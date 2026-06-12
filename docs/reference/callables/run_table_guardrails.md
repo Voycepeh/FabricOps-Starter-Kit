@@ -148,7 +148,7 @@ are routed through the configured metadata target by the called helpers.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/pipeline.py#L260-L448">View run_table_guardrails on GitHub</a>
 
 ```python
 def run_table_guardrails(
@@ -534,7 +534,7 @@ def run_table_guardrails(
 
             **`def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L228-L257)
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/pipeline.py#L228-L257)
 
             ```python
             def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -571,7 +571,7 @@ def run_table_guardrails(
 
             **`def _table_key(table_config: Mapping[str, Any]) -> str`**
 
-            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L216-L217)
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/pipeline.py#L216-L217)
 
             ```python
             def _table_key(table_config: Mapping[str, Any]) -> str:
@@ -580,7 +580,7 @@ def run_table_guardrails(
 
             **`def _table_name(table_config: Mapping[str, Any]) -> str`**
 
-            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L220-L221)
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/pipeline.py#L220-L221)
 
             ```python
             def _table_name(table_config: Mapping[str, Any]) -> str:
@@ -591,7 +591,7 @@ def run_table_guardrails(
 
             **`def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool`**
 
-            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L224-L225)
+            Source: [`src/fabricops_kit/pipeline.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/pipeline.py#L224-L225)
 
             ```python
             def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
@@ -646,7 +646,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L260-L448">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/pipeline.py#L260-L448</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/pipeline.py#L260-L448">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/pipeline.py#L260-L448</a>
 - Start line: `260`
 - End line: `448`
 - Signature:

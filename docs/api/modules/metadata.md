@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 4</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>4</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>config</code>, <code>data_agreement</code>, <code>governance_review</code>, <code>pipeline</code></td>
+      <td><code>data_agreement</code>, <code>governance_review</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -251,9 +251,6 @@ No public exports in this module.
 </details>
 
 ### External callers
-
-**config**
-<a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **data_agreement**
 <a class="reference-chip" href="../data_agreement/#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="../data_agreement/#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="../data_agreement/#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>, <a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>

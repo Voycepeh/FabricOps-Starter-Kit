@@ -85,7 +85,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L1083-L1098">View get_selected_agreement on GitHub</a>
 
 ```python
 def get_selected_agreement() -> dict[str, Any]:
@@ -174,7 +174,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L1083-L1098">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L1083-L1098</a>
 - Start line: `1083`
 - End line: `1098`
 - Signature:

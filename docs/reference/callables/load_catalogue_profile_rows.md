@@ -103,7 +103,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L381-L406">View load_catalogue_profile_rows on GitHub</a>
 
 ```python
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
@@ -191,7 +191,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
             **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L149-L150)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L149-L150)
 
             ```python
             def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
@@ -200,7 +200,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
             **`def _stable_metadata_key(*parts: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L144-L146)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L144-L146)
 
             ```python
             def _stable_metadata_key(*parts: Any) -> str:
@@ -212,7 +212,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
             **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L62-L67)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L62-L67)
 
             ```python
             def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
@@ -225,7 +225,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
             **`def _is_success(row: dict[str, Any]) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L74-L75)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L74-L75)
 
             ```python
             def _is_success(row: dict[str, Any]) -> bool:
@@ -234,7 +234,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
             **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L70-L71)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L70-L71)
 
             ```python
             def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
@@ -283,7 +283,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L381-L406</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L381-L406">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L381-L406</a>
 - Start line: `381`
 - End line: `406`
 - Signature:

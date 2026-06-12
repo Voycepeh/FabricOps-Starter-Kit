@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 5</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 8</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 6</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>5</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>data_agreement</code>, <code>governance_review</code>, <code>guardrails</code>, <code>metadata</code>, <code>pipeline</code></td>
+      <td><code>config</code>, <code>data_agreement</code>, <code>governance_review</code>, <code>guardrails</code>, <code>metadata</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -260,6 +260,9 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </details>
 
 ### External callers
+
+**config**
+<a class="reference-chip" href="../config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../config/#_validate_metadata_table_registration"><code>_validate_metadata_table_registration</code></a>
 
 **data_agreement**
 <a class="reference-chip" href="../data_agreement/#_ensure_metadata_tables"><code>_ensure_metadata_tables</code></a>, <a class="reference-chip" href="../data_agreement/#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="../data_agreement/#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="../data_agreement/#_write_row"><code>_write_row</code></a>

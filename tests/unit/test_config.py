@@ -151,41 +151,68 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
         PathConfig(paths={})
 
 
-def test_setup_metadata_tables_delegates_v1_metadata_setup(monkeypatch):
-    calls = []
+def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypatch):
+    from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
+    from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
+    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.governance_review as governance
 
-    def data_agreement_setup(**kwargs):
-        calls.append(("data_agreement", kwargs))
-        return {"status": "ready", "created_tables": []}
+    class Schema:
+        def __init__(self, fields):
+            self._fields = fields
 
-    def notebook_registry_setup(**kwargs):
-        calls.append(("notebook_registry", kwargs))
-        return {"status": "ready", "created_tables": []}
+        def fieldNames(self):  # noqa: N802 - mirrors Spark API
+            return list(self._fields)
 
-    def governance_setup(**kwargs):
-        calls.append(("governance", kwargs))
-        return {"status": "ready", "created_tables": []}
+    class Table:
+        def __init__(self, fields):
+            self.columns = list(fields)
 
-    monkeypatch.setattr("fabricops_kit.data_agreement._setup_data_agreement_tables", data_agreement_setup)
-    monkeypatch.setattr("fabricops_kit.metadata._setup_notebook_registry_table", notebook_registry_setup)
-    monkeypatch.setattr("fabricops_kit.governance_review._setup_governance_metadata_tables", governance_setup)
-    monkeypatch.setattr("fabricops_kit.config._get_active_metadata_tables", lambda config: ["METADATA_DATA_STEWARD"])
-    monkeypatch.setattr(
-        "fabricops_kit.config._validate_metadata_table_registration",
-        lambda **kwargs: {"status": "ready", "missing_tables": [], "expected_tables": kwargs["expected_tables"]},
-    )
+    class Spark:
+        def __init__(self):
+            self.created_dataframes = []
 
-    config = framework_config()
-    spark = object()
-    result = setup_metadata_tables(spark=spark, config=config, env="dev", require_active_steward=True)
+        def createDataFrame(self, rows, schema=None):  # noqa: N802 - mirrors Spark API
+            self.created_dataframes.append((list(rows), schema.fieldNames()))
+            return object()
+
+        def sql(self, statement):
+            raise AssertionError(f"metadata setup must not call spark.sql: {statement}")
+
+    schemas = {
+        DATA_STEWARD_TABLE: Schema(["steward_id"]),
+        DATA_AGREEMENT_TABLE: Schema(["agreement_id"]),
+        DATA_AGREEMENT_EVIDENCE_TABLE: Schema(["agreement_id", "file_path"]),
+        NOTEBOOK_REGISTRY_TABLE: Schema(["agreement_id", "registration_id"]),
+        "METADATA_DQ_RULES": Schema(["rule_id"]),
+    }
+    reads = {table: 0 for table in schemas}
+    writes = []
+
+    def read_table(config, env, target, table, spark_session=None):
+        reads[table] += 1
+        if reads[table] == 1:
+            raise RuntimeError("table does not exist")
+        return Table(schemas[table].fieldNames())
+
+    monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
+    monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_DQ_RULES": schemas["METADATA_DQ_RULES"]})
+    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(io, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((env, target, table, kwargs)))
+    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
+
+    spark = Spark()
+    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev", require_active_steward=True)
 
     assert result["status"] == "ready"
-    assert [name for name, _ in calls] == ["data_agreement", "notebook_registry", "governance"]
-    assert calls[0][1] == {"spark": spark, "config": config, "env": "dev", "require_active_steward": True}
-    assert calls[1][1] == {"spark": spark, "config": config, "env": "dev"}
-    assert calls[2][1] == {"spark": spark, "config": config, "env": "dev"}
-    assert result["active_metadata_tables"] == ["METADATA_DATA_STEWARD"]
-    assert result["registration_validation"]["status"] == "ready"
+    assert result["data_agreement"]["status"] == "ready"
+    assert result["notebook_registry"]["created"] is True
+    assert result["governance"]["created_tables"] == ["METADATA_DQ_RULES"]
+    assert result["active_metadata_tables"] == list(schemas)
+    assert [table for _, _, table, _ in writes] == list(schemas)
+    assert all(target == "metadata" for _, target, _, _ in writes)
+    assert all(kwargs == {"mode": "ignore", "overwrite_schema": True} for *_, kwargs in writes)
+    assert spark.created_dataframes == [([], schema.fieldNames()) for schema in schemas.values()]
 
 
 def test_active_metadata_tables_are_source_driven_and_explain_optional_access_table():
@@ -201,23 +228,20 @@ def test_active_metadata_tables_are_source_driven_and_explain_optional_access_ta
     assert "METADATA_DATA_ACCESS" not in tables
 
 
-def test_metadata_registration_validation_uses_show_tables_against_active_registry():
-    class Row(dict):
-        def asDict(self, recursive=True):  # noqa: N802 - mirrors Spark API
-            return dict(self)
+def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
+    import fabricops_kit.fabric_input_output as io
 
-    class Result:
-        def collect(self):
-            return [Row(tableName="METADATA_DATA_STEWARD"), Row(tableName="METADATA_DQ_RULES")]
+    calls = []
+
+    def read_table(config, env, target, table, spark_session=None):
+        calls.append((env, target, table, spark_session))
+        return object()
 
     class Spark:
-        def __init__(self):
-            self.statements = []
-
         def sql(self, statement):
-            self.statements.append(statement)
-            return Result()
+            raise AssertionError(f"metadata validation must not call spark.sql: {statement}")
 
+    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
     spark = Spark()
     result = _validate_metadata_table_registration(
         spark=spark,
@@ -229,21 +253,24 @@ def test_metadata_registration_validation_uses_show_tables_against_active_regist
     assert result["status"] == "ready"
     assert result["missing_tables"] == []
     assert result["expected_table_count"] == 2
+    assert result["registered_tables"] == ["METADATA_DATA_STEWARD", "METADATA_DQ_RULES"]
+    assert result["show_tables_statement"] is None
     assert result["optional_documented_tables"] == ["METADATA_DATA_ACCESS"]
-    assert spark.statements == ["SHOW TABLES IN `lh_metadata_dev`"]
+    assert calls == [
+        ("dev", "metadata", "METADATA_DATA_STEWARD", spark),
+        ("dev", "metadata", "METADATA_DQ_RULES", spark),
+    ]
 
 
-def test_metadata_registration_validation_warns_for_missing_registered_tables():
-    class Result:
-        def collect(self):
-            return []
+def test_metadata_registration_validation_warns_for_missing_configured_tables(monkeypatch):
+    import fabricops_kit.fabric_input_output as io
 
-    class Spark:
-        def sql(self, statement):
-            return Result()
+    def read_table(config, env, target, table, spark_session=None):
+        raise RuntimeError("table does not exist")
 
+    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
     result = _validate_metadata_table_registration(
-        spark=Spark(),
+        spark=object(),
         config=framework_config(),
         env="dev",
         expected_tables=["METADATA_DATA_STEWARD"],
@@ -251,7 +278,7 @@ def test_metadata_registration_validation_warns_for_missing_registered_tables():
 
     assert result["status"] == "not_ready"
     assert result["missing_tables"] == ["METADATA_DATA_STEWARD"]
-    assert "SHOW TABLES" in result["warnings"][0]
+    assert "configured metadata target" in result["warnings"][0]
 
 
 def test_audit_timezone_defaults_validates_and_fails_clearly():

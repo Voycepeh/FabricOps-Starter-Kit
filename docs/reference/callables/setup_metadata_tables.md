@@ -36,12 +36,14 @@ Not documented yet
 
 ## Calls
 
-- `fabricops_kit.config._get_active_metadata_tables`
+- `fabricops_kit.config._get_metadata_table_schema_registry`
+- `fabricops_kit.config._metadata_schema_field_names`
 - `fabricops_kit.config._metadata_tables_from_setup_results`
+- `fabricops_kit.config._setup_metadata_table_registry`
+- `fabricops_kit.config._validate_framework_config`
 - `fabricops_kit.config._validate_metadata_table_registration`
-- `fabricops_kit.data_agreement._setup_data_agreement_tables`
-- `fabricops_kit.governance_review._setup_governance_metadata_tables`
-- `fabricops_kit.metadata._setup_notebook_registry_table`
+- `fabricops_kit.data_agreement._list_data_stewards`
+- `fabricops_kit.governance_review._get_governance_metadata_schemas`
 
 ## Callable implementation
 
@@ -50,7 +52,7 @@ Not documented yet
 - Module: `config`
 - Classification: Callable
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `1044`
+- Source line: `1152`
 - Signature:
 
 ```python
@@ -106,7 +108,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1044-L1108">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1152-L1253">View setup_metadata_tables on GitHub</a>
 
 ```python
 def setup_metadata_tables(
@@ -142,19 +144,56 @@ def setup_metadata_tables(
     ``00_env_config`` simple while delegating to internal helpers that route all
     metadata reads and writes through the configured metadata lakehouse target.
     """
-    from fabricops_kit.data_agreement import _setup_data_agreement_tables
-    from fabricops_kit.governance_review import _setup_governance_metadata_tables
-    from fabricops_kit.metadata import _setup_notebook_registry_table
-
-    data_agreement = _setup_data_agreement_tables(
-        spark=spark,
-        config=config,
-        env=env,
-        require_active_steward=require_active_steward,
+    from fabricops_kit.data_agreement import (
+        DATA_AGREEMENT_EVIDENCE_TABLE,
+        DATA_AGREEMENT_TABLE,
+        DATA_STEWARD_TABLE,
+        _list_data_stewards,
     )
-    notebook_registry = _setup_notebook_registry_table(spark=spark, config=config, env=env)
-    governance = _setup_governance_metadata_tables(spark=spark, config=config, env=env)
-    expected_tables = _get_active_metadata_tables(config)
+    from fabricops_kit.governance_review import _get_governance_metadata_schemas
+    from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
+
+    normalized = _validate_framework_config(config)
+    registry = _get_metadata_table_schema_registry(normalized)
+    setup_registry = _setup_metadata_table_registry(spark=spark, config=normalized, env=env, registry=registry)
+    expected_tables = list(registry)
+    created_tables = list(setup_registry["created_tables"])
+
+    metadata_tables = normalized.data_agreement_config.metadata_tables or {}
+    data_agreement_tables = [
+        str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)),
+        str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
+        str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
+    ]
+    active_stewards = _list_data_stewards(normalized, env, spark_session=spark, active_only=True, missing_ok=True)
+    data_agreement = {
+        "status": "ready" if active_stewards else "not_ready",
+        "tables": data_agreement_tables,
+        "created_tables": [table for table in data_agreement_tables if table in created_tables],
+        "active_steward_count": len(active_stewards),
+        "message": (
+            f"{data_agreement_tables[0]} contains active steward rows. 01_agreement can render both intake widgets."
+            if active_stewards
+            else f"{data_agreement_tables[0]} has no active steward rows yet. Use the 01_agreement Data Steward widget to create one before saving an agreement."
+        ),
+    }
+    if require_active_steward and not active_stewards:
+        raise ValueError(data_agreement["message"])
+
+    governance_tables = list(_get_governance_metadata_schemas())
+    notebook_registry = {
+        "status": "ready",
+        "table": NOTEBOOK_REGISTRY_TABLE,
+        "schema": _metadata_schema_field_names(registry[NOTEBOOK_REGISTRY_TABLE]),
+        "created": NOTEBOOK_REGISTRY_TABLE in created_tables,
+        "migrated": False,
+        "created_tables": [NOTEBOOK_REGISTRY_TABLE] if NOTEBOOK_REGISTRY_TABLE in created_tables else [],
+    }
+    governance = {
+        "status": "ready",
+        "tables": governance_tables,
+        "created_tables": [table for table in governance_tables if table in created_tables],
+    }
     created_or_checked = _metadata_tables_from_setup_results(data_agreement, notebook_registry, governance)
     registration_validation = _validate_metadata_table_registration(
         spark=spark,
@@ -186,50 +225,54 @@ def setup_metadata_tables(
 
     ```text
     setup_metadata_tables(...)
-    ├── _get_active_metadata_tables(...)
+    ├── _get_governance_metadata_schemas(...)
+    │   ├── _schema(...)
+    │   │   └── …
+    │   └── _spark_types(...)
+    ├── _get_metadata_table_schema_registry(...)
     │   ├── _get_governance_metadata_schemas(...)
     │   │   └── …
+    │   ├── _string_metadata_schema(...)
     │   └── _validate_framework_config(...)
     │       └── …
+    ├── _list_data_stewards(...)
+    │   ├── _active_steward(...)
+    │   │   └── …
+    │   ├── _config_value(...)
+    │   ├── _latest_by_key(...)
+    │   │   └── …
+    │   └── read_lakehouse_table(...)
+    │       └── …
+    ├── _metadata_schema_field_names(...)
     ├── _metadata_tables_from_setup_results(...)
-    ├── _setup_data_agreement_tables(...)
-    │   ├── _ensure_metadata_tables(...)
-    │   │   └── …
-    │   └── _list_data_stewards(...)
-    │       └── …
-    ├── _setup_governance_metadata_tables(...)
-    │   ├── _coerce_rows(...)
-    │   ├── _get_governance_metadata_schemas(...)
-    │   │   └── …
+    ├── _setup_metadata_table_registry(...)
+    │   ├── _create_empty_metadata_dataframe(...)
     │   ├── _is_table_not_found_error(...)
-    │   ├── _schema_field_names(...)
+    │   ├── _metadata_schema_field_names(...)
+    │   ├── _metadata_table_columns(...)
+    │   │   └── …
     │   ├── read_lakehouse_table(...)
     │   │   └── …
     │   └── write_lakehouse_table(...)
     │       └── …
-    ├── _setup_notebook_registry_table(...)
-    │   ├── _coerce_row_dicts(...)
-    │   ├── _registry_rows_with_defaults(...)
-    │   │   └── …
-    │   ├── _rows_for_spark(...)
-    │   ├── read_lakehouse_table(...)
-    │   │   └── …
-    │   └── write_lakehouse_table(...)
-    │       └── …
+    ├── _validate_framework_config(...)
+    │   ├── _validate_audit_timezone(...)
+    │   └── FrameworkConfig(...)
     └── _validate_metadata_table_registration(...)
         ├── _detect_nested_metadata_delta_folders(...)
         │   └── …
         ├── _get_active_metadata_tables(...)
         │   └── …
-        ├── _show_tables_for_metadata_lakehouse(...)
+        ├── _get_store(...)
+        ├── _validate_framework_config(...)
         │   └── …
-        └── _validate_framework_config(...)
+        └── read_lakehouse_table(...)
             └── …
     ```
 
-??? info "Internal helpers used: 30"
+??? info "Internal helpers used: 25"
 
-    This callable uses 30 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, fabric or spark access, and other.
+    This callable uses 25 internal helpers for audit timestamp, metadata loading, validation, rule evaluation, fabric or spark access, and other.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
@@ -248,7 +291,7 @@ def setup_metadata_tables(
         </tr>
         <tr>
           <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_detect_nested_metadata_delta_folders</code>, <code>_ensure_metadata_tables</code>, <code>_get_active_metadata_tables</code>, <code>_get_governance_metadata_schemas</code>, <code>_is_table_not_found_error</code>, <code>_list_data_stewards</code>, <code>_metadata_tables_from_setup_results</code>, <code>_setup_data_agreement_tables</code>, <code>_setup_governance_metadata_tables</code>, <code>_setup_notebook_registry_table</code>, <code>_show_tables_for_metadata_lakehouse</code>, <code>_to_bool</code>, <code>_validate_metadata_table_registration</code>, <code>_validate_schema_field_names</code></td>
+          <td data-label="Helpers"><code>_create_empty_metadata_dataframe</code>, <code>_detect_nested_metadata_delta_folders</code>, <code>_get_active_metadata_tables</code>, <code>_get_governance_metadata_schemas</code>, <code>_get_metadata_table_schema_registry</code>, <code>_is_table_not_found_error</code>, <code>_list_data_stewards</code>, <code>_metadata_schema_field_names</code>, <code>_metadata_table_columns</code>, <code>_metadata_tables_from_setup_results</code>, <code>_setup_metadata_table_registry</code>, <code>_string_metadata_schema</code>, <code>_to_bool</code>, <code>_validate_metadata_table_registration</code>, <code>_validate_schema_field_names</code></td>
           <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
         </tr>
         <tr>
@@ -257,23 +300,18 @@ def setup_metadata_tables(
           <td data-label="What they do">Validate inputs and guard conditions before the workflow continues.</td>
         </tr>
         <tr>
-          <td data-label="Area">Rule parsing</td>
-          <td data-label="Helpers"><code>_schema_field_names</code></td>
-          <td data-label="What they do">Normalize stored or user-provided values before applying rules.</td>
-        </tr>
-        <tr>
           <td data-label="Area">Rule evaluation</td>
           <td data-label="Helpers"><code>_spark_types</code></td>
           <td data-label="What they do">Convert configured rules into executable checks and evaluation results.</td>
         </tr>
         <tr>
           <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_store</code>, <code>_rows_for_spark</code></td>
+          <td data-label="Helpers"><code>_coerce_row_dicts</code>, <code>_get_store</code></td>
           <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
         </tr>
         <tr>
           <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_active_steward</code>, <code>_coerce_row_dicts</code>, <code>_coerce_row_dicts</code>, <code>_coerce_rows</code>, <code>_config_value</code>, <code>_latest_by_key</code>, <code>_notebook_registration_key</code>, <code>_registry_rows_with_defaults</code>, <code>_safe_str</code>, <code>_schema</code></td>
+          <td data-label="Helpers"><code>_active_steward</code>, <code>_coerce_row_dicts</code>, <code>_config_value</code>, <code>_latest_by_key</code>, <code>_schema</code></td>
           <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
         </tr>
       </tbody>
@@ -286,7 +324,7 @@ def setup_metadata_tables(
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -325,9 +363,19 @@ def setup_metadata_tables(
 
         ??? example "Metadata loading helpers"
 
+            **`def _create_empty_metadata_dataframe(spark: Any, schema: Any) -> Any`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1078-L1080)
+
+            ```python
+            def _create_empty_metadata_dataframe(spark: Any, schema: Any) -> Any:
+                """Create an empty Spark DataFrame using an explicit metadata schema."""
+                return spark.createDataFrame([], schema=schema)
+            ```
+
             **`def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L980-L1000)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L980-L1000)
 
             ```python
             def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]:
@@ -353,60 +401,9 @@ def setup_metadata_tables(
                 return nested
             ```
 
-            **`def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]`**
-
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L405-L448)
-
-            ```python
-            def _ensure_metadata_tables(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
-                """Idempotently create or validate lightweight ``01_agreement`` metadata tables.
-
-                Parameters
-                ----------
-                config : FrameworkConfig or dict
-                    Configured metadata lakehouse route from ``00_env_config``.
-                env_name : str
-                    Environment key configured by ``00_env_config``.
-                spark : pyspark.sql.SparkSession
-                    Fabric Spark session used to create empty Delta tables when missing.
-
-                Returns
-                -------
-                dict[str, Any]
-                    Setup summary with checked table names.
-
-                Notes
-                -----
-                Metadata reads and writes always use the configured ``metadata`` target.
-                Existing tables with different schemas require a deliberate migration; this
-                helper does not destructively overwrite metadata.
-                """
-                metadata_tables = _config_value(config, "metadata_tables", {}) or {}
-                table_schemas = {
-                    str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)): DATA_STEWARD_FIELDS,
-                    str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)): DATA_AGREEMENT_FIELDS,
-                    str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)): DATA_AGREEMENT_EVIDENCE_FIELDS,
-                }
-                created = []
-                for table_name, fields in table_schemas.items():
-                    try:
-                        table = read_lakehouse_table(config, env_name, "metadata", table_name, spark_session=spark)
-                    except Exception:
-                        empty_df = spark.createDataFrame([{field: "" for field in fields}]).limit(0)
-                        write_lakehouse_table(empty_df, config, env_name, "metadata", table_name, mode="ignore", overwrite_schema=True)
-                        table = read_lakehouse_table(config, env_name, "metadata", table_name, spark_session=spark)
-                        created.append(table_name)
-                    rows = [] if hasattr(table, "columns") else _coerce_row_dicts(table)
-                    columns = list(table.columns) if hasattr(table, "columns") else list(rows[0]) if rows else []
-                    missing = [field for field in fields if field not in columns]
-                    if missing:
-                        raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before rendering 01_agreement.")
-                return {"status": "ready", "tables": list(table_schemas), "created_tables": created}
-            ```
-
             **`def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L898-L925)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L898-L925)
 
             ```python
             def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]:
@@ -441,7 +438,7 @@ def setup_metadata_tables(
 
             **`def _get_governance_metadata_schemas() -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L152-L195)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L152-L195)
 
             ```python
             def _get_governance_metadata_schemas() -> dict[str, Any]:
@@ -490,9 +487,46 @@ def setup_metadata_tables(
                 }
             ```
 
+            **`def _get_metadata_table_schema_registry(config: FrameworkConfig | dict[str, Any]) -> dict[str, Any]`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1028-L1057)
+
+            ```python
+            def _get_metadata_table_schema_registry(config: FrameworkConfig | dict[str, Any]) -> dict[str, Any]:
+                """Return the canonical metadata setup registry as table names mapped to schemas."""
+                normalized = _validate_framework_config(config)
+                from fabricops_kit.data_agreement import (
+                    DATA_AGREEMENT_EVIDENCE_FIELDS,
+                    DATA_AGREEMENT_EVIDENCE_TABLE,
+                    DATA_AGREEMENT_FIELDS,
+                    DATA_AGREEMENT_TABLE,
+                    DATA_STEWARD_FIELDS,
+                    DATA_STEWARD_TABLE,
+                )
+                from fabricops_kit.governance_review import _get_governance_metadata_schemas
+                from fabricops_kit.metadata import NOTEBOOK_REGISTRY_FIELDS, NOTEBOOK_REGISTRY_TABLE
+
+                metadata_tables = normalized.data_agreement_config.metadata_tables or {}
+                registry: dict[str, Any] = {
+                    str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)): _string_metadata_schema(
+                        str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), DATA_STEWARD_FIELDS
+                    ),
+                    str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)): _string_metadata_schema(
+                        str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), DATA_AGREEMENT_FIELDS
+                    ),
+                    str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)): _string_metadata_schema(
+                        str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
+                        DATA_AGREEMENT_EVIDENCE_FIELDS,
+                    ),
+                    NOTEBOOK_REGISTRY_TABLE: _string_metadata_schema(NOTEBOOK_REGISTRY_TABLE, NOTEBOOK_REGISTRY_FIELDS),
+                }
+                registry.update(_get_governance_metadata_schemas())
+                return registry
+            ```
+
             **`def _is_table_not_found_error(exc: Exception) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L198-L218)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L198-L218)
 
             ```python
             def _is_table_not_found_error(exc: Exception) -> bool:
@@ -520,7 +554,7 @@ def setup_metadata_tables(
 
             **`def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any=None, active_only: bool=True, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L536-L565)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L536-L565)
 
             ```python
             def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -555,9 +589,35 @@ def setup_metadata_tables(
                 return [row for row in latest if _active_steward(row)] if active_only else latest
             ```
 
+            **`def _metadata_schema_field_names(schema: Any) -> list[str]`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1003-L1007)
+
+            ```python
+            def _metadata_schema_field_names(schema: Any) -> list[str]:
+                """Return field names from a Spark StructType-like schema."""
+                if hasattr(schema, "fieldNames"):
+                    return list(schema.fieldNames())
+                return [field.name for field in getattr(schema, "fields", [])]
+            ```
+
+            **`def _metadata_table_columns(table: Any) -> list[str]`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1069-L1075)
+
+            ```python
+            def _metadata_table_columns(table: Any) -> list[str]:
+                """Return column names from a Spark DataFrame-like object or row collection."""
+                columns = list(getattr(table, "columns", []) or [])
+                if columns:
+                    return columns
+                rows = _coerce_row_dicts(table)
+                return list(rows[0]) if rows else []
+            ```
+
             **`def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L928-L939)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L928-L939)
 
             ```python
             def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]:
@@ -574,213 +634,64 @@ def setup_metadata_tables(
                 return tables
             ```
 
-            **`def _setup_data_agreement_tables(*, spark: Any, config: Any, env: str, require_active_steward: bool=False) -> dict[str, Any]`**
+            **`def _setup_metadata_table_registry(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, registry: dict[str, Any]) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L451-L485)
-
-            ```python
-            def _setup_data_agreement_tables(*, spark: Any, config: Any, env: str, require_active_steward: bool = False) -> dict[str, Any]:
-                """Prepare intake tables and report whether agreement intake has a steward.
-
-                Parameters
-                ----------
-                spark : pyspark.sql.SparkSession
-                    Fabric Spark session used for idempotent table setup.
-                config : FrameworkConfig or dict
-                    Configuration containing the metadata lakehouse route and table names.
-                env : str
-                    Environment key configured by ``00_env_config``.
-                require_active_steward : bool, default=False
-                    Raise when no active steward exists instead of returning ``not_ready``.
-
-                Returns
-                -------
-                dict[str, Any]
-                    Setup status, checked tables, created tables, message, and active count.
-
-                Notes
-                -----
-                ``00_env_config`` calls this before ``01_agreement``. Missing tables are created
-                empty; no fake steward rows are seeded.
-                """
-                summary = _ensure_metadata_tables(config, env, spark=spark)
-                profiles = _list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
-                summary["active_steward_count"] = len(profiles)
-                if profiles:
-                    summary["message"] = f"{DATA_STEWARD_TABLE} contains active steward rows. 01_agreement can render both intake widgets."
-                else:
-                    summary["status"] = "not_ready"
-                    summary["message"] = f"{DATA_STEWARD_TABLE} has no active steward rows yet. Use the 01_agreement Data Steward widget to create one before saving an agreement."
-                    if require_active_steward:
-                        raise ValueError(summary["message"])
-                return summary
-            ```
-
-            **`def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]`**
-
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L221-L255)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1083-L1107)
 
             ```python
-            def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
-                """Create or validate governance metadata tables via the configured route.
+            def _setup_metadata_table_registry(
+                *, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, registry: dict[str, Any]
+            ) -> dict[str, Any]:
+                """Create missing metadata tables through configured lakehouse IO helpers."""
+                from fabricops_kit.fabric_input_output import read_lakehouse_table, write_lakehouse_table
+                from fabricops_kit.governance_review import _is_table_not_found_error
 
-                Parameters
-                ----------
-                spark : pyspark.sql.SparkSession
-                    Spark session used to create empty metadata tables when missing.
-                config : FrameworkConfig or dict
-                    ``00_env_config`` configuration that contains the ``metadata`` target.
-                env : str
-                    Environment key to prepare.
-
-                Returns
-                -------
-                dict[str, Any]
-                    Setup status, checked tables, and newly created tables.
-                """
                 created: list[str] = []
-                schemas = _get_governance_metadata_schemas()
-                for table_name, schema in schemas.items():
+                for table_name, schema in registry.items():
                     try:
                         table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
                     except Exception as exc:
                         if not _is_table_not_found_error(exc):
-                            raise RuntimeError(f"Unable to read governance metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition.") from exc
-                        empty_df = spark.createDataFrame([], schema=schema)
+                            raise RuntimeError(
+                                f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
+                            ) from exc
+                        empty_df = _create_empty_metadata_dataframe(spark, schema)
                         write_lakehouse_table(empty_df, config, env, "metadata", table_name, mode="ignore", overwrite_schema=True)
                         table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
                         created.append(table_name)
-                    columns = list(getattr(table, "columns", [])) or (list(_coerce_rows(table)[0]) if _coerce_rows(table) else [])
-                    fields = _schema_field_names(schema)
-                    missing = [field for field in fields if field not in columns]
+
+                    missing = [field for field in _metadata_schema_field_names(schema) if field not in _metadata_table_columns(table)]
                     if missing:
-                        raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before running 03_governance.")
-                return {"status": "ready", "tables": list(schemas), "created_tables": created}
+                        raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before running metadata setup.")
+                return {"status": "ready", "tables": list(registry), "created_tables": created}
             ```
 
-            **`def _setup_notebook_registry_table(*, spark: Any, config: Any, env: str, metadata_table: str=NOTEBOOK_REGISTRY_TABLE) -> dict[str, Any]`**
+            **`def _string_metadata_schema(table_name: str, fields: list[str])`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L61-L130)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1010-L1025)
 
             ```python
-            def _setup_notebook_registry_table(
-                *, spark: Any, config: Any, env: str, metadata_table: str = NOTEBOOK_REGISTRY_TABLE
-            ) -> dict[str, Any]:
-                """Create or validate the notebook registry metadata table.
-
-                Parameters
-                ----------
-                spark : pyspark.sql.SparkSession
-                    Fabric Spark session used to create an empty table when the registry is
-                    missing.
-                config : FrameworkConfig or dict
-                    Configuration containing the metadata lakehouse route from
-                    ``00_env_config``.
-                env : str
-                    Environment key configured by ``00_env_config``.
-                metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
-                    Physical metadata table name to prepare.
-
-                Returns
-                -------
-                dict[str, Any]
-                    Setup status, checked table, schema, and whether the table was created.
-
-                Raises
-                ------
-                ValueError
-                    If an existing table is missing required registry columns.
-
-                Notes
-                -----
-                This helper is separate from ``_setup_data_agreement_tables`` because the
-                registry is workflow-notebook bootstrap metadata, not ``01_agreement`` agreement
-                intake metadata. Reads and writes use the configured ``metadata`` target
-                from ``00_env_config``.
-                """
-                fields = list(NOTEBOOK_REGISTRY_FIELDS)
-                created = False
+            def _string_metadata_schema(table_name: str, fields: list[str]):
+                """Build an explicit all-string Spark schema for lightweight metadata tables."""
                 try:
-                    table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
-                except Exception:
-                    empty_df = spark.createDataFrame([{field: "" for field in fields}]).limit(0)
-                    write_lakehouse_table(empty_df, config, env, "metadata", metadata_table, mode="ignore", overwrite_schema=True)
-                    table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
-                    created = True
+                    from pyspark.sql.types import StringType, StructField, StructType
+                except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
+                    raise RuntimeError("metadata table setup requires pyspark.sql.types in the active runtime.") from exc
 
-                rows = _coerce_row_dicts(table)
-                columns = list(table.columns) if hasattr(table, "columns") else list(rows[0]) if rows else []
-                missing_base = [field for field in NOTEBOOK_REGISTRY_BASE_FIELDS if field not in columns]
-                if missing_base:
-                    raise ValueError(
-                        f"{metadata_table} is missing required column(s): {', '.join(missing_base)}. Migrate or recreate the notebook registry table before workflow notebooks register themselves."
-                    )
-
-                migrated = False
-                missing_state = [field for field in NOTEBOOK_REGISTRY_STATE_FIELDS if field not in columns]
-                if missing_state:
-                    migrated_rows = _registry_rows_with_defaults(rows)
-                    df = spark.createDataFrame(_rows_for_spark(migrated_rows or [{field: "" for field in fields}])).limit(
-                        0 if not migrated_rows else len(migrated_rows)
-                    )
-                    write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="overwrite", overwrite_schema=True)
-                    migrated = True
-                return {
-                    "status": "ready",
-                    "table": metadata_table,
-                    "schema": fields,
-                    "created": created,
-                    "migrated": migrated,
-                    "created_tables": [metadata_table] if created else [],
-                }
-            ```
-
-            **`def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str) -> dict[str, Any]`**
-
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L942-L977)
-
-            ```python
-            def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str) -> dict[str, Any]:
-                """Inspect registered tables for the configured metadata lakehouse."""
-                metadata_store = _get_store(config=config, env=env, target="metadata")
-                if metadata_store.kind != "lakehouse":
-                    raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
-                if not hasattr(spark, "sql"):
-                    return {"status": "skipped", "database": metadata_store.name, "tables": [], "message": "Spark SQL is unavailable in this runtime."}
-
-                statements = [f"SHOW TABLES IN `{str(metadata_store.name).replace('`', '``')}`", "SHOW TABLES"]
-                last_error: Exception | None = None
-                for statement in statements:
-                    try:
-                        rows = spark.sql(statement).collect()
-                        table_names: list[str] = []
-                        for row in rows:
-                            if hasattr(row, "asDict"):
-                                item = row.asDict(recursive=True)
-                            elif isinstance(row, dict):
-                                item = row
-                            else:
-                                try:
-                                    item = dict(row)
-                                except Exception:
-                                    item = {}
-                            table_name = item.get("tableName") or item.get("table_name") or item.get("tablename")
-                            if table_name is None and not item:
-                                try:
-                                    table_name = row[1]
-                                except Exception:
-                                    table_name = None
-                            if table_name:
-                                table_names.append(str(table_name))
-                        return {"status": "ready", "database": metadata_store.name, "tables": sorted(set(table_names)), "statement": statement}
-                    except Exception as exc:  # pragma: no cover - depends on Fabric Spark catalog behavior
-                        last_error = exc
-                return {"status": "skipped", "database": metadata_store.name, "tables": [], "message": f"SHOW TABLES was unavailable: {last_error}"}
+                logical_names: dict[str, list[str]] = {}
+                for column_name in fields:
+                    logical_names.setdefault(str(column_name).lower(), []).append(str(column_name))
+                duplicates = {logical: names for logical, names in logical_names.items() if len(names) > 1}
+                if duplicates:
+                    details = "; ".join(f"{logical}: {', '.join(names)}" for logical, names in sorted(duplicates.items()))
+                    raise ValueError(f"{table_name} schema contains case-insensitive duplicate column names: {details}.")
+                string = StringType()
+                return StructType([StructField(str(column_name), string, True) for column_name in fields])
             ```
 
             **`def _to_bool(value: Any) -> bool`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L497-L513)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L497-L513)
 
             ```python
             def _to_bool(value: Any) -> bool:
@@ -804,7 +715,7 @@ def setup_metadata_tables(
 
             **`def _validate_metadata_table_registration(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str] | None=None) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1003-L1041)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1110-L1149)
 
             ```python
             def _validate_metadata_table_registration(
@@ -814,43 +725,44 @@ def setup_metadata_tables(
                 env: str,
                 expected_tables: list[str] | None = None,
             ) -> dict[str, Any]:
-                """Validate that active metadata tables are registered in the Spark catalog."""
+                """Validate active metadata tables through configured metadata target reads."""
+                from fabricops_kit.fabric_input_output import read_lakehouse_table
+
                 normalized = _validate_framework_config(config)
                 expected = list(expected_tables or _get_active_metadata_tables(normalized))
-                show_tables = _show_tables_for_metadata_lakehouse(spark=spark, config=normalized, env=env)
-                observed = {str(name).lower(): str(name) for name in show_tables.get("tables", [])}
-                show_tables_ready = show_tables.get("status") == "ready"
-                missing = [table for table in expected if table.lower() not in observed] if show_tables_ready else []
-                nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)
+                missing: list[str] = []
                 warnings: list[str] = []
+                for table in expected:
+                    try:
+                        read_lakehouse_table(normalized, env, "metadata", table, spark_session=spark)
+                    except Exception:
+                        missing.append(table)
+                nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)
                 if missing:
-                    warnings.append("Expected metadata tables were not returned by SHOW TABLES.")
+                    warnings.append("Expected metadata tables could not be read from the configured metadata target.")
                 if nested_paths:
                     warnings.append(
                         "Detected legacy nested metadata Delta folders under Tables/<metadata_table>/Unidentified/_delta_log. "
                         "FabricOps will not delete or migrate user data automatically; review and migrate those folders manually if needed. "
                         "New metadata setup writes to registered Lakehouse table paths directly."
                     )
-                if not show_tables_ready:
-                    warnings.append(str(show_tables.get("message") or "SHOW TABLES validation was skipped."))
-                status = "ready" if show_tables_ready and not missing else "not_ready" if show_tables_ready else "skipped"
                 return {
-                    "status": status,
-                    "database": show_tables.get("database"),
+                    "status": "ready" if not missing else "not_ready",
+                    "database": _get_store(config=normalized, env=env, target="metadata").name,
                     "expected_tables": expected,
                     "expected_table_count": len(expected),
-                    "registered_tables": show_tables.get("tables", []),
+                    "registered_tables": [table for table in expected if table not in missing],
                     "missing_tables": missing,
                     "nested_metadata_delta_paths": nested_paths,
                     "warnings": warnings,
-                    "show_tables_statement": show_tables.get("statement"),
+                    "show_tables_statement": None,
                     "optional_documented_tables": ["METADATA_DATA_ACCESS"],
                 }
             ```
 
             **`def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L112-L137)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L112-L137)
 
             ```python
             def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None:
@@ -885,7 +797,7 @@ def setup_metadata_tables(
 
             **`def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L551-L624)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L551-L624)
 
             ```python
             def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
@@ -964,24 +876,11 @@ def setup_metadata_tables(
                 return normalized
             ```
 
-        ??? example "Rule parsing helpers"
-
-            **`def _schema_field_names(schema: Any) -> list[str]`**
-
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L146-L149)
-
-            ```python
-            def _schema_field_names(schema: Any) -> list[str]:
-                if hasattr(schema, "fieldNames"):
-                    return list(schema.fieldNames())
-                return [field.name for field in getattr(schema, "fields", [])]
-            ```
-
         ??? example "Rule evaluation helpers"
 
             **`def _spark_types()`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L103-L109)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L103-L109)
 
             ```python
             def _spark_types():
@@ -995,9 +894,23 @@ def setup_metadata_tables(
 
         ??? example "Fabric or Spark access helpers"
 
+            **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1061-L1067)
+
+            ```python
+            def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
+                """Return row dictionaries from Spark-like row collections."""
+                if rows is None:
+                    return []
+                if hasattr(rows, "collect"):
+                    rows = rows.collect()
+                return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
+            ```
+
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -1043,28 +956,11 @@ def setup_metadata_tables(
                 return paths[env][target]
             ```
 
-            **`def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]`**
-
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L161-L170)
-
-            ```python
-            def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-                out = []
-                for row in rows or []:
-                    item = dict(row)
-                    if isinstance(item.get("approved_at"), datetime):
-                        item["approved_at"] = item["approved_at"].isoformat()
-                    if isinstance(item.get("ai_suggestion_json"), (dict, list)):
-                        item["ai_suggestion_json"] = json.dumps(item["ai_suggestion_json"], sort_keys=True)
-                    out.append(item)
-                return out
-            ```
-
         ??? example "Other helpers"
 
             **`def _active_steward(row: dict[str, Any]) -> bool`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L516-L526)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L516-L526)
 
             ```python
             def _active_steward(row: dict[str, Any]) -> bool:
@@ -1082,7 +978,7 @@ def setup_metadata_tables(
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L397-L402)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L397-L402)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -1091,37 +987,11 @@ def setup_metadata_tables(
                 if hasattr(rows, "collect"):
                     rows = rows.collect()
                 return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
-            ```
-
-            **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
-
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L53-L58)
-
-            ```python
-            def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
-                if rows is None:
-                    return []
-                if hasattr(rows, "collect"):
-                    rows = rows.collect()
-                return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
-            ```
-
-            **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
-
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L62-L67)
-
-            ```python
-            def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-                if rows_or_df is None:
-                    return []
-                if hasattr(rows_or_df, "collect"):
-                    rows_or_df = rows_or_df.collect()
-                return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
             ```
 
             **`def _config_value(config: Any, name: str, default: Any) -> Any`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L149-L153)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L149-L153)
 
             ```python
             def _config_value(config: Any, name: str, default: Any) -> Any:
@@ -1133,7 +1003,7 @@ def setup_metadata_tables(
 
             **`def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_agreement.py#L488-L494)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L488-L494)
 
             ```python
             def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]:
@@ -1145,54 +1015,9 @@ def setup_metadata_tables(
                 return sorted(latest.values(), key=lambda row: str(row.get(key) or "").lower())
             ```
 
-            **`def _notebook_registration_key(row: dict[str, Any]) -> str`**
-
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L41-L50)
-
-            ```python
-            def _notebook_registration_key(row: dict[str, Any]) -> str:
-                parts = [
-                    str(row.get("workspace_id") or ""),
-                    str(row.get("notebook_id") or ""),
-                    str(row.get("notebook_name") or ""),
-                    str(row.get("agreement_id") or ""),
-                    str(row.get("agreement_contract_version") or ""),
-                    str(row.get("registration_role") or ""),
-                ]
-                return hashlib.sha256("||".join(parts).encode("utf-8")).hexdigest()[:24]
-            ```
-
-            **`def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]`**
-
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L408-L419)
-
-            ```python
-            def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]:
-                out = []
-                for source in _coerce_row_dicts(rows):
-                    row = {field: _safe_str(source.get(field)) for field in NOTEBOOK_REGISTRY_BASE_FIELDS}
-                    row["agreement_contract_version"] = _safe_str(source.get("agreement_contract_version"))
-                    row["registration_role"] = _safe_str(source.get("registration_role") or "primary")
-                    row["registration_status"] = _safe_str(source.get("registration_status") or "active")
-                    row["superseded_at"] = _safe_str(source.get("superseded_at"))
-                    row["superseded_by_registration_id"] = _safe_str(source.get("superseded_by_registration_id"))
-                    row["registration_id"] = _safe_str(source.get("registration_id") or _notebook_registration_key(row))
-                    out.append({field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS})
-                return out
-            ```
-
-            **`def _safe_str(value: Any) -> str`**
-
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L188-L189)
-
-            ```python
-            def _safe_str(value: Any) -> str:
-                return "" if value is None else str(value)
-            ```
-
             **`def _schema(table_name: str, fields: list[tuple[str, Any]])`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L140-L143)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L140-L143)
 
             ```python
             def _schema(table_name: str, fields: list[tuple[str, Any]]):
@@ -1215,9 +1040,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `1044`
+- Source line: `1152`
 - Inbound references count: 0
-- Outbound references count: 7
+- Outbound references count: 9
 
 ### AI implementation contract
 
@@ -1234,19 +1059,21 @@ Not documented yet
 
 ### Outbound references
 
-- `fabricops_kit.config._get_active_metadata_tables`
+- `fabricops_kit.config._get_metadata_table_schema_registry`
+- `fabricops_kit.config._metadata_schema_field_names`
 - `fabricops_kit.config._metadata_tables_from_setup_results`
+- `fabricops_kit.config._setup_metadata_table_registry`
+- `fabricops_kit.config._validate_framework_config`
 - `fabricops_kit.config._validate_metadata_table_registration`
-- `fabricops_kit.data_agreement._setup_data_agreement_tables`
-- `fabricops_kit.governance_review._setup_governance_metadata_tables`
-- `fabricops_kit.metadata._setup_notebook_registry_table`
+- `fabricops_kit.data_agreement._list_data_stewards`
+- `fabricops_kit.governance_review._get_governance_metadata_schemas`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1044-L1108">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L1044-L1108</a>
-- Start line: `1044`
-- End line: `1108`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1152-L1253">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L1152-L1253</a>
+- Start line: `1152`
+- End line: `1253`
 - Signature:
 
 ```python
@@ -1262,7 +1089,7 @@ def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any
 
 ### Internal implementation summary
 
-- Internal helper count: 30
+- Internal helper count: 25
 - Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

@@ -140,7 +140,7 @@ human approval step while preserving configured metadata lakehouse routing.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1015-L1117">View record_table_governance on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L1015-L1117">View record_table_governance on GitHub</a>
 
 ```python
 def record_table_governance(
@@ -364,7 +364,7 @@ def record_table_governance(
 
             **`def _build_runtime_audit_fields(*, config: Any=None, env: str | None=None, timestamp_field: str='_committed_at', user_field: str='_committed_by', workspace_field: str='_workspace_name', notebook_field: str='_notebook_name', metadata_lakehouse_field: str='_metadata_lakehouse_name', activity_field: str='_activity_id', committed_by: str | None=None, committed_at: str | None=None, runtime_context: dict[str, Any] | None=None) -> dict[str, str]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L219-L289)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L219-L289)
 
             ```python
             def _build_runtime_audit_fields(
@@ -442,7 +442,7 @@ def record_table_governance(
 
             **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L69-L75)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L69-L75)
 
             ```python
             def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
@@ -456,7 +456,7 @@ def record_table_governance(
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -469,7 +469,7 @@ def record_table_governance(
 
             **`def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L848-L852)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L848-L852)
 
             ```python
             def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
@@ -481,7 +481,7 @@ def record_table_governance(
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -522,7 +522,7 @@ def record_table_governance(
 
             **`def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L153-L154)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L153-L154)
 
             ```python
             def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str:
@@ -531,7 +531,7 @@ def record_table_governance(
 
             **`def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L149-L150)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L149-L150)
 
             ```python
             def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str:
@@ -540,7 +540,7 @@ def record_table_governance(
 
             **`def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L425-L447)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L425-L447)
 
             ```python
             def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]:
@@ -570,7 +570,7 @@ def record_table_governance(
 
             **`def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L863-L864)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L863-L864)
 
             ```python
             def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
@@ -579,7 +579,7 @@ def record_table_governance(
 
             **`def _stable_metadata_key(*parts: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L144-L146)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L144-L146)
 
             ```python
             def _stable_metadata_key(*parts: Any) -> str:
@@ -589,7 +589,7 @@ def record_table_governance(
 
             **`def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1183-L1256)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L1183-L1256)
 
             ```python
             def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -672,7 +672,7 @@ def record_table_governance(
 
             **`def _canonical_dq_rule_type(rule_type: Any) -> str`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L78-L79)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L78-L79)
 
             ```python
             def _canonical_dq_rule_type(rule_type: Any) -> str:
@@ -681,7 +681,7 @@ def record_table_governance(
 
             **`def _json(value: Any) -> str`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L526-L531)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L526-L531)
 
             ```python
             def _json(value: Any) -> str:
@@ -696,7 +696,7 @@ def record_table_governance(
 
             **`def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L157-L158)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L157-L158)
 
             ```python
             def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
@@ -705,7 +705,7 @@ def record_table_governance(
 
             **`def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L450-L501)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L450-L501)
 
             ```python
             def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
@@ -766,7 +766,7 @@ def record_table_governance(
 
             **`def _status_is_failed(value: Any) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L855-L856)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L855-L856)
 
             ```python
             def _status_is_failed(value: Any) -> bool:
@@ -775,7 +775,7 @@ def record_table_governance(
 
             **`def _status_is_warning(value: Any) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L859-L860)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L859-L860)
 
             ```python
             def _status_is_warning(value: Any) -> bool:
@@ -786,7 +786,7 @@ def record_table_governance(
 
             **`def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None=None) -> dict[str, str]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L88-L100)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L88-L100)
 
             ```python
             def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:
@@ -806,7 +806,7 @@ def record_table_governance(
 
             **`def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L82-L85)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L82-L85)
 
             ```python
             def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
@@ -817,7 +817,7 @@ def record_table_governance(
 
             **`def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L503-L524)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L503-L524)
 
             ```python
             def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
@@ -846,7 +846,7 @@ def record_table_governance(
 
             **`def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any=None, env: str | None=None, approved_by: str | None=None) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L409-L422)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L409-L422)
 
             ```python
             def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
@@ -867,7 +867,7 @@ def record_table_governance(
 
             **`def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L62-L67)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L62-L67)
 
             ```python
             def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
@@ -880,7 +880,7 @@ def record_table_governance(
 
             **`def _context_get(context: Any, *keys: str) -> Any`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L173-L185)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L173-L185)
 
             ```python
             def _context_get(context: Any, *keys: str) -> Any:
@@ -900,7 +900,7 @@ def record_table_governance(
 
             **`def _now_utc_iso(config: Any=None) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L133-L134)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L133-L134)
 
             ```python
             def _now_utc_iso(config: Any = None) -> str:
@@ -909,7 +909,7 @@ def record_table_governance(
 
             **`def _resolve_action_by(action_by: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L137-L141)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L137-L141)
 
             ```python
             def _resolve_action_by(action_by: str | None = None) -> str:
@@ -921,7 +921,7 @@ def record_table_governance(
 
             **`def _review_governance_evidence(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any, reviewed_by: str | None=None, mode: str='append') -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L867-L1013)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L867-L1013)
 
             ```python
             def _review_governance_evidence(
@@ -1075,7 +1075,7 @@ def record_table_governance(
 
             **`def _runtime_context() -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L192-L216)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L192-L216)
 
             ```python
             def _runtime_context() -> dict[str, Any]:
@@ -1107,7 +1107,7 @@ def record_table_governance(
 
             **`def _safe_str(value: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/metadata.py#L188-L189)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L188-L189)
 
             ```python
             def _safe_str(value: Any) -> str:
@@ -1116,7 +1116,7 @@ def record_table_governance(
 
             **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L70-L71)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L70-L71)
 
             ```python
             def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
@@ -1165,7 +1165,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1015-L1117">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/governance_review.py#L1015-L1117</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L1015-L1117">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L1015-L1117</a>
 - Start line: `1015`
 - End line: `1117`
 - Signature:

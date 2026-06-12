@@ -109,7 +109,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_lineage.py#L212-L236">View build_lineage_records on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_lineage.py#L212-L236">View build_lineage_records on GitHub</a>
 
 ```python
 def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any = None) -> list[dict]:
@@ -179,7 +179,7 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
             **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L69-L75)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L69-L75)
 
             ```python
             def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
@@ -193,7 +193,7 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -206,7 +206,7 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -281,7 +281,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_lineage.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_lineage.py#L212-L236">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1a340ba809c58f40e81214f59b2f021ee1bdadba/src/fabricops_kit/data_lineage.py#L212-L236</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_lineage.py#L212-L236">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_lineage.py#L212-L236</a>
 - Start line: `212`
 - End line: `236`
 - Signature:
