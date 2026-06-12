@@ -562,7 +562,7 @@ def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
     if not related_guides:
         return []
 
-    lines = ["## Related guides", ""]
+    lines = ["## See also", ""]
     seen: set[tuple[str, str]] = set()
     for guide in related_guides:
         title = str(guide.get("title", "")).strip()
@@ -581,7 +581,7 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
     """Render compact glossary-backed key terms for a callable page."""
     if not glossary_terms:
         return []
-    lines = ["## Key terms", ""]
+    lines = ["**Glossary terms**", ""]
     seen: set[str] = set()
     for term in glossary_terms:
         key = term.lower()
@@ -605,19 +605,62 @@ def _metadata_parameter_overrides(value: Any) -> dict[str, str]:
     return {}
 
 
+def _markdown_table_cell(text: str) -> str:
+    """Escape characters that would otherwise split a Markdown table cell."""
+    return text.replace("|", r"\|").replace("\n", "<br>")
+
+
 def _render_parameter_definitions(parameter_rows: list[dict[str, str]], parameter_overrides: dict[str, str]) -> list[str]:
-    """Render parameters as a NumPy/Sphinx-inspired Markdown definition list."""
+    """Render parameters as a compact API-reference Markdown table."""
     if not parameter_rows:
         return ["No parameters."]
-    lines: list[str] = []
+    lines = ["| Parameter | Type | Required | Description |", "| --- | --- | --- | --- |"]
     for row in parameter_rows:
         name = row["name"]
-        required_label = "required" if row.get("required") == "Yes" else "optional"
-        type_text = row.get("type", "").strip()
-        descriptor = f"`{type_text}`, {required_label}" if type_text else required_label
-        meaning = parameter_overrides.get(name, row.get("description", PLACEHOLDER))
-        lines.extend([f"`{name}` : {descriptor}", f": {meaning}", ""])
-    return lines[:-1]
+        required_label = "Yes" if row.get("required") == "Yes" else "No"
+        type_text = _markdown_table_cell(row.get("type", "").strip() or "—")
+        meaning = _markdown_table_cell(parameter_overrides.get(name, row.get("description", PLACEHOLDER)))
+        lines.append(f"| `{name}` | `{type_text}` | {required_label} | {meaning} |")
+    return lines
+
+
+def _validate_preferred_example(short_name: str, signature: str, example: str) -> None:
+    """Fail when a documented example obviously conflicts with the source signature."""
+    if not example.strip():
+        return
+    try:
+        parsed = ast.parse(example)
+    except SyntaxError as exc:
+        raise RuntimeError(f"{short_name} preferred_example is not valid Python: {exc}") from exc
+
+    calls = [node for node in ast.walk(parsed) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == short_name]
+    if not calls:
+        return
+
+    keyword_only_match = re.search(rf"def {re.escape(short_name)}\(\*, (?P<body>.*)\)", signature)
+    if keyword_only_match is None:
+        return
+
+    valid_keyword_names = {
+        token.split(":", 1)[0].split("=", 1)[0].strip()
+        for token in keyword_only_match.group("body").split(",")
+        if token.strip()
+    }
+    for call in calls:
+        if call.args:
+            raise RuntimeError(f"{short_name} preferred_example must use keyword arguments for keyword-only parameters.")
+        unknown_keywords = {kw.arg for kw in call.keywords if kw.arg is not None} - valid_keyword_names
+        if unknown_keywords:
+            names = ", ".join(sorted(unknown_keywords))
+            raise RuntimeError(f"{short_name} preferred_example uses parameters not in the signature: {names}")
+
+
+def _render_preferred_example(short_name: str, signature: str, metadata: dict[str, Any]) -> str:
+    """Return a validated preferred example for the callable reference page."""
+    example = _documented_text(metadata.get("preferred_example"))
+    if example != PLACEHOLDER:
+        _validate_preferred_example(short_name, signature, example)
+    return example
 
 def _read_template_source(template_path: str) -> str:
     """Return searchable source text from a starter notebook/template file."""
@@ -2064,11 +2107,15 @@ def main() -> None:
             expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
             purpose_lines: list[str] = []
             if expanded_purpose != PLACEHOLDER:
-                purpose_lines = ["## Purpose", "", expanded_purpose, ""]
+                purpose_lines = ["**Additional context:**", "", expanded_purpose, ""]
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
             key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
+            see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
+            if key_term_lines:
+                see_also_lines.extend(key_term_lines)
+            preferred_example = _render_preferred_example(short_name, signature, metadata)
             return_interpretation_lines = (
                 ["### Return interpretation", "", rendered_return_interpretation, ""]
                 if metadata.get("return_interpretation")
@@ -2144,65 +2191,61 @@ def main() -> None:
             lines = [
                 f"# {short_name}",
                 "",
+                "## Signature",
+                "",
+                _code_block(signature) if signature else PLACEHOLDER,
+                "",
+                "## Summary",
+                "",
                 purpose,
                 "",
-                *purpose_lines,
-                *use_when_lines,
-                "## At a glance",
+                "## Usage note",
+                "",
+                *(_bullet_lines(human_use_when) if human_use_when != PLACEHOLDER else [PLACEHOLDER]),
                 "",
                 "**Do not use when:**",
                 "",
                 *_bullet_lines(human_do_not_use),
                 "",
-                "**Errors:**",
+                *purpose_lines,
+                "## Parameters",
+                "",
+                *input_lines,
+                "",
+                "## Returns",
+                "",
+                rendered_returns,
+                "",
+                *return_interpretation_lines,
+                "## Raises / Errors",
                 "",
                 rendered_raises,
+                "",
+                *common_failure_cause_lines,
+                "## Example",
+                "",
+                _code_block(preferred_example),
+                "",
+                *see_also_lines,
+                "## Developer details",
+                "",
+                *function_detail_lines,
+                "",
+                "**Used in templates:**",
+                "",
+                *used_in_template_lines,
                 "",
                 "**Side effects:**",
                 "",
                 rendered_side_effects,
                 "",
-                *key_term_lines,
-                *related_guide_lines,
-                "## Used in templates",
+                "**Notes:**",
                 "",
-                *used_in_template_lines,
-                "",
-                "## Used by",
-                "",
-                *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
+                rendered_notes,
                 "",
                 "## Calls",
                 "",
                 *(_fmt_links(deps) if deps else [PLACEHOLDER]),
-                "",
-                "## Function details and source",
-                "",
-                "### Function details",
-                "",
-                *function_detail_lines,
-                "",
-                "### Parameters",
-                "",
-                *input_lines,
-                "",
-                "### Returns",
-                "",
-                rendered_returns,
-                "",
-                *return_interpretation_lines,
-                *common_failure_cause_lines,
-                "### Notes",
-                "",
-                rendered_notes,
-                "",
-                "### Example",
-                "",
-                _code_block(_documented_text(metadata.get("preferred_example"))),
-                "",
-                "### Public callable source code",
-                "",
-                *public_source_lines,
                 "",
                 "## Internal implementation summary",
                 "",
@@ -2211,6 +2254,14 @@ def main() -> None:
                 *nested_helper_lines,
                 "",
             ]
+            if used_by:
+                lines.extend(["## Used by", "", *_fmt_links(used_by), ""])
+            lines.extend([
+                "## Source link",
+                "",
+                *public_source_lines,
+                "",
+            ])
             lines.extend([
                 *markdown_details(
                     "AI / machine-readable metadata — skip this if you are reading the docs normally",

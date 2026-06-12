@@ -1,55 +1,72 @@
 # widget_review_column_context
 
+## Signature
+
+```python
+def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
+```
+
+## Summary
+
 Render standalone business-context review guidance for selected profile rows.
 
-## Purpose
-
-Renders review guidance for column business context so reviewers can approve or edit metadata for a selected table.
-
-## When to use this
+## Usage note
 
 - Use in 03_governance when profile rows need human-reviewed column descriptions or business meaning.
-
-## At a glance
 
 **Do not use when:**
 
 - Not documented yet
 
-**Errors:**
+**Additional context:**
+
+Renders review guidance for column business context so reviewers can approve or edit metadata for a selected table.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `profile_rows` | `list[dict[str, Any]]` | Yes | Selected column profile evidence from ``load_catalogue_profile_rows``. |
+
+## Returns
+
+list[dict[str, Any]]
+    Empty editable review list. Add approved context rows before calling
+    ``record_table_governance``.
+
+### Return interpretation
+
+The widget captures review state; approved rows must still be passed to record_table_governance to persist metadata.
+
+## Raises / Errors
 
 Not documented yet
 
-**Side effects:**
+### Common failure causes
 
+- No profile rows are loaded.
+- Required review fields are incomplete.
+- Widget dependencies are unavailable.
+- Reviewer changes are not committed before persistence.
+
+## Example
+
+```python
 Not documented yet
+```
 
-## Key terms
+## See also
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+**Glossary terms**
 
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Governance Review](../../how-fabricops-works/governance-review.md)
-
-## Used in templates
-
-- `03_governance`
-
-## Used by
-
-Not documented yet
-
-## Calls
-
-- `fabricops_kit.governance_review._display_review_guidance`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `governance_review`
 - Classification: Callable
@@ -61,64 +78,21 @@ Not documented yet
 def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
 ```
 
-### Parameters
+**Used in templates:**
 
-`profile_rows` : `list[dict[str, Any]]`, required
-: Selected column profile evidence from ``load_catalogue_profile_rows``.
+- `03_governance`
 
-### Returns
+**Side effects:**
 
-list[dict[str, Any]]
-    Empty editable review list. Add approved context rows before calling
-    ``record_table_governance``.
+Not documented yet
 
-### Return interpretation
-
-The widget captures review state; approved rows must still be passed to record_table_governance to persist metadata.
-
-### Common failure causes
-
-- No profile rows are loaded.
-- Required review fields are incomplete.
-- Widget dependencies are unavailable.
-- Reviewer changes are not committed before persistence.
-
-### Notes
+**Notes:**
 
 No additional callable notes are documented.
 
-### Example
+## Calls
 
-```python
-Not documented yet
-```
-
-### Public callable source code
-
-- Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L514-L532">View widget_review_column_context on GitHub</a>
-
-```python
-def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Render standalone business-context review guidance for ``03_governance``.
-
-    Parameters
-    ----------
-    profile_rows : list of dict
-        Selected column profile evidence from ``load_catalogue_profile_rows``.
-
-    Returns
-    -------
-    list[dict[str, Any]]
-        Empty editable review list. Add approved context rows before calling
-        ``record_table_governance``.
-    """
-    return _display_review_guidance(
-        "Business context review",
-        profile_rows,
-        "Describe human-approved business meaning for each column. AI suggestions, if used, are advisory only.",
-    )
-```
+- `fabricops_kit.governance_review._display_review_guidance`
 
 ## Internal implementation summary
 
@@ -159,7 +133,7 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
 
             **`def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L497-L511)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L497-L511)
 
             ```python
             def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
@@ -181,13 +155,40 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
 
             **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L70-L71)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L70-L71)
 
             ```python
             def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
                 return row.get(name, row.get(name.upper(), default))
             ```
 
+
+## Source link
+
+- Source file path: `src/fabricops_kit/governance_review.py`
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L514-L532">View widget_review_column_context on GitHub</a>
+
+```python
+def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Render standalone business-context review guidance for ``03_governance``.
+
+    Parameters
+    ----------
+    profile_rows : list of dict
+        Selected column profile evidence from ``load_catalogue_profile_rows``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Empty editable review list. Add approved context rows before calling
+        ``record_table_governance``.
+    """
+    return _display_review_guidance(
+        "Business context review",
+        profile_rows,
+        "Describe human-approved business meaning for each column. AI suggestions, if used, are advisory only.",
+    )
+```
 
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
@@ -231,7 +232,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L514-L532">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/governance_review.py#L514-L532</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L514-L532">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L514-L532</a>
 - Start line: `514`
 - End line: `532`
 - Signature:

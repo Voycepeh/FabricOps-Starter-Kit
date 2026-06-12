@@ -1,56 +1,76 @@
 # write_warehouse_table
 
+## Signature
+
+```python
+def write_warehouse_table(df, config, env, target, schema, table, mode='append')
+```
+
+## Summary
+
 Write a DataFrame to a configured Fabric warehouse target.
 
-## Purpose
-
-Writes a DataFrame to a configured Fabric Warehouse destination for pipeline outputs that belong in warehouse storage.
-
-## When to use this
+## Usage note
 
 - Use for target writes after guardrails pass and the configured output layer is a warehouse table.
-
-## At a glance
 
 **Do not use when:**
 
 - Do not use for lakehouse table writes, lakehouse Files writes, or metadata evidence writes.
 
-**Errors:**
+**Additional context:**
+
+Writes a DataFrame to a configured Fabric Warehouse destination for pipeline outputs that belong in warehouse storage.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to write. |
+| `config` | `FrameworkConfig \| dict` | Yes | FabricOps FrameworkConfig or compatible config object. |
+| `env` | `str` | Yes | Environment name in the config mapping, for example `"Sandbox"` or `"DE"`. |
+| `target` | `str` | Yes | Warehouse target name under the selected environment, for example `"Warehouse"` or `"wh_Bronze"`. |
+| `schema` | `str` | Yes | Warehouse schema name, for example `"dbo"`. |
+| `table` | `str` | Yes | Warehouse table name. |
+| `mode` | `str, default "append"` | No | Spark write mode, for example `"append"` or `"overwrite"`. |
+
+## Returns
+
+None; the DataFrame is written to the configured warehouse table.
+
+### Return interpretation
+
+A successful write means the helper submitted the DataFrame write to the configured warehouse target; verify downstream table state for business checks.
+
+## Raises / Errors
 
 Raises configuration, Spark connector, or warehouse write errors when the target/table cannot be written.
 
-**Side effects:**
+### Common failure causes
 
-Writes data to a Fabric warehouse table using the selected mode.
+- The warehouse target is missing from configuration.
+- The target table name or write mode is invalid.
+- Warehouse connector support is unavailable.
+- The caller lacks write permission.
 
-## Key terms
+## Example
+
+```python
+write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders_serving", mode="append")
+```
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+**Glossary terms**
 
 - **Target table:** An output table written by the pipeline.
 - **Guardrail:** A check that tells the notebook whether it is safe to continue.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
-
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-
-## Used in templates
-
-- `00_env_config`
-- `02_pipeline`
-
-## Used by
-
-Not documented yet
-
-## Calls
-
-- `fabricops_kit.config._get_store`
-
-## Function details and source
-
-### Function details
+## Developer details
 
 - Module: `fabric_input_output`
 - Classification: Callable
@@ -62,59 +82,113 @@ Not documented yet
 def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 ```
 
-### Parameters
+**Used in templates:**
 
-`df` : `pyspark.sql.DataFrame`, required
-: Spark DataFrame to write.
+- `00_env_config`
+- `02_pipeline`
 
-`config` : `FrameworkConfig | dict`, required
-: FabricOps FrameworkConfig or compatible config object.
+**Side effects:**
 
-`env` : `str`, required
-: Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
+Writes data to a Fabric warehouse table using the selected mode.
 
-`target` : `str`, required
-: Warehouse target name under the selected environment, for example `"Warehouse"` or `"wh_Bronze"`.
-
-`schema` : `str`, required
-: Warehouse schema name, for example `"dbo"`.
-
-`table` : `str`, required
-: Warehouse table name.
-
-`mode` : `str, default "append"`, optional
-: Spark write mode, for example `"append"` or `"overwrite"`.
-
-### Returns
-
-None; the DataFrame is written to the configured warehouse table.
-
-### Return interpretation
-
-A successful write means the helper submitted the DataFrame write to the configured warehouse target; verify downstream table state for business checks.
-
-### Common failure causes
-
-- The warehouse target is missing from configuration.
-- The target table name or write mode is invalid.
-- Warehouse connector support is unavailable.
-- The caller lacks write permission.
-
-### Notes
+**Notes:**
 
 Side effect: performs a write operation to the target warehouse object via
 Fabric runtime connector APIs.
 
-### Example
+## Calls
 
-```python
-write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders_serving", mode="append")
-```
+- `fabricops_kit.config._get_store`
 
-### Public callable source code
+## Internal implementation summary
+
+??? info "Call flow"
+
+    ```text
+    write_warehouse_table(...)
+    └── _get_store(...)
+    ```
+
+??? info "Internal helpers used: 1"
+
+    This callable uses 1 internal helpers for fabric or spark access.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Area">Fabric or Spark access</td>
+          <td data-label="Helpers"><code>_get_store</code></td>
+          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    ??? example "View helper source by area"
+
+        ??? example "Fabric or Spark access helpers"
+
+            **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L627-L667)
+
+            ```python
+            def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+                """Resolve a configured Fabric path for an environment and target.
+
+                Parameters
+                ----------
+                env : str
+                    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+                target : str
+                    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+                config : FrameworkConfig | PathConfig | None
+                    Configuration that contains environment-to-target path mappings.
+
+                Returns
+                -------
+                Any
+                    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+                Raises
+                ------
+                ValueError
+                    If config is missing, or if the environment/target mapping does not exist.
+
+                Examples
+                --------
+                >>> get_path("Sandbox", "Source", config=CONFIG)
+                Housepath(...)
+                """
+                if config is None:
+                    raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+                paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+                if env not in paths:
+                    available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+                    raise ValueError(
+                        f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+                    )
+                if target not in paths[env]:
+                    available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+                    raise ValueError(
+                        f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+                    )
+                return paths[env][target]
+            ```
+
+
+## Source link
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L433-L497">View write_warehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L433-L497">View write_warehouse_table on GitHub</a>
 
 ```python
 def write_warehouse_table(df, config, env, target, schema, table, mode="append"):
@@ -184,91 +258,6 @@ def write_warehouse_table(df, config, env, target, schema, table, mode="append")
     )
 ```
 
-## Internal implementation summary
-
-??? info "Call flow"
-
-    ```text
-    write_warehouse_table(...)
-    └── _get_store(...)
-    ```
-
-??? info "Internal helpers used: 1"
-
-    This callable uses 1 internal helpers for fabric or spark access.
-
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Fabric or Spark access helpers"
-
-            **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
-
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L627-L667)
-
-            ```python
-            def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-                """Resolve a configured Fabric path for an environment and target.
-
-                Parameters
-                ----------
-                env : str
-                    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-                target : str
-                    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-                config : FrameworkConfig | PathConfig | None
-                    Configuration that contains environment-to-target path mappings.
-
-                Returns
-                -------
-                Any
-                    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-                Raises
-                ------
-                ValueError
-                    If config is missing, or if the environment/target mapping does not exist.
-
-                Examples
-                --------
-                >>> get_path("Sandbox", "Source", config=CONFIG)
-                Housepath(...)
-                """
-                if config is None:
-                    raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-                paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-                if env not in paths:
-                    available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-                    raise ValueError(
-                        f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-                    )
-                if target not in paths[env]:
-                    available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-                    raise ValueError(
-                        f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-                    )
-                return paths[env][target]
-            ```
-
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -308,7 +297,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L433-L497">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L433-L497</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L433-L497">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L433-L497</a>
 - Start line: `433`
 - End line: `497`
 - Signature:

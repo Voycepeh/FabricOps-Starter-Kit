@@ -1,47 +1,315 @@
 # read_lakehouse_table
 
+## Signature
+
+```python
+def read_lakehouse_table(config, env, target, table, spark_session=None)
+```
+
+## Summary
+
 Read a table from a configured Fabric lakehouse target.
 
-## Purpose
-
-Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.
-
-## When to use this
+## Usage note
 
 - Use when notebook code needs a managed lakehouse table rather than a file path or warehouse SQL query.
-
-## At a glance
 
 **Do not use when:**
 
 - Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for warehouse SQL tables.
 
-**Errors:**
+**Additional context:**
+
+Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `config` | `FrameworkConfig \| dict` | Yes | FabricOps FrameworkConfig or compatible config object. |
+| `env` | `str` | Yes | Environment key such as `"dev"`. |
+| `target` | `str` | Yes | Logical target name such as `"source"` or `"unified"`. |
+| `table` | `str` | Yes | Table name under the lakehouse `Tables` area. |
+| `spark_session` | `object` | No | Spark session to use. If omitted, the helper uses the notebook global `spark`. |
+
+## Returns
+
+Spark DataFrame loaded from the configured lakehouse table.
+
+### Return interpretation
+
+The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.
+
+## Raises / Errors
 
 Raises configuration, Spark, or table-read errors when the target or table cannot be resolved/read.
 
-**Side effects:**
+### Common failure causes
 
-Reads from a lakehouse table; it does not write metadata, tables, or files.
+- The target or table name is misspelled.
+- The selected environment does not define the requested lakehouse target.
+- Spark cannot access the table.
+- The caller lacks permission to read the lakehouse.
 
-## Key terms
+## Example
+
+```python
+df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
+```
+
+## See also
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+**Glossary terms**
 
 - **Source table:** An input table or file read by the pipeline.
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
-## Related guides
+## Developer details
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- Module: `fabric_input_output`
+- Classification: Callable
+- Source file path: `src/fabricops_kit/fabric_input_output.py`
+- Source line: `171`
+- Signature:
 
-## Used in templates
+```python
+def read_lakehouse_table(config, env, target, table, spark_session=None)
+```
+
+**Used in templates:**
 
 - `00_env_config`
 - `01_agreement`
 - `02_pipeline`
 - `03_governance`
 - `99_explore`
+
+**Side effects:**
+
+Reads from a lakehouse table; it does not write metadata, tables, or files.
+
+**Notes:**
+
+No additional callable notes are documented.
+
+## Calls
+
+- `fabricops_kit.config._get_store`
+- `fabricops_kit.fabric_input_output._current_database_matches`
+- `fabricops_kit.fabric_input_output._get_spark`
+- `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._registered_table_identifier`
+- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
+
+## Internal implementation summary
+
+??? info "Call flow"
+
+    ```text
+    read_lakehouse_table(...)
+    ├── _current_database_matches(...)
+    ├── _get_spark(...)
+    ├── _get_store(...)
+    ├── _normalize_table_name(...)
+    ├── _registered_table_identifier(...)
+    │   ├── _normalize_table_name(...)
+    │   └── _quote_identifier(...)
+    └── _uses_registered_metadata_table(...)
+    ```
+
+??? info "Internal helpers used: 7"
+
+    This callable uses 7 internal helpers for metadata loading, fabric or spark access, and other.
+
+    <div class="module-table-scroll reference-input-table">
+    <table class="reference-function-table">
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Helpers</th>
+          <th>What they do</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Area">Metadata loading</td>
+          <td data-label="Helpers"><code>_current_database_matches</code>, <code>_normalize_table_name</code>, <code>_registered_table_identifier</code>, <code>_uses_registered_metadata_table</code></td>
+          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
+        </tr>
+        <tr>
+          <td data-label="Area">Fabric or Spark access</td>
+          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
+          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
+        </tr>
+        <tr>
+          <td data-label="Area">Other</td>
+          <td data-label="Helpers"><code>_quote_identifier</code></td>
+          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    ??? example "View helper source by area"
+
+        ??? example "Metadata loading helpers"
+
+            **`def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`**
+
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L107-L115)
+
+            ```python
+            def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
+                catalog = getattr(spark_obj, "catalog", None)
+                current_database = getattr(catalog, "currentDatabase", None)
+                if not callable(current_database):
+                    return False
+                try:
+                    return str(current_database()).strip().lower() == store.name.strip().lower()
+                except Exception:
+                    return False
+            ```
+
+            **`def _normalize_table_name(table: str) -> str`**
+
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L81-L90)
+
+            ```python
+            def _normalize_table_name(table: str) -> str:
+                """Return a safe Spark table name, never a nested folder path."""
+                value = str(table or "").strip()
+                if not value:
+                    raise ValueError("table is required.")
+                if any(separator in value for separator in ("/", "\\")) or ".." in value:
+                    raise ValueError("table must be a table name, not a file path or nested folder path.")
+                if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+                    raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
+                return value
+            ```
+
+            **`def _registered_table_identifier(store: FabricStore, table: str) -> str`**
+
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L97-L99)
+
+            ```python
+            def _registered_table_identifier(store: FabricStore, table: str) -> str:
+                """Return a metadata lakehouse-qualified Spark table identifier."""
+                return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
+            ```
+
+            **`def _uses_registered_metadata_table(target: str) -> bool`**
+
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L102-L104)
+
+            ```python
+            def _uses_registered_metadata_table(target: str) -> bool:
+                """Return whether a target should use Spark table registration."""
+                return str(target or "").strip().lower() == "metadata"
+            ```
+
+        ??? example "Fabric or Spark access helpers"
+
+            **`def _get_spark(spark_session=None)`**
+
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L125-L155)
+
+            ```python
+            def _get_spark(spark_session=None):
+                """Return an explicit Spark session or the active notebook global `spark`.
+
+                Most Fabric notebooks already expose a global `spark` object. Tests and
+                local scripts can pass `spark_session` explicitly to avoid relying on the
+                notebook runtime.
+
+                Parameters
+                ----------
+                spark_session : object, optional
+                    Spark session to use instead of the notebook global `spark`.
+
+                Returns
+                -------
+                object
+                    Spark session object.
+
+                Raises
+                ------
+                RuntimeError
+                    If no Spark session is passed and no global `spark` object exists.
+                """
+                if spark_session is not None:
+                    return spark_session
+                try:
+                    return globals()["spark"]
+                except KeyError as exc:
+                    raise RuntimeError(
+                        "Spark session was not provided and global 'spark' was not found. "
+                        "Run this inside Fabric/Spark or pass spark_session explicitly."
+                    ) from exc
+            ```
+
+            **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
+
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L627-L667)
+
+            ```python
+            def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+                """Resolve a configured Fabric path for an environment and target.
+
+                Parameters
+                ----------
+                env : str
+                    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+                target : str
+                    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+                config : FrameworkConfig | PathConfig | None
+                    Configuration that contains environment-to-target path mappings.
+
+                Returns
+                -------
+                Any
+                    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+
+                Raises
+                ------
+                ValueError
+                    If config is missing, or if the environment/target mapping does not exist.
+
+                Examples
+                --------
+                >>> get_path("Sandbox", "Source", config=CONFIG)
+                Housepath(...)
+                """
+                if config is None:
+                    raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
+                paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+                if env not in paths:
+                    available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+                    raise ValueError(
+                        f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+                    )
+                if target not in paths[env]:
+                    available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+                    raise ValueError(
+                        f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+                    )
+                return paths[env][target]
+            ```
+
+        ??? example "Other helpers"
+
+            **`def _quote_identifier(identifier: str) -> str`**
+
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L93-L94)
+
+            ```python
+            def _quote_identifier(identifier: str) -> str:
+                return f"`{str(identifier).replace('`', '``')}`"
+            ```
+
 
 ## Used by
 
@@ -56,75 +324,10 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - `fabricops_kit.metadata._load_notebook_registry`
 
-## Calls
-
-- `fabricops_kit.config._get_store`
-- `fabricops_kit.fabric_input_output._current_database_matches`
-- `fabricops_kit.fabric_input_output._get_spark`
-- `fabricops_kit.fabric_input_output._normalize_table_name`
-- `fabricops_kit.fabric_input_output._registered_table_identifier`
-- `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
-
-## Function details and source
-
-### Function details
-
-- Module: `fabric_input_output`
-- Classification: Callable
-- Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `171`
-- Signature:
-
-```python
-def read_lakehouse_table(config, env, target, table, spark_session=None)
-```
-
-### Parameters
-
-`config` : `FrameworkConfig | dict`, required
-: FabricOps FrameworkConfig or compatible config object.
-
-`env` : `str`, required
-: Environment key such as `"dev"`.
-
-`target` : `str`, required
-: Logical target name such as `"source"` or `"unified"`.
-
-`table` : `str`, required
-: Table name under the lakehouse `Tables` area.
-
-`spark_session` : `object`, optional
-: Spark session to use. If omitted, the helper uses the notebook global `spark`.
-
-### Returns
-
-Spark DataFrame loaded from the configured lakehouse table.
-
-### Return interpretation
-
-The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.
-
-### Common failure causes
-
-- The target or table name is misspelled.
-- The selected environment does not define the requested lakehouse target.
-- Spark cannot access the table.
-- The caller lacks permission to read the lakehouse.
-
-### Notes
-
-No additional callable notes are documented.
-
-### Example
-
-```python
-df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
-```
-
-### Public callable source code
+## Source link
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
 
 ```python
 def read_lakehouse_table(config, env, target, table, spark_session=None):
@@ -183,212 +386,6 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     return spark_obj.read.format("delta").load(path)
 ```
 
-## Internal implementation summary
-
-??? info "Call flow"
-
-    ```text
-    read_lakehouse_table(...)
-    ├── _current_database_matches(...)
-    ├── _get_spark(...)
-    ├── _get_store(...)
-    ├── _normalize_table_name(...)
-    ├── _registered_table_identifier(...)
-    │   ├── _normalize_table_name(...)
-    │   └── _quote_identifier(...)
-    └── _uses_registered_metadata_table(...)
-    ```
-
-??? info "Internal helpers used: 7"
-
-    This callable uses 7 internal helpers for metadata loading, fabric or spark access, and other.
-
-    <div class="module-table-scroll reference-input-table">
-    <table class="reference-function-table">
-      <thead>
-        <tr>
-          <th>Area</th>
-          <th>Helpers</th>
-          <th>What they do</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Area">Metadata loading</td>
-          <td data-label="Helpers"><code>_current_database_matches</code>, <code>_normalize_table_name</code>, <code>_registered_table_identifier</code>, <code>_uses_registered_metadata_table</code></td>
-          <td data-label="What they do">Load and identify the metadata or table context needed by the callable.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Fabric or Spark access</td>
-          <td data-label="Helpers"><code>_get_spark</code>, <code>_get_store</code></td>
-          <td data-label="What they do">Access Fabric or Spark runtime services used by the implementation.</td>
-        </tr>
-        <tr>
-          <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_quote_identifier</code></td>
-          <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Metadata loading helpers"
-
-            **`def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L107-L115)
-
-            ```python
-            def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
-                catalog = getattr(spark_obj, "catalog", None)
-                current_database = getattr(catalog, "currentDatabase", None)
-                if not callable(current_database):
-                    return False
-                try:
-                    return str(current_database()).strip().lower() == store.name.strip().lower()
-                except Exception:
-                    return False
-            ```
-
-            **`def _normalize_table_name(table: str) -> str`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L81-L90)
-
-            ```python
-            def _normalize_table_name(table: str) -> str:
-                """Return a safe Spark table name, never a nested folder path."""
-                value = str(table or "").strip()
-                if not value:
-                    raise ValueError("table is required.")
-                if any(separator in value for separator in ("/", "\\")) or ".." in value:
-                    raise ValueError("table must be a table name, not a file path or nested folder path.")
-                if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-                    raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
-                return value
-            ```
-
-            **`def _registered_table_identifier(store: FabricStore, table: str) -> str`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L97-L99)
-
-            ```python
-            def _registered_table_identifier(store: FabricStore, table: str) -> str:
-                """Return a metadata lakehouse-qualified Spark table identifier."""
-                return f"{_quote_identifier(store.name)}.{_quote_identifier(_normalize_table_name(table))}"
-            ```
-
-            **`def _uses_registered_metadata_table(target: str) -> bool`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L102-L104)
-
-            ```python
-            def _uses_registered_metadata_table(target: str) -> bool:
-                """Return whether a target should use Spark table registration."""
-                return str(target or "").strip().lower() == "metadata"
-            ```
-
-        ??? example "Fabric or Spark access helpers"
-
-            **`def _get_spark(spark_session=None)`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L125-L155)
-
-            ```python
-            def _get_spark(spark_session=None):
-                """Return an explicit Spark session or the active notebook global `spark`.
-
-                Most Fabric notebooks already expose a global `spark` object. Tests and
-                local scripts can pass `spark_session` explicitly to avoid relying on the
-                notebook runtime.
-
-                Parameters
-                ----------
-                spark_session : object, optional
-                    Spark session to use instead of the notebook global `spark`.
-
-                Returns
-                -------
-                object
-                    Spark session object.
-
-                Raises
-                ------
-                RuntimeError
-                    If no Spark session is passed and no global `spark` object exists.
-                """
-                if spark_session is not None:
-                    return spark_session
-                try:
-                    return globals()["spark"]
-                except KeyError as exc:
-                    raise RuntimeError(
-                        "Spark session was not provided and global 'spark' was not found. "
-                        "Run this inside Fabric/Spark or pass spark_session explicitly."
-                    ) from exc
-            ```
-
-            **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
-
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/config.py#L627-L667)
-
-            ```python
-            def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-                """Resolve a configured Fabric path for an environment and target.
-
-                Parameters
-                ----------
-                env : str
-                    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-                target : str
-                    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-                config : FrameworkConfig | PathConfig | None
-                    Configuration that contains environment-to-target path mappings.
-
-                Returns
-                -------
-                Any
-                    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-                Raises
-                ------
-                ValueError
-                    If config is missing, or if the environment/target mapping does not exist.
-
-                Examples
-                --------
-                >>> get_path("Sandbox", "Source", config=CONFIG)
-                Housepath(...)
-                """
-                if config is None:
-                    raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-                paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-                if env not in paths:
-                    available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-                    raise ValueError(
-                        f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-                    )
-                if target not in paths[env]:
-                    available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-                    raise ValueError(
-                        f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-                    )
-                return paths[env][target]
-            ```
-
-        ??? example "Other helpers"
-
-            **`def _quote_identifier(identifier: str) -> str`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L93-L94)
-
-            ```python
-            def _quote_identifier(identifier: str) -> str:
-                return f"`{str(identifier).replace('`', '``')}`"
-            ```
-
-
 <details class="reference-metadata-details">
 <summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>
 
@@ -442,7 +439,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f39132033d0795937707ff6bec4d4f7a90c42957/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
 - Start line: `171`
 - End line: `224`
 - Signature:
