@@ -1,0 +1,48 @@
+# FabricOps Starter Kit
+
+> FabricOps Starter Kit helps teams build governed, quality-checked, AI-ready notebooks in Microsoft Fabric with reusable helpers, notebook templates, metadata-backed contracts, data quality checks, lineage, and handover evidence.
+
+Use this file as a concise navigation map for LLMs, coding agents, and documentation ingestion workflows. The human-readable documentation is also published with Markdown variants where possible; for example, `/quick-start/` is available as `/quick-start.md`.
+
+## Quick start
+
+- [Quick Start](https://voycepeh.github.io/FabricOps-Starter-Kit/quick-start.md): First path through the starter workflow and key concepts.
+- [Install](https://voycepeh.github.io/FabricOps-Starter-Kit/install.md): Package installation options and runtime setup notes.
+- [Create Wheel](https://voycepeh.github.io/FabricOps-Starter-Kit/setup/create-wheel.md): Build a wheel for Microsoft Fabric upload.
+- [Run in Fabric](https://voycepeh.github.io/FabricOps-Starter-Kit/setup/run-in-fabric.md): Configure a Fabric workspace, lakehouse targets, and notebook environment.
+
+## Architecture
+
+- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/index.md): Overview of the governed Fabric notebook operating model.
+- [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-tables.md): Metadata table responsibilities and governance evidence model.
+- [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/pipeline-guardrails.md): Runtime guardrails for schemas, freshness, DQ enforcement, and load behavior.
+- [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
+
+## Notebook flow
+
+- [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/notebook-templates.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
+- [Template Function Map](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/template-function-map.md): Map from notebook templates to supported package helpers.
+
+## Metadata and contracts
+
+- [Data Quality and Governance](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/governance-review.md): Review flows for column context, classification, DQ rules, and governance evidence.
+- [DQ Rules Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/dq-rules/index.md): Supported rule types, parameters, examples, and enforcement expectations.
+- [Glossary](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/glossary.md): Shared terminology for governed notebook delivery.
+
+## API reference
+
+- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/index.md): Public callable reference generated from source docstrings and metadata.
+- [Functions by Module](https://voycepeh.github.io/FabricOps-Starter-Kit/api/modules/index.md): Module-oriented callable index for package users and maintainers.
+- [Agent Manifest](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/agent-manifest.json): Machine-readable helper metadata for AI coding agents.
+- [Function Manifest](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/function-manifest.json): Machine-readable function inventory and dependency metadata.
+
+## Handover and maintenance
+
+- [Release Management](https://voycepeh.github.io/FabricOps-Starter-Kit/development/release-management.md): Maintainer workflow for releases, versioning, and generated references.
+- [Documentation Versioning](https://voycepeh.github.io/FabricOps-Starter-Kit/development/docs-versioning.md): Documentation versioning and traceability guidance.
+- [Contributing](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/CONTRIBUTING.md): Contribution workflow and expectations.
+- [Repository README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md): Repository-level overview and navigation.
+
+## Reference proposal
+
+- [llms.txt proposal](https://llmstxt.org/): Reference proposal for publishing a concise Markdown navigation map and Markdown page variants for LLM access.
