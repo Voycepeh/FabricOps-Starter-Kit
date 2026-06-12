@@ -53,8 +53,6 @@ Start with one Governance workspace and one Engineering workspace. **Alternative
 | ---- | ------- | --------------- |---------- |
 | 5    | Run the required notebooks in sequence. | The Agreement → Pipeline → Review delivery flow is created and can be reviewed before production promotion. | [Notebook Templates](how-fabricops-works/notebook-templates.md)    |
 
-*Optional: After running `00_env_config`, you may run the example smoke test notebooks to quickly understand how the pipeline and DQ rule flows work before adapting the production templates. Use [`example_pipeline_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_smoke_test.ipynb) to validate the pipeline path, including metadata tables, source and target guardrails, evidence writing, lineage, runtime summary, and target writes. Use [`example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) to understand how DQ rules are evaluated, how warning rules behave, and how error rules block when enforcement fails. These examples are aligned to the current release and should be treated as release-specific validation aids, not production workflow templates.*
-
 On first and later pipeline runs, approved DQ warning rules do not block publication and write the full dataset; approved DQ error rules block before the target write.
 
 The notebooks are intentionally separated by role. Each template produces metadata or outputs that the next role can reuse.
@@ -73,6 +71,26 @@ Run the required delivery templates in this order:
 | 4 | `03_governance` | Checks evidence, metadata, ownership, rules, and readiness; approved DQ expectations are stored for the next pipeline run. |
 | 5 | Rerun `02_pipeline` when needed | Loads active approved DQ rules from `METADATA_DQ_RULES` and enforces them before the target write. |
 | 6 | Operational support | Use the production notebook export plus FabricOps metadata evidence for support and review. |
+
+## Optional: run the pipeline guardrail demo
+
+This demo is optional and is not part of the mandatory first-run setup. Use it when you want to see the real `02_pipeline` template exercise guardrails against deterministic demo data before adapting the template for your own sources.
+
+1. Run `00_env_config` first so `CONFIG`, `ENV`, and the configured lakehouse routes are available.
+2. Run [`example_pipeline_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_smoke_test.ipynb) to create simulated `smoke_` source tables in the configured `source_lakehouse`.
+3. Open `02_pipeline.ipynb` and point it at one of the generated smoke source tables.
+4. Run `02_pipeline` to see the real template read from `source_lakehouse`, apply guardrails, write successful outputs to `unified_lakehouse`, and record metadata evidence where supported.
+5. Use different smoke source tables to demonstrate the happy path, schema guardrail, DQ guardrail, freshness guardrail, and load behaviour guardrail.
+
+| Scenario | Source table | What it demonstrates |
+| -------- | ------------ | -------------------- |
+| Happy path | `smoke_src_orders_happy` | Valid source reads and writes successfully. |
+| Schema guardrail | `smoke_src_orders_schema_drift` | Missing, extra, or changed columns are detected. |
+| DQ guardrail | `smoke_src_orders_dq_issue` | Invalid records trigger DQ warning or failure. |
+| Freshness guardrail | `smoke_src_orders_stale` | Stale source data is detected. |
+| Load behaviour | `smoke_src_orders_reload_a` / `smoke_src_orders_reload_b` | Append versus overwrite/reload behaviour is visible. |
+
+All generated demo assets are prefixed with `smoke_`, and the scenario generator is safe to rerun. `example_pipeline_smoke_test.ipynb` only generates scenario data; the actual pipeline behaviour is demonstrated by `02_pipeline.ipynb`. For isolated DQ rule checks, use [`example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb).
 
 Optional support:
 
