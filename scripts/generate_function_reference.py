@@ -2102,7 +2102,6 @@ def main() -> None:
             ]
             nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
             human_use_when = _documented_text(metadata.get("when_to_use"))
-            use_when_lines = ["## When to use this", "", *_bullet_lines(human_use_when), ""] if human_use_when != PLACEHOLDER else []
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
             expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
             purpose_lines: list[str] = []
