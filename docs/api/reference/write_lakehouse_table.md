@@ -2,6 +2,14 @@
 
 Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:195`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L195-L290">View on GitHub</a>
+</div>
+
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
@@ -143,198 +151,17 @@ Side effects:
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
         </div>
       </section>
     </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Metadata loading helpers"
-
-            **`def _normalize_table_name(table: str) -> str`**
-
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L81-L90)
-
-            ```python
-            def _normalize_table_name(table: str) -> str:
-                """Return a safe Spark table name, never a nested folder path."""
-                value = str(table or "").strip()
-                if not value:
-                    raise ValueError("table is required.")
-                if any(separator in value for separator in ("/", "\\")) or ".." in value:
-                    raise ValueError("table must be a table name, not a file path or nested folder path.")
-                if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-                    raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
-                return value
-            ```
-
-        ??? example "Fabric or Spark access helpers"
-
-            **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
-
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/config.py#L627-L667)
-
-            ```python
-            def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-                """Resolve a configured Fabric path for an environment and target.
-
-                Parameters
-                ----------
-                env : str
-                    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-                target : str
-                    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-                config : FrameworkConfig | PathConfig | None
-                    Configuration that contains environment-to-target path mappings.
-
-                Returns
-                -------
-                Any
-                    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-                Raises
-                ------
-                ValueError
-                    If config is missing, or if the environment/target mapping does not exist.
-
-                Examples
-                --------
-                >>> get_path("Sandbox", "Source", config=CONFIG)
-                Housepath(...)
-                """
-                if config is None:
-                    raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-                paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-                if env not in paths:
-                    available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-                    raise ValueError(
-                        f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-                    )
-                if target not in paths[env]:
-                    available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-                    raise ValueError(
-                        f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-                    )
-                return paths[env][target]
-            ```
-
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/fabric_input_output.py:195`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L195-L290">View on GitHub</a>
-</div>
-
-??? example "Source code"
-
-    ```python
-    def write_lakehouse_table(
-        df,
-        config,
-        env,
-        target,
-        table,
-        mode="append",
-        partition_by=None,
-        repartition_by=None,
-        overwrite_schema=True,
-    ):
-        """Write a Spark DataFrame to a Fabric lakehouse Delta table.
-
-        This writes to the lakehouse `Tables/` area by saving to the ABFSS path from
-        the configured `FabricStore` root. It does not use registered Spark table
-        names, partial namespaces, or the current/default lakehouse context. Use this
-        in the Unified/Product stage after transformations, DQ checks, and runtime
-        audit-column enrichment are complete.
-
-        Parameters
-        ----------
-        df : pyspark.sql.DataFrame
-            Spark DataFrame to write.
-        config : FrameworkConfig | dict
-            FabricOps FrameworkConfig or compatible config object.
-        env : str
-            Environment key such as `"dev"`.
-        target : str
-            Logical target name such as `"source"` or `"unified"`.
-        table : str
-            Target table name under the lakehouse `Tables` area.
-        mode : str, default "append"
-            Spark write mode. Supported values are `"append"`, `"overwrite"`,
-            `"errorifexists"`, and `"ignore"`.
-        partition_by : str or list[str], optional
-            Column or columns used to physically partition the Delta table.
-        repartition_by : int, str, list, or tuple, optional
-            Optional repartitioning before write.
-        overwrite_schema : bool, default True
-            Whether to set Spark Delta `overwriteSchema=true` before saving.
-
-        Returns
-        -------
-        None
-            The DataFrame is written to the target Delta table path.
-
-        Notes
-        -----
-        Side effects:
-        - Persists data to OneLake Delta storage under ``Tables/<table>``.
-        - Optional repartitioning can change output file sizing and partition
-          layout.
-
-        Raises
-        ------
-        ValueError
-            If `table` is missing, `mode` is invalid, or the resolved target is not a lakehouse.
-
-        Examples
-        --------
-        >>> write_lakehouse_table(df, CONFIG, ENV, "unified", "CLEAN_ORDERS")
-        """
-        store = _get_store(config, env, target)
-        if store.kind != "lakehouse":
-            raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-        table_name = _normalize_table_name(table)
-
-        normalized_mode = str(mode or "").lower().strip()
-        if normalized_mode not in {"append", "overwrite", "errorifexists", "ignore"}:
-            raise ValueError("mode must be one of append, overwrite, errorifexists, ignore.")
-
-        path = f"{store.root.rstrip('/')}/Tables/{table_name}"
-
-        if repartition_by is not None:
-            if isinstance(repartition_by, (list, tuple)):
-                if len(repartition_by) > 0 and isinstance(repartition_by[0], int):
-                    df = df.repartition(repartition_by[0], *repartition_by[1:])
-                else:
-                    df = df.repartition(*repartition_by)
-            elif isinstance(repartition_by, int):
-                df = df.repartition(repartition_by)
-            else:
-                df = df.repartition(repartition_by)
-
-        writer = df.write.mode(normalized_mode).format("delta")
-
-        if partition_by is not None:
-            if isinstance(partition_by, (list, tuple)):
-                writer = writer.partitionBy(*partition_by)
-            else:
-                writer = writer.partitionBy(partition_by)
-
-        if overwrite_schema:
-            writer = writer.option("overwriteSchema", "true")
-
-        writer.save(path)
-    ```
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
@@ -383,7 +210,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L195-L290">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L195-L290</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L195-L290">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L195-L290</a>
 - Start line: `195`
 - End line: `290`
 - Signature:
@@ -413,19 +240,9 @@ def write_lakehouse_table(
 ### Internal implementation summary
 
 - Internal helper count: 2
-- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
+- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
-
-## Source link
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/fabric_input_output.py:195`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L195-L290">View on GitHub</a>
-</div>
 
 ## Glossary
 

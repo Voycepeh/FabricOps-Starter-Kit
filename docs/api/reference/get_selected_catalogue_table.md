@@ -2,6 +2,14 @@
 
 Return the table selected by widget_select_catalogue_table.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/governance_review.py:273`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L273-L297">View on GitHub</a>
+</div>
+
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
@@ -101,44 +109,6 @@ No additional callable notes are documented.
       </section>
     </div>
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/governance_review.py:273`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L273-L297">View on GitHub</a>
-</div>
-
-??? example "Source code"
-
-    ```python
-    def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
-        """Return the catalogue table selected by ``widget_select_catalogue_table``.
-
-        Parameters
-        ----------
-        table_selector : ipywidgets.Combobox, optional
-            Selector returned by ``widget_select_catalogue_table``. Passing it is
-            optional because the widget also maintains module-level selection state.
-
-        Returns
-        -------
-        dict[str, Any]
-            Stable table identity used by ``load_catalogue_profile_rows``.
-        """
-        if _SELECTED_CATALOGUE_TABLE is not None:
-            return dict(_SELECTED_CATALOGUE_TABLE)
-        raw_value = getattr(table_selector, "value", None) if table_selector is not None else None
-        if raw_value:
-            try:
-                parsed = json.loads(str(raw_value))
-                if isinstance(parsed, dict):
-                    return dict(parsed)
-            except json.JSONDecodeError:
-                pass
-        raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
-    ```
-
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
 
@@ -181,7 +151,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L273-L297">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L273-L297</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L273-L297">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L273-L297</a>
 - Start line: `273`
 - End line: `297`
 - Signature:
@@ -199,19 +169,9 @@ Not documented yet
 ### Internal implementation summary
 
 - Internal helper count: 0
-- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
+- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
-
-## Source link
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/governance_review.py:273`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L273-L297">View on GitHub</a>
-</div>
 
 ## Glossary
 

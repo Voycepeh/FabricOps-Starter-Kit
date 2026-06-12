@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
@@ -89,7 +90,10 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
         assert "### Used by" in text, page
         assert "### Calls" in text, page
         assert "## Implementation details" in text, page
-        assert "## Source link" in text, page
+        assert "## Source link" not in text, page
+        assert '??? example "Source code"' not in text, page
+        assert '??? example "View helper source by area"' not in text, page
+        assert text.count('<div class="reference-source-card" markdown="1">') == 1, page
         assert "## Nested helper functions" not in text, page
         assert "\n## Source\n" not in text, page
         assert "\n## What this is for\n" not in text, page
@@ -165,7 +169,7 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
             "### Used by",
             "### Calls",
             "## Implementation details",
-            "## Source link",
+            '<summary>Machine-readable metadata / metadata details',
             "## See also",
         ]
         if "### Return interpretation" in text:
@@ -181,15 +185,13 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         assert '??? info "Nested helper functions:' not in text, page
         assert '??? info "Internal helpers used:' in text, page
         assert 'class="reference-helper-groups"' in text, page
-        source_link_pos = text.index("## Source link")
+        source_card_pos = text.index('<div class="reference-source-card" markdown="1">')
+        signature_pos = text.index("## Signature")
         implementation_pos = text.index("## Implementation details")
         call_flow_pos = text.index('??? info "Call flow"')
-        assert implementation_pos < call_flow_pos < source_link_pos, page
-        if '??? info "Internal helpers used: 0"' not in text:
-            assert '??? example "View helper source by area"' in text, page
-            assert text.index('??? example "View helper source by area"') > implementation_pos, page
-            first_helper_code = text.index("```python", text.index('??? example "View helper source by area"'))
-            assert first_helper_code > text.index('??? example "View helper source by area"'), page
+        assert source_card_pos < signature_pos < implementation_pos < call_flow_pos, page
+        assert '??? example "View helper source by area"' not in text, page
+        assert '??? example "Source code"' not in text, page
         assert "\n### `_" not in text, page
         assert "\n## `_" not in text, page
         assert implementation_pos < text.index("<summary>Machine-readable metadata / metadata details"), page
@@ -223,6 +225,10 @@ def test_enforce_profile_behavior_reference_uses_distinct_blocks_and_responsive_
     ):
         assert 'class="reference-helper-chip"' in text
         assert f"<code>{helper_name}</code>" in text
+        assert re.search(
+            rf'<a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/[^"]+#L\d+(?:-L\d+)?"><code>{helper_name}</code></a>',
+            text,
+        )
 
 def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
@@ -237,12 +243,11 @@ def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
         "Rule evaluation",
     ):
         assert f'<h4>{area}</h4>' in text
-        assert f'??? example "{area} helpers"' in text
     assert "Expanded internal helper tree is available in Implementation details." in text
-    assert text.index("## Implementation details") < text.index("## Source link")
+    assert text.index('<div class="reference-source-card" markdown="1">') < text.index("## Signature")
     assert text.index("## Implementation details") < text.index('??? info "Call flow"')
     assert text.index('??? info "Call flow"') < text.index('??? info "Internal helpers used: 16"')
-    assert text.index('??? example "View helper source by area"') < text.index('??? example "Audit timestamp helpers"')
+    assert '??? example "View helper source by area"' not in text
 
 
 def test_indent_markdown_indents_multiline_items_and_blank_lines() -> None:
@@ -294,20 +299,23 @@ def test_missing_examples_are_plain_text_not_python_code() -> None:
             assert "```python" not in example, page
 
 
-def test_callable_pages_include_source_section_and_github_source_link() -> None:
+def test_callable_pages_include_one_top_source_card_and_github_source_link() -> None:
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Source link" in text, page
-        source_link = _section_text(text, "Source link")
-        assert '<div class="reference-source-card" markdown="1">' in source_link, page
-        assert "**Source**" in source_link, page
-        assert "View on GitHub" in source_link, page
-        assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in source_link, page
-        assert "/src/fabricops_kit/" in source_link, page
-        assert "#L" in source_link, page
+        assert "## Source link" not in text, page
+        assert text.count('<div class="reference-source-card" markdown="1">') == 1, page
+        source_start = text.index('<div class="reference-source-card" markdown="1">')
+        source_end = text.index("</div>", source_start)
+        source_card = text[source_start:source_end]
+        assert source_start < text.index("## Signature"), page
+        assert "**Source**" in source_card, page
+        assert "View on GitHub" in source_card, page
+        assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in source_card, page
+        assert "/src/fabricops_kit/" in source_card, page
+        assert "#L" in source_card, page
 
 
 def test_callable_pages_collapse_ai_machine_metadata() -> None:
@@ -338,7 +346,8 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
 
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
-    assert "View on GitHub" in _section_text(text, "Source link")
+    assert "View on GitHub" in text
+    assert text.count('<div class="reference-source-card" markdown="1">') == 1
     assert "## Example usage" in text
     assert "context = setup_notebook" in _section_text(text, "Example usage")
     first_metadata = text.index("<summary>Machine-readable metadata / metadata details")
@@ -351,7 +360,7 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "## Parameters" in text
     assert "| `config` |" in text
     assert "| Yes |" in text or "| No |" in text
-    assert "## Source link" in text
+    assert "## Source link" not in text
 
 
 def test_public_callables_have_one_canonical_full_content_page() -> None:
@@ -508,7 +517,7 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
     text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
     assert "## See also" in text
     assert "- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)" in text
-    assert text.index("## Source link") < text.index("## See also")
+    assert text.index("## Implementation details") < text.index("## See also")
 
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:
@@ -620,7 +629,6 @@ def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() 
         "### Calls",
         "## Implementation details",
         '<summary>Machine-readable metadata / metadata details',
-        "## Source link",
         "## See also",
     ]
     assert [text.index(marker) for marker in ordered_markers] == sorted(text.index(marker) for marker in ordered_markers)

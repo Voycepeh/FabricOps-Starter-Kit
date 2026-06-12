@@ -2,6 +2,14 @@
 
 Return the agreement selected by widget_select_agreement.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:1000`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/data_agreement.py#L1000-L1015">View on GitHub</a>
+</div>
+
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
@@ -109,35 +117,6 @@ No additional callable notes are documented.
       </section>
     </div>
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/data_agreement.py:1000`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/data_agreement.py#L1000-L1015">View on GitHub</a>
-</div>
-
-??? example "Source code"
-
-    ```python
-    def get_selected_agreement() -> dict[str, Any]:
-        """Return the agreement selected by :func:`widget_select_agreement`.
-
-        Returns
-        -------
-        dict[str, Any]
-            Selected latest-version agreement row.
-
-        Raises
-        ------
-        RuntimeError
-            If no selector has established a selected agreement.
-        """
-        if not _SELECTED_AGREEMENT:
-            raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
-        return dict(_SELECTED_AGREEMENT)
-    ```
-
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
 
@@ -177,7 +156,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/data_agreement.py#L1000-L1015">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/data_agreement.py#L1000-L1015</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/data_agreement.py#L1000-L1015">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/data_agreement.py#L1000-L1015</a>
 - Start line: `1000`
 - End line: `1015`
 - Signature:
@@ -195,19 +174,9 @@ def get_selected_agreement() -> dict[str, Any]
 ### Internal implementation summary
 
 - Internal helper count: 0
-- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
+- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
-
-## Source link
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/data_agreement.py:1000`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/data_agreement.py#L1000-L1015">View on GitHub</a>
-</div>
 
 ## Glossary
 

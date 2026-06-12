@@ -2,6 +2,14 @@
 
 Render standalone sensitivity and PII classification review guidance for selected profile rows.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/governance_review.py:789`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L789-L807">View on GitHub</a>
+</div>
+
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
@@ -104,79 +112,11 @@ No additional callable notes are documented.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L497-L511"><code>_display_review_guidance</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L497-L511"><code>_display_review_guidance</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
         </div>
       </section>
     </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Other helpers"
-
-            **`def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]`**
-
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L497-L511)
-
-            ```python
-            def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
-                widgets = importlib.import_module("ipywidgets")
-                from IPython import display as ip
-
-                columns = [str(_value(row, "column_name")) for row in profile_rows]
-                html = widgets.HTML(
-                    f"<h3>{title}</h3>"
-                    f"<p>{instructions}</p>"
-                    f"<p><b>Columns loaded:</b> {', '.join(columns)}</p>"
-                    "<p>Return value is an editable list scaffold. Add reviewed dictionaries, set "
-                    "<code>review_status='approved'</code> and <code>commit=True</code>, then pass the list to "
-                    "<code>record_table_governance</code>.</p>"
-                )
-                ip.display(html)
-                return []
-            ```
-
-            **`def _value(row: dict[str, Any], name: str, default: Any='') -> Any`**
-
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L70-L71)
-
-            ```python
-            def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-                return row.get(name, row.get(name.upper(), default))
-            ```
-
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/governance_review.py:789`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L789-L807">View on GitHub</a>
-</div>
-
-??? example "Source code"
-
-    ```python
-    def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Render standalone sensitivity and PII classification review guidance.
-
-        Parameters
-        ----------
-        profile_rows : list of dict
-            Selected column profile evidence from ``load_catalogue_profile_rows``.
-
-        Returns
-        -------
-        list[dict[str, Any]]
-            Empty editable review list. Add approved classification dictionaries
-            before calling ``record_table_governance``.
-        """
-        return _display_review_guidance(
-            "Sensitivity and PII classification review",
-            profile_rows,
-            "Review sensitivity labels, personal-data classifications, identifier types, and handling requirements.",
-        )
-    ```
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
@@ -220,7 +160,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L789-L807">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L789-L807</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L789-L807">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L789-L807</a>
 - Start line: `789`
 - End line: `807`
 - Signature:
@@ -240,19 +180,9 @@ Not documented yet
 ### Internal implementation summary
 
 - Internal helper count: 2
-- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
+- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
-
-## Source link
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/governance_review.py:789`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/governance_review.py#L789-L807">View on GitHub</a>
-</div>
 
 ## Glossary
 

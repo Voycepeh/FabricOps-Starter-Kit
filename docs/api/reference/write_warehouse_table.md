@@ -2,6 +2,14 @@
 
 Write a DataFrame to a configured Fabric warehouse target.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:400`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L400-L464">View on GitHub</a>
+</div>
+
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
@@ -117,141 +125,10 @@ Fabric runtime connector APIs.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
         </div>
       </section>
     </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Fabric or Spark access helpers"
-
-            **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
-
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/config.py#L627-L667)
-
-            ```python
-            def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
-                """Resolve a configured Fabric path for an environment and target.
-
-                Parameters
-                ----------
-                env : str
-                    Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-                target : str
-                    Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
-                config : FrameworkConfig | PathConfig | None
-                    Configuration that contains environment-to-target path mappings.
-
-                Returns
-                -------
-                Any
-                    FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
-
-                Raises
-                ------
-                ValueError
-                    If config is missing, or if the environment/target mapping does not exist.
-
-                Examples
-                --------
-                >>> get_path("Sandbox", "Source", config=CONFIG)
-                Housepath(...)
-                """
-                if config is None:
-                    raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-                paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
-                if env not in paths:
-                    available_envs = ", ".join(sorted(paths.keys())) or "<none>"
-                    raise ValueError(
-                        f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
-                    )
-                if target not in paths[env]:
-                    available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
-                    raise ValueError(
-                        f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
-                    )
-                return paths[env][target]
-            ```
-
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/fabric_input_output.py:400`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L400-L464">View on GitHub</a>
-</div>
-
-??? example "Source code"
-
-    ```python
-    def write_warehouse_table(df, config, env, target, schema, table, mode="append"):
-        """Write a Spark DataFrame to a Microsoft Fabric warehouse table.
-
-        This uses Fabric Spark's `synapsesql` connector to write to a warehouse
-        configured in the framework `CONFIG` mapping. Use this near the end of the
-        Product step when publishing serving tables.
-
-        Parameters
-        ----------
-        df : pyspark.sql.DataFrame
-            Spark DataFrame to write.
-        config : FrameworkConfig | dict
-            FabricOps FrameworkConfig or compatible config object.
-        env : str
-            Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
-        target : str
-            Warehouse target name under the selected environment, for example
-            `"Warehouse"` or `"wh_Bronze"`.
-        schema : str
-            Warehouse schema name, for example `"dbo"`.
-        table : str
-            Warehouse table name.
-        mode : str, default "append"
-            Spark write mode, for example `"append"` or `"overwrite"`.
-
-        Returns
-        -------
-        None
-            The DataFrame is written to the target warehouse table.
-
-        Notes
-        -----
-        Side effect: performs a write operation to the target warehouse object via
-        Fabric runtime connector APIs.
-
-        Raises
-        ------
-        RuntimeError
-            If the Microsoft Fabric Spark connector is unavailable.
-        ValueError
-            If the selected environment or target is missing from the config.
-
-        Examples
-        --------
-        >>> write_warehouse_table(df, CONFIG, ENV, "product", "dbo", "TABLE_NAME")
-        """
-        store = _get_store(config, env, target)
-        if store.kind != "warehouse":
-            raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
-
-        try:
-            import com.microsoft.spark.fabric
-            from com.microsoft.spark.fabric.Constants import Constants
-        except Exception as exc:
-            raise RuntimeError(
-                "This function must run inside Microsoft Fabric Spark with "
-                "com.microsoft.spark.fabric available."
-            ) from exc
-
-        (
-            df.write.mode(mode)
-            .option(Constants.WorkspaceId, store.workspace_id)
-            .option(Constants.DatawarehouseId, store.item_id)
-            .synapsesql(f"{store.name}.{schema}.{table}")
-        )
-    ```
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
@@ -292,7 +169,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L400-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L400-L464</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L400-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L400-L464</a>
 - Start line: `400`
 - End line: `464`
 - Signature:
@@ -312,19 +189,9 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 ### Internal implementation summary
 
 - Internal helper count: 1
-- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
+- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
-
-## Source link
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/fabric_input_output.py:400`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/fabric_input_output.py#L400-L464">View on GitHub</a>
-</div>
 
 ## Glossary
 
