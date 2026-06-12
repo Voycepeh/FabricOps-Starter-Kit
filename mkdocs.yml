@@ -103,6 +103,7 @@ markdown_extensions:
 
 hooks:
   - docs/gen_release_info.py
+  - docs/copy_markdown_variants.py
   - docs/breadcrumbs.py
 
 plugins:
