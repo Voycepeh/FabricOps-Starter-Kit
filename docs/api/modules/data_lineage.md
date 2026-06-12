@@ -76,7 +76,7 @@ Owns source-to-target lineage and transformation evidence.
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a></td>
+      <td><a href="../reference/build_lineage_records/"><code>build_lineage_records</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Build source-to-target lineage evidence records for a pipeline run.</td>
@@ -99,7 +99,7 @@ Owns source-to-target lineage and transformation evidence.
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
+<a class="reference-chip" href="../reference/build_lineage_records/"><code>build_lineage_records</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>

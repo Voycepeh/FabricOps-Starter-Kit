@@ -48,7 +48,7 @@ Generated artifacts:
 - `docs/reference/index.md`
 - `docs/reference/dependency-metadata.json`
 - `docs/reference/call-graph.md`
-- `docs/reference/callables/*.md`
+- `docs/api/reference/*.md`
 - `docs/reference/internal/*.md`
 - `docs/api/modules/*.md`
 - `mkdocs.yml` reference/module navigation
