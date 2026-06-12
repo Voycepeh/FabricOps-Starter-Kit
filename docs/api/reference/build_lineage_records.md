@@ -4,27 +4,17 @@ Build source-to-target lineage evidence records for a pipeline run.
 
 ## Purpose
 
-Build source-to-target lineage evidence records for a pipeline run.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-None.
-
-**Use when:**
+## When to use this
 
 - Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use to scan notebooks automatically or persist metadata; it only builds records from supplied lineage inputs.
-
-**Example:**
-
-```python
-lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=["source.orders"], target_table="unified.orders", transformation_steps=[{"step": "clean_orders"}])
-```
 
 **Errors:**
 
@@ -34,6 +24,10 @@ Raises normal Python errors if required lineage inputs are missing or malformed.
 
 Pure record-building helper; it does not write metadata, tables, or files.
 
+## Used in templates
+
+None.
+
 ## Used by
 
 Not documented yet
@@ -42,7 +36,7 @@ Not documented yet
 
 - `fabricops_kit.config._current_audit_timestamp`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -106,9 +100,23 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
 List of lineage record dictionaries suitable for metadata persistence.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=["source.orders"], target_table="unified.orders", transformation_steps=[{"step": "clean_orders"}])
+```
 
 ### Public callable source code
 
@@ -265,6 +273,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: —
+- Glossary terms: —
 
 ### AI implementation contract
 

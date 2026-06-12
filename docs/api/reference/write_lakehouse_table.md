@@ -4,31 +4,17 @@ Write a DataFrame to a configured Fabric lakehouse target.
 
 ## Purpose
 
-Write a DataFrame to a configured Fabric lakehouse target.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `00_env_config`
-- `01_agreement`
-- `02_pipeline`
-- `03_governance`
-- `99_explore`
-
-**Use when:**
+## When to use this
 
 - Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for metadata evidence tables unless the helper explicitly routes metadata, and do not use for warehouse tables.
-
-**Example:**
-
-```python
-write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
-```
 
 **Errors:**
 
@@ -37,6 +23,14 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 **Side effects:**
 
 Writes data to a Fabric lakehouse table using the selected write mode.
+
+## Used in templates
+
+- `00_env_config`
+- `01_agreement`
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
 
 ## Used by
 
@@ -56,7 +50,7 @@ Writes data to a Fabric lakehouse table using the selected write mode.
 - `fabricops_kit.fabric_input_output._registered_table_identifier`
 - `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -135,12 +129,26 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 
 None; the DataFrame is written to the configured lakehouse table.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Side effects:
 - Persists data to OneLake Delta storage under ``Tables/<table>``.
 - Optional repartitioning can change output file sizing and partition
   layout.
+
+### Example
+
+```python
+write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
+```
 
 ### Public callable source code
 
@@ -414,6 +422,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 8
 - Outbound references count: 4
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
+- Glossary terms: —
 
 ### AI implementation contract
 

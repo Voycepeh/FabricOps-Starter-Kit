@@ -4,28 +4,17 @@ Read an Excel file from a configured Fabric lakehouse Files path.
 
 ## Purpose
 
-Read an Excel file from a configured Fabric lakehouse Files path.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-- `99_explore`
-
-**Use when:**
+## When to use this
 
 - Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.
-
-**Example:**
-
-```python
-mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
-```
 
 **Errors:**
 
@@ -34,6 +23,11 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 **Side effects:**
 
 Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
+
+## Used in templates
+
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -45,7 +39,7 @@ Not documented yet
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -109,11 +103,25 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 
 Spark DataFrame converted from the selected Excel worksheet.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Side effects:
 - Creates a temporary local file during conversion.
 - Materializes rows through pandas before creating a Spark DataFrame.
+
+### Example
+
+```python
+mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -378,6 +386,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 02_pipeline, 99_explore
+- Glossary terms: —
 
 ### AI implementation contract
 

@@ -4,27 +4,17 @@ Prepare source or target table configs for 02_pipeline.
 
 ## Purpose
 
-Prepare source or target table configs for 02_pipeline.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for ad hoc reads or writes outside the pipeline table-config pattern.
-
-**Example:**
-
-```python
-SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
-```
 
 **Errors:**
 
@@ -35,6 +25,10 @@ ValueError
 
 Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
 
+## Used in templates
+
+- `02_pipeline`
+
 ## Used by
 
 Not documented yet
@@ -43,7 +37,7 @@ Not documented yet
 
 - `fabricops_kit.pipeline._add_audit_columns`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -102,6 +96,14 @@ def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_
 
 Enriched table configs and a dictionary keyed by table key.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Source configs derive ``dataset_name`` from ``table_name`` and ``stage`` from
@@ -112,6 +114,12 @@ FabricOps read helpers and supplied in each source config as ``df``.
 Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
 ``target_name``, and ``target_kind`` unless overridden, then add standard
 FabricOps audit columns.
+
+### Example
+
+```python
+SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
+```
 
 ### Public callable source code
 
@@ -351,6 +359,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

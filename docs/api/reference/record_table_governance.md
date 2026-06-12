@@ -4,27 +4,17 @@ Persist approved table-governance context, DQ-rule, and classification evidence 
 
 ## Purpose
 
-Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `03_governance`
-
-**Use when:**
+## When to use this
 
 - Use in 03_governance after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use to draft governance recommendations, bypass review approval, or write unapproved rows.
-
-**Example:**
-
-```python
-written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark, context_reviews=context_rows, dq_rule_reviews=dq_rows, classification_reviews=classification_rows, approved_by="reviewer")
-```
 
 **Errors:**
 
@@ -33,6 +23,10 @@ Raises configuration, validation, Spark, or metadata-write errors when approved 
 **Side effects:**
 
 Writes approved governance metadata records to configured metadata tables.
+
+## Used in templates
+
+- `03_governance`
 
 ## Used by
 
@@ -46,7 +40,7 @@ Not documented yet
 - `fabricops_kit.governance_review._build_dq_rule_records`
 - `fabricops_kit.governance_review._review_governance_evidence`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -135,11 +129,25 @@ def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, 
 
 Dictionary of records written for column_context, dq_rules, and column_classification.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 This is the v1 governance commit action for ``03_governance`` notebooks. It merges
 the previous row-builder and per-table commit helpers into one explicit
 human approval step while preserving configured metadata lakehouse routing.
+
+### Example
+
+```python
+written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark, context_reviews=context_rows, dq_rule_reviews=dq_rows, classification_reviews=classification_rows, approved_by="reviewer")
+```
 
 ### Public callable source code
 
@@ -1145,6 +1153,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 5
 - Used in templates: 03_governance
+- Glossary terms: —
 
 ### AI implementation contract
 

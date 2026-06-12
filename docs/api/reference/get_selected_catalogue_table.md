@@ -4,27 +4,17 @@ Return the table selected by widget_select_catalogue_table.
 
 ## Purpose
 
-Return the table selected by widget_select_catalogue_table.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `03_governance`
-
-**Use when:**
+## When to use this
 
 - Return the table selected by widget_select_catalogue_table.
+
+## At a glance
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -34,6 +24,10 @@ Not documented yet
 
 Not documented yet
 
+## Used in templates
+
+- `03_governance`
+
 ## Used by
 
 Not documented yet
@@ -42,7 +36,7 @@ Not documented yet
 
 Not documented yet
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -82,9 +76,23 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -167,6 +175,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 0
 - Used in templates: 03_governance
+- Glossary terms: —
 
 ### AI implementation contract
 

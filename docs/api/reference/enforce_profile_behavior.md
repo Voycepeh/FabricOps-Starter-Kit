@@ -4,28 +4,19 @@ Enforce append, overwrite, or skip profile behavior against accepted catalogue p
 
 ## Purpose
 
-Enforce append, overwrite, or skip profile behavior against accepted catalogue profile evidence.
+This function protects against accidental changes in how a table is loaded. For example, it can stop a pipeline from overwriting a dataset that was previously approved as append-only.
+
+It compares the current load behavior with the previously accepted catalogue profile. If the current behavior no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.
+
+## When to use this
+
+- Use this when promoting or running a pipeline that should follow a previously approved loading pattern. It is especially useful when an overwrite could remove existing history, or when an append-only table suddenly behaves like a full refresh.
 
 ## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
-
-- Use in 02_pipeline to enforce load_behavior expectations against previous accepted catalogue profile evidence.
 
 **Do not use when:**
 
 - Do not use for simple schema validation or DQ-rule enforcement; use validate_schema or enforce_dq_rules for those checks.
-
-**Example:**
-
-```python
-stability_result = enforce_profile_behavior(spark, df, "METADATA_DATA_CATALOGUE", dataset_name, table_name, stage="target", run_id=run_id, load_behavior="overwrite")
-stop_if_failed(stability_result)
-```
 
 **Errors:**
 
@@ -34,6 +25,26 @@ Raises Spark or metadata-read errors when baseline profile evidence cannot be lo
 **Side effects:**
 
 Reads baseline profile metadata and computes current profile evidence; it does not write target data.
+
+### Key terms
+
+- **Profile behavior:** The expected way a table is loaded.
+- **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
+- **Baseline profile:** The previous approved profile used as the comparison point.
+- **Stage:** The part of the pipeline being checked, such as source or target.
+- **Profile behavior check:** A check that confirms the current table load pattern still matches the approved pattern.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Append:** Add new rows without replacing existing rows.
+- **Overwrite:** Replace the existing table contents with the current output.
+- **Skip:** Do not run that behavior check or write step for the table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -53,7 +64,7 @@ Reads baseline profile metadata and computes current profile evidence; it does n
 - `fabricops_kit.guardrails._profile_watermark_bounds`
 - `fabricops_kit.guardrails._string_value`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -82,57 +93,57 @@ def enforce_profile_behavior(spark, dataframe, metadata_table: str, dataset_name
     <tr>
       <td data-label="Parameter"><code>spark</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used to read ``METADATA_DATA_CATALOGUE`` when ``catalogue_df`` is not supplied.</td>
+      <td data-label="Meaning">Spark session used to read accepted profile evidence from the configured metadata target.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>dataframe</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame being checked.</td>
+      <td data-label="Meaning">Current source or target DataFrame being checked.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>metadata_table</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Catalogue metadata table that stores profile evidence rows.</td>
+      <td data-label="Meaning">Metadata table that stores accepted catalogue profile evidence.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>dataset_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Governed dataset identifier used for previous-profile lookup.</td>
+      <td data-label="Meaning">Dataset name used to find matching catalogue evidence.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>table_name</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Governed source or target table name used for previous-profile lookup.</td>
+      <td data-label="Meaning">Table name used to find matching catalogue evidence.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>stage</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Pipeline stage used to keep source and target profiles independent.</td>
+      <td data-label="Meaning">The part of the pipeline being checked, such as source or target.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>run_id</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Current pipeline run identifier.</td>
+      <td data-label="Meaning">Current pipeline run identifier recorded in the generated profile evidence.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>load_behavior</code></td>
       <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Expected load behavior. ``append`` protects history, ``overwrite`` accepts rebuilt outputs as the new state, and ``skip`` disables only this guardrail.</td>
+      <td data-label="Meaning">Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>watermark_column</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">Business watermark column used by append behavior to compare current and previous minimum and maximum profile evidence.</td>
+      <td data-label="Meaning">Optional column used to compare append watermark movement when available.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>exclude_columns</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">Business or technical columns to exclude from the current profile.</td>
+      <td data-label="Meaning">Optional columns to ignore while comparing profile fields.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>exclude_run_id</code></td>
       <td data-label="Required">No</td>
-      <td data-label="Meaning">Run identifier to exclude from previous-profile lookup. Defaults to ``run_id``.</td>
+      <td data-label="Meaning">Optional run id to exclude when selecting the accepted baseline evidence.</td>
     </tr>
     <tr>
       <td data-label="Parameter"><code>config</code></td>
@@ -162,11 +173,33 @@ def enforce_profile_behavior(spark, dataframe, metadata_table: str, dataset_name
 
 Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and profile behavior checks.
 
+### Return interpretation
+
+If can_continue is true, the current load behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, update or reapprove the catalogue profile evidence. If not intentional, fix the pipeline configuration.
+
+### Common failure causes
+
+- Accepted profile evidence has not been created or approved yet.
+- The current load behavior does not match the accepted baseline.
+- The configured dataset or table name does not match catalogue evidence.
+- The configured stage does not match the accepted evidence.
+- The metadata lakehouse or catalogue profile table cannot be read.
+- The accepted evidence is missing required behavior fields.
+- The current behavior value is invalid or unsupported.
+- The accepted evidence is stale or incomplete.
+
 ### Notes
 
 This guardrail uses existing profile evidence: row count plus the configured
 watermark column's ``min_value`` and ``max_value``. Schema and DQ checks are
 enforced by their own guardrails.
+
+### Example
+
+```python
+stability_result = enforce_profile_behavior(spark, df, "METADATA_DATA_CATALOGUE", dataset_name, table_name, stage="target", run_id=run_id, load_behavior="overwrite")
+stop_if_failed(stability_result)
+```
 
 ### Public callable source code
 
@@ -819,11 +852,22 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 11
 - Used in templates: 02_pipeline
+- Glossary terms: profile behavior, accepted catalogue profile evidence, baseline profile, stage, profile behavior check, guardrail, can_continue, append, overwrite, skip, metadata lakehouse
 
 ### AI implementation contract
 
 - **required_context:** Requires profile metadata routed through the configured 00_env_config metadata target and a valid source/target stage.
-- **inputs:** spark, dataframe, metadata_table, dataset_name, table_name, required stage, run_id, load_behavior, optional watermark column, exclude_columns, and exclude_run_id.
+- **inputs:** - `spark`: Spark session used to read accepted profile evidence from the configured metadata target.
+- `dataframe`: Current source or target DataFrame being checked.
+- `metadata_table`: Metadata table that stores accepted catalogue profile evidence.
+- `dataset_name`: Dataset name used to find matching catalogue evidence.
+- `table_name`: Table name used to find matching catalogue evidence.
+- `stage`: The part of the pipeline being checked, such as source or target.
+- `run_id`: Current pipeline run identifier recorded in the generated profile evidence.
+- `load_behavior`: Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip.
+- `watermark_column`: Optional column used to compare append watermark movement when available.
+- `exclude_columns`: Optional columns to ignore while comparing profile fields.
+- `exclude_run_id`: Optional run id to exclude when selecting the accepted baseline evidence.
 - **output:** Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and profile behavior checks.
 - **side_effects:** Reads baseline profile metadata and computes current profile evidence; it does not write target data.
 - **failure_modes:** Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded or compared.

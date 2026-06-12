@@ -36,6 +36,7 @@ nav:
   - Function & DQ Rules Reference:
       - List of functions: reference/index.md
       - Template Function Map: reference/template-function-map.md
+      - Glossary: reference/glossary.md
       - Functions by Modules:
           # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md

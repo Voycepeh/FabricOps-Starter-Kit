@@ -4,28 +4,17 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 ## Purpose
 
-Write a DataFrame to a configured Fabric warehouse target.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `00_env_config`
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use when publishing a Spark DataFrame to a configured Fabric warehouse table.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for lakehouse table writes, lakehouse Files writes, or metadata evidence writes.
-
-**Example:**
-
-```python
-write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders_serving", mode="append")
-```
 
 **Errors:**
 
@@ -35,6 +24,11 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 
 Writes data to a Fabric warehouse table using the selected mode.
 
+## Used in templates
+
+- `00_env_config`
+- `02_pipeline`
+
 ## Used by
 
 Not documented yet
@@ -43,7 +37,7 @@ Not documented yet
 
 - `fabricops_kit.config._get_store`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -112,10 +106,24 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 
 None; the DataFrame is written to the configured warehouse table.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Side effect: performs a write operation to the target warehouse object via
 Fabric runtime connector APIs.
+
+### Example
+
+```python
+write_warehouse_table(serving_df, CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders_serving", mode="append")
+```
 
 ### Public callable source code
 
@@ -292,6 +300,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 00_env_config, 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

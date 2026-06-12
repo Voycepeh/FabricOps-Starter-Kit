@@ -73,14 +73,19 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         assert "## Purpose" in text, page
+        assert "## When to use this" in text, page
         assert "## At a glance" in text, page
+        assert "## Used in templates" in text, page
         assert "## Used by" in text, page
         assert "## Calls" in text, page
-        assert "## Callable implementation" in text, page
+        assert "## Function details and source" in text, page
         assert "### Function details" in text, page
         assert "### Parameters" in text, page
         assert "### Returns" in text, page
+        assert "### Return interpretation" in text, page
+        assert "### Common failure causes" in text, page
         assert "### Notes" in text, page
+        assert "### Example" in text, page
         assert "### Public callable source code" in text, page
         assert "## Internal implementation summary" in text, page
         assert "## Nested helper functions" not in text, page
@@ -130,14 +135,19 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         text = page.read_text(encoding="utf-8")
         ordered_markers = [
             "## Purpose",
+            "## When to use this",
             "## At a glance",
+            "## Used in templates",
             "## Used by",
             "## Calls",
-            "## Callable implementation",
+            "## Function details and source",
             "### Function details",
             "### Parameters",
             "### Returns",
+            "### Return interpretation",
+            "### Common failure causes",
             "### Notes",
+            "### Example",
             "### Public callable source code",
             "## Internal implementation summary",
         ]
@@ -261,7 +271,7 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
     assert "setup_notebook on GitHub" in text
-    assert "**Example:**\n\n```python\ncontext = setup_notebook" in text
+    assert "### Example\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
     for marker in ("## Purpose", "## At a glance", "### Parameters", "### Returns"):
         assert text.index(marker) < first_metadata
@@ -312,6 +322,66 @@ def test_generated_manifests_point_public_callables_to_canonical_api_reference()
             assert entry["docs_path"].startswith("reference/internal/")
 
 
+
+def test_glossary_page_exists_and_includes_required_terms() -> None:
+    glossary_page = REFERENCE_DIR / "glossary.md"
+    glossary_source = REFERENCE_DIR / "glossary.json"
+    required_terms = {
+        "profile behavior",
+        "accepted catalogue profile evidence",
+        "baseline profile",
+        "stage",
+        "profile behavior check",
+        "guardrail",
+        "can_continue",
+        "append",
+        "overwrite",
+        "skip",
+        "metadata lakehouse",
+        "catalogue evidence",
+        "source table",
+        "target table",
+        "notebook template",
+    }
+
+    assert glossary_page.exists()
+    assert glossary_source.exists()
+    glossary_entries = json.loads(glossary_source.read_text(encoding="utf-8"))
+    terms = {entry["term"] for entry in glossary_entries}
+    assert required_terms <= terms
+
+    glossary_text = glossary_page.read_text(encoding="utf-8")
+    for term in required_terms:
+        assert f"## {term}" in glossary_text
+    assert "**Plain language:**" in glossary_text
+
+
+def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    entry = next(item for item in function_manifest if item["name"] == "enforce_profile_behavior")
+    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
+
+    assert "profile behavior" in entry["glossary_terms"]
+    assert "can_continue" in entry["glossary_terms"]
+    assert "### Key terms" in text
+    assert "**Profile behavior:** The expected way a table is loaded." in text
+    assert "**can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running." in text
+    assert "See the [full glossary](../../reference/glossary/)" in text
+    assert "previously approved as append-only" in text
+    assert "overwrite could remove existing history" in text
+    assert "If can_continue is false, review whether the behavior change is intentional before writing the table." in text
+    assert "The part of the pipeline being checked, such as source or target." in text
+
+
+def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
+    for page in sorted(API_REFERENCE_DIR.glob("*.md")):
+        text = page.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        intro = next(line.strip() for line in lines[1:] if line.strip())
+        purpose = _section_text(text, "Purpose")
+        assert purpose.strip() != intro, page
+        assert purpose.count(intro) == 0, page
+
 def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
     agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
@@ -335,9 +405,8 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
         assert "Outbound" in article or "Inbound" in article
 
         detail_text = (API_REFERENCE_DIR / f"{callable_name}.md").read_text(encoding="utf-8")
-        at_a_glance = _section_text(detail_text, "At a glance")
-        assert "### Used in templates" in at_a_glance
-        used_in_section = at_a_glance.split("### Used in templates", 1)[1].split("\n**Use when:**", 1)[0]
+        assert "## Used in templates" in detail_text
+        used_in_section = _section_text(detail_text, "Used in templates")
         assert used_in_section.count("`02_pipeline`") == 1
 
 
@@ -352,7 +421,8 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
 
     assert "/reference/callables/" not in combined
     assert "../callables/" not in combined
-    assert "../../reference/" not in combined
+    combined_without_glossary_links = combined.replace("../../reference/glossary/", "")
+    assert "../../reference/" not in combined_without_glossary_links
     assert "api/reference/" in combined
     assert "../api/reference/enforce_dq_rules/" in combined
     assert "../reference/enforce_dq_rules/" in combined
@@ -362,10 +432,12 @@ def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() 
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
     ordered_markers = [
         "## Purpose",
+        "## When to use this",
         "## At a glance",
+        "## Used in templates",
         "## Used by",
         "## Calls",
-        "## Callable implementation",
+        "## Function details and source",
         "### Function details",
         "### Public callable source code",
         "## Internal implementation summary",

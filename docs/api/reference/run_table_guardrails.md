@@ -4,27 +4,17 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 
 ## Purpose
 
-Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use in 02_pipeline to run source guardrails before transformation and target guardrails before writes while keeping per-table results separated.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.
-
-**Example:**
-
-```python
-source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
-```
 
 **Errors:**
 
@@ -33,6 +23,10 @@ Not documented yet
 **Side effects:**
 
 Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -52,7 +46,7 @@ Not documented yet
 - `fabricops_kit.pipeline._table_name`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -141,6 +135,14 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 
 Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
@@ -148,6 +150,12 @@ results before reporting blocking failures. DQ results that return an
 annotated DataFrame update the corresponding table config ``df`` in place
 so downstream writes use the checked DataFrame. Metadata reads and writes
 are routed through the configured metadata target by the called helpers.
+
+### Example
+
+```python
+source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
+```
 
 ### Public callable source code
 
@@ -620,6 +628,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 11
 - Used in templates: 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

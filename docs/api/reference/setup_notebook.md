@@ -4,29 +4,19 @@ Shared environment setup and runtime validation for notebook templates.
 
 ## Purpose
 
-Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `00_env_config`
-
-**Use when:**
+## When to use this
 
 - Starting a FabricOps notebook from 00_env_config
 - Validating configured environment targets before downstream helpers run
 - Capturing runtime metadata for later lineage, review, or handover steps
 
+## At a glance
+
 **Do not use when:**
 
 - Do not use as a replacement for metadata table setup or per-table governance writes; call setup_metadata_tables for metadata storage preparation.
-
-**Example:**
-
-```python
-context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
-```
 
 **Errors:**
 
@@ -35,6 +25,10 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 **Side effects:**
 
 Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
+
+## Used in templates
+
+- `00_env_config`
 
 ## Used by
 
@@ -47,7 +41,7 @@ Not documented yet
 - `fabricops_kit.config._run_config_smoke_tests`
 - `fabricops_kit.config._validate_framework_config`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -111,10 +105,24 @@ def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox',
 
 NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Validation and smoke checks are local to notebook startup. This helper does
 not provision Fabric resources or persist metadata.
+
+### Example
+
+```python
+context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
+```
 
 ### Public callable source code
 
@@ -673,6 +681,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 00_env_config
+- Glossary terms: —
 
 ### AI implementation contract
 

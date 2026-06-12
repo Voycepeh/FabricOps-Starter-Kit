@@ -4,29 +4,17 @@ Render an agreement selector and optionally register the active notebook.
 
 ## Purpose
 
-Render an agreement selector and optionally register the active notebook.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-- `99_explore`
-
-**Use when:**
+## When to use this
 
 - Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use when an agreement has already been programmatically selected and validated, or for catalogue table review selection in 03_governance.
-
-**Example:**
-
-```python
-widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)
-agreement = get_selected_agreement()
-```
 
 **Errors:**
 
@@ -35,6 +23,11 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 **Side effects:**
 
 Displays an IPython widget and may register the active notebook selection in metadata when requested.
+
+## Used in templates
+
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -50,7 +43,7 @@ Not documented yet
 - `fabricops_kit.metadata._current_notebook_active_registrations`
 - `fabricops_kit.metadata._register_current_notebook`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -134,9 +127,24 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 
 Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)
+agreement = get_selected_agreement()
+```
 
 ### Public callable source code
 
@@ -1157,6 +1165,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 7
 - Used in templates: 02_pipeline, 99_explore
+- Glossary terms: —
 
 ### AI implementation contract
 

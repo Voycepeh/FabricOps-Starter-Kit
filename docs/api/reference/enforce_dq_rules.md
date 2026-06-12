@@ -4,29 +4,17 @@ Enforce approved active DQ rules as a target-write guardrail without filtering r
 
 ## Purpose
 
-Enforce approved active DQ rules as a target-write guardrail without filtering rows.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-- `03_governance`
-
-**Use when:**
+## When to use this
 
 - Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use to filter bad rows, author new DQ rules, or bypass governance review approval.
-
-**Example:**
-
-```python
-dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)
-stop_if_failed(dq_result)
-```
 
 **Errors:**
 
@@ -35,6 +23,11 @@ Raises configuration, metadata-read, or Spark expression errors when approved ru
 **Side effects:**
 
 Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
+
+## Used in templates
+
+- `02_pipeline`
+- `03_governance`
 
 ## Used by
 
@@ -50,7 +43,7 @@ Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it d
 - `fabricops_kit.governance_review._run_dq_guardrail_checks`
 - `fabricops_kit.governance_review._summarize_dq_guardrail`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -114,12 +107,27 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 
 Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 This v1 guardrail reads approved active rules from ``METADATA_DQ_RULES`` via
 the configured metadata route. It records aggregate rule outcomes only; it
 does not quarantine rows, write row-level failure metadata, filter invalid
 rows, send alerts, or partially write targets.
+
+### Example
+
+```python
+dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)
+stop_if_failed(dq_result)
+```
 
 ### Public callable source code
 
@@ -822,6 +830,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 7
 - Used in templates: 02_pipeline, 03_governance
+- Glossary terms: —
 
 ### AI implementation contract
 

@@ -4,28 +4,17 @@ Validate a DataFrame schema using strict, allow-new-columns, or monitor-only pre
 
 ## Purpose
 
-Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for DQ-rule enforcement or metadata persistence.
-
-**Example:**
-
-```python
-schema_result = validate_schema(df, {"order_id": "string"}, preset="allow_new_columns")
-stop_if_failed(schema_result)
-```
 
 **Errors:**
 
@@ -34,6 +23,10 @@ ValueError when preset is not one of the supported schema presets.
 **Side effects:**
 
 Inspects DataFrame schema only; it does not write metadata, tables, or files.
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -44,7 +37,7 @@ Inspects DataFrame schema only; it does not write metadata, tables, or files.
 - `fabricops_kit.guardrails._actual_schema`
 - `fabricops_kit.guardrails._normalize_datatype`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -93,9 +86,24 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 
 Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+schema_result = validate_schema(df, {"order_id": "string"}, preset="allow_new_columns")
+stop_if_failed(schema_result)
+```
 
 ### Public callable source code
 
@@ -335,6 +343,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 2
 - Used in templates: 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

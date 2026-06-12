@@ -3,6 +3,7 @@
 Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are used in starter templates; Implementation Modules show the active source modules that maintainers debug and extend.
 
 - Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.
+- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.
 - Use the Function catalogue below to browse public v1 callables. Internal helper details are embedded inside callable pages instead of normal catalogue entries.
 - Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.
 

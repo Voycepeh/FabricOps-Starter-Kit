@@ -4,28 +4,17 @@ Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail
 
 ## Purpose
 
-Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for informational warnings that should not block execution, or before a guardrail result exists.
-
-**Example:**
-
-```python
-schema_result = validate_schema(df, expected_schema)
-stop_if_failed(schema_result)
-```
 
 **Errors:**
 
@@ -35,6 +24,10 @@ Raises RuntimeError outside Fabric notebook exit handling when a failed guardrai
 
 May terminate notebook execution through Fabric notebook utilities or raise an exception.
 
+## Used in templates
+
+- `02_pipeline`
+
 ## Used by
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
@@ -43,7 +36,7 @@ May terminate notebook execution through Fabric notebook utilities or raise an e
 
 - `fabricops_kit.guardrails.SchemaDriftError`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -82,9 +75,24 @@ def stop_if_failed(result) -> None
 
 None when execution may continue; otherwise raises or exits according to runtime behavior.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+schema_result = validate_schema(df, expected_schema)
+stop_if_failed(schema_result)
+```
 
 ### Public callable source code
 
@@ -163,6 +171,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 1
 - Used in templates: 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

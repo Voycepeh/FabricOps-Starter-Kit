@@ -4,31 +4,17 @@ Read a table from a configured Fabric lakehouse target.
 
 ## Purpose
 
-Read a table from a configured Fabric lakehouse target.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `00_env_config`
-- `01_agreement`
-- `02_pipeline`
-- `03_governance`
-- `99_explore`
-
-**Use when:**
+## When to use this
 
 - Use when reading a Delta table from a configured Fabric lakehouse target.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for warehouse SQL tables.
-
-**Example:**
-
-```python
-df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
-```
 
 **Errors:**
 
@@ -37,6 +23,14 @@ Raises configuration, Spark, or table-read errors when the target or table canno
 **Side effects:**
 
 Reads from a lakehouse table; it does not write metadata, tables, or files.
+
+## Used in templates
+
+- `00_env_config`
+- `01_agreement`
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
 
 ## Used by
 
@@ -60,7 +54,7 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 - `fabricops_kit.fabric_input_output._registered_table_identifier`
 - `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -119,9 +113,23 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 
 Spark DataFrame loaded from the configured lakehouse table.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -408,6 +416,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 10
 - Outbound references count: 6
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
+- Glossary terms: —
 
 ### AI implementation contract
 

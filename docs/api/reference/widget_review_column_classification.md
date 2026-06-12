@@ -4,27 +4,17 @@ Render standalone sensitivity and PII classification review guidance for selecte
 
 ## Purpose
 
-Render standalone sensitivity and PII classification review guidance for selected profile rows.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `03_governance`
-
-**Use when:**
+## When to use this
 
 - Render standalone sensitivity and PII classification review guidance for selected profile rows.
+
+## At a glance
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -34,6 +24,10 @@ Not documented yet
 
 Not documented yet
 
+## Used in templates
+
+- `03_governance`
+
 ## Used by
 
 Not documented yet
@@ -42,7 +36,7 @@ Not documented yet
 
 - `fabricops_kit.governance_review._display_review_guidance`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -83,9 +77,23 @@ list[dict[str, Any]]
     Empty editable review list. Add approved classification dictionaries
     before calling ``record_table_governance``.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -200,6 +208,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 03_governance
+- Glossary terms: —
 
 ### AI implementation contract
 

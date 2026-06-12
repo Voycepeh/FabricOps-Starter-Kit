@@ -4,27 +4,17 @@ Create or validate all FabricOps metadata tables through one setup action.
 
 ## Purpose
 
-Create or validate all FabricOps metadata tables through one setup action.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `00_env_config`
-
-**Use when:**
+## When to use this
 
 - Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, stability, and governance workflows.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for writing business data or pipeline target tables; use write_lakehouse_table or write_warehouse_table for data outputs.
-
-**Example:**
-
-```python
-setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)
-```
 
 **Errors:**
 
@@ -33,6 +23,10 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 **Side effects:**
 
 Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
+
+## Used in templates
+
+- `00_env_config`
 
 ## Used by
 
@@ -49,7 +43,7 @@ Not documented yet
 - `fabricops_kit.data_agreement._list_data_stewards`
 - `fabricops_kit.governance_review._get_governance_metadata_schemas`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -103,11 +97,25 @@ def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any
 
 Setup result describing metadata table creation or validation status.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 This is the v1 notebook setup action for metadata provisioning. It keeps
 ``00_env_config`` simple while delegating to internal helpers that route all
 metadata reads and writes through the configured metadata lakehouse target.
+
+### Example
+
+```python
+setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -1050,6 +1058,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 9
 - Used in templates: 00_env_config
+- Glossary terms: —
 
 ### AI implementation contract
 

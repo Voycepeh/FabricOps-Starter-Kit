@@ -4,27 +4,17 @@ Render standalone DQ-rule review guidance for selected profile rows.
 
 ## Purpose
 
-Render standalone DQ-rule review guidance for selected profile rows.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `03_governance`
-
-**Use when:**
+## When to use this
 
 - Render standalone DQ-rule review guidance for selected profile rows.
+
+## At a glance
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -33,6 +23,10 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Used in templates
+
+- `03_governance`
 
 ## Used by
 
@@ -47,7 +41,7 @@ Not documented yet
 - `fabricops_kit.governance_review._validate_dq_rules`
 - `fabricops_kit.governance_review._value`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -119,9 +113,23 @@ list[dict[str, Any]]
     deactivation, and reactivation dictionaries to this list; pass it to
     ``record_table_governance`` to persist append-only metadata history.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -791,6 +799,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 6
 - Used in templates: 03_governance
+- Glossary terms: —
 
 ### AI implementation contract
 

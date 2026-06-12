@@ -4,28 +4,17 @@ Return the agreement selected by widget_select_agreement.
 
 ## Purpose
 
-Return the agreement selected by widget_select_agreement.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use immediately after widget_select_agreement to retrieve the selected agreement record for pipeline logic and evidence binding.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use before rendering and completing widget_select_agreement, or as a substitute for querying all agreement metadata.
-
-**Example:**
-
-```python
-agreement = get_selected_agreement()
-dataset_name = agreement["dataset_name"]
-```
 
 **Errors:**
 
@@ -35,6 +24,10 @@ Raises an error when no agreement has been selected in the current session.
 
 Reads session/widget state only; it does not write metadata, tables, or files.
 
+## Used in templates
+
+- `02_pipeline`
+
 ## Used by
 
 Not documented yet
@@ -43,7 +36,7 @@ Not documented yet
 
 Not documented yet
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -82,9 +75,24 @@ def get_selected_agreement() -> dict[str, Any]
 
 Selected agreement dictionary for the active notebook session.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+agreement = get_selected_agreement()
+dataset_name = agreement["dataset_name"]
+```
 
 ### Public callable source code
 
@@ -158,6 +166,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 0
 - Used in templates: 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

@@ -4,27 +4,17 @@ Render a searchable selector for latest successful catalogue profiles.
 
 ## Purpose
 
-Render a searchable selector for latest successful catalogue profiles.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `03_governance`
-
-**Use when:**
+## When to use this
 
 - Render a searchable selector for latest successful catalogue profiles.
+
+## At a glance
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -33,6 +23,10 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Used in templates
+
+- `03_governance`
 
 ## Used by
 
@@ -44,7 +38,7 @@ Not documented yet
 - `fabricops_kit.governance_review._catalogue_table_options`
 - `fabricops_kit.governance_review._coerce_rows`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -94,9 +88,23 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 ipywidgets.Combobox
     Searchable selector whose value stores stable JSON identity.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -331,6 +339,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 03_governance
+- Glossary terms: —
 
 ### AI implementation contract
 

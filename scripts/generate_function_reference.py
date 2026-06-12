@@ -26,6 +26,8 @@ MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
 FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
+GLOSSARY_SOURCE_PATH = ROOT / "docs" / "reference" / "glossary.json"
+GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
@@ -505,6 +507,76 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
             return ast.literal_eval(node.value)
     raise RuntimeError("Could not parse MODULE_DOCS_METADATA from reference_docs_metadata.py")
 
+
+
+def parse_glossary_metadata() -> dict[str, dict[str, Any]]:
+    """Return glossary metadata keyed by normalized term."""
+    if not GLOSSARY_SOURCE_PATH.exists():
+        return {}
+    entries = json.loads(GLOSSARY_SOURCE_PATH.read_text(encoding="utf-8"))
+    glossary: dict[str, dict[str, Any]] = {}
+    for entry in entries:
+        term = str(entry.get("term", "")).strip()
+        if not term:
+            raise RuntimeError("Glossary entries must include a term.")
+        if not entry.get("plain_language_definition"):
+            raise RuntimeError(f"Glossary entry {term!r} is missing plain_language_definition.")
+        key = term.lower()
+        if key in glossary:
+            raise RuntimeError(f"Duplicate glossary term: {term}")
+        glossary[key] = entry
+    return glossary
+
+
+def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
+    """Render the public glossary page from structured glossary metadata."""
+    lines = [
+        "# FabricOps glossary",
+        "",
+        "Simple definitions for repeated FabricOps terms used across generated callable references and workflow documentation.",
+        "",
+    ]
+    for entry in sorted(glossary.values(), key=lambda row: row["term"].lower()):
+        term = str(entry["term"])
+        lines.extend([f"## {term}", "", f"**Plain language:** {entry['plain_language_definition']}", ""])
+        technical = entry.get("technical_definition")
+        if technical:
+            lines.extend([f"**Technical:** {technical}", ""])
+        example = entry.get("example")
+        if example:
+            lines.extend([f"**Example:** {example}", ""])
+        related = entry.get("related_terms") or []
+        if related:
+            lines.extend([f"**Related terms:** {', '.join(f'`{item}`' for item in related)}", ""])
+    GLOSSARY_PAGE_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
+
+
+def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, Any]]) -> list[str]:
+    """Render compact glossary-backed key terms for a callable page."""
+    if not glossary_terms:
+        return []
+    lines = ["### Key terms", ""]
+    seen: set[str] = set()
+    for term in glossary_terms:
+        key = term.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        entry = glossary.get(key)
+        if entry is None:
+            raise RuntimeError(f"Callable references unknown glossary term: {term}")
+        term_text = str(entry["term"])
+        display_term = term_text if "_" in term_text else term_text.capitalize()
+        lines.append(f"- **{display_term}:** {entry['plain_language_definition']}")
+    lines.extend(["", "See the [full glossary](../../reference/glossary/) for more FabricOps terms.", ""])
+    return lines
+
+
+def _metadata_parameter_overrides(value: Any) -> dict[str, str]:
+    """Return parameter descriptions supplied by callable metadata."""
+    if isinstance(value, dict):
+        return {str(key): str(item) for key, item in value.items()}
+    return {}
 
 def _read_template_source(template_path: str) -> str:
     """Return searchable source text from a starter notebook/template file."""
@@ -1137,10 +1209,17 @@ def main() -> None:
     docs_metadata = parse_docs_metadata()
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
+    glossary = parse_glossary_metadata()
+    _render_glossary_page(glossary)
 
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
         raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for exported symbols: " + ", ".join(missing_metadata))
+    unknown_glossary_terms = sorted(
+        {term for metadata in docs_metadata.values() for term in metadata.get("glossary_terms", []) if term.lower() not in glossary}
+    )
+    if unknown_glossary_terms:
+        raise RuntimeError("PUBLIC_SYMBOL_DOCS references unknown glossary terms: " + ", ".join(unknown_glossary_terms))
 
     unknown_metadata = sorted(name for name in docs_metadata if name not in public)
     if unknown_metadata:
@@ -1687,6 +1766,7 @@ def main() -> None:
         "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are used in starter templates; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.",
+        "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
         "- Use the Function catalogue below to browse public v1 callables. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
@@ -1847,7 +1927,9 @@ def main() -> None:
         related_for_page = metadata_related or relationship_related
         rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
         rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
+        rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"), "Interpret the returned value according to the Returns section above.")
         rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
+        rendered_common_failure_causes = _documented_text(metadata.get("common_failure_causes"), "No common failure causes are documented beyond the Errors section.")
         rendered_notes = _documented_text(doc_sections.get("notes"), "No additional callable notes are documented.")
         rendered_side_effects = _documented_text(metadata.get("side_effects"))
         rendered_fabric_context = _documented_text(
@@ -1883,8 +1965,13 @@ def main() -> None:
             return out
 
         if node["exported"]:
+            parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
             input_rows = [
-                [f"<code>{html_escape(row['name'])}</code>", row["required"], html_escape(row["description"])]
+                [
+                    f"<code>{html_escape(row['name'])}</code>",
+                    row["required"],
+                    html_escape(parameter_overrides.get(row["name"], row["description"])),
+                ]
                 for row in parameter_rows
             ]
             input_table = render_html_table(
@@ -1929,11 +2016,19 @@ def main() -> None:
                 _code_block(source_block) if source_block else PLACEHOLDER,
             ]
             nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
-            human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
-            human_use_bullets = _bullet_lines("\n".join(metadata["when_to_use"])) if metadata.get("when_to_use") else _bullet_lines(human_use_when)
+            human_use_when = _documented_text(metadata.get("when_to_use"), metadata.get("use_when"), metadata.get("purpose"), purpose)
+            human_use_bullets = _bullet_lines(human_use_when)
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
+            purpose_body = _documented_text(
+                metadata.get("expanded_purpose"),
+                (
+                    "This API reference documents the callable summarized above. Use the sections below "
+                    "for when to use it, inputs, return values, template usage, and implementation details."
+                ),
+            )
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
+            key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
             function_manifest_lines = [
                 f"- Fully qualified function name: `{qn}`",
                 f"- Short name: `{short_name}`",
@@ -1945,6 +2040,7 @@ def main() -> None:
                 f"- Inbound references count: {len(used_by)}",
                 f"- Outbound references count: {len(deps)}",
                 f"- Used in templates: {', '.join(used_in_templates) if used_in_templates else '—'}",
+                f"- Glossary terms: {', '.join(metadata.get('glossary_terms', [])) if metadata.get('glossary_terms') else '—'}",
             ]
             raw_source_metadata_lines = [
                 f"- Source file path: `{source_path}`",
@@ -2002,25 +2098,17 @@ def main() -> None:
                 "",
                 "## Purpose",
                 "",
-                _documented_text(metadata.get("purpose"), purpose),
+                purpose_body,
                 "",
-                "## At a glance",
-                "",
-                "### Used in templates",
-                "",
-                *used_in_template_lines,
-                "",
-                "**Use when:**",
+                "## When to use this",
                 "",
                 *human_use_bullets,
+                "",
+                "## At a glance",
                 "",
                 "**Do not use when:**",
                 "",
                 *_bullet_lines(human_do_not_use),
-                "",
-                "**Example:**",
-                "",
-                _code_block(_documented_text(metadata.get("preferred_example"))),
                 "",
                 "**Errors:**",
                 "",
@@ -2030,6 +2118,11 @@ def main() -> None:
                 "",
                 rendered_side_effects,
                 "",
+                *key_term_lines,
+                "## Used in templates",
+                "",
+                *used_in_template_lines,
+                "",
                 "## Used by",
                 "",
                 *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
@@ -2038,7 +2131,7 @@ def main() -> None:
                 "",
                 *(_fmt_links(deps) if deps else [PLACEHOLDER]),
                 "",
-                "## Callable implementation",
+                "## Function details and source",
                 "",
                 "### Function details",
                 "",
@@ -2054,9 +2147,21 @@ def main() -> None:
                 "",
                 rendered_returns,
                 "",
+                "### Return interpretation",
+                "",
+                rendered_return_interpretation,
+                "",
+                "### Common failure causes",
+                "",
+                rendered_common_failure_causes,
+                "",
                 "### Notes",
                 "",
                 rendered_notes,
+                "",
+                "### Example",
+                "",
+                _code_block(_documented_text(metadata.get("preferred_example"))),
                 "",
                 "### Public callable source code",
                 "",
@@ -2148,7 +2253,7 @@ def main() -> None:
             (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,
@@ -2158,6 +2263,10 @@ def main() -> None:
             "inbound": used_by,
             "outbound": deps,
             "used_in_templates": record_used_in_templates,
+            "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [],
+            "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None,
+            "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None,
+            "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [],
             "source_file": source_path,
             "source_start_line": source_start_line,
             "source_end_line": source_end_line,
@@ -2169,8 +2278,10 @@ def main() -> None:
             "required_context": rendered_fabric_context,
             "inputs": rendered_parameters,
             "output": rendered_returns,
+            "return_interpretation": rendered_return_interpretation,
             "side_effects": rendered_side_effects,
             "failure_modes": rendered_raises,
+            "common_failure_causes": rendered_common_failure_causes,
             "preferred_example": _documented_text(metadata.get("preferred_example")),
             "verification": rendered_ai_verification,
             "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],

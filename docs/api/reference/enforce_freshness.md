@@ -4,28 +4,17 @@ Enforce whether the latest data arrived within the configured freshness lag.
 
 ## Purpose
 
-Enforce whether the latest data arrived within the configured freshness lag.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use validate_schema, enforce_profile_behavior, or enforce_dq_rules for those checks.
-
-**Example:**
-
-```python
-freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")
-stop_if_failed(freshness_result)
-```
 
 **Errors:**
 
@@ -34,6 +23,10 @@ ValueError when severity is unsupported, lag is missing for a configured column,
 **Side effects:**
 
 Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -45,7 +38,7 @@ Computes max(freshness_column) on the provided DataFrame; it does not write meta
 - `fabricops_kit.guardrails._iso_date_value`
 - `fabricops_kit.guardrails._max_column_value`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -104,10 +97,25 @@ def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int
 
 Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Freshness is separate from profile behavior. ``load_behavior="skip"`` only
 skips profile behavior enforcement; freshness still runs when configured.
+
+### Example
+
+```python
+freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")
+stop_if_failed(freshness_result)
+```
 
 ### Public callable source code
 
@@ -345,6 +353,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 3
 - Used in templates: 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

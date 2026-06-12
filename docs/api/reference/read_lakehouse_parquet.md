@@ -4,28 +4,17 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 
 ## Purpose
 
-Read a Parquet path from a configured Fabric lakehouse Files path.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-- `99_explore`
-
-**Use when:**
+## When to use this
 
 - Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use for Delta tables, CSV files, Excel files, or warehouse SQL tables.
-
-**Example:**
-
-```python
-df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.parquet", spark_session=spark)
-```
 
 **Errors:**
 
@@ -34,6 +23,11 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 **Side effects:**
 
 Reads from lakehouse Files and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.
+
+## Used in templates
+
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -46,7 +40,7 @@ Not documented yet
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -110,10 +104,24 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 
 Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Assumes Fabric notebook runtime filesystem conventions for local fallback
 conversion paths (``/lakehouse/default/Files/...``).
+
+### Example
+
+```python
+df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.parquet", spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -481,6 +489,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 02_pipeline, 99_explore
+- Glossary terms: —
 
 ### AI implementation contract
 

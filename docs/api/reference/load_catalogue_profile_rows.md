@@ -4,27 +4,17 @@ Load column profile rows for the selected catalogue table.
 
 ## Purpose
 
-Load column profile rows for the selected catalogue table.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `03_governance`
-
-**Use when:**
+## When to use this
 
 - Load column profile rows for the selected catalogue table.
+
+## At a glance
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -33,6 +23,10 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Used in templates
+
+- `03_governance`
 
 ## Used by
 
@@ -46,7 +40,7 @@ Not documented yet
 - `fabricops_kit.governance_review._value`
 - `fabricops_kit.metadata._build_metadata_table_key`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -100,9 +94,23 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
 Not documented yet
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -263,6 +271,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 5
 - Used in templates: 03_governance
+- Glossary terms: —
 
 ### AI implementation contract
 

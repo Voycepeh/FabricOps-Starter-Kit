@@ -4,27 +4,17 @@ Render the standalone agreement-evidence widget.
 
 ## Purpose
 
-Render the standalone agreement-evidence widget.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `01_agreement`
-
-**Use when:**
+## When to use this
 
 - Render the standalone agreement-evidence widget.
+
+## At a glance
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -34,6 +24,10 @@ Not documented yet
 
 Not documented yet
 
+## Used in templates
+
+- `01_agreement`
+
 ## Used by
 
 Not documented yet
@@ -42,7 +36,7 @@ Not documented yet
 
 - `fabricops_kit.data_agreement._render_agreement_evidence_widget`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -94,6 +88,14 @@ dict[str, Any]
     metadata lakehouse evidence file paths, refreshing agreement options,
     and saving evidence metadata rows.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 This public wrapper is intended for the separate-widget ``01_agreement`` layout.
@@ -101,6 +103,12 @@ Evidence files must be uploaded manually to the metadata lakehouse
 ``Files`` area first. The widget appends one file-reference row per
 pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
 does not read or write binary file content.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -897,6 +905,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 01_agreement
+- Glossary terms: —
 
 ### AI implementation contract
 

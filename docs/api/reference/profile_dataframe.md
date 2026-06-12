@@ -4,29 +4,17 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 
 ## Purpose
 
-Profile a source or target DataFrame for schema, quality, and catalogue evidence.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-- `03_governance`
-- `99_explore`
-
-**Use when:**
+## When to use this
 
 - Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
+
+## At a glance
 
 **Do not use when:**
 
 - Do not use as a data-quality enforcement step or as a persistence helper; it builds profile rows but does not approve governance evidence.
-
-**Example:**
-
-```python
-profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
-```
 
 **Errors:**
 
@@ -35,6 +23,12 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 **Side effects:**
 
 Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
+
+## Used in templates
+
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
 
 ## Used by
 
@@ -50,7 +44,7 @@ Computes profiling aggregations on the provided DataFrame; it does not write met
 - `fabricops_kit.data_profiling._get_profiled_columns`
 - `fabricops_kit.data_profiling._is_min_max_supported_type`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -134,11 +128,25 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 
 Spark DataFrame containing one profile row per eligible business column.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 Distribution profiling only collects aggregated Spark results such as
 quantiles, bucket counts, and grouped category counts. It does not collect
 complete datasets to the driver.
+
+### Example
+
+```python
+profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
+```
 
 ### Public callable source code
 
@@ -622,6 +630,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 3
 - Outbound references count: 5
 - Used in templates: 02_pipeline, 03_governance, 99_explore
+- Glossary terms: —
 
 ### AI implementation contract
 

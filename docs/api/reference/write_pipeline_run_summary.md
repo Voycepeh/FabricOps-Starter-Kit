@@ -4,27 +4,17 @@ Write one pipeline runtime summary row to metadata.
 
 ## Purpose
 
-Write one pipeline runtime summary row to metadata.
+This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
 
-## At a glance
-
-### Used in templates
-
-- `02_pipeline`
-
-**Use when:**
+## When to use this
 
 - Use at the end of 02_pipeline to store operational run evidence in METADATA_PIPELINE_RUNS.
+
+## At a glance
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -33,6 +23,10 @@ Not documented yet
 **Side effects:**
 
 Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -45,7 +39,7 @@ Not documented yet
 - `fabricops_kit.pipeline._now_iso`
 - `fabricops_kit.pipeline._summary_status`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -219,11 +213,25 @@ def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str
 
 Runtime summary row that was written.
 
+### Return interpretation
+
+Interpret the returned value according to the Returns section above.
+
+### Common failure causes
+
+No common failure causes are documented beyond the Errors section.
+
 ### Notes
 
 The row is written via ``write_lakehouse_table(..., config, env,
 "metadata", metadata_table, mode="append")`` so runtime evidence never
 relies on a default attached lakehouse.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -544,6 +552,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 02_pipeline
+- Glossary terms: —
 
 ### AI implementation contract
 

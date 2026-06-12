@@ -15,13 +15,17 @@ class PublicSymbolDocMetadata(TypedDict):
     template_segment: str
     function_type: NotRequired[str]
     purpose: NotRequired[str]
+    expanded_purpose: NotRequired[str]
     summary_override: str | None
     use_when: NotRequired[str]
-    when_to_use: NotRequired[list[str]]
+    when_to_use: NotRequired[list[str] | str]
     do_not_use_when: NotRequired[str]
+    glossary_terms: NotRequired[list[str]]
     parameters: NotRequired[str | dict[str, str] | list[str]]
     returns: NotRequired[str]
+    return_interpretation: NotRequired[str]
     raises: NotRequired[str | dict[str, str] | list[str]]
+    common_failure_causes: NotRequired[str | list[str]]
     side_effects: NotRequired[str | list[str]]
     fabric_context: NotRequired[str]
     ai_verification: NotRequired[str | list[str]]
@@ -501,15 +505,46 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'symbol_name': 'enforce_profile_behavior',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profile behavior enforcement',
+  'expanded_purpose': 'This function protects against accidental changes in how a table is loaded. For example, it can stop a pipeline from overwriting a dataset that was previously approved as append-only.\n\nIt compares the current load behavior with the previously accepted catalogue profile. If the current behavior no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.',
   'use_when': 'Use in 02_pipeline to enforce load_behavior expectations against previous accepted catalogue profile evidence.',
+  'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously approved loading pattern. It is especially useful when an overwrite could remove existing history, or when an append-only table suddenly behaves like a full refresh.',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
                      'validate_schema or enforce_dq_rules for those checks.',
-  'parameters': 'spark, dataframe, metadata_table, dataset_name, table_name, required stage, '
-                'run_id, load_behavior, optional watermark column, exclude_columns, and exclude_run_id.',
+  'glossary_terms': ['profile behavior',
+                     'accepted catalogue profile evidence',
+                     'baseline profile',
+                     'stage',
+                     'profile behavior check',
+                     'guardrail',
+                     'can_continue',
+                     'append',
+                     'overwrite',
+                     'skip',
+                     'metadata lakehouse'],
+  'parameters': {'spark': 'Spark session used to read accepted profile evidence from the configured metadata target.',
+                 'dataframe': 'Current source or target DataFrame being checked.',
+                 'metadata_table': 'Metadata table that stores accepted catalogue profile evidence.',
+                 'dataset_name': 'Dataset name used to find matching catalogue evidence.',
+                 'table_name': 'Table name used to find matching catalogue evidence.',
+                 'stage': 'The part of the pipeline being checked, such as source or target.',
+                 'run_id': 'Current pipeline run identifier recorded in the generated profile evidence.',
+                 'load_behavior': 'Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip.',
+                 'watermark_column': 'Optional column used to compare append watermark movement when available.',
+                 'exclude_columns': 'Optional columns to ignore while comparing profile fields.',
+                 'exclude_run_id': 'Optional run id to exclude when selecting the accepted baseline evidence.'},
   'returns': 'Guardrail result dictionary with status, can_continue, message, current profile, '
              'baseline details, and profile behavior checks.',
+  'return_interpretation': 'If can_continue is true, the current load behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, update or reapprove the catalogue profile evidence. If not intentional, fix the pipeline configuration.',
   'raises': 'Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded '
             'or compared.',
+  'common_failure_causes': ['Accepted profile evidence has not been created or approved yet.',
+                            'The current load behavior does not match the accepted baseline.',
+                            'The configured dataset or table name does not match catalogue evidence.',
+                            'The configured stage does not match the accepted evidence.',
+                            'The metadata lakehouse or catalogue profile table cannot be read.',
+                            'The accepted evidence is missing required behavior fields.',
+                            'The current behavior value is invalid or unsupported.',
+                            'The accepted evidence is stale or incomplete.'],
   'side_effects': 'Reads baseline profile metadata and computes current profile evidence; it does '
                   'not write target data.',
   'fabric_context': 'Requires profile metadata routed through the configured 00_env_config '
