@@ -18,7 +18,7 @@ Use this page as a function lookup after you understand the notebook flow. The d
 
 ## Find a function
 
-Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand Implementation details.
+Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand the Internal implementation summary.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search functions</label>

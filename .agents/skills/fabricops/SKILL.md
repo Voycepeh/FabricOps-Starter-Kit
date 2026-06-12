@@ -84,7 +84,7 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 - Use `docs/reference/agent-manifest.json` for required context, inputs, outputs, side effects, failure modes, verification, and related functions.
 - Use `docs/reference/function-manifest.json` for the machine-readable function inventory and dependency metadata.
 - Use pages in `docs/api/reference/` for notebook authoring guidance.
-- Use embedded Implementation details on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
+- Use the embedded Internal implementation summary on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
 - Use `docs/reference/template-function-map.md` to connect notebook templates to callable references.
 - Do not manually edit generated reference files unless source inputs or generator behavior require it.
 - If source metadata, public API surface, callable documentation contracts, or generator behavior changes, regenerate the existing reference outputs with `PYTHONPATH=src python scripts/generate_function_reference.py` and run relevant tests.
@@ -96,5 +96,5 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 3. Read the matching page in `docs/api/reference/` before calling or recommending a public helper.
 4. For DQ work, read `docs/reference/dq-rules/index.md`, each relevant generated DQ rule page, and the callable page before generating notebook code.
 5. Inspect `docs/reference/agent-manifest.json` and `docs/reference/function-manifest.json` when you need execution metadata, dependencies, side effects, failure modes, or verification guidance.
-6. Use embedded Implementation details on callable pages when maintaining package implementation details; only use `docs/reference/internal/` if standalone internal pages were explicitly generated for maintainer diagnostics.
+6. Use the embedded Internal implementation summary on callable pages when maintaining package implementation details; only use `docs/reference/internal/` if standalone internal pages were explicitly generated for maintainer diagnostics.
 7. Preserve `00_env_config` metadata routing for reads and writes, especially governed evidence tables such as `METADATA_DQ_RULES`.

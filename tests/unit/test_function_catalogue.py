@@ -27,7 +27,7 @@ def test_function_catalogue_uses_public_callable_filter() -> None:
     assert 'data-function-type-filter="callable" checked' in page
     assert 'data-function-type-filter="internal"> Internal' not in page
     assert "Public functions intended for notebook authors." in page
-    assert "For internal helper behavior, open the public callable page and expand Implementation details." in page
+    assert "For internal helper behavior, open the public callable page and expand the Internal implementation summary." in page
 
 
 def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
