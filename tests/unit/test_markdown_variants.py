@@ -35,3 +35,28 @@ def test_markdown_variant_hook_publishes_agent_friendly_entrypoints(tmp_path: Pa
     missing_paths = [str(path.relative_to(site_dir)) for path in expected_paths if not path.exists()]
 
     assert missing_paths == []
+
+
+def test_markdown_variant_hook_publishes_versioned_agent_friendly_entrypoints(tmp_path: Path) -> None:
+    hook = _load_hook_module()
+    versioned_site_dir = tmp_path / "site" / "1.2.3"
+
+    hook.on_post_build({"docs_dir": str(ROOT / "docs"), "site_dir": str(versioned_site_dir)})
+
+    expected_paths = [
+        versioned_site_dir / "llms.txt",
+        versioned_site_dir / "quick-start.md",
+        versioned_site_dir / "reference.md",
+    ]
+    missing_paths = [str(path.relative_to(versioned_site_dir)) for path in expected_paths if not path.exists()]
+
+    assert missing_paths == []
+
+
+def test_llms_txt_uses_relative_documentation_links_for_versioned_snapshots() -> None:
+    llms_text = (ROOT / "docs" / "llms.txt").read_text(encoding="utf-8")
+
+    assert "https://voycepeh.github.io/FabricOps-Starter-Kit/" not in llms_text
+    assert "(how-fabricops-works.md)" in llms_text
+    assert "(reference.md)" in llms_text
+    assert "(reference/dq-rules.md)" in llms_text

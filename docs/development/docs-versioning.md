@@ -28,6 +28,8 @@ The documentation build generates a release traceability page with the full pack
 
 Released documentation, released wheel files, and released notebook templates must be frozen together. Dev documentation may point to `main` branch templates, but released documentation should point to the matching Git tag or release assets.
 
+Mike release snapshots freeze all static documentation artifacts together, including rendered HTML pages, `/llms.txt`, sibling `.md` page variants, and generated reference manifests. Keep `llms.txt` as a static build artifact with relative documentation links so each versioned snapshot serves its own frozen copies, such as `/<version>/llms.txt`, `/<version>/quick-start.md`, and `/<version>/reference.md`.
+
 Template downloads should use the same release as the wheel, ideally as a `templates.zip` release asset. This avoids users reading released documentation while opening a newer notebook that expects a newer wheel or metadata schema.
 
 ## Release process
