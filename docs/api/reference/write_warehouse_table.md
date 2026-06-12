@@ -29,7 +29,7 @@ Writes data to a Fabric warehouse table using the selected mode.
 - **Target table:** An output table written by the pipeline.
 - **Guardrail:** A check that tells the notebook whether it is safe to continue.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

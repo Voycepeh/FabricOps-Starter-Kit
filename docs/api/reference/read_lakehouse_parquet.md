@@ -29,7 +29,7 @@ Reads from lakehouse Files and may create a local timestamp-converted fallback f
 - **Source table:** An input table or file read by the pipeline.
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

@@ -31,7 +31,7 @@ Computes max(freshness_column) on the provided DataFrame; it does not write meta
 - **Source table:** An input table or file read by the pipeline.
 - **Target table:** An output table written by the pipeline.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

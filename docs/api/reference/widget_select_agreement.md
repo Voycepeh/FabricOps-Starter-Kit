@@ -28,7 +28,7 @@ Displays an IPython widget and may register the active notebook selection in met
 
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

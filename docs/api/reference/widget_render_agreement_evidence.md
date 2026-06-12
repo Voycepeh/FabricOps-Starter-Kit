@@ -29,7 +29,7 @@ Not documented yet
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

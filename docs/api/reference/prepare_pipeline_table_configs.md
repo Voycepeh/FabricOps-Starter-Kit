@@ -32,7 +32,7 @@ Source role validates pre-loaded DataFrames. Target role adds FabricOps audit co
 - **Stage:** The part of the pipeline being checked, such as source or target.
 - **Guardrail:** A check that tells the notebook whether it is safe to continue.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

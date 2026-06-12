@@ -28,7 +28,7 @@ Reads session/widget state only; it does not write metadata, tables, or files.
 
 - **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

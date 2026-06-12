@@ -594,7 +594,7 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
         term_text = str(entry["term"])
         display_term = term_text if "_" in term_text else term_text.capitalize()
         lines.append(f"- **{display_term}:** {entry['plain_language_definition']}")
-    lines.extend(["", "See the [full glossary](../../reference/glossary/) for more FabricOps terms.", ""])
+    lines.extend(["", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms.", ""])
     return lines
 
 
@@ -701,7 +701,7 @@ def public_reference_link(
     if symbol not in docs_metadata:
         raise RuntimeError(f"Missing PUBLIC_SYMBOL_DOCS entry for exported symbol: {symbol}")
     if context == "module":
-        return f"../reference/{symbol}/"
+        return f"../../reference/{symbol}/"
     if context == "reference":
         return f"../api/reference/{symbol}/"
     if context == "notebook":
@@ -1599,6 +1599,18 @@ def main() -> None:
         module_sidebar_groups.setdefault(row["sidebar_group"], []).append(module_name)
 
     mkdocs_text = MKDOCS_PATH.read_text(encoding="utf-8")
+    function_start_marker = "          # AUTO-GENERATED-FUNCTIONS-START"
+    function_end_marker = "          # AUTO-GENERATED-FUNCTIONS-END"
+    if function_start_marker in mkdocs_text and function_end_marker in mkdocs_text:
+        generated_function_lines = [
+            f"          - {name}: api/reference/{name}.md"
+            for name in sorted(public, key=str.lower)
+        ]
+        generated_functions = "\n".join(generated_function_lines)
+        before, rest = mkdocs_text.split(function_start_marker, 1)
+        middle, after = rest.split(function_end_marker, 1)
+        mkdocs_text = before + function_start_marker + "\n" + generated_functions + "\n" + function_end_marker + after
+
     start_marker = "      # AUTO-GENERATED-MODULES-START"
     end_marker = "      # AUTO-GENERATED-MODULES-END"
     if start_marker in mkdocs_text and end_marker in mkdocs_text:
@@ -1610,7 +1622,8 @@ def main() -> None:
         before, rest = mkdocs_text.split(start_marker, 1)
         middle, after = rest.split(end_marker, 1)
         mkdocs_text = before + start_marker + "\n" + generated + "\n" + end_marker + after
-        MKDOCS_PATH.write_text(mkdocs_text, encoding="utf-8", newline="\n")
+
+    MKDOCS_PATH.write_text(mkdocs_text, encoding="utf-8", newline="\n")
 
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}

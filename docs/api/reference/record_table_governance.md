@@ -30,7 +30,7 @@ Writes approved governance metadata records to configured metadata tables.
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 - **Guardrail:** A check that tells the notebook whether it is safe to continue.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

@@ -29,7 +29,7 @@ Creates or validates FabricOps metadata tables in the configured metadata lakeho
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

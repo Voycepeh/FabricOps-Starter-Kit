@@ -30,7 +30,7 @@ Not documented yet
 - **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

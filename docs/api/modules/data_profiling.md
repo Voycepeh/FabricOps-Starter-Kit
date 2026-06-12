@@ -76,7 +76,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
   </thead>
   <tbody>
     <tr>
-      <td><a href="../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+      <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Profile a source or target DataFrame for schema, quality, and catalogue evidence.</td>
@@ -99,7 +99,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_build_distribution_summaries</code></span>, <span class="reference-chip"><code>_get_profiled_columns</code></span>, <span class="reference-chip"><code>_is_min_max_supported_type</code></span>
 </li>
@@ -126,7 +126,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td><code>_build_distribution_summaries</code></td>
-      <td><a href="../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+      <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
       <td><code>_build_numeric_distribution</code></td>
@@ -134,11 +134,11 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
     </tr>
     <tr>
       <td><code>_get_profiled_columns</code></td>
-      <td><a href="../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+      <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
       <td><code>_is_min_max_supported_type</code></td>
-      <td><a href="../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+      <td><a href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
     </tr>
     <tr>
       <td><code>_numeric_bin_edges</code></td>
@@ -179,10 +179,10 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <a class="reference-chip" href="../governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
 
 **guardrails**
-<a class="reference-chip" href="../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
+<a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
 
 ### External callees
 

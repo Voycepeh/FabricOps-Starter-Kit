@@ -29,7 +29,7 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 - **Source table:** An input table or file read by the pipeline.
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

@@ -30,7 +30,7 @@ Pure record-building helper; it does not write metadata, tables, or files.
 - **Target table:** An output table written by the pipeline.
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 
