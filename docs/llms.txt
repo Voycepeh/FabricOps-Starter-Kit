@@ -13,7 +13,7 @@ Use this file as a concise navigation map for LLMs, coding agents, and documenta
 
 ## Architecture
 
-- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/index.md): Overview of the governed Fabric notebook operating model.
+- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works.md): Overview of the governed Fabric notebook operating model.
 - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-tables.md): Metadata table responsibilities and governance evidence model.
 - [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/pipeline-guardrails.md): Runtime guardrails for schemas, freshness, DQ enforcement, and load behavior.
 - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
@@ -26,13 +26,13 @@ Use this file as a concise navigation map for LLMs, coding agents, and documenta
 ## Metadata and contracts
 
 - [Data Quality and Governance](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/governance-review.md): Review flows for column context, classification, DQ rules, and governance evidence.
-- [DQ Rules Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/dq-rules/index.md): Supported rule types, parameters, examples, and enforcement expectations.
+- [DQ Rules Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/dq-rules.md): Supported rule types, parameters, examples, and enforcement expectations.
 - [Glossary](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/glossary.md): Shared terminology for governed notebook delivery.
 
 ## API reference
 
-- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/index.md): Public callable reference generated from source docstrings and metadata.
-- [Functions by Module](https://voycepeh.github.io/FabricOps-Starter-Kit/api/modules/index.md): Module-oriented callable index for package users and maintainers.
+- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference.md): Public callable reference generated from source docstrings and metadata.
+- [Functions by Module](https://voycepeh.github.io/FabricOps-Starter-Kit/api/modules.md): Module-oriented callable index for package users and maintainers.
 - [Agent Manifest](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/agent-manifest.json): Machine-readable helper metadata for AI coding agents.
 - [Function Manifest](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/function-manifest.json): Machine-readable function inventory and dependency metadata.
 

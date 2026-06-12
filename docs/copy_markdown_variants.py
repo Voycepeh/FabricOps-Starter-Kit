@@ -8,6 +8,7 @@ from typing import Any
 
 
 EXCLUDED_DIRS = {"assets", "javascripts", "stylesheets"}
+ROOT_TEXT_FILES = {"llms.txt"}
 
 
 def _is_public_markdown(path: Path, docs_dir: Path) -> bool:
@@ -31,6 +32,12 @@ def on_post_build(config: Any) -> None:
 
     docs_dir = Path(config["docs_dir"]).resolve()
     site_dir = Path(config["site_dir"]).resolve()
+    site_dir.mkdir(parents=True, exist_ok=True)
+
+    for file_name in ROOT_TEXT_FILES:
+        source_path = docs_dir / file_name
+        if source_path.is_file():
+            shutil.copy2(source_path, site_dir / file_name)
 
     for source_path in docs_dir.rglob("*.md"):
         if not _is_public_markdown(source_path, docs_dir):
