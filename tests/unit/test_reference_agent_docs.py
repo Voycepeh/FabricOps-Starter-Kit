@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import ast
 import json
+import posixpath
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 REFERENCE_DIR = ROOT / "docs" / "reference"
+API_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
+LEGACY_CALLABLE_DIR = REFERENCE_DIR / "callables"
 PLACEHOLDER = "Not documented yet"
 CORE_CALLABLES = {
     "setup_notebook",
@@ -42,6 +47,38 @@ CORE_AGENT_FIELDS = (
 )
 
 
+def _public_exports() -> set[str]:
+    tree = ast.parse((ROOT / "src" / "fabricops_kit" / "__init__.py").read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
+            return {elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)}
+    raise AssertionError("src/fabricops_kit/__init__.py is missing __all__")
+
+
+def _markdown_links(text: str) -> list[str]:
+    markdown_links = re.findall(r"\[[^\]]+\]\(([^)]+)\)", text)
+    html_links = re.findall(r'href="([^"]+)"', text)
+    return [*markdown_links, *html_links]
+
+
+def _page_url_dir(page: Path) -> str:
+    relative = page.relative_to(ROOT / "docs").with_suffix("")
+    if relative.name == "index":
+        relative = relative.parent
+    return "/" + str(relative).strip("/") + "/"
+
+
+def _resolved_docs_url(page: Path, link: str) -> str | None:
+    if link.startswith(("http://", "https://", "#", "mailto:")):
+        return None
+    target = link.split("#", 1)[0].split("?", 1)[0]
+    if not target:
+        return None
+    if target.startswith("/"):
+        return posixpath.normpath(target)
+    return posixpath.normpath(posixpath.join(_page_url_dir(page), target))
+
+
 def _section_text(page_text: str, section: str) -> str:
     marker = f"## {section}\n"
     assert marker in page_text
@@ -66,7 +103,7 @@ def test_fabricops_skill_file_exists() -> None:
 
 
 def test_every_callable_page_has_ai_reference_sections() -> None:
-    callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
@@ -75,7 +112,7 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
         assert "## At a glance" in text, page
         assert "## Used by" in text, page
         assert "## Calls" in text, page
-        assert "## Callable implementation" in text, page
+        assert "## Function details and source" in text, page
         assert "### Function details" in text, page
         assert "### Parameters" in text, page
         assert "### Returns" in text, page
@@ -92,9 +129,95 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
         assert "<summary>AI / machine-readable metadata — skip this if you are reading the docs normally</summary>" in text, page
 
 
+def test_every_public_callable_has_one_canonical_generated_page_path() -> None:
+    public_exports = _public_exports()
+    canonical_pages = {page.stem for page in API_REFERENCE_DIR.glob("*.md")}
+    legacy_pages = {page.stem for page in LEGACY_CALLABLE_DIR.glob("*.md")} if LEGACY_CALLABLE_DIR.exists() else set()
+
+    assert canonical_pages == public_exports
+    assert legacy_pages == set()
+
+    expected_paths = {name: f"api/reference/{name}.md" for name in public_exports}
+
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    public_function_manifest_paths = {
+        entry["name"]: entry.get("docs_path")
+        for entry in function_manifest
+        if entry.get("classification") == "Callable"
+    }
+    assert public_function_manifest_paths == expected_paths
+
+    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    public_agent_manifest_paths = {
+        entry["name"]: entry.get("docs_path")
+        for entry in agent_manifest
+        if entry.get("type") == "callable"
+    }
+    assert public_agent_manifest_paths == expected_paths
+
+
+def test_generated_function_links_use_only_canonical_api_reference_route() -> None:
+    public_exports = _public_exports()
+    generated_pages = [
+        REFERENCE_DIR / "index.md",
+        REFERENCE_DIR / "template-function-map.md",
+        *API_REFERENCE_DIR.glob("*.md"),
+        *(ROOT / "docs" / "api" / "modules").glob("*.md"),
+    ]
+
+    assert generated_pages
+    for page in generated_pages:
+        text = page.read_text(encoding="utf-8")
+        for link in _markdown_links(text):
+            assert "/reference/callables/" not in link, (page, link)
+            assert "reference/callables/" not in link, (page, link)
+            assert "../callables/" not in link, (page, link)
+
+    for page in generated_pages:
+        for link in _markdown_links(page.read_text(encoding="utf-8")):
+            resolved_url = _resolved_docs_url(page, link)
+            if not resolved_url:
+                continue
+            linked_name = resolved_url.rstrip("/").rsplit("/", 1)[-1]
+            if linked_name in public_exports:
+                assert resolved_url == f"/api/reference/{linked_name}", (page, link, resolved_url)
+
+    catalogue_text = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
+    template_map_text = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
+    for name in public_exports:
+        assert f'href="../api/reference/{name}/"' in catalogue_text
+        assert f"../api/reference/{name}/" in template_map_text or name not in template_map_text
+
+
+def test_enforce_dq_rules_has_single_canonical_corrected_page() -> None:
+    canonical_page = API_REFERENCE_DIR / "enforce_dq_rules.md"
+    legacy_page = LEGACY_CALLABLE_DIR / "enforce_dq_rules.md"
+    text = canonical_page.read_text(encoding="utf-8")
+
+    assert canonical_page.exists()
+    assert not legacy_page.exists()
+    ordered_markers = [
+        "## Purpose",
+        "## At a glance",
+        "## Used by",
+        "## Calls",
+        "## Function details and source",
+        "### Function details",
+        "### Public callable source code",
+        "## Internal implementation summary",
+        '??? info "Call flow"',
+        '??? info "Internal helpers used: 16"',
+        "<summary>AI / machine-readable metadata",
+    ]
+    positions = [text.index(marker) for marker in ordered_markers]
+    assert positions == sorted(positions)
+    assert "## Callable implementation" not in text
+    assert "Internal helpers used by this callable" not in text
+
+
 def test_core_callable_pages_have_non_placeholder_ai_guidance() -> None:
     for callable_name in sorted(CORE_CALLABLES):
-        page = REFERENCE_DIR / "callables" / f"{callable_name}.md"
+        page = API_REFERENCE_DIR / f"{callable_name}.md"
         text = page.read_text(encoding="utf-8")
         for section in CORE_PAGE_SECTIONS:
             section_text = _section_text(text, section)
@@ -122,7 +245,7 @@ def test_standalone_internal_pages_are_not_generated_by_default() -> None:
 
 
 def test_callable_pages_embed_public_first_implementation_details() -> None:
-    callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
@@ -132,7 +255,7 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
             "## At a glance",
             "## Used by",
             "## Calls",
-            "## Callable implementation",
+            "## Function details and source",
             "### Function details",
             "### Parameters",
             "### Returns",
@@ -164,7 +287,7 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
 
 
 def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
-    text = (REFERENCE_DIR / "callables" / "enforce_dq_rules.md").read_text(encoding="utf-8")
+    text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
 
     assert '??? info "Internal helpers used: 16"' in text
     assert "This callable uses 16 internal helpers for" in text
@@ -220,7 +343,7 @@ def test_github_source_url_uses_configured_source_ref(monkeypatch) -> None:
 
 
 def test_callable_pages_include_source_section_and_github_source_link() -> None:
-    callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
@@ -232,7 +355,7 @@ def test_callable_pages_include_source_section_and_github_source_link() -> None:
 
 
 def test_callable_pages_collapse_ai_machine_metadata() -> None:
-    callable_pages = sorted((REFERENCE_DIR / "callables").glob("*.md"))
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
@@ -255,7 +378,7 @@ def test_callable_pages_collapse_ai_machine_metadata() -> None:
 
 
 def test_setup_notebook_reference_uses_human_first_source_documentation() -> None:
-    text = (REFERENCE_DIR / "callables" / "setup_notebook.md").read_text(encoding="utf-8")
+    text = (API_REFERENCE_DIR / "setup_notebook.md").read_text(encoding="utf-8")
 
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
