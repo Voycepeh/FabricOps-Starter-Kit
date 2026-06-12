@@ -2,9 +2,13 @@
 
 Read an Excel file from a configured Fabric lakehouse Files path.
 
+## Purpose
+
+Reads an Excel file from a configured lakehouse Files path and converts it into a Spark DataFrame for notebook processing.
+
 ## When to use this
 
-- Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
+- Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 **Side effects:**
 
 Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -72,6 +83,17 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 ### Returns
 
 Spark DataFrame converted from the selected Excel worksheet.
+
+### Return interpretation
+
+The returned DataFrame depends on workbook sheet and parsing options; confirm headers and types before using it as pipeline input.
+
+### Common failure causes
+
+- The workbook path or sheet name is incorrect.
+- Excel parsing dependencies are unavailable.
+- The workbook layout does not match expected headers.
+- The configured lakehouse target cannot be read.
 
 ### Notes
 
@@ -348,7 +370,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 02_pipeline, 99_explore
-- Glossary terms: —
+- Glossary terms: source table, notebook template
 
 ### AI implementation contract
 

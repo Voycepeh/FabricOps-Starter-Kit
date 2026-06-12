@@ -2,9 +2,13 @@
 
 Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
 
+## Purpose
+
+Stops or raises for a blocking guardrail result so a notebook does not continue into unsafe downstream writes.
+
 ## When to use this
 
-- Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.
+- Use immediately after schema, freshness, profile behavior, or DQ guardrail helpers when can_continue controls whether the pipeline should proceed.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Raises RuntimeError outside Fabric notebook exit handling when a failed guardrai
 **Side effects:**
 
 May terminate notebook execution through Fabric notebook utilities or raise an exception.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -54,6 +65,17 @@ def stop_if_failed(result) -> None
 ### Returns
 
 None when execution may continue; otherwise raises or exits according to runtime behavior.
+
+### Return interpretation
+
+No return value means execution may continue. A blocking result raises or exits according to runtime settings.
+
+### Common failure causes
+
+- The guardrail result is missing can_continue or status fields.
+- A blocking guardrail returned can_continue as false.
+- Notebook exit behavior is not supported in the current runtime.
+- The caller passed a warning result that should not stop execution.
 
 ### Notes
 
@@ -143,7 +165,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 1
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: guardrail, can_continue
 
 ### AI implementation contract
 

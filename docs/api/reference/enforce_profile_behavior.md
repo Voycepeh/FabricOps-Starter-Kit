@@ -26,7 +26,7 @@ Raises Spark or metadata-read errors when baseline profile evidence cannot be lo
 
 Reads baseline profile metadata and computes current profile evidence; it does not write target data.
 
-### Key terms
+## Key terms
 
 - **Profile behavior:** The expected way a table is loaded.
 - **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.

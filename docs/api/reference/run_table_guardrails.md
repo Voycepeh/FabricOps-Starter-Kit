@@ -2,9 +2,13 @@
 
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
+## Purpose
+
+Coordinates profiling, schema, freshness, profile behavior, DQ, and catalogue evidence checks for a group of pipeline table configs.
+
 ## When to use this
 
-- Use in 02_pipeline to run source guardrails before transformation and target guardrails before writes while keeping per-table results separated.
+- Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.
 
 ## At a glance
 
@@ -19,6 +23,16 @@ Not documented yet
 **Side effects:**
 
 Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -94,6 +108,17 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 ### Returns
 
 Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
+
+### Return interpretation
+
+The result groups each guardrail outcome and a summary DataFrame. If any blocking result has can_continue false, stop before writing data.
+
+### Common failure causes
+
+- One of the table configs is incomplete.
+- A schema, freshness, profile behavior, or DQ check fails.
+- Approved metadata evidence cannot be read.
+- Spark cannot profile or validate one of the DataFrames.
 
 ### Notes
 
@@ -580,7 +605,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 11
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: guardrail, can_continue, source table, target table, catalogue evidence
 
 ### AI implementation contract
 

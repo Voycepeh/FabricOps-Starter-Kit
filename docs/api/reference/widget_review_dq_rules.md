@@ -2,9 +2,13 @@
 
 Render standalone DQ-rule review guidance for selected profile rows.
 
+## Purpose
+
+Renders data-quality rule review guidance so reviewers can approve executable expectations for a selected table.
+
 ## When to use this
 
-- Render standalone DQ-rule review guidance for selected profile rows.
+- Use in 03_governance after profile rows are loaded and before record_table_governance persists approved DQ rules.
 
 ## At a glance
 
@@ -19,6 +23,14 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -80,6 +92,17 @@ list[dict[str, Any]]
     Mutable review list. The widget appends approved create, update,
     deactivation, and reactivation dictionaries to this list; pass it to
     ``record_table_governance`` to persist append-only metadata history.
+
+### Return interpretation
+
+The widget captures proposed and approved DQ rule rows. Only approved rows should be persisted and later enforced by pipeline guardrails.
+
+### Common failure causes
+
+- Profile rows are missing.
+- Rule parameters are incomplete or unsupported.
+- The reviewer has not approved any rules.
+- Widget state is reset before records are collected.
 
 ### Notes
 
@@ -759,7 +782,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 6
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: catalogue evidence, guardrail, metadata lakehouse
 
 ### AI implementation contract
 

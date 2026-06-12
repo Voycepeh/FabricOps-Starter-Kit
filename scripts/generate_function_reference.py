@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import runpy
 import subprocess
 from typing import Any, Iterable
 
@@ -473,26 +474,19 @@ def parse_public_exports() -> list[str]:
 
 
 def parse_docs_metadata() -> dict[str, dict[str, Any]]:
-    tree = ast.parse(DOCS_METADATA_PATH.read_text(encoding="utf-8"))
-    for node in tree.body:
-        is_assign = isinstance(node, ast.Assign) and any(
-            isinstance(t, ast.Name) and t.id == "PUBLIC_SYMBOL_DOCS" for t in node.targets
-        )
-        is_annassign = (
-            isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "PUBLIC_SYMBOL_DOCS"
-        )
-        if (is_assign or is_annassign) and node.value is not None:
-            rows = ast.literal_eval(node.value)
-            seen = set()
-            out = {}
-            for row in rows:
-                name = row["symbol_name"]
-                if name in seen:
-                    raise RuntimeError(f"Duplicate PUBLIC_SYMBOL_DOCS symbol_name detected: {name}")
-                seen.add(name)
-                out[name] = row
-            return out
-    raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from reference_docs_metadata.py")
+    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+    rows = namespace.get("PUBLIC_SYMBOL_DOCS")
+    if not isinstance(rows, list):
+        raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from reference_docs_metadata.py")
+    seen = set()
+    out = {}
+    for row in rows:
+        name = row["symbol_name"]
+        if name in seen:
+            raise RuntimeError(f"Duplicate PUBLIC_SYMBOL_DOCS symbol_name detected: {name}")
+        seen.add(name)
+        out[name] = row
+    return out
 
 
 def parse_template_flow_docs() -> list[dict[str, Any]]:
@@ -566,7 +560,7 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
     """Render compact glossary-backed key terms for a callable page."""
     if not glossary_terms:
         return []
-    lines = ["### Key terms", ""]
+    lines = ["## Key terms", ""]
     seen: set[str] = set()
     for term in glossary_terms:
         key = term.lower()
@@ -1953,9 +1947,9 @@ def main() -> None:
         related_for_page = metadata_related or relationship_related
         rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
         rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
-        rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"), "Interpret the returned value according to the Returns section above.")
+        rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"))
         rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
-        rendered_common_failure_causes = _documented_text(metadata.get("common_failure_causes"), "No common failure causes are documented beyond the Errors section.")
+        rendered_common_failure_causes = _documented_text(metadata.get("common_failure_causes"))
         rendered_notes = _documented_text(doc_sections.get("notes"), "No additional callable notes are documented.")
         rendered_side_effects = _documented_text(metadata.get("side_effects"))
         rendered_fabric_context = _documented_text(
@@ -2030,16 +2024,13 @@ def main() -> None:
                 _code_block(source_block) if source_block else PLACEHOLDER,
             ]
             nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
-            human_use_when = _documented_text(metadata.get("when_to_use"), metadata.get("use_when"), metadata.get("purpose"), purpose)
-            human_use_bullets = _bullet_lines(human_use_when)
+            human_use_when = _documented_text(metadata.get("when_to_use"))
+            use_when_lines = ["## When to use this", "", *_bullet_lines(human_use_when), ""] if human_use_when != PLACEHOLDER else []
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
             expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
-            metadata_purpose = _documented_text(metadata.get("purpose"))
             purpose_lines: list[str] = []
             if expanded_purpose != PLACEHOLDER:
                 purpose_lines = ["## Purpose", "", expanded_purpose, ""]
-            elif metadata_purpose != PLACEHOLDER and metadata_purpose.strip() != purpose.strip():
-                purpose_lines = ["## Purpose", "", metadata_purpose, ""]
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
             key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
@@ -2121,10 +2112,7 @@ def main() -> None:
                 purpose,
                 "",
                 *purpose_lines,
-                "## When to use this",
-                "",
-                *human_use_bullets,
-                "",
+                *use_when_lines,
                 "## At a glance",
                 "",
                 "**Do not use when:**",
@@ -2266,7 +2254,8 @@ def main() -> None:
             (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
+        record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,
@@ -2278,13 +2267,14 @@ def main() -> None:
             "used_in_templates": record_used_in_templates,
             "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [],
             "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None,
+            "when_to_use": record_when_to_use,
             "source_file": source_path,
             "source_start_line": source_start_line,
             "source_end_line": source_end_line,
             "source_url": source_ref,
             "docs_path": docs_path,
             "summary": purpose,
-            "use_when": _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
+            "use_when": _documented_text(metadata.get("when_to_use"), metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
             "do_not_use_when": _documented_text(metadata.get("do_not_use_when")),
             "required_context": rendered_fabric_context,
             "inputs": rendered_parameters,

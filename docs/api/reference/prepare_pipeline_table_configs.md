@@ -2,9 +2,13 @@
 
 Prepare source or target table configs for 02_pipeline.
 
+## Purpose
+
+Normalizes source and target table configuration dictionaries so pipeline guardrail, write, lineage, and evidence helpers receive consistent fields.
+
 ## When to use this
 
-- Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
+- Use before running table guardrails or writes when notebook-editable table configs need package defaults and derived keys.
 
 ## At a glance
 
@@ -20,6 +24,15 @@ ValueError
 **Side effects:**
 
 Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Stage:** The part of the pipeline being checked, such as source or target.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -67,6 +80,17 @@ def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_
 ### Returns
 
 Enriched table configs and a dictionary keyed by table key.
+
+### Return interpretation
+
+The returned configs are enriched copies keyed for downstream helpers. Confirm each table has the expected stage, key, and write settings.
+
+### Common failure causes
+
+- A table config is missing key or table_name fields.
+- Stage or write settings are inconsistent.
+- Source and target config shapes differ from expected dictionaries.
+- Defaults in CONFIG do not match the notebook environment.
 
 ### Notes
 
@@ -323,7 +347,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: source table, target table, stage, guardrail
 
 ### AI implementation contract
 

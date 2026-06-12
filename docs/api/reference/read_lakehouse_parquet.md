@@ -2,9 +2,13 @@
 
 Read a Parquet path from a configured Fabric lakehouse Files path.
 
+## Purpose
+
+Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.
+
 ## When to use this
 
-- Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
+- Use for file-based source ingestion when the source is Parquet rather than a managed table.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 **Side effects:**
 
 Reads from lakehouse Files and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -73,6 +84,17 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 ### Returns
 
 Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
+
+### Return interpretation
+
+The returned DataFrame uses the Parquet schema read by Spark; validate it before downstream profile or guardrail checks.
+
+### Common failure causes
+
+- The Parquet path is missing or misspelled.
+- The file is not valid Parquet.
+- The configured lakehouse target is unavailable.
+- The caller lacks read permission.
 
 ### Notes
 
@@ -451,7 +473,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 02_pipeline, 99_explore
-- Glossary terms: —
+- Glossary terms: source table, notebook template
 
 ### AI implementation contract
 

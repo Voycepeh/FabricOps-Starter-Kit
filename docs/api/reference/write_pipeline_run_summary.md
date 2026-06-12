@@ -2,9 +2,13 @@
 
 Write one pipeline runtime summary row to metadata.
 
+## Purpose
+
+Writes a compact run-level summary that ties pipeline name, agreement context, guardrail results, lineage, and write outcomes together.
+
 ## When to use this
 
-- Use at the end of 02_pipeline to store operational run evidence in METADATA_PIPELINE_RUNS.
+- Use at the end of 02_pipeline when downstream operators need one metadata record describing the run outcome.
 
 ## At a glance
 
@@ -19,6 +23,15 @@ Not documented yet
 **Side effects:**
 
 Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -138,6 +151,17 @@ def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str
 ### Returns
 
 Runtime summary row that was written.
+
+### Return interpretation
+
+The returned summary shows what run metadata was assembled or written. Compare status and guardrail counts with expected pipeline outcomes.
+
+### Common failure causes
+
+- Required run identifiers are missing.
+- Guardrail result structures are malformed.
+- Metadata routing is unavailable.
+- The configured summary table cannot be written.
 
 ### Notes
 
@@ -470,7 +494,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: guardrail, can_continue, catalogue evidence, metadata lakehouse
 
 ### AI implementation contract
 

@@ -2,9 +2,13 @@
 
 Render standalone business-context review guidance for selected profile rows.
 
+## Purpose
+
+Renders review guidance for column business context so reviewers can approve or edit metadata for a selected table.
+
 ## When to use this
 
-- Render standalone business-context review guidance for selected profile rows.
+- Use in 03_governance when profile rows need human-reviewed column descriptions or business meaning.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -56,6 +67,17 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
 list[dict[str, Any]]
     Empty editable review list. Add approved context rows before calling
     ``record_table_governance``.
+
+### Return interpretation
+
+The widget captures review state; approved rows must still be passed to record_table_governance to persist metadata.
+
+### Common failure causes
+
+- No profile rows are loaded.
+- Required review fields are incomplete.
+- Widget dependencies are unavailable.
+- Reviewer changes are not committed before persistence.
 
 ### Notes
 
@@ -180,7 +202,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: catalogue evidence, notebook template
 
 ### AI implementation contract
 

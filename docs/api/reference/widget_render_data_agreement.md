@@ -2,9 +2,13 @@
 
 Render the standalone data-agreement intake widget.
 
+## Purpose
+
+Renders the data agreement intake widget used to capture agreement identity, scope, and business metadata for later notebook workflows.
+
 ## When to use this
 
-- Render the standalone data-agreement intake widget.
+- Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.
 
 ## At a glance
 
@@ -19,6 +23,12 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -61,6 +71,17 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
 
 dict[str, Any]
     Rendered controls, including read-only generated-identifier context.
+
+### Return interpretation
+
+The rendered widget collects agreement input; downstream helpers can only use the agreement after the user saves valid values.
+
+### Common failure causes
+
+- ipywidgets is not available in the runtime.
+- Required agreement fields are missing.
+- Agreement identifiers conflict with existing metadata.
+- The metadata target cannot be written.
 
 ### Notes
 
@@ -1395,7 +1416,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 01_agreement
-- Glossary terms: —
+- Glossary terms: notebook template
 
 ### AI implementation contract
 

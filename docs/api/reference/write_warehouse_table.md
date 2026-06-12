@@ -2,9 +2,13 @@
 
 Write a DataFrame to a configured Fabric warehouse target.
 
+## Purpose
+
+Writes a DataFrame to a configured Fabric Warehouse destination for pipeline outputs that belong in warehouse storage.
+
 ## When to use this
 
-- Use when publishing a Spark DataFrame to a configured Fabric warehouse table.
+- Use for target writes after guardrails pass and the configured output layer is a warehouse table.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 **Side effects:**
 
 Writes data to a Fabric warehouse table using the selected mode.
+
+## Key terms
+
+- **Target table:** An output table written by the pipeline.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -73,6 +84,17 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 ### Returns
 
 None; the DataFrame is written to the configured warehouse table.
+
+### Return interpretation
+
+A successful write means the helper submitted the DataFrame write to the configured warehouse target; verify downstream table state for business checks.
+
+### Common failure causes
+
+- The warehouse target is missing from configuration.
+- The target table name or write mode is invalid.
+- Warehouse connector support is unavailable.
+- The caller lacks write permission.
 
 ### Notes
 
@@ -260,7 +282,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 00_env_config, 02_pipeline
-- Glossary terms: —
+- Glossary terms: target table, guardrail
 
 ### AI implementation contract
 

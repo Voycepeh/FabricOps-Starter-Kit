@@ -4,7 +4,7 @@ Shared environment setup and runtime validation for notebook templates.
 
 ## Purpose
 
-Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.
+Validates the selected FabricOps environment, resolves configured runtime targets, and returns the notebook context that downstream helpers depend on.
 
 ## When to use this
 
@@ -25,6 +25,13 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 **Side effects:**
 
 Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -78,6 +85,17 @@ def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox',
 ### Returns
 
 NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
+
+### Return interpretation
+
+A ready context means required targets resolved and runtime checks passed. Review validation messages before running downstream cells when readiness is not successful.
+
+### Common failure causes
+
+- The environment name is not present in CONFIG.
+- Required targets are missing from path configuration.
+- Fabric runtime metadata is unavailable and no local fallback was provided.
+- Configured lakehouse or warehouse targets cannot be resolved.
 
 ### Notes
 
@@ -647,7 +665,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 00_env_config
-- Glossary terms: —
+- Glossary terms: notebook template, metadata lakehouse
 
 ### AI implementation contract
 

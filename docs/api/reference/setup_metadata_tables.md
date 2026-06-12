@@ -2,9 +2,13 @@
 
 Create or validate all FabricOps metadata tables through one setup action.
 
+## Purpose
+
+Prepares the FabricOps metadata tables used by agreement, profiling, governance, lineage, and pipeline evidence workflows.
+
 ## When to use this
 
-- Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, stability, and governance workflows.
+- Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 **Side effects:**
 
 Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
+
+## Key terms
+
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -70,6 +81,17 @@ def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any
 ### Returns
 
 Setup result describing metadata table creation or validation status.
+
+### Return interpretation
+
+The returned setup status tells you which metadata tables were created or validated and whether the environment is ready for workflows that write evidence.
+
+### Common failure causes
+
+- The configured metadata lakehouse path is missing or invalid.
+- Spark cannot create or inspect the metadata tables.
+- The selected environment does not include metadata routing.
+- The caller lacks permission to create or update metadata tables.
 
 ### Notes
 
@@ -1024,7 +1046,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 9
 - Used in templates: 00_env_config
-- Glossary terms: —
+- Glossary terms: metadata lakehouse, catalogue evidence
 
 ### AI implementation contract
 

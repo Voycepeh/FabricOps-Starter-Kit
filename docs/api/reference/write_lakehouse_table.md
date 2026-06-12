@@ -2,9 +2,13 @@
 
 Write a DataFrame to a configured Fabric lakehouse target.
 
+## Purpose
+
+Writes a DataFrame to a configured Fabric lakehouse table while keeping target resolution centralized in environment configuration.
+
 ## When to use this
 
-- Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
+- Use for pipeline target writes after guardrails have passed and the destination is a lakehouse table.
 
 ## At a glance
 
@@ -19,6 +23,14 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 **Side effects:**
 
 Writes data to a Fabric lakehouse table using the selected write mode.
+
+## Key terms
+
+- **Target table:** An output table written by the pipeline.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -92,6 +104,17 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 ### Returns
 
 None; the DataFrame is written to the configured lakehouse table.
+
+### Return interpretation
+
+The helper returns the write operation result from the underlying DataFrame writer when available; verify downstream table state for business validation.
+
+### Common failure causes
+
+- Guardrails were skipped before a target write.
+- The target lakehouse is not configured for the environment.
+- The write mode is unsupported for the destination.
+- The caller lacks write permission or Spark cannot create the table.
 
 ### Notes
 
@@ -378,7 +401,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 8
 - Outbound references count: 4
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
-- Glossary terms: —
+- Glossary terms: target table, guardrail, metadata lakehouse
 
 ### AI implementation contract
 

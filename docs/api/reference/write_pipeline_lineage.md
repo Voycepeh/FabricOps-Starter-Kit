@@ -2,9 +2,13 @@
 
 Write many-to-many source-to-target lineage evidence.
 
+## Purpose
+
+Persists lineage records for a pipeline run so source tables, target tables, and transformation steps remain traceable.
+
 ## When to use this
 
-- Use after target writes to persist lineage relationships tied to agreement and notebook registry context.
+- Use near the end of 02_pipeline after transformations and target config resolution have produced lineage-ready records.
 
 ## At a glance
 
@@ -19,6 +23,15 @@ Not documented yet
 **Side effects:**
 
 Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse target.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -100,6 +113,17 @@ def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, so
 ### Returns
 
 Status, row count, and lineage rows.
+
+### Return interpretation
+
+A successful result indicates lineage rows were prepared for metadata persistence; review returned counts against expected transformation steps.
+
+### Common failure causes
+
+- Lineage records are empty or malformed.
+- run_id, source, or target identifiers are missing.
+- The metadata table cannot be written.
+- Audit fields cannot be resolved from configuration.
 
 ### Notes
 
@@ -566,7 +590,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 5
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: source table, target table, catalogue evidence, metadata lakehouse
 
 ### AI implementation contract
 

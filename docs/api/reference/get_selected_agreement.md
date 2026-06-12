@@ -2,9 +2,13 @@
 
 Return the agreement selected by widget_select_agreement.
 
+## Purpose
+
+Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.
+
 ## When to use this
 
-- Use immediately after widget_select_agreement to retrieve the selected agreement record for pipeline logic and evidence binding.
+- Use after rendering and completing widget_select_agreement when code needs the selected agreement values.
 
 ## At a glance
 
@@ -19,6 +23,12 @@ Raises an error when no agreement has been selected in the current session.
 **Side effects:**
 
 Reads session/widget state only; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -53,6 +63,17 @@ No parameters.
 ### Returns
 
 Selected agreement dictionary for the active notebook session.
+
+### Return interpretation
+
+A returned dictionary contains the selected agreement fields. A missing value means the selector has not been completed in the current notebook state.
+
+### Common failure causes
+
+- widget_select_agreement has not been run.
+- The user has not selected an agreement.
+- Notebook state was reset.
+- The selected row is no longer present in metadata.
 
 ### Notes
 
@@ -137,7 +158,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 0
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: notebook template
 
 ### AI implementation contract
 

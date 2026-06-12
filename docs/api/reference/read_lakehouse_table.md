@@ -2,9 +2,13 @@
 
 Read a table from a configured Fabric lakehouse target.
 
+## Purpose
+
+Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.
+
 ## When to use this
 
-- Use when reading a Delta table from a configured Fabric lakehouse target.
+- Use when notebook code needs a managed lakehouse table rather than a file path or warehouse SQL query.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Raises configuration, Spark, or table-read errors when the target or table canno
 **Side effects:**
 
 Reads from a lakehouse table; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -84,6 +95,17 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 ### Returns
 
 Spark DataFrame loaded from the configured lakehouse table.
+
+### Return interpretation
+
+The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.
+
+### Common failure causes
+
+- The target or table name is misspelled.
+- The selected environment does not define the requested lakehouse target.
+- Spark cannot access the table.
+- The caller lacks permission to read the lakehouse.
 
 ### Notes
 
@@ -380,7 +402,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 10
 - Outbound references count: 6
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
-- Glossary terms: —
+- Glossary terms: source table, metadata lakehouse
 
 ### AI implementation contract
 

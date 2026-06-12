@@ -2,9 +2,13 @@
 
 Render the standalone data-steward intake widget.
 
+## Purpose
+
+Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.
+
 ## When to use this
 
-- Render the standalone data-steward intake widget.
+- Use in 01_agreement when collecting or updating data steward details before creating a data agreement.
 
 ## At a glance
 
@@ -19,6 +23,12 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -61,6 +71,17 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
 
 dict[str, Any]
     Rendered widget controls keyed for notebook customization.
+
+### Return interpretation
+
+The widget itself is the user interface; saved steward values are available to downstream agreement evidence only after the user completes the widget action.
+
+### Common failure causes
+
+- ipywidgets is not available in the runtime.
+- Required steward fields are left blank.
+- Widget state is cleared by rerunning cells out of order.
+- Metadata routing is unavailable when the widget tries to persist records.
 
 ### Notes
 
@@ -1395,7 +1416,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 01_agreement
-- Glossary terms: —
+- Glossary terms: notebook template
 
 ### AI implementation contract
 

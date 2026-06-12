@@ -2,9 +2,13 @@
 
 Return the table selected by widget_select_catalogue_table.
 
+## Purpose
+
+Returns the catalogue table selected by widget_select_catalogue_table for downstream governance review cells.
+
 ## When to use this
 
-- Return the table selected by widget_select_catalogue_table.
+- Use after the catalogue selector has been rendered and the reviewer has chosen a table.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -55,6 +66,17 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
+
+### Return interpretation
+
+A returned dictionary contains the selected table context. A missing value means the reviewer has not completed the selection in current state.
+
+### Common failure causes
+
+- The selector widget has not been run.
+- No table is selected.
+- Notebook state was cleared.
+- The selected metadata row is no longer available.
 
 ### Notes
 
@@ -147,7 +169,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 0
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: catalogue evidence, notebook template
 
 ### AI implementation contract
 

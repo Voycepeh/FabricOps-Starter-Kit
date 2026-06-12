@@ -2,9 +2,13 @@
 
 Render an agreement selector and optionally register the active notebook.
 
+## Purpose
+
+Displays an agreement selector and stores the chosen agreement so pipeline and exploration notebooks can bind work to approved business context.
+
 ## When to use this
 
-- Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
+- Use near the start of 02_pipeline or 99_explore before reads, profiling, lineage, or governance evidence need an agreement id.
 
 ## At a glance
 
@@ -19,6 +23,12 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 **Side effects:**
 
 Displays an IPython widget and may register the active notebook selection in metadata when requested.
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -88,6 +98,17 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 ### Returns
 
 Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
+
+### Return interpretation
+
+A visible selection widget does not mean an agreement is selected; call get_selected_agreement after the user chooses a row.
+
+### Common failure causes
+
+- No agreement metadata rows are available.
+- The user has not selected an agreement.
+- Notebook registration metadata cannot be written.
+- The configured metadata lakehouse cannot be read.
 
 ### Notes
 
@@ -1119,7 +1140,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 7
 - Used in templates: 02_pipeline, 99_explore
-- Glossary terms: —
+- Glossary terms: notebook template
 
 ### AI implementation contract
 

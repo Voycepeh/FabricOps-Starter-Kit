@@ -2,9 +2,13 @@
 
 Render a searchable selector for latest successful catalogue profiles.
 
+## Purpose
+
+Renders a selector for catalogue profile rows so governance reviewers can choose the table they are reviewing.
+
 ## When to use this
 
-- Render a searchable selector for latest successful catalogue profiles.
+- Use at the start of 03_governance before column context, DQ, or classification review widgets need a selected table.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -63,6 +74,17 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 
 ipywidgets.Combobox
     Searchable selector whose value stores stable JSON identity.
+
+### Return interpretation
+
+The widget stores the selected table in notebook state; call get_selected_catalogue_table after the user chooses a row.
+
+### Common failure causes
+
+- No catalogue profile rows are available.
+- The user has not selected a table.
+- Profile metadata cannot be read.
+- Widget state was reset by rerunning cells.
 
 ### Notes
 
@@ -307,7 +329,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: catalogue evidence, notebook template
 
 ### AI implementation contract
 

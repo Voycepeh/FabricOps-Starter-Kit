@@ -2,9 +2,13 @@
 
 Build source-to-target lineage evidence records for a pipeline run.
 
+## Purpose
+
+Builds source-to-target transformation records that describe how a pipeline output was produced during a run.
+
 ## When to use this
 
-- Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
+- Use in 02_pipeline when transformation steps should be persisted as lineage evidence after a target is prepared.
 
 ## At a glance
 
@@ -19,6 +23,14 @@ Raises normal Python errors if required lineage inputs are missing or malformed.
 **Side effects:**
 
 Pure record-building helper; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -69,6 +81,17 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 ### Returns
 
 List of lineage record dictionaries suitable for metadata persistence.
+
+### Return interpretation
+
+Each returned dictionary is one lineage metadata row ready for persistence; review source, target, and step fields before writing.
+
+### Common failure causes
+
+- run_id or dataset_name is missing.
+- Source or target table names are blank.
+- Transformation step dictionaries are malformed.
+- Configuration is missing audit timestamp settings.
 
 ### Notes
 
@@ -235,7 +258,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: —
-- Glossary terms: —
+- Glossary terms: source table, target table, catalogue evidence
 
 ### AI implementation contract
 

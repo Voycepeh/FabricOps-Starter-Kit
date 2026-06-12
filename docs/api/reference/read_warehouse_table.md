@@ -2,9 +2,13 @@
 
 Read a table from a configured Fabric warehouse target.
 
+## Purpose
+
+Reads data from a configured Fabric Warehouse table or query target into a Spark DataFrame.
+
 ## When to use this
 
-- Use when reading a table from a configured Fabric warehouse target.
+- Use when source data lives in a Fabric Warehouse rather than a lakehouse file or Delta table.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 **Side effects:**
 
 Reads from a warehouse table; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -72,6 +83,17 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 ### Returns
 
 Spark DataFrame loaded from the configured warehouse table.
+
+### Return interpretation
+
+The returned DataFrame represents the warehouse read result; confirm filters and row counts before profiling or transformation.
+
+### Common failure causes
+
+- The warehouse target is not configured.
+- The table or SQL text is invalid.
+- Warehouse connector context is unavailable.
+- The caller lacks warehouse read permission.
 
 ### Notes
 
@@ -292,7 +314,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 2
 - Used in templates: 00_env_config, 02_pipeline, 99_explore
-- Glossary terms: —
+- Glossary terms: source table, notebook template
 
 ### AI implementation contract
 

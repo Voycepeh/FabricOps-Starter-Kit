@@ -359,6 +359,33 @@ def test_glossary_page_exists_and_includes_required_terms() -> None:
     assert "**Plain language:**" in glossary_text
 
 
+
+def test_public_callable_records_have_real_metadata_backed_guidance() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    public_records = [entry for entry in function_manifest if entry.get("classification") == "Callable"]
+
+    assert public_records
+    for entry in public_records:
+        assert entry.get("expanded_purpose"), entry["name"]
+        assert entry.get("when_to_use"), entry["name"]
+        assert entry.get("return_interpretation"), entry["name"]
+        assert entry.get("common_failure_causes"), entry["name"]
+
+
+def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    glossary_entries = json.loads((REFERENCE_DIR / "glossary.json").read_text(encoding="utf-8"))
+    glossary = {entry["term"]: entry["plain_language_definition"] for entry in glossary_entries}
+
+    for entry in function_manifest:
+        if entry.get("classification") != "Callable" or not entry.get("glossary_terms"):
+            continue
+        text = (API_REFERENCE_DIR / f"{entry['name']}.md").read_text(encoding="utf-8")
+        key_terms = _section_text(text, "Key terms")
+        for term in entry["glossary_terms"]:
+            label = term if "_" in term else term.capitalize()
+            assert f"**{label}:** {glossary[term]}" in key_terms, entry["name"]
+
 def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None:
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
     entry = next(item for item in function_manifest if item["name"] == "enforce_profile_behavior")
@@ -366,7 +393,7 @@ def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None
 
     assert "profile behavior" in entry["glossary_terms"]
     assert "can_continue" in entry["glossary_terms"]
-    assert "### Key terms" in text
+    assert "## Key terms" in text
     assert "**Profile behavior:** The expected way a table is loaded." in text
     assert "**can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running." in text
     assert "See the [full glossary](../../reference/glossary/)" in text

@@ -2,9 +2,13 @@
 
 Enforce approved active DQ rules as a target-write guardrail without filtering rows.
 
+## Purpose
+
+Evaluates approved data-quality rules against a DataFrame and returns guardrail evidence that can block unsafe writes.
+
 ## When to use this
 
-- Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
+- Use in pipeline guardrails after governance-approved DQ rules exist for the dataset and table.
 
 ## At a glance
 
@@ -19,6 +23,15 @@ Raises configuration, metadata-read, or Spark expression errors when approved ru
 **Side effects:**
 
 Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -76,6 +89,17 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 ### Returns
 
 Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
+
+### Return interpretation
+
+When can_continue is true, active rules passed or only non-blocking issues were found. When false, inspect failing rule details before writing the table.
+
+### Common failure causes
+
+- No approved active DQ rules exist for the table.
+- Rule parameters are invalid or unsupported.
+- Required columns are missing from the DataFrame.
+- The metadata lakehouse cannot be read.
 
 ### Notes
 
@@ -792,7 +816,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 7
 - Used in templates: 02_pipeline, 03_governance
-- Glossary terms: —
+- Glossary terms: guardrail, can_continue, catalogue evidence, metadata lakehouse
 
 ### AI implementation contract
 

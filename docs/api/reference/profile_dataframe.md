@@ -2,9 +2,13 @@
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
+## Purpose
+
+Builds deterministic profile evidence for a DataFrame, including schema, row counts, nulls, distinct counts, and optional summary values.
+
 ## When to use this
 
-- Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
+- Use during exploration, governance review, or guardrail preparation when a table needs reproducible profile evidence.
 
 ## At a glance
 
@@ -19,6 +23,14 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 **Side effects:**
 
 Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -89,6 +101,17 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 ### Returns
 
 Spark DataFrame containing one profile row per eligible business column.
+
+### Return interpretation
+
+Each returned profile row describes one table or column metric. Downstream governance and guardrail helpers use those rows as evidence.
+
+### Common failure causes
+
+- The DataFrame is empty or missing expected columns.
+- Requested statistics are unsupported for a column type.
+- Spark actions fail while computing counts or summaries.
+- Excluded columns remove fields needed for review.
 
 ### Notes
 
@@ -584,7 +607,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 3
 - Outbound references count: 5
 - Used in templates: 02_pipeline, 03_governance, 99_explore
-- Glossary terms: —
+- Glossary terms: catalogue evidence, source table, target table
 
 ### AI implementation contract
 

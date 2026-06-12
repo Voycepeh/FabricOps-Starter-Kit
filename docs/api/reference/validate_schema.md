@@ -2,9 +2,13 @@
 
 Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
 
+## Purpose
+
+Checks whether a DataFrame contains the expected columns and compatible types before downstream transformations or writes continue.
+
 ## When to use this
 
-- Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
+- Use as an early guardrail when a source or target DataFrame must match a known schema contract.
 
 ## At a glance
 
@@ -19,6 +23,15 @@ ValueError when preset is not one of the supported schema presets.
 **Side effects:**
 
 Inspects DataFrame schema only; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -61,6 +74,17 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 ### Returns
 
 Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
+
+### Return interpretation
+
+When can_continue is true, schema checks passed or only non-blocking issues were found. When false, fix missing or mismatched columns before writing data.
+
+### Common failure causes
+
+- Required columns are missing.
+- Column types differ from expected schema.
+- The expected schema configuration is incomplete.
+- The DataFrame supplied to the check is not the intended table.
 
 ### Notes
 
@@ -311,7 +335,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 2
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: guardrail, can_continue, source table, target table
 
 ### AI implementation contract
 

@@ -2,9 +2,13 @@
 
 Enforce whether the latest data arrived within the configured freshness lag.
 
+## Purpose
+
+Checks whether the latest value in a freshness column is recent enough for the configured maximum lag before pipeline writes continue.
+
 ## When to use this
 
-- Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.
+- Use as a pipeline guardrail when stale source or target data should block or warn before downstream work proceeds.
 
 ## At a glance
 
@@ -19,6 +23,15 @@ ValueError when severity is unsupported, lag is missing for a configured column,
 **Side effects:**
 
 Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -68,6 +81,17 @@ def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int
 ### Returns
 
 Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.
+
+### Return interpretation
+
+If can_continue is true, the latest freshness value is within the allowed lag or the check was skipped. If false, investigate stale data before writing outputs.
+
+### Common failure causes
+
+- The freshness column is missing.
+- The max lag value is missing or invalid.
+- The latest date is older than the allowed lag.
+- Severity is invalid or configured as blocking for stale data.
 
 ### Notes
 
@@ -317,7 +341,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 3
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: guardrail, can_continue, source table, target table
 
 ### AI implementation contract
 

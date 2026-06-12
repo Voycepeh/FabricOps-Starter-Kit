@@ -2,9 +2,13 @@
 
 Load column profile rows for the selected catalogue table.
 
+## Purpose
+
+Loads catalogue profile evidence rows for a selected table so governance review widgets can display approved or proposed context.
+
 ## When to use this
 
-- Load column profile rows for the selected catalogue table.
+- Use in 03_governance after selecting a catalogue table and before rendering review widgets.
 
 ## At a glance
 
@@ -19,6 +23,14 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -67,6 +79,17 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 ### Returns
 
 Not documented yet
+
+### Return interpretation
+
+Returned rows provide the profile context that review widgets display. Empty results usually mean evidence has not been recorded for that table or stage.
+
+### Common failure causes
+
+- The selected table context is incomplete.
+- The metadata lakehouse cannot be read.
+- Profile evidence has not been generated yet.
+- Filters for dataset, table, or stage do not match stored evidence.
 
 ### Notes
 
@@ -237,7 +260,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 5
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: catalogue evidence, accepted catalogue profile evidence, metadata lakehouse
 
 ### AI implementation contract
 

@@ -2,9 +2,13 @@
 
 Render the standalone agreement-evidence widget.
 
+## Purpose
+
+Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.
+
 ## When to use this
 
-- Render the standalone agreement-evidence widget.
+- Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.
 
 ## At a glance
 
@@ -19,6 +23,13 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -63,6 +74,17 @@ dict[str, Any]
     Rendered controls for selecting an agreement version, pasting
     metadata lakehouse evidence file paths, refreshing agreement options,
     and saving evidence metadata rows.
+
+### Return interpretation
+
+The widget records evidence references when saved; review the resulting metadata rows before relying on them in handover or audit flows.
+
+### Common failure causes
+
+- Evidence details are incomplete.
+- File or URL references are malformed.
+- Widget state is reset before saving.
+- The configured metadata target is not writable.
 
 ### Notes
 
@@ -873,7 +895,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 01_agreement
-- Glossary terms: —
+- Glossary terms: notebook template, catalogue evidence
 
 ### AI implementation contract
 

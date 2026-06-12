@@ -2,9 +2,13 @@
 
 Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
 
+## Purpose
+
+Persists approved column context, DQ rules, and classification records for a selected table in one governance commit action.
+
 ## When to use this
 
-- Use in 03_governance after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
+- Use after reviewers approve governance rows in 03_governance and those approvals should become metadata-backed evidence.
 
 ## At a glance
 
@@ -19,6 +23,14 @@ Raises configuration, validation, Spark, or metadata-write errors when approved 
 **Side effects:**
 
 Writes approved governance metadata records to configured metadata tables.
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## Used in templates
 
@@ -88,6 +100,17 @@ def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, 
 ### Returns
 
 Dictionary of records written for column_context, dq_rules, and column_classification.
+
+### Return interpretation
+
+The returned dictionary groups written records by metadata area. Confirm counts match approved review rows before treating governance as complete.
+
+### Common failure causes
+
+- Review rows are not approved.
+- Required profile context is missing.
+- Metadata routing is unavailable.
+- Spark cannot write one of the governance metadata tables.
 
 ### Notes
 
@@ -1105,7 +1128,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 5
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: catalogue evidence, metadata lakehouse, guardrail
 
 ### AI implementation contract
 
