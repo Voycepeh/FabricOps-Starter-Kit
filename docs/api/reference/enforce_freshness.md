@@ -2,6 +2,14 @@
 
 Enforce whether the latest data arrived within the configured freshness lag.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/guardrails.py:367`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L367-L464">View on GitHub</a>
+</div>
+
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
@@ -126,201 +134,12 @@ skips profile behavior enforcement; freshness still runs when configured.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L342-L359"><code>_coerce_date</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L362-L364"><code>_iso_date_value</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L309-L339"><code>_max_column_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L342-L359"><code>_coerce_date</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L362-L364"><code>_iso_date_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L309-L339"><code>_max_column_value</code></a>
         </div>
       </section>
     </div>
-
-    ??? example "View helper source by area"
-
-        ??? example "Other helpers"
-
-            **`def _coerce_date(value) -> date | None`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L342-L359)
-
-            ```python
-            def _coerce_date(value) -> date | None:
-                if value in (None, ""):
-                    return None
-                if isinstance(value, datetime):
-                    return value.date()
-                if isinstance(value, date):
-                    return value
-                text = str(value).strip()
-                if not text:
-                    return None
-                try:
-                    return datetime.fromisoformat(text.replace("Z", "+00:00")).date()
-                except ValueError:
-                    pass
-                try:
-                    return date.fromisoformat(text[:10])
-                except ValueError:
-                    return None
-            ```
-
-            **`def _iso_date_value(value) -> str`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L362-L364)
-
-            ```python
-            def _iso_date_value(value) -> str:
-                parsed = _coerce_date(value)
-                return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
-            ```
-
-            **`def _max_column_value(dataframe, column_name: str)`**
-
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L309-L339)
-
-            ```python
-            def _max_column_value(dataframe, column_name: str):
-                if dataframe is None or not column_name:
-                    return None
-                if hasattr(dataframe, "agg"):
-                    from pyspark.sql import functions as F
-
-                    rows = dataframe.agg(F.max(F.col(column_name)).alias("latest_value")).collect()
-                    if not rows:
-                        return None
-                    row = rows[0]
-                    if isinstance(row, dict):
-                        return row.get("latest_value")
-                    if hasattr(row, "asDict"):
-                        return row.asDict().get("latest_value")
-                    try:
-                        return row["latest_value"]
-                    except Exception:
-                        return getattr(row, "latest_value", None)
-                if isinstance(dataframe, dict):
-                    values = [dataframe.get(column_name)]
-                else:
-                    values = []
-                    for row in dataframe or []:
-                        if isinstance(row, dict):
-                            values.append(row.get(column_name))
-                        elif hasattr(row, "asDict"):
-                            values.append(row.asDict().get(column_name))
-                        else:
-                            values.append(getattr(row, column_name, None))
-                values = [value for value in values if value not in (None, "")]
-                return max(values) if values else None
-            ```
-
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/guardrails.py:367`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L367-L464">View on GitHub</a>
-</div>
-
-??? example "Source code"
-
-    ```python
-    def enforce_freshness(
-        dataframe,
-        freshness_column: str | None,
-        max_lag_days: int | str | None,
-        severity: str = "blocking",
-        *,
-        reference_date: date | datetime | str | None = None,
-    ) -> dict:
-        """Enforce that a DataFrame contains recent enough data.
-
-        Parameters
-        ----------
-        dataframe : Any
-            Spark DataFrame or iterable of row-like mappings to check.
-        freshness_column : str or None
-            Column whose maximum value represents the latest available data date.
-            When omitted, the freshness guardrail is skipped.
-        max_lag_days : int or str or None
-            Maximum allowed lag, in days, between ``reference_date`` and the latest
-            value in ``freshness_column``. Required when ``freshness_column`` is set.
-        severity : {"blocking", "warning"}, default="blocking"
-            Whether stale data blocks continuation or returns a non-blocking warning.
-        reference_date : date, datetime, str, optional
-            Date used as "today" for comparison. Defaults to the current local date.
-
-        Returns
-        -------
-        dict
-            Standard guardrail result with ``status``, ``can_continue``,
-            ``check_type``, latest value, required minimum value, and message.
-
-        Notes
-        -----
-        Freshness is separate from profile behavior. ``load_behavior="skip"`` only
-        skips profile behavior enforcement; freshness still runs when configured.
-        """
-        column = str(freshness_column or "").strip()
-        normalized_severity = str(severity or "blocking").lower().strip()
-        if normalized_severity not in {"blocking", "warning"}:
-            raise ValueError("severity must be one of: blocking, warning")
-
-        base_result = {
-            "status": "skipped",
-            "can_continue": True,
-            "check_type": "freshness",
-            "freshness_column": column,
-            "freshness_max_lag_days": "" if max_lag_days in (None, "") else max_lag_days,
-            "freshness_severity": normalized_severity,
-            "latest_value": "",
-            "required_min_value": "",
-            "freshness_status": "skipped",
-            "freshness_can_continue": True,
-            "freshness_message": "Freshness check skipped because no freshness column is configured.",
-            "message": "Freshness check skipped because no freshness column is configured.",
-        }
-        if not column:
-            return base_result
-        if max_lag_days is None or str(max_lag_days).strip() == "":
-            raise ValueError("max_lag_days is required when freshness_column is set")
-        lag_days = int(max_lag_days)
-        if lag_days < 0:
-            raise ValueError("max_lag_days must be greater than or equal to zero")
-        base_result["freshness_max_lag_days"] = lag_days
-
-        today = _coerce_date(reference_date) if reference_date is not None else date.today()
-        if today is None:
-            raise ValueError("reference_date must be a date, datetime, or ISO date string")
-        required_min = today - timedelta(days=lag_days)
-        latest_raw = _max_column_value(dataframe, column)
-        latest_date = _coerce_date(latest_raw)
-        latest_display = _iso_date_value(latest_raw)
-        required_display = required_min.isoformat()
-        base_result.update(latest_value=latest_display, required_min_value=required_display)
-
-        if latest_date is not None and latest_date >= required_min:
-            message = "Freshness check passed."
-            base_result.update(
-                status="passed",
-                can_continue=True,
-                freshness_status="passed",
-                freshness_can_continue=True,
-                freshness_message=message,
-                message=message,
-            )
-            return base_result
-
-        message = f"Freshness check failed: latest {column} is older than allowed lag."
-        status = "failed" if normalized_severity == "blocking" else "warning"
-        can_continue = normalized_severity == "warning"
-        base_result.update(
-            status=status,
-            can_continue=can_continue,
-            freshness_status=status,
-            freshness_can_continue=can_continue,
-            freshness_message=message,
-            message=message,
-        )
-        return base_result
-    ```
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
@@ -363,7 +182,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L367-L464</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L367-L464</a>
 - Start line: `367`
 - End line: `464`
 - Signature:
@@ -389,19 +208,9 @@ def enforce_freshness(
 ### Internal implementation summary
 
 - Internal helper count: 3
-- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
+- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
-
-## Source link
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/guardrails.py:367`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L367-L464">View on GitHub</a>
-</div>
 
 ## Glossary
 

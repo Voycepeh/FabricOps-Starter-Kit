@@ -2,6 +2,14 @@
 
 Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/guardrails.py:840`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L840-L859">View on GitHub</a>
+</div>
+
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
@@ -112,39 +120,6 @@ No additional callable notes are documented.
       </section>
     </div>
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/guardrails.py:840`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L840-L859">View on GitHub</a>
-</div>
-
-??? example "Source code"
-
-    ```python
-    def stop_if_failed(result) -> None:
-        """Stop notebook execution when a guardrail result is blocking.
-
-        Parameters
-        ----------
-        result : dict
-            Direct schema, freshness, profile behavior, or DQ guardrail result.
-
-        Raises
-        ------
-        SchemaDriftError
-            If the resolved result has ``can_continue=False``.
-        """
-        resolved = (result or {}).get("result") if isinstance(result, dict) and "result" in result else result
-        resolved = resolved or {}
-        if bool(resolved.get("can_continue", True)):
-            return
-        status = resolved.get("status", "failed")
-        detail = resolved.get("message") or resolved.get("summary") or "Guardrail blocked execution."
-        raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
-    ```
-
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
 
@@ -184,7 +159,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L840-L859</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L840-L859">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/guardrails.py#L840-L859</a>
 - Start line: `840`
 - End line: `859`
 - Signature:
@@ -205,19 +180,9 @@ def stop_if_failed(result) -> None
 ### Internal implementation summary
 
 - Internal helper count: 0
-- Grouped helper summary and optional source snippets are rendered in the page-level Implementation details section.
+- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
-
-## Source link
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/guardrails.py:840`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/49b66befe4534bc43d6bccbed2445ec23dd02d36/src/fabricops_kit/guardrails.py#L840-L859">View on GitHub</a>
-</div>
 
 ## Glossary
 

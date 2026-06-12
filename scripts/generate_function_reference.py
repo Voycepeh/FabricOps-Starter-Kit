@@ -216,7 +216,6 @@ def _parameter_rows_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef, para
 
 def parse_module(path: Path) -> dict[str, Any]:
     source_text = path.read_text(encoding="utf-8")
-    source_lines = source_text.splitlines()
     tree = ast.parse(source_text)
     functions: dict[str, str] = {}
     classes: dict[str, str] = {}
@@ -226,7 +225,6 @@ def parse_module(path: Path) -> dict[str, Any]:
     signatures: dict[str, str] = {}
     doc_sections: dict[str, dict[str, str]] = {}
     source_locations: dict[str, dict[str, int]] = {}
-    source_blocks: dict[str, str] = {}
     parameters: dict[str, list[dict[str, str]]] = {}
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -236,7 +234,6 @@ def parse_module(path: Path) -> dict[str, Any]:
             sections = _docstring_sections(doc)
             doc_sections[node.name] = sections
             source_locations[node.name] = {"start_line": node.lineno, "end_line": getattr(node, "end_lineno", node.lineno)}
-            source_blocks[node.name] = "\n".join(source_lines[node.lineno - 1 : getattr(node, "end_lineno", node.lineno)])
             parameters[node.name] = _parameter_rows_from_node(node, sections.get("parameters", ""))
             called = set()
             for child in ast.walk(node):
@@ -253,7 +250,6 @@ def parse_module(path: Path) -> dict[str, Any]:
             sections = _docstring_sections(doc)
             doc_sections[node.name] = sections
             source_locations[node.name] = {"start_line": node.lineno, "end_line": getattr(node, "end_lineno", node.lineno)}
-            source_blocks[node.name] = "\n".join(source_lines[node.lineno - 1 : getattr(node, "end_lineno", node.lineno)])
         elif isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id.isupper():
@@ -276,7 +272,6 @@ def parse_module(path: Path) -> dict[str, Any]:
         "signatures": signatures,
         "doc_sections": doc_sections,
         "source_locations": source_locations,
-        "source_blocks": source_blocks,
         "parameters": parameters,
     }
 
@@ -878,15 +873,6 @@ def _source_card_lines(
     ]
 
 
-def _source_code_details_lines(source_block: str) -> list[str]:
-    """Render collapsed source code for implementation details."""
-    return [
-        '??? example "Source code"',
-        "",
-        *_indent_markdown([_code_block(source_block) if source_block else PLACEHOLDER]),
-    ]
-
-
 PLACEHOLDER = "Not documented yet"
 
 
@@ -1269,8 +1255,6 @@ def _render_nested_helper_section(
             {
                 "name": helper_name,
                 "module_name": module_name,
-                "signature": info.get("signatures", {}).get(helper_name, f"{helper_name}(...)"),
-                "source_block": info.get("source_blocks", {}).get(helper_name, ""),
                 "source_path": f"src/fabricops_kit/{module_name}.py",
                 "source_location": info.get("source_locations", {}).get(helper_name, {}),
             }
@@ -1280,37 +1264,10 @@ def _render_nested_helper_section(
     for area in area_order:
         grouped[area]["helpers"] = sorted(grouped[area]["helpers"], key=lambda item: item["name"].lower())
 
-    source_by_area_lines: list[str] = []
-    for area in area_order:
-        source_by_area_lines.extend([f'??? example "{area} helpers"', ""])
-        area_source_lines: list[str] = []
-        for helper in grouped[area]["helpers"]:
-            source_location = helper["source_location"]
-            source_url = github_source_url(
-                helper["source_path"],
-                source_location.get("start_line"),
-                source_location.get("end_line"),
-            )
-            area_source_lines.extend(
-                [
-                    f"**`{helper['signature']}`**",
-                    "",
-                    f"Source: [`{helper['source_path']}`]({source_url})",
-                    "",
-                    _code_block(helper["source_block"]) if helper["source_block"] else PLACEHOLDER,
-                    "",
-                ]
-            )
-        source_by_area_lines.extend(_indent_markdown(area_source_lines))
-
     body_lines = [
         f"This callable uses {helper_count} internal helpers for {_helper_area_purposes(area_order)}.",
         "",
         *_render_helper_group_cards(grouped, area_order),
-        "",
-        '??? example "View helper source by area"',
-        "",
-        *_indent_markdown(source_by_area_lines),
     ]
     return [
         f'??? info "Internal helpers used: {helper_count}"',
@@ -2159,7 +2116,6 @@ def main() -> None:
         source_start_line = source_location.get("start_line")
         source_end_line = source_location.get("end_line")
         source_ref = github_source_url(source_path, source_start_line, source_end_line)
-        source_block = module_info.get("source_blocks", {}).get(short_name, "")
         parameter_rows = module_info.get("parameters", {}).get(short_name, [])
         classification = "Callable" if node.get("role") == "callable" else "Internal"
         purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
@@ -2230,17 +2186,7 @@ def main() -> None:
                     *_render_call_tree(qn, calls_by_qn, node_by_qn, max_depth=call_tree_depth),
                 ]),
             ]
-            source_code_lines = [
-                *_source_card_lines(
-                    source_path=source_path,
-                    source_start_line=source_start_line,
-                    source_ref=source_ref,
-                    short_name=short_name,
-                ),
-                "",
-                *_source_code_details_lines(source_block),
-            ]
-            source_link_lines = _source_card_lines(
+            source_card_lines = _source_card_lines(
                 source_path=source_path,
                 source_start_line=source_start_line,
                 source_ref=source_ref,
@@ -2337,8 +2283,8 @@ def main() -> None:
                 "",
                 f"- Internal helper count: {len(helper_qns)}",
                 (
-                    "- Grouped helper summary and optional source snippets are rendered in the page-level "
-                    "Implementation details section."
+                    "- Grouped helper summary is rendered in the page-level Implementation details section; "
+                    "helper chips link to source."
                 ),
             ]
             machine_metadata_lines = [
@@ -2372,6 +2318,8 @@ def main() -> None:
                 f"# {short_name}",
                 "",
                 purpose,
+                "",
+                *source_card_lines,
                 "",
                 *usage_guidance_lines,
                 "",
@@ -2423,17 +2371,11 @@ def main() -> None:
                 "",
                 *nested_helper_lines,
                 "",
-                *source_code_lines,
-                "",
                 *markdown_details(
                     "Machine-readable metadata / metadata details",
                     machine_metadata_lines,
                     class_name="reference-metadata-details",
                 ),
-                "",
-                "## Source link",
-                "",
-                *source_link_lines,
                 "",
                 *glossary_section_lines,
                 *see_also_lines,
