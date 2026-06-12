@@ -4,6 +4,7 @@ site_url: https://voycepeh.github.io/FabricOps-Starter-Kit/
 
 theme:
   name: material
+  custom_dir: overrides
   language: en
   features:
     - navigation.tabs
@@ -102,6 +103,7 @@ markdown_extensions:
 
 hooks:
   - docs/gen_release_info.py
+  - docs/breadcrumbs.py
 
 plugins:
   - search
@@ -132,6 +134,7 @@ extra_javascript:
   - javascripts/callable-finder.js
 
 extra_css:
+  - stylesheets/breadcrumbs.css
   - stylesheets/api-chips.css
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
