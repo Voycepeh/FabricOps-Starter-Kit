@@ -4,23 +4,17 @@ Write many-to-many source-to-target lineage evidence.
 
 ## Purpose
 
-Write many-to-many source-to-target lineage evidence.
+Persists lineage records for a pipeline run so source tables, target tables, and transformation steps remain traceable.
+
+## When to use this
+
+- Use near the end of 02_pipeline after transformations and target config resolution have produced lineage-ready records.
 
 ## At a glance
-
-**Use when:**
-
-- Use after target writes to persist lineage relationships tied to agreement and notebook registry context.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -29,6 +23,24 @@ Not documented yet
 **Side effects:**
 
 Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse target.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -42,7 +54,7 @@ Not documented yet
 - `fabricops_kit.pipeline._now_iso`
 - `fabricops_kit.pipeline._runtime_audit_fields`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -58,102 +70,75 @@ def write_pipeline_lineage(*, spark: Any, config: Any, env: str, run_id: str, so
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used to create lineage rows.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Metadata route from ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Pipeline run identifier.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_definitions</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Source and target definitions keyed by alias.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_definitions</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>relationships</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Many-to-many lineage relationships. Each item may contain ``sources``, ``targets``, ``operation``, and ``description``. When omitted, every source is linked to every target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Governance context embedded in lineage payloads.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_contract_version</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_registry_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>metadata_table</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Metadata lineage table.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>mode</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Write mode for lineage evidence.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`spark` : `Any`, required
+: Spark session used to create lineage rows.
+
+`config` : `Any`, required
+: Metadata route from ``00_env_config``.
+
+`env` : `str`, required
+: Not documented yet
+
+`run_id` : `str`, required
+: Pipeline run identifier.
+
+`source_definitions` : `Mapping[str, Mapping[str, Any]]`, required
+: Source and target definitions keyed by alias.
+
+`target_definitions` : `Mapping[str, Mapping[str, Any]]`, required
+: Not documented yet
+
+`relationships` : `list[Mapping[str, Any]] | None`, optional
+: Many-to-many lineage relationships. Each item may contain ``sources``, ``targets``, ``operation``, and ``description``. When omitted, every source is linked to every target.
+
+`dataset_name` : `str`, optional
+: Governance context embedded in lineage payloads.
+
+`agreement_id` : `str`, optional
+: Not documented yet
+
+`agreement_contract_version` : `str`, optional
+: Not documented yet
+
+`notebook_registry_id` : `str`, optional
+: Not documented yet
+
+`notebook_id` : `str`, optional
+: Not documented yet
+
+`pipeline_name` : `str`, optional
+: Not documented yet
+
+`metadata_table` : `str`, optional
+: Metadata lineage table.
+
+`mode` : `str`, optional
+: Write mode for lineage evidence.
 
 ### Returns
 
 Status, row count, and lineage rows.
 
+### Return interpretation
+
+A successful result indicates lineage rows were prepared for metadata persistence; review returned counts against expected transformation steps.
+
+### Common failure causes
+
+- Lineage records are empty or malformed.
+- run_id, source, or target identifiers are missing.
+- The metadata table cannot be written.
+- Audit fields cannot be resolved from configuration.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -609,6 +594,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `559`
 - Inbound references count: 0
 - Outbound references count: 5
+- Used in templates: 02_pipeline
+- Glossary terms: source table, target table, catalogue evidence, metadata lakehouse
 
 ### AI implementation contract
 

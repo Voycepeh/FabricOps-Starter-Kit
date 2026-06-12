@@ -4,23 +4,17 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 
 ## Purpose
 
-Read a Parquet path from a configured Fabric lakehouse Files path.
+Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.
+
+## When to use this
+
+- Use for file-based source ingestion when the source is Parquet rather than a managed table.
 
 ## At a glance
-
-**Use when:**
-
-- Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
 
 **Do not use when:**
 
 - Do not use for Delta tables, CSV files, Excel files, or warehouse SQL tables.
-
-**Example:**
-
-```python
-df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.parquet", spark_session=spark)
-```
 
 **Errors:**
 
@@ -29,6 +23,22 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 **Side effects:**
 
 Reads from lakehouse Files and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -41,7 +51,7 @@ Not documented yet
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -57,58 +67,49 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>relative_path</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Path to the Parquet file under the lakehouse `Files/` folder, without the leading `&quot;Files/&quot;`. For example: `&quot;raw/orders/orders_2026.parquet&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>verbose</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether to print read and fallback progress.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`relative_path` : `str`, required
+: Path to the Parquet file under the lakehouse `Files/` folder, without the leading `"Files/"`. For example: `"raw/orders/orders_2026.parquet"`.
+
+`verbose` : `bool, default True`, optional
+: Whether to print read and fallback progress.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`.
 
 ### Returns
 
 Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
 
+### Return interpretation
+
+The returned DataFrame uses the Parquet schema read by Spark; validate it before downstream profile or guardrail checks.
+
+### Common failure causes
+
+- The Parquet path is missing or misspelled.
+- The file is not valid Parquet.
+- The configured lakehouse target is unavailable.
+- The caller lacks read permission.
+
 ### Notes
 
 Assumes Fabric notebook runtime filesystem conventions for local fallback
 conversion paths (``/lakehouse/default/Files/...``).
+
+### Example
+
+```python
+df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.parquet", spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -475,6 +476,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `555`
 - Inbound references count: 0
 - Outbound references count: 4
+- Used in templates: 02_pipeline, 99_explore
+- Glossary terms: source table, notebook template
 
 ### AI implementation contract
 

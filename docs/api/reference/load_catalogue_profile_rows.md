@@ -4,23 +4,17 @@ Load column profile rows for the selected catalogue table.
 
 ## Purpose
 
-Load column profile rows for the selected catalogue table.
+Loads catalogue profile evidence rows for a selected table so governance review widgets can display approved or proposed context.
+
+## When to use this
+
+- Use in 03_governance after selecting a catalogue table and before rendering review widgets.
 
 ## At a glance
-
-**Use when:**
-
-- Load column profile rows for the selected catalogue table.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -29,6 +23,23 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+- `03_governance`
 
 ## Used by
 
@@ -42,7 +53,7 @@ Not documented yet
 - `fabricops_kit.governance_review._value`
 - `fabricops_kit.metadata._build_metadata_table_key`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -58,47 +69,42 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>selection</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Not documented yet
+
+`env` : `str`, required
+: Not documented yet
+
+`selection` : `dict[str, Any]`, required
+: Not documented yet
+
+`spark_session` : `Any`, required
+: Not documented yet
 
 ### Returns
 
 Not documented yet
 
+### Return interpretation
+
+Returned rows provide the profile context that review widgets display. Empty results usually mean evidence has not been recorded for that table or stage.
+
+### Common failure causes
+
+- The selected table context is incomplete.
+- The metadata lakehouse cannot be read.
+- Profile evidence has not been generated yet.
+- Filters for dataset, table, or stage do not match stored evidence.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -258,6 +264,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `344`
 - Inbound references count: 1
 - Outbound references count: 5
+- Used in templates: 03_governance
+- Glossary terms: catalogue evidence, accepted catalogue profile evidence, metadata lakehouse
 
 ### AI implementation contract
 

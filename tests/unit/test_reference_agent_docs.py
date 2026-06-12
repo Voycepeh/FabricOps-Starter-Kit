@@ -29,7 +29,6 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
-    "Purpose",
     "At a glance",
 )
 CORE_AGENT_FIELDS = (
@@ -52,6 +51,13 @@ def _section_text(page_text: str, section: str) -> str:
     return section.strip()
 
 
+def _subsection_text(page_text: str, subsection: str) -> str:
+    marker = f"### {subsection}\n"
+    assert marker in page_text
+    after = page_text.split(marker, 1)[1]
+    return after.split("\n### ", 1)[0].strip()
+
+
 def test_reference_ai_manifest_files_exist_and_are_valid_json() -> None:
     agent_manifest = REFERENCE_DIR / "agent-manifest.json"
     function_manifest = REFERENCE_DIR / "function-manifest.json"
@@ -72,15 +78,17 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Purpose" in text, page
+        assert "## When to use this" in text, page
         assert "## At a glance" in text, page
+        assert "## Used in templates" in text, page
         assert "## Used by" in text, page
         assert "## Calls" in text, page
-        assert "## Callable implementation" in text, page
+        assert "## Function details and source" in text, page
         assert "### Function details" in text, page
         assert "### Parameters" in text, page
         assert "### Returns" in text, page
         assert "### Notes" in text, page
+        assert "### Example" in text, page
         assert "### Public callable source code" in text, page
         assert "## Internal implementation summary" in text, page
         assert "## Nested helper functions" not in text, page
@@ -129,18 +137,25 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         ordered_markers = [
-            "## Purpose",
+            "## When to use this",
             "## At a glance",
+            "## Used in templates",
             "## Used by",
             "## Calls",
-            "## Callable implementation",
+            "## Function details and source",
             "### Function details",
             "### Parameters",
             "### Returns",
             "### Notes",
+            "### Example",
             "### Public callable source code",
             "## Internal implementation summary",
         ]
+        if "## Purpose" in text:
+            ordered_markers.insert(0, "## Purpose")
+        for optional_marker in ("### Return interpretation", "### Common failure causes"):
+            if optional_marker in text:
+                ordered_markers.insert(ordered_markers.index("### Notes"), optional_marker)
         positions = [text.index(marker) for marker in ordered_markers]
         assert positions == sorted(positions), page
         assert '??? info "Call flow"' in text, page
@@ -261,18 +276,17 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
     assert "setup_notebook on GitHub" in text
-    assert "**Example:**\n\n```python\ncontext = setup_notebook" in text
+    assert "### Example\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
-    for marker in ("## Purpose", "## At a glance", "### Parameters", "### Returns"):
+    for marker in ("## At a glance", "### Parameters", "### Returns"):
         assert text.index(marker) < first_metadata
     assert "## AI / machine-readable metadata" not in text
     assert "- Starting a FabricOps notebook from 00_env_config" in text
     assert "- Validating configured environment targets before downstream helpers run" in text
     assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
     assert "### Parameters" in text
-    assert "Parameter" in text
-    assert "Required" in text
-    assert "Meaning" in text
+    assert "`config` :" in text
+    assert ", required" in text or ", optional" in text
     assert "### Public callable source code" in text
 
 
@@ -287,7 +301,6 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
         assert canonical_page.exists(), name
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
         text = canonical_page.read_text(encoding="utf-8")
-        assert "## Purpose" in text, canonical_page
         assert "## At a glance" in text, canonical_page
         assert "## Internal implementation summary" in text, canonical_page
 
@@ -312,6 +325,198 @@ def test_generated_manifests_point_public_callables_to_canonical_api_reference()
             assert entry["docs_path"].startswith("reference/internal/")
 
 
+
+def test_glossary_page_exists_and_includes_required_terms() -> None:
+    glossary_page = REFERENCE_DIR / "glossary.md"
+    glossary_source = REFERENCE_DIR / "glossary.json"
+    required_terms = {
+        "profile behavior",
+        "accepted catalogue profile evidence",
+        "baseline profile",
+        "stage",
+        "profile behavior check",
+        "guardrail",
+        "can_continue",
+        "append",
+        "overwrite",
+        "skip",
+        "metadata lakehouse",
+        "catalogue evidence",
+        "source table",
+        "target table",
+        "notebook template",
+    }
+
+    assert glossary_page.exists()
+    assert glossary_source.exists()
+    glossary_entries = json.loads(glossary_source.read_text(encoding="utf-8"))
+    terms = {entry["term"] for entry in glossary_entries}
+    assert required_terms <= terms
+
+    glossary_text = glossary_page.read_text(encoding="utf-8")
+    for term in required_terms:
+        assert f"## {term}" in glossary_text
+    assert "**Plain language:**" in glossary_text
+
+
+
+def test_public_callable_records_have_real_metadata_backed_guidance() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    public_records = [entry for entry in function_manifest if entry.get("classification") == "Callable"]
+
+    assert public_records
+    for entry in public_records:
+        assert entry.get("expanded_purpose"), entry["name"]
+        assert entry.get("when_to_use"), entry["name"]
+        assert entry.get("return_interpretation"), entry["name"]
+        assert entry.get("common_failure_causes"), entry["name"]
+
+
+def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    glossary_entries = json.loads((REFERENCE_DIR / "glossary.json").read_text(encoding="utf-8"))
+    glossary = {entry["term"]: entry["plain_language_definition"] for entry in glossary_entries}
+
+    for entry in function_manifest:
+        if entry.get("classification") != "Callable" or not entry.get("glossary_terms"):
+            continue
+        text = (API_REFERENCE_DIR / f"{entry['name']}.md").read_text(encoding="utf-8")
+        key_terms = _section_text(text, "Key terms")
+        for term in entry["glossary_terms"]:
+            label = term if "_" in term else term.capitalize()
+            assert f"**{label}:** {glossary[term]}" in key_terms, entry["name"]
+
+def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    entry = next(item for item in function_manifest if item["name"] == "enforce_profile_behavior")
+    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
+
+    assert "profile behavior" in entry["glossary_terms"]
+    assert "can_continue" in entry["glossary_terms"]
+    assert "## Key terms" in text
+    assert "**Profile behavior:** The expected way a table is loaded." in text
+    assert "**can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running." in text
+    assert "See the [full glossary](../../reference/glossary/)" in text
+    assert "previously approved as append-only" in text
+    assert "overwrite could remove existing history" in text
+    assert "If can_continue is false, review whether the behavior change is intentional before writing the table." in text
+    assert "The part of the pipeline being checked, such as source or target." in text
+
+
+def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
+    for page in sorted(API_REFERENCE_DIR.glob("*.md")):
+        text = page.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        intro = next(line.strip() for line in lines[1:] if line.strip())
+        if "## Purpose" not in text:
+            continue
+        purpose = _section_text(text, "Purpose")
+        assert purpose.strip() != intro, page
+        assert purpose.count(intro) == 0, page
+
+
+def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
+    forbidden = (
+        "This API reference documents the callable summarized above",
+        "Interpret the returned value according to the Returns section above",
+        "No common failure causes are documented beyond the Errors section",
+    )
+    for page in sorted(API_REFERENCE_DIR.glob("*.md")):
+        text = page.read_text(encoding="utf-8")
+        for phrase in forbidden:
+            assert phrase not in text, page
+
+
+
+def test_related_guides_metadata_renders_before_template_and_call_graph_sections() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    function_by_name = {entry["name"]: entry for entry in function_manifest if entry.get("classification") == "Callable"}
+    agent_by_name = {entry["name"]: entry for entry in agent_manifest if entry.get("type") == "callable"}
+
+    related_guides = function_by_name["run_table_guardrails"]["related_guides"]
+    assert related_guides == [
+        {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/pipeline-guardrails.md"}
+    ]
+    assert agent_by_name["run_table_guardrails"]["related_guides"] == related_guides
+
+    text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
+    assert "## Related guides" in text
+    assert "- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)" in text
+    assert text.index("## Related guides") < text.index("## Used in templates")
+    assert text.index("## Related guides") < text.index("## Used by")
+    assert text.index("## Related guides") < text.index("## Calls")
+
+
+def test_concept_pages_link_back_to_key_callable_references() -> None:
+    notebook_templates = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md").read_text(encoding="utf-8")
+    pipeline_guardrails = (ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md").read_text(encoding="utf-8")
+    governance_review = (ROOT / "docs" / "how-fabricops-works" / "governance-review.md").read_text(encoding="utf-8")
+    metadata_tables = (ROOT / "docs" / "how-fabricops-works" / "metadata-tables.md").read_text(encoding="utf-8")
+
+    assert "[setup_notebook](../api/reference/setup_notebook/)" in notebook_templates
+    assert "[prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/)" in notebook_templates
+    assert "[record_table_governance](../api/reference/record_table_governance/)" in notebook_templates
+    assert "[run_table_guardrails](../api/reference/run_table_guardrails/)" in pipeline_guardrails
+    assert "[enforce_profile_behavior](../api/reference/enforce_profile_behavior/)" in pipeline_guardrails
+    assert "[stop_if_failed](../api/reference/stop_if_failed/)" in pipeline_guardrails
+    assert "[widget_review_dq_rules](../api/reference/widget_review_dq_rules/)" in governance_review
+    assert "[record_table_governance](../api/reference/record_table_governance/)" in governance_review
+    assert "[setup_metadata_tables](../api/reference/setup_metadata_tables/)" in metadata_tables
+    assert "[build_lineage_records](../api/reference/build_lineage_records/)" in metadata_tables
+
+
+def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    dependency_metadata = json.loads((REFERENCE_DIR / "dependency-metadata.json").read_text(encoding="utf-8"))
+    reference_index = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
+
+    function_by_name = {entry["name"]: entry for entry in function_manifest}
+    agent_by_name = {entry["name"]: entry for entry in agent_manifest if entry.get("type") == "callable"}
+    dependency_by_name = {entry["callable"]: entry for entry in dependency_metadata["callables"].values()}
+
+    for callable_name in ("enforce_freshness", "enforce_profile_behavior"):
+        assert function_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
+        assert agent_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
+        assert dependency_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
+
+        article_start = reference_index.index(f'data-callable-name="{callable_name}"')
+        article_end = reference_index.index("</article>", article_start)
+        article = reference_index[article_start:article_end]
+        assert '<p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>' in article
+        assert article.count("Used in:") == 1
+        assert "Outbound" in article or "Inbound" in article
+
+        detail_text = (API_REFERENCE_DIR / f"{callable_name}.md").read_text(encoding="utf-8")
+        assert "## Used in templates" in detail_text
+        used_in_section = _section_text(detail_text, "Used in templates")
+        assert used_in_section.count("`02_pipeline`") == 1
+
+
+def test_callable_parameters_render_as_definition_list_not_table() -> None:
+    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
+    parameters = _subsection_text(text, "Parameters")
+
+    assert "| Parameter | Required | Meaning |" not in parameters
+    assert "<table" not in parameters
+    assert '<div class="module-table-scroll reference-input-table">' not in parameters
+    assert "`dataset_name` : `str`, required" in parameters
+    assert ": Dataset name used to find matching catalogue evidence." in parameters
+    assert "`stage` : `str`, required" in parameters
+    assert ": The part of the pipeline being checked, such as source or target." in parameters
+    assert "`exclude_run_id` : `str | None`, optional" in parameters
+
+
+def test_enforce_profile_behavior_preserves_relationship_sections_after_readability_changes() -> None:
+    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
+
+    used_by = _section_text(text, "Used by")
+    calls = _section_text(text, "Calls")
+    assert "fabricops_kit.pipeline.run_table_guardrails" in used_by
+    assert "fabricops_kit.data_profiling.profile_dataframe" in calls
+    assert "fabricops_kit.fabric_input_output.read_lakehouse_table" in calls
+
 def test_generated_public_callable_links_use_canonical_route() -> None:
     generated_markdown = [
         REFERENCE_DIR / "index.md",
@@ -323,7 +528,8 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
 
     assert "/reference/callables/" not in combined
     assert "../callables/" not in combined
-    assert "../../reference/" not in combined
+    combined_without_glossary_links = combined.replace("../../reference/glossary/", "")
+    assert "../../reference/" not in combined_without_glossary_links
     assert "api/reference/" in combined
     assert "../api/reference/enforce_dq_rules/" in combined
     assert "../reference/enforce_dq_rules/" in combined
@@ -332,16 +538,19 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
 def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() -> None:
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
     ordered_markers = [
-        "## Purpose",
+        "## When to use this",
         "## At a glance",
+        "## Used in templates",
         "## Used by",
         "## Calls",
-        "## Callable implementation",
+        "## Function details and source",
         "### Function details",
         "### Public callable source code",
         "## Internal implementation summary",
         '<summary>AI / machine-readable metadata',
     ]
+    if "## Purpose" in text:
+        ordered_markers.insert(0, "## Purpose")
 
     assert [text.index(marker) for marker in ordered_markers] == sorted(text.index(marker) for marker in ordered_markers)
     assert "Internal helpers used by this callable" not in text

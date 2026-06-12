@@ -4,23 +4,17 @@ Read a CSV file from a configured Fabric lakehouse Files path.
 
 ## Purpose
 
-Read a CSV file from a configured Fabric lakehouse Files path.
+Reads a CSV file from the Files area of a configured Fabric lakehouse and returns it as a Spark DataFrame.
+
+## When to use this
+
+- Use for file-based source ingestion when the source is CSV and should be resolved through configured lakehouse paths.
 
 ## At a glance
-
-**Use when:**
-
-- Use when reading a CSV file from a configured Fabric lakehouse Files path.
 
 **Do not use when:**
 
 - Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL tables.
-
-**Example:**
-
-```python
-df = read_lakehouse_csv(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.csv", header=True, spark_session=spark)
-```
 
 **Errors:**
 
@@ -29,6 +23,23 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 **Side effects:**
 
 Reads from lakehouse Files; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `00_env_config`
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -40,7 +51,7 @@ Not documented yet
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -56,57 +67,48 @@ def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, h
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>relative_path</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Path to the CSV file or folder under the lakehouse root, for example `&quot;Files/raw/orders.csv&quot;` or `&quot;Files/raw/orders/&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>header</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether the first row of the CSV file contains column names.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`relative_path` : `str`, required
+: Path to the CSV file or folder under the lakehouse root, for example `"Files/raw/orders.csv"` or `"Files/raw/orders/"`.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`.
+
+`header` : `bool, default True`, optional
+: Whether the first row of the CSV file contains column names.
 
 ### Returns
 
 Spark DataFrame loaded from the lakehouse Files CSV path.
 
+### Return interpretation
+
+The returned DataFrame reflects Spark CSV parsing options; inspect schema and sample rows before profiling or writing.
+
+### Common failure causes
+
+- The file path is wrong or outside the configured lakehouse.
+- CSV options do not match the file shape.
+- Spark cannot access the file.
+- The selected environment is missing the source lakehouse target.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+df = read_lakehouse_csv(CONFIG, env="Sandbox", target="Source", relative_path="raw/orders/orders.csv", header=True, spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -325,6 +327,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `326`
 - Inbound references count: 0
 - Outbound references count: 3
+- Used in templates: 00_env_config, 02_pipeline, 99_explore
+- Glossary terms: source table, notebook template
 
 ### AI implementation contract
 

@@ -4,23 +4,17 @@ Read a table from a configured Fabric warehouse target.
 
 ## Purpose
 
-Read a table from a configured Fabric warehouse target.
+Reads data from a configured Fabric Warehouse table or query target into a Spark DataFrame.
+
+## When to use this
+
+- Use when source data lives in a Fabric Warehouse rather than a lakehouse file or Delta table.
 
 ## At a glance
-
-**Use when:**
-
-- Use when reading a table from a configured Fabric warehouse target.
 
 **Do not use when:**
 
 - Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or Excel paths.
-
-**Example:**
-
-```python
-df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders", spark_session=spark)
-```
 
 **Errors:**
 
@@ -29,6 +23,23 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 **Side effects:**
 
 Reads from a warehouse table; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `00_env_config`
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -39,7 +50,7 @@ Not documented yet
 - `fabricops_kit.config._get_store`
 - `fabricops_kit.fabric_input_output._get_spark`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -55,57 +66,48 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment name in the config mapping, for example `&quot;Sandbox&quot;` or `&quot;DE&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Warehouse target name under the selected environment, for example `&quot;Warehouse&quot;` or `&quot;wh_Bronze&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>schema</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Warehouse schema name, for example `&quot;dbo&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Warehouse table name.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
+
+`target` : `str`, required
+: Warehouse target name under the selected environment, for example `"Warehouse"` or `"wh_Bronze"`.
+
+`schema` : `str`, required
+: Warehouse schema name, for example `"dbo"`.
+
+`table` : `str`, required
+: Warehouse table name.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`.
 
 ### Returns
 
 Spark DataFrame loaded from the configured warehouse table.
 
+### Return interpretation
+
+The returned DataFrame represents the warehouse read result; confirm filters and row counts before profiling or transformation.
+
+### Common failure causes
+
+- The warehouse target is not configured.
+- The table or SQL text is invalid.
+- Warehouse connector context is unavailable.
+- The caller lacks warehouse read permission.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", schema="dbo", table="orders", spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -315,6 +317,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `371`
 - Inbound references count: 0
 - Outbound references count: 2
+- Used in templates: 00_env_config, 02_pipeline, 99_explore
+- Glossary terms: source table, notebook template
 
 ### AI implementation contract
 

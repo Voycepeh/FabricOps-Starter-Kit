@@ -4,25 +4,19 @@ Shared environment setup and runtime validation for notebook templates.
 
 ## Purpose
 
-Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.
+Validates the selected FabricOps environment, resolves configured runtime targets, and returns the notebook context that downstream helpers depend on.
 
-## At a glance
-
-**Use when:**
+## When to use this
 
 - Starting a FabricOps notebook from 00_env_config
 - Validating configured environment targets before downstream helpers run
 - Capturing runtime metadata for later lineage, review, or handover steps
 
+## At a glance
+
 **Do not use when:**
 
 - Do not use as a replacement for metadata table setup or per-table governance writes; call setup_metadata_tables for metadata storage preparation.
-
-**Example:**
-
-```python
-context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
-```
 
 **Errors:**
 
@@ -31,6 +25,22 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 **Side effects:**
 
 Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+- `00_env_config`
 
 ## Used by
 
@@ -43,7 +53,7 @@ Not documented yet
 - `fabricops_kit.config._run_config_smoke_tests`
 - `fabricops_kit.config._validate_framework_config`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -59,58 +69,49 @@ def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox',
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Framework configuration object or compatible mapping. The setup flow validates required sections and configured Fabric targets before running readiness checks.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Environment key used to resolve target paths.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>required_targets</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Target names that must resolve for ``env``. Defaults to ``[&quot;Source&quot;, &quot;Unified&quot;]``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Explicit notebook name used for runtime metadata and naming checks.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id_prefix</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Prefix used when a Fabric runtime run identifier is unavailable.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>local_fallback_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Notebook name used when neither ``notebook_name`` nor Fabric runtime context provides one.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict[str, Any]`, required
+: Framework configuration object or compatible mapping. The setup flow validates required sections and configured Fabric targets before running readiness checks.
+
+`env` : `str`, optional
+: Environment key used to resolve target paths.
+
+`required_targets` : `list[str] | None`, optional
+: Target names that must resolve for ``env``. Defaults to ``["Source", "Unified"]``.
+
+`notebook_name` : `str | None`, optional
+: Explicit notebook name used for runtime metadata and naming checks.
+
+`run_id_prefix` : `str`, optional
+: Prefix used when a Fabric runtime run identifier is unavailable.
+
+`local_fallback_name` : `str | None`, optional
+: Notebook name used when neither ``notebook_name`` nor Fabric runtime context provides one.
 
 ### Returns
 
 NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
 
+### Return interpretation
+
+A ready context means required targets resolved and runtime checks passed. Review validation messages before running downstream cells when readiness is not successful.
+
+### Common failure causes
+
+- The environment name is not present in CONFIG.
+- Required targets are missing from path configuration.
+- Fabric runtime metadata is unavailable and no local fallback was provided.
+- Configured lakehouse or warehouse targets cannot be resolved.
+
 ### Notes
 
 Validation and smoke checks are local to notebook startup. This helper does
 not provision Fabric resources or persist metadata.
+
+### Example
+
+```python
+context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
+```
 
 ### Public callable source code
 
@@ -668,6 +669,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `786`
 - Inbound references count: 0
 - Outbound references count: 4
+- Used in templates: 00_env_config
+- Glossary terms: notebook template, metadata lakehouse
 
 ### AI implementation contract
 

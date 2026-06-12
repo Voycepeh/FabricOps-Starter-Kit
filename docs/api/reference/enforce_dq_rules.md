@@ -4,24 +4,17 @@ Enforce approved active DQ rules as a target-write guardrail without filtering r
 
 ## Purpose
 
-Enforce approved active DQ rules as a target-write guardrail without filtering rows.
+Evaluates approved data-quality rules against a DataFrame and returns guardrail evidence that can block unsafe writes.
+
+## When to use this
+
+- Use in pipeline guardrails after governance-approved DQ rules exist for the dataset and table.
 
 ## At a glance
-
-**Use when:**
-
-- Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
 
 **Do not use when:**
 
 - Do not use to filter bad rows, author new DQ rules, or bypass governance review approval.
-
-**Example:**
-
-```python
-dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)
-stop_if_failed(dq_result)
-```
 
 **Errors:**
 
@@ -30,6 +23,25 @@ Raises configuration, metadata-read, or Spark expression errors when approved ru
 **Side effects:**
 
 Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+## Used in templates
+
+- `02_pipeline`
+- `03_governance`
 
 ## Used by
 
@@ -45,7 +57,7 @@ Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it d
 - `fabricops_kit.governance_review._run_dq_guardrail_checks`
 - `fabricops_kit.governance_review._summarize_dq_guardrail`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -61,53 +73,38 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>dataframe</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame to evaluate before the target write. The full DataFrame is never filtered or split by this helper.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Runtime configuration containing the configured metadata lakehouse route from ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment name used to read ``METADATA_DQ_RULES`` from the configured metadata target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Dataset identifier used with ``table_name`` to scope approved DQ rules when those columns exist in the metadata table.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Target table name whose approved active DQ rules should be enforced.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session used to read metadata when required by the configured storage helper.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`dataframe` : `Any`, required
+: Spark DataFrame to evaluate before the target write. The full DataFrame is never filtered or split by this helper.
+
+`config` : `FrameworkConfig or dict`, required
+: Runtime configuration containing the configured metadata lakehouse route from ``00_env_config``.
+
+`env` : `str`, required
+: Environment name used to read ``METADATA_DQ_RULES`` from the configured metadata target.
+
+`dataset_name` : `str`, required
+: Dataset identifier used with ``table_name`` to scope approved DQ rules when those columns exist in the metadata table.
+
+`table_name` : `str`, required
+: Target table name whose approved active DQ rules should be enforced.
+
+`spark_session` : `pyspark.sql.SparkSession`, optional
+: Spark session used to read metadata when required by the configured storage helper.
 
 ### Returns
 
 Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
+
+### Return interpretation
+
+When can_continue is true, active rules passed or only non-blocking issues were found. When false, inspect failing rule details before writing the table.
+
+### Common failure causes
+
+- No approved active DQ rules exist for the table.
+- Rule parameters are invalid or unsupported.
+- Required columns are missing from the DataFrame.
+- The metadata lakehouse cannot be read.
 
 ### Notes
 
@@ -115,6 +112,13 @@ This v1 guardrail reads approved active rules from ``METADATA_DQ_RULES`` via
 the configured metadata route. It records aggregate rule outcomes only; it
 does not quarantine rows, write row-level failure metadata, filter invalid
 rows, send alerts, or partially write targets.
+
+### Example
+
+```python
+dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)
+stop_if_failed(dq_result)
+```
 
 ### Public callable source code
 
@@ -816,6 +820,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1499`
 - Inbound references count: 1
 - Outbound references count: 7
+- Used in templates: 02_pipeline, 03_governance
+- Glossary terms: guardrail, can_continue, catalogue evidence, metadata lakehouse
 
 ### AI implementation contract
 

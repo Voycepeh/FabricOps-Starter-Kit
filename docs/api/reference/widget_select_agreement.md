@@ -4,24 +4,17 @@ Render an agreement selector and optionally register the active notebook.
 
 ## Purpose
 
-Render an agreement selector and optionally register the active notebook.
+Displays an agreement selector and stores the chosen agreement so pipeline and exploration notebooks can bind work to approved business context.
+
+## When to use this
+
+- Use near the start of 02_pipeline or 99_explore before reads, profiling, lineage, or governance evidence need an agreement id.
 
 ## At a glance
-
-**Use when:**
-
-- Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
 
 **Do not use when:**
 
 - Do not use when an agreement has already been programmatically selected and validated, or for catalogue table review selection in 03_governance.
-
-**Example:**
-
-```python
-widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)
-agreement = get_selected_agreement()
-```
 
 **Errors:**
 
@@ -30,6 +23,21 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 **Side effects:**
 
 Displays an IPython widget and may register the active notebook selection in metadata when requested.
+
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -45,7 +53,7 @@ Not documented yet
 - `fabricops_kit.metadata._current_notebook_active_registrations`
 - `fabricops_kit.metadata._register_current_notebook`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -61,77 +69,61 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>agreement_rows_or_config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement rows when the caller already has them available.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Environment key used to load agreements when ``CONFIG`` is supplied.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Fabric Spark session used for configured metadata-table reads.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>register_notebook</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">When True, render registration status and a button that links the current notebook to the selected agreement.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_type</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Workflow metadata passed to ``_register_current_notebook`` when ``register_notebook`` is enabled.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>environment_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>topic</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`agreement_rows_or_config` : `Any`, required
+: Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement rows when the caller already has them available.
+
+`env_name` : `str | None`, optional
+: Environment key used to load agreements when ``CONFIG`` is supplied.
+
+`spark_session` : `Any`, optional
+: Fabric Spark session used for configured metadata-table reads.
+
+`register_notebook` : `bool`, optional
+: When True, render registration status and a button that links the current notebook to the selected agreement.
+
+`notebook_type` : `str | None`, optional
+: Workflow metadata passed to ``_register_current_notebook`` when ``register_notebook`` is enabled.
+
+`environment_name` : `str | None`, optional
+: Not documented yet
+
+`dataset_name` : `str | None`, optional
+: Not documented yet
+
+`table_name` : `str | None`, optional
+: Not documented yet
+
+`topic` : `str | None`, optional
+: Not documented yet
+
+`pipeline_name` : `str | None`, optional
+: Not documented yet
 
 ### Returns
 
 Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
 
+### Return interpretation
+
+A visible selection widget does not mean an agreement is selected; call get_selected_agreement after the user chooses a row.
+
+### Common failure causes
+
+- No agreement metadata rows are available.
+- The user has not selected an agreement.
+- Notebook registration metadata cannot be written.
+- The configured metadata lakehouse cannot be read.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)
+agreement = get_selected_agreement()
+```
 
 ### Public callable source code
 
@@ -1151,6 +1143,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `773`
 - Inbound references count: 0
 - Outbound references count: 7
+- Used in templates: 02_pipeline, 99_explore
+- Glossary terms: notebook template
 
 ### AI implementation contract
 

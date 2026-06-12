@@ -4,23 +4,17 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 
 ## Purpose
 
-Profile a source or target DataFrame for schema, quality, and catalogue evidence.
+Builds deterministic profile evidence for a DataFrame, including schema, row counts, nulls, distinct counts, and optional summary values.
+
+## When to use this
+
+- Use during exploration, governance review, or guardrail preparation when a table needs reproducible profile evidence.
 
 ## At a glance
-
-**Use when:**
-
-- Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
 
 **Do not use when:**
 
 - Do not use as a data-quality enforcement step or as a persistence helper; it builds profile rows but does not approve governance evidence.
-
-**Example:**
-
-```python
-profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
-```
 
 **Errors:**
 
@@ -29,6 +23,25 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 **Side effects:**
 
 Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+## Used in templates
+
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
 
 ## Used by
 
@@ -44,7 +57,7 @@ Computes profiling aggregations on the provided DataFrame; it does not write met
 - `fabricops_kit.data_profiling._get_profiled_columns`
 - `fabricops_kit.data_profiling._is_min_max_supported_type`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -60,79 +73,62 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>df</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame to profile.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical table name written into each profile row.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>exclude_columns</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Additional columns to skip, on top of the standard technical columns.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_timestamp_timezone</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field. When omitted, ``config.audit_timezone`` is used and falls back to UTC.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Framework-like configuration carrying ``audit_timezone`` for audit timestamp consistency.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>include_distributions</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">When true, add lightweight distribution summaries for suitable numeric and categorical columns. The default preserves the existing lightweight profile shape and behavior.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>distribution_columns</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional allow-list of important columns for distribution summaries. ``None`` profiles every suitable business column.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>distribution_bin_edges</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional numeric bin edges keyed by column name. Pass baseline edges to make the current profile directly comparable with a previous profile.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>categorical_categories</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional baseline category vocabulary keyed by column name. When supplied, those categories are counted explicitly and all other non-null values are rolled into ``other_count`` so the current profile remains comparable with the baseline.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>categorical_top_n</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Maximum number of non-null category values to keep per categorical column before rolling the remainder into ``other_count``.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`df` : `Any`, required
+: Spark DataFrame to profile.
+
+`table_name` : `str`, required
+: Logical table name written into each profile row.
+
+`exclude_columns` : `list[str] or set[str]`, optional
+: Additional columns to skip, on top of the standard technical columns.
+
+`run_timestamp_timezone` : `str | None`, optional
+: Explicit IANA time zone used for the ``RUN_TIMESTAMP`` evidence field. When omitted, ``config.audit_timezone`` is used and falls back to UTC.
+
+`config` : `Any`, optional
+: Framework-like configuration carrying ``audit_timezone`` for audit timestamp consistency.
+
+`include_distributions` : `bool`, optional
+: When true, add lightweight distribution summaries for suitable numeric and categorical columns. The default preserves the existing lightweight profile shape and behavior.
+
+`distribution_columns` : `list[str] | set[str] | tuple[str, ...] | None`, optional
+: Optional allow-list of important columns for distribution summaries. ``None`` profiles every suitable business column.
+
+`distribution_bin_edges` : `dict[str, list[float]] | None`, optional
+: Optional numeric bin edges keyed by column name. Pass baseline edges to make the current profile directly comparable with a previous profile.
+
+`categorical_categories` : `dict[str, list[str]] | None`, optional
+: Optional baseline category vocabulary keyed by column name. When supplied, those categories are counted explicitly and all other non-null values are rolled into ``other_count`` so the current profile remains comparable with the baseline.
+
+`categorical_top_n` : `int`, optional
+: Maximum number of non-null category values to keep per categorical column before rolling the remainder into ``other_count``.
 
 ### Returns
 
 Spark DataFrame containing one profile row per eligible business column.
+
+### Return interpretation
+
+Each returned profile row describes one table or column metric. Downstream governance and guardrail helpers use those rows as evidence.
+
+### Common failure causes
+
+- The DataFrame is empty or missing expected columns.
+- Requested statistics are unsupported for a column type.
+- Spark actions fail while computing counts or summaries.
+- Excluded columns remove fields needed for review.
 
 ### Notes
 
 Distribution profiling only collects aggregated Spark results such as
 quantiles, bucket counts, and grouped category counts. It does not collect
 complete datasets to the driver.
+
+### Example
+
+```python
+profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
+```
 
 ### Public callable source code
 
@@ -615,6 +611,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `225`
 - Inbound references count: 3
 - Outbound references count: 5
+- Used in templates: 02_pipeline, 03_governance, 99_explore
+- Glossary terms: catalogue evidence, source table, target table
 
 ### AI implementation contract
 

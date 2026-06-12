@@ -4,23 +4,17 @@ Write a DataFrame to a configured Fabric lakehouse target.
 
 ## Purpose
 
-Write a DataFrame to a configured Fabric lakehouse target.
+Writes a DataFrame to a configured Fabric lakehouse table while keeping target resolution centralized in environment configuration.
+
+## When to use this
+
+- Use for pipeline target writes after guardrails have passed and the destination is a lakehouse table.
 
 ## At a glance
-
-**Use when:**
-
-- Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
 
 **Do not use when:**
 
 - Do not use for metadata evidence tables unless the helper explicitly routes metadata, and do not use for warehouse tables.
-
-**Example:**
-
-```python
-write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
-```
 
 **Errors:**
 
@@ -29,6 +23,27 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 **Side effects:**
 
 Writes data to a Fabric lakehouse table using the selected write mode.
+
+## Key terms
+
+- **Target table:** An output table written by the pipeline.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+- `00_env_config`
+- `01_agreement`
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
 
 ## Used by
 
@@ -48,7 +63,7 @@ Writes data to a Fabric lakehouse table using the selected write mode.
 - `fabricops_kit.fabric_input_output._registered_table_identifier`
 - `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -64,68 +79,47 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>df</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame to write.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Target table name under the lakehouse `Tables` area.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>mode</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark write mode. Supported values are `&quot;append&quot;`, `&quot;overwrite&quot;`, `&quot;errorifexists&quot;`, and `&quot;ignore&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>partition_by</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Column or columns used to physically partition the Delta table.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>repartition_by</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional repartitioning before write.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>overwrite_schema</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether to set Spark Delta `overwriteSchema=true` before saving.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`df` : `pyspark.sql.DataFrame`, required
+: Spark DataFrame to write.
+
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`table` : `str`, required
+: Target table name under the lakehouse `Tables` area.
+
+`mode` : `str, default "append"`, optional
+: Spark write mode. Supported values are `"append"`, `"overwrite"`, `"errorifexists"`, and `"ignore"`.
+
+`partition_by` : `str or list[str]`, optional
+: Column or columns used to physically partition the Delta table.
+
+`repartition_by` : `int, str, list, or tuple`, optional
+: Optional repartitioning before write.
+
+`overwrite_schema` : `bool, default True`, optional
+: Whether to set Spark Delta `overwriteSchema=true` before saving.
 
 ### Returns
 
 None; the DataFrame is written to the configured lakehouse table.
+
+### Return interpretation
+
+The helper returns the write operation result from the underlying DataFrame writer when available; verify downstream table state for business validation.
+
+### Common failure causes
+
+- Guardrails were skipped before a target write.
+- The target lakehouse is not configured for the environment.
+- The write mode is unsupported for the destination.
+- The caller lacks write permission or Spark cannot create the table.
 
 ### Notes
 
@@ -133,6 +127,12 @@ Side effects:
 - Persists data to OneLake Delta storage under ``Tables/<table>``.
 - Optional repartitioning can change output file sizing and partition
   layout.
+
+### Example
+
+```python
+write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
+```
 
 ### Public callable source code
 
@@ -405,6 +405,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `227`
 - Inbound references count: 8
 - Outbound references count: 4
+- Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
+- Glossary terms: target table, guardrail, metadata lakehouse
 
 ### AI implementation contract
 

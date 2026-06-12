@@ -4,23 +4,17 @@ Render standalone sensitivity and PII classification review guidance for selecte
 
 ## Purpose
 
-Render standalone sensitivity and PII classification review guidance for selected profile rows.
+Renders sensitivity and PII classification review guidance for columns in a selected table.
+
+## When to use this
+
+- Use in 03_governance when reviewers need to approve classification metadata before governance records are written.
 
 ## At a glance
-
-**Use when:**
-
-- Render standalone sensitivity and PII classification review guidance for selected profile rows.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -30,6 +24,21 @@ Not documented yet
 
 Not documented yet
 
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+## Used in templates
+
+- `03_governance`
+
 ## Used by
 
 Not documented yet
@@ -38,7 +47,7 @@ Not documented yet
 
 - `fabricops_kit.governance_review._display_review_guidance`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -54,24 +63,8 @@ def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> l
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>profile_rows</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Selected column profile evidence from ``load_catalogue_profile_rows``.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`profile_rows` : `list[dict[str, Any]]`, required
+: Selected column profile evidence from ``load_catalogue_profile_rows``.
 
 ### Returns
 
@@ -79,9 +72,26 @@ list[dict[str, Any]]
     Empty editable review list. Add approved classification dictionaries
     before calling ``record_table_governance``.
 
+### Return interpretation
+
+The widget captures classification review state; approved classifications must be included in record_table_governance to persist them.
+
+### Common failure causes
+
+- No selected profile rows are available.
+- Classification choices are incomplete.
+- Reviewer approval status is missing.
+- Widget state is not collected before persistence.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -195,6 +205,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `789`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 03_governance
+- Glossary terms: catalogue evidence, notebook template
 
 ### AI implementation contract
 

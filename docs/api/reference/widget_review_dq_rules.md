@@ -4,23 +4,17 @@ Render standalone DQ-rule review guidance for selected profile rows.
 
 ## Purpose
 
-Render standalone DQ-rule review guidance for selected profile rows.
+Renders data-quality rule review guidance so reviewers can approve executable expectations for a selected table.
+
+## When to use this
+
+- Use in 03_governance after profile rows are loaded and before record_table_governance persists approved DQ rules.
 
 ## At a glance
-
-**Use when:**
-
-- Render standalone DQ-rule review guidance for selected profile rows.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -29,6 +23,23 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
+## Used in templates
+
+- `03_governance`
 
 ## Used by
 
@@ -43,7 +54,7 @@ Not documented yet
 - `fabricops_kit.governance_review._validate_dq_rules`
 - `fabricops_kit.governance_review._value`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -59,54 +70,26 @@ def widget_review_dq_rules(profile_rows: list[dict[str, Any]], *, existing_rules
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>profile_rows</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Selected catalogue profile rows containing columns and profile evidence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>existing_rules</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Previously persisted active and inactive DQ rule rows for the selected table. When supplied, the widget displays them in an editable review table. Runtime enforcement still reads ``METADATA_DQ_RULES`` later.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Runtime objects used only when reviewers click AI suggestion actions.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Selected table name. Defaults to the table in ``profile_rows``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>business_context</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Optional context sent to the Fabric AI suggestion helper.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`profile_rows` : `list[dict[str, Any]]`, required
+: Selected catalogue profile rows containing columns and profile evidence.
+
+`existing_rules` : `list[dict[str, Any]] | None`, optional
+: Previously persisted active and inactive DQ rule rows for the selected table. When supplied, the widget displays them in an editable review table. Runtime enforcement still reads ``METADATA_DQ_RULES`` later.
+
+`config` : `Any`, optional
+: Runtime objects used only when reviewers click AI suggestion actions.
+
+`env` : `str | None`, optional
+: Not documented yet
+
+`spark_session` : `Any`, optional
+: Not documented yet
+
+`table_name` : `str | None`, optional
+: Selected table name. Defaults to the table in ``profile_rows``.
+
+`business_context` : `str`, optional
+: Optional context sent to the Fabric AI suggestion helper.
 
 ### Returns
 
@@ -115,9 +98,26 @@ list[dict[str, Any]]
     deactivation, and reactivation dictionaries to this list; pass it to
     ``record_table_governance`` to persist append-only metadata history.
 
+### Return interpretation
+
+The widget captures proposed and approved DQ rule rows. Only approved rows should be persisted and later enforced by pipeline guardrails.
+
+### Common failure causes
+
+- Profile rows are missing.
+- Rule parameters are incomplete or unsupported.
+- The reviewer has not approved any rules.
+- Widget state is reset before records are collected.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -786,6 +786,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `624`
 - Inbound references count: 0
 - Outbound references count: 6
+- Used in templates: 03_governance
+- Glossary terms: catalogue evidence, guardrail, metadata lakehouse
 
 ### AI implementation contract
 

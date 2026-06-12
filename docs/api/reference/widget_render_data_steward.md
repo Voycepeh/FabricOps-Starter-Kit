@@ -4,23 +4,17 @@ Render the standalone data-steward intake widget.
 
 ## Purpose
 
-Render the standalone data-steward intake widget.
+Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.
+
+## When to use this
+
+- Use in 01_agreement when collecting or updating data steward details before creating a data agreement.
 
 ## At a glance
-
-**Use when:**
-
-- Render the standalone data-steward intake widget.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -30,6 +24,20 @@ Not documented yet
 
 Not documented yet
 
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `01_agreement`
+
 ## Used by
 
 Not documented yet
@@ -38,7 +46,7 @@ Not documented yet
 
 - `fabricops_kit.data_agreement._render_maintenance_widget`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -54,43 +62,40 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Configuration containing steward widget fields and metadata routing.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key configured by ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Fabric Spark session used for metadata reads and append-only writes.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Configuration containing steward widget fields and metadata routing.
+
+`env_name` : `str`, required
+: Environment key configured by ``00_env_config``.
+
+`spark` : `Any`, required
+: Fabric Spark session used for metadata reads and append-only writes.
 
 ### Returns
 
 dict[str, Any]
     Rendered widget controls keyed for notebook customization.
 
+### Return interpretation
+
+The widget itself is the user interface; saved steward values are available to downstream agreement evidence only after the user completes the widget action.
+
+### Common failure causes
+
+- ipywidgets is not available in the runtime.
+- Required steward fields are left blank.
+- Widget state is cleared by rerunning cells out of order.
+- Metadata routing is unavailable when the widget tries to persist records.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -1414,6 +1419,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1415`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 01_agreement
+- Glossary terms: notebook template
 
 ### AI implementation contract
 

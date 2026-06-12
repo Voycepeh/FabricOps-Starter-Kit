@@ -4,23 +4,17 @@ Write one pipeline runtime summary row to metadata.
 
 ## Purpose
 
-Write one pipeline runtime summary row to metadata.
+Writes a compact run-level summary that ties pipeline name, agreement context, guardrail results, lineage, and write outcomes together.
+
+## When to use this
+
+- Use at the end of 02_pipeline when downstream operators need one metadata record describing the run outcome.
 
 ## At a glance
-
-**Use when:**
-
-- Use at the end of 02_pipeline to store operational run evidence in METADATA_PIPELINE_RUNS.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -29,6 +23,24 @@ Not documented yet
 **Side effects:**
 
 Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -41,7 +53,7 @@ Not documented yet
 - `fabricops_kit.pipeline._now_iso`
 - `fabricops_kit.pipeline._summary_status`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -57,169 +69,116 @@ def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used to create the one-row summary DataFrame.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Metadata route from ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Pipeline run identifier.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Agreement and notebook registry context.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>agreement_contract_version</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_registry_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>notebook_type</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>started_at</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Runtime timestamps. Defaults to current UTC time when omitted.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>completed_at</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>status</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Overall pipeline status.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_definitions</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Dataset definitions used to compute source and target counts.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_definitions</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_schema_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Guardrail result dictionaries included in the JSON summary.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_schema_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_freshness_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_freshness_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_stability_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_stability_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_dq_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_dq_results</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>lineage_status</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Evidence write statuses and support message.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>catalogue_status</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>message</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>metadata_table</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Metadata table that stores runtime summaries.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>mode</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Write mode for the runtime summary row.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`spark` : `Any`, required
+: Spark session used to create the one-row summary DataFrame.
+
+`config` : `Any`, required
+: Metadata route from ``00_env_config``.
+
+`env` : `str`, required
+: Not documented yet
+
+`run_id` : `str`, required
+: Pipeline run identifier.
+
+`agreement_id` : `str`, optional
+: Agreement and notebook registry context.
+
+`agreement_contract_version` : `str`, optional
+: Not documented yet
+
+`notebook_registry_id` : `str`, optional
+: Not documented yet
+
+`notebook_id` : `str`, optional
+: Not documented yet
+
+`notebook_type` : `str`, optional
+: Not documented yet
+
+`pipeline_name` : `str`, optional
+: Not documented yet
+
+`started_at` : `str | None`, optional
+: Runtime timestamps. Defaults to current UTC time when omitted.
+
+`completed_at` : `str | None`, optional
+: Not documented yet
+
+`status` : `str`, optional
+: Overall pipeline status.
+
+`source_definitions` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Dataset definitions used to compute source and target counts.
+
+`target_definitions` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`source_schema_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Guardrail result dictionaries included in the JSON summary.
+
+`target_schema_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`source_freshness_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`target_freshness_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`source_stability_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`target_stability_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`source_dq_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`target_dq_results` : `Mapping[str, Mapping[str, Any]] | None`, optional
+: Not documented yet
+
+`lineage_status` : `str`, optional
+: Evidence write statuses and support message.
+
+`catalogue_status` : `str`, optional
+: Not documented yet
+
+`message` : `str`, optional
+: Not documented yet
+
+`metadata_table` : `str`, optional
+: Metadata table that stores runtime summaries.
+
+`mode` : `str`, optional
+: Write mode for the runtime summary row.
 
 ### Returns
 
 Runtime summary row that was written.
+
+### Return interpretation
+
+The returned summary shows what run metadata was assembled or written. Compare status and guardrail counts with expected pipeline outcomes.
+
+### Common failure causes
+
+- Required run identifiers are missing.
+- Guardrail result structures are malformed.
+- Metadata routing is unavailable.
+- The configured summary table cannot be written.
 
 ### Notes
 
 The row is written via ``write_lakehouse_table(..., config, env,
 "metadata", metadata_table, mode="append")`` so runtime evidence never
 relies on a default attached lakehouse.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -539,6 +498,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `646`
 - Inbound references count: 0
 - Outbound references count: 4
+- Used in templates: 02_pipeline
+- Glossary terms: guardrail, can_continue, catalogue evidence, metadata lakehouse
 
 ### AI implementation contract
 

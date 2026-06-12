@@ -4,23 +4,17 @@ Render a searchable selector for latest successful catalogue profiles.
 
 ## Purpose
 
-Render a searchable selector for latest successful catalogue profiles.
+Renders a selector for catalogue profile rows so governance reviewers can choose the table they are reviewing.
+
+## When to use this
+
+- Use at the start of 03_governance before column context, DQ, or classification review widgets need a selected table.
 
 ## At a glance
-
-**Use when:**
-
-- Render a searchable selector for latest successful catalogue profiles.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -29,6 +23,21 @@ Not documented yet
 **Side effects:**
 
 Not documented yet
+
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+## Used in templates
+
+- `03_governance`
 
 ## Used by
 
@@ -40,7 +49,7 @@ Not documented yet
 - `fabricops_kit.governance_review._catalogue_table_options`
 - `fabricops_kit.governance_review._coerce_rows`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -56,43 +65,40 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Runtime config containing the metadata lakehouse route.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment used to read ``METADATA_DATA_CATALOGUE``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark session used for the catalogue read.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Runtime config containing the metadata lakehouse route.
+
+`env` : `str`, required
+: Environment used to read ``METADATA_DATA_CATALOGUE``.
+
+`spark_session` : `Any`, required
+: Spark session used for the catalogue read.
 
 ### Returns
 
 ipywidgets.Combobox
     Searchable selector whose value stores stable JSON identity.
 
+### Return interpretation
+
+The widget stores the selected table in notebook state; call get_selected_catalogue_table after the user chooses a row.
+
+### Common failure causes
+
+- No catalogue profile rows are available.
+- The user has not selected a table.
+- Profile metadata cannot be read.
+- Widget state was reset by rerunning cells.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -326,6 +332,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `300`
 - Inbound references count: 0
 - Outbound references count: 3
+- Used in templates: 03_governance
+- Glossary terms: catalogue evidence, notebook template
 
 ### AI implementation contract
 

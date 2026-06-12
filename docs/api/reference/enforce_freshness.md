@@ -4,24 +4,17 @@ Enforce whether the latest data arrived within the configured freshness lag.
 
 ## Purpose
 
-Enforce whether the latest data arrived within the configured freshness lag.
+Checks whether the latest value in a freshness column is recent enough for the configured maximum lag before pipeline writes continue.
+
+## When to use this
+
+- Use as a pipeline guardrail when stale source or target data should block or warn before downstream work proceeds.
 
 ## At a glance
-
-**Use when:**
-
-- Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.
 
 **Do not use when:**
 
 - Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use validate_schema, enforce_profile_behavior, or enforce_dq_rules for those checks.
-
-**Example:**
-
-```python
-freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")
-stop_if_failed(freshness_result)
-```
 
 **Errors:**
 
@@ -30,6 +23,23 @@ ValueError when severity is unsupported, lag is missing for a configured column,
 **Side effects:**
 
 Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
+## Used in templates
+
+- `02_pipeline`
 
 ## Used by
 
@@ -41,7 +51,7 @@ Computes max(freshness_column) on the provided DataFrame; it does not write meta
 - `fabricops_kit.guardrails._iso_date_value`
 - `fabricops_kit.guardrails._max_column_value`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -57,53 +67,47 @@ def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>dataframe</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Spark DataFrame or iterable of row-like mappings to check.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>freshness_column</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Column whose maximum value represents the latest available data date. When omitted, the freshness guardrail is skipped.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>max_lag_days</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Maximum allowed lag, in days, between ``reference_date`` and the latest value in ``freshness_column``. Required when ``freshness_column`` is set.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>severity</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Whether stale data blocks continuation or returns a non-blocking warning.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>reference_date</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Date used as &quot;today&quot; for comparison. Defaults to the current local date.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`dataframe` : `Any`, required
+: Spark DataFrame or iterable of row-like mappings to check.
+
+`freshness_column` : `str | None`, required
+: Column whose maximum value represents the latest available data date. When omitted, the freshness guardrail is skipped.
+
+`max_lag_days` : `int | str | None`, required
+: Maximum allowed lag, in days, between ``reference_date`` and the latest value in ``freshness_column``. Required when ``freshness_column`` is set.
+
+`severity` : `str`, optional
+: Whether stale data blocks continuation or returns a non-blocking warning.
+
+`reference_date` : `date | datetime | str | None`, optional
+: Date used as "today" for comparison. Defaults to the current local date.
 
 ### Returns
 
 Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.
 
+### Return interpretation
+
+If can_continue is true, the latest freshness value is within the allowed lag or the check was skipped. If false, investigate stale data before writing outputs.
+
+### Common failure causes
+
+- The freshness column is missing.
+- The max lag value is missing or invalid.
+- The latest date is older than the allowed lag.
+- Severity is invalid or configured as blocking for stale data.
+
 ### Notes
 
 Freshness is separate from profile behavior. ``load_behavior="skip"`` only
 skips profile behavior enforcement; freshness still runs when configured.
+
+### Example
+
+```python
+freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")
+stop_if_failed(freshness_result)
+```
 
 ### Public callable source code
 
@@ -340,6 +344,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `367`
 - Inbound references count: 1
 - Outbound references count: 3
+- Used in templates: 02_pipeline
+- Glossary terms: guardrail, can_continue, source table, target table
 
 ### AI implementation contract
 

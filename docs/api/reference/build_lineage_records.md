@@ -4,23 +4,17 @@ Build source-to-target lineage evidence records for a pipeline run.
 
 ## Purpose
 
-Build source-to-target lineage evidence records for a pipeline run.
+Builds source-to-target transformation records that describe how a pipeline output was produced during a run.
+
+## When to use this
+
+- Use in 02_pipeline when transformation steps should be persisted as lineage evidence after a target is prepared.
 
 ## At a glance
-
-**Use when:**
-
-- Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
 
 **Do not use when:**
 
 - Do not use to scan notebooks automatically or persist metadata; it only builds records from supplied lineage inputs.
-
-**Example:**
-
-```python
-lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=["source.orders"], target_table="unified.orders", transformation_steps=[{"step": "clean_orders"}])
-```
 
 **Errors:**
 
@@ -30,6 +24,23 @@ Raises normal Python errors if required lineage inputs are missing or malformed.
 
 Pure record-building helper; it does not write metadata, tables, or files.
 
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+None.
+
 ## Used by
 
 Not documented yet
@@ -38,7 +49,7 @@ Not documented yet
 
 - `fabricops_kit.config._current_audit_timestamp`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -54,57 +65,48 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>dataset_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Dataset identifier for all output rows.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Unique run identifier.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>source_tables</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Source table names captured for the run.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target_table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Target table name produced by the run.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>transformation_steps</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Transformation step dictionaries to merge into each output row.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Framework configuration used to resolve the configured audit timezone when adding timestamp metadata.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`dataset_name` : `str`, required
+: Dataset identifier for all output rows.
+
+`run_id` : `str`, required
+: Unique run identifier.
+
+`source_tables` : `list[str]`, required
+: Source table names captured for the run.
+
+`target_table` : `str`, required
+: Target table name produced by the run.
+
+`transformation_steps` : `list[dict]`, required
+: Transformation step dictionaries to merge into each output row.
+
+`config` : `Any`, optional
+: Framework configuration used to resolve the configured audit timezone when adding timestamp metadata.
 
 ### Returns
 
 List of lineage record dictionaries suitable for metadata persistence.
 
+### Return interpretation
+
+Each returned dictionary is one lineage metadata row ready for persistence; review source, target, and step fields before writing.
+
+### Common failure causes
+
+- run_id or dataset_name is missing.
+- Source or target table names are blank.
+- Transformation step dictionaries are malformed.
+- Configuration is missing audit timestamp settings.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=["source.orders"], target_table="unified.orders", transformation_steps=[{"step": "clean_orders"}])
+```
 
 ### Public callable source code
 
@@ -260,6 +262,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `212`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: —
+- Glossary terms: source table, target table, catalogue evidence
 
 ### AI implementation contract
 

@@ -15,18 +15,23 @@ class PublicSymbolDocMetadata(TypedDict):
     template_segment: str
     function_type: NotRequired[str]
     purpose: NotRequired[str]
+    expanded_purpose: NotRequired[str]
     summary_override: str | None
     use_when: NotRequired[str]
-    when_to_use: NotRequired[list[str]]
+    when_to_use: NotRequired[list[str] | str]
     do_not_use_when: NotRequired[str]
+    glossary_terms: NotRequired[list[str]]
     parameters: NotRequired[str | dict[str, str] | list[str]]
     returns: NotRequired[str]
+    return_interpretation: NotRequired[str]
     raises: NotRequired[str | dict[str, str] | list[str]]
+    common_failure_causes: NotRequired[str | list[str]]
     side_effects: NotRequired[str | list[str]]
     fabric_context: NotRequired[str]
     ai_verification: NotRequired[str | list[str]]
     preferred_example: NotRequired[str]
     related_functions: NotRequired[list[str]]
+    related_guides: NotRequired[list[dict[str, str]]]
 
 
 
@@ -501,15 +506,46 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'symbol_name': 'enforce_profile_behavior',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profile behavior enforcement',
+  'expanded_purpose': 'This function protects against accidental changes in how a table is loaded. For example, it can stop a pipeline from overwriting a dataset that was previously approved as append-only.\n\nIt compares the current load behavior with the previously accepted catalogue profile. If the current behavior no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.',
   'use_when': 'Use in 02_pipeline to enforce load_behavior expectations against previous accepted catalogue profile evidence.',
+  'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously approved loading pattern. It is especially useful when an overwrite could remove existing history, or when an append-only table suddenly behaves like a full refresh.',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
                      'validate_schema or enforce_dq_rules for those checks.',
-  'parameters': 'spark, dataframe, metadata_table, dataset_name, table_name, required stage, '
-                'run_id, load_behavior, optional watermark column, exclude_columns, and exclude_run_id.',
+  'glossary_terms': ['profile behavior',
+                     'accepted catalogue profile evidence',
+                     'baseline profile',
+                     'stage',
+                     'profile behavior check',
+                     'guardrail',
+                     'can_continue',
+                     'append',
+                     'overwrite',
+                     'skip',
+                     'metadata lakehouse'],
+  'parameters': {'spark': 'Spark session used to read accepted profile evidence from the configured metadata target.',
+                 'dataframe': 'Current source or target DataFrame being checked.',
+                 'metadata_table': 'Metadata table that stores accepted catalogue profile evidence.',
+                 'dataset_name': 'Dataset name used to find matching catalogue evidence.',
+                 'table_name': 'Table name used to find matching catalogue evidence.',
+                 'stage': 'The part of the pipeline being checked, such as source or target.',
+                 'run_id': 'Current pipeline run identifier recorded in the generated profile evidence.',
+                 'load_behavior': 'Current load behavior to compare with the accepted baseline, commonly append, overwrite, or skip.',
+                 'watermark_column': 'Optional column used to compare append watermark movement when available.',
+                 'exclude_columns': 'Optional columns to ignore while comparing profile fields.',
+                 'exclude_run_id': 'Optional run id to exclude when selecting the accepted baseline evidence.'},
   'returns': 'Guardrail result dictionary with status, can_continue, message, current profile, '
              'baseline details, and profile behavior checks.',
+  'return_interpretation': 'If can_continue is true, the current load behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, update or reapprove the catalogue profile evidence. If not intentional, fix the pipeline configuration.',
   'raises': 'Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded '
             'or compared.',
+  'common_failure_causes': ['Accepted profile evidence has not been created or approved yet.',
+                            'The current load behavior does not match the accepted baseline.',
+                            'The configured dataset or table name does not match catalogue evidence.',
+                            'The configured stage does not match the accepted evidence.',
+                            'The metadata lakehouse or catalogue profile table cannot be read.',
+                            'The accepted evidence is missing required behavior fields.',
+                            'The current behavior value is invalid or unsupported.',
+                            'The accepted evidence is stale or incomplete.'],
   'side_effects': 'Reads baseline profile metadata and computes current profile evidence; it does '
                   'not write target data.',
   'fabric_context': 'Requires profile metadata routed through the configured 00_env_config '
@@ -739,3 +775,282 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'related_functions': ['load_catalogue_profile_rows',
                         'enforce_dq_rules',
                         'setup_metadata_tables']}]
+
+PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL: dict[str, dict[str, object]] = {
+    "setup_notebook": {
+        "expanded_purpose": "Validates the selected FabricOps environment, resolves configured runtime targets, and returns the notebook context that downstream helpers depend on.",
+        "glossary_terms": ["notebook template", "metadata lakehouse"],
+        "return_interpretation": "A ready context means required targets resolved and runtime checks passed. Review validation messages before running downstream cells when readiness is not successful.",
+        "common_failure_causes": ["The environment name is not present in CONFIG.", "Required targets are missing from path configuration.", "Fabric runtime metadata is unavailable and no local fallback was provided.", "Configured lakehouse or warehouse targets cannot be resolved."],
+    },
+    "setup_metadata_tables": {
+        "expanded_purpose": "Prepares the FabricOps metadata tables used by agreement, profiling, governance, lineage, and pipeline evidence workflows.",
+        "when_to_use": "Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.",
+        "glossary_terms": ["metadata lakehouse", "catalogue evidence"],
+        "return_interpretation": "The returned setup status tells you which metadata tables were created or validated and whether the environment is ready for workflows that write evidence.",
+        "common_failure_causes": ["The configured metadata lakehouse path is missing or invalid.", "Spark cannot create or inspect the metadata tables.", "The selected environment does not include metadata routing.", "The caller lacks permission to create or update metadata tables."],
+    },
+    "widget_render_data_steward": {
+        "expanded_purpose": "Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.",
+        "when_to_use": "Use in 01_agreement when collecting or updating data steward details before creating a data agreement.",
+        "glossary_terms": ["notebook template"],
+        "return_interpretation": "The widget itself is the user interface; saved steward values are available to downstream agreement evidence only after the user completes the widget action.",
+        "common_failure_causes": ["ipywidgets is not available in the runtime.", "Required steward fields are left blank.", "Widget state is cleared by rerunning cells out of order.", "Metadata routing is unavailable when the widget tries to persist records."],
+    },
+    "widget_render_data_agreement": {
+        "expanded_purpose": "Renders the data agreement intake widget used to capture agreement identity, scope, and business metadata for later notebook workflows.",
+        "when_to_use": "Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.",
+        "glossary_terms": ["notebook template"],
+        "return_interpretation": "The rendered widget collects agreement input; downstream helpers can only use the agreement after the user saves valid values.",
+        "common_failure_causes": ["ipywidgets is not available in the runtime.", "Required agreement fields are missing.", "Agreement identifiers conflict with existing metadata.", "The metadata target cannot be written."],
+    },
+    "widget_render_agreement_evidence": {
+        "expanded_purpose": "Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.",
+        "when_to_use": "Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.",
+        "glossary_terms": ["notebook template", "catalogue evidence"],
+        "return_interpretation": "The widget records evidence references when saved; review the resulting metadata rows before relying on them in handover or audit flows.",
+        "common_failure_causes": ["Evidence details are incomplete.", "File or URL references are malformed.", "Widget state is reset before saving.", "The configured metadata target is not writable."],
+    },
+    "widget_select_agreement": {
+        "expanded_purpose": "Displays an agreement selector and stores the chosen agreement so pipeline and exploration notebooks can bind work to approved business context.",
+        "when_to_use": "Use near the start of 02_pipeline or 99_explore before reads, profiling, lineage, or governance evidence need an agreement id.",
+        "glossary_terms": ["notebook template"],
+        "return_interpretation": "A visible selection widget does not mean an agreement is selected; call get_selected_agreement after the user chooses a row.",
+        "common_failure_causes": ["No agreement metadata rows are available.", "The user has not selected an agreement.", "Notebook registration metadata cannot be written.", "The configured metadata lakehouse cannot be read."],
+    },
+    "get_selected_agreement": {
+        "expanded_purpose": "Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.",
+        "when_to_use": "Use after rendering and completing widget_select_agreement when code needs the selected agreement values.",
+        "glossary_terms": ["notebook template"],
+        "return_interpretation": "A returned dictionary contains the selected agreement fields. A missing value means the selector has not been completed in the current notebook state.",
+        "common_failure_causes": ["widget_select_agreement has not been run.", "The user has not selected an agreement.", "Notebook state was reset.", "The selected row is no longer present in metadata."],
+    },
+    "read_lakehouse_table": {
+        "expanded_purpose": "Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.",
+        "when_to_use": "Use when notebook code needs a managed lakehouse table rather than a file path or warehouse SQL query.",
+        "glossary_terms": ["source table", "metadata lakehouse"],
+        "return_interpretation": "The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.",
+        "common_failure_causes": ["The target or table name is misspelled.", "The selected environment does not define the requested lakehouse target.", "Spark cannot access the table.", "The caller lacks permission to read the lakehouse."],
+    },
+    "write_lakehouse_table": {
+        "expanded_purpose": "Writes a DataFrame to a configured Fabric lakehouse table while keeping target resolution centralized in environment configuration.",
+        "when_to_use": "Use for pipeline target writes after guardrails have passed and the destination is a lakehouse table.",
+        "glossary_terms": ["target table", "guardrail", "metadata lakehouse"],
+        "return_interpretation": "The helper returns the write operation result from the underlying DataFrame writer when available; verify downstream table state for business validation.",
+        "common_failure_causes": ["Guardrails were skipped before a target write.", "The target lakehouse is not configured for the environment.", "The write mode is unsupported for the destination.", "The caller lacks write permission or Spark cannot create the table."],
+    },
+    "read_lakehouse_csv": {
+        "expanded_purpose": "Reads a CSV file from the Files area of a configured Fabric lakehouse and returns it as a Spark DataFrame.",
+        "when_to_use": "Use for file-based source ingestion when the source is CSV and should be resolved through configured lakehouse paths.",
+        "glossary_terms": ["source table", "notebook template"],
+        "return_interpretation": "The returned DataFrame reflects Spark CSV parsing options; inspect schema and sample rows before profiling or writing.",
+        "common_failure_causes": ["The file path is wrong or outside the configured lakehouse.", "CSV options do not match the file shape.", "Spark cannot access the file.", "The selected environment is missing the source lakehouse target."],
+    },
+    "read_lakehouse_parquet": {
+        "expanded_purpose": "Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.",
+        "when_to_use": "Use for file-based source ingestion when the source is Parquet rather than a managed table.",
+        "glossary_terms": ["source table", "notebook template"],
+        "return_interpretation": "The returned DataFrame uses the Parquet schema read by Spark; validate it before downstream profile or guardrail checks.",
+        "common_failure_causes": ["The Parquet path is missing or misspelled.", "The file is not valid Parquet.", "The configured lakehouse target is unavailable.", "The caller lacks read permission."],
+    },
+    "read_lakehouse_excel": {
+        "expanded_purpose": "Reads an Excel file from a configured lakehouse Files path and converts it into a Spark DataFrame for notebook processing.",
+        "when_to_use": "Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.",
+        "glossary_terms": ["source table", "notebook template"],
+        "return_interpretation": "The returned DataFrame depends on workbook sheet and parsing options; confirm headers and types before using it as pipeline input.",
+        "common_failure_causes": ["The workbook path or sheet name is incorrect.", "Excel parsing dependencies are unavailable.", "The workbook layout does not match expected headers.", "The configured lakehouse target cannot be read."],
+    },
+    "read_warehouse_table": {
+        "expanded_purpose": "Reads data from a configured Fabric Warehouse table or query target into a Spark DataFrame.",
+        "when_to_use": "Use when source data lives in a Fabric Warehouse rather than a lakehouse file or Delta table.",
+        "glossary_terms": ["source table", "notebook template"],
+        "return_interpretation": "The returned DataFrame represents the warehouse read result; confirm filters and row counts before profiling or transformation.",
+        "common_failure_causes": ["The warehouse target is not configured.", "The table or SQL text is invalid.", "Warehouse connector context is unavailable.", "The caller lacks warehouse read permission."],
+    },
+    "write_warehouse_table": {
+        "expanded_purpose": "Writes a DataFrame to a configured Fabric Warehouse destination for pipeline outputs that belong in warehouse storage.",
+        "when_to_use": "Use for target writes after guardrails pass and the configured output layer is a warehouse table.",
+        "glossary_terms": ["target table", "guardrail"],
+        "return_interpretation": "A successful write means the helper submitted the DataFrame write to the configured warehouse target; verify downstream table state for business checks.",
+        "common_failure_causes": ["The warehouse target is missing from configuration.", "The target table name or write mode is invalid.", "Warehouse connector support is unavailable.", "The caller lacks write permission."],
+    },
+    "profile_dataframe": {
+        "expanded_purpose": "Builds deterministic profile evidence for a DataFrame, including schema, row counts, nulls, distinct counts, and optional summary values.",
+        "when_to_use": "Use during exploration, governance review, or guardrail preparation when a table needs reproducible profile evidence.",
+        "glossary_terms": ["catalogue evidence", "source table", "target table"],
+        "return_interpretation": "Each returned profile row describes one table or column metric. Downstream governance and guardrail helpers use those rows as evidence.",
+        "common_failure_causes": ["The DataFrame is empty or missing expected columns.", "Requested statistics are unsupported for a column type.", "Spark actions fail while computing counts or summaries.", "Excluded columns remove fields needed for review."],
+    },
+    "validate_schema": {
+        "expanded_purpose": "Checks whether a DataFrame contains the expected columns and compatible types before downstream transformations or writes continue.",
+        "when_to_use": "Use as an early guardrail when a source or target DataFrame must match a known schema contract.",
+        "glossary_terms": ["guardrail", "can_continue", "source table", "target table"],
+        "return_interpretation": "When can_continue is true, schema checks passed or only non-blocking issues were found. When false, fix missing or mismatched columns before writing data.",
+        "common_failure_causes": ["Required columns are missing.", "Column types differ from expected schema.", "The expected schema configuration is incomplete.", "The DataFrame supplied to the check is not the intended table."],
+    },
+    "enforce_freshness": {
+        "expanded_purpose": "Checks whether the latest value in a freshness column is recent enough for the configured maximum lag before pipeline writes continue.",
+        "when_to_use": "Use as a pipeline guardrail when stale source or target data should block or warn before downstream work proceeds.",
+        "glossary_terms": ["guardrail", "can_continue", "source table", "target table"],
+        "return_interpretation": "If can_continue is true, the latest freshness value is within the allowed lag or the check was skipped. If false, investigate stale data before writing outputs.",
+        "common_failure_causes": ["The freshness column is missing.", "The max lag value is missing or invalid.", "The latest date is older than the allowed lag.", "Severity is invalid or configured as blocking for stale data."],
+    },
+    "enforce_profile_behavior": {
+        "expanded_purpose": "This function protects against accidental changes in how a table is loaded. For example, it can stop a pipeline from overwriting a dataset that was previously approved as append-only.\n\nIt compares the current load behavior with the previously accepted catalogue profile. If the current behavior no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.",
+        "when_to_use": "Use this when promoting or running a pipeline that should follow a previously approved loading pattern. It is especially useful when an overwrite could remove existing history, or when an append-only table suddenly behaves like a full refresh.",
+        "glossary_terms": ["profile behavior", "accepted catalogue profile evidence", "baseline profile", "stage", "profile behavior check", "guardrail", "can_continue", "append", "overwrite", "skip", "metadata lakehouse"],
+        "return_interpretation": "If can_continue is true, the current load behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, update or reapprove the catalogue profile evidence. If not intentional, fix the pipeline configuration.",
+        "common_failure_causes": ["Accepted profile evidence has not been created or approved yet.", "The current load behavior does not match the accepted baseline.", "The configured dataset or table name does not match catalogue evidence.", "The configured stage does not match the accepted evidence.", "The metadata lakehouse or catalogue profile table cannot be read.", "The accepted evidence is missing required behavior fields.", "The current behavior value is invalid or unsupported.", "The accepted evidence is stale or incomplete."],
+    },
+    "stop_if_failed": {
+        "expanded_purpose": "Stops or raises for a blocking guardrail result so a notebook does not continue into unsafe downstream writes.",
+        "when_to_use": "Use immediately after schema, freshness, profile behavior, or DQ guardrail helpers when can_continue controls whether the pipeline should proceed.",
+        "glossary_terms": ["guardrail", "can_continue"],
+        "return_interpretation": "No return value means execution may continue. A blocking result raises or exits according to runtime settings.",
+        "common_failure_causes": ["The guardrail result is missing can_continue or status fields.", "A blocking guardrail returned can_continue as false.", "Notebook exit behavior is not supported in the current runtime.", "The caller passed a warning result that should not stop execution."],
+    },
+    "enforce_dq_rules": {
+        "expanded_purpose": "Evaluates approved data-quality rules against a DataFrame and returns guardrail evidence that can block unsafe writes.",
+        "when_to_use": "Use in pipeline guardrails after governance-approved DQ rules exist for the dataset and table.",
+        "glossary_terms": ["guardrail", "can_continue", "catalogue evidence", "metadata lakehouse"],
+        "return_interpretation": "When can_continue is true, active rules passed or only non-blocking issues were found. When false, inspect failing rule details before writing the table.",
+        "common_failure_causes": ["No approved active DQ rules exist for the table.", "Rule parameters are invalid or unsupported.", "Required columns are missing from the DataFrame.", "The metadata lakehouse cannot be read."],
+    },
+    "build_lineage_records": {
+        "expanded_purpose": "Builds source-to-target transformation records that describe how a pipeline output was produced during a run.",
+        "when_to_use": "Use in 02_pipeline when transformation steps should be persisted as lineage evidence after a target is prepared.",
+        "glossary_terms": ["source table", "target table", "catalogue evidence"],
+        "return_interpretation": "Each returned dictionary is one lineage metadata row ready for persistence; review source, target, and step fields before writing.",
+        "common_failure_causes": ["run_id or dataset_name is missing.", "Source or target table names are blank.", "Transformation step dictionaries are malformed.", "Configuration is missing audit timestamp settings."],
+    },
+    "prepare_pipeline_table_configs": {
+        "expanded_purpose": "Normalizes source and target table configuration dictionaries so pipeline guardrail, write, lineage, and evidence helpers receive consistent fields.",
+        "when_to_use": "Use before running table guardrails or writes when notebook-editable table configs need package defaults and derived keys.",
+        "glossary_terms": ["source table", "target table", "stage", "guardrail"],
+        "return_interpretation": "The returned configs are enriched copies keyed for downstream helpers. Confirm each table has the expected stage, key, and write settings.",
+        "common_failure_causes": ["A table config is missing key or table_name fields.", "Stage or write settings are inconsistent.", "Source and target config shapes differ from expected dictionaries.", "Defaults in CONFIG do not match the notebook environment."],
+    },
+    "run_table_guardrails": {
+        "expanded_purpose": "Coordinates profiling, schema, freshness, profile behavior, DQ, and catalogue evidence checks for a group of pipeline table configs.",
+        "when_to_use": "Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.",
+        "glossary_terms": ["guardrail", "can_continue", "source table", "target table", "catalogue evidence"],
+        "return_interpretation": "The result groups each guardrail outcome and a summary DataFrame. If any blocking result has can_continue false, stop before writing data.",
+        "common_failure_causes": ["One of the table configs is incomplete.", "A schema, freshness, profile behavior, or DQ check fails.", "Approved metadata evidence cannot be read.", "Spark cannot profile or validate one of the DataFrames."],
+    },
+    "write_catalogue_evidence": {
+        "expanded_purpose": "Writes runtime catalogue evidence rows generated by pipeline guardrails to the configured metadata target.",
+        "when_to_use": "Use after guardrail evidence is built and before governance or handover workflows need the latest runtime evidence.",
+        "glossary_terms": ["catalogue evidence", "metadata lakehouse", "guardrail"],
+        "return_interpretation": "The returned status summarizes which evidence rows were prepared or written. Confirm expected table keys appear before relying on governance review outputs.",
+        "common_failure_causes": ["Evidence definitions are missing required fields.", "The metadata lakehouse cannot be written.", "Spark cannot convert evidence rows to the target schema.", "The caller lacks metadata write permission."],
+    },
+    "write_pipeline_lineage": {
+        "expanded_purpose": "Persists lineage records for a pipeline run so source tables, target tables, and transformation steps remain traceable.",
+        "when_to_use": "Use near the end of 02_pipeline after transformations and target config resolution have produced lineage-ready records.",
+        "glossary_terms": ["source table", "target table", "catalogue evidence", "metadata lakehouse"],
+        "return_interpretation": "A successful result indicates lineage rows were prepared for metadata persistence; review returned counts against expected transformation steps.",
+        "common_failure_causes": ["Lineage records are empty or malformed.", "run_id, source, or target identifiers are missing.", "The metadata table cannot be written.", "Audit fields cannot be resolved from configuration."],
+    },
+    "write_pipeline_run_summary": {
+        "expanded_purpose": "Writes a compact run-level summary that ties pipeline name, agreement context, guardrail results, lineage, and write outcomes together.",
+        "when_to_use": "Use at the end of 02_pipeline when downstream operators need one metadata record describing the run outcome.",
+        "glossary_terms": ["guardrail", "can_continue", "catalogue evidence", "metadata lakehouse"],
+        "return_interpretation": "The returned summary shows what run metadata was assembled or written. Compare status and guardrail counts with expected pipeline outcomes.",
+        "common_failure_causes": ["Required run identifiers are missing.", "Guardrail result structures are malformed.", "Metadata routing is unavailable.", "The configured summary table cannot be written."],
+    },
+    "widget_select_catalogue_table": {
+        "expanded_purpose": "Renders a selector for catalogue profile rows so governance reviewers can choose the table they are reviewing.",
+        "when_to_use": "Use at the start of 03_governance before column context, DQ, or classification review widgets need a selected table.",
+        "glossary_terms": ["catalogue evidence", "notebook template"],
+        "return_interpretation": "The widget stores the selected table in notebook state; call get_selected_catalogue_table after the user chooses a row.",
+        "common_failure_causes": ["No catalogue profile rows are available.", "The user has not selected a table.", "Profile metadata cannot be read.", "Widget state was reset by rerunning cells."],
+    },
+    "get_selected_catalogue_table": {
+        "expanded_purpose": "Returns the catalogue table selected by widget_select_catalogue_table for downstream governance review cells.",
+        "when_to_use": "Use after the catalogue selector has been rendered and the reviewer has chosen a table.",
+        "glossary_terms": ["catalogue evidence", "notebook template"],
+        "return_interpretation": "A returned dictionary contains the selected table context. A missing value means the reviewer has not completed the selection in current state.",
+        "common_failure_causes": ["The selector widget has not been run.", "No table is selected.", "Notebook state was cleared.", "The selected metadata row is no longer available."],
+    },
+    "load_catalogue_profile_rows": {
+        "expanded_purpose": "Loads catalogue profile evidence rows for a selected table so governance review widgets can display approved or proposed context.",
+        "when_to_use": "Use in 03_governance after selecting a catalogue table and before rendering review widgets.",
+        "glossary_terms": ["catalogue evidence", "accepted catalogue profile evidence", "metadata lakehouse"],
+        "return_interpretation": "Returned rows provide the profile context that review widgets display. Empty results usually mean evidence has not been recorded for that table or stage.",
+        "common_failure_causes": ["The selected table context is incomplete.", "The metadata lakehouse cannot be read.", "Profile evidence has not been generated yet.", "Filters for dataset, table, or stage do not match stored evidence."],
+    },
+    "widget_review_column_context": {
+        "expanded_purpose": "Renders review guidance for column business context so reviewers can approve or edit metadata for a selected table.",
+        "when_to_use": "Use in 03_governance when profile rows need human-reviewed column descriptions or business meaning.",
+        "glossary_terms": ["catalogue evidence", "notebook template"],
+        "return_interpretation": "The widget captures review state; approved rows must still be passed to record_table_governance to persist metadata.",
+        "common_failure_causes": ["No profile rows are loaded.", "Required review fields are incomplete.", "Widget dependencies are unavailable.", "Reviewer changes are not committed before persistence."],
+    },
+    "widget_review_dq_rules": {
+        "expanded_purpose": "Renders data-quality rule review guidance so reviewers can approve executable expectations for a selected table.",
+        "when_to_use": "Use in 03_governance after profile rows are loaded and before record_table_governance persists approved DQ rules.",
+        "glossary_terms": ["catalogue evidence", "guardrail", "metadata lakehouse"],
+        "return_interpretation": "The widget captures proposed and approved DQ rule rows. Only approved rows should be persisted and later enforced by pipeline guardrails.",
+        "common_failure_causes": ["Profile rows are missing.", "Rule parameters are incomplete or unsupported.", "The reviewer has not approved any rules.", "Widget state is reset before records are collected."],
+    },
+    "widget_review_column_classification": {
+        "expanded_purpose": "Renders sensitivity and PII classification review guidance for columns in a selected table.",
+        "when_to_use": "Use in 03_governance when reviewers need to approve classification metadata before governance records are written.",
+        "glossary_terms": ["catalogue evidence", "notebook template"],
+        "return_interpretation": "The widget captures classification review state; approved classifications must be included in record_table_governance to persist them.",
+        "common_failure_causes": ["No selected profile rows are available.", "Classification choices are incomplete.", "Reviewer approval status is missing.", "Widget state is not collected before persistence."],
+    },
+    "record_table_governance": {
+        "expanded_purpose": "Persists approved column context, DQ rules, and classification records for a selected table in one governance commit action.",
+        "when_to_use": "Use after reviewers approve governance rows in 03_governance and those approvals should become metadata-backed evidence.",
+        "glossary_terms": ["catalogue evidence", "metadata lakehouse", "guardrail"],
+        "return_interpretation": "The returned dictionary groups written records by metadata area. Confirm counts match approved review rows before treating governance as complete.",
+        "common_failure_causes": ["Review rows are not approved.", "Required profile context is missing.", "Metadata routing is unavailable.", "Spark cannot write one of the governance metadata tables."],
+    },
+}
+
+RELATED_GUIDE_NOTEBOOK_TEMPLATES = {"title": "Notebook Templates", "path": "../../how-fabricops-works/notebook-templates.md"}
+RELATED_GUIDE_PIPELINE_GUARDRAILS = {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/pipeline-guardrails.md"}
+RELATED_GUIDE_GOVERNANCE_REVIEW = {"title": "Governance Review", "path": "../../how-fabricops-works/governance-review.md"}
+RELATED_GUIDE_METADATA_TABLES = {"title": "Metadata Tables", "path": "../../how-fabricops-works/metadata-tables.md"}
+
+RELATED_GUIDES_BY_SYMBOL: dict[str, list[dict[str, str]]] = {
+    "setup_notebook": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "setup_metadata_tables": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "widget_render_data_steward": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "widget_render_data_agreement": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "widget_render_agreement_evidence": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "widget_select_agreement": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "get_selected_agreement": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_lakehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "write_lakehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "read_lakehouse_csv": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_lakehouse_parquet": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_lakehouse_excel": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_warehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "write_warehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "profile_dataframe": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "validate_schema": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "enforce_freshness": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "enforce_profile_behavior": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "stop_if_failed": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "enforce_dq_rules": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "build_lineage_records": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "prepare_pipeline_table_configs": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "run_table_guardrails": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "write_catalogue_evidence": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_METADATA_TABLES],
+    "write_pipeline_lineage": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "write_pipeline_run_summary": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_METADATA_TABLES],
+    "widget_select_catalogue_table": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "get_selected_catalogue_table": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "load_catalogue_profile_rows": [RELATED_GUIDE_GOVERNANCE_REVIEW, RELATED_GUIDE_METADATA_TABLES],
+    "widget_review_column_context": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "widget_review_dq_rules": [RELATED_GUIDE_GOVERNANCE_REVIEW, RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "widget_review_column_classification": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "record_table_governance": [RELATED_GUIDE_GOVERNANCE_REVIEW, RELATED_GUIDE_METADATA_TABLES],
+}
+
+for _metadata_row in PUBLIC_SYMBOL_DOCS:
+    _metadata_row.update(PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL.get(_metadata_row["symbol_name"], {}))
+    if related_guides := RELATED_GUIDES_BY_SYMBOL.get(_metadata_row["symbol_name"]):
+        _metadata_row["related_guides"] = related_guides

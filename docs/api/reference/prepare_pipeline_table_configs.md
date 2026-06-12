@@ -4,23 +4,17 @@ Prepare source or target table configs for 02_pipeline.
 
 ## Purpose
 
-Prepare source or target table configs for 02_pipeline.
+Normalizes source and target table configuration dictionaries so pipeline guardrail, write, lineage, and evidence helpers receive consistent fields.
+
+## When to use this
+
+- Use before running table guardrails or writes when notebook-editable table configs need package defaults and derived keys.
 
 ## At a glance
-
-**Use when:**
-
-- Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
 
 **Do not use when:**
 
 - Do not use for ad hoc reads or writes outside the pipeline table-config pattern.
-
-**Example:**
-
-```python
-SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
-```
 
 **Errors:**
 
@@ -31,6 +25,24 @@ ValueError
 
 Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.
 
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Stage:** The part of the pipeline being checked, such as source or target.
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
+## Used in templates
+
+- `02_pipeline`
+
 ## Used by
 
 Not documented yet
@@ -39,7 +51,7 @@ Not documented yet
 
 - `fabricops_kit.pipeline._add_audit_columns`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -55,48 +67,35 @@ def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>table_configs</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">User-authored table config dictionaries from ``SOURCE_TABLES`` or ``TARGET_TABLES``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>default_settings</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Default guardrails, and for targets write options, merged before each table config. Table-specific values take precedence.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table_role</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>run_id</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Pipeline run identifier used for target audit columns. Required for target role.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>pipeline_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Pipeline name used for target audit columns. Required for target role.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`table_configs` : `list[dict[str, Any]]`, required
+: User-authored table config dictionaries from ``SOURCE_TABLES`` or ``TARGET_TABLES``.
+
+`default_settings` : `Mapping[str, Any]`, required
+: Default guardrails, and for targets write options, merged before each table config. Table-specific values take precedence.
+
+`table_role` : `str`, required
+: Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata.
+
+`run_id` : `str`, optional
+: Pipeline run identifier used for target audit columns. Required for target role.
+
+`pipeline_name` : `str`, optional
+: Pipeline name used for target audit columns. Required for target role.
 
 ### Returns
 
 Enriched table configs and a dictionary keyed by table key.
+
+### Return interpretation
+
+The returned configs are enriched copies keyed for downstream helpers. Confirm each table has the expected stage, key, and write settings.
+
+### Common failure causes
+
+- A table config is missing key or table_name fields.
+- Stage or write settings are inconsistent.
+- Source and target config shapes differ from expected dictionaries.
+- Defaults in CONFIG do not match the notebook environment.
 
 ### Notes
 
@@ -108,6 +107,12 @@ FabricOps read helpers and supplied in each source config as ``df``.
 Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
 ``target_name``, and ``target_kind`` unless overridden, then add standard
 FabricOps audit columns.
+
+### Example
+
+```python
+SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
+```
 
 ### Public callable source code
 
@@ -346,6 +351,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `126`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 02_pipeline
+- Glossary terms: source table, target table, stage, guardrail
 
 ### AI implementation contract
 

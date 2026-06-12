@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
+import re
+import runpy
 import subprocess
 from typing import Any, Iterable
 
@@ -25,6 +27,8 @@ MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
 FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
+GLOSSARY_SOURCE_PATH = ROOT / "docs" / "reference" / "glossary.json"
+GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
@@ -156,9 +160,9 @@ def _docstring_sections(doc: str | None) -> dict[str, str]:
 
 
 
-def _parameter_descriptions(parameters_section: str) -> dict[str, str]:
-    """Return first-paragraph descriptions keyed by NumPy-style parameter name."""
-    descriptions: dict[str, list[str]] = {}
+def _parameter_doc_metadata(parameters_section: str) -> dict[str, dict[str, str]]:
+    """Return first-paragraph NumPy-style parameter docs keyed by parameter name."""
+    docs: dict[str, dict[str, Any]] = {}
     current: str | None = None
     for raw_line in parameters_section.splitlines():
         line = raw_line.rstrip()
@@ -166,37 +170,48 @@ def _parameter_descriptions(parameters_section: str) -> dict[str, str]:
         if not stripped:
             continue
         if not line.startswith(" ") and " : " in line:
-            names = stripped.split(" : ", 1)[0].split(",")
+            names_part, type_part = stripped.split(" : ", 1)
+            names = names_part.split(",")
             current = names[0].strip()
-            descriptions[current] = []
+            docs[current] = {"type": type_part.strip(), "description_lines": []}
             continue
         if current is not None:
-            descriptions[current].append(stripped)
-    return {name: " ".join(lines).strip() for name, lines in descriptions.items()}
+            docs[current]["description_lines"].append(stripped)
+    return {
+        name: {"type": str(values.get("type", "")).strip(), "description": " ".join(values.get("description_lines", [])).strip()}
+        for name, values in docs.items()
+    }
+
+
+def _clean_parameter_type(type_text: str) -> str:
+    """Return a compact parameter type label for definition-list rendering."""
+    cleaned = type_text.replace("``", "").strip()
+    for suffix in (", optional", ", default=None", ", default = None"):
+        cleaned = cleaned.replace(suffix, "")
+    return cleaned.strip()
 
 
 def _parameter_rows_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef, parameters_section: str) -> list[dict[str, str]]:
-    """Return compact parameter metadata for generated callable input tables."""
-    descriptions = _parameter_descriptions(parameters_section)
+    """Return compact parameter metadata for generated callable input sections."""
+    docs = _parameter_doc_metadata(parameters_section)
     positional = [arg for arg in [*node.args.posonlyargs, *node.args.args] if arg.arg not in {"self", "cls"}]
     positional_required = len(positional) - len(node.args.defaults)
     rows: list[dict[str, str]] = []
+
+    def _row(arg: ast.arg, required: bool) -> dict[str, str]:
+        doc = docs.get(arg.arg, {})
+        annotation = ast.unparse(arg.annotation) if arg.annotation is not None else ""
+        return {
+            "name": arg.arg,
+            "required": "Yes" if required else "No",
+            "type": _clean_parameter_type(annotation or doc.get("type", "")),
+            "description": doc.get("description", PLACEHOLDER) or PLACEHOLDER,
+        }
+
     for index, arg in enumerate(positional):
-        rows.append(
-            {
-                "name": arg.arg,
-                "required": "Yes" if index < positional_required else "No",
-                "description": descriptions.get(arg.arg, PLACEHOLDER),
-            }
-        )
+        rows.append(_row(arg, index < positional_required))
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults):
-        rows.append(
-            {
-                "name": arg.arg,
-                "required": "Yes" if default is None else "No",
-                "description": descriptions.get(arg.arg, PLACEHOLDER),
-            }
-        )
+        rows.append(_row(arg, default is None))
     return rows
 
 
@@ -459,26 +474,19 @@ def parse_public_exports() -> list[str]:
 
 
 def parse_docs_metadata() -> dict[str, dict[str, Any]]:
-    tree = ast.parse(DOCS_METADATA_PATH.read_text(encoding="utf-8"))
-    for node in tree.body:
-        is_assign = isinstance(node, ast.Assign) and any(
-            isinstance(t, ast.Name) and t.id == "PUBLIC_SYMBOL_DOCS" for t in node.targets
-        )
-        is_annassign = (
-            isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "PUBLIC_SYMBOL_DOCS"
-        )
-        if (is_assign or is_annassign) and node.value is not None:
-            rows = ast.literal_eval(node.value)
-            seen = set()
-            out = {}
-            for row in rows:
-                name = row["symbol_name"]
-                if name in seen:
-                    raise RuntimeError(f"Duplicate PUBLIC_SYMBOL_DOCS symbol_name detected: {name}")
-                seen.add(name)
-                out[name] = row
-            return out
-    raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from reference_docs_metadata.py")
+    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+    rows = namespace.get("PUBLIC_SYMBOL_DOCS")
+    if not isinstance(rows, list):
+        raise RuntimeError("Could not parse PUBLIC_SYMBOL_DOCS from reference_docs_metadata.py")
+    seen = set()
+    out = {}
+    for row in rows:
+        name = row["symbol_name"]
+        if name in seen:
+            raise RuntimeError(f"Duplicate PUBLIC_SYMBOL_DOCS symbol_name detected: {name}")
+        seen.add(name)
+        out[name] = row
+    return out
 
 
 def parse_template_flow_docs() -> list[dict[str, Any]]:
@@ -503,6 +511,174 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
         if (is_assign or is_annassign) and node.value is not None:
             return ast.literal_eval(node.value)
     raise RuntimeError("Could not parse MODULE_DOCS_METADATA from reference_docs_metadata.py")
+
+
+
+def parse_glossary_metadata() -> dict[str, dict[str, Any]]:
+    """Return glossary metadata keyed by normalized term."""
+    if not GLOSSARY_SOURCE_PATH.exists():
+        return {}
+    entries = json.loads(GLOSSARY_SOURCE_PATH.read_text(encoding="utf-8"))
+    glossary: dict[str, dict[str, Any]] = {}
+    for entry in entries:
+        term = str(entry.get("term", "")).strip()
+        if not term:
+            raise RuntimeError("Glossary entries must include a term.")
+        if not entry.get("plain_language_definition"):
+            raise RuntimeError(f"Glossary entry {term!r} is missing plain_language_definition.")
+        key = term.lower()
+        if key in glossary:
+            raise RuntimeError(f"Duplicate glossary term: {term}")
+        glossary[key] = entry
+    return glossary
+
+
+def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
+    """Render the public glossary page from structured glossary metadata."""
+    lines = [
+        "# FabricOps glossary",
+        "",
+        "Simple definitions for repeated FabricOps terms used across generated callable references and workflow documentation.",
+        "",
+    ]
+    for entry in sorted(glossary.values(), key=lambda row: row["term"].lower()):
+        term = str(entry["term"])
+        lines.extend([f"## {term}", "", f"**Plain language:** {entry['plain_language_definition']}", ""])
+        technical = entry.get("technical_definition")
+        if technical:
+            lines.extend([f"**Technical:** {technical}", ""])
+        example = entry.get("example")
+        if example:
+            lines.extend([f"**Example:** {example}", ""])
+        related = entry.get("related_terms") or []
+        if related:
+            lines.extend([f"**Related terms:** {', '.join(f'`{item}`' for item in related)}", ""])
+    GLOSSARY_PAGE_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
+
+
+
+def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
+    """Render conceptual documentation links for a callable page."""
+    if not related_guides:
+        return []
+
+    lines = ["## Related guides", ""]
+    seen: set[tuple[str, str]] = set()
+    for guide in related_guides:
+        title = str(guide.get("title", "")).strip()
+        path = str(guide.get("path", "")).strip()
+        if not title or not path:
+            raise RuntimeError("related_guides entries must include both title and path")
+        key = (title, path)
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(f"- [{title}]({path})")
+    lines.append("")
+    return lines
+
+def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, Any]]) -> list[str]:
+    """Render compact glossary-backed key terms for a callable page."""
+    if not glossary_terms:
+        return []
+    lines = ["## Key terms", ""]
+    seen: set[str] = set()
+    for term in glossary_terms:
+        key = term.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        entry = glossary.get(key)
+        if entry is None:
+            raise RuntimeError(f"Callable references unknown glossary term: {term}")
+        term_text = str(entry["term"])
+        display_term = term_text if "_" in term_text else term_text.capitalize()
+        lines.append(f"- **{display_term}:** {entry['plain_language_definition']}")
+    lines.extend(["", "See the [full glossary](../../reference/glossary/) for more FabricOps terms.", ""])
+    return lines
+
+
+def _metadata_parameter_overrides(value: Any) -> dict[str, str]:
+    """Return parameter descriptions supplied by callable metadata."""
+    if isinstance(value, dict):
+        return {str(key): str(item) for key, item in value.items()}
+    return {}
+
+
+def _render_parameter_definitions(parameter_rows: list[dict[str, str]], parameter_overrides: dict[str, str]) -> list[str]:
+    """Render parameters as a NumPy/Sphinx-inspired Markdown definition list."""
+    if not parameter_rows:
+        return ["No parameters."]
+    lines: list[str] = []
+    for row in parameter_rows:
+        name = row["name"]
+        required_label = "required" if row.get("required") == "Yes" else "optional"
+        type_text = row.get("type", "").strip()
+        descriptor = f"`{type_text}`, {required_label}" if type_text else required_label
+        meaning = parameter_overrides.get(name, row.get("description", PLACEHOLDER))
+        lines.extend([f"`{name}` : {descriptor}", f": {meaning}", ""])
+    return lines[:-1]
+
+def _read_template_source(template_path: str) -> str:
+    """Return searchable source text from a starter notebook/template file."""
+    path = ROOT / template_path
+    if not path.exists():
+        return ""
+    if path.suffix == ".ipynb":
+        try:
+            notebook = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return path.read_text(encoding="utf-8")
+        chunks: list[str] = []
+        for cell in notebook.get("cells", []):
+            source = cell.get("source", "")
+            chunks.append("".join(source) if isinstance(source, list) else str(source))
+        return "\n".join(chunks)
+    return path.read_text(encoding="utf-8")
+
+
+def _derive_template_usage(
+    template_flow_docs: list[dict[str, Any]],
+    symbol_map: dict[str, Symbol],
+    node_by_qn: dict[str, dict[str, Any]],
+    calls_by_qn: dict[str, list[str]],
+) -> dict[str, list[str]]:
+    """Map public callable names to starter templates that directly or indirectly use them."""
+    symbol_to_qn = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
+    qn_to_symbol = {qn: name for name, qn in symbol_to_qn.items()}
+    template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
+    usage: dict[str, set[str]] = {name: set() for name in symbol_map}
+
+    for flow in template_flow_docs:
+        notebook_key = flow["notebook_key"]
+        source_text = _read_template_source(flow.get("template_path", ""))
+        direct_symbols: set[str] = set()
+        if source_text:
+            for symbol_name in symbol_map:
+                if re.search(rf"(?<![A-Za-z0-9_]){re.escape(symbol_name)}(?![A-Za-z0-9_])", source_text):
+                    direct_symbols.add(symbol_name)
+        else:
+            for segment in flow.get("segments", []):
+                direct_symbols.update(segment.get("symbols", []))
+
+        queue = [symbol_to_qn[name] for name in sorted(direct_symbols) if name in symbol_to_qn]
+        seen: set[str] = set()
+        while queue:
+            qn = queue.pop(0)
+            if qn in seen:
+                continue
+            seen.add(qn)
+            public_symbol = qn_to_symbol.get(qn)
+            if public_symbol:
+                usage.setdefault(public_symbol, set()).add(notebook_key)
+            for callee_qn in calls_by_qn.get(qn, []):
+                if callee_qn in node_by_qn and callee_qn not in seen:
+                    queue.append(callee_qn)
+
+    return {
+        symbol: sorted(notebooks, key=lambda notebook: (template_order.get(notebook, len(template_order)), notebook))
+        for symbol, notebooks in usage.items()
+    }
 
 
 def generate_internal_reference_pages() -> bool:
@@ -1074,10 +1250,17 @@ def main() -> None:
     docs_metadata = parse_docs_metadata()
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
+    glossary = parse_glossary_metadata()
+    _render_glossary_page(glossary)
 
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
         raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for exported symbols: " + ", ".join(missing_metadata))
+    unknown_glossary_terms = sorted(
+        {term for metadata in docs_metadata.values() for term in metadata.get("glossary_terms", []) if term.lower() not in glossary}
+    )
+    if unknown_glossary_terms:
+        raise RuntimeError("PUBLIC_SYMBOL_DOCS references unknown glossary terms: " + ", ".join(unknown_glossary_terms))
 
     unknown_metadata = sorted(name for name in docs_metadata if name not in public)
     if unknown_metadata:
@@ -1429,6 +1612,18 @@ def main() -> None:
         mkdocs_text = before + start_marker + "\n" + generated + "\n" + end_marker + after
         MKDOCS_PATH.write_text(mkdocs_text, encoding="utf-8", newline="\n")
 
+    nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
+    node_by_qn = {n["qualified_name"]: n for n in nodes}
+    calls_by_qn: dict[str, list[str]] = {}
+    used_by_qn: dict[str, list[str]] = {}
+    for e in edges:
+        caller = e["caller_qualified_name"]
+        callee = e.get("callee_qualified_name")
+        if not callee:
+            continue
+        calls_by_qn.setdefault(caller, []).append(callee)
+        used_by_qn.setdefault(callee, []).append(caller)
+    template_usage_by_symbol = _derive_template_usage(template_flow_docs, symbol_map, node_by_qn, calls_by_qn)
     manifest_rows = []
     known_modules = set(discovered_doc_modules)
     for s in sorted(function_symbol_map.values(), key=lambda x: x.name.lower()):
@@ -1450,6 +1645,7 @@ def main() -> None:
                 "callable_role": callable_role,
                 "template_notebook": docs_metadata[s.name].get("template_notebook"),
                 "template_segment": docs_metadata[s.name].get("template_segment"),
+                "used_in_templates": template_usage_by_symbol.get(s.name, []),
             }
         )
     manifest_modules = []
@@ -1465,23 +1661,13 @@ def main() -> None:
     manifest_modules = sorted(manifest_modules, key=lambda row: row["module_name"])
     manifest_rows = sorted(manifest_rows, key=lambda row: (row["module_name"], row["callable_name"]))
     MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
-    nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
-    node_by_qn = {n["qualified_name"]: n for n in nodes}
-    calls_by_qn: dict[str, list[str]] = {}
-    used_by_qn: dict[str, list[str]] = {}
-    for e in edges:
-        caller = e["caller_qualified_name"]
-        callee = e.get("callee_qualified_name")
-        if not callee:
-            continue
-        calls_by_qn.setdefault(caller, []).append(callee)
-        used_by_qn.setdefault(callee, []).append(caller)
     dependency_callables: dict[str, dict[str, Any]] = {}
     for qn in sorted(node_by_qn):
         node = node_by_qn[qn]
         deps = sorted(set(calls_by_qn.get(qn, [])))
         internal_helpers = [d for d in deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
         used_by = sorted(set(used_by_qn.get(qn, [])))
+        used_in_templates = template_usage_by_symbol.get(node["callable_name"], []) if node["exported"] else []
         dependency_callables[qn] = {
             "qualified_name": qn,
             "short_name": node["callable_name"],
@@ -1501,6 +1687,7 @@ def main() -> None:
             "calls_count": len(deps),
             "used_by": used_by,
             "used_by_count": len(used_by),
+            "used_in_templates": used_in_templates,
             "internal_helpers_used": internal_helpers,
             "internal_helper_count": len(internal_helpers),
         }
@@ -1620,6 +1807,7 @@ def main() -> None:
         "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are used in starter templates; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.",
+        "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
         "- Use the Function catalogue below to browse public v1 callables. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
@@ -1676,7 +1864,7 @@ def main() -> None:
         symbol = function_symbol_map.get(name)
         if node["exported"] and symbol:
             symbol_link = public_reference_link(name, docs_metadata, context="reference")
-            starter_path = ", ".join(sorted(starter_symbol_to_notebooks.get(name, set()))) or "—"
+            starter_path = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
             purpose = symbol.purpose or symbol.summary or "—"
             display_module = symbol.public_module
         else:
@@ -1709,6 +1897,11 @@ def main() -> None:
                     f'<span class="reference-chip reference-chip-type reference-chip-{_esc(function_type)}">{_esc(classification_label)}</span>'
                     f'<span class="reference-chip">{_esc(starter_path)}</span>'
                     "</p>"
+                ),
+                (
+                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(starter_path)}</p>'
+                    if starter_path != "—"
+                    else ""
                 ),
                 '  <div class="reference-catalogue-item-counts">',
                 (
@@ -1775,7 +1968,9 @@ def main() -> None:
         related_for_page = metadata_related or relationship_related
         rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
         rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
+        rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"))
         rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
+        rendered_common_failure_causes = _documented_text(metadata.get("common_failure_causes"))
         rendered_notes = _documented_text(doc_sections.get("notes"), "No additional callable notes are documented.")
         rendered_side_effects = _documented_text(metadata.get("side_effects"))
         rendered_fabric_context = _documented_text(
@@ -1811,15 +2006,8 @@ def main() -> None:
             return out
 
         if node["exported"]:
-            input_rows = [
-                [f"<code>{html_escape(row['name'])}</code>", row["required"], html_escape(row["description"])]
-                for row in parameter_rows
-            ]
-            input_table = render_html_table(
-                ["Parameter", "Required", "Meaning"],
-                input_rows or [["—", "—", PLACEHOLDER]],
-                table_class="reference-function-table",
-            )
+            parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
+            input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
             related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             helper_qns = _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
@@ -1857,9 +2045,27 @@ def main() -> None:
                 _code_block(source_block) if source_block else PLACEHOLDER,
             ]
             nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
-            human_use_when = _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose)
-            human_use_bullets = _bullet_lines("\n".join(metadata["when_to_use"])) if metadata.get("when_to_use") else _bullet_lines(human_use_when)
+            human_use_when = _documented_text(metadata.get("when_to_use"))
+            use_when_lines = ["## When to use this", "", *_bullet_lines(human_use_when), ""] if human_use_when != PLACEHOLDER else []
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
+            expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
+            purpose_lines: list[str] = []
+            if expanded_purpose != PLACEHOLDER:
+                purpose_lines = ["## Purpose", "", expanded_purpose, ""]
+            used_in_templates = template_usage_by_symbol.get(short_name, [])
+            used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
+            key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
+            related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
+            return_interpretation_lines = (
+                ["### Return interpretation", "", rendered_return_interpretation, ""]
+                if metadata.get("return_interpretation")
+                else []
+            )
+            common_failure_cause_lines = (
+                ["### Common failure causes", "", rendered_common_failure_causes, ""]
+                if metadata.get("common_failure_causes")
+                else []
+            )
             function_manifest_lines = [
                 f"- Fully qualified function name: `{qn}`",
                 f"- Short name: `{short_name}`",
@@ -1870,6 +2076,8 @@ def main() -> None:
                 f"- Source line: `{source_start_line}`",
                 f"- Inbound references count: {len(used_by)}",
                 f"- Outbound references count: {len(deps)}",
+                f"- Used in templates: {', '.join(used_in_templates) if used_in_templates else '—'}",
+                f"- Glossary terms: {', '.join(metadata.get('glossary_terms', [])) if metadata.get('glossary_terms') else '—'}",
             ]
             raw_source_metadata_lines = [
                 f"- Source file path: `{source_path}`",
@@ -1925,23 +2133,13 @@ def main() -> None:
                 "",
                 purpose,
                 "",
-                "## Purpose",
-                "",
-                _documented_text(metadata.get("purpose"), purpose),
-                "",
+                *purpose_lines,
+                *use_when_lines,
                 "## At a glance",
-                "",
-                "**Use when:**",
-                "",
-                *human_use_bullets,
                 "",
                 "**Do not use when:**",
                 "",
                 *_bullet_lines(human_do_not_use),
-                "",
-                "**Example:**",
-                "",
-                _code_block(_documented_text(metadata.get("preferred_example"))),
                 "",
                 "**Errors:**",
                 "",
@@ -1951,6 +2149,12 @@ def main() -> None:
                 "",
                 rendered_side_effects,
                 "",
+                *key_term_lines,
+                *related_guide_lines,
+                "## Used in templates",
+                "",
+                *used_in_template_lines,
+                "",
                 "## Used by",
                 "",
                 *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
@@ -1959,7 +2163,7 @@ def main() -> None:
                 "",
                 *(_fmt_links(deps) if deps else [PLACEHOLDER]),
                 "",
-                "## Callable implementation",
+                "## Function details and source",
                 "",
                 "### Function details",
                 "",
@@ -1967,17 +2171,21 @@ def main() -> None:
                 "",
                 "### Parameters",
                 "",
-                '<div class="module-table-scroll reference-input-table">',
-                *input_table,
-                "</div>",
+                *input_lines,
                 "",
                 "### Returns",
                 "",
                 rendered_returns,
                 "",
+                *return_interpretation_lines,
+                *common_failure_cause_lines,
                 "### Notes",
                 "",
                 rendered_notes,
+                "",
+                "### Example",
+                "",
+                _code_block(_documented_text(metadata.get("preferred_example"))),
                 "",
                 "### Public callable source code",
                 "",
@@ -2068,7 +2276,9 @@ def main() -> None:
         elif generate_internal_pages:
             (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
+        record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
+        record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,
@@ -2077,19 +2287,26 @@ def main() -> None:
             "role": node.get("role", "internal"),
             "inbound": used_by,
             "outbound": deps,
+            "used_in_templates": record_used_in_templates,
+            "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [],
+            "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None,
+            "when_to_use": record_when_to_use,
             "source_file": source_path,
             "source_start_line": source_start_line,
             "source_end_line": source_end_line,
             "source_url": source_ref,
             "docs_path": docs_path,
             "summary": purpose,
-            "use_when": _documented_text(metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
+            "use_when": _documented_text(metadata.get("when_to_use"), metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
             "do_not_use_when": _documented_text(metadata.get("do_not_use_when")),
             "required_context": rendered_fabric_context,
             "inputs": rendered_parameters,
             "output": rendered_returns,
+            "return_interpretation": rendered_return_interpretation,
             "side_effects": rendered_side_effects,
             "failure_modes": rendered_raises,
+            "common_failure_causes": rendered_common_failure_causes,
+            "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [],
             "preferred_example": _documented_text(metadata.get("preferred_example")),
             "verification": rendered_ai_verification,
             "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],

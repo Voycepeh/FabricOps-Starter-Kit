@@ -4,23 +4,17 @@ Return the table selected by widget_select_catalogue_table.
 
 ## Purpose
 
-Return the table selected by widget_select_catalogue_table.
+Returns the catalogue table selected by widget_select_catalogue_table for downstream governance review cells.
+
+## When to use this
+
+- Use after the catalogue selector has been rendered and the reviewer has chosen a table.
 
 ## At a glance
-
-**Use when:**
-
-- Return the table selected by widget_select_catalogue_table.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -30,6 +24,21 @@ Not documented yet
 
 Not documented yet
 
+## Key terms
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
+## Used in templates
+
+- `03_governance`
+
 ## Used by
 
 Not documented yet
@@ -38,7 +47,7 @@ Not documented yet
 
 Not documented yet
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -54,33 +63,34 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>table_selector</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Selector returned by ``widget_select_catalogue_table``. Passing it is optional because the widget also maintains module-level selection state.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`table_selector` : `Any | None`, optional
+: Selector returned by ``widget_select_catalogue_table``. Passing it is optional because the widget also maintains module-level selection state.
 
 ### Returns
 
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
 
+### Return interpretation
+
+A returned dictionary contains the selected table context. A missing value means the reviewer has not completed the selection in current state.
+
+### Common failure causes
+
+- The selector widget has not been run.
+- No table is selected.
+- Notebook state was cleared.
+- The selected metadata row is no longer available.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -162,6 +172,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `273`
 - Inbound references count: 0
 - Outbound references count: 0
+- Used in templates: 03_governance
+- Glossary terms: catalogue evidence, notebook template
 
 ### AI implementation contract
 

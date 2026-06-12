@@ -1,0 +1,107 @@
+[
+  {
+    "term": "profile behavior",
+    "plain_language_definition": "The expected way a table is loaded.",
+    "technical_definition": "The approved load behavior value used by guardrail checks, commonly append, overwrite, or skip.",
+    "example": "A table approved as append should keep adding new rows instead of replacing the whole table.",
+    "related_terms": ["append", "overwrite", "skip", "profile behavior check"]
+  },
+  {
+    "term": "accepted catalogue profile evidence",
+    "plain_language_definition": "The approved profile record that FabricOps treats as the trusted baseline for a table.",
+    "technical_definition": "Reviewed catalogue profile metadata stored in the configured metadata target and used by guardrails to compare current runtime behavior with accepted evidence.",
+    "example": "A governance reviewer accepts a target table profile, and later pipeline runs compare new profiles against that accepted record.",
+    "related_terms": ["baseline profile", "catalogue evidence", "metadata lakehouse"]
+  },
+  {
+    "term": "baseline profile",
+    "plain_language_definition": "The previous approved profile used as the comparison point.",
+    "technical_definition": "The accepted profile row selected for the same dataset, table, and stage before evaluating current pipeline behavior.",
+    "example": "The target table profile accepted last week becomes the baseline for today's target guardrail check.",
+    "related_terms": ["accepted catalogue profile evidence", "profile behavior check"]
+  },
+  {
+    "term": "stage",
+    "plain_language_definition": "The part of the pipeline being checked, such as source or target.",
+    "technical_definition": "A table-processing phase recorded with profile or guardrail evidence so FabricOps compares like-for-like evidence.",
+    "example": "Source guardrails run before transformation, while target guardrails run before writes.",
+    "related_terms": ["source table", "target table"]
+  },
+  {
+    "term": "profile behavior check",
+    "plain_language_definition": "A check that confirms the current table load pattern still matches the approved pattern.",
+    "technical_definition": "A guardrail comparison between current load_behavior/profile fields and accepted catalogue profile evidence.",
+    "example": "A target table configured as overwrite fails if the approved baseline says it should append.",
+    "related_terms": ["profile behavior", "guardrail", "can_continue"]
+  },
+  {
+    "term": "guardrail",
+    "plain_language_definition": "A check that tells the notebook whether it is safe to continue.",
+    "technical_definition": "A validation result with status and continuation fields used before downstream writes or metadata recording.",
+    "example": "A freshness guardrail can stop a pipeline before stale data is written.",
+    "related_terms": ["can_continue", "profile behavior check"]
+  },
+  {
+    "term": "can_continue",
+    "plain_language_definition": "A returned true/false value that tells downstream code whether the pipeline should keep running.",
+    "technical_definition": "Boolean field in guardrail result dictionaries that is false when blocking checks should stop downstream work.",
+    "example": "If can_continue is false, call stop_if_failed before writing the table.",
+    "related_terms": ["guardrail"]
+  },
+  {
+    "term": "append",
+    "plain_language_definition": "Add new rows without replacing existing rows.",
+    "technical_definition": "A load behavior where pipeline writes preserve existing table history and add incoming records.",
+    "example": "Daily transaction records are appended to keep prior days available.",
+    "related_terms": ["profile behavior", "overwrite", "skip"]
+  },
+  {
+    "term": "overwrite",
+    "plain_language_definition": "Replace the existing table contents with the current output.",
+    "technical_definition": "A load behavior where a write can remove prior records by replacing the target table or partition contents.",
+    "example": "A small reference table may be overwritten each run when the latest file is the complete truth.",
+    "related_terms": ["profile behavior", "append", "skip"]
+  },
+  {
+    "term": "skip",
+    "plain_language_definition": "Do not run that behavior check or write step for the table.",
+    "technical_definition": "A configured behavior value that tells FabricOps to bypass a specific profile behavior enforcement path.",
+    "example": "A table can be marked skip while it is being onboarded and is not ready for enforcement.",
+    "related_terms": ["profile behavior", "append", "overwrite"]
+  },
+  {
+    "term": "metadata lakehouse",
+    "plain_language_definition": "The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.",
+    "technical_definition": "The metadata target resolved from 00_env_config and used for FabricOps metadata tables instead of relying on a default attached lakehouse.",
+    "example": "Profile evidence and DQ approvals are read from the metadata lakehouse configured for the selected environment.",
+    "related_terms": ["accepted catalogue profile evidence", "catalogue evidence"]
+  },
+  {
+    "term": "catalogue evidence",
+    "plain_language_definition": "Reviewed metadata that explains what FabricOps knows about a dataset or table.",
+    "technical_definition": "Governed records such as profile, column context, classification, DQ rule, or lineage evidence stored for review and enforcement workflows.",
+    "example": "A governance review records catalogue evidence that later pipeline guardrails can read.",
+    "related_terms": ["accepted catalogue profile evidence", "metadata lakehouse"]
+  },
+  {
+    "term": "source table",
+    "plain_language_definition": "An input table or file read by the pipeline.",
+    "technical_definition": "A configured upstream dataset entry processed before transformation and target writes.",
+    "example": "The pipeline reads source tables before applying transformation logic.",
+    "related_terms": ["stage", "target table"]
+  },
+  {
+    "term": "target table",
+    "plain_language_definition": "An output table written by the pipeline.",
+    "technical_definition": "A configured downstream dataset entry validated before write helpers persist the transformed output.",
+    "example": "Target guardrails run before the target table is written.",
+    "related_terms": ["stage", "source table"]
+  },
+  {
+    "term": "notebook template",
+    "plain_language_definition": "A starter notebook that shows where and how FabricOps helpers are used.",
+    "technical_definition": "A reusable Fabric notebook under templates/notebooks that demonstrates environment setup, agreement, pipeline, governance, or exploration workflows.",
+    "example": "02_pipeline is the notebook template for production-style guardrails, lineage, and writes.",
+    "related_terms": ["guardrail", "stage"]
+  }
+]

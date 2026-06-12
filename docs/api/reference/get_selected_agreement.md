@@ -4,24 +4,17 @@ Return the agreement selected by widget_select_agreement.
 
 ## Purpose
 
-Return the agreement selected by widget_select_agreement.
+Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.
+
+## When to use this
+
+- Use after rendering and completing widget_select_agreement when code needs the selected agreement values.
 
 ## At a glance
-
-**Use when:**
-
-- Use immediately after widget_select_agreement to retrieve the selected agreement record for pipeline logic and evidence binding.
 
 **Do not use when:**
 
 - Do not use before rendering and completing widget_select_agreement, or as a substitute for querying all agreement metadata.
-
-**Example:**
-
-```python
-agreement = get_selected_agreement()
-dataset_name = agreement["dataset_name"]
-```
 
 **Errors:**
 
@@ -31,6 +24,20 @@ Raises an error when no agreement has been selected in the current session.
 
 Reads session/widget state only; it does not write metadata, tables, or files.
 
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `02_pipeline`
+
 ## Used by
 
 Not documented yet
@@ -39,7 +46,7 @@ Not documented yet
 
 Not documented yet
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -55,32 +62,33 @@ def get_selected_agreement() -> dict[str, Any]
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter">—</td>
-      <td data-label="Required">—</td>
-      <td data-label="Meaning">Not documented yet</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+No parameters.
 
 ### Returns
 
 Selected agreement dictionary for the active notebook session.
 
+### Return interpretation
+
+A returned dictionary contains the selected agreement fields. A missing value means the selector has not been completed in the current notebook state.
+
+### Common failure causes
+
+- widget_select_agreement has not been run.
+- The user has not selected an agreement.
+- Notebook state was reset.
+- The selected row is no longer present in metadata.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+agreement = get_selected_agreement()
+dataset_name = agreement["dataset_name"]
+```
 
 ### Public callable source code
 
@@ -153,6 +161,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1000`
 - Inbound references count: 0
 - Outbound references count: 0
+- Used in templates: 02_pipeline
+- Glossary terms: notebook template
 
 ### AI implementation contract
 

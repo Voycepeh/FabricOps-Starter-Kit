@@ -4,24 +4,17 @@ Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail
 
 ## Purpose
 
-Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
+Stops or raises for a blocking guardrail result so a notebook does not continue into unsafe downstream writes.
+
+## When to use this
+
+- Use immediately after schema, freshness, profile behavior, or DQ guardrail helpers when can_continue controls whether the pipeline should proceed.
 
 ## At a glance
-
-**Use when:**
-
-- Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.
 
 **Do not use when:**
 
 - Do not use for informational warnings that should not block execution, or before a guardrail result exists.
-
-**Example:**
-
-```python
-schema_result = validate_schema(df, expected_schema)
-stop_if_failed(schema_result)
-```
 
 **Errors:**
 
@@ -31,6 +24,21 @@ Raises RuntimeError outside Fabric notebook exit handling when a failed guardrai
 
 May terminate notebook execution through Fabric notebook utilities or raise an exception.
 
+## Key terms
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
+## Used in templates
+
+- `02_pipeline`
+
 ## Used by
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
@@ -39,7 +47,7 @@ May terminate notebook execution through Fabric notebook utilities or raise an e
 
 - `fabricops_kit.guardrails.SchemaDriftError`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -55,32 +63,34 @@ def stop_if_failed(result) -> None
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>result</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Direct schema, freshness, profile behavior, or DQ guardrail result.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`result` : `dict`, required
+: Direct schema, freshness, profile behavior, or DQ guardrail result.
 
 ### Returns
 
 None when execution may continue; otherwise raises or exits according to runtime behavior.
 
+### Return interpretation
+
+No return value means execution may continue. A blocking result raises or exits according to runtime settings.
+
+### Common failure causes
+
+- The guardrail result is missing can_continue or status fields.
+- A blocking guardrail returned can_continue as false.
+- Notebook exit behavior is not supported in the current runtime.
+- The caller passed a warning result that should not stop execution.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+schema_result = validate_schema(df, expected_schema)
+stop_if_failed(schema_result)
+```
 
 ### Public callable source code
 
@@ -158,6 +168,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `840`
 - Inbound references count: 1
 - Outbound references count: 1
+- Used in templates: 02_pipeline
+- Glossary terms: guardrail, can_continue
 
 ### AI implementation contract
 

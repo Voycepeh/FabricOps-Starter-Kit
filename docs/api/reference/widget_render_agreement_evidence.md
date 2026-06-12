@@ -4,23 +4,17 @@ Render the standalone agreement-evidence widget.
 
 ## Purpose
 
-Render the standalone agreement-evidence widget.
+Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.
+
+## When to use this
+
+- Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.
 
 ## At a glance
-
-**Use when:**
-
-- Render the standalone agreement-evidence widget.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -30,6 +24,22 @@ Not documented yet
 
 Not documented yet
 
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+- `01_agreement`
+
 ## Used by
 
 Not documented yet
@@ -38,7 +48,7 @@ Not documented yet
 
 - `fabricops_kit.data_agreement._render_agreement_evidence_widget`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -54,34 +64,14 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Configuration containing agreement metadata routing and evidence table settings.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key configured by ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Configuration containing agreement metadata routing and evidence table settings.
+
+`env_name` : `str`, required
+: Environment key configured by ``00_env_config``.
+
+`spark` : `Any`, required
+: Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.
 
 ### Returns
 
@@ -90,6 +80,17 @@ dict[str, Any]
     metadata lakehouse evidence file paths, refreshing agreement options,
     and saving evidence metadata rows.
 
+### Return interpretation
+
+The widget records evidence references when saved; review the resulting metadata rows before relying on them in handover or audit flows.
+
+### Common failure causes
+
+- Evidence details are incomplete.
+- File or URL references are malformed.
+- Widget state is reset before saving.
+- The configured metadata target is not writable.
+
 ### Notes
 
 This public wrapper is intended for the separate-widget ``01_agreement`` layout.
@@ -97,6 +98,12 @@ Evidence files must be uploaded manually to the metadata lakehouse
 ``Files`` area first. The widget appends one file-reference row per
 pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
 does not read or write binary file content.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -892,6 +899,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1379`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 01_agreement
+- Glossary terms: notebook template, catalogue evidence
 
 ### AI implementation contract
 

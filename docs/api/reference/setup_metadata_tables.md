@@ -4,23 +4,17 @@ Create or validate all FabricOps metadata tables through one setup action.
 
 ## Purpose
 
-Create or validate all FabricOps metadata tables through one setup action.
+Prepares the FabricOps metadata tables used by agreement, profiling, governance, lineage, and pipeline evidence workflows.
+
+## When to use this
+
+- Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.
 
 ## At a glance
-
-**Use when:**
-
-- Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, stability, and governance workflows.
 
 **Do not use when:**
 
 - Do not use for writing business data or pipeline target tables; use write_lakehouse_table or write_warehouse_table for data outputs.
-
-**Example:**
-
-```python
-setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)
-```
 
 **Errors:**
 
@@ -29,6 +23,22 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 **Side effects:**
 
 Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.
+
+## Key terms
+
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
+## Used in templates
+
+- `00_env_config`
 
 ## Used by
 
@@ -45,7 +55,7 @@ Not documented yet
 - `fabricops_kit.data_agreement._list_data_stewards`
 - `fabricops_kit.governance_review._get_governance_metadata_schemas`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -61,49 +71,44 @@ def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Fabric Spark session used by the table setup helpers.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Shared ``00_env_config`` configuration containing the metadata target.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key to prepare.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>require_active_steward</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Forwarded to the agreement metadata setup to optionally require an active steward before returning success.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`spark` : `Any`, required
+: Fabric Spark session used by the table setup helpers.
+
+`config` : `FrameworkConfig | dict[str, Any]`, required
+: Shared ``00_env_config`` configuration containing the metadata target.
+
+`env` : `str`, required
+: Environment key to prepare.
+
+`require_active_steward` : `bool`, optional
+: Forwarded to the agreement metadata setup to optionally require an active steward before returning success.
 
 ### Returns
 
 Setup result describing metadata table creation or validation status.
+
+### Return interpretation
+
+The returned setup status tells you which metadata tables were created or validated and whether the environment is ready for workflows that write evidence.
+
+### Common failure causes
+
+- The configured metadata lakehouse path is missing or invalid.
+- Spark cannot create or inspect the metadata tables.
+- The selected environment does not include metadata routing.
+- The caller lacks permission to create or update metadata tables.
 
 ### Notes
 
 This is the v1 notebook setup action for metadata provisioning. It keeps
 ``00_env_config`` simple while delegating to internal helpers that route all
 metadata reads and writes through the configured metadata lakehouse target.
+
+### Example
+
+```python
+setup_metadata_tables(CONFIG, env="Sandbox", spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -1045,6 +1050,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1114`
 - Inbound references count: 0
 - Outbound references count: 9
+- Used in templates: 00_env_config
+- Glossary terms: metadata lakehouse, catalogue evidence
 
 ### AI implementation contract
 

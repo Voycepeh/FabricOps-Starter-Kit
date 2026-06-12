@@ -4,23 +4,17 @@ Read an Excel file from a configured Fabric lakehouse Files path.
 
 ## Purpose
 
-Read an Excel file from a configured Fabric lakehouse Files path.
+Reads an Excel file from a configured lakehouse Files path and converts it into a Spark DataFrame for notebook processing.
+
+## When to use this
+
+- Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.
 
 ## At a glance
-
-**Use when:**
-
-- Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
 
 **Do not use when:**
 
 - Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.
-
-**Example:**
-
-```python
-mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
-```
 
 **Errors:**
 
@@ -29,6 +23,22 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 **Side effects:**
 
 Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `02_pipeline`
+- `99_explore`
 
 ## Used by
 
@@ -40,7 +50,7 @@ Not documented yet
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._lakehouse_file_path`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -56,59 +66,50 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>relative_path</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Path to the Excel file relative to the lakehouse ``Files`` area, for example ``&quot;reference/faculty_mapping.xlsx&quot;``. A leading ``&quot;Files/&quot;`` prefix is accepted for consistency with notebook examples and is normalized away before the lakehouse path is resolved.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>sheet_name</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Worksheet name or index to read. Defaults to the first worksheet.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`. **read_excel_kwargs Additional keyword arguments passed directly to :func:`pandas.read_excel`. Common options include ``skiprows`` for title rows above the real header, ``header`` for custom header-row selection, ``usecols`` for column filtering, ``dtype`` for mixed-type columns, and ``nrows`` for sampling or bounded reads.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`relative_path` : `str`, required
+: Path to the Excel file relative to the lakehouse ``Files`` area, for example ``"reference/faculty_mapping.xlsx"``. A leading ``"Files/"`` prefix is accepted for consistency with notebook examples and is normalized away before the lakehouse path is resolved.
+
+`sheet_name` : `str or int, default 0`, optional
+: Worksheet name or index to read. Defaults to the first worksheet.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`. **read_excel_kwargs Additional keyword arguments passed directly to :func:`pandas.read_excel`. Common options include ``skiprows`` for title rows above the real header, ``header`` for custom header-row selection, ``usecols`` for column filtering, ``dtype`` for mixed-type columns, and ``nrows`` for sampling or bounded reads.
 
 ### Returns
 
 Spark DataFrame converted from the selected Excel worksheet.
+
+### Return interpretation
+
+The returned DataFrame depends on workbook sheet and parsing options; confirm headers and types before using it as pipeline input.
+
+### Common failure causes
+
+- The workbook path or sheet name is incorrect.
+- Excel parsing dependencies are unavailable.
+- The workbook layout does not match expected headers.
+- The configured lakehouse target cannot be read.
 
 ### Notes
 
 Side effects:
 - Creates a temporary local file during conversion.
 - Materializes rows through pandas before creating a Spark DataFrame.
+
+### Example
+
+```python
+mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -372,6 +373,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `680`
 - Inbound references count: 0
 - Outbound references count: 3
+- Used in templates: 02_pipeline, 99_explore
+- Glossary terms: source table, notebook template
 
 ### AI implementation contract
 

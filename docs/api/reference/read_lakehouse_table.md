@@ -4,23 +4,17 @@ Read a table from a configured Fabric lakehouse target.
 
 ## Purpose
 
-Read a table from a configured Fabric lakehouse target.
+Reads a Delta table from a configured Fabric lakehouse target using the environment routing supplied by 00_env_config.
+
+## When to use this
+
+- Use when notebook code needs a managed lakehouse table rather than a file path or warehouse SQL query.
 
 ## At a glance
-
-**Use when:**
-
-- Use when reading a Delta table from a configured Fabric lakehouse target.
 
 **Do not use when:**
 
 - Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for warehouse SQL tables.
-
-**Example:**
-
-```python
-df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
-```
 
 **Errors:**
 
@@ -29,6 +23,25 @@ Raises configuration, Spark, or table-read errors when the target or table canno
 **Side effects:**
 
 Reads from a lakehouse table; it does not write metadata, tables, or files.
+
+## Key terms
+
+- **Source table:** An input table or file read by the pipeline.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `00_env_config`
+- `01_agreement`
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
 
 ## Used by
 
@@ -52,7 +65,7 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 - `fabricops_kit.fabric_input_output._registered_table_identifier`
 - `fabricops_kit.fabric_input_output._uses_registered_metadata_table`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -68,52 +81,45 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">FabricOps FrameworkConfig or compatible config object.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key such as `&quot;dev&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>target</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Logical target name such as `&quot;source&quot;` or `&quot;unified&quot;`.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>table</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Table name under the lakehouse `Tables` area.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark_session</code></td>
-      <td data-label="Required">No</td>
-      <td data-label="Meaning">Spark session to use. If omitted, the helper uses the notebook global `spark`.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `FrameworkConfig | dict`, required
+: FabricOps FrameworkConfig or compatible config object.
+
+`env` : `str`, required
+: Environment key such as `"dev"`.
+
+`target` : `str`, required
+: Logical target name such as `"source"` or `"unified"`.
+
+`table` : `str`, required
+: Table name under the lakehouse `Tables` area.
+
+`spark_session` : `object`, optional
+: Spark session to use. If omitted, the helper uses the notebook global `spark`.
 
 ### Returns
 
 Spark DataFrame loaded from the configured lakehouse table.
 
+### Return interpretation
+
+The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.
+
+### Common failure causes
+
+- The target or table name is misspelled.
+- The selected environment does not define the requested lakehouse target.
+- Spark cannot access the table.
+- The caller lacks permission to read the lakehouse.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
+```
 
 ### Public callable source code
 
@@ -399,6 +405,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `171`
 - Inbound references count: 10
 - Outbound references count: 6
+- Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
+- Glossary terms: source table, metadata lakehouse
 
 ### AI implementation contract
 

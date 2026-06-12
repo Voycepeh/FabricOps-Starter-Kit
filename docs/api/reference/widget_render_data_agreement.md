@@ -4,23 +4,17 @@ Render the standalone data-agreement intake widget.
 
 ## Purpose
 
-Render the standalone data-agreement intake widget.
+Renders the data agreement intake widget used to capture agreement identity, scope, and business metadata for later notebook workflows.
+
+## When to use this
+
+- Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.
 
 ## At a glance
-
-**Use when:**
-
-- Render the standalone data-agreement intake widget.
 
 **Do not use when:**
 
 - Not documented yet
-
-**Example:**
-
-```python
-Not documented yet
-```
 
 **Errors:**
 
@@ -30,6 +24,20 @@ Not documented yet
 
 Not documented yet
 
+## Key terms
+
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
+## Used in templates
+
+- `01_agreement`
+
 ## Used by
 
 Not documented yet
@@ -38,7 +46,7 @@ Not documented yet
 
 - `fabricops_kit.data_agreement._render_maintenance_widget`
 
-## Callable implementation
+## Function details and source
 
 ### Function details
 
@@ -54,43 +62,40 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
 
 ### Parameters
 
-<div class="module-table-scroll reference-input-table">
-<table class="reference-function-table">
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Required</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td data-label="Parameter"><code>config</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Configuration containing agreement widget fields and metadata routing.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>env_name</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Environment key configured by ``00_env_config``.</td>
-    </tr>
-    <tr>
-      <td data-label="Parameter"><code>spark</code></td>
-      <td data-label="Required">Yes</td>
-      <td data-label="Meaning">Fabric Spark session used for metadata reads and append-only writes.</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+`config` : `Any`, required
+: Configuration containing agreement widget fields and metadata routing.
+
+`env_name` : `str`, required
+: Environment key configured by ``00_env_config``.
+
+`spark` : `Any`, required
+: Fabric Spark session used for metadata reads and append-only writes.
 
 ### Returns
 
 dict[str, Any]
     Rendered controls, including read-only generated-identifier context.
 
+### Return interpretation
+
+The rendered widget collects agreement input; downstream helpers can only use the agreement after the user saves valid values.
+
+### Common failure causes
+
+- ipywidgets is not available in the runtime.
+- Required agreement fields are missing.
+- Agreement identifiers conflict with existing metadata.
+- The metadata target cannot be written.
+
 ### Notes
 
 No additional callable notes are documented.
+
+### Example
+
+```python
+Not documented yet
+```
 
 ### Public callable source code
 
@@ -1414,6 +1419,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1435`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 01_agreement
+- Glossary terms: notebook template
 
 ### AI implementation contract
 
