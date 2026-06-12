@@ -166,5 +166,5 @@ These notebooks are release-specific validation aids. They are stored beside the
 
 | Notebook | Purpose |
 | --- | --- |
-| `example_pipeline_smoke_test.ipynb` | Validates the pipeline path: source and target guardrails, catalogue evidence, lineage, runtime summary, and a smoke target write. |
+| `example_pipeline_smoke_test.ipynb` | Generates deterministic `smoke_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |
 | `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |

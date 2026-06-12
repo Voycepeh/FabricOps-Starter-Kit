@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -105,29 +106,29 @@ def test_source_loading_uses_existing_read_helpers_directly():
 def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discoverable():
     _markdown, code, _cells = _notebook_sources()
 
-    assert "DATASET_NAME =" not in code
+    assert re.search(r"^DATASET_NAME\s*=", code, re.MULTILINE) is None
     assert "DATA_PRODUCT_NAME" not in code
     assert "SOURCE_TABLES = [" in code
     assert '"key": "source_01"' in code
     assert '"layer": "source"' in code
     assert '"df": df_source_01' in code
-    assert '"table_name": "CHANGE_ME_source_table"' in code
-    assert '"watermark_column": "business_date"' in code
+    assert '"table_name": PIPELINE_SOURCE_TABLE_NAME' in code
+    assert '"watermark_column": "order_date"' in code
 
     source_user_block = code[code.index("SOURCE_TABLES = [") : code.index("DEFAULT_SOURCE_GUARDRAILS = {")]
     source_default_example = source_user_block[: source_user_block.index("# To add a second source table")]
     for beginner_field in [
+        '"order_id": "bigint"',
         '"customer_id": "bigint"',
-        '"business_date": "date"',
-        '"event_ts": "string"',
+        '"order_date": "date"',
+        '"ingestion_ts": "timestamp"',
         '"status": "string"',
-        '"amount": "double"',
-        '"email": "string"',
+        '"order_amount": "double"',
         '"country_code": "string"',
     ]:
         assert beginner_field in source_default_example
-    for hidden_beginner_field in ['"dataset_name"', '"stage"']:
-        assert hidden_beginner_field not in source_default_example
+    assert '"dataset_name": PIPELINE_DATASET_NAME' in source_default_example
+    assert '"stage"' not in source_default_example
     for advanced_override in [
         '"dataset_name": "CHANGE_ME_governance_dataset"',
         '"stage": "source"',
@@ -183,25 +184,28 @@ def test_active_default_source_transform_and_target_schema_are_coherent_passthro
 
     transform_block = code[code.index("# DIY your transformations here.") : code.index("TARGET_TABLES = [")]
     assert "df_target_01 = df_source_01" in transform_block
-    assert '"amount_band"' in transform_block  # commented example only
+    assert ".withColumn(" in transform_block  # commented example only
+    assert '"order_amount_band"' in transform_block  # commented example only
+    assert '"order_amount"' in transform_block
 
     target_user_block = code[code.index("TARGET_TABLES = [") : code.index("DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {")]
     target_default_example = target_user_block[: target_user_block.index("# To add a second target table")]
     for expected_column in [
+        '"order_id": "bigint"',
         '"customer_id": "bigint"',
-        '"business_date": "date"',
-        '"event_ts": "string"',
+        '"order_date": "date"',
+        '"ingestion_ts": "timestamp"',
         '"status": "string"',
-        '"amount": "double"',
-        '"email": "string"',
+        '"order_amount": "double"',
         '"country_code": "string"',
         '"_fabricops_run_id": "string"',
         '"_fabricops_pipeline_name": "string"',
         '"_fabricops_created_at": "string"',
     ]:
         assert expected_column in target_default_example
-    assert '"amount_band": "string"' not in target_default_example
-    for hidden_beginner_field in ['"dataset_name"', '"stage"', '"target_kind"', '"kind"']:
+    assert '"order_amount_band": "string"' not in target_default_example
+    assert '"dataset_name": PIPELINE_DATASET_NAME' in target_default_example
+    for hidden_beginner_field in ['"stage"', '"target_kind"', '"kind"']:
         assert hidden_beginner_field not in target_default_example
 
     assert "TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(" in code
