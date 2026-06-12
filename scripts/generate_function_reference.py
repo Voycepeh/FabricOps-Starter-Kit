@@ -85,7 +85,6 @@ V1_CALLABLES = {
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
-    "build_lineage_records",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
     "write_catalogue_evidence",

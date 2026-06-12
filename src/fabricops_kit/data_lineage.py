@@ -207,30 +207,3 @@ def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id:
         }
         for step_number, step in enumerate(lineage_steps, 1)
     ]
-
-
-def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list[str], target_table: str, transformation_steps: list[dict], config: Any = None) -> list[dict]:
-    """Build compact lineage records for downstream metadata sinks.
-
-    Parameters
-    ----------
-    dataset_name : str
-        Dataset identifier for all output rows.
-    run_id : str
-        Unique run identifier.
-    source_tables : list of str
-        Source table names captured for the run.
-    target_table : str
-        Target table name produced by the run.
-    transformation_steps : list of dict
-        Transformation step dictionaries to merge into each output row.
-    config : Any, optional
-        Framework configuration used to resolve the configured audit timezone
-        when adding timestamp metadata.
-
-    Returns
-    -------
-    list of dict
-        Row dictionaries suitable for metadata persistence.
-    """
-    return [{"run_id": run_id, "dataset_name": dataset_name, "source_tables": source_tables, "target_table": target_table, **({"created_ts": _current_audit_timestamp(config=config, drop_microseconds=False)} if config is not None else {}), **s} for s in transformation_steps]

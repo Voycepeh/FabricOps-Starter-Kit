@@ -143,7 +143,7 @@ No additional callable notes are documented.
 
             **`def _normalize_datatype(data_type) -> str`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L37-L83)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L37-L83)
 
             ```python
             def _normalize_datatype(data_type) -> str:
@@ -199,7 +199,7 @@ No additional callable notes are documented.
 
             **`def _actual_schema(df) -> tuple[list[str], dict[str, str]]`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L86-L101)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L86-L101)
 
             ```python
             def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
@@ -228,7 +228,7 @@ No additional callable notes are documented.
 ## Source link
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L109-L198">View validate_schema on GitHub</a>
 
 ```python
 def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
@@ -363,7 +363,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L109-L198</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L109-L198">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L109-L198</a>
 - Start line: `109`
 - End line: `198`
 - Signature:

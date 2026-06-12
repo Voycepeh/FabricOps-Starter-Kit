@@ -25,7 +25,6 @@ CORE_CALLABLES = {
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
-    "build_lineage_records",
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
@@ -481,7 +480,7 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     assert "[widget_review_dq_rules](../api/reference/widget_review_dq_rules/)" in governance_review
     assert "[record_table_governance](../api/reference/record_table_governance/)" in governance_review
     assert "[setup_metadata_tables](../api/reference/setup_metadata_tables/)" in metadata_tables
-    assert "[build_lineage_records](../api/reference/build_lineage_records/)" in metadata_tables
+    assert "[write_pipeline_lineage](../api/reference/write_pipeline_lineage/)" in metadata_tables
 
 
 def test_template_usage_metadata_renders_from_structured_reference_model() -> None:

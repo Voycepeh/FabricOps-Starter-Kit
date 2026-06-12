@@ -12,7 +12,6 @@ from .data_agreement import (
     widget_render_data_steward,
     widget_select_agreement,
 )
-from .data_lineage import build_lineage_records
 from .data_profiling import profile_dataframe
 from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_failed, validate_schema
 from .fabric_input_output import (
@@ -79,7 +78,6 @@ __all__ = [
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
-    "build_lineage_records",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
     "write_catalogue_evidence",

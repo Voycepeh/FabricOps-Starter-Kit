@@ -218,7 +218,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -259,7 +259,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _create_empty_metadata_dataframe(spark: Any, schema: Any) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1040-L1042)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1040-L1042)
 
             ```python
             def _create_empty_metadata_dataframe(spark: Any, schema: Any) -> Any:
@@ -269,7 +269,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L942-L962)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L942-L962)
 
             ```python
             def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]:
@@ -297,7 +297,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L898-L925)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L898-L925)
 
             ```python
             def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]:
@@ -332,7 +332,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _get_governance_metadata_schemas() -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L152-L195)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L152-L195)
 
             ```python
             def _get_governance_metadata_schemas() -> dict[str, Any]:
@@ -383,7 +383,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _get_metadata_table_schema_registry(config: FrameworkConfig | dict[str, Any]) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L990-L1019)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L990-L1019)
 
             ```python
             def _get_metadata_table_schema_registry(config: FrameworkConfig | dict[str, Any]) -> dict[str, Any]:
@@ -420,7 +420,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _is_table_not_found_error(exc: Exception) -> bool`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L198-L218)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L198-L218)
 
             ```python
             def _is_table_not_found_error(exc: Exception) -> bool:
@@ -448,7 +448,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any=None, active_only: bool=True, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L453-L482)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L453-L482)
 
             ```python
             def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -485,7 +485,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _metadata_schema_field_names(schema: Any) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L965-L969)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L965-L969)
 
             ```python
             def _metadata_schema_field_names(schema: Any) -> list[str]:
@@ -497,7 +497,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _metadata_table_columns(table: Any) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1031-L1037)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1031-L1037)
 
             ```python
             def _metadata_table_columns(table: Any) -> list[str]:
@@ -511,7 +511,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L928-L939)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L928-L939)
 
             ```python
             def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]:
@@ -530,7 +530,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _setup_metadata_table_registry(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, registry: dict[str, Any]) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1045-L1069)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1045-L1069)
 
             ```python
             def _setup_metadata_table_registry(
@@ -562,7 +562,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _string_metadata_schema(table_name: str, fields: list[str])`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L972-L987)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L972-L987)
 
             ```python
             def _string_metadata_schema(table_name: str, fields: list[str]):
@@ -585,7 +585,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _to_bool(value: Any) -> bool`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L414-L430)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L414-L430)
 
             ```python
             def _to_bool(value: Any) -> bool:
@@ -609,7 +609,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _validate_metadata_table_registration(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str] | None=None) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1072-L1111)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1072-L1111)
 
             ```python
             def _validate_metadata_table_registration(
@@ -656,7 +656,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L112-L137)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L112-L137)
 
             ```python
             def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None:
@@ -691,7 +691,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L551-L624)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L551-L624)
 
             ```python
             def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
@@ -774,7 +774,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _spark_types()`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L103-L109)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L103-L109)
 
             ```python
             def _spark_types():
@@ -790,7 +790,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1022-L1028)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1022-L1028)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -804,7 +804,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -854,7 +854,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _active_steward(row: dict[str, Any]) -> bool`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L433-L443)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L433-L443)
 
             ```python
             def _active_steward(row: dict[str, Any]) -> bool:
@@ -872,7 +872,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L397-L402)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L397-L402)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -885,7 +885,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _config_value(config: Any, name: str, default: Any) -> Any`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L149-L153)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L149-L153)
 
             ```python
             def _config_value(config: Any, name: str, default: Any) -> Any:
@@ -897,7 +897,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L405-L411)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L405-L411)
 
             ```python
             def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]:
@@ -911,7 +911,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 
             **`def _schema(table_name: str, fields: list[tuple[str, Any]])`**
 
-            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L140-L143)
+            Source: [`src/fabricops_kit/governance_review.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L140-L143)
 
             ```python
             def _schema(table_name: str, fields: list[tuple[str, Any]]):
@@ -924,7 +924,7 @@ metadata reads and writes through the configured metadata lakehouse target.
 ## Source link
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1114-L1217">View setup_metadata_tables on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217">View setup_metadata_tables on GitHub</a>
 
 ```python
 def setup_metadata_tables(
@@ -1079,7 +1079,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1114-L1217">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1114-L1217</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217</a>
 - Start line: `1114`
 - End line: `1217`
 - Signature:

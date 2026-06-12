@@ -1,4 +1,4 @@
-# `data_lineage` module
+# `data_lineage` module (internal)
 
 <div class="api-status-block">
   <span class="api-chip api-chip-module">Module overview</span>
@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 1</span><span class="reference-chip">Internal helpers: 7</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 7</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns source-to-target lineage and transformation evidence.
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -63,28 +63,7 @@ Owns source-to-target lineage and transformation evidence.
 
 ## Public callables
 
-<div class="module-table-scroll">
-<table>
-  <thead>
-    <tr>
-      <th>Callable</th>
-      <th>Tier</th>
-      <th>Type</th>
-      <th>Summary</th>
-      <th>Related helpers</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Build source-to-target lineage evidence records for a pipeline run.</td>
-      <td>—</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+No public exports in this module.
 
 ## Module relationships
 
@@ -97,13 +76,7 @@ Owns source-to-target lineage and transformation evidence.
 <section class="callable-relationship-card">
 <h5>data_lineage</h5>
 <h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-</ul>
+<p>None.</p>
 </section>
 
 ### Related internal helpers

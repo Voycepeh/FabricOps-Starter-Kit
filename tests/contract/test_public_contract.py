@@ -34,7 +34,6 @@ APPROVED_V1_CALLABLES = {
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
-    "build_lineage_records",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
     "write_catalogue_evidence",
@@ -119,7 +118,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 33
+    assert len(fabricops_kit.__all__) == 32
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
