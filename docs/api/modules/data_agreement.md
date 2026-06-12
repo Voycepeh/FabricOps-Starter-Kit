@@ -76,35 +76,35 @@ Owns agreement metadata capture, audited record building, metadata commit helper
   </thead>
   <tbody>
     <tr>
-      <td><a href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
+      <td><a href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Return the agreement selected by widget_select_agreement.</td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
+      <td><a href="../../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone agreement-evidence widget.</td>
       <td><code>_render_agreement_evidence_widget</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
+      <td><a href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-agreement intake widget.</td>
       <td><code>_render_maintenance_widget</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+      <td><a href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-steward intake widget.</td>
       <td><code>_render_maintenance_widget</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
@@ -127,27 +127,27 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
+<a class="reference-chip" href="../../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
 <li>
-<a class="reference-chip" href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
+<a class="reference-chip" href="../../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>
+<a class="reference-chip" href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_render_maintenance_widget</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>
+<a class="reference-chip" href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_render_maintenance_widget</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
+<a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>
 </li>
@@ -222,11 +222,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_html_escape</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
       <td><code>_latest_agreement_versions</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
       <td><code>_latest_by_key</code></td>
@@ -238,7 +238,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_list_data_agreements</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
       <td><code>_list_data_stewards</code></td>
@@ -262,7 +262,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_render_agreement_evidence_widget</code></td>
-      <td><a href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
+      <td><a href="../../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
     </tr>
     <tr>
       <td><code>_render_custom_fields</code></td>
@@ -270,15 +270,15 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_render_maintenance_widget</code></td>
-      <td><a href="../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+      <td><a href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
     </tr>
     <tr>
       <td><code>_render_searchable_selector</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
       <td><code>_require_ipywidgets</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
       <td><code>_save_agreement_evidence_records</code></td>
@@ -465,12 +465,12 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 ### External callers
 
 **config**
-<a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
+<a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 ### External callees
 
 **fabric_input_output**
-<a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_current_notebook_active_registrations"><code>_current_notebook_active_registrations</code></a>, <a class="reference-chip" href="../metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>

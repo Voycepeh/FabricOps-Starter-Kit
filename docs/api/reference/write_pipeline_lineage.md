@@ -31,7 +31,7 @@ Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse tar
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

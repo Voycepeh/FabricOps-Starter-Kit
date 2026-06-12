@@ -22,8 +22,8 @@ def test_breadcrumbs_follow_configured_nav_hierarchy() -> None:
             _section(
                 "Function & DQ Rules Reference",
                 [
-                    _page("List of functions", "reference/"),
-                    _section("Functions by Modules", [module_page, current]),
+                    _section("List of functions", [_page("Overview", "reference/"), current]),
+                    _section("Functions by Modules", [module_page]),
                 ],
             ),
         ]
@@ -35,7 +35,7 @@ def test_breadcrumbs_follow_configured_nav_hierarchy() -> None:
     assert context["fabricops_breadcrumbs"] == [
         {"title": "Home", "url": "index.html"},
         {"title": "Function & DQ Rules Reference", "url": "reference/"},
-        {"title": "Functions by Modules", "url": "api/modules/config/"},
+        {"title": "List of functions", "url": "reference/"},
         {"title": "setup_notebook", "url": None},
     ]
 

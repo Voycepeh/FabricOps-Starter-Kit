@@ -396,7 +396,7 @@ def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None
     assert "## Key terms" in text
     assert "**Profile behavior:** The expected way a table is loaded." in text
     assert "**can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running." in text
-    assert "See the [full glossary](../../reference/glossary/)" in text
+    assert "See the [full glossary](../../../reference/glossary/)" in text
     assert "previously approved as append-only" in text
     assert "overwrite could remove existing history" in text
     assert "If can_continue is false, review whether the behavior change is intentional before writing the table." in text
@@ -517,6 +517,19 @@ def test_enforce_profile_behavior_preserves_relationship_sections_after_readabil
     assert "fabricops_kit.data_profiling.profile_dataframe" in calls
     assert "fabricops_kit.fabric_input_output.read_lakehouse_table" in calls
 
+
+def test_mkdocs_nav_registers_callable_pages_under_function_list() -> None:
+    mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    public_names = sorted(entry["name"] for entry in function_manifest if entry.get("classification") == "Callable")
+
+    assert "      - List of functions:\n          - Overview: reference/index.md" in mkdocs_text
+    assert "          # AUTO-GENERATED-FUNCTIONS-START" in mkdocs_text
+    assert "          # AUTO-GENERATED-FUNCTIONS-END" in mkdocs_text
+    for name in public_names:
+        assert f"          - {name}: api/reference/{name}.md" in mkdocs_text
+
+
 def test_generated_public_callable_links_use_canonical_route() -> None:
     generated_markdown = [
         REFERENCE_DIR / "index.md",
@@ -528,11 +541,12 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
 
     assert "/reference/callables/" not in combined
     assert "../callables/" not in combined
-    combined_without_glossary_links = combined.replace("../../reference/glossary/", "")
-    assert "../../reference/" not in combined_without_glossary_links
-    assert "api/reference/" in combined
+    combined_without_glossary_links = combined.replace("../../../reference/glossary/", "")
+    assert "api/reference/" in combined_without_glossary_links
     assert "../api/reference/enforce_dq_rules/" in combined
-    assert "../reference/enforce_dq_rules/" in combined
+    assert "../../reference/enforce_dq_rules/" in combined
+    assert "api/modules/reference/" not in combined
+    assert 'href="../reference/enforce_dq_rules/"' not in combined
 
 
 def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() -> None:

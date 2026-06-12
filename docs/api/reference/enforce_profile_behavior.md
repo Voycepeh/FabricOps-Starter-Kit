@@ -40,7 +40,7 @@ Reads baseline profile metadata and computes current profile evidence; it does n
 - **Skip:** Do not run that behavior check or write step for the table.
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

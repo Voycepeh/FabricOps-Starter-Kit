@@ -29,7 +29,7 @@ May terminate notebook execution through Fabric notebook utilities or raise an e
 - **Guardrail:** A check that tells the notebook whether it is safe to continue.
 - **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 

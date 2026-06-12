@@ -31,7 +31,7 @@ Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.
 - **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
 - **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
 
-See the [full glossary](../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## Related guides
 
