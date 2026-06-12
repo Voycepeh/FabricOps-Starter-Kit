@@ -8,6 +8,10 @@ Persist approved table-governance context, DQ-rule, and classification evidence 
 
 ## At a glance
 
+### Used in templates
+
+- `03_governance`
+
 **Use when:**
 
 - Use in 03_governance after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
@@ -1140,6 +1144,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `978`
 - Inbound references count: 0
 - Outbound references count: 5
+- Used in templates: 03_governance
 
 ### AI implementation contract
 

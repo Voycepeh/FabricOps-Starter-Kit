@@ -8,6 +8,11 @@ Render an agreement selector and optionally register the active notebook.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+- `99_explore`
+
 **Use when:**
 
 - Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
@@ -1151,6 +1156,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `773`
 - Inbound references count: 0
 - Outbound references count: 7
+- Used in templates: 02_pipeline, 99_explore
 
 ### AI implementation contract
 

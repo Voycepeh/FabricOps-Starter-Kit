@@ -8,6 +8,12 @@ Read a CSV file from a configured Fabric lakehouse Files path.
 
 ## At a glance
 
+### Used in templates
+
+- `00_env_config`
+- `02_pipeline`
+- `99_explore`
+
 **Use when:**
 
 - Use when reading a CSV file from a configured Fabric lakehouse Files path.
@@ -325,6 +331,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `326`
 - Inbound references count: 0
 - Outbound references count: 3
+- Used in templates: 00_env_config, 02_pipeline, 99_explore
 
 ### AI implementation contract
 

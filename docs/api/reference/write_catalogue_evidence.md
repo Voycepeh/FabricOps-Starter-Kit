@@ -8,6 +8,10 @@ Enrich profile rows with guardrail context and write catalogue evidence.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use after source or target profiles and guardrail results are available to persist catalogue evidence through the configured metadata route.
@@ -701,6 +705,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `451`
 - Inbound references count: 1
 - Outbound references count: 7
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

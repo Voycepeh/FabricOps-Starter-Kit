@@ -8,6 +8,10 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use in 02_pipeline to run source guardrails before transformation and target guardrails before writes while keeping per-table results separated.
@@ -615,6 +619,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `260`
 - Inbound references count: 0
 - Outbound references count: 11
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

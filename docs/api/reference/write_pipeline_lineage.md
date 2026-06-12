@@ -8,6 +8,10 @@ Write many-to-many source-to-target lineage evidence.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use after target writes to persist lineage relationships tied to agreement and notebook registry context.
@@ -609,6 +613,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `559`
 - Inbound references count: 0
 - Outbound references count: 5
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

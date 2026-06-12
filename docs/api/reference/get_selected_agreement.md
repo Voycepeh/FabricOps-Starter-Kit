@@ -8,6 +8,10 @@ Return the agreement selected by widget_select_agreement.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use immediately after widget_select_agreement to retrieve the selected agreement record for pipeline logic and evidence binding.
@@ -153,6 +157,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1000`
 - Inbound references count: 0
 - Outbound references count: 0
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

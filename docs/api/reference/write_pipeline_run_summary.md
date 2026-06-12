@@ -8,6 +8,10 @@ Write one pipeline runtime summary row to metadata.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use at the end of 02_pipeline to store operational run evidence in METADATA_PIPELINE_RUNS.
@@ -539,6 +543,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `646`
 - Inbound references count: 0
 - Outbound references count: 4
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

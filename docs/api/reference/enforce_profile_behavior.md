@@ -8,6 +8,10 @@ Enforce append, overwrite, or skip profile behavior against accepted catalogue p
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use in 02_pipeline to enforce load_behavior expectations against previous accepted catalogue profile evidence.
@@ -814,6 +818,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `639`
 - Inbound references count: 1
 - Outbound references count: 11
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

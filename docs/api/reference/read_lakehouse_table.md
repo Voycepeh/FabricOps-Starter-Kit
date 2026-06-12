@@ -8,6 +8,14 @@ Read a table from a configured Fabric lakehouse target.
 
 ## At a glance
 
+### Used in templates
+
+- `00_env_config`
+- `01_agreement`
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
+
 **Use when:**
 
 - Use when reading a Delta table from a configured Fabric lakehouse target.
@@ -399,6 +407,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `171`
 - Inbound references count: 10
 - Outbound references count: 6
+- Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
 
 ### AI implementation contract
 

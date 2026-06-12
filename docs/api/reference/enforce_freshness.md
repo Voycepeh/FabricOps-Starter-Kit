@@ -8,6 +8,10 @@ Enforce whether the latest data arrived within the configured freshness lag.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.
@@ -340,6 +344,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `367`
 - Inbound references count: 1
 - Outbound references count: 3
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

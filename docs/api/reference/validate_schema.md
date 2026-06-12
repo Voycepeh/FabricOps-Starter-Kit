@@ -8,6 +8,10 @@ Validate a DataFrame schema using strict, allow-new-columns, or monitor-only pre
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
@@ -330,6 +334,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `109`
 - Inbound references count: 1
 - Outbound references count: 2
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

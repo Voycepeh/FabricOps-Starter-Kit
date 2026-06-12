@@ -8,6 +8,10 @@ Render standalone sensitivity and PII classification review guidance for selecte
 
 ## At a glance
 
+### Used in templates
+
+- `03_governance`
+
 **Use when:**
 
 - Render standalone sensitivity and PII classification review guidance for selected profile rows.
@@ -195,6 +199,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `789`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 03_governance
 
 ### AI implementation contract
 

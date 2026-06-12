@@ -312,6 +312,35 @@ def test_generated_manifests_point_public_callables_to_canonical_api_reference()
             assert entry["docs_path"].startswith("reference/internal/")
 
 
+def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    dependency_metadata = json.loads((REFERENCE_DIR / "dependency-metadata.json").read_text(encoding="utf-8"))
+    reference_index = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
+
+    function_by_name = {entry["name"]: entry for entry in function_manifest}
+    agent_by_name = {entry["name"]: entry for entry in agent_manifest if entry.get("type") == "callable"}
+    dependency_by_name = {entry["callable"]: entry for entry in dependency_metadata["callables"].values()}
+
+    for callable_name in ("enforce_freshness", "enforce_profile_behavior"):
+        assert function_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
+        assert agent_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
+        assert dependency_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
+
+        article_start = reference_index.index(f'data-callable-name="{callable_name}"')
+        article_end = reference_index.index("</article>", article_start)
+        article = reference_index[article_start:article_end]
+        assert '<p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>' in article
+        assert article.count("Used in:") == 1
+        assert "Outbound" in article or "Inbound" in article
+
+        detail_text = (API_REFERENCE_DIR / f"{callable_name}.md").read_text(encoding="utf-8")
+        at_a_glance = _section_text(detail_text, "At a glance")
+        assert "### Used in templates" in at_a_glance
+        used_in_section = at_a_glance.split("### Used in templates", 1)[1].split("\n**Use when:**", 1)[0]
+        assert used_in_section.count("`02_pipeline`") == 1
+
+
 def test_generated_public_callable_links_use_canonical_route() -> None:
     generated_markdown = [
         REFERENCE_DIR / "index.md",

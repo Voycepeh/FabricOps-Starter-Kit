@@ -8,6 +8,10 @@ Build source-to-target lineage evidence records for a pipeline run.
 
 ## At a glance
 
+### Used in templates
+
+None.
+
 **Use when:**
 
 - Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
@@ -260,6 +264,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `212`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: —
 
 ### AI implementation contract
 

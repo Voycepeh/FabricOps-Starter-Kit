@@ -8,6 +8,10 @@ Render standalone DQ-rule review guidance for selected profile rows.
 
 ## At a glance
 
+### Used in templates
+
+- `03_governance`
+
 **Use when:**
 
 - Render standalone DQ-rule review guidance for selected profile rows.
@@ -786,6 +790,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `624`
 - Inbound references count: 0
 - Outbound references count: 6
+- Used in templates: 03_governance
 
 ### AI implementation contract
 

@@ -8,6 +8,10 @@ Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.
@@ -158,6 +162,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `840`
 - Inbound references count: 1
 - Outbound references count: 1
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

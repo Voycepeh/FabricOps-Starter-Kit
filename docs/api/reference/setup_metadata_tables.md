@@ -8,6 +8,10 @@ Create or validate all FabricOps metadata tables through one setup action.
 
 ## At a glance
 
+### Used in templates
+
+- `00_env_config`
+
 **Use when:**
 
 - Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, stability, and governance workflows.
@@ -1045,6 +1049,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1114`
 - Inbound references count: 0
 - Outbound references count: 9
+- Used in templates: 00_env_config
 
 ### AI implementation contract
 

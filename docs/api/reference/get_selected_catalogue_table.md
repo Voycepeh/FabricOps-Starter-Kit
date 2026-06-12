@@ -8,6 +8,10 @@ Return the table selected by widget_select_catalogue_table.
 
 ## At a glance
 
+### Used in templates
+
+- `03_governance`
+
 **Use when:**
 
 - Return the table selected by widget_select_catalogue_table.
@@ -162,6 +166,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `273`
 - Inbound references count: 0
 - Outbound references count: 0
+- Used in templates: 03_governance
 
 ### AI implementation contract
 

@@ -8,6 +8,11 @@ Enforce approved active DQ rules as a target-write guardrail without filtering r
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+- `03_governance`
+
 **Use when:**
 
 - Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
@@ -816,6 +821,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1499`
 - Inbound references count: 1
 - Outbound references count: 7
+- Used in templates: 02_pipeline, 03_governance
 
 ### AI implementation contract
 

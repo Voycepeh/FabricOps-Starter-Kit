@@ -8,6 +8,12 @@ Read a table from a configured Fabric warehouse target.
 
 ## At a glance
 
+### Used in templates
+
+- `00_env_config`
+- `02_pipeline`
+- `99_explore`
+
 **Use when:**
 
 - Use when reading a table from a configured Fabric warehouse target.
@@ -315,6 +321,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `371`
 - Inbound references count: 0
 - Outbound references count: 2
+- Used in templates: 00_env_config, 02_pipeline, 99_explore
 
 ### AI implementation contract
 

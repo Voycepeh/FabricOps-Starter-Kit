@@ -8,6 +8,10 @@ Prepare source or target table configs for 02_pipeline.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+
 **Use when:**
 
 - Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
@@ -346,6 +350,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `126`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 02_pipeline
 
 ### AI implementation contract
 

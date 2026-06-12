@@ -8,6 +8,11 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+- `99_explore`
+
 **Use when:**
 
 - Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
@@ -475,6 +480,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `555`
 - Inbound references count: 0
 - Outbound references count: 4
+- Used in templates: 02_pipeline, 99_explore
 
 ### AI implementation contract
 

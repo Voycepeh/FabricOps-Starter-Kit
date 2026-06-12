@@ -8,6 +8,14 @@ Write a DataFrame to a configured Fabric lakehouse target.
 
 ## At a glance
 
+### Used in templates
+
+- `00_env_config`
+- `01_agreement`
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
+
 **Use when:**
 
 - Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
@@ -405,6 +413,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `227`
 - Inbound references count: 8
 - Outbound references count: 4
+- Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
 
 ### AI implementation contract
 

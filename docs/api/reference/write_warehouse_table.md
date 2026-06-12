@@ -8,6 +8,11 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 ## At a glance
 
+### Used in templates
+
+- `00_env_config`
+- `02_pipeline`
+
 **Use when:**
 
 - Use when publishing a Spark DataFrame to a configured Fabric warehouse table.
@@ -286,6 +291,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `433`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 00_env_config, 02_pipeline
 
 ### AI implementation contract
 

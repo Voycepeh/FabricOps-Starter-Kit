@@ -8,6 +8,10 @@ Load column profile rows for the selected catalogue table.
 
 ## At a glance
 
+### Used in templates
+
+- `03_governance`
+
 **Use when:**
 
 - Load column profile rows for the selected catalogue table.
@@ -258,6 +262,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `344`
 - Inbound references count: 1
 - Outbound references count: 5
+- Used in templates: 03_governance
 
 ### AI implementation contract
 

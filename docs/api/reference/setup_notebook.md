@@ -8,6 +8,10 @@ Prepare a FabricOps notebook by validating configuration, resolving environment 
 
 ## At a glance
 
+### Used in templates
+
+- `00_env_config`
+
 **Use when:**
 
 - Starting a FabricOps notebook from 00_env_config
@@ -668,6 +672,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `786`
 - Inbound references count: 0
 - Outbound references count: 4
+- Used in templates: 00_env_config
 
 ### AI implementation contract
 

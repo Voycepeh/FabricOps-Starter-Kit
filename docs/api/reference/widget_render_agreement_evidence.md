@@ -8,6 +8,10 @@ Render the standalone agreement-evidence widget.
 
 ## At a glance
 
+### Used in templates
+
+- `01_agreement`
+
 **Use when:**
 
 - Render the standalone agreement-evidence widget.
@@ -892,6 +896,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `1379`
 - Inbound references count: 0
 - Outbound references count: 1
+- Used in templates: 01_agreement
 
 ### AI implementation contract
 

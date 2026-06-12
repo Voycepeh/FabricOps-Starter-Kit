@@ -8,6 +8,12 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+- `03_governance`
+- `99_explore`
+
 **Use when:**
 
 - Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
@@ -615,6 +621,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `225`
 - Inbound references count: 3
 - Outbound references count: 5
+- Used in templates: 02_pipeline, 03_governance, 99_explore
 
 ### AI implementation contract
 

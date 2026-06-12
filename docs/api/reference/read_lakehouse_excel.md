@@ -8,6 +8,11 @@ Read an Excel file from a configured Fabric lakehouse Files path.
 
 ## At a glance
 
+### Used in templates
+
+- `02_pipeline`
+- `99_explore`
+
 **Use when:**
 
 - Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
@@ -372,6 +377,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `680`
 - Inbound references count: 0
 - Outbound references count: 3
+- Used in templates: 02_pipeline, 99_explore
 
 ### AI implementation contract
 

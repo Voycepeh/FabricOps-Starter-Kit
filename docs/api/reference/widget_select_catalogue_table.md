@@ -8,6 +8,10 @@ Render a searchable selector for latest successful catalogue profiles.
 
 ## At a glance
 
+### Used in templates
+
+- `03_governance`
+
 **Use when:**
 
 - Render a searchable selector for latest successful catalogue profiles.
@@ -326,6 +330,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `300`
 - Inbound references count: 0
 - Outbound references count: 3
+- Used in templates: 03_governance
 
 ### AI implementation contract
 
