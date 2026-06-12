@@ -556,6 +556,27 @@ def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
     GLOSSARY_PAGE_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
 
 
+
+def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
+    """Render conceptual documentation links for a callable page."""
+    if not related_guides:
+        return []
+
+    lines = ["## Related guides", ""]
+    seen: set[tuple[str, str]] = set()
+    for guide in related_guides:
+        title = str(guide.get("title", "")).strip()
+        path = str(guide.get("path", "")).strip()
+        if not title or not path:
+            raise RuntimeError("related_guides entries must include both title and path")
+        key = (title, path)
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(f"- [{title}]({path})")
+    lines.append("")
+    return lines
+
 def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, Any]]) -> list[str]:
     """Render compact glossary-backed key terms for a callable page."""
     if not glossary_terms:
@@ -2034,6 +2055,7 @@ def main() -> None:
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
             key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
+            related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             return_interpretation_lines = (
                 ["### Return interpretation", "", rendered_return_interpretation, ""]
                 if metadata.get("return_interpretation")
@@ -2128,6 +2150,7 @@ def main() -> None:
                 rendered_side_effects,
                 "",
                 *key_term_lines,
+                *related_guide_lines,
                 "## Used in templates",
                 "",
                 *used_in_template_lines,
@@ -2255,7 +2278,7 @@ def main() -> None:
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
         record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,
@@ -2283,6 +2306,7 @@ def main() -> None:
             "side_effects": rendered_side_effects,
             "failure_modes": rendered_raises,
             "common_failure_causes": rendered_common_failure_causes,
+            "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [],
             "preferred_example": _documented_text(metadata.get("preferred_example")),
             "verification": rendered_ai_verification,
             "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],

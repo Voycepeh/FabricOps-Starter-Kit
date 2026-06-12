@@ -13,6 +13,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 262,
     "source_end_line": 295,
@@ -36,6 +37,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 506,
     "source_end_line": 511,
@@ -57,6 +59,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 358,
     "source_end_line": 417,
@@ -80,6 +83,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 86,
     "source_end_line": 87,
@@ -103,6 +107,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 458,
     "source_end_line": 502,
@@ -124,6 +129,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 328,
     "source_end_line": 345,
@@ -145,6 +151,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 437,
     "source_end_line": 454,
@@ -166,6 +173,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 114,
     "source_end_line": 129,
@@ -189,6 +197,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 515,
     "source_end_line": 548,
@@ -210,6 +219,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 91,
     "source_end_line": 110,
@@ -231,6 +241,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 299,
     "source_end_line": 324,
@@ -252,6 +263,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 421,
     "source_end_line": 433,
@@ -276,6 +288,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1356,
     "source_end_line": 1377,
@@ -301,6 +314,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 78,
     "source_end_line": 83,
@@ -324,6 +338,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1220,
     "source_end_line": 1225,
@@ -347,6 +362,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1022,
     "source_end_line": 1028,
@@ -370,6 +386,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1040,
     "source_end_line": 1042,
@@ -403,6 +420,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 69,
     "source_end_line": 75,
@@ -426,6 +444,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1270,
     "source_end_line": 1271,
@@ -451,6 +470,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 942,
     "source_end_line": 962,
@@ -474,6 +494,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1277,
     "source_end_line": 1285,
@@ -500,6 +521,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 898,
     "source_end_line": 925,
@@ -527,6 +549,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 61,
     "source_end_line": 66,
@@ -550,6 +573,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1228,
     "source_end_line": 1267,
@@ -577,6 +601,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 990,
     "source_end_line": 1019,
@@ -610,6 +635,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 627,
     "source_end_line": 667,
@@ -634,6 +660,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1380,
     "source_end_line": 1404,
@@ -657,6 +684,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1288,
     "source_end_line": 1316,
@@ -682,6 +710,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1319,
     "source_end_line": 1323,
@@ -706,6 +735,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 965,
     "source_end_line": 969,
@@ -731,6 +761,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1031,
     "source_end_line": 1037,
@@ -754,6 +785,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 928,
     "source_end_line": 939,
@@ -783,6 +815,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 684,
     "source_end_line": 783,
@@ -813,6 +846,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1045,
     "source_end_line": 1069,
@@ -836,6 +870,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 972,
     "source_end_line": 987,
@@ -860,6 +895,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 27,
     "source_end_line": 58,
@@ -887,6 +923,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1326,
     "source_end_line": 1353,
@@ -918,6 +955,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 551,
     "source_end_line": 624,
@@ -947,6 +985,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1072,
     "source_end_line": 1111,
@@ -970,6 +1009,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 670,
     "source_end_line": 681,
@@ -1011,6 +1051,16 @@
       "The selected environment does not include metadata routing.",
       "The caller lacks permission to create or update metadata tables."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1114,
     "source_end_line": 1217,
@@ -1051,6 +1101,16 @@
       "Fabric runtime metadata is unavailable and no local fallback was provided.",
       "Configured lakehouse or warehouse targets cannot be resolved."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 786,
     "source_end_line": 895,
@@ -1077,6 +1137,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 433,
     "source_end_line": 443,
@@ -1102,6 +1163,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1034,
     "source_end_line": 1044,
@@ -1128,6 +1190,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 621,
     "source_end_line": 625,
@@ -1153,6 +1216,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 397,
     "source_end_line": 402,
@@ -1179,6 +1243,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 362,
     "source_end_line": 394,
@@ -1208,6 +1273,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 149,
     "source_end_line": 153,
@@ -1243,6 +1309,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 628,
     "source_end_line": 672,
@@ -1275,6 +1342,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 502,
     "source_end_line": 552,
@@ -1299,6 +1367,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 118,
     "source_end_line": 146,
@@ -1322,6 +1391,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 611,
     "source_end_line": 612,
@@ -1345,6 +1415,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 446,
     "source_end_line": 450,
@@ -1368,6 +1439,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 675,
     "source_end_line": 684,
@@ -1393,6 +1465,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 156,
     "source_end_line": 177,
@@ -1417,6 +1490,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 192,
     "source_end_line": 195,
@@ -1444,6 +1518,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 570,
     "source_end_line": 586,
@@ -1469,6 +1544,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 405,
     "source_end_line": 411,
@@ -1498,6 +1574,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 589,
     "source_end_line": 598,
@@ -1525,6 +1602,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 601,
     "source_end_line": 608,
@@ -1555,6 +1633,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 453,
     "source_end_line": 482,
@@ -1581,6 +1660,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 564,
     "source_end_line": 567,
@@ -1606,6 +1686,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 555,
     "source_end_line": 561,
@@ -1630,6 +1711,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 489,
     "source_end_line": 499,
@@ -1655,6 +1737,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 687,
     "source_end_line": 737,
@@ -1684,6 +1767,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1258,
     "source_end_line": 1376,
@@ -1712,6 +1796,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 310,
     "source_end_line": 359,
@@ -1752,6 +1837,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1047,
     "source_end_line": 1255,
@@ -1780,6 +1866,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 198,
     "source_end_line": 308,
@@ -1807,6 +1894,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 63,
     "source_end_line": 72,
@@ -1835,6 +1923,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 739,
     "source_end_line": 770,
@@ -1860,6 +1949,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 102,
     "source_end_line": 115,
@@ -1887,6 +1977,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1018,
     "source_end_line": 1031,
@@ -1914,6 +2005,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 414,
     "source_end_line": 430,
@@ -1938,6 +2030,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 615,
     "source_end_line": 618,
@@ -1964,6 +2057,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 180,
     "source_end_line": 189,
@@ -1991,6 +2085,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 485,
     "source_end_line": 486,
@@ -2020,6 +2115,12 @@
       "The user has not selected an agreement.",
       "Notebook state was reset.",
       "The selected row is no longer present in metadata."
+    ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1000,
@@ -2054,6 +2155,16 @@
       "Widget state is reset before saving.",
       "The configured metadata target is not writable."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1379,
     "source_end_line": 1412,
@@ -2086,6 +2197,12 @@
       "Agreement identifiers conflict with existing metadata.",
       "The metadata target cannot be written."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1435,
     "source_end_line": 1452,
@@ -2117,6 +2234,12 @@
       "Required steward fields are left blank.",
       "Widget state is cleared by rerunning cells out of order.",
       "Metadata routing is unavailable when the widget tries to persist records."
+    ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1415,
@@ -2157,6 +2280,12 @@
       "Notebook registration metadata cannot be written.",
       "The configured metadata lakehouse cannot be read."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 773,
     "source_end_line": 997,
@@ -2181,6 +2310,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 166,
     "source_end_line": 209,
@@ -2202,6 +2332,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 110,
     "source_end_line": 127,
@@ -2225,6 +2356,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 14,
     "source_end_line": 19,
@@ -2248,6 +2380,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 22,
     "source_end_line": 34,
@@ -2271,6 +2404,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 89,
     "source_end_line": 107,
@@ -2297,6 +2431,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 37,
     "source_end_line": 86,
@@ -2320,6 +2455,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 130,
     "source_end_line": 163,
@@ -2352,6 +2488,16 @@
       "Transformation step dictionaries are malformed.",
       "Configuration is missing audit timestamp settings."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 212,
     "source_end_line": 236,
@@ -2375,6 +2521,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 152,
     "source_end_line": 189,
@@ -2402,6 +2549,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 192,
     "source_end_line": 222,
@@ -2425,6 +2573,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 120,
     "source_end_line": 149,
@@ -2448,6 +2597,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 59,
     "source_end_line": 81,
@@ -2471,6 +2621,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 84,
     "source_end_line": 104,
@@ -2494,6 +2645,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 107,
     "source_end_line": 117,
@@ -2538,6 +2690,16 @@
       "Spark actions fail while computing counts or summaries.",
       "Excluded columns remove fields needed for review."
     ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 225,
     "source_end_line": 345,
@@ -2559,6 +2721,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 25,
     "source_end_line": 78,
@@ -2582,6 +2745,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 500,
     "source_end_line": 552,
@@ -2605,6 +2769,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 107,
     "source_end_line": 115,
@@ -2632,6 +2797,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 125,
     "source_end_line": 155,
@@ -2657,6 +2823,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 158,
     "source_end_line": 168,
@@ -2682,6 +2849,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 81,
     "source_end_line": 90,
@@ -2705,6 +2873,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 93,
     "source_end_line": 94,
@@ -2732,6 +2901,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 97,
     "source_end_line": 99,
@@ -2756,6 +2926,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 102,
     "source_end_line": 104,
@@ -2793,6 +2964,12 @@
       "Spark cannot access the file.",
       "The selected environment is missing the source lakehouse target."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 326,
     "source_end_line": 368,
@@ -2828,6 +3005,12 @@
       "Excel parsing dependencies are unavailable.",
       "The workbook layout does not match expected headers.",
       "The configured lakehouse target cannot be read."
+    ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 680,
@@ -2865,6 +3048,12 @@
       "The file is not valid Parquet.",
       "The configured lakehouse target is unavailable.",
       "The caller lacks read permission."
+    ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 555,
@@ -2919,6 +3108,12 @@
       "Spark cannot access the table.",
       "The caller lacks permission to read the lakehouse."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 171,
     "source_end_line": 224,
@@ -2954,6 +3149,12 @@
       "The table or SQL text is invalid.",
       "Warehouse connector context is unavailable.",
       "The caller lacks warehouse read permission."
+    ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 371,
@@ -3005,6 +3206,16 @@
       "The write mode is unsupported for the destination.",
       "The caller lacks write permission or Spark cannot create the table."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 227,
     "source_end_line": 323,
@@ -3039,6 +3250,12 @@
       "Warehouse connector support is unavailable.",
       "The caller lacks write permission."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 433,
     "source_end_line": 497,
@@ -3068,6 +3285,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 88,
     "source_end_line": 100,
@@ -3098,6 +3316,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 82,
     "source_end_line": 85,
@@ -3125,6 +3344,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 466,
     "source_end_line": 487,
@@ -3152,6 +3372,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 372,
     "source_end_line": 385,
@@ -3183,6 +3404,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 413,
     "source_end_line": 464,
@@ -3213,6 +3435,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 78,
     "source_end_line": 79,
@@ -3240,6 +3463,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 221,
     "source_end_line": 270,
@@ -3267,6 +3491,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 62,
     "source_end_line": 67,
@@ -3293,6 +3518,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 497,
     "source_end_line": 511,
@@ -3316,6 +3542,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1368,
     "source_end_line": 1371,
@@ -3344,6 +3571,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1284,
     "source_end_line": 1366,
@@ -3370,6 +3598,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1448,
     "source_end_line": 1458,
@@ -3395,6 +3624,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 586,
     "source_end_line": 604,
@@ -3421,6 +3651,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 553,
     "source_end_line": 583,
@@ -3444,6 +3675,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 388,
     "source_end_line": 410,
@@ -3467,6 +3699,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 535,
     "source_end_line": 550,
@@ -3493,6 +3726,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1461,
     "source_end_line": 1476,
@@ -3519,6 +3753,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1412,
     "source_end_line": 1445,
@@ -3542,6 +3777,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1101,
     "source_end_line": 1103,
@@ -3571,6 +3807,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1585,
     "source_end_line": 1593,
@@ -3594,6 +3831,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1106,
     "source_end_line": 1108,
@@ -3621,6 +3859,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1129,
     "source_end_line": 1143,
@@ -3649,6 +3888,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 152,
     "source_end_line": 195,
@@ -3675,6 +3915,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 74,
     "source_end_line": 75,
@@ -3698,6 +3939,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 198,
     "source_end_line": 218,
@@ -3723,6 +3965,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 489,
     "source_end_line": 494,
@@ -3748,6 +3991,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1221,
     "source_end_line": 1242,
@@ -3773,6 +4017,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 811,
     "source_end_line": 815,
@@ -3802,6 +4047,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1245,
     "source_end_line": 1280,
@@ -3825,6 +4071,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1111,
     "source_end_line": 1126,
@@ -3850,6 +4097,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 607,
     "source_end_line": 621,
@@ -3877,6 +4125,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1558,
     "source_end_line": 1582,
@@ -3903,6 +4152,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 826,
     "source_end_line": 827,
@@ -3938,6 +4188,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 830,
     "source_end_line": 976,
@@ -3966,6 +4217,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1374,
     "source_end_line": 1409,
@@ -3991,6 +4243,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1093,
     "source_end_line": 1098,
@@ -4017,6 +4270,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 140,
     "source_end_line": 143,
@@ -4038,6 +4292,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 146,
     "source_end_line": 149,
@@ -4067,6 +4322,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1083,
     "source_end_line": 1090,
@@ -4091,6 +4347,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 103,
     "source_end_line": 109,
@@ -4114,6 +4371,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 818,
     "source_end_line": 819,
@@ -4137,6 +4395,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 822,
     "source_end_line": 823,
@@ -4161,6 +4420,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1479,
     "source_end_line": 1496,
@@ -4192,6 +4452,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1146,
     "source_end_line": 1219,
@@ -4215,6 +4476,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 112,
     "source_end_line": 137,
@@ -4246,6 +4508,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 70,
     "source_end_line": 71,
@@ -4290,6 +4553,16 @@
       "Required columns are missing from the DataFrame.",
       "The metadata lakehouse cannot be read."
     ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1499,
     "source_end_line": 1556,
@@ -4320,6 +4593,12 @@
       "No table is selected.",
       "Notebook state was cleared.",
       "The selected metadata row is no longer available."
+    ],
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 273,
@@ -4361,6 +4640,16 @@
       "Profile evidence has not been generated yet.",
       "Filters for dataset, table, or stage do not match stored evidence."
     ],
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 344,
     "source_end_line": 369,
@@ -4399,6 +4688,16 @@
       "Metadata routing is unavailable.",
       "Spark cannot write one of the governance metadata tables."
     ],
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 978,
     "source_end_line": 1080,
@@ -4432,6 +4731,12 @@
       "Reviewer approval status is missing.",
       "Widget state is not collected before persistence."
     ],
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 789,
     "source_end_line": 807,
@@ -4464,6 +4769,12 @@
       "Required review fields are incomplete.",
       "Widget dependencies are unavailable.",
       "Reviewer changes are not committed before persistence."
+    ],
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 514,
@@ -4504,6 +4815,16 @@
       "The reviewer has not approved any rules.",
       "Widget state is reset before records are collected."
     ],
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      },
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 624,
     "source_end_line": 787,
@@ -4539,6 +4860,12 @@
       "Profile metadata cannot be read.",
       "Widget state was reset by rerunning cells."
     ],
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 300,
     "source_end_line": 341,
@@ -4562,6 +4889,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 27,
     "source_end_line": 34,
@@ -4587,6 +4915,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 86,
     "source_end_line": 101,
@@ -4611,6 +4940,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 467,
     "source_end_line": 478,
@@ -4635,6 +4965,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 342,
     "source_end_line": 359,
@@ -4659,6 +4990,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 485,
     "source_end_line": 494,
@@ -4682,6 +5014,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 282,
     "source_end_line": 286,
@@ -4707,6 +5040,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 507,
     "source_end_line": 514,
@@ -4728,6 +5062,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 289,
     "source_end_line": 291,
@@ -4753,6 +5088,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 497,
     "source_end_line": 504,
@@ -4777,6 +5113,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 834,
     "source_end_line": 837,
@@ -4802,6 +5139,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 362,
     "source_end_line": 364,
@@ -4830,6 +5168,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 527,
     "source_end_line": 636,
@@ -4853,6 +5192,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 309,
     "source_end_line": 339,
@@ -4877,6 +5217,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 37,
     "source_end_line": 83,
@@ -4904,6 +5245,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 201,
     "source_end_line": 269,
@@ -4929,6 +5271,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 294,
     "source_end_line": 306,
@@ -4955,6 +5298,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 517,
     "source_end_line": 524,
@@ -4978,6 +5322,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 272,
     "source_end_line": 279,
@@ -5003,6 +5348,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 481,
     "source_end_line": 482,
@@ -5041,6 +5387,12 @@
       "The max lag value is missing or invalid.",
       "The latest date is older than the allowed lag.",
       "Severity is invalid or configured as blocking for stale data."
+    ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
     ],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 367,
@@ -5100,6 +5452,16 @@
       "The current behavior value is invalid or unsupported.",
       "The accepted evidence is stale or incomplete."
     ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 639,
     "source_end_line": 832,
@@ -5134,6 +5496,12 @@
       "A blocking guardrail returned can_continue as false.",
       "Notebook exit behavior is not supported in the current runtime.",
       "The caller passed a warning result that should not stop execution."
+    ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
     ],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 840,
@@ -5173,6 +5541,12 @@
       "The expected schema configuration is incomplete.",
       "The DataFrame supplied to the check is not the intended table."
     ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 109,
     "source_end_line": 198,
@@ -5198,6 +5572,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 85,
     "source_end_line": 86,
@@ -5223,6 +5598,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 81,
     "source_end_line": 82,
@@ -5253,6 +5629,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 77,
     "source_end_line": 78,
@@ -5286,6 +5663,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 147,
     "source_end_line": 217,
@@ -5309,6 +5687,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 53,
     "source_end_line": 58,
@@ -5336,6 +5715,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 101,
     "source_end_line": 113,
@@ -5364,6 +5744,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 390,
     "source_end_line": 440,
@@ -5391,6 +5772,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 336,
     "source_end_line": 387,
@@ -5415,6 +5797,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 41,
     "source_end_line": 50,
@@ -5441,6 +5824,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 61,
     "source_end_line": 62,
@@ -5472,6 +5856,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 220,
     "source_end_line": 333,
@@ -5499,6 +5884,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 65,
     "source_end_line": 69,
@@ -5522,6 +5908,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 89,
     "source_end_line": 98,
@@ -5550,6 +5937,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 120,
     "source_end_line": 144,
@@ -5575,6 +5963,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 116,
     "source_end_line": 117,
@@ -5600,6 +5989,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 72,
     "source_end_line": 74,
@@ -5625,6 +6015,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 113,
     "source_end_line": 123,
@@ -5651,6 +6042,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 228,
     "source_end_line": 257,
@@ -5674,6 +6066,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 81,
     "source_end_line": 109,
@@ -5699,6 +6092,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 23,
     "source_end_line": 24,
@@ -5724,6 +6118,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 63,
     "source_end_line": 78,
@@ -5747,6 +6142,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 224,
     "source_end_line": 225,
@@ -5776,6 +6172,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 19,
     "source_end_line": 20,
@@ -5803,6 +6200,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 49,
     "source_end_line": 60,
@@ -5826,6 +6224,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 27,
     "source_end_line": 46,
@@ -5850,6 +6249,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 216,
     "source_end_line": 217,
@@ -5874,6 +6274,7 @@
     "when_to_use": null,
     "return_interpretation": null,
     "common_failure_causes": [],
+    "related_guides": [],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 220,
     "source_end_line": 221,
@@ -5908,6 +6309,16 @@
       "Stage or write settings are inconsistent.",
       "Source and target config shapes differ from expected dictionaries.",
       "Defaults in CONFIG do not match the notebook environment."
+    ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 126,
@@ -5955,6 +6366,12 @@
       "Approved metadata evidence cannot be read.",
       "Spark cannot profile or validate one of the DataFrames."
     ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 260,
     "source_end_line": 448,
@@ -5997,6 +6414,16 @@
       "Spark cannot convert evidence rows to the target schema.",
       "The caller lacks metadata write permission."
     ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 451,
     "source_end_line": 556,
@@ -6036,6 +6463,16 @@
       "The metadata table cannot be written.",
       "Audit fields cannot be resolved from configuration."
     ],
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 559,
     "source_end_line": 643,
@@ -6073,6 +6510,16 @@
       "Guardrail result structures are malformed.",
       "Metadata routing is unavailable.",
       "The configured summary table cannot be written."
+    ],
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 646,

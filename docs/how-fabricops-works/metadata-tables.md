@@ -44,6 +44,13 @@ write_lakehouse_table(
 
 For how schema, freshness, profile behavior, and DQ settings produce this evidence, see [Pipeline Guardrails](pipeline-guardrails.md).
 
+## Callable references
+
+Use these generated API references for helpers that create, read, or write metadata evidence:
+
+- [setup_metadata_tables](../api/reference/setup_metadata_tables/) prepares the configured metadata tables.
+- [write_catalogue_evidence](../api/reference/write_catalogue_evidence/), [build_lineage_records](../api/reference/build_lineage_records/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/) write pipeline evidence.
+- [record_table_governance](../api/reference/record_table_governance/) writes approved governance metadata.
 
 ## Standard runtime audit columns
 

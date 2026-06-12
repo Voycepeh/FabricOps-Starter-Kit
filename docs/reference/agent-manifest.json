@@ -26,6 +26,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -59,6 +60,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -92,6 +94,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -125,6 +128,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -160,6 +164,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -193,6 +198,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -224,6 +230,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -255,6 +262,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -288,6 +296,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -321,6 +330,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -352,6 +362,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -383,6 +394,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -417,6 +429,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "DatasetContractValidationError\n    Raised when one or more validation issues are found.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -455,6 +468,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -491,6 +505,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -526,6 +541,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -561,6 +577,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -606,6 +623,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -650,6 +668,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -687,6 +706,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -723,6 +743,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -761,6 +782,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -802,6 +824,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -840,6 +863,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -879,6 +903,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -927,6 +952,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    If config is missing, or if the environment/target mapping does not exist.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -973,6 +999,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1009,6 +1036,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1046,6 +1074,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1083,6 +1112,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1121,6 +1151,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1157,6 +1188,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1198,6 +1230,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    Propagated from config/path validation helpers when required targets or\n    configured environments are invalid.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1245,6 +1278,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1286,6 +1320,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1322,6 +1357,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    If a non-blank value is not a valid IANA timezone name.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1362,6 +1398,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1408,6 +1445,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    Raised when required sections are missing, component types are invalid,\n    or configured path targets are incomplete.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1456,6 +1494,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1496,6 +1535,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1544,6 +1584,16 @@
     "side_effects": "Creates or validates FabricOps metadata tables in the configured metadata lakehouse target.",
     "failure_modes": "Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.",
     "common_failure_causes": "- The configured metadata lakehouse path is missing or invalid.\n- Spark cannot create or inspect the metadata tables.\n- The selected environment does not include metadata routing.\n- The caller lacks permission to create or update metadata tables.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "setup_metadata_tables(CONFIG, env=\"Sandbox\", spark_session=spark)",
     "verification": "Verify metadata setup completes before recommending agreement, profiling, lineage, stability, or governance workflows that persist evidence.",
     "related_functions": [
@@ -1592,6 +1642,16 @@
     "side_effects": "Runs configuration validation and Fabric readiness checks; it does not write FabricOps metadata tables.",
     "failure_modes": "ValueError for invalid configuration sections, missing required paths, or unresolved required targets.",
     "common_failure_causes": "- The environment name is not present in CONFIG.\n- Required targets are missing from path configuration.\n- Fabric runtime metadata is unavailable and no local fallback was provided.\n- Configured lakehouse or warehouse targets cannot be resolved.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "context = setup_notebook(CONFIG, env=\"Sandbox\", required_targets=[\"Source\", \"Unified\"], notebook_name=\"00_env_config\")",
     "verification": "Verify the returned context is ready before generating downstream notebook code and confirm required targets resolve for the selected env.",
     "related_functions": [
@@ -1630,6 +1690,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1669,6 +1730,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1708,6 +1770,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1747,6 +1810,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1787,6 +1851,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    If a required configured field is blank.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1830,6 +1895,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1883,6 +1949,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1938,6 +2005,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -1982,6 +2050,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    If non-blank text is not a JSON object.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2018,6 +2087,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2053,6 +2123,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2088,6 +2159,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2125,6 +2197,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2162,6 +2235,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2202,6 +2276,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2242,6 +2317,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2284,6 +2360,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2328,6 +2405,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2373,6 +2451,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2417,6 +2496,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2456,6 +2536,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2494,6 +2575,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2532,6 +2614,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2574,6 +2657,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2619,6 +2703,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2675,6 +2760,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2731,6 +2817,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2774,6 +2861,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2818,6 +2906,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2859,6 +2948,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2900,6 +2990,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2942,6 +3033,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -2982,6 +3074,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3021,6 +3114,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3063,6 +3157,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3103,6 +3198,12 @@
     "side_effects": "Reads session/widget state only; it does not write metadata, tables, or files.",
     "failure_modes": "Raises an error when no agreement has been selected in the current session.",
     "common_failure_causes": "- widget_select_agreement has not been run.\n- The user has not selected an agreement.\n- Notebook state was reset.\n- The selected row is no longer present in metadata.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "agreement = get_selected_agreement()\ndataset_name = agreement[\"dataset_name\"]",
     "verification": "Verify the returned agreement has the expected dataset/table identifiers before using it to drive reads, writes, or governance evidence.",
     "related_functions": [
@@ -3143,6 +3244,16 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- Evidence details are incomplete.\n- File or URL references are malformed.\n- Widget state is reset before saving.\n- The configured metadata target is not writable.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3182,6 +3293,12 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- ipywidgets is not available in the runtime.\n- Required agreement fields are missing.\n- Agreement identifiers conflict with existing metadata.\n- The metadata target cannot be written.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3221,6 +3338,12 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- ipywidgets is not available in the runtime.\n- Required steward fields are left blank.\n- Widget state is cleared by rerunning cells out of order.\n- Metadata routing is unavailable when the widget tries to persist records.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3267,6 +3390,12 @@
     "side_effects": "Displays an IPython widget and may register the active notebook selection in metadata when requested.",
     "failure_modes": "Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.",
     "common_failure_causes": "- No agreement metadata rows are available.\n- The user has not selected an agreement.\n- Notebook registration metadata cannot be written.\n- The configured metadata lakehouse cannot be read.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "widget_select_agreement(CONFIG, env=\"Sandbox\", spark_session=spark)\nagreement = get_selected_agreement()",
     "verification": "Verify the user selected an agreement and call get_selected_agreement before generating pipeline code that depends on agreement context.",
     "related_functions": [
@@ -3304,6 +3433,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3338,6 +3468,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -3371,6 +3502,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3406,6 +3538,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3441,6 +3574,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3479,6 +3613,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3516,6 +3651,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3555,6 +3691,16 @@
     "side_effects": "Pure record-building helper; it does not write metadata, tables, or files.",
     "failure_modes": "Raises normal Python errors if required lineage inputs are missing or malformed.",
     "common_failure_causes": "- run_id or dataset_name is missing.\n- Source or target table names are blank.\n- Transformation step dictionaries are malformed.\n- Configuration is missing audit timestamp settings.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "lineage_rows = build_lineage_records(dataset_name=dataset_name, run_id=run_id, source_tables=[\"source.orders\"], target_table=\"unified.orders\", transformation_steps=[{\"step\": \"clean_orders\"}])",
     "verification": "Verify each source table, target table, transformation step, dataset_name, and run_id are populated before persisting lineage records.",
     "related_functions": [
@@ -3591,6 +3737,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3630,6 +3777,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3668,6 +3816,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3703,6 +3852,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3738,6 +3888,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3773,6 +3924,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3824,6 +3976,16 @@
     "side_effects": "Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.",
     "failure_modes": "Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.",
     "common_failure_causes": "- The DataFrame is empty or missing expected columns.\n- Requested statistics are unsupported for a column type.\n- Spark actions fail while computing counts or summaries.\n- Excluded columns remove fields needed for review.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "preferred_example": "profile_rows_df = profile_dataframe(df, table_name=\"orders\", include_distributions=True, distribution_columns=[\"status\"] )",
     "verification": "Verify the profile row count matches expected business columns and inspect key schema/profile fields before writing evidence.",
     "related_functions": [
@@ -3858,6 +4020,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -3891,6 +4054,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3926,6 +4090,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -3965,6 +4130,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "RuntimeError\n    If no Spark session is passed and no global `spark` object exists.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4006,6 +4172,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4045,6 +4212,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4082,6 +4250,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4121,6 +4290,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4160,6 +4330,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4205,6 +4376,12 @@
     "side_effects": "Reads from lakehouse Files; it does not write metadata, tables, or files.",
     "failure_modes": "Raises ValueError for invalid file paths and configuration/Spark errors when the file cannot be read.",
     "common_failure_causes": "- The file path is wrong or outside the configured lakehouse.\n- CSV options do not match the file shape.\n- Spark cannot access the file.\n- The selected environment is missing the source lakehouse target.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "df = read_lakehouse_csv(CONFIG, env=\"Sandbox\", target=\"Source\", relative_path=\"raw/orders/orders.csv\", header=True, spark_session=spark)",
     "verification": "Verify relative_path points under Files, then check row count and schema after reading.",
     "related_functions": [
@@ -4250,6 +4427,12 @@
     "side_effects": "Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.",
     "failure_modes": "Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.",
     "common_failure_causes": "- The workbook path or sheet name is incorrect.\n- Excel parsing dependencies are unavailable.\n- The workbook layout does not match expected headers.\n- The configured lakehouse target cannot be read.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "mapping_df = read_lakehouse_excel(CONFIG, env=\"Sandbox\", target=\"Source\", relative_path=\"reference/faculty_mapping.xlsx\", sheet_name=0, spark_session=spark)",
     "verification": "Verify the DataFrame row count and schema after reading, and confirm the Excel file is appropriate for a small reference-style input.",
     "related_functions": [
@@ -4296,6 +4479,12 @@
     "side_effects": "Reads from lakehouse Files and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.",
     "failure_modes": "Raises ValueError for invalid relative paths and Spark/read errors when the Parquet path cannot be loaded.",
     "common_failure_causes": "- The Parquet path is missing or misspelled.\n- The file is not valid Parquet.\n- The configured lakehouse target is unavailable.\n- The caller lacks read permission.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "df = read_lakehouse_parquet(CONFIG, env=\"Sandbox\", target=\"Source\", relative_path=\"raw/orders/orders.parquet\", spark_session=spark)",
     "verification": "Verify the file path is a lakehouse Files Parquet path and check row count/schema after reading.",
     "related_functions": [
@@ -4358,6 +4547,12 @@
     "side_effects": "Reads from a lakehouse table; it does not write metadata, tables, or files.",
     "failure_modes": "Raises configuration, Spark, or table-read errors when the target or table cannot be resolved/read.",
     "common_failure_causes": "- The target or table name is misspelled.\n- The selected environment does not define the requested lakehouse target.\n- Spark cannot access the table.\n- The caller lacks permission to read the lakehouse.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "df = read_lakehouse_table(CONFIG, env=\"Sandbox\", target=\"Source\", table=\"orders\", spark_session=spark)",
     "verification": "Verify the target/table name comes from CONFIG and check the returned DataFrame schema or row count before downstream transformations.",
     "related_functions": [
@@ -4404,6 +4599,12 @@
     "side_effects": "Reads from a warehouse table; it does not write metadata, tables, or files.",
     "failure_modes": "Raises configuration, Spark SQL, or warehouse-read errors when the target/table cannot be resolved/read.",
     "common_failure_causes": "- The warehouse target is not configured.\n- The table or SQL text is invalid.\n- Warehouse connector context is unavailable.\n- The caller lacks warehouse read permission.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "df = read_warehouse_table(CONFIG, env=\"Sandbox\", target=\"Warehouse\", schema=\"dbo\", table=\"orders\", spark_session=spark)",
     "verification": "Verify the warehouse target/schema/table are configured and inspect the resulting DataFrame schema before downstream use.",
     "related_functions": [
@@ -4462,6 +4663,16 @@
     "side_effects": "Writes data to a Fabric lakehouse table using the selected write mode.",
     "failure_modes": "Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.",
     "common_failure_causes": "- Guardrails were skipped before a target write.\n- The target lakehouse is not configured for the environment.\n- The write mode is unsupported for the destination.\n- The caller lacks write permission or Spark cannot create the table.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "write_lakehouse_table(curated_df, CONFIG, env=\"Sandbox\", target=\"Unified\", table=\"orders_curated\", mode=\"overwrite\")",
     "verification": "Verify upstream guardrails passed, confirm target routing from CONFIG, and check the intended write mode before generating code that calls this helper.",
     "related_functions": [
@@ -4505,6 +4716,12 @@
     "side_effects": "Writes data to a Fabric warehouse table using the selected mode.",
     "failure_modes": "Raises configuration, Spark connector, or warehouse write errors when the target/table cannot be written.",
     "common_failure_causes": "- The warehouse target is missing from configuration.\n- The target table name or write mode is invalid.\n- Warehouse connector support is unavailable.\n- The caller lacks write permission.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      }
+    ],
     "preferred_example": "write_warehouse_table(serving_df, CONFIG, env=\"Sandbox\", target=\"Warehouse\", schema=\"dbo\", table=\"orders_serving\", mode=\"append\")",
     "verification": "Verify guardrails passed, confirm schema/table routing from CONFIG, and check the intended write mode before calling.",
     "related_functions": [
@@ -4548,6 +4765,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4595,6 +4813,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4640,6 +4859,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4682,6 +4902,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4728,6 +4949,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4777,6 +4999,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4823,6 +5046,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    If there are no catalogue rows or no successful profile rows.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4865,6 +5089,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4907,6 +5132,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4944,6 +5170,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -4984,6 +5211,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5026,6 +5254,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5065,6 +5294,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5104,6 +5334,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5141,6 +5372,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5176,6 +5408,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5214,6 +5447,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5254,6 +5488,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5291,6 +5526,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5332,6 +5568,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5372,6 +5609,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5411,6 +5649,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5454,6 +5693,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5496,6 +5736,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5533,6 +5774,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5570,6 +5812,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5609,6 +5852,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5647,6 +5891,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5689,6 +5934,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5729,6 +5975,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5766,6 +6013,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5807,6 +6055,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5848,6 +6097,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5897,6 +6147,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5948,6 +6199,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -5989,6 +6241,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6029,6 +6282,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6064,6 +6318,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -6103,6 +6358,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6145,6 +6401,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6181,6 +6438,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6216,6 +6474,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6252,6 +6511,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6296,6 +6556,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6338,6 +6599,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    Raised when two or more physical field names collapse to the same\n    logical name under Spark/Delta's case-insensitive column resolution.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6381,6 +6643,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6440,6 +6703,16 @@
     "side_effects": "Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.",
     "failure_modes": "Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.",
     "common_failure_causes": "- No approved active DQ rules exist for the table.\n- Rule parameters are invalid or unsupported.\n- Required columns are missing from the DataFrame.\n- The metadata lakehouse cannot be read.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "preferred_example": "dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)\nstop_if_failed(dq_result)",
     "verification": "Verify approved metadata exists, inspect status/can_continue, and call stop_if_failed before writing when blocking failures occur.",
     "related_functions": [
@@ -6479,6 +6752,12 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- The selector widget has not been run.\n- No table is selected.\n- Notebook state was cleared.\n- The selected metadata row is no longer available.",
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -6524,6 +6803,16 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- The selected table context is incomplete.\n- The metadata lakehouse cannot be read.\n- Profile evidence has not been generated yet.\n- Filters for dataset, table, or stage do not match stored evidence.",
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6574,6 +6863,16 @@
     "side_effects": "Writes approved governance metadata records to configured metadata tables.",
     "failure_modes": "Raises configuration, validation, Spark, or metadata-write errors when approved records cannot be built or persisted.",
     "common_failure_causes": "- Review rows are not approved.\n- Required profile context is missing.\n- Metadata routing is unavailable.\n- Spark cannot write one of the governance metadata tables.",
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "written = record_table_governance(CONFIG, env, profile_rows, spark_session=spark, context_reviews=context_rows, dq_rule_reviews=dq_rows, classification_reviews=classification_rows, approved_by=\"reviewer\")",
     "verification": "Verify review_status is approved and commit is true for intended rows before calling; confirm returned record groups match expected approvals.",
     "related_functions": [
@@ -6616,6 +6915,12 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- No selected profile rows are available.\n- Classification choices are incomplete.\n- Reviewer approval status is missing.\n- Widget state is not collected before persistence.",
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6656,6 +6961,12 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- No profile rows are loaded.\n- Required review fields are incomplete.\n- Widget dependencies are unavailable.\n- Reviewer changes are not committed before persistence.",
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6702,6 +7013,16 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- Profile rows are missing.\n- Rule parameters are incomplete or unsupported.\n- The reviewer has not approved any rules.\n- Widget state is reset before records are collected.",
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      },
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6749,6 +7070,12 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- No catalogue profile rows are available.\n- The user has not selected a table.\n- Profile metadata cannot be read.\n- Widget state was reset by rerunning cells.",
+    "related_guides": [
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6786,6 +7113,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6823,6 +7151,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6860,6 +7189,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6897,6 +7227,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6934,6 +7265,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -6970,6 +7302,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7007,6 +7340,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7041,6 +7375,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": []
@@ -7076,6 +7411,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7113,6 +7449,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7151,6 +7488,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7192,6 +7530,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7231,6 +7570,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7267,6 +7607,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7307,6 +7648,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7347,6 +7689,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7386,6 +7729,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7423,6 +7767,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7460,6 +7805,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7508,6 +7854,12 @@
     "side_effects": "Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.",
     "failure_modes": "ValueError when severity is unsupported, lag is missing for a configured column, lag is negative, or reference_date is invalid.",
     "common_failure_causes": "- The freshness column is missing.\n- The max lag value is missing or invalid.\n- The latest date is older than the allowed lag.\n- Severity is invalid or configured as blocking for stale data.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "preferred_example": "freshness_result = enforce_freshness(df, \"business_date\", 1, severity=\"blocking\")\nstop_if_failed(freshness_result)",
     "verification": "Verify freshness_column and freshness_max_lag_days come from the table config and that blocking severity stops writes when can_continue is false.",
     "related_functions": [
@@ -7571,6 +7923,16 @@
     "side_effects": "Reads baseline profile metadata and computes current profile evidence; it does not write target data.",
     "failure_modes": "Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded or compared.",
     "common_failure_causes": "- Accepted profile evidence has not been created or approved yet.\n- The current load behavior does not match the accepted baseline.\n- The configured dataset or table name does not match catalogue evidence.\n- The configured stage does not match the accepted evidence.\n- The metadata lakehouse or catalogue profile table cannot be read.\n- The accepted evidence is missing required behavior fields.\n- The current behavior value is invalid or unsupported.\n- The accepted evidence is stale or incomplete.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Governance Review",
+        "path": "../../how-fabricops-works/governance-review.md"
+      }
+    ],
     "preferred_example": "stability_result = enforce_profile_behavior(spark, df, \"METADATA_DATA_CATALOGUE\", dataset_name, table_name, stage=\"target\", run_id=run_id, load_behavior=\"overwrite\")\nstop_if_failed(stability_result)",
     "verification": "Verify baseline selection, status, and can_continue before allowing downstream writes or calling stop_if_failed.",
     "related_functions": [
@@ -7616,6 +7978,12 @@
     "side_effects": "May terminate notebook execution through Fabric notebook utilities or raise an exception.",
     "failure_modes": "Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.",
     "common_failure_causes": "- The guardrail result is missing can_continue or status fields.\n- A blocking guardrail returned can_continue as false.\n- Notebook exit behavior is not supported in the current runtime.\n- The caller passed a warning result that should not stop execution.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "preferred_example": "schema_result = validate_schema(df, expected_schema)\nstop_if_failed(schema_result)",
     "verification": "Verify the guardrail result shape includes status/can_continue/message before passing it to stop_if_failed.",
     "related_functions": [
@@ -7664,6 +8032,12 @@
     "side_effects": "Inspects DataFrame schema only; it does not write metadata, tables, or files.",
     "failure_modes": "ValueError when preset is not one of the supported schema presets.",
     "common_failure_causes": "- Required columns are missing.\n- Column types differ from expected schema.\n- The expected schema configuration is incomplete.\n- The DataFrame supplied to the check is not the intended table.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "preferred_example": "schema_result = validate_schema(df, {\"order_id\": \"string\"}, preset=\"allow_new_columns\")\nstop_if_failed(schema_result)",
     "verification": "Verify can_continue before calling write helpers and pass the result to stop_if_failed when blocking behavior is required.",
     "related_functions": [
@@ -7703,6 +8077,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7741,6 +8116,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7784,6 +8160,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7835,6 +8212,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7879,6 +8257,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7918,6 +8297,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -7962,6 +8342,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8005,6 +8386,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8044,6 +8426,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8083,6 +8466,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8128,6 +8512,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "ValueError\n    If the recommended ``config``/``env`` route is not provided.",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8174,6 +8559,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8212,6 +8598,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8252,6 +8639,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8293,6 +8681,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8332,6 +8721,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8371,6 +8761,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8410,6 +8801,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8447,6 +8839,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8484,6 +8877,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8523,6 +8917,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8559,6 +8954,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8600,6 +8996,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8644,6 +9041,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8682,6 +9080,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8718,6 +9117,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8755,6 +9155,7 @@
     "side_effects": "Not documented yet",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "Not documented yet",
+    "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8798,6 +9199,16 @@
     "side_effects": "Source role validates pre-loaded DataFrames. Target role adds FabricOps audit columns to target DataFrames.",
     "failure_modes": "ValueError\n    If ``table_role`` is not ``\"source\"`` or ``\"target\"``.",
     "common_failure_causes": "- A table config is missing key or table_name fields.\n- Stage or write settings are inconsistent.\n- Source and target config shapes differ from expected dictionaries.\n- Defaults in CONFIG do not match the notebook environment.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "preferred_example": "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role=\"source\")",
     "verification": "Verify the correct table_role is used and enriched configs are passed to run_table_guardrails before transformation or writes.",
     "related_functions": [
@@ -8852,6 +9263,12 @@
     "side_effects": "Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes catalogue evidence, and may update table config DataFrames with DQ annotations.",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- One of the table configs is incomplete.\n- A schema, freshness, profile behavior, or DQ check fails.\n- Approved metadata evidence cannot be read.\n- Spark cannot profile or validate one of the DataFrames.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
     "preferred_example": "source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)",
     "verification": "Verify stop_on_failure=True is used before transformation or writes when blocking guardrails should stop execution.",
     "related_functions": [
@@ -8902,6 +9319,16 @@
     "side_effects": "Writes METADATA_DATA_CATALOGUE through the configured metadata lakehouse target.",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- Evidence definitions are missing required fields.\n- The metadata lakehouse cannot be written.\n- Spark cannot convert evidence rows to the target schema.\n- The caller lacks metadata write permission.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8949,6 +9376,16 @@
     "side_effects": "Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse target.",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- Lineage records are empty or malformed.\n- run_id, source, or target identifiers are missing.\n- The metadata table cannot be written.\n- Audit fields cannot be resolved from configuration.",
+    "related_guides": [
+      {
+        "title": "Notebook Templates",
+        "path": "../../how-fabricops-works/notebook-templates.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
@@ -8996,6 +9433,16 @@
     "side_effects": "Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.",
     "failure_modes": "Not documented yet",
     "common_failure_causes": "- Required run identifiers are missing.\n- Guardrail result structures are malformed.\n- Metadata routing is unavailable.\n- The configured summary table cannot be written.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      },
+      {
+        "title": "Metadata Tables",
+        "path": "../../how-fabricops-works/metadata-tables.md"
+      }
+    ],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [

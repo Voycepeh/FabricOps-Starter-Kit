@@ -30,6 +30,10 @@ Not documented yet
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
 ## Used in templates
 
 - `01_agreement`

@@ -32,6 +32,11 @@ Writes approved governance metadata records to configured metadata tables.
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
 ## Used in templates
 
 - `03_governance`

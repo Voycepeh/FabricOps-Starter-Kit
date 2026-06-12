@@ -31,6 +31,7 @@ class PublicSymbolDocMetadata(TypedDict):
     ai_verification: NotRequired[str | list[str]]
     preferred_example: NotRequired[str]
     related_functions: NotRequired[list[str]]
+    related_guides: NotRequired[list[dict[str, str]]]
 
 
 
@@ -1008,5 +1009,48 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL: dict[str, dict[str, object]] = {
     },
 }
 
+RELATED_GUIDE_NOTEBOOK_TEMPLATES = {"title": "Notebook Templates", "path": "../../how-fabricops-works/notebook-templates.md"}
+RELATED_GUIDE_PIPELINE_GUARDRAILS = {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/pipeline-guardrails.md"}
+RELATED_GUIDE_GOVERNANCE_REVIEW = {"title": "Governance Review", "path": "../../how-fabricops-works/governance-review.md"}
+RELATED_GUIDE_METADATA_TABLES = {"title": "Metadata Tables", "path": "../../how-fabricops-works/metadata-tables.md"}
+
+RELATED_GUIDES_BY_SYMBOL: dict[str, list[dict[str, str]]] = {
+    "setup_notebook": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "setup_metadata_tables": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "widget_render_data_steward": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "widget_render_data_agreement": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "widget_render_agreement_evidence": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "widget_select_agreement": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "get_selected_agreement": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_lakehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "write_lakehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "read_lakehouse_csv": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_lakehouse_parquet": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_lakehouse_excel": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "read_warehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "write_warehouse_table": [RELATED_GUIDE_NOTEBOOK_TEMPLATES],
+    "profile_dataframe": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "validate_schema": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "enforce_freshness": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "enforce_profile_behavior": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "stop_if_failed": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "enforce_dq_rules": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "build_lineage_records": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "prepare_pipeline_table_configs": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "run_table_guardrails": [RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "write_catalogue_evidence": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_METADATA_TABLES],
+    "write_pipeline_lineage": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
+    "write_pipeline_run_summary": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_METADATA_TABLES],
+    "widget_select_catalogue_table": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "get_selected_catalogue_table": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "load_catalogue_profile_rows": [RELATED_GUIDE_GOVERNANCE_REVIEW, RELATED_GUIDE_METADATA_TABLES],
+    "widget_review_column_context": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "widget_review_dq_rules": [RELATED_GUIDE_GOVERNANCE_REVIEW, RELATED_GUIDE_PIPELINE_GUARDRAILS],
+    "widget_review_column_classification": [RELATED_GUIDE_GOVERNANCE_REVIEW],
+    "record_table_governance": [RELATED_GUIDE_GOVERNANCE_REVIEW, RELATED_GUIDE_METADATA_TABLES],
+}
+
 for _metadata_row in PUBLIC_SYMBOL_DOCS:
     _metadata_row.update(PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL.get(_metadata_row["symbol_name"], {}))
+    if related_guides := RELATED_GUIDES_BY_SYMBOL.get(_metadata_row["symbol_name"]):
+        _metadata_row["related_guides"] = related_guides

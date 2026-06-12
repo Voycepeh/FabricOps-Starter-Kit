@@ -34,6 +34,11 @@ Source role validates pre-loaded DataFrames. Target role adds FabricOps audit co
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
 ## Used in templates
 
 - `02_pipeline`

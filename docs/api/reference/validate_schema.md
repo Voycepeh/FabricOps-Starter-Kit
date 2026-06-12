@@ -33,6 +33,10 @@ Inspects DataFrame schema only; it does not write metadata, tables, or files.
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
 ## Used in templates
 
 - `02_pipeline`

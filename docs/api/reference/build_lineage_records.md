@@ -32,6 +32,11 @@ Pure record-building helper; it does not write metadata, tables, or files.
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
 ## Used in templates
 
 None.

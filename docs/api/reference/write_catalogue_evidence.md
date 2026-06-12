@@ -32,6 +32,11 @@ Writes METADATA_DATA_CATALOGUE through the configured metadata lakehouse target.
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
 ## Used in templates
 
 - `02_pipeline`

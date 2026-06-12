@@ -426,6 +426,46 @@ def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
         for phrase in forbidden:
             assert phrase not in text, page
 
+
+
+def test_related_guides_metadata_renders_before_template_and_call_graph_sections() -> None:
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    function_by_name = {entry["name"]: entry for entry in function_manifest if entry.get("classification") == "Callable"}
+    agent_by_name = {entry["name"]: entry for entry in agent_manifest if entry.get("type") == "callable"}
+
+    related_guides = function_by_name["run_table_guardrails"]["related_guides"]
+    assert related_guides == [
+        {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/pipeline-guardrails.md"}
+    ]
+    assert agent_by_name["run_table_guardrails"]["related_guides"] == related_guides
+
+    text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
+    assert "## Related guides" in text
+    assert "- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)" in text
+    assert text.index("## Related guides") < text.index("## Used in templates")
+    assert text.index("## Related guides") < text.index("## Used by")
+    assert text.index("## Related guides") < text.index("## Calls")
+
+
+def test_concept_pages_link_back_to_key_callable_references() -> None:
+    notebook_templates = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md").read_text(encoding="utf-8")
+    pipeline_guardrails = (ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md").read_text(encoding="utf-8")
+    governance_review = (ROOT / "docs" / "how-fabricops-works" / "governance-review.md").read_text(encoding="utf-8")
+    metadata_tables = (ROOT / "docs" / "how-fabricops-works" / "metadata-tables.md").read_text(encoding="utf-8")
+
+    assert "[setup_notebook](../api/reference/setup_notebook/)" in notebook_templates
+    assert "[prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/)" in notebook_templates
+    assert "[record_table_governance](../api/reference/record_table_governance/)" in notebook_templates
+    assert "[run_table_guardrails](../api/reference/run_table_guardrails/)" in pipeline_guardrails
+    assert "[enforce_profile_behavior](../api/reference/enforce_profile_behavior/)" in pipeline_guardrails
+    assert "[stop_if_failed](../api/reference/stop_if_failed/)" in pipeline_guardrails
+    assert "[widget_review_dq_rules](../api/reference/widget_review_dq_rules/)" in governance_review
+    assert "[record_table_governance](../api/reference/record_table_governance/)" in governance_review
+    assert "[setup_metadata_tables](../api/reference/setup_metadata_tables/)" in metadata_tables
+    assert "[build_lineage_records](../api/reference/build_lineage_records/)" in metadata_tables
+
+
 def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
     agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))

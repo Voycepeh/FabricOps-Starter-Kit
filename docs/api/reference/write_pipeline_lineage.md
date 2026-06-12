@@ -33,6 +33,11 @@ Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse tar
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
 ## Used in templates
 
 - `02_pipeline`

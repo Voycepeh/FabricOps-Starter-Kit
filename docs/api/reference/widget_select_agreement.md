@@ -30,6 +30,10 @@ Displays an IPython widget and may register the active notebook selection in met
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
 ## Used in templates
 
 - `02_pipeline`

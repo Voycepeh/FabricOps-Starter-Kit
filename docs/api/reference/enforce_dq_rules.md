@@ -33,6 +33,11 @@ Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it d
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
 ## Used in templates
 
 - `02_pipeline`

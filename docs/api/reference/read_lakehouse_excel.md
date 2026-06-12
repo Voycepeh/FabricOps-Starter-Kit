@@ -31,6 +31,10 @@ Reads from lakehouse Files through a temporary local Excel file; it does not wri
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+
 ## Used in templates
 
 - `02_pipeline`

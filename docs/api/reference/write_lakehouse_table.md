@@ -32,6 +32,11 @@ Writes data to a Fabric lakehouse table using the selected write mode.
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+
 ## Used in templates
 
 - `00_env_config`

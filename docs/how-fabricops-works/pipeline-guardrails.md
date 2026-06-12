@@ -35,6 +35,15 @@ FabricOps keeps the responsibility split clear:
 
 Each guardrail returns run evidence that can be displayed in the notebook and used to decide whether the next critical step can continue. Warning-severity failures can continue with evidence; Error-severity failure blocks before the next critical step, as do blocking failures.
 
+## Callable references
+
+Use these generated API references for the runtime helpers behind this guardrail flow:
+
+- [run_table_guardrails](../api/reference/run_table_guardrails/) coordinates the table-level guardrail checks.
+- [validate_schema](../api/reference/validate_schema/), [enforce_freshness](../api/reference/enforce_freshness/), [enforce_profile_behavior](../api/reference/enforce_profile_behavior/), and [enforce_dq_rules](../api/reference/enforce_dq_rules/) implement the main check types.
+- [stop_if_failed](../api/reference/stop_if_failed/) is the compact notebook stop helper for failed guardrail results.
+- [profile_dataframe](../api/reference/profile_dataframe/) and [write_catalogue_evidence](../api/reference/write_catalogue_evidence/) create the profile evidence that later checks and governance review use.
+
 ## Schema guardrails
 
 Schema guardrails check whether a source or target table still matches the expected columns and data types. Use `schema_preset` separately from freshness, profile behavior, and DQ settings so structure checks stay easy to reason about.

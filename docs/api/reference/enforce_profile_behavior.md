@@ -42,6 +42,11 @@ Reads baseline profile metadata and computes current profile evidence; it does n
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/governance-review.md)
+
 ## Used in templates
 
 - `02_pipeline`

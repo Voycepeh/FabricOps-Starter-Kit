@@ -34,6 +34,10 @@ Profiles DataFrames, reads stability/DQ metadata through configured metadata rou
 
 See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
+## Related guides
+
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+
 ## Used in templates
 
 - `02_pipeline`
