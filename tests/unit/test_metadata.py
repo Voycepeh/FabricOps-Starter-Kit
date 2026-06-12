@@ -111,6 +111,15 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
     assert active[0]["notebook_id"] == "notebook-id"
 
 
+def test_notebook_registry_read_requires_configured_metadata_route():
+    class Spark:
+        def table(self, table):
+            raise AssertionError(f"notebook registry must not call spark.table: {table}")
+
+    with pytest.raises(ValueError, match="config and env are required"):
+        metadata._load_notebook_registry(Spark(), missing_ok=True)
+
+
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
     table_key = metadata._build_metadata_table_key(" DEV ", "Sales", "Orders")
     column_key = metadata._build_metadata_column_key("dev", "sales", "orders", "Order_ID")

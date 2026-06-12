@@ -348,12 +348,10 @@ def _load_notebook_registry(
     notebook_name: str | None = None,
     registration_role: str | None = None,
 ) -> list[dict[str, Any]]:
+    if config is None or env is None:
+        raise ValueError("config and env are required to read notebook registry metadata without an attached default lakehouse.")
     try:
-        table = (
-            read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
-            if config is not None and env is not None
-            else spark.table(metadata_table)
-        )
+        table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
         rows = _coerce_row_dicts(table)
     except Exception:
         if missing_ok:

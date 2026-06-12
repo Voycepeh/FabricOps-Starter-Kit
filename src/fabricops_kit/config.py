@@ -1059,7 +1059,7 @@ def _setup_metadata_table_registry(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc
             empty_df = _create_empty_metadata_dataframe(spark, schema)
-            write_lakehouse_table(empty_df, config, env, "metadata", table_name, mode="ignore", overwrite_schema=True)
+            write_lakehouse_table(empty_df, config, env, "metadata", table_name, mode="overwrite", overwrite_schema=True)
             table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
             created.append(table_name)
 
@@ -1095,7 +1095,7 @@ def _validate_metadata_table_registration(
         warnings.append(
             "Detected legacy nested metadata Delta folders under Tables/<metadata_table>/Unidentified/_delta_log. "
             "FabricOps will not delete or migrate user data automatically; review and migrate those folders manually if needed. "
-            "New metadata setup writes to registered Lakehouse table paths directly."
+            "New metadata setup writes directly to configured ABFSS Lakehouse table paths."
         )
     return {
         "status": "ready" if not missing else "not_ready",
@@ -1142,7 +1142,8 @@ def setup_metadata_tables(
     -----
     This is the v1 notebook setup action for metadata provisioning. It keeps
     ``00_env_config`` simple while delegating to internal helpers that route all
-    metadata reads and writes through the configured metadata lakehouse target.
+    metadata reads and writes through configured metadata target ABFSS paths,
+    never Spark partial namespaces or the current/default lakehouse context.
     """
     from fabricops_kit.data_agreement import (
         DATA_AGREEMENT_EVIDENCE_TABLE,

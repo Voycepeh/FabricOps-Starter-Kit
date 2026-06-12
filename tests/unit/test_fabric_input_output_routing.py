@@ -26,6 +26,9 @@ DELETED_INTERNAL_HELPERS = {
     "_get_fabric_runtime_context",
     "_check_naming_convention",
     "_seed_minimal_sample_source_table",
+    "_registered_table_identifier",
+    "_uses_registered_metadata_table",
+    "_current_database_matches",
 }
 
 
@@ -66,7 +69,10 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
 
     metadata_spark = _Spark()
     io.read_lakehouse_table(config, "dev", "metadata", "orders", spark_session=metadata_spark)
-    assert metadata_spark.table_calls == ["`lh_metadata_dev`.`orders`"]
+    metadata_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/orders"
+    assert ("format", "delta") in metadata_spark.read.calls
+    assert ("load", metadata_path) in metadata_spark.read.calls
+    assert metadata_spark.table_calls == []
 
 
 def test_lakehouse_table_write_routes_to_configured_store():
@@ -75,9 +81,11 @@ def test_lakehouse_table_write_routes_to_configured_store():
 
     io.write_lakehouse_table(frame, config, "dev", "metadata", "metadata_orders", mode="overwrite")
 
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/metadata_orders"
     assert ("mode", "overwrite") in frame.write.calls
     assert ("format", "delta") in frame.write.calls
-    assert ("saveAsTable", "`lh_metadata_dev`.`metadata_orders`") in frame.write.calls
+    assert ("save", expected_path) in frame.write.calls
+    assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
 
 
 def test_lakehouse_file_readers_build_configured_files_paths():
@@ -124,6 +132,8 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
     assert ("option", "workspace_id", "dev-warehouse-workspace") in frame.write.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in frame.write.calls
     assert ("synapsesql", "wh_product_dev.dbo.orders") in frame.write.calls
+    assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
+    assert spark.table_calls == []
 
 
 def test_deleted_internal_helpers_are_absent_and_unreferenced():

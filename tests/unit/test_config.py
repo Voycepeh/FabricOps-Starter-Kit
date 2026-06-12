@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -214,7 +215,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     assert result["active_metadata_tables"] == list(schemas)
     assert [table for _, _, table, _ in writes] == list(schemas)
     assert all(target == "metadata" for _, target, _, _ in writes)
-    assert all(kwargs == {"mode": "ignore", "overwrite_schema": True} for *_, kwargs in writes)
+    assert all(kwargs == {"mode": "overwrite", "overwrite_schema": True} for *_, kwargs in writes)
     assert spark.created_dataframes == [([], schema.fieldNames()) for schema in schemas.values()]
 
 
@@ -304,9 +305,14 @@ def test_env_config_template_exposes_audit_timezone_setting():
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
-    assert 'FABRICOPS_AUDIT_TIMEZONE = "UTC"' in source
+    timezone_assignment = re.search(r'(?m)^FABRICOPS_AUDIT_TIMEZONE = "([^"]+)"$', source)
+    assert timezone_assignment is not None
+    assert _validate_audit_timezone(timezone_assignment.group(1)) == timezone_assignment.group(1)
     assert "_validate_audit_timezone(FABRICOPS_AUDIT_TIMEZONE)" in source
     assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
+    assert "UTC is the default and recommended portable option." in source
+    assert "valid IANA timezone" in source
+    assert "Asia/Singapore" in source
 
 
 def test_downstream_notebooks_use_config_aware_audit_timestamps_only():

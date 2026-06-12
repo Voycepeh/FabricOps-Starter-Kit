@@ -110,7 +110,7 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     assert ("partitionBy", ("status",)) in frame.write.calls
 
 
-def test_metadata_lakehouse_table_helpers_use_registered_tables():
+def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tables():
     config = framework_config()
     spark = _Spark()
     frame = _Frame()
@@ -118,9 +118,12 @@ def test_metadata_lakehouse_table_helpers_use_registered_tables():
     read_result = io.read_lakehouse_table(config, "dev", "metadata", "METADATA_DQ_RULES", spark_session=spark)
     io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", mode="ignore")
 
-    assert read_result == {"table": "`lh_metadata_dev`.`METADATA_DQ_RULES`"}
-    assert spark.table_calls == ["`lh_metadata_dev`.`METADATA_DQ_RULES`"]
-    assert ("saveAsTable", "`lh_metadata_dev`.`METADATA_DQ_RULES`") in frame.write.calls
+    expected_path = "abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/METADATA_DQ_RULES"
+    assert read_result.count() == 1
+    assert spark.table_calls == []
+    assert ("load", expected_path) in spark.read.calls
+    assert ("save", expected_path) in frame.write.calls
+    assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
     assert not any(call[0] == "save" and "Unidentified" in call[1] for call in frame.write.calls)
 
 
