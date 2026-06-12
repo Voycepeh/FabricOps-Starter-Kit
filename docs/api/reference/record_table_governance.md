@@ -1019,9 +1019,12 @@ human approval step while preserving configured metadata lakehouse routing.
             ```
 
 
-<div class="reference-source-card">
-  <p><strong>Source:</strong> <code>fabricops_kit/governance_review.py:978</code></p>
-  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L978-L1080">View on GitHub</a></p>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/governance_review.py:978`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L978-L1080">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -1213,8 +1216,13 @@ def record_table_governance(
 
 ## Source link
 
-- Source: `fabricops_kit/governance_review.py:978`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L978-L1080">View record_table_governance on GitHub</a>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/governance_review.py:978`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L978-L1080">View on GitHub</a>
+</div>
 
 ## Glossary
 

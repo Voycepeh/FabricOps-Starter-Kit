@@ -868,10 +868,12 @@ def _source_card_lines(
     display_path = _display_source_path(source_path)
     line_suffix = f":{source_start_line}" if source_start_line else ""
     return [
-        '<div class="reference-source-card">',
-        f'  <p><strong>Source:</strong> <code>{html_escape(display_path)}{line_suffix}</code></p>',
-        '  <p><strong>Actions:</strong> '
-        f'<a class="reference-source-link" href="{source_ref}">View on GitHub</a></p>',
+        '<div class="reference-source-card" markdown="1">',
+        "**Source**",
+        "",
+        f"`{display_path}{line_suffix}`",
+        "",
+        f'<a class="reference-source-link" href="{source_ref}">View on GitHub</a>',
         "</div>",
     ]
 
@@ -2238,10 +2240,12 @@ def main() -> None:
                 "",
                 *_source_code_details_lines(source_block),
             ]
-            source_link_lines = [
-                f'- Source: `{_display_source_path(source_path)}:{source_start_line}`',
-                f'- <a class="reference-source-link" href="{source_ref}">View {short_name} on GitHub</a>',
-            ]
+            source_link_lines = _source_card_lines(
+                source_path=source_path,
+                source_start_line=source_start_line,
+                source_ref=source_ref,
+                short_name=short_name,
+            )
             nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
             human_use_when = _documented_text(metadata.get("when_to_use"))
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
@@ -2375,10 +2379,18 @@ def main() -> None:
                 "",
                 *_reference_code_block(_format_api_signature(signature), class_name="reference-api-definition"),
                 "",
-                "## Example usage",
-                "",
-                *_reference_code_block(preferred_example, class_name="reference-example-usage"),
-                "",
+                *(
+                    [
+                        "## Example usage",
+                        "",
+                        *(
+                            _reference_code_block(preferred_example, class_name="reference-example-usage")
+                            if preferred_example != PLACEHOLDER
+                            else ["Example usage not documented yet."]
+                        ),
+                        "",
+                    ]
+                ),
                 "## Parameters",
                 "",
                 *input_lines,

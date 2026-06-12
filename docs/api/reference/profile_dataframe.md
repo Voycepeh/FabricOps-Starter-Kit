@@ -460,9 +460,12 @@ complete datasets to the driver.
             ```
 
 
-<div class="reference-source-card">
-  <p><strong>Source:</strong> <code>fabricops_kit/data_profiling.py:225</code></p>
-  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345">View on GitHub</a></p>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_profiling.py:225`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -672,8 +675,13 @@ def profile_dataframe(
 
 ## Source link
 
-- Source: `fabricops_kit/data_profiling.py:225`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345">View profile_dataframe on GitHub</a>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_profiling.py:225`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345">View on GitHub</a>
+</div>
 
 ## Glossary
 

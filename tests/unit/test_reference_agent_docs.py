@@ -221,7 +221,8 @@ def test_enforce_profile_behavior_reference_uses_distinct_blocks_and_responsive_
         "_catalogue_value",
         "_guardrail_exclude_columns",
     ):
-        assert f'class="reference-helper-chip"' in text and f"<code>{helper_name}</code>" in text
+        assert 'class="reference-helper-chip"' in text
+        assert f"<code>{helper_name}</code>" in text
 
 def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
@@ -279,6 +280,20 @@ def test_github_source_url_uses_configured_source_ref(monkeypatch) -> None:
     )
 
 
+def test_missing_examples_are_plain_text_not_python_code() -> None:
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
+        text = page.read_text(encoding="utf-8")
+        if "## Example usage" not in text:
+            continue
+        example = _section_text(text, "Example usage")
+        assert "```python\nNot documented yet\n```" not in example, page
+        if "Example usage not documented yet." in example:
+            assert "```python" not in example, page
+
+
 def test_callable_pages_include_source_section_and_github_source_link() -> None:
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
@@ -286,9 +301,13 @@ def test_callable_pages_include_source_section_and_github_source_link() -> None:
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         assert "## Source link" in text, page
-        assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in text, page
-        assert "/src/fabricops_kit/" in text, page
-        assert "#L" in text, page
+        source_link = _section_text(text, "Source link")
+        assert '<div class="reference-source-card" markdown="1">' in source_link, page
+        assert "**Source**" in source_link, page
+        assert "View on GitHub" in source_link, page
+        assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in source_link, page
+        assert "/src/fabricops_kit/" in source_link, page
+        assert "#L" in source_link, page
 
 
 def test_callable_pages_collapse_ai_machine_metadata() -> None:
@@ -319,7 +338,7 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
 
     assert "../../api/modules/config/#setup_notebook" not in text
     assert "src/fabricops_kit/config.py#L" in text
-    assert "setup_notebook on GitHub" in text
+    assert "View on GitHub" in _section_text(text, "Source link")
     assert "## Example usage" in text
     assert "context = setup_notebook" in _section_text(text, "Example usage")
     first_metadata = text.index("<summary>Machine-readable metadata / metadata details")

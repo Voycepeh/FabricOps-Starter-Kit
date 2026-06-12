@@ -251,9 +251,12 @@ No additional callable notes are documented.
             ```
 
 
-<div class="reference-source-card">
-  <p><strong>Source:</strong> <code>fabricops_kit/fabric_input_output.py:326</code></p>
-  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368">View on GitHub</a></p>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:326`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -378,8 +381,13 @@ def read_lakehouse_csv(
 
 ## Source link
 
-- Source: `fabricops_kit/fabric_input_output.py:326`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368">View read_lakehouse_csv on GitHub</a>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/fabric_input_output.py:326`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368">View on GitHub</a>
+</div>
 
 ## Glossary
 

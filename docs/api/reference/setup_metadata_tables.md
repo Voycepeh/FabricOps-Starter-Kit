@@ -944,9 +944,12 @@ metadata reads and writes through the configured metadata lakehouse target.
             ```
 
 
-<div class="reference-source-card">
-  <p><strong>Source:</strong> <code>fabricops_kit/config.py:1114</code></p>
-  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217">View on GitHub</a></p>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/config.py:1114`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -1134,8 +1137,13 @@ def setup_metadata_tables(
 
 ## Source link
 
-- Source: `fabricops_kit/config.py:1114`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217">View setup_metadata_tables on GitHub</a>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/config.py:1114`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217">View on GitHub</a>
+</div>
 
 ## Glossary
 

@@ -904,9 +904,12 @@ No additional callable notes are documented.
             ```
 
 
-<div class="reference-source-card">
-  <p><strong>Source:</strong> <code>fabricops_kit/data_agreement.py:773</code></p>
-  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997">View on GitHub</a></p>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:773`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -1220,8 +1223,13 @@ def widget_select_agreement(
 
 ## Source link
 
-- Source: `fabricops_kit/data_agreement.py:773`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997">View widget_select_agreement on GitHub</a>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:773`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997">View on GitHub</a>
+</div>
 
 ## Glossary
 

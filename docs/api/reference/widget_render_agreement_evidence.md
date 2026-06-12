@@ -31,13 +31,7 @@ def widget_render_agreement_evidence(
 
 ## Example usage
 
-<div class="reference-example-usage" markdown="1">
-
-```python
-Not documented yet
-```
-
-</div>
+Example usage not documented yet.
 
 ## Parameters
 
@@ -849,9 +843,12 @@ does not read or write binary file content.
             ```
 
 
-<div class="reference-source-card">
-  <p><strong>Source:</strong> <code>fabricops_kit/data_agreement.py:1379</code></p>
-  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412">View on GitHub</a></p>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:1379`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -970,8 +967,13 @@ Not documented yet
 
 ## Source link
 
-- Source: `fabricops_kit/data_agreement.py:1379`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412">View widget_render_agreement_evidence on GitHub</a>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:1379`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412">View on GitHub</a>
+</div>
 
 ## Glossary
 

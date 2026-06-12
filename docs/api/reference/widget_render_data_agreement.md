@@ -31,13 +31,7 @@ def widget_render_data_agreement(
 
 ## Example usage
 
-<div class="reference-example-usage" markdown="1">
-
-```python
-Not documented yet
-```
-
-</div>
+Example usage not documented yet.
 
 ## Parameters
 
@@ -1406,9 +1400,12 @@ No additional callable notes are documented.
             ```
 
 
-<div class="reference-source-card">
-  <p><strong>Source:</strong> <code>fabricops_kit/data_agreement.py:1435</code></p>
-  <p><strong>Actions:</strong> <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452">View on GitHub</a></p>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:1435`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452">View on GitHub</a>
 </div>
 
 ??? example "Source code"
@@ -1507,8 +1504,13 @@ Not documented yet
 
 ## Source link
 
-- Source: `fabricops_kit/data_agreement.py:1435`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452">View widget_render_data_agreement on GitHub</a>
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:1435`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452">View on GitHub</a>
+</div>
 
 ## Glossary
 
