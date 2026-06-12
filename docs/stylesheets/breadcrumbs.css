@@ -1,0 +1,49 @@
+.fabricops-breadcrumbs {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  margin: 0 0 0.9rem;
+}
+
+.fabricops-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fabricops-breadcrumbs li {
+  align-items: center;
+  display: inline-flex;
+  min-width: 0;
+}
+
+.fabricops-breadcrumbs li:not(:last-child)::after {
+  color: var(--md-default-fg-color--lighter);
+  content: "/";
+  margin: 0 0.35rem;
+}
+
+.fabricops-breadcrumbs a {
+  color: var(--md-typeset-a-color);
+  text-decoration: none;
+}
+
+.fabricops-breadcrumbs a:hover,
+.fabricops-breadcrumbs a:focus {
+  text-decoration: underline;
+}
+
+.fabricops-breadcrumbs [aria-current="page"] {
+  color: var(--md-default-fg-color);
+  font-weight: 600;
+}
+
+@media screen and (max-width: 44.9844em) {
+  .fabricops-breadcrumbs {
+    font-size: 0.64rem;
+    margin-bottom: 0.7rem;
+  }
+}
