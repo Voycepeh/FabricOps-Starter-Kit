@@ -26,6 +26,17 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 - [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
 - [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/)
 
+## AI-friendly documentation
+
+FabricOps publishes an [LLM navigation map](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/llms.txt) for AI agents, coding assistants, and documentation ingestion tools.
+
+Most documentation pages also have raw Markdown variants by adding `.md` to the page URL, for example:
+
+- [Quick Start](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/quick-start/)
+- [Quick Start Markdown](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/quick-start.md)
+
+These files are published with the documentation build so agents can navigate FabricOps without scraping rendered HTML.
+
 ## Template quick links (Download and open in fabric directly for best experience)
 
 - [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks/00_env_config.ipynb)
