@@ -94,79 +94,92 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
     assert "## Optional example notebooks" in notebook_docs
     assert "These notebooks are release-specific validation aids." in notebook_docs
     assert "They are not production workflow templates." in notebook_docs
-    assert "| `example_pipeline_smoke_test.ipynb` | Validates the pipeline path: source and target guardrails, catalogue evidence, lineage, runtime summary, and a smoke target write. |" in notebook_docs
+    assert "| `example_pipeline_smoke_test.ipynb` | Generates deterministic `smoke_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |" in notebook_docs
     assert "| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |" in notebook_docs
 
 
-def test_quick_start_links_template_smoke_tests_with_release_specific_wording():
+def test_quick_start_links_optional_pipeline_guardrail_demo():
     quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
-    expected = (
-        "*Optional: After running `00_env_config`, you may run the example smoke test notebooks to quickly "
-        "understand how the pipeline and DQ rule flows work before adapting the production templates. "
-        "Use [`example_pipeline_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_smoke_test.ipynb) "
-        "to validate the pipeline path, including metadata tables, source and target guardrails, evidence "
-        "writing, lineage, runtime summary, and target writes. Use [`example_dq_rule_smoke_test.ipynb`]"
-        "(https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) "
-        "to understand how DQ rules are "
-        "evaluated, how warning rules behave, and how error rules block when enforcement fails. These "
-        "examples are aligned to the current release and should be treated as release-specific validation "
-        "aids, not production workflow templates.*"
-    )
 
-    assert expected in quick_start
+    for expected in [
+        "## Optional: run the pipeline guardrail demo",
+        "not part of the mandatory first-run setup",
+        "example_pipeline_smoke_test.ipynb",
+        "source_lakehouse",
+        "02_pipeline",
+        "unified_lakehouse",
+        "example_pipeline_smoke_test.ipynb` only generates scenario data",
+        "example_dq_rule_smoke_test.ipynb",
+    ]:
+        assert expected in quick_start
+
+    for scenario_table in [
+        "smoke_src_orders_happy",
+        "smoke_src_orders_schema_drift",
+        "smoke_src_orders_dq_issue",
+        "smoke_src_orders_stale",
+        "smoke_src_orders_reload_a",
+        "smoke_src_orders_reload_b",
+    ]:
+        assert scenario_table in quick_start
+
     assert (TEMPLATES / "example_pipeline_smoke_test.ipynb").exists()
     assert (TEMPLATES / "example_dq_rule_smoke_test.ipynb").exists()
     assert not (ROOT / "examples" / "notebooks" / "98_pipeline_smoke_test.ipynb").exists()
     assert not (ROOT / "examples" / "notebooks" / "98_dq_rule_smoke_test.ipynb").exists()
 
 
-def test_smoke_test_example_notebook_exists_and_covers_end_to_end_pattern():
+def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
     smoke_notebook = TEMPLATES / "example_pipeline_smoke_test.ipynb"
 
     assert smoke_notebook.exists()
     smoke_text = smoke_notebook.read_text(encoding="utf-8")
     smoke = _code_from_notebook(smoke_notebook)
 
-    assert "guardrail orchestration" in smoke_text
-    for expected in [
-        "spark.createDataFrame",
-        "SOURCE_01_CONFIG",
-        "TARGET_01_CONFIG",
+    for expected_text in [
+        "source scenario generator",
+        "02_pipeline",
+        "smoke_src_orders_happy",
+        "smoke_src_orders_schema_drift",
+        "smoke_src_orders_dq_issue",
+        "smoke_src_orders_stale",
+        "smoke_src_orders_reload_a",
+        "smoke_src_orders_reload_b",
+    ]:
+        assert expected_text in smoke_text
+
+    for scenario_table in [
+        "smoke_src_orders_happy",
+        "smoke_src_orders_schema_drift",
+        "smoke_src_orders_dq_issue",
+        "smoke_src_orders_stale",
+        "smoke_src_orders_reload_a",
+        "smoke_src_orders_reload_b",
+    ]:
+        assert scenario_table in smoke
+
+    assert "spark.createDataFrame" in smoke
+    assert "write_lakehouse_table" in smoke
+    assert '"source",' in smoke
+    assert "METADATA_DQ_RULES" in smoke
+    assert "scenario_catalogue_df" in smoke
+    assert "Refusing to write non-smoke table" in smoke
+
+    for orchestration_concern in [
         "SOURCE_TABLES",
         "TARGET_TABLES",
         "run_table_guardrails",
         "prepare_pipeline_table_configs",
-        "write_lakehouse_table",
         "write_warehouse_table",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "PASS: FabricOps pipeline smoke test completed.",
+        "def run_table_guardrails(",
+        "prepare_source_table_configs",
+        "prepare_target_table_configs",
+        "write_target_tables",
     ]:
-        assert expected in smoke
-
-    assert "fabricops_smoke_target" in smoke
-    assert "TARGET_01_WRITE_MODE = \"overwrite\"" in smoke
-    assert "Metadata evidence tables remain append-only" in smoke_text
-    for evidence_helper in [
-        "prepare_pipeline_table_configs",
-        "write_lakehouse_table",
-        "write_warehouse_table",
-        "write_pipeline_lineage",
-        "write_pipeline_run_summary",
-    ]:
-        assert evidence_helper in smoke
-    assert "mode=\"overwrite\"" not in smoke
-    assert "mode = \"overwrite\"" not in smoke
-    assert "read_lakehouse_csv" not in smoke
-    assert "read_lakehouse_excel" not in smoke
-    assert "read_lakehouse_parquet" not in smoke
-    assert "_load_source_dataframe" not in smoke
-    assert "_read_source_dataframe" not in smoke
-    assert "read_type" not in smoke
-    assert "def run_table_guardrails(" not in smoke
-    assert "prepare_source_table_configs" not in smoke
-    assert "prepare_target_table_configs" not in smoke
-    assert "write_target_tables" not in smoke
+        assert orchestration_concern not in smoke
 
     dq_smoke = _code_from_notebook(TEMPLATES / "example_dq_rule_smoke_test.ipynb")
     assert "mode=\"overwrite\"" not in dq_smoke
