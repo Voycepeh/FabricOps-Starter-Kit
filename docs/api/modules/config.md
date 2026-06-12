@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 28</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>29</td>
+      <td>28</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -221,10 +221,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
     <tr>
-      <td><code>_show_tables_for_metadata_lakehouse</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_string_metadata_schema</code></td>
       <td>—</td>
     </tr>
@@ -343,11 +339,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <span class="reference-chip"><code>_setup_metadata_table_registry</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_create_empty_metadata_dataframe</code></span>, <span class="reference-chip"><code>_metadata_schema_field_names</code></span>, <span class="reference-chip"><code>_metadata_table_columns</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_show_tables_for_metadata_lakehouse</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_get_store</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_string_metadata_schema</code></span>

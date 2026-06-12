@@ -437,7 +437,6 @@
       "used_by": [
         "fabricops_kit.config._detect_nested_metadata_delta_folders",
         "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config._show_tables_for_metadata_lakehouse",
         "fabricops_kit.config._validate_metadata_table_registration",
         "fabricops_kit.config.setup_notebook",
         "fabricops_kit.fabric_input_output.read_lakehouse_csv",
@@ -448,7 +447,7 @@
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.fabric_input_output.write_warehouse_table"
       ],
-      "used_by_count": 12,
+      "used_by_count": 11,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -614,24 +613,6 @@
         "fabricops_kit.config._metadata_table_columns"
       ],
       "internal_helper_count": 3
-    },
-    "fabricops_kit.config._show_tables_for_metadata_lakehouse": {
-      "qualified_name": "fabricops_kit.config._show_tables_for_metadata_lakehouse",
-      "short_name": "_show_tables_for_metadata_lakehouse",
-      "module": "config",
-      "callable": "_show_tables_for_metadata_lakehouse",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config._get_store"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.config._get_store"
-      ],
-      "internal_helper_count": 1
     },
     "fabricops_kit.config._string_metadata_schema": {
       "qualified_name": "fabricops_kit.config._string_metadata_schema",
@@ -885,12 +866,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._latest_agreement_versions",
         "fabricops_kit.data_agreement._latest_by_key",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows"
       ],
-      "used_by_count": 4,
+      "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -927,14 +907,13 @@
       "used_by": [
         "fabricops_kit.data_agreement._create_or_update_data_agreement",
         "fabricops_kit.data_agreement._create_or_update_data_steward",
-        "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._get_widget_visible_fields",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
         "fabricops_kit.data_agreement._list_data_stewards",
         "fabricops_kit.data_agreement._render_maintenance_widget",
         "fabricops_kit.data_agreement._save_agreement_evidence_records"
       ],
-      "used_by_count": 8,
+      "used_by_count": 7,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1026,30 +1005,6 @@
       "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._ensure_metadata_tables": {
-      "qualified_name": "fabricops_kit.data_agreement._ensure_metadata_tables",
-      "short_name": "_ensure_metadata_tables",
-      "module": "data_agreement",
-      "callable": "_ensure_metadata_tables",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._config_value",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.data_agreement._setup_data_agreement_tables"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._coerce_row_dicts",
-        "fabricops_kit.data_agreement._config_value"
-      ],
-      "internal_helper_count": 2
     },
     "fabricops_kit.data_agreement._generate_agreement_id": {
       "qualified_name": "fabricops_kit.data_agreement._generate_agreement_id",
@@ -1244,10 +1199,9 @@
       "used_by": [
         "fabricops_kit.config.setup_metadata_tables",
         "fabricops_kit.data_agreement._create_or_update_data_agreement",
-        "fabricops_kit.data_agreement._render_maintenance_widget",
-        "fabricops_kit.data_agreement._setup_data_agreement_tables"
+        "fabricops_kit.data_agreement._render_maintenance_widget"
       ],
-      "used_by_count": 4,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._active_steward",
         "fabricops_kit.data_agreement._config_value",
@@ -1519,26 +1473,6 @@
       "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.data_agreement._setup_data_agreement_tables": {
-      "qualified_name": "fabricops_kit.data_agreement._setup_data_agreement_tables",
-      "short_name": "_setup_data_agreement_tables",
-      "module": "data_agreement",
-      "callable": "_setup_data_agreement_tables",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.data_agreement._ensure_metadata_tables",
-        "fabricops_kit.data_agreement._list_data_stewards"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.data_agreement._ensure_metadata_tables",
-        "fabricops_kit.data_agreement._list_data_stewards"
-      ],
-      "internal_helper_count": 2
     },
     "fabricops_kit.data_agreement._standard_widget": {
       "qualified_name": "fabricops_kit.data_agreement._standard_widget",
@@ -2247,19 +2181,16 @@
       "used_by": [
         "fabricops_kit.config._setup_metadata_table_registry",
         "fabricops_kit.config._validate_metadata_table_registration",
-        "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
         "fabricops_kit.data_agreement._list_data_stewards",
         "fabricops_kit.governance_review._read_metadata_rows",
-        "fabricops_kit.governance_review._setup_governance_metadata_tables",
         "fabricops_kit.governance_review.enforce_dq_rules",
         "fabricops_kit.governance_review.load_catalogue_profile_rows",
         "fabricops_kit.governance_review.widget_select_catalogue_table",
         "fabricops_kit.guardrails.enforce_profile_behavior",
-        "fabricops_kit.metadata._load_notebook_registry",
-        "fabricops_kit.metadata._setup_notebook_registry_table"
+        "fabricops_kit.metadata._load_notebook_registry"
       ],
-      "used_by_count": 13,
+      "used_by_count": 10,
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._current_database_matches",
         "fabricops_kit.fabric_input_output._get_spark",
@@ -2304,18 +2235,15 @@
       "calls_count": 4,
       "used_by": [
         "fabricops_kit.config._setup_metadata_table_registry",
-        "fabricops_kit.data_agreement._ensure_metadata_tables",
         "fabricops_kit.data_agreement._write_row",
         "fabricops_kit.governance_review._review_governance_evidence",
-        "fabricops_kit.governance_review._setup_governance_metadata_tables",
         "fabricops_kit.governance_review.record_table_governance",
         "fabricops_kit.metadata._register_current_notebook",
-        "fabricops_kit.metadata._setup_notebook_registry_table",
         "fabricops_kit.pipeline.write_catalogue_evidence",
         "fabricops_kit.pipeline.write_pipeline_lineage",
         "fabricops_kit.pipeline.write_pipeline_run_summary"
       ],
-      "used_by_count": 11,
+      "used_by_count": 8,
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._normalize_table_name",
         "fabricops_kit.fabric_input_output._registered_table_identifier",
@@ -2526,11 +2454,10 @@
         "fabricops_kit.governance_review._extract_assignment_payload",
         "fabricops_kit.governance_review._load_active_dq_rules",
         "fabricops_kit.governance_review._read_metadata_rows",
-        "fabricops_kit.governance_review._setup_governance_metadata_tables",
         "fabricops_kit.governance_review.load_catalogue_profile_rows",
         "fabricops_kit.governance_review.widget_select_catalogue_table"
       ],
-      "used_by_count": 6,
+      "used_by_count": 5,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -2836,10 +2763,9 @@
       "used_by": [
         "fabricops_kit.config._get_active_metadata_tables",
         "fabricops_kit.config._get_metadata_table_schema_registry",
-        "fabricops_kit.config.setup_metadata_tables",
-        "fabricops_kit.governance_review._setup_governance_metadata_tables"
+        "fabricops_kit.config.setup_metadata_tables"
       ],
-      "used_by_count": 4,
+      "used_by_count": 3,
       "internal_helpers_used": [
         "fabricops_kit.governance_review._schema",
         "fabricops_kit.governance_review._spark_types"
@@ -2877,10 +2803,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.config._setup_metadata_table_registry",
-        "fabricops_kit.governance_review._setup_governance_metadata_tables"
+        "fabricops_kit.config._setup_metadata_table_registry"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -3160,38 +3085,10 @@
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.governance_review._setup_governance_metadata_tables"
-      ],
-      "used_by_count": 1,
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._setup_governance_metadata_tables": {
-      "qualified_name": "fabricops_kit.governance_review._setup_governance_metadata_tables",
-      "short_name": "_setup_governance_metadata_tables",
-      "module": "governance_review",
-      "callable": "_setup_governance_metadata_tables",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table",
-        "fabricops_kit.governance_review._coerce_rows",
-        "fabricops_kit.governance_review._get_governance_metadata_schemas",
-        "fabricops_kit.governance_review._is_table_not_found_error",
-        "fabricops_kit.governance_review._schema_field_names"
-      ],
-      "calls_count": 6,
       "used_by": [],
       "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._coerce_rows",
-        "fabricops_kit.governance_review._get_governance_metadata_schemas",
-        "fabricops_kit.governance_review._is_table_not_found_error",
-        "fabricops_kit.governance_review._schema_field_names"
-      ],
-      "internal_helper_count": 4
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.governance_review._spark_sql_helpers": {
       "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
@@ -4086,10 +3983,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.metadata._registry_rows_with_defaults",
-        "fabricops_kit.metadata._setup_notebook_registry_table"
+        "fabricops_kit.metadata._load_notebook_registry"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4148,8 +4044,8 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.metadata._notebook_registration_key",
-        "fabricops_kit.metadata._registry_rows_with_defaults"
+        "fabricops_kit.metadata._coerce_row_dicts",
+        "fabricops_kit.metadata._notebook_registration_key"
       ],
       "calls_count": 3,
       "used_by": [
@@ -4157,8 +4053,8 @@
       ],
       "used_by_count": 1,
       "internal_helpers_used": [
-        "fabricops_kit.metadata._notebook_registration_key",
-        "fabricops_kit.metadata._registry_rows_with_defaults"
+        "fabricops_kit.metadata._coerce_row_dicts",
+        "fabricops_kit.metadata._notebook_registration_key"
       ],
       "internal_helper_count": 2
     },
@@ -4173,10 +4069,9 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.metadata._load_notebook_registry",
-        "fabricops_kit.metadata._register_current_notebook",
-        "fabricops_kit.metadata._registry_rows_with_defaults"
+        "fabricops_kit.metadata._register_current_notebook"
       ],
-      "used_by_count": 3,
+      "used_by_count": 2,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4229,31 +4124,6 @@
       ],
       "internal_helper_count": 5
     },
-    "fabricops_kit.metadata._registry_rows_with_defaults": {
-      "qualified_name": "fabricops_kit.metadata._registry_rows_with_defaults",
-      "short_name": "_registry_rows_with_defaults",
-      "module": "metadata",
-      "callable": "_registry_rows_with_defaults",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.metadata._coerce_row_dicts",
-        "fabricops_kit.metadata._notebook_registration_key",
-        "fabricops_kit.metadata._safe_str"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.metadata._load_notebook_registry",
-        "fabricops_kit.metadata._setup_notebook_registry_table"
-      ],
-      "used_by_count": 2,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._coerce_row_dicts",
-        "fabricops_kit.metadata._notebook_registration_key",
-        "fabricops_kit.metadata._safe_str"
-      ],
-      "internal_helper_count": 3
-    },
     "fabricops_kit.metadata._resolve_action_by": {
       "qualified_name": "fabricops_kit.metadata._resolve_action_by",
       "short_name": "_resolve_action_by",
@@ -4287,10 +4157,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.metadata._register_current_notebook",
-        "fabricops_kit.metadata._setup_notebook_registry_table"
+        "fabricops_kit.metadata._register_current_notebook"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4329,36 +4198,11 @@
       "used_by": [
         "fabricops_kit.metadata._build_runtime_audit_fields",
         "fabricops_kit.metadata._current_notebook_active_registrations",
-        "fabricops_kit.metadata._register_current_notebook",
-        "fabricops_kit.metadata._registry_rows_with_defaults"
+        "fabricops_kit.metadata._register_current_notebook"
       ],
-      "used_by_count": 4,
+      "used_by_count": 3,
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.metadata._setup_notebook_registry_table": {
-      "qualified_name": "fabricops_kit.metadata._setup_notebook_registry_table",
-      "short_name": "_setup_notebook_registry_table",
-      "module": "metadata",
-      "callable": "_setup_notebook_registry_table",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table",
-        "fabricops_kit.metadata._coerce_row_dicts",
-        "fabricops_kit.metadata._registry_rows_with_defaults",
-        "fabricops_kit.metadata._rows_for_spark"
-      ],
-      "calls_count": 5,
-      "used_by": [],
-      "used_by_count": 0,
-      "internal_helpers_used": [
-        "fabricops_kit.metadata._coerce_row_dicts",
-        "fabricops_kit.metadata._registry_rows_with_defaults",
-        "fabricops_kit.metadata._rows_for_spark"
-      ],
-      "internal_helper_count": 3
     },
     "fabricops_kit.metadata._stable_metadata_key": {
       "qualified_name": "fabricops_kit.metadata._stable_metadata_key",
@@ -4712,7 +4556,7 @@
   "modules": {
     "config": {
       "callable_count": 2,
-      "internal_count": 29,
+      "internal_count": 28,
       "outbound_modules": [
         "data_agreement",
         "fabric_input_output",
@@ -4732,7 +4576,7 @@
     },
     "data_agreement": {
       "callable_count": 5,
-      "internal_count": 37,
+      "internal_count": 35,
       "outbound_modules": [
         "config",
         "fabric_input_output",
@@ -4787,7 +4631,7 @@
     },
     "governance_review": {
       "callable_count": 8,
-      "internal_count": 47,
+      "internal_count": 46,
       "outbound_modules": [
         "config",
         "data_profiling",
@@ -4816,7 +4660,7 @@
     },
     "metadata": {
       "callable_count": 0,
-      "internal_count": 18,
+      "internal_count": 16,
       "outbound_modules": [
         "config",
         "fabric_input_output"

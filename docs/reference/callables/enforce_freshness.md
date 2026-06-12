@@ -108,7 +108,7 @@ skips profile behavior enforcement; freshness still runs when configured.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L367-L464">View enforce_freshness on GitHub</a>
 
 ```python
 def enforce_freshness(
@@ -252,7 +252,7 @@ def enforce_freshness(
 
             **`def _coerce_date(value) -> date | None`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/guardrails.py#L342-L359)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L342-L359)
 
             ```python
             def _coerce_date(value) -> date | None:
@@ -277,7 +277,7 @@ def enforce_freshness(
 
             **`def _iso_date_value(value) -> str`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/guardrails.py#L362-L364)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L362-L364)
 
             ```python
             def _iso_date_value(value) -> str:
@@ -287,7 +287,7 @@ def enforce_freshness(
 
             **`def _max_column_value(dataframe, column_name: str)`**
 
-            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/guardrails.py#L309-L339)
+            Source: [`src/fabricops_kit/guardrails.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L309-L339)
 
             ```python
             def _max_column_value(dataframe, column_name: str):
@@ -363,7 +363,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/guardrails.py#L367-L464</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L367-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/guardrails.py#L367-L464</a>
 - Start line: `367`
 - End line: `464`
 - Signature:

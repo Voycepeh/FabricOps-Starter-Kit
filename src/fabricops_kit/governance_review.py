@@ -218,43 +218,6 @@ def _is_table_not_found_error(exc: Exception) -> bool:
     return any(marker in message for marker in not_found_markers) and not any(marker in message for marker in non_not_found_markers)
 
 
-def _setup_governance_metadata_tables(*, spark: Any, config: Any, env: str) -> dict[str, Any]:
-    """Create or validate governance metadata tables via the configured route.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Spark session used to create empty metadata tables when missing.
-    config : FrameworkConfig or dict
-        ``00_env_config`` configuration that contains the ``metadata`` target.
-    env : str
-        Environment key to prepare.
-
-    Returns
-    -------
-    dict[str, Any]
-        Setup status, checked tables, and newly created tables.
-    """
-    created: list[str] = []
-    schemas = _get_governance_metadata_schemas()
-    for table_name, schema in schemas.items():
-        try:
-            table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
-        except Exception as exc:
-            if not _is_table_not_found_error(exc):
-                raise RuntimeError(f"Unable to read governance metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition.") from exc
-            empty_df = spark.createDataFrame([], schema=schema)
-            write_lakehouse_table(empty_df, config, env, "metadata", table_name, mode="ignore", overwrite_schema=True)
-            table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
-            created.append(table_name)
-        columns = list(getattr(table, "columns", [])) or (list(_coerce_rows(table)[0]) if _coerce_rows(table) else [])
-        fields = _schema_field_names(schema)
-        missing = [field for field in fields if field not in columns]
-        if missing:
-            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before running 03_governance.")
-    return {"status": "ready", "tables": list(schemas), "created_tables": created}
-
-
 def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return one option per logical table using its latest successful profile.
 

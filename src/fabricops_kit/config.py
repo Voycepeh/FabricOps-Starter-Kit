@@ -939,44 +939,6 @@ def _metadata_tables_from_setup_results(*summaries: dict[str, Any]) -> list[str]
     return tables
 
 
-def _show_tables_for_metadata_lakehouse(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str) -> dict[str, Any]:
-    """Inspect registered tables for the configured metadata lakehouse."""
-    metadata_store = _get_store(config=config, env=env, target="metadata")
-    if metadata_store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
-    if not hasattr(spark, "sql"):
-        return {"status": "skipped", "database": metadata_store.name, "tables": [], "message": "Spark SQL is unavailable in this runtime."}
-
-    statements = [f"SHOW TABLES IN `{str(metadata_store.name).replace('`', '``')}`", "SHOW TABLES"]
-    last_error: Exception | None = None
-    for statement in statements:
-        try:
-            rows = spark.sql(statement).collect()
-            table_names: list[str] = []
-            for row in rows:
-                if hasattr(row, "asDict"):
-                    item = row.asDict(recursive=True)
-                elif isinstance(row, dict):
-                    item = row
-                else:
-                    try:
-                        item = dict(row)
-                    except Exception:
-                        item = {}
-                table_name = item.get("tableName") or item.get("table_name") or item.get("tablename")
-                if table_name is None and not item:
-                    try:
-                        table_name = row[1]
-                    except Exception:
-                        table_name = None
-                if table_name:
-                    table_names.append(str(table_name))
-            return {"status": "ready", "database": metadata_store.name, "tables": sorted(set(table_names)), "statement": statement}
-        except Exception as exc:  # pragma: no cover - depends on Fabric Spark catalog behavior
-            last_error = exc
-    return {"status": "skipped", "database": metadata_store.name, "tables": [], "message": f"SHOW TABLES was unavailable: {last_error}"}
-
-
 def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str, Any], env: str, expected_tables: list[str]) -> list[str]:
     """Best-effort warning detector for legacy nested metadata Delta folders."""
     try:
@@ -1057,7 +1019,6 @@ def _get_metadata_table_schema_registry(config: FrameworkConfig | dict[str, Any]
     return registry
 
 
-
 def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
     """Return row dictionaries from Spark-like row collections."""
     if rows is None:
@@ -1065,6 +1026,7 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
     if hasattr(rows, "collect"):
         rows = rows.collect()
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
+
 
 def _metadata_table_columns(table: Any) -> list[str]:
     """Return column names from a Spark DataFrame-like object or row collection."""
@@ -1103,7 +1065,7 @@ def _setup_metadata_table_registry(
 
         missing = [field for field in _metadata_schema_field_names(schema) if field not in _metadata_table_columns(table)]
         if missing:
-            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Migrate the table before running metadata setup.")
+            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}. Recreate or manually migrate the table before running metadata setup.")
     return {"status": "ready", "tables": list(registry), "created_tables": created}
 
 
@@ -1224,7 +1186,6 @@ def setup_metadata_tables(
         "table": NOTEBOOK_REGISTRY_TABLE,
         "schema": _metadata_schema_field_names(registry[NOTEBOOK_REGISTRY_TABLE]),
         "created": NOTEBOOK_REGISTRY_TABLE in created_tables,
-        "migrated": False,
         "created_tables": [NOTEBOOK_REGISTRY_TABLE] if NOTEBOOK_REGISTRY_TABLE in created_tables else [],
     }
     governance = {
@@ -1246,6 +1207,9 @@ def setup_metadata_tables(
         "data_agreement": data_agreement,
         "notebook_registry": notebook_registry,
         "governance": governance,
+        "tables": expected_tables,
+        "created_tables": created_tables,
+        "warnings": registration_validation.get("warnings", []),
         "active_metadata_tables": expected_tables,
         "active_metadata_table_count": len(expected_tables),
         "created_or_checked_tables": created_or_checked,

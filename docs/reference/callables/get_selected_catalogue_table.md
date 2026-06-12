@@ -45,7 +45,7 @@ Not documented yet
 - Module: `governance_review`
 - Classification: Callable
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `310`
+- Source line: `273`
 - Signature:
 
 ```python
@@ -85,7 +85,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L310-L334">View get_selected_catalogue_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/governance_review.py#L273-L297">View get_selected_catalogue_table on GitHub</a>
 
 ```python
 def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
@@ -159,7 +159,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `310`
+- Source line: `273`
 - Inbound references count: 0
 - Outbound references count: 0
 
@@ -186,9 +186,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L310-L334">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/governance_review.py#L310-L334</a>
-- Start line: `310`
-- End line: `334`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/governance_review.py#L273-L297">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/governance_review.py#L273-L297</a>
+- Start line: `273`
+- End line: `297`
 - Signature:
 
 ```python

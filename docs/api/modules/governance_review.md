@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 47</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 46</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>47</td>
+      <td>46</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -357,10 +357,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_setup_governance_metadata_tables</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_spark_sql_helpers</code></td>
       <td>—</td>
     </tr>
@@ -567,11 +563,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 </li>
 <li>
 <span class="reference-chip"><code>_schema_field_names</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_setup_governance_metadata_tables</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_get_governance_metadata_schemas</code></span>, <span class="reference-chip"><code>_is_table_not_found_error</code></span>, <span class="reference-chip"><code>_schema_field_names</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_spark_sql_helpers</code></span>

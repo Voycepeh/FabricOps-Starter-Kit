@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 37</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>37</td>
+      <td>35</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -205,10 +205,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_ensure_metadata_tables</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_generate_agreement_id</code></td>
       <td>—</td>
     </tr>
@@ -293,10 +289,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_setup_data_agreement_tables</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_standard_widget</code></td>
       <td>—</td>
     </tr>
@@ -360,11 +352,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <span class="reference-chip"><code>_deserialize_custom_fields</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_ensure_metadata_tables</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_config_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_generate_agreement_id</code></span>
@@ -454,11 +441,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <span class="reference-chip"><code>_serialize_custom_fields</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_setup_data_agreement_tables</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_ensure_metadata_tables</code></span>, <span class="reference-chip"><code>_list_data_stewards</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_standard_widget</code></span>

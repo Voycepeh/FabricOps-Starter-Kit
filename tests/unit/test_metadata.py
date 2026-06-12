@@ -25,17 +25,9 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
     assert audit["_activity_id"] == "manual-activity"
 
 
-def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch):
-    reads = []
+def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
     writes = []
 
-    def read_table(config, env, target, table, **kwargs):
-        reads.append((env, target, table))
-        if len(reads) == 1:
-            raise RuntimeError("missing")
-        return [dict.fromkeys(metadata.NOTEBOOK_REGISTRY_FIELDS, "")]
-
-    monkeypatch.setattr(metadata, "read_lakehouse_table", read_table)
     monkeypatch.setattr(
         metadata,
         "write_lakehouse_table",
@@ -54,10 +46,8 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
         },
     )
 
-    spark = FakeSpark()
-    setup = metadata._setup_notebook_registry_table(spark=spark, config=framework_config(), env="dev")
     row = metadata._register_current_notebook(
-        spark=spark,
+        spark=FakeSpark(),
         config=framework_config(),
         env="dev",
         agreement_id="DA-1",
@@ -67,11 +57,9 @@ def test_notebook_registry_setup_and_registration_use_metadata_route(monkeypatch
         table_name="fact_orders",
     )
 
-    assert setup["created"] is True
     assert list(row) == metadata.NOTEBOOK_REGISTRY_FIELDS
     assert row["notebook_url"] == "https://app.fabric.microsoft.com/groups/workspace-id/notebooks/notebook-id"
     assert [(env, target, table) for _, env, target, table, _ in writes] == [
-        ("dev", "metadata", metadata.NOTEBOOK_REGISTRY_TABLE),
         ("dev", "metadata", metadata.NOTEBOOK_REGISTRY_TABLE),
     ]
 

@@ -208,6 +208,9 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     assert result["data_agreement"]["status"] == "ready"
     assert result["notebook_registry"]["created"] is True
     assert result["governance"]["created_tables"] == ["METADATA_DQ_RULES"]
+    assert result["tables"] == list(schemas)
+    assert result["created_tables"] == list(schemas)
+    assert result["warnings"] == []
     assert result["active_metadata_tables"] == list(schemas)
     assert [table for _, _, table, _ in writes] == list(schemas)
     assert all(target == "metadata" for _, target, _, _ in writes)

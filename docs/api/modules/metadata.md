@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 18</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 16</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 3</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>18</td>
+      <td>16</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -138,10 +138,6 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_registry_rows_with_defaults</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_resolve_action_by</code></td>
       <td>—</td>
     </tr>
@@ -155,10 +151,6 @@ No public exports in this module.
     </tr>
     <tr>
       <td><code>_safe_str</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_setup_notebook_registry_table</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -205,7 +197,7 @@ No public exports in this module.
 <li>
 <span class="reference-chip"><code>_load_notebook_registry</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_notebook_registration_key</code></span>, <span class="reference-chip"><code>_registry_rows_with_defaults</code></span>
+<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_notebook_registration_key</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_notebook_registration_key</code></span>
@@ -217,11 +209,6 @@ No public exports in this module.
 <span class="reference-chip"><code>_register_current_notebook</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_context_get</code></span>, <span class="reference-chip"><code>_notebook_registration_key</code></span>, <span class="reference-chip"><code>_rows_for_spark</code></span>, <span class="reference-chip"><code>_runtime_context</code></span>, <span class="reference-chip"><code>_safe_str</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_registry_rows_with_defaults</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_notebook_registration_key</code></span>, <span class="reference-chip"><code>_safe_str</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_resolve_action_by</code></span>
@@ -238,11 +225,6 @@ No public exports in this module.
 </li>
 <li>
 <span class="reference-chip"><code>_safe_str</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_setup_notebook_registry_table</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_registry_rows_with_defaults</code></span>, <span class="reference-chip"><code>_rows_for_spark</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_stable_metadata_key</code></span>

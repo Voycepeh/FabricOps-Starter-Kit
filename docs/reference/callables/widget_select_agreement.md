@@ -52,7 +52,7 @@ Not documented yet
 - Module: `data_agreement`
 - Classification: Callable
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `856`
+- Source line: `773`
 - Signature:
 
 ```python
@@ -136,7 +136,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L856-L1080">View widget_select_agreement on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L773-L997">View widget_select_agreement on GitHub</a>
 
 ```python
 def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
@@ -409,9 +409,9 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
     └── _require_ipywidgets(...)
     ```
 
-??? info "Internal helpers used: 23"
+??? info "Internal helpers used: 22"
 
-    This callable uses 23 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
+    This callable uses 22 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
 
     <div class="module-table-scroll reference-input-table">
     <table class="reference-function-table">
@@ -445,7 +445,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
         </tr>
         <tr>
           <td data-label="Area">Other</td>
-          <td data-label="Helpers"><code>_coerce_row_dicts</code>, <code>_coerce_row_dicts</code>, <code>_config_value</code>, <code>_context_get</code>, <code>_current_notebook_active_registrations</code>, <code>_html_escape</code>, <code>_notebook_registration_key</code>, <code>_register_current_notebook</code>, <code>_registry_rows_with_defaults</code>, <code>_require_ipywidgets</code>, <code>_runtime_context</code>, <code>_safe_str</code>, <code>_widget_common</code></td>
+          <td data-label="Helpers"><code>_coerce_row_dicts</code>, <code>_coerce_row_dicts</code>, <code>_config_value</code>, <code>_context_get</code>, <code>_current_notebook_active_registrations</code>, <code>_html_escape</code>, <code>_notebook_registration_key</code>, <code>_register_current_notebook</code>, <code>_require_ipywidgets</code>, <code>_runtime_context</code>, <code>_safe_str</code>, <code>_widget_common</code></td>
           <td data-label="What they do">Support lower-level implementation details that do not fit the main helper areas.</td>
         </tr>
       </tbody>
@@ -458,7 +458,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _current_audit_timestamp(config: Any=None, timezone_name: str | None=None, *, drop_microseconds: bool=True) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L69-L75)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/config.py#L69-L75)
 
             ```python
             def _current_audit_timestamp(config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True) -> str:
@@ -472,7 +472,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _get_audit_timezone(config: Any=None, timezone_name: str | None=None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L61-L66)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/config.py#L61-L66)
 
             ```python
             def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
@@ -485,7 +485,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -526,7 +526,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L653-L669)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L570-L586)
 
             ```python
             def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
@@ -550,7 +550,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any=None, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L672-L681)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L589-L598)
 
             ```python
             def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -567,7 +567,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any=None, active_only: bool=False, missing_ok: bool=False) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L684-L691)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L601-L608)
 
             ```python
             def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False) -> list[dict[str, Any]]:
@@ -582,7 +582,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _load_notebook_registry(spark, agreement_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, notebook_type=None, environment_name=None, missing_ok: bool=True, *, config: Any=None, env: str | None=None, active_only: bool=False, notebook_id: str | None=None, notebook_name: str | None=None, registration_role: str | None=None) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L422-L473)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L336-L387)
 
             ```python
             def _load_notebook_registry(
@@ -606,7 +606,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
                         if config is not None and env is not None
                         else spark.table(metadata_table)
                     )
-                    rows = _registry_rows_with_defaults(table)
+                    rows = _coerce_row_dicts(table)
                 except Exception:
                     if missing_ok:
                         return []
@@ -641,7 +641,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _render_searchable_selector(*, widgets: Any, label: str, rows: list[dict[str, Any]], label_fn: Callable[[dict[str, Any]], str], value_fn: Callable[[dict[str, Any]], str], placeholder: str='Search...', max_results: int=25, search_fields: list[str] | None=None, context_fields: list[tuple[str, str]] | None=None, empty_label: str | None=None, selected_value: str | None=None) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L198-L308)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L198-L308)
 
             ```python
             def _render_searchable_selector(
@@ -761,7 +761,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _parse_contract_version(version: Any) -> tuple[int, int, int]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L638-L644)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L555-L561)
 
             ```python
             def _parse_contract_version(version: Any) -> tuple[int, int, int]:
@@ -777,7 +777,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L161-L170)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L89-L98)
 
             ```python
             def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -796,7 +796,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L397-L402)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L397-L402)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -809,7 +809,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L53-L58)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L53-L58)
 
             ```python
             def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
@@ -822,7 +822,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _config_value(config: Any, name: str, default: Any) -> Any`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L149-L153)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L149-L153)
 
             ```python
             def _config_value(config: Any, name: str, default: Any) -> Any:
@@ -834,7 +834,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _context_get(context: Any, *keys: str) -> Any`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L173-L185)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L101-L113)
 
             ```python
             def _context_get(context: Any, *keys: str) -> Any:
@@ -854,7 +854,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _current_notebook_active_registrations(spark, *, config: Any, env: str, metadata_table: str=NOTEBOOK_REGISTRY_TABLE, notebook_type: str | None=None, environment_name: str | None=None, registration_role: str | None=None, missing_ok: bool=True) -> list[dict[str, Any]]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L476-L526)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L390-L440)
 
             ```python
             def _current_notebook_active_registrations(
@@ -912,7 +912,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _html_escape(value: Any) -> str`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L192-L195)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L192-L195)
 
             ```python
             def _html_escape(value: Any) -> str:
@@ -923,7 +923,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _notebook_registration_key(row: dict[str, Any]) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L41-L50)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L41-L50)
 
             ```python
             def _notebook_registration_key(row: dict[str, Any]) -> str:
@@ -940,7 +940,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _register_current_notebook(spark, agreement_id=None, notebook_type=None, environment_name=None, dataset_name=None, table_name=None, topic=None, pipeline_name=None, contract_version=None, registration_role='primary', registration_status='active', registration_id=None, superseded_at=None, superseded_by_registration_id=None, metadata_table=NOTEBOOK_REGISTRY_TABLE, *, config: Any=None, env: str | None=None)`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L292-L405)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L220-L333)
 
             ```python
             def _register_current_notebook(
@@ -1010,10 +1010,10 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
                 Notes
                 -----
-                Prepare the registry with :func:`_setup_notebook_registry_table` before
-                workflow notebooks register themselves. New notebooks should pass
-                ``config=CONFIG`` and ``env=ENV`` so metadata writes use the configured
-                ``metadata`` target from ``00_env_config``.
+                ``00_env_config`` prepares the notebook registry as part of
+                :func:`fabricops_kit.config.setup_metadata_tables`. New notebooks should
+                pass ``config=CONFIG`` and ``env=ENV`` so metadata writes use the
+                configured ``metadata`` target from ``00_env_config``.
                 """
                 if config is None or env is None:
                     raise ValueError("_register_current_notebook requires config and env for metadata routing.")
@@ -1059,28 +1059,9 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
                 return row
             ```
 
-            **`def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]`**
-
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L408-L419)
-
-            ```python
-            def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]:
-                out = []
-                for source in _coerce_row_dicts(rows):
-                    row = {field: _safe_str(source.get(field)) for field in NOTEBOOK_REGISTRY_BASE_FIELDS}
-                    row["agreement_contract_version"] = _safe_str(source.get("agreement_contract_version"))
-                    row["registration_role"] = _safe_str(source.get("registration_role") or "primary")
-                    row["registration_status"] = _safe_str(source.get("registration_status") or "active")
-                    row["superseded_at"] = _safe_str(source.get("superseded_at"))
-                    row["superseded_by_registration_id"] = _safe_str(source.get("superseded_by_registration_id"))
-                    row["registration_id"] = _safe_str(source.get("registration_id") or _notebook_registration_key(row))
-                    out.append({field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS})
-                return out
-            ```
-
             **`def _require_ipywidgets()`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L63-L72)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L63-L72)
 
             ```python
             def _require_ipywidgets():
@@ -1097,7 +1078,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _runtime_context() -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L192-L216)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L120-L144)
 
             ```python
             def _runtime_context() -> dict[str, Any]:
@@ -1129,7 +1110,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _safe_str(value: Any) -> str`**
 
-            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/metadata.py#L188-L189)
+            Source: [`src/fabricops_kit/metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/metadata.py#L116-L117)
 
             ```python
             def _safe_str(value: Any) -> str:
@@ -1138,7 +1119,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
 
             **`def _widget_common(widgets_module: Any, description: str, *, textarea: bool=False) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L180-L189)
+            Source: [`src/fabricops_kit/data_agreement.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L180-L189)
 
             ```python
             def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
@@ -1167,7 +1148,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `856`
+- Source line: `773`
 - Inbound references count: 0
 - Outbound references count: 7
 
@@ -1197,9 +1178,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L856-L1080">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/data_agreement.py#L856-L1080</a>
-- Start line: `856`
-- End line: `1080`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L773-L997">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/data_agreement.py#L773-L997</a>
+- Start line: `773`
+- End line: `997`
 - Signature:
 
 ```python
@@ -1215,7 +1196,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 
 ### Internal implementation summary
 
-- Internal helper count: 23
+- Internal helper count: 22
 - Grouped helper summary and optional source snippets are rendered in the page-level Internal implementation summary section.
 
 </details>

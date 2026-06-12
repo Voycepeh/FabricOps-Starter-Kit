@@ -34,17 +34,14 @@ Reads from a lakehouse table; it does not write metadata, tables, or files.
 
 - `fabricops_kit.config._setup_metadata_table_registry`
 - `fabricops_kit.config._validate_metadata_table_registration`
-- `fabricops_kit.data_agreement._ensure_metadata_tables`
 - `fabricops_kit.data_agreement._list_all_data_agreement_rows`
 - `fabricops_kit.data_agreement._list_data_stewards`
 - `fabricops_kit.governance_review._read_metadata_rows`
-- `fabricops_kit.governance_review._setup_governance_metadata_tables`
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 - <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - `fabricops_kit.metadata._load_notebook_registry`
-- `fabricops_kit.metadata._setup_notebook_registry_table`
 
 ## Calls
 
@@ -121,7 +118,7 @@ No additional callable notes are documented.
 ### Public callable source code
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L171-L224">View read_lakehouse_table on GitHub</a>
 
 ```python
 def read_lakehouse_table(config, env, target, table, spark_session=None):
@@ -235,7 +232,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L107-L115)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L107-L115)
 
             ```python
             def _current_database_matches(spark_obj: Any, store: FabricStore) -> bool:
@@ -251,7 +248,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _normalize_table_name(table: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L81-L90)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L81-L90)
 
             ```python
             def _normalize_table_name(table: str) -> str:
@@ -268,7 +265,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _registered_table_identifier(store: FabricStore, table: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L97-L99)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L97-L99)
 
             ```python
             def _registered_table_identifier(store: FabricStore, table: str) -> str:
@@ -278,7 +275,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _uses_registered_metadata_table(target: str) -> bool`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L102-L104)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L102-L104)
 
             ```python
             def _uses_registered_metadata_table(target: str) -> bool:
@@ -290,7 +287,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _get_spark(spark_session=None)`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L125-L155)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L125-L155)
 
             ```python
             def _get_spark(spark_session=None):
@@ -328,7 +325,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -378,7 +375,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
 
             **`def _quote_identifier(identifier: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L93-L94)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L93-L94)
 
             ```python
             def _quote_identifier(identifier: str) -> str:
@@ -400,7 +397,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source line: `171`
-- Inbound references count: 13
+- Inbound references count: 10
 - Outbound references count: 6
 
 ### AI implementation contract
@@ -416,17 +413,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 - `fabricops_kit.config._setup_metadata_table_registry`
 - `fabricops_kit.config._validate_metadata_table_registration`
-- `fabricops_kit.data_agreement._ensure_metadata_tables`
 - `fabricops_kit.data_agreement._list_all_data_agreement_rows`
 - `fabricops_kit.data_agreement._list_data_stewards`
 - `fabricops_kit.governance_review._read_metadata_rows`
-- `fabricops_kit.governance_review._setup_governance_metadata_tables`
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 - <a href="../load_catalogue_profile_rows/"><code>fabricops_kit.governance_review.load_catalogue_profile_rows</code></a>
 - <a href="../widget_select_catalogue_table/"><code>fabricops_kit.governance_review.widget_select_catalogue_table</code></a>
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - `fabricops_kit.metadata._load_notebook_registry`
-- `fabricops_kit.metadata._setup_notebook_registry_table`
 
 ### Outbound references
 
@@ -440,7 +434,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/2319e3488b66212cd694b16ac27f58b6909d12af/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L171-L224">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ab4a3b9225b7e46ac2079370f27b99d4ec21a78d/src/fabricops_kit/fabric_input_output.py#L171-L224</a>
 - Start line: `171`
 - End line: `224`
 - Signature:

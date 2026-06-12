@@ -58,78 +58,6 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
 
 
-def _setup_notebook_registry_table(
-    *, spark: Any, config: Any, env: str, metadata_table: str = NOTEBOOK_REGISTRY_TABLE
-) -> dict[str, Any]:
-    """Create or validate the notebook registry metadata table.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used to create an empty table when the registry is
-        missing.
-    config : FrameworkConfig or dict
-        Configuration containing the metadata lakehouse route from
-        ``00_env_config``.
-    env : str
-        Environment key configured by ``00_env_config``.
-    metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
-        Physical metadata table name to prepare.
-
-    Returns
-    -------
-    dict[str, Any]
-        Setup status, checked table, schema, and whether the table was created.
-
-    Raises
-    ------
-    ValueError
-        If an existing table is missing required registry columns.
-
-    Notes
-    -----
-    This helper is separate from ``_setup_data_agreement_tables`` because the
-    registry is workflow-notebook bootstrap metadata, not ``01_agreement`` agreement
-    intake metadata. Reads and writes use the configured ``metadata`` target
-    from ``00_env_config``.
-    """
-    fields = list(NOTEBOOK_REGISTRY_FIELDS)
-    created = False
-    try:
-        table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
-    except Exception:
-        empty_df = spark.createDataFrame([{field: "" for field in fields}]).limit(0)
-        write_lakehouse_table(empty_df, config, env, "metadata", metadata_table, mode="ignore", overwrite_schema=True)
-        table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
-        created = True
-
-    rows = _coerce_row_dicts(table)
-    columns = list(table.columns) if hasattr(table, "columns") else list(rows[0]) if rows else []
-    missing_base = [field for field in NOTEBOOK_REGISTRY_BASE_FIELDS if field not in columns]
-    if missing_base:
-        raise ValueError(
-            f"{metadata_table} is missing required column(s): {', '.join(missing_base)}. Migrate or recreate the notebook registry table before workflow notebooks register themselves."
-        )
-
-    migrated = False
-    missing_state = [field for field in NOTEBOOK_REGISTRY_STATE_FIELDS if field not in columns]
-    if missing_state:
-        migrated_rows = _registry_rows_with_defaults(rows)
-        df = spark.createDataFrame(_rows_for_spark(migrated_rows or [{field: "" for field in fields}])).limit(
-            0 if not migrated_rows else len(migrated_rows)
-        )
-        write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="overwrite", overwrite_schema=True)
-        migrated = True
-    return {
-        "status": "ready",
-        "table": metadata_table,
-        "schema": fields,
-        "created": created,
-        "migrated": migrated,
-        "created_tables": [metadata_table] if created else [],
-    }
-
-
 def _now_utc_iso(config: Any = None) -> str:
     return _current_audit_timestamp(config=config, drop_microseconds=False)
 
@@ -356,10 +284,10 @@ def _register_current_notebook(
 
     Notes
     -----
-    Prepare the registry with :func:`_setup_notebook_registry_table` before
-    workflow notebooks register themselves. New notebooks should pass
-    ``config=CONFIG`` and ``env=ENV`` so metadata writes use the configured
-    ``metadata`` target from ``00_env_config``.
+    ``00_env_config`` prepares the notebook registry as part of
+    :func:`fabricops_kit.config.setup_metadata_tables`. New notebooks should
+    pass ``config=CONFIG`` and ``env=ENV`` so metadata writes use the
+    configured ``metadata`` target from ``00_env_config``.
     """
     if config is None or env is None:
         raise ValueError("_register_current_notebook requires config and env for metadata routing.")
@@ -405,20 +333,6 @@ def _register_current_notebook(
     return row
 
 
-def _registry_rows_with_defaults(rows: Any) -> list[dict[str, Any]]:
-    out = []
-    for source in _coerce_row_dicts(rows):
-        row = {field: _safe_str(source.get(field)) for field in NOTEBOOK_REGISTRY_BASE_FIELDS}
-        row["agreement_contract_version"] = _safe_str(source.get("agreement_contract_version"))
-        row["registration_role"] = _safe_str(source.get("registration_role") or "primary")
-        row["registration_status"] = _safe_str(source.get("registration_status") or "active")
-        row["superseded_at"] = _safe_str(source.get("superseded_at"))
-        row["superseded_by_registration_id"] = _safe_str(source.get("superseded_by_registration_id"))
-        row["registration_id"] = _safe_str(source.get("registration_id") or _notebook_registration_key(row))
-        out.append({field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS})
-    return out
-
-
 def _load_notebook_registry(
     spark,
     agreement_id=None,
@@ -440,7 +354,7 @@ def _load_notebook_registry(
             if config is not None and env is not None
             else spark.table(metadata_table)
         )
-        rows = _registry_rows_with_defaults(table)
+        rows = _coerce_row_dicts(table)
     except Exception:
         if missing_ok:
             return []
