@@ -153,7 +153,7 @@ conversion paths (``/lakehouse/default/Files/...``).
 
             **`def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True)`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L500-L552)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L500-L552)
 
             ```python
             def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True):
@@ -215,7 +215,7 @@ conversion paths (``/lakehouse/default/Files/...``).
 
             **`def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L158-L168)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L158-L168)
 
             ```python
             def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> str:
@@ -235,7 +235,7 @@ conversion paths (``/lakehouse/default/Files/...``).
 
             **`def _get_spark(spark_session=None)`**
 
-            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L125-L155)
+            Source: [`src/fabricops_kit/fabric_input_output.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155)
 
             ```python
             def _get_spark(spark_session=None):
@@ -273,7 +273,7 @@ conversion paths (``/lakehouse/default/Files/...``).
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -323,7 +323,7 @@ conversion paths (``/lakehouse/default/Files/...``).
 ## Source link
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L555-L677">View read_lakehouse_parquet on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L555-L677">View read_lakehouse_parquet on GitHub</a>
 
 ```python
 def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None):
@@ -493,7 +493,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L555-L677">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L555-L677</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L555-L677">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L555-L677</a>
 - Start line: `555`
 - End line: `677`
 - Signature:

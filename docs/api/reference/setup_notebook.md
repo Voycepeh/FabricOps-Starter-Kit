@@ -167,7 +167,7 @@ not provision Fabric resources or persist metadata.
 
             **`def _validate_audit_timezone(timezone_name: str | None) -> str`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L27-L58)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58)
 
             ```python
             def _validate_audit_timezone(timezone_name: str | None) -> str:
@@ -208,7 +208,7 @@ not provision Fabric resources or persist metadata.
 
             **`def _get_fabric_runtime_metadata(notebook_name: str | None=None) -> dict[str, Any]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1228-L1267)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1228-L1267)
 
             ```python
             def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, Any]:
@@ -257,7 +257,7 @@ not provision Fabric resources or persist metadata.
 
             **`def _check_spark_session() -> tuple[bool, str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1220-L1225)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1220-L1225)
 
             ```python
             def _check_spark_session() -> tuple[bool, str]:
@@ -270,7 +270,7 @@ not provision Fabric resources or persist metadata.
 
             **`def _run_config_smoke_tests(config: FrameworkConfig, env: str='Sandbox', required_targets: list[str] | None=None, check_io_import: bool=False, notebook_name: str | None=None) -> list[ConfigSmokeCheckResult]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L684-L783)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L684-L783)
 
             ```python
             def _run_config_smoke_tests(
@@ -377,7 +377,7 @@ not provision Fabric resources or persist metadata.
 
             **`def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L551-L624)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L551-L624)
 
             ```python
             def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> FrameworkConfig:
@@ -458,7 +458,7 @@ not provision Fabric resources or persist metadata.
 
             **`def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None=None) -> list[str]`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L670-L681)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L670-L681)
 
             ```python
             def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None = None) -> list[str]:
@@ -479,7 +479,7 @@ not provision Fabric resources or persist metadata.
 
             **`def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any`**
 
-            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L627-L667)
+            Source: [`src/fabricops_kit/config.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667)
 
             ```python
             def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
@@ -529,7 +529,7 @@ not provision Fabric resources or persist metadata.
 ## Source link
 
 - Source file path: `src/fabricops_kit/config.py`
-- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L786-L895">View setup_notebook on GitHub</a>
+- <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L786-L895">View setup_notebook on GitHub</a>
 
 ```python
 def setup_notebook(
@@ -686,7 +686,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L786-L895">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L786-L895</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L786-L895">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L786-L895</a>
 - Start line: `786`
 - End line: `895`
 - Signature:

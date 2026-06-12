@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit.data_lineage import _build_lineage_records, build_lineage_records
+from fabricops_kit.data_lineage import _build_lineage_records
 from tests.helpers import framework_config
 
 from fabricops_kit.governance_review import (
@@ -52,28 +52,11 @@ def _profile_rows(run: str = "run-2") -> list[dict]:
     ]
 
 
-def test_profile_and_lineage_helpers_return_notebook_ready_structures():
+def test_profile_helper_returns_notebook_ready_structure():
     profile = {"table_name": "orders", "row_count": 3, "columns": [{"column_name": "amount"}]}
-    lineage = build_lineage_records(
-        dataset_name="sales",
-        run_id="run-1",
-        source_tables=["raw_orders"],
-        target_table="orders",
-        transformation_steps=[{"step": "clean", "description": "Clean source rows"}],
-    )
+
     assert profile["table_name"] == "orders"
     assert profile["row_count"] == 3
-    assert lineage[0]["target_table"] == "orders"
-    assert lineage == [
-        {
-            "run_id": "run-1",
-            "dataset_name": "sales",
-            "source_tables": ["raw_orders"],
-            "target_table": "orders",
-            "step": "clean",
-            "description": "Clean source rows",
-        }
-    ]
 
 
 def test_private_lineage_records_use_configured_audit_timezone():
@@ -114,22 +97,6 @@ def test_private_lineage_records_default_to_utc_without_config():
     )
 
     assert rows[0]["created_ts"].endswith("+00:00")
-
-
-def test_public_lineage_records_accept_config_for_timestamp_metadata():
-    config = framework_config()
-    object.__setattr__(config, "audit_timezone", "Asia/Singapore")
-
-    rows = build_lineage_records(
-        dataset_name="sales",
-        run_id="run-1",
-        source_tables=["raw_orders"],
-        target_table="orders",
-        transformation_steps=[{"step": "clean"}],
-        config=config,
-    )
-
-    assert rows[0]["created_ts"].endswith("+08:00")
 
 
 def test_governance_review_builders_commit_only_human_approved_records():

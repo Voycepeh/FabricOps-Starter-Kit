@@ -179,20 +179,6 @@
       ]
     },
     {
-      "module_name": "data_lineage",
-      "visibility": "public",
-      "module_summary": "Owns source-to-target lineage and transformation evidence.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "build_lineage_records",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Lineage evidence",
-      "used_in_templates": []
-    },
-    {
       "module_name": "data_profiling",
       "visibility": "public",
       "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.",

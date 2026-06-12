@@ -38,7 +38,6 @@ nav:
       - List of functions:
           - Overview: reference/index.md
           # AUTO-GENERATED-FUNCTIONS-START
-          - build_lineage_records: api/reference/build_lineage_records.md
           - enforce_dq_rules: api/reference/enforce_dq_rules.md
           - enforce_freshness: api/reference/enforce_freshness.md
           - enforce_profile_behavior: api/reference/enforce_profile_behavior.md

@@ -370,7 +370,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 ### External callers
 
 **data_lineage**
-<a class="reference-chip" href="../data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a>, <a class="reference-chip" href="../../reference/build_lineage_records/"><code>build_lineage_records</code></a>
+<a class="reference-chip" href="../data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a>
 
 **data_profiling**
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>

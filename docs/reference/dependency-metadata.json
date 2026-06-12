@@ -293,7 +293,6 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.data_lineage._build_lineage_records",
-        "fabricops_kit.data_lineage.build_lineage_records",
         "fabricops_kit.governance_review._dq_summary",
         "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
         "fabricops_kit.metadata._build_runtime_audit_fields",
@@ -302,7 +301,7 @@
         "fabricops_kit.pipeline._add_audit_columns",
         "fabricops_kit.pipeline._now_iso"
       ],
-      "used_by_count": 9,
+      "used_by_count": 8,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.config._get_audit_timezone"
@@ -1891,23 +1890,6 @@
         "fabricops_kit.data_lineage._build_lineage_records"
       ],
       "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_lineage.build_lineage_records": {
-      "qualified_name": "fabricops_kit.data_lineage.build_lineage_records",
-      "short_name": "build_lineage_records",
-      "module": "data_lineage",
-      "callable": "build_lineage_records",
-      "docs_url": "/FabricOps-Starter-Kit/reference/build_lineage_records/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.config._current_audit_timestamp"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4894,7 +4876,7 @@
       "inbound_count": 1
     },
     "data_lineage": {
-      "callable_count": 1,
+      "callable_count": 0,
       "internal_count": 7,
       "outbound_modules": [
         "config"

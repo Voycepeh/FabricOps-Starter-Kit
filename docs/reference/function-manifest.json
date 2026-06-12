@@ -17,7 +17,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 262,
     "source_end_line": 295,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L262-L295",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L262-L295",
     "docs_path": null,
     "summary": "Prompt templates used by implemented AI-assisted workflows."
   },
@@ -41,7 +41,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 506,
     "source_end_line": 511,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L506-L511",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L506-L511",
     "docs_path": null,
     "summary": "Represent one readiness or smoke-test check."
   },
@@ -63,7 +63,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 358,
     "source_end_line": 417,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L358-L417",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L358-L417",
     "docs_path": null,
     "summary": "Editable ``01_agreement`` table names and widget definitions."
   },
@@ -87,7 +87,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 86,
     "source_end_line": 87,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L86-L87",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L86-L87",
     "docs_path": null,
     "summary": "Raised when dataset-contract validation fails."
   },
@@ -111,7 +111,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 458,
     "source_end_line": 502,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L458-L502",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L458-L502",
     "docs_path": null,
     "summary": "Top-level framework configuration object."
   },
@@ -133,7 +133,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 328,
     "source_end_line": 345,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L328-L345",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L328-L345",
     "docs_path": null,
     "summary": "Default governance-policy options for metadata/classification checks."
   },
@@ -155,7 +155,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 437,
     "source_end_line": 454,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L437-L454",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L437-L454",
     "docs_path": null,
     "summary": "Default lineage-capture behavior for pipeline traceability."
   },
@@ -177,7 +177,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 114,
     "source_end_line": 129,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L114-L129",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L114-L129",
     "docs_path": null,
     "summary": "Runtime options used by notebook-oriented helpers."
   },
@@ -201,7 +201,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 515,
     "source_end_line": 548,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L515-L548",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L515-L548",
     "docs_path": null,
     "summary": "Consolidated startup context returned by :func:`setup_notebook`."
   },
@@ -223,7 +223,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 91,
     "source_end_line": 110,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L91-L110",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L91-L110",
     "docs_path": null,
     "summary": "Environment-to-target mapping used for lakehouse/warehouse routing."
   },
@@ -245,7 +245,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 299,
     "source_end_line": 324,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L299-L324",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L299-L324",
     "docs_path": null,
     "summary": "Default quality-policy options for FabricOps validation stages."
   },
@@ -267,7 +267,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 421,
     "source_end_line": 433,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L421-L433",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L421-L433",
     "docs_path": null,
     "summary": "Notebook-table review settings for DQ and governance suggestion approval."
   },
@@ -292,7 +292,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1356,
     "source_end_line": 1377,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1356-L1377",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1356-L1377",
     "docs_path": null,
     "summary": "Raise when a dataset contract violates the expected schema."
   },
@@ -318,7 +318,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 78,
     "source_end_line": 83,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L78-L83",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L78-L83",
     "docs_path": null,
     "summary": "Return a Spark expression for the current audit timestamp timezone."
   },
@@ -342,7 +342,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1220,
     "source_end_line": 1225,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1220-L1225",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1220-L1225",
     "docs_path": null,
     "summary": "Check whether a Spark session is available."
   },
@@ -366,7 +366,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1022,
     "source_end_line": 1028,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1022-L1028",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1022-L1028",
     "docs_path": null,
     "summary": "Return row dictionaries from Spark-like row collections."
   },
@@ -390,7 +390,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1040,
     "source_end_line": 1042,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1040-L1042",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1040-L1042",
     "docs_path": null,
     "summary": "Create an empty Spark DataFrame using an explicit metadata schema."
   },
@@ -402,7 +402,6 @@
     "classification": "Internal",
     "inbound": [
       "fabricops_kit.data_lineage._build_lineage_records",
-      "fabricops_kit.data_lineage.build_lineage_records",
       "fabricops_kit.governance_review._dq_summary",
       "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
       "fabricops_kit.metadata._build_runtime_audit_fields",
@@ -424,7 +423,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 69,
     "source_end_line": 75,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L69-L75",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L69-L75",
     "docs_path": null,
     "summary": "Return the current audit timestamp in the configured audit timezone."
   },
@@ -448,7 +447,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1270,
     "source_end_line": 1271,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1270-L1271",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1270-L1271",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -474,7 +473,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 942,
     "source_end_line": 962,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L942-L962",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L942-L962",
     "docs_path": null,
     "summary": "Best-effort warning detector for legacy nested metadata Delta folders."
   },
@@ -498,7 +497,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1277,
     "source_end_line": 1285,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1277-L1285",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1277-L1285",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -525,7 +524,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 898,
     "source_end_line": 925,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L898-L925",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L898-L925",
     "docs_path": null,
     "summary": "Return the canonical active metadata tables prepared by ``00_env_config``."
   },
@@ -553,7 +552,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 61,
     "source_end_line": 66,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L61-L66",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L61-L66",
     "docs_path": null,
     "summary": "Resolve the configured FabricOps audit timezone, defaulting to UTC."
   },
@@ -577,7 +576,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1228,
     "source_end_line": 1267,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1228-L1267",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1228-L1267",
     "docs_path": null,
     "summary": "Best-effort retrieval of Fabric runtime metadata."
   },
@@ -605,7 +604,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 990,
     "source_end_line": 1019,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L990-L1019",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L990-L1019",
     "docs_path": null,
     "summary": "Return the canonical metadata setup registry as table names mapped to schemas."
   },
@@ -639,7 +638,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 627,
     "source_end_line": 667,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L627-L667",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L627-L667",
     "docs_path": null,
     "summary": "Resolve a configured Fabric path for an environment and target."
   },
@@ -664,7 +663,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1380,
     "source_end_line": 1404,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1380-L1404",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1380-L1404",
     "docs_path": null,
     "summary": "Load a dataset contract file and return schema validation findings."
   },
@@ -688,7 +687,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1288,
     "source_end_line": 1316,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1288-L1316",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1288-L1316",
     "docs_path": null,
     "summary": "Load a dataset contract YAML file into a dictionary."
   },
@@ -714,7 +713,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1319,
     "source_end_line": 1323,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1319-L1323",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1319-L1323",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -739,7 +738,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 965,
     "source_end_line": 969,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L965-L969",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L965-L969",
     "docs_path": null,
     "summary": "Return field names from a Spark StructType-like schema."
   },
@@ -765,7 +764,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1031,
     "source_end_line": 1037,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1031-L1037",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1031-L1037",
     "docs_path": null,
     "summary": "Return column names from a Spark DataFrame-like object or row collection."
   },
@@ -789,7 +788,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 928,
     "source_end_line": 939,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L928-L939",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L928-L939",
     "docs_path": null,
     "summary": "Return ordered metadata table names from setup helper summaries."
   },
@@ -819,7 +818,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 684,
     "source_end_line": 783,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L684-L783",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L684-L783",
     "docs_path": null,
     "summary": "Run 00_env_config readiness smoke checks for configuration bootstrap."
   },
@@ -850,7 +849,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1045,
     "source_end_line": 1069,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1045-L1069",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1045-L1069",
     "docs_path": null,
     "summary": "Create missing metadata tables through configured lakehouse IO helpers."
   },
@@ -874,7 +873,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 972,
     "source_end_line": 987,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L972-L987",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L972-L987",
     "docs_path": null,
     "summary": "Build an explicit all-string Spark schema for lightweight metadata tables."
   },
@@ -899,7 +898,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 27,
     "source_end_line": 58,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L27-L58",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L27-L58",
     "docs_path": null,
     "summary": "Return a valid IANA audit timezone name."
   },
@@ -927,7 +926,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1326,
     "source_end_line": 1353,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1326-L1353",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1326-L1353",
     "docs_path": null,
     "summary": "Validate a loaded dataset contract against the JSON schema."
   },
@@ -959,7 +958,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 551,
     "source_end_line": 624,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L551-L624",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L551-L624",
     "docs_path": null,
     "summary": "Validate and normalize framework configuration input."
   },
@@ -989,7 +988,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1072,
     "source_end_line": 1111,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1072-L1111",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1072-L1111",
     "docs_path": null,
     "summary": "Validate active metadata tables through configured metadata target reads."
   },
@@ -1013,7 +1012,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 670,
     "source_end_line": 681,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L670-L681",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L670-L681",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1064,7 +1063,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 1114,
     "source_end_line": 1217,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L1114-L1217",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L1114-L1217",
     "docs_path": "api/reference/setup_metadata_tables.md",
     "summary": "Create or validate all FabricOps metadata tables through one setup action."
   },
@@ -1114,7 +1113,7 @@
     "source_path": "src/fabricops_kit/config.py",
     "source_start_line": 786,
     "source_end_line": 895,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/config.py#L786-L895",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/config.py#L786-L895",
     "docs_path": "api/reference/setup_notebook.md",
     "summary": "Shared environment setup and runtime validation for notebook templates."
   },
@@ -1141,7 +1140,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 433,
     "source_end_line": 443,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L433-L443",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L433-L443",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1167,7 +1166,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1034,
     "source_end_line": 1044,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1034-L1044",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1034-L1044",
     "docs_path": null,
     "summary": "Return read-only agreement version context for the notebook form."
   },
@@ -1194,7 +1193,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 621,
     "source_end_line": 625,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L621-L625",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L621-L625",
     "docs_path": null,
     "summary": "Return user-facing agreement values used to detect business changes."
   },
@@ -1220,7 +1219,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 397,
     "source_end_line": 402,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L397-L402",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L397-L402",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1247,7 +1246,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 362,
     "source_end_line": 394,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L362-L394",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L362-L394",
     "docs_path": null,
     "summary": "Collect and validate configured custom-field widget values."
   },
@@ -1277,7 +1276,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 149,
     "source_end_line": 153,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L149-L153",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L149-L153",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1313,7 +1312,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 628,
     "source_end_line": 672,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L628-L672",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L628-L672",
     "docs_path": null,
     "summary": "Append a new agreement or a new semantic version of an existing one."
   },
@@ -1346,7 +1345,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 502,
     "source_end_line": 552,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L502-L552",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L502-L552",
     "docs_path": null,
     "summary": "Append a created or updated steward assignment with runtime audit fields."
   },
@@ -1371,7 +1370,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 118,
     "source_end_line": 146,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L118-L146",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L118-L146",
     "docs_path": null,
     "summary": "Deserialize stored custom-field JSON for widget display."
   },
@@ -1395,7 +1394,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 611,
     "source_end_line": 612,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L611-L612",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L611-L612",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1419,7 +1418,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 446,
     "source_end_line": 450,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L446-L450",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L446-L450",
     "docs_path": null,
     "summary": "Generate a stable public-safe steward identifier from business fields."
   },
@@ -1443,7 +1442,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 675,
     "source_end_line": 684,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L675-L684",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L675-L684",
     "docs_path": null,
     "summary": "Return a notebookutils-like object when the Fabric runtime exposes one."
   },
@@ -1469,7 +1468,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 156,
     "source_end_line": 177,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L156-L177",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L156-L177",
     "docs_path": null,
     "summary": "Return configured editable columns without backend audit fields."
   },
@@ -1494,7 +1493,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 192,
     "source_end_line": 195,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L192-L195",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L192-L195",
     "docs_path": null,
     "summary": "Return display-safe HTML text for notebook context snippets."
   },
@@ -1522,7 +1521,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 570,
     "source_end_line": 586,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L570-L586",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L570-L586",
     "docs_path": null,
     "summary": "Return the latest semantic version for each stable agreement ID."
   },
@@ -1548,7 +1547,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 405,
     "source_end_line": 411,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L405-L411",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L405-L411",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1578,7 +1577,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 589,
     "source_end_line": 598,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L589-L598",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L589-L598",
     "docs_path": null,
     "summary": "List all append-only agreement rows from the metadata lakehouse."
   },
@@ -1606,7 +1605,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 601,
     "source_end_line": 608,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L601-L608",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L601-L608",
     "docs_path": null,
     "summary": "List latest versioned agreements from the configured metadata lakehouse."
   },
@@ -1637,7 +1636,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 453,
     "source_end_line": 482,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L453-L482",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L453-L482",
     "docs_path": null,
     "summary": "List latest append-only steward rows from the metadata lakehouse."
   },
@@ -1664,7 +1663,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 564,
     "source_end_line": 567,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L564-L567",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L564-L567",
     "docs_path": null,
     "summary": "Return the next minor contract version, defaulting to ``1."
   },
@@ -1690,7 +1689,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 555,
     "source_end_line": 561,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L555-L561",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L555-L561",
     "docs_path": null,
     "summary": "Parse a semantic contract version into a comparable tuple."
   },
@@ -1715,7 +1714,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 489,
     "source_end_line": 499,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L489-L499",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L489-L499",
     "docs_path": null,
     "summary": "Return an ISO date string or raise a clear intake validation error."
   },
@@ -1741,7 +1740,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 687,
     "source_end_line": 737,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L687-L737",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L687-L737",
     "docs_path": null,
     "summary": "Parse and validate manually supplied evidence file paths before writes."
   },
@@ -1771,7 +1770,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1258,
     "source_end_line": 1376,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1258-L1376",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1258-L1376",
     "docs_path": null,
     "summary": "Render optional agreement evidence upload controls."
   },
@@ -1800,7 +1799,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 310,
     "source_end_line": 359,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L310-L359",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L310-L359",
     "docs_path": null,
     "summary": "Create widgets for configured organization-specific fields."
   },
@@ -1841,7 +1840,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1047,
     "source_end_line": 1255,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1047-L1255",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1047-L1255",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1870,7 +1869,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 198,
     "source_end_line": 308,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L198-L308",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L198-L308",
     "docs_path": null,
     "summary": "Render a table-backed selector with search and stable-value tracking."
   },
@@ -1898,7 +1897,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 63,
     "source_end_line": 72,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L63-L72",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L63-L72",
     "docs_path": null,
     "summary": "Return ipywidgets or raise an actionable optional-dependency error."
   },
@@ -1927,7 +1926,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 739,
     "source_end_line": 770,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L739-L770",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L739-L770",
     "docs_path": null,
     "summary": "Append manually uploaded evidence file-reference metadata rows."
   },
@@ -1953,7 +1952,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 102,
     "source_end_line": 115,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L102-L115",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L102-L115",
     "docs_path": null,
     "summary": "Serialize organization-specific intake values to deterministic JSON."
   },
@@ -1981,7 +1980,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1018,
     "source_end_line": 1031,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1018-L1031",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1018-L1031",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2009,7 +2008,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 414,
     "source_end_line": 430,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L414-L430",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L414-L430",
     "docs_path": null,
     "summary": "Normalize common notebook and metadata boolean representations."
   },
@@ -2034,7 +2033,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 615,
     "source_end_line": 618,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L615-L618",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L615-L618",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2061,7 +2060,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 180,
     "source_end_line": 189,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L180-L189",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L180-L189",
     "docs_path": null,
     "summary": "Return common style and layout keyword arguments for form controls."
   },
@@ -2089,7 +2088,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 485,
     "source_end_line": 486,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L485-L486",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L485-L486",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2125,7 +2124,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1000,
     "source_end_line": 1015,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1000-L1015",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1000-L1015",
     "docs_path": "api/reference/get_selected_agreement.md",
     "summary": "Return the agreement selected by widget_select_agreement."
   },
@@ -2168,7 +2167,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1379,
     "source_end_line": 1412,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1379-L1412",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1379-L1412",
     "docs_path": "api/reference/widget_render_agreement_evidence.md",
     "summary": "Render the standalone agreement-evidence widget."
   },
@@ -2206,7 +2205,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1435,
     "source_end_line": 1452,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1435-L1452",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1435-L1452",
     "docs_path": "api/reference/widget_render_data_agreement.md",
     "summary": "Render the standalone data-agreement intake widget."
   },
@@ -2244,7 +2243,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1415,
     "source_end_line": 1432,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L1415-L1432",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L1415-L1432",
     "docs_path": "api/reference/widget_render_data_steward.md",
     "summary": "Render the standalone data-steward intake widget."
   },
@@ -2289,7 +2288,7 @@
     "source_path": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 773,
     "source_end_line": 997,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_agreement.py#L773-L997",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_agreement.py#L773-L997",
     "docs_path": "api/reference/widget_select_agreement.md",
     "summary": "Render an agreement selector and optionally register the active notebook."
   },
@@ -2314,7 +2313,7 @@
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 166,
     "source_end_line": 209,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L166-L209",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_lineage.py#L166-L209",
     "docs_path": null,
     "summary": "Build metadata-ready lineage rows from validated lineage steps."
   },
@@ -2336,7 +2335,7 @@
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 110,
     "source_end_line": 127,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L110-L127",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_lineage.py#L110-L127",
     "docs_path": null,
     "summary": "Optionally enrich deterministic lineage steps using an AI helper callable."
   },
@@ -2360,7 +2359,7 @@
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 14,
     "source_end_line": 19,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L14-L19",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_lineage.py#L14-L19",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2384,7 +2383,7 @@
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 22,
     "source_end_line": 34,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L22-L34",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_lineage.py#L22-L34",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2408,7 +2407,7 @@
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 89,
     "source_end_line": 107,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L89-L107",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_lineage.py#L89-L107",
     "docs_path": null,
     "summary": "Scan multiple notebook cells and append cell references to lineage steps."
   },
@@ -2435,7 +2434,7 @@
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 37,
     "source_end_line": 86,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L37-L86",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_lineage.py#L37-L86",
     "docs_path": null,
     "summary": "Extract deterministic lineage steps from notebook code using AST parsing."
   },
@@ -2459,51 +2458,9 @@
     "source_path": "src/fabricops_kit/data_lineage.py",
     "source_start_line": 130,
     "source_end_line": 163,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L130-L163",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_lineage.py#L130-L163",
     "docs_path": null,
     "summary": "Validate lineage step structure and flag records requiring human review."
-  },
-  {
-    "id": "fabricops_kit.data_lineage.build_lineage_records",
-    "name": "build_lineage_records",
-    "qualified_name": "fabricops_kit.data_lineage.build_lineage_records",
-    "module": "data_lineage",
-    "classification": "Callable",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config._current_audit_timestamp"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [
-      "source table",
-      "target table",
-      "catalogue evidence"
-    ],
-    "expanded_purpose": "Builds source-to-target transformation records that describe how a pipeline output was produced during a run.",
-    "when_to_use": "Use in 02_pipeline when transformation steps should be persisted as lineage evidence after a target is prepared.",
-    "return_interpretation": "Each returned dictionary is one lineage metadata row ready for persistence; review source, target, and step fields before writing.",
-    "common_failure_causes": [
-      "run_id or dataset_name is missing.",
-      "Source or target table names are blank.",
-      "Transformation step dictionaries are malformed.",
-      "Configuration is missing audit timestamp settings."
-    ],
-    "related_guides": [
-      {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
-      },
-      {
-        "title": "Metadata Tables",
-        "path": "../../how-fabricops-works/metadata-tables.md"
-      }
-    ],
-    "source_path": "src/fabricops_kit/data_lineage.py",
-    "source_start_line": 212,
-    "source_end_line": 236,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_lineage.py#L212-L236",
-    "docs_path": "api/reference/build_lineage_records.md",
-    "summary": "Build source-to-target lineage evidence records for a pipeline run."
   },
   {
     "id": "fabricops_kit.data_profiling._build_categorical_distribution",
@@ -2525,7 +2482,7 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 152,
     "source_end_line": 189,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_profiling.py#L152-L189",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L152-L189",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2553,7 +2510,7 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 192,
     "source_end_line": 222,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_profiling.py#L192-L222",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L192-L222",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2577,7 +2534,7 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 120,
     "source_end_line": 149,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_profiling.py#L120-L149",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L120-L149",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2601,7 +2558,7 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 59,
     "source_end_line": 81,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_profiling.py#L59-L81",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L59-L81",
     "docs_path": null,
     "summary": "Return non-technical column names from a Spark DataFrame."
   },
@@ -2625,7 +2582,7 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 84,
     "source_end_line": 104,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_profiling.py#L84-L104",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L84-L104",
     "docs_path": null,
     "summary": "Return whether min/max aggregation is safe for a Spark type string."
   },
@@ -2649,7 +2606,7 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 107,
     "source_end_line": 117,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_profiling.py#L107-L117",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L107-L117",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2703,7 +2660,7 @@
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 225,
     "source_end_line": 345,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/data_profiling.py#L225-L345",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/data_profiling.py#L225-L345",
     "docs_path": "api/reference/profile_dataframe.md",
     "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence."
   },
@@ -2725,7 +2682,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 25,
     "source_end_line": 78,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L25-L78",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L25-L78",
     "docs_path": null,
     "summary": "Fabric lakehouse or warehouse connection details."
   },
@@ -2749,7 +2706,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 500,
     "source_end_line": 552,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L500-L552",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L500-L552",
     "docs_path": null,
     "summary": "Convert one Parquet file from nanosecond to microsecond timestamps."
   },
@@ -2773,7 +2730,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 107,
     "source_end_line": 115,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L107-L115",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L107-L115",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2801,7 +2758,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 125,
     "source_end_line": 155,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L125-L155",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L125-L155",
     "docs_path": null,
     "summary": "Return an explicit Spark session or the active notebook global `spark`."
   },
@@ -2827,7 +2784,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 158,
     "source_end_line": 168,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L158-L168",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L158-L168",
     "docs_path": null,
     "summary": "Return an ABFSS path under a configured lakehouse Files area."
   },
@@ -2853,7 +2810,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 81,
     "source_end_line": 90,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L81-L90",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L81-L90",
     "docs_path": null,
     "summary": "Return a safe Spark table name, never a nested folder path."
   },
@@ -2877,7 +2834,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 93,
     "source_end_line": 94,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L93-L94",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L93-L94",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -2905,7 +2862,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 97,
     "source_end_line": 99,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L97-L99",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L97-L99",
     "docs_path": null,
     "summary": "Return a metadata lakehouse-qualified Spark table identifier."
   },
@@ -2930,7 +2887,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 102,
     "source_end_line": 104,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L102-L104",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L102-L104",
     "docs_path": null,
     "summary": "Return whether a target should use Spark table registration."
   },
@@ -2973,7 +2930,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 326,
     "source_end_line": 368,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L326-L368",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L326-L368",
     "docs_path": "api/reference/read_lakehouse_csv.md",
     "summary": "Read a CSV file from a configured Fabric lakehouse Files path."
   },
@@ -3015,7 +2972,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 680,
     "source_end_line": 767,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L680-L767",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L680-L767",
     "docs_path": "api/reference/read_lakehouse_excel.md",
     "summary": "Read an Excel file from a configured Fabric lakehouse Files path."
   },
@@ -3058,7 +3015,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 555,
     "source_end_line": 677,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L555-L677",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L555-L677",
     "docs_path": "api/reference/read_lakehouse_parquet.md",
     "summary": "Read a Parquet path from a configured Fabric lakehouse Files path."
   },
@@ -3117,7 +3074,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 171,
     "source_end_line": 224,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L171-L224",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L171-L224",
     "docs_path": "api/reference/read_lakehouse_table.md",
     "summary": "Read a table from a configured Fabric lakehouse target."
   },
@@ -3159,7 +3116,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 371,
     "source_end_line": 430,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L371-L430",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L371-L430",
     "docs_path": "api/reference/read_warehouse_table.md",
     "summary": "Read a table from a configured Fabric warehouse target."
   },
@@ -3219,7 +3176,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 227,
     "source_end_line": 323,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L227-L323",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L227-L323",
     "docs_path": "api/reference/write_lakehouse_table.md",
     "summary": "Write a DataFrame to a configured Fabric lakehouse target."
   },
@@ -3259,7 +3216,7 @@
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 433,
     "source_end_line": 497,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/fabric_input_output.py#L433-L497",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/fabric_input_output.py#L433-L497",
     "docs_path": "api/reference/write_warehouse_table.md",
     "summary": "Write a DataFrame to a configured Fabric warehouse target."
   },
@@ -3289,7 +3246,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 88,
     "source_end_line": 100,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L88-L100",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L88-L100",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3320,7 +3277,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 82,
     "source_end_line": 85,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L82-L85",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L82-L85",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3348,7 +3305,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 466,
     "source_end_line": 487,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L466-L487",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L466-L487",
     "docs_path": null,
     "summary": "Build append-only approved sensitivity and PII classification records."
   },
@@ -3376,7 +3333,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 372,
     "source_end_line": 385,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L372-L385",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L372-L385",
     "docs_path": null,
     "summary": "Build append-only approved business-context records from explicit reviews."
   },
@@ -3408,7 +3365,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 413,
     "source_end_line": 464,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L413-L464",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L413-L464",
     "docs_path": null,
     "summary": "Build append-only approved DQ-rule records without enforcing them."
   },
@@ -3439,7 +3396,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 78,
     "source_end_line": 79,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L78-L79",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L78-L79",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3467,7 +3424,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 221,
     "source_end_line": 270,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L221-L270",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L221-L270",
     "docs_path": null,
     "summary": "Return one option per logical table using its latest successful profile."
   },
@@ -3495,7 +3452,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 62,
     "source_end_line": 67,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L62-L67",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L62-L67",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3522,7 +3479,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 497,
     "source_end_line": 511,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L497-L511",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L497-L511",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3546,7 +3503,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1368,
     "source_end_line": 1371,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1368-L1371",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1368-L1371",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3575,7 +3532,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1284,
     "source_end_line": 1366,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1284-L1366",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1284-L1366",
     "docs_path": null,
     "summary": "Build a Spark boolean expression identifying rows that fail one DQ rule."
   },
@@ -3602,7 +3559,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1448,
     "source_end_line": 1458,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1448-L1458",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1448-L1458",
     "docs_path": null,
     "summary": "Return the count of rows that failed at least one DQ rule."
   },
@@ -3628,7 +3585,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 586,
     "source_end_line": 604,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L586-L604",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L586-L604",
     "docs_path": null,
     "summary": "Return parameter names a reviewer should fill for a rule type."
   },
@@ -3655,7 +3612,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 553,
     "source_end_line": 583,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L553-L583",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L553-L583",
     "docs_path": null,
     "summary": "Return table-shaped rows for active and inactive selected-table rules."
   },
@@ -3679,7 +3636,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 388,
     "source_end_line": 410,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L388-L410",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L388-L410",
     "docs_path": null,
     "summary": "Return rule parameters stored inside ``rule_parameters_json``."
   },
@@ -3703,7 +3660,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 535,
     "source_end_line": 550,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L535-L550",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L535-L550",
     "docs_path": null,
     "summary": "Return compact display text for non-identity DQ parameters."
   },
@@ -3730,7 +3687,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1461,
     "source_end_line": 1476,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1461-L1476",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1461-L1476",
     "docs_path": null,
     "summary": "Build aggregate DQ fields for catalogue/profile evidence."
   },
@@ -3757,7 +3714,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1412,
     "source_end_line": 1445,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1412-L1445",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1412-L1445",
     "docs_path": null,
     "summary": "Return the full DataFrame tagged with failed DQ rule IDs and row status."
   },
@@ -3781,7 +3738,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1101,
     "source_end_line": 1103,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1101-L1103",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1101-L1103",
     "docs_path": null,
     "summary": "Draft column business-context suggestions with Fabric AI."
   },
@@ -3811,7 +3768,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1585,
     "source_end_line": 1593,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1585-L1593",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1585-L1593",
     "docs_path": null,
     "summary": "Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."
   },
@@ -3835,7 +3792,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1106,
     "source_end_line": 1108,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1106-L1108",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1106-L1108",
     "docs_path": null,
     "summary": "Draft sensitivity and PII classification suggestions with Fabric AI."
   },
@@ -3863,7 +3820,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1129,
     "source_end_line": 1143,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1129-L1143",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1129-L1143",
     "docs_path": null,
     "summary": "Extract dictionary payloads from AI response rows with optional table-key narrowing."
   },
@@ -3892,7 +3849,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 152,
     "source_end_line": 195,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L152-L195",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L152-L195",
     "docs_path": null,
     "summary": "Return typed Spark schemas prepared by ``00_env_config`` for governance."
   },
@@ -3919,7 +3876,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 74,
     "source_end_line": 75,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L74-L75",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L74-L75",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3943,7 +3900,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 198,
     "source_end_line": 218,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L198-L218",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L198-L218",
     "docs_path": null,
     "summary": "Return whether a Spark/read exception clearly means the table is absent."
   },
@@ -3969,7 +3926,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 489,
     "source_end_line": 494,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L489-L494",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L489-L494",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -3995,7 +3952,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1221,
     "source_end_line": 1242,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1221-L1242",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1221-L1242",
     "docs_path": null,
     "summary": "Resolve latest append-only DQ metadata rows by stable rule identity."
   },
@@ -4021,7 +3978,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 811,
     "source_end_line": 815,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L811-L815",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L811-L815",
     "docs_path": null,
     "summary": "Return the latest row using lexicographic string timestamps/ids."
   },
@@ -4051,7 +4008,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1245,
     "source_end_line": 1280,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1245-L1280",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1245-L1280",
     "docs_path": null,
     "summary": "Load active approved DQ rules from append-only metadata rows."
   },
@@ -4075,7 +4032,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1111,
     "source_end_line": 1126,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1111-L1126",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1111-L1126",
     "docs_path": null,
     "summary": "Parse JSON/Python-dict AI response text into a dictionary."
   },
@@ -4101,7 +4058,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 607,
     "source_end_line": 621,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L607-L621",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L607-L621",
     "docs_path": null,
     "summary": "Parse and validate draft AI DQ suggestions without approving them."
   },
@@ -4129,7 +4086,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1558,
     "source_end_line": 1582,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1558-L1582",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1558-L1582",
     "docs_path": null,
     "summary": "Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."
   },
@@ -4156,7 +4113,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 826,
     "source_end_line": 827,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L826-L827",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L826-L827",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4192,7 +4149,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 830,
     "source_end_line": 976,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L830-L976",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L830-L976",
     "docs_path": null,
     "summary": "Review persisted v1 evidence and write a governance outcome row."
   },
@@ -4221,7 +4178,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1374,
     "source_end_line": 1409,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1374-L1409",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1374-L1409",
     "docs_path": null,
     "summary": "Run DQ rules and return notebook guardrail check dictionaries."
   },
@@ -4247,7 +4204,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1093,
     "source_end_line": 1098,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1093-L1098",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1093-L1098",
     "docs_path": null,
     "summary": "Run Fabric AI prompt drafting against prepared profile rows."
   },
@@ -4274,7 +4231,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 140,
     "source_end_line": 143,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L140-L143",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L140-L143",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4296,7 +4253,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 146,
     "source_end_line": 149,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L146-L149",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L146-L149",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4326,7 +4283,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1083,
     "source_end_line": 1090,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1083-L1090",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1083-L1090",
     "docs_path": null,
     "summary": "Return Spark SQL helper modules lazily for DQ runtime helpers."
   },
@@ -4351,7 +4308,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 103,
     "source_end_line": 109,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L103-L109",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L103-L109",
     "docs_path": null,
     "summary": "Return Spark SQL type classes lazily so package import stays lightweight."
   },
@@ -4375,7 +4332,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 818,
     "source_end_line": 819,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L818-L819",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L818-L819",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4399,7 +4356,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 822,
     "source_end_line": 823,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L822-L823",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L822-L823",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4424,7 +4381,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1479,
     "source_end_line": 1496,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1479-L1496",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1479-L1496",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4456,7 +4413,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1146,
     "source_end_line": 1219,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1146-L1219",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1146-L1219",
     "docs_path": null,
     "summary": "Validate canonical DQ rules before loading or enforcement."
   },
@@ -4480,7 +4437,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 112,
     "source_end_line": 137,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L112-L137",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L112-L137",
     "docs_path": null,
     "summary": "Validate that a metadata schema has no case-insensitive duplicates."
   },
@@ -4512,7 +4469,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 70,
     "source_end_line": 71,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L70-L71",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L70-L71",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4566,7 +4523,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 1499,
     "source_end_line": 1556,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L1499-L1556",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L1499-L1556",
     "docs_path": "api/reference/enforce_dq_rules.md",
     "summary": "Enforce approved active DQ rules as a target-write guardrail without filtering rows."
   },
@@ -4603,7 +4560,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 273,
     "source_end_line": 297,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L273-L297",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L273-L297",
     "docs_path": "api/reference/get_selected_catalogue_table.md",
     "summary": "Return the table selected by widget_select_catalogue_table."
   },
@@ -4653,7 +4610,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 344,
     "source_end_line": 369,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L344-L369",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L344-L369",
     "docs_path": "api/reference/load_catalogue_profile_rows.md",
     "summary": "Load column profile rows for the selected catalogue table."
   },
@@ -4701,7 +4658,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 978,
     "source_end_line": 1080,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L978-L1080",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L978-L1080",
     "docs_path": "api/reference/record_table_governance.md",
     "summary": "Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action."
   },
@@ -4740,7 +4697,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 789,
     "source_end_line": 807,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L789-L807",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L789-L807",
     "docs_path": "api/reference/widget_review_column_classification.md",
     "summary": "Render standalone sensitivity and PII classification review guidance for selected profile rows."
   },
@@ -4779,7 +4736,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 514,
     "source_end_line": 532,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L514-L532",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L514-L532",
     "docs_path": "api/reference/widget_review_column_context.md",
     "summary": "Render standalone business-context review guidance for selected profile rows."
   },
@@ -4828,7 +4785,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 624,
     "source_end_line": 787,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L624-L787",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L624-L787",
     "docs_path": "api/reference/widget_review_dq_rules.md",
     "summary": "Render standalone DQ-rule review guidance for selected profile rows."
   },
@@ -4869,7 +4826,7 @@
     "source_path": "src/fabricops_kit/governance_review.py",
     "source_start_line": 300,
     "source_end_line": 341,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/governance_review.py#L300-L341",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/governance_review.py#L300-L341",
     "docs_path": "api/reference/widget_select_catalogue_table.md",
     "summary": "Render a searchable selector for latest successful catalogue profiles."
   },
@@ -4893,7 +4850,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 27,
     "source_end_line": 34,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L27-L34",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L27-L34",
     "docs_path": null,
     "summary": "Raised when a guardrail check is configured to stop execution."
   },
@@ -4919,7 +4876,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 86,
     "source_end_line": 101,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L86-L101",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L86-L101",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4944,7 +4901,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 467,
     "source_end_line": 478,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L467-L478",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L467-L478",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4969,7 +4926,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 342,
     "source_end_line": 359,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L342-L359",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L342-L359",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -4994,7 +4951,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 485,
     "source_end_line": 494,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L485-L494",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L485-L494",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5018,7 +4975,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 282,
     "source_end_line": 286,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L282-L286",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L282-L286",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5044,7 +5001,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 507,
     "source_end_line": 514,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L507-L514",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L507-L514",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5066,7 +5023,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 289,
     "source_end_line": 291,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L289-L291",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L289-L291",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5092,7 +5049,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 497,
     "source_end_line": 504,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L497-L504",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L497-L504",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5117,7 +5074,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 834,
     "source_end_line": 837,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L834-L837",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L834-L837",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5143,7 +5100,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 362,
     "source_end_line": 364,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L362-L364",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L362-L364",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5172,7 +5129,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 527,
     "source_end_line": 636,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L527-L636",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L527-L636",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5196,7 +5153,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 309,
     "source_end_line": 339,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L309-L339",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L309-L339",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5221,7 +5178,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 37,
     "source_end_line": 83,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L37-L83",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L37-L83",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5249,7 +5206,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 201,
     "source_end_line": 269,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L201-L269",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L201-L269",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5275,7 +5232,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 294,
     "source_end_line": 306,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L294-L306",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L294-L306",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5302,7 +5259,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 517,
     "source_end_line": 524,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L517-L524",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L517-L524",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5326,7 +5283,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 272,
     "source_end_line": 279,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L272-L279",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L272-L279",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5352,7 +5309,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 481,
     "source_end_line": 482,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L481-L482",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L481-L482",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5397,7 +5354,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 367,
     "source_end_line": 464,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L367-L464",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L367-L464",
     "docs_path": "api/reference/enforce_freshness.md",
     "summary": "Enforce whether the latest data arrived within the configured freshness lag."
   },
@@ -5465,7 +5422,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 639,
     "source_end_line": 832,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L639-L832",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L639-L832",
     "docs_path": "api/reference/enforce_profile_behavior.md",
     "summary": "Enforce append, overwrite, or skip profile behavior against accepted catalogue profile evidence."
   },
@@ -5506,7 +5463,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 840,
     "source_end_line": 859,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L840-L859",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L840-L859",
     "docs_path": "api/reference/stop_if_failed.md",
     "summary": "Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation."
   },
@@ -5550,7 +5507,7 @@
     "source_path": "src/fabricops_kit/guardrails.py",
     "source_start_line": 109,
     "source_end_line": 198,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/guardrails.py#L109-L198",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/guardrails.py#L109-L198",
     "docs_path": "api/reference/validate_schema.md",
     "summary": "Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets."
   },
@@ -5576,7 +5533,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 85,
     "source_end_line": 86,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L85-L86",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L85-L86",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5602,7 +5559,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 81,
     "source_end_line": 82,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L81-L82",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L81-L82",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5633,7 +5590,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 77,
     "source_end_line": 78,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L77-L78",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L77-L78",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5667,7 +5624,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 147,
     "source_end_line": 217,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L147-L217",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L147-L217",
     "docs_path": null,
     "summary": "Build reusable framework-managed audit fields for metadata-table rows."
   },
@@ -5691,7 +5648,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 53,
     "source_end_line": 58,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L53-L58",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L53-L58",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5719,7 +5676,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 101,
     "source_end_line": 113,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L101-L113",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L101-L113",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5748,7 +5705,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 390,
     "source_end_line": 440,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L390-L440",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L390-L440",
     "docs_path": null,
     "summary": "Return active agreement registrations for the running notebook."
   },
@@ -5776,7 +5733,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 336,
     "source_end_line": 387,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L336-L387",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L336-L387",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5801,7 +5758,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 41,
     "source_end_line": 50,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L41-L50",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L41-L50",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5828,7 +5785,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 61,
     "source_end_line": 62,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L61-L62",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L61-L62",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5860,7 +5817,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 220,
     "source_end_line": 333,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L220-L333",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L220-L333",
     "docs_path": null,
     "summary": "Append a runtime notebook registration row."
   },
@@ -5888,7 +5845,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 65,
     "source_end_line": 69,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L65-L69",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L65-L69",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5912,7 +5869,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 89,
     "source_end_line": 98,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L89-L98",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L89-L98",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5941,7 +5898,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 120,
     "source_end_line": 144,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L120-L144",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L120-L144",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5967,7 +5924,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 116,
     "source_end_line": 117,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L116-L117",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L116-L117",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -5993,7 +5950,7 @@
     "source_path": "src/fabricops_kit/metadata.py",
     "source_start_line": 72,
     "source_end_line": 74,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/metadata.py#L72-L74",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/metadata.py#L72-L74",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6019,7 +5976,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 113,
     "source_end_line": 123,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L113-L123",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L113-L123",
     "docs_path": null,
     "summary": "Return a DataFrame with standard FabricOps target audit columns."
   },
@@ -6046,7 +6003,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 228,
     "source_end_line": 257,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L228-L257",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L228-L257",
     "docs_path": null,
     "summary": "Build catalogue evidence definitions for pipeline table guardrails."
   },
@@ -6070,7 +6027,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 81,
     "source_end_line": 109,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L81-L109",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L81-L109",
     "docs_path": null,
     "summary": "Return profile evidence using lowercase catalogue column names only."
   },
@@ -6096,7 +6053,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 23,
     "source_end_line": 24,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L23-L24",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L23-L24",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6122,7 +6079,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 63,
     "source_end_line": 78,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L63-L78",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L63-L78",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6146,7 +6103,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 224,
     "source_end_line": 225,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L224-L225",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L224-L225",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6176,7 +6133,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 19,
     "source_end_line": 20,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L19-L20",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L19-L20",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6204,7 +6161,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 49,
     "source_end_line": 60,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L49-L60",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L49-L60",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6228,7 +6185,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 27,
     "source_end_line": 46,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L27-L46",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L27-L46",
     "docs_path": null,
     "summary": "Return a roll-up status for guardrail result mappings."
   },
@@ -6253,7 +6210,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 216,
     "source_end_line": 217,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L216-L217",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L216-L217",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6278,7 +6235,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 220,
     "source_end_line": 221,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L220-L221",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L220-L221",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -6323,7 +6280,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 126,
     "source_end_line": 214,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L126-L214",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L126-L214",
     "docs_path": "api/reference/prepare_pipeline_table_configs.md",
     "summary": "Prepare source or target table configs for 02_pipeline."
   },
@@ -6375,7 +6332,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 260,
     "source_end_line": 448,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L260-L448",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L260-L448",
     "docs_path": "api/reference/run_table_guardrails.md",
     "summary": "Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs."
   },
@@ -6427,7 +6384,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 451,
     "source_end_line": 556,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L451-L556",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L451-L556",
     "docs_path": "api/reference/write_catalogue_evidence.md",
     "summary": "Enrich profile rows with guardrail context and write catalogue evidence."
   },
@@ -6476,7 +6433,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 559,
     "source_end_line": 643,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L559-L643",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L559-L643",
     "docs_path": "api/reference/write_pipeline_lineage.md",
     "summary": "Write many-to-many source-to-target lineage evidence."
   },
@@ -6524,7 +6481,7 @@
     "source_path": "src/fabricops_kit/pipeline.py",
     "source_start_line": 646,
     "source_end_line": 758,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1dc3c45d105de76dbe2c564d1e04e78d550eac95/src/fabricops_kit/pipeline.py#L646-L758",
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c4d665ddd08b8c281ac8a97f8e2ce0ba80ff0d05/src/fabricops_kit/pipeline.py#L646-L758",
     "docs_path": "api/reference/write_pipeline_run_summary.md",
     "summary": "Write one pipeline runtime summary row to metadata."
   }
