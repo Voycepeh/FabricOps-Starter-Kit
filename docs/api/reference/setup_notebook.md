@@ -4,7 +4,7 @@ Shared environment setup and runtime validation for notebook templates.
 
 ## Purpose
 
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
+Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.
 
 ## When to use this
 
@@ -78,14 +78,6 @@ def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox',
 ### Returns
 
 NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

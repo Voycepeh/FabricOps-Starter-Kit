@@ -2,10 +2,6 @@
 
 Enforce approved active DQ rules as a target-write guardrail without filtering rows.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use before target writes to enforce active approved DQ rules for a dataset/table as a pipeline guardrail.
@@ -80,14 +76,6 @@ def enforce_dq_rules(dataframe, config, env, dataset_name, table_name, *, spark_
 ### Returns
 
 Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

@@ -2,10 +2,6 @@
 
 Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.
@@ -58,14 +54,6 @@ def stop_if_failed(result) -> None
 ### Returns
 
 None when execution may continue; otherwise raises or exits according to runtime behavior.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

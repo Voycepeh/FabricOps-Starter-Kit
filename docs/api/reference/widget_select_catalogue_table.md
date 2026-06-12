@@ -2,10 +2,6 @@
 
 Render a searchable selector for latest successful catalogue profiles.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Render a searchable selector for latest successful catalogue profiles.
@@ -67,14 +63,6 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any)
 
 ipywidgets.Combobox
     Searchable selector whose value stores stable JSON identity.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

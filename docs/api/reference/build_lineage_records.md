@@ -2,10 +2,6 @@
 
 Build source-to-target lineage evidence records for a pipeline run.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use in pipeline notebooks to build source-to-target lineage evidence rows for a completed transformation run.
@@ -73,14 +69,6 @@ def build_lineage_records(*, dataset_name: str, run_id: str, source_tables: list
 ### Returns
 
 List of lineage record dictionaries suitable for metadata persistence.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

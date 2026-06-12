@@ -2,10 +2,6 @@
 
 Render the standalone data-steward intake widget.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Render the standalone data-steward intake widget.
@@ -65,14 +61,6 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
 
 dict[str, Any]
     Rendered widget controls keyed for notebook customization.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

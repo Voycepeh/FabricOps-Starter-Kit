@@ -2,10 +2,6 @@
 
 Read an Excel file from a configured Fabric lakehouse Files path.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use when reading .xlsx files from a configured Fabric lakehouse Files path, especially small reference files, mapping tables, or manually maintained business inputs.
@@ -76,14 +72,6 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
 ### Returns
 
 Spark DataFrame converted from the selected Excel worksheet.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

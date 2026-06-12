@@ -2,10 +2,6 @@
 
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use in 02_pipeline to run source guardrails before transformation and target guardrails before writes while keeping per-table results separated.
@@ -98,14 +94,6 @@ def run_table_guardrails(table_configs: list[dict[str, Any]], *, config: Any, en
 ### Returns
 
 Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

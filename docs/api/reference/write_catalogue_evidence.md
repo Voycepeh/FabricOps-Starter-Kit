@@ -2,10 +2,6 @@
 
 Enrich profile rows with guardrail context and write catalogue evidence.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use after source or target profiles and guardrail results are available to persist catalogue evidence through the configured metadata route.
@@ -109,14 +105,6 @@ def write_catalogue_evidence(profiles: Mapping[str, Any], dataset_definitions: M
 ### Returns
 
 Dictionary of write statuses keyed by dataset alias.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

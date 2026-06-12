@@ -2,10 +2,6 @@
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use to create schema, null, distinct, min/max, and optional distribution evidence from a Spark DataFrame.
@@ -93,14 +89,6 @@ def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestam
 ### Returns
 
 Spark DataFrame containing one profile row per eligible business column.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

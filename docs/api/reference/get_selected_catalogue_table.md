@@ -2,10 +2,6 @@
 
 Return the table selected by widget_select_catalogue_table.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Return the table selected by widget_select_catalogue_table.
@@ -59,14 +55,6 @@ def get_selected_catalogue_table(table_selector: Any | None=None) -> dict[str, A
 
 dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

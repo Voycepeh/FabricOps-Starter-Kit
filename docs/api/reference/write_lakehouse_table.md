@@ -2,10 +2,6 @@
 
 Write a DataFrame to a configured Fabric lakehouse target.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use when publishing a Spark DataFrame to a configured Fabric lakehouse table.
@@ -96,14 +92,6 @@ def write_lakehouse_table(df, config, env, target, table, mode='append', partiti
 ### Returns
 
 None; the DataFrame is written to the configured lakehouse table.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

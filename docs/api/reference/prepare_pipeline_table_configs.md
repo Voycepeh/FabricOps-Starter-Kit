@@ -2,10 +2,6 @@
 
 Prepare source or target table configs for 02_pipeline.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive standard config fields or add target audit columns.
@@ -71,14 +67,6 @@ def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_
 ### Returns
 
 Enriched table configs and a dictionary keyed by table key.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

@@ -2,10 +2,6 @@
 
 Enforce whether the latest data arrived within the configured freshness lag.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.
@@ -72,14 +68,6 @@ def enforce_freshness(dataframe, freshness_column: str | None, max_lag_days: int
 ### Returns
 
 Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

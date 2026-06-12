@@ -2,10 +2,6 @@
 
 Write one pipeline runtime summary row to metadata.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use at the end of 02_pipeline to store operational run evidence in METADATA_PIPELINE_RUNS.
@@ -142,14 +138,6 @@ def write_pipeline_run_summary(*, spark: Any, config: Any, env: str, run_id: str
 ### Returns
 
 Runtime summary row that was written.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

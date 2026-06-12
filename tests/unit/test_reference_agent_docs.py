@@ -29,7 +29,6 @@ CORE_CALLABLES = {
     "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
-    "Purpose",
     "At a glance",
 )
 CORE_AGENT_FIELDS = (
@@ -79,7 +78,6 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        assert "## Purpose" in text, page
         assert "## When to use this" in text, page
         assert "## At a glance" in text, page
         assert "## Used in templates" in text, page
@@ -89,8 +87,6 @@ def test_every_callable_page_has_ai_reference_sections() -> None:
         assert "### Function details" in text, page
         assert "### Parameters" in text, page
         assert "### Returns" in text, page
-        assert "### Return interpretation" in text, page
-        assert "### Common failure causes" in text, page
         assert "### Notes" in text, page
         assert "### Example" in text, page
         assert "### Public callable source code" in text, page
@@ -141,7 +137,6 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         ordered_markers = [
-            "## Purpose",
             "## When to use this",
             "## At a glance",
             "## Used in templates",
@@ -151,13 +146,16 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
             "### Function details",
             "### Parameters",
             "### Returns",
-            "### Return interpretation",
-            "### Common failure causes",
             "### Notes",
             "### Example",
             "### Public callable source code",
             "## Internal implementation summary",
         ]
+        if "## Purpose" in text:
+            ordered_markers.insert(0, "## Purpose")
+        for optional_marker in ("### Return interpretation", "### Common failure causes"):
+            if optional_marker in text:
+                ordered_markers.insert(ordered_markers.index("### Notes"), optional_marker)
         positions = [text.index(marker) for marker in ordered_markers]
         assert positions == sorted(positions), page
         assert '??? info "Call flow"' in text, page
@@ -280,7 +278,7 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "setup_notebook on GitHub" in text
     assert "### Example\n\n```python\ncontext = setup_notebook" in text
     first_metadata = text.index("<summary>AI / machine-readable metadata")
-    for marker in ("## Purpose", "## At a glance", "### Parameters", "### Returns"):
+    for marker in ("## At a glance", "### Parameters", "### Returns"):
         assert text.index(marker) < first_metadata
     assert "## AI / machine-readable metadata" not in text
     assert "- Starting a FabricOps notebook from 00_env_config" in text
@@ -303,7 +301,6 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
         assert canonical_page.exists(), name
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
         text = canonical_page.read_text(encoding="utf-8")
-        assert "## Purpose" in text, canonical_page
         assert "## At a glance" in text, canonical_page
         assert "## Internal implementation summary" in text, canonical_page
 
@@ -384,9 +381,23 @@ def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
         text = page.read_text(encoding="utf-8")
         lines = text.splitlines()
         intro = next(line.strip() for line in lines[1:] if line.strip())
+        if "## Purpose" not in text:
+            continue
         purpose = _section_text(text, "Purpose")
         assert purpose.strip() != intro, page
         assert purpose.count(intro) == 0, page
+
+
+def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
+    forbidden = (
+        "This API reference documents the callable summarized above",
+        "Interpret the returned value according to the Returns section above",
+        "No common failure causes are documented beyond the Errors section",
+    )
+    for page in sorted(API_REFERENCE_DIR.glob("*.md")):
+        text = page.read_text(encoding="utf-8")
+        for phrase in forbidden:
+            assert phrase not in text, page
 
 def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
@@ -460,7 +471,6 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
 def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() -> None:
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
     ordered_markers = [
-        "## Purpose",
         "## When to use this",
         "## At a glance",
         "## Used in templates",
@@ -472,6 +482,8 @@ def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() 
         "## Internal implementation summary",
         '<summary>AI / machine-readable metadata',
     ]
+    if "## Purpose" in text:
+        ordered_markers.insert(0, "## Purpose")
 
     assert [text.index(marker) for marker in ordered_markers] == sorted(text.index(marker) for marker in ordered_markers)
     assert "Internal helpers used by this callable" not in text

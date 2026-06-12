@@ -2,10 +2,6 @@
 
 Read a Parquet path from a configured Fabric lakehouse Files path.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
@@ -77,14 +73,6 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
 ### Returns
 
 Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

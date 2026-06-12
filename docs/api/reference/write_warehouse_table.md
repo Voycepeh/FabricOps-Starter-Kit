@@ -2,10 +2,6 @@
 
 Write a DataFrame to a configured Fabric warehouse target.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use when publishing a Spark DataFrame to a configured Fabric warehouse table.
@@ -77,14 +73,6 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 ### Returns
 
 None; the DataFrame is written to the configured warehouse table.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

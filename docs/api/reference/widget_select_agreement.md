@@ -2,10 +2,6 @@
 
 Render an agreement selector and optionally register the active notebook.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use in 02_pipeline or 99_explore notebooks to let a user select an approved data agreement before reading, profiling, or writing governed data.
@@ -92,14 +88,6 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None=
 ### Returns
 
 Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

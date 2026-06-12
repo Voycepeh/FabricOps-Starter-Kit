@@ -2,10 +2,6 @@
 
 Load column profile rows for the selected catalogue table.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Load column profile rows for the selected catalogue table.
@@ -71,14 +67,6 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
 ### Returns
 
 Not documented yet
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

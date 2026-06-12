@@ -2,10 +2,6 @@
 
 Render the standalone data-agreement intake widget.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Render the standalone data-agreement intake widget.
@@ -65,14 +61,6 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
 
 dict[str, Any]
     Rendered controls, including read-only generated-identifier context.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

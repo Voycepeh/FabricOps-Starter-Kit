@@ -2033,16 +2033,26 @@ def main() -> None:
             human_use_when = _documented_text(metadata.get("when_to_use"), metadata.get("use_when"), metadata.get("purpose"), purpose)
             human_use_bullets = _bullet_lines(human_use_when)
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
-            purpose_body = _documented_text(
-                metadata.get("expanded_purpose"),
-                (
-                    "This API reference documents the callable summarized above. Use the sections below "
-                    "for when to use it, inputs, return values, template usage, and implementation details."
-                ),
-            )
+            expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
+            metadata_purpose = _documented_text(metadata.get("purpose"))
+            purpose_lines: list[str] = []
+            if expanded_purpose != PLACEHOLDER:
+                purpose_lines = ["## Purpose", "", expanded_purpose, ""]
+            elif metadata_purpose != PLACEHOLDER and metadata_purpose.strip() != purpose.strip():
+                purpose_lines = ["## Purpose", "", metadata_purpose, ""]
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
             key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
+            return_interpretation_lines = (
+                ["### Return interpretation", "", rendered_return_interpretation, ""]
+                if metadata.get("return_interpretation")
+                else []
+            )
+            common_failure_cause_lines = (
+                ["### Common failure causes", "", rendered_common_failure_causes, ""]
+                if metadata.get("common_failure_causes")
+                else []
+            )
             function_manifest_lines = [
                 f"- Fully qualified function name: `{qn}`",
                 f"- Short name: `{short_name}`",
@@ -2110,10 +2120,7 @@ def main() -> None:
                 "",
                 purpose,
                 "",
-                "## Purpose",
-                "",
-                purpose_body,
-                "",
+                *purpose_lines,
                 "## When to use this",
                 "",
                 *human_use_bullets,
@@ -2159,14 +2166,8 @@ def main() -> None:
                 "",
                 rendered_returns,
                 "",
-                "### Return interpretation",
-                "",
-                rendered_return_interpretation,
-                "",
-                "### Common failure causes",
-                "",
-                rendered_common_failure_causes,
-                "",
+                *return_interpretation_lines,
+                *common_failure_cause_lines,
                 "### Notes",
                 "",
                 rendered_notes,

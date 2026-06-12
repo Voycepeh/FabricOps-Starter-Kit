@@ -2,10 +2,6 @@
 
 Render standalone sensitivity and PII classification review guidance for selected profile rows.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Render standalone sensitivity and PII classification review guidance for selected profile rows.
@@ -60,14 +56,6 @@ def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> l
 list[dict[str, Any]]
     Empty editable review list. Add approved classification dictionaries
     before calling ``record_table_governance``.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

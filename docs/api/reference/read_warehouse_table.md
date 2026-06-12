@@ -2,10 +2,6 @@
 
 Read a table from a configured Fabric warehouse target.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use when reading a table from a configured Fabric warehouse target.
@@ -76,14 +72,6 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 ### Returns
 
 Spark DataFrame loaded from the configured warehouse table.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

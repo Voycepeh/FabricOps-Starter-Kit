@@ -2,10 +2,6 @@
 
 Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use before writes to compare a DataFrame schema against an expected schema with strict, allow-new-columns, or monitor-only behavior.
@@ -65,14 +61,6 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str='
 ### Returns
 
 Guardrail result dictionary with status, can_continue, checks, message, and schema difference details.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

@@ -2,10 +2,6 @@
 
 Create or validate all FabricOps metadata tables through one setup action.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, stability, and governance workflows.
@@ -74,14 +70,6 @@ def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any
 ### Returns
 
 Setup result describing metadata table creation or validation status.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 

@@ -2,10 +2,6 @@
 
 Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.
 
-## Purpose
-
-This API reference documents the callable summarized above. Use the sections below for when to use it, inputs, return values, template usage, and implementation details.
-
 ## When to use this
 
 - Use in 03_governance after human approval to persist approved column context, DQ rules, and classification evidence for a profiled table.
@@ -92,14 +88,6 @@ def record_table_governance(config: Any, env: str, profile_rows: list[dict[str, 
 ### Returns
 
 Dictionary of records written for column_context, dq_rules, and column_classification.
-
-### Return interpretation
-
-Interpret the returned value according to the Returns section above.
-
-### Common failure causes
-
-No common failure causes are documented beyond the Errors section.
 
 ### Notes
 
