@@ -2265,8 +2265,6 @@ def main() -> None:
             "used_in_templates": record_used_in_templates,
             "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [],
             "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None,
-            "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None,
-            "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [],
             "source_file": source_path,
             "source_start_line": source_start_line,
             "source_end_line": source_end_line,
