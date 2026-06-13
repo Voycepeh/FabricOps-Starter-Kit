@@ -130,7 +130,7 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
 def test_lakehouse_table_helpers_reject_nested_table_paths():
     config = framework_config()
 
-    with pytest.raises(ValueError, match="not a file path"):
+    with pytest.raises(ValueError, match="simple table name"):
         io.write_lakehouse_table(_Frame(), config, "dev", "metadata", "METADATA_DQ_RULES/Unidentified", mode="ignore")
 
 

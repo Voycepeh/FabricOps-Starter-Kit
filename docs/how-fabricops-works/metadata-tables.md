@@ -2,9 +2,19 @@
 
 FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, support, and visibility.
 
-`00_env_config` creates the current 11 active metadata tables on first run and validates the expected schemas on later runs. It creates missing metadata tables by building empty Spark DataFrames from the known schemas and writing them through the configured `metadata` lakehouse target; the notebook does **not** need a default lakehouse attachment for metadata setup. `METADATA_DATA_ACCESS` remains documented as optional access-capture metadata, but it is not created by the standard setup until an access-capture workflow enables it. Most users should not create or edit these schemas by hand.
+`00_env_config` contains the metadata setup call as an optional commented block. Uncomment and run that block manually once per environment to create the current 11 active metadata tables, then comment it back before normal use. Rerun it only after metadata schema/table changes. Keeping setup commented makes downstream `%run 00_env_config` calls fast for `01_agreement`, `02_pipeline`, and `03_governance`. The setup creates missing metadata tables by building empty Spark DataFrames from the known schemas and writing them through the configured `metadata` lakehouse target; the notebook does **not** need a default lakehouse attachment for metadata setup. `METADATA_DATA_ACCESS` remains documented as optional access-capture metadata, but it is not created by the standard setup until an access-capture workflow enables it. Most users should not create or edit these schemas by hand.
 
 A healthy metadata table is rooted directly at `Tables/<metadata_table>/_delta_log`; it should not be created as a nested path such as `Tables/<metadata_table>/Unidentified/_delta_log`. FabricOps does not automatically migrate older or malformed metadata tables. If schema validation reports missing columns or you find an older nested folder, recreate the affected table or manually migrate the data before rerunning setup. If you choose to inspect the metadata lakehouse catalog manually, run catalog checks against the configured metadata lakehouse rather than relying on a notebook default lakehouse.
+
+
+## Classic and schema-enabled Lakehouse registration
+
+FabricOps supports both Microsoft Fabric Lakehouse table registration models:
+
+- **Classic/non-schema Lakehouses:** set `LAKEHOUSE_SCHEMAS_ENABLED = False` and keep target schemas unset or `None` in `00_env_config`. When you manually uncomment and run the setup block, metadata setup writes Delta tables under `Tables/<table_name>` in the configured metadata Lakehouse.
+- **Schema-enabled Lakehouses:** keep `LAKEHOUSE_SCHEMAS_ENABLED = True` and set `METADATA_SCHEMA` to the configured schema such as `"dbo"` in `00_env_config`. The configured metadata target carries that schema into shared Lakehouse IO, so metadata setup writes physical Delta tables under `Tables/<schema>/<metadata_table_name>` (for example `Tables/dbo/METADATA_DATA_AGREEMENT`) while Spark identifiers resolve as `<schema>.<table>` when needed.
+
+If you see `Unidentified` folders in a schema-enabled Lakehouse, the tables were likely written as path-based Delta folders instead of registered schema tables. FabricOps does not automatically delete, move, or migrate those folders. Confirm there is no needed data in the folders, then recreate the tables through the optional `00_env_config` setup block using the configured `METADATA_SCHEMA` or manually migrate the data using your normal Fabric administration process.
 
 All workflow notebooks read and write metadata through the configured metadata route:
 

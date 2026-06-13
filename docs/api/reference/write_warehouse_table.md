@@ -5,9 +5,9 @@ Write a DataFrame to a configured Fabric warehouse target.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:400`
+`fabricops_kit/fabric_input_output.py:470`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L400-L464">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/28ea8aabaa58ddf26db6f23bbd745152d6367f35/src/fabricops_kit/fabric_input_output.py#L470-L534">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -125,7 +125,7 @@ Fabric runtime connector APIs.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/28ea8aabaa58ddf26db6f23bbd745152d6367f35/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -143,7 +143,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `400`
+- Source line: `470`
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 00_env_config, 02_pipeline
@@ -169,9 +169,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L400-L464">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L400-L464</a>
-- Start line: `400`
-- End line: `464`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/28ea8aabaa58ddf26db6f23bbd745152d6367f35/src/fabricops_kit/fabric_input_output.py#L470-L534">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/28ea8aabaa58ddf26db6f23bbd745152d6367f35/src/fabricops_kit/fabric_input_output.py#L470-L534</a>
+- Start line: `470`
+- End line: `534`
 - Signature:
 
 ```python

@@ -7,7 +7,7 @@ Return the table selected by widget_select_catalogue_table.
 
 `fabricops_kit/governance_review.py:273`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L273-L297">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/28ea8aabaa58ddf26db6f23bbd745152d6367f35/src/fabricops_kit/governance_review.py#L273-L297">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -151,7 +151,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L273-L297">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L273-L297</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/28ea8aabaa58ddf26db6f23bbd745152d6367f35/src/fabricops_kit/governance_review.py#L273-L297">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/28ea8aabaa58ddf26db6f23bbd745152d6367f35/src/fabricops_kit/governance_review.py#L273-L297</a>
 - Start line: `273`
 - End line: `297`
 - Signature:

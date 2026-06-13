@@ -450,7 +450,7 @@ def _generate_steward_id(values: dict[str, Any]) -> str:
     return f"STEW-{digest}"
 
 
-def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False) -> list[dict[str, Any]]:
+def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest append-only steward rows from the metadata lakehouse.
 
     Parameters
@@ -473,7 +473,7 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
     """
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), spark_session=spark_session)
+        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), schema=metadata_schema, spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []

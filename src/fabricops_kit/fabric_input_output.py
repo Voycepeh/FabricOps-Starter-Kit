@@ -60,6 +60,8 @@ class FabricStore:
     item_id: str
     name: str
     kind: str
+    schema_enabled: bool = False
+    schema: str | None = None
 
     def __post_init__(self) -> None:
         for field_name in ("env", "workspace_id", "item_id", "name", "kind"):
@@ -70,6 +72,16 @@ class FabricStore:
         if normalized_kind not in {"lakehouse", "warehouse"}:
             raise ValueError("kind must be one of: lakehouse, warehouse.")
         object.__setattr__(self, "kind", normalized_kind)
+        object.__setattr__(self, "schema_enabled", bool(self.schema_enabled))
+        schema_value = None if self.schema is None else str(self.schema).strip()
+        if self.schema_enabled and normalized_kind == "lakehouse":
+            if not schema_value:
+                raise ValueError("schema is required when schema_enabled is True for a lakehouse store.")
+            if any(separator in schema_value for separator in ("/", "\\", ".")):
+                raise ValueError("schema must be a simple schema name; do not use paths or dots.")
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", schema_value):
+                raise ValueError("schema must contain only letters, numbers, and underscores, and must not start with a number.")
+        object.__setattr__(self, "schema", schema_value or None)
 
     @property
     def root(self) -> str:
@@ -79,15 +91,62 @@ class FabricStore:
 
 
 def _normalize_table_name(table: str) -> str:
-    """Return a safe Spark table name, never a nested folder path."""
+    """Return a safe Spark table identifier, never a path or qualified name."""
     value = str(table or "").strip()
     if not value:
         raise ValueError("table is required.")
-    if any(separator in value for separator in ("/", "\\")) or ".." in value:
-        raise ValueError("table must be a table name, not a file path or nested folder path.")
+    if any(separator in value for separator in ("/", "\\", ".")):
+        raise ValueError("table must be a simple table name; pass schema separately and do not use paths or dots.")
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
         raise ValueError("table must contain only letters, numbers, and underscores, and must not start with a number.")
     return value
+
+
+def _normalize_schema_name(schema: str | None) -> str | None:
+    """Return a safe Spark schema identifier, or ``None`` when omitted."""
+    if schema is None:
+        return None
+    value = str(schema).strip()
+    if not value:
+        raise ValueError("schema must be a non-empty Spark identifier when provided.")
+    if any(separator in value for separator in ("/", "\\", ".")):
+        raise ValueError("schema must be a simple schema name; do not use paths or dots.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError("schema must contain only letters, numbers, and underscores, and must not start with a number.")
+    return value
+
+
+def _qualified_table_name(schema: str | None, table: str) -> str:
+    """Return ``schema.table`` when schema is provided, otherwise ``table``."""
+    table_name = _normalize_table_name(table)
+    schema_name = _normalize_schema_name(schema)
+    return f"{schema_name}.{table_name}" if schema_name else table_name
+
+
+def _resolve_lakehouse_schema(store: FabricStore, schema: str | None = None) -> str | None:
+    """Return the explicit schema or configured store schema when enabled."""
+    if schema is not None:
+        return _normalize_schema_name(schema)
+    if getattr(store, "schema_enabled", False):
+        return _normalize_schema_name(getattr(store, "schema", None))
+    return None
+
+
+def _resolve_lakehouse_table_path(store: FabricStore, table: str, schema: str | None = None) -> str:
+    """Return the physical OneLake Delta table path for a lakehouse table."""
+    if store.kind != "lakehouse":
+        raise ValueError("Lakehouse table paths are only available for lakehouse stores.")
+    table_name = _normalize_table_name(table)
+    schema_name = _resolve_lakehouse_schema(store, schema)
+    table_relative_path = f"{schema_name}/{table_name}" if schema_name else table_name
+    return f"{store.root.rstrip('/')}/Tables/{table_relative_path}"
+
+
+def _resolve_lakehouse_table_identifier(store: FabricStore, table: str, schema: str | None = None) -> str:
+    """Return the Spark table identifier for a lakehouse table."""
+    table_name = _normalize_table_name(table)
+    schema_name = _resolve_lakehouse_schema(store, schema)
+    return _qualified_table_name(schema_name, table_name)
 
 
 DEFAULT_ENV = "Sandbox"
@@ -143,7 +202,7 @@ def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> st
     return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
 
 
-def read_lakehouse_table(config, env, target, table, spark_session=None):
+def read_lakehouse_table(config, env, target, table, schema=None, spark_session=None):
     """Read a Delta table from a Fabric lakehouse.
 
     This reads from the lakehouse `Tables/` area by loading the ABFSS path from
@@ -161,7 +220,12 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     target : str
         Logical target name such as `"source"` or `"unified"`.
     table : str
-        Table name under the lakehouse `Tables` area.
+        Simple table name. Do not pass ``schema.table``; use ``schema`` separately.
+    schema : str or None, default=None
+        Optional schema override for schema-enabled Lakehouses. When omitted,
+        schema routing comes from the configured lakehouse target. Schema-enabled
+        targets read from ``Tables/<schema>/<table>``; classic targets read from
+        ``Tables/<table>``.
     spark_session : object, optional
         Spark session to use. If omitted, the helper uses the notebook global
         `spark`.
@@ -185,10 +249,10 @@ def read_lakehouse_table(config, env, target, table, spark_session=None):
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    table_name = _normalize_table_name(table)
+    _normalize_table_name(table)
 
     spark_obj = _get_spark(spark_session)
-    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
+    path = _resolve_lakehouse_table_path(store, table, schema=schema)
     return spark_obj.read.format("delta").load(path)
 
 
@@ -198,6 +262,7 @@ def write_lakehouse_table(
     env,
     target,
     table,
+    schema=None,
     mode="append",
     partition_by=None,
     repartition_by=None,
@@ -222,7 +287,12 @@ def write_lakehouse_table(
     target : str
         Logical target name such as `"source"` or `"unified"`.
     table : str
-        Target table name under the lakehouse `Tables` area.
+        Simple target table name. Do not pass ``schema.table``; use ``schema`` separately.
+    schema : str or None, default=None
+        Optional schema override for schema-enabled Lakehouses. When omitted,
+        schema routing comes from the configured lakehouse target. Schema-enabled
+        targets save to ``Tables/<schema>/<table>``; classic targets save to
+        ``Tables/<table>``.
     mode : str, default "append"
         Spark write mode. Supported values are `"append"`, `"overwrite"`,
         `"errorifexists"`, and `"ignore"`.
@@ -241,7 +311,7 @@ def write_lakehouse_table(
     Notes
     -----
     Side effects:
-    - Persists data to OneLake Delta storage under ``Tables/<table>``.
+    - Persists data to OneLake Delta storage under ``Tables/<table>`` or ``Tables/<schema>/<table>`` when schema routing is enabled.
     - Optional repartitioning can change output file sizing and partition
       layout.
 
@@ -257,13 +327,13 @@ def write_lakehouse_table(
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
-    table_name = _normalize_table_name(table)
+    _normalize_table_name(table)
 
     normalized_mode = str(mode or "").lower().strip()
     if normalized_mode not in {"append", "overwrite", "errorifexists", "ignore"}:
         raise ValueError("mode must be one of append, overwrite, errorifexists, ignore.")
 
-    path = f"{store.root.rstrip('/')}/Tables/{table_name}"
+    path = _resolve_lakehouse_table_path(store, table, schema=schema)
 
     if repartition_by is not None:
         if isinstance(repartition_by, (list, tuple)):

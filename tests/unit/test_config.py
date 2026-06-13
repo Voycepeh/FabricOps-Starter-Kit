@@ -24,6 +24,7 @@ from fabricops_kit.config import (
     setup_metadata_tables,
     setup_notebook,
 )
+from fabricops_kit.fabric_input_output import FabricStore
 from tests.helpers import framework_config, store
 
 pytestmark = pytest.mark.unit
@@ -190,7 +191,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     reads = {table: 0 for table in schemas}
     writes = []
 
-    def read_table(config, env, target, table, spark_session=None):
+    def read_table(config, env, target, table, schema=None, spark_session=None):
         reads[table] += 1
         if reads[table] == 1:
             raise RuntimeError("table does not exist")
@@ -215,7 +216,9 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     assert result["active_metadata_tables"] == list(schemas)
     assert [table for _, _, table, _ in writes] == list(schemas)
     assert all(target == "metadata" for _, target, _, _ in writes)
-    assert all(kwargs == {"mode": "overwrite", "overwrite_schema": True} for *_, kwargs in writes)
+    assert all(kwargs == {"schema": None, "mode": "overwrite", "overwrite_schema": True} for *_, kwargs in writes)
+    assert result["metadata_schema"] is None
+    assert result["fully_qualified_tables"] == list(schemas)
     assert spark.created_dataframes == [([], schema.fieldNames()) for schema in schemas.values()]
 
 
@@ -237,8 +240,8 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
 
     calls = []
 
-    def read_table(config, env, target, table, spark_session=None):
-        calls.append((env, target, table, spark_session))
+    def read_table(config, env, target, table, schema=None, spark_session=None):
+        calls.append((env, target, table, schema, spark_session))
         return object()
 
     class Spark:
@@ -261,15 +264,15 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
     assert result["show_tables_statement"] is None
     assert result["optional_documented_tables"] == ["METADATA_DATA_ACCESS"]
     assert calls == [
-        ("dev", "metadata", "METADATA_DATA_STEWARD", spark),
-        ("dev", "metadata", "METADATA_DQ_RULES", spark),
+        ("dev", "metadata", "METADATA_DATA_STEWARD", None, spark),
+        ("dev", "metadata", "METADATA_DQ_RULES", None, spark),
     ]
 
 
 def test_metadata_registration_validation_warns_for_missing_configured_tables(monkeypatch):
     import fabricops_kit.fabric_input_output as io
 
-    def read_table(config, env, target, table, spark_session=None):
+    def read_table(config, env, target, table, schema=None, spark_session=None):
         raise RuntimeError("table does not exist")
 
     monkeypatch.setattr(io, "read_lakehouse_table", read_table)
@@ -284,6 +287,86 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
     assert result["missing_tables"] == ["METADATA_DATA_STEWARD"]
     assert "configured metadata target" in result["warnings"][0]
 
+
+
+def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch):
+    import fabricops_kit.fabric_input_output as io
+
+    class Schema:
+        def __init__(self, fields):
+            self._fields = fields
+        def fieldNames(self):  # noqa: N802
+            return list(self._fields)
+
+    class Table:
+        columns = ["id"]
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
+            return object()
+
+    schemas = {"METADATA_DATA_AGREEMENT": Schema(["id"])}
+    reads = []
+    writes = []
+
+    def read_table(config, env, target, table, schema=None, spark_session=None):
+        reads.append((table, schema))
+        return Table()
+
+    monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
+    monkeypatch.setattr("fabricops_kit.config._get_active_metadata_tables", lambda config: list(schemas))
+    monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
+    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: writes.append(kwargs))
+    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
+
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", metadata_schema="METADATA")
+
+    assert result["metadata_schema"] == "METADATA"
+    assert result["fully_qualified_tables"] == ["METADATA.METADATA_DATA_AGREEMENT"]
+    assert result["registration_validation"]["metadata_schema"] == "METADATA"
+    assert all(schema == "METADATA" for _, schema in reads)
+    assert writes == []
+
+
+def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
+    import fabricops_kit.fabric_input_output as io
+
+    class Schema:
+        def fieldNames(self):  # noqa: N802
+            return ["id"]
+
+    class Table:
+        columns = ["id"]
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
+            return object()
+
+    cfg = framework_config()
+    metadata_store = cfg.path_config.paths["dev"]["metadata"]
+    cfg.path_config.paths["dev"]["metadata"] = FabricStore(
+        env=metadata_store.env,
+        workspace_id=metadata_store.workspace_id,
+        item_id=metadata_store.item_id,
+        name=metadata_store.name,
+        kind=metadata_store.kind,
+        schema_enabled=True,
+        schema="dbo",
+    )
+    schemas = {"METADATA_DATA_AGREEMENT": Schema()}
+
+    monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
+    monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
+    monkeypatch.setattr(io, "read_lakehouse_table", lambda *args, **kwargs: Table())
+    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
+
+    result = setup_metadata_tables(spark=Spark(), config=cfg, env="dev")
+
+    assert result["metadata_schema"] is None
+    assert result["fully_qualified_tables"] == ["dbo.METADATA_DATA_AGREEMENT"]
+    assert result["registration_validation"]["fully_qualified_tables"] == ["dbo.METADATA_DATA_AGREEMENT"]
 
 def test_audit_timezone_defaults_validates_and_fails_clearly():
     assert _validate_audit_timezone(None) == "UTC"

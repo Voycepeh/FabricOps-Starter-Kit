@@ -280,7 +280,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
             'resolved/read.',
   'side_effects': 'Reads from a lakehouse table; it does not write metadata, tables, or files.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; loads {store.root}/Tables/{table} and never uses registered Spark table names, partial namespaces, or the current/default lakehouse.',
+                    'intended env name; loads {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} when the configured lakehouse target has schemas enabled.',
   'ai_verification': 'Verify the target/table name comes from CONFIG and check the returned '
                      'DataFrame schema or row count before downstream transformations.',
   'preferred_example': 'df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", '
@@ -303,9 +303,9 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'returns': 'None; the DataFrame is written to the configured lakehouse table.',
   'raises': 'Raises configuration, Spark, or write errors when the target cannot be resolved or '
             'the write fails.',
-  'side_effects': 'Writes data to a Fabric lakehouse Delta table by saving to {store.root}/Tables/{table} using the selected write mode.',
+  'side_effects': 'Writes data to a Fabric lakehouse Delta table by saving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} when the configured lakehouse target has schemas enabled.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; saves {store.root}/Tables/{table} and never uses saveAsTable, registered Spark table names, partial namespaces, or the current/default lakehouse.',
+                    'intended env name; saves {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} when the configured lakehouse target has schemas enabled.',
   'ai_verification': 'Verify upstream guardrails passed, confirm target routing from CONFIG, and '
                      'check the intended write mode before generating code that calls this helper.',
   'preferred_example': 'write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", '
@@ -811,14 +811,14 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL: dict[str, dict[str, object]] = {
         "common_failure_causes": ["widget_select_agreement has not been run.", "The user has not selected an agreement.", "Notebook state was reset.", "The selected row is no longer present in metadata."],
     },
     "read_lakehouse_table": {
-        "expanded_purpose": "Reads a Delta table from {store.root}/Tables/{table} for the configured Fabric lakehouse target, including metadata, without requiring an attached default lakehouse.",
+        "expanded_purpose": "Reads a Delta table from the configured Fabric lakehouse target, resolving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} for schema-enabled targets.",
         "when_to_use": "Use when notebook code needs a managed lakehouse Delta table by ABFSS path rather than a file path, registered Spark table name, or warehouse SQL query.",
         "glossary_terms": ["source table", "metadata lakehouse"],
         "return_interpretation": "The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.",
         "common_failure_causes": ["The target or table name is misspelled.", "The selected environment does not define the requested lakehouse target.", "Spark cannot access the table.", "The caller lacks permission to read the lakehouse."],
     },
     "write_lakehouse_table": {
-        "expanded_purpose": "Writes a DataFrame to {store.root}/Tables/{table} for the configured Fabric lakehouse target, including metadata, without requiring an attached default lakehouse.",
+        "expanded_purpose": "Writes a DataFrame to the configured Fabric lakehouse target, resolving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} for schema-enabled targets.",
         "when_to_use": "Use for lakehouse or metadata table writes after guardrails have passed when the destination should be saved by ABFSS Delta path, not saveAsTable or a Spark namespace.",
         "glossary_terms": ["target table", "guardrail", "metadata lakehouse"],
         "return_interpretation": "The helper returns the write operation result from the underlying DataFrame writer when available; verify downstream table state for business validation.",
