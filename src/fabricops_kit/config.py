@@ -1073,7 +1073,7 @@ def _setup_metadata_table_registry(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc
             empty_df = _create_empty_metadata_dataframe(spark, schema)
-            write_lakehouse_table(empty_df, config, env, "metadata", table_name, schema=metadata_schema, mode="overwrite", overwrite_schema=True)
+            write_lakehouse_table(empty_df, config, env, "metadata", table_name, schema=metadata_schema, mode="overwrite", options={"overwriteSchema": "true"})
             table = read_lakehouse_table(config, env, "metadata", table_name, schema=metadata_schema, spark_session=spark)
             created.append(table_name)
 
@@ -1101,7 +1101,7 @@ def _validate_metadata_table_registration(
     warnings: list[str] = []
     for table in expected:
         try:
-            read_lakehouse_table(normalized, env, "metadata", table, schema=metadata_schema, spark_session=spark)
+            read_lakehouse_table(normalized, env, "metadata", table, schema=resolved_metadata_schema, spark_session=spark)
         except Exception:
             missing.append(table)
     nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)
@@ -1111,7 +1111,7 @@ def _validate_metadata_table_registration(
         warnings.append(
             "Detected legacy nested metadata Delta folders under Tables/<metadata_table>/Unidentified/_delta_log. "
             "FabricOps will not delete or migrate user data automatically; review and migrate those folders manually if needed. "
-            + ("When metadata_schema is set, new metadata setup uses schema-enabled registered tables. " if metadata_schema else "New metadata setup writes directly to configured ABFSS Lakehouse table paths.")
+            + ("When metadata schema routing is configured, new metadata setup uses schema-aware Lakehouse paths. " if resolved_metadata_schema else "New metadata setup writes directly to configured ABFSS Lakehouse table paths.")
         )
     return {
         "status": "ready" if not missing else "not_ready",
@@ -1122,7 +1122,7 @@ def _validate_metadata_table_registration(
         "missing_tables": missing,
         "nested_metadata_delta_paths": nested_paths,
         "warnings": warnings,
-        "metadata_schema": metadata_schema,
+        "metadata_schema": resolved_metadata_schema,
         "fully_qualified_tables": [f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in expected],
         "show_tables_statement": None,
         "optional_documented_tables": ["METADATA_DATA_ACCESS"],
@@ -1188,9 +1188,9 @@ def setup_metadata_tables(
 
     normalized = _validate_framework_config(config)
     registry = _get_metadata_table_schema_registry(normalized)
-    setup_registry = _setup_metadata_table_registry(spark=spark, config=normalized, env=env, registry=registry, metadata_schema=metadata_schema)
-    expected_tables = list(registry)
     resolved_metadata_schema = _resolve_metadata_schema(normalized, env, metadata_schema)
+    setup_registry = _setup_metadata_table_registry(spark=spark, config=normalized, env=env, registry=registry, metadata_schema=resolved_metadata_schema)
+    expected_tables = list(registry)
     fully_qualified_tables = [f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in expected_tables]
     created_tables = list(setup_registry["created_tables"])
 
@@ -1200,7 +1200,7 @@ def setup_metadata_tables(
         str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
         str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
     ]
-    active_stewards = _list_data_stewards(normalized, env, spark_session=spark, active_only=True, missing_ok=True, metadata_schema=metadata_schema)
+    active_stewards = _list_data_stewards(normalized, env, spark_session=spark, active_only=True, missing_ok=True, metadata_schema=resolved_metadata_schema)
     data_agreement = {
         "status": "ready" if active_stewards else "not_ready",
         "tables": data_agreement_tables,
@@ -1234,7 +1234,7 @@ def setup_metadata_tables(
         config=config,
         env=env,
         expected_tables=expected_tables,
-        metadata_schema=metadata_schema,
+        metadata_schema=resolved_metadata_schema,
     )
     statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
     registration_status = registration_validation.get("status")
@@ -1244,7 +1244,7 @@ def setup_metadata_tables(
         "notebook_registry": notebook_registry,
         "governance": governance,
         "tables": expected_tables,
-        "metadata_schema": metadata_schema,
+        "metadata_schema": resolved_metadata_schema,
         "fully_qualified_tables": fully_qualified_tables,
         "created_tables": created_tables,
         "warnings": registration_validation.get("warnings", []),

@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from .data_profiling import profile_dataframe
 from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_failed, validate_schema
-from .fabric_input_output import write_lakehouse_table
+from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .config import _current_audit_timestamp, _get_audit_timezone
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields
@@ -551,7 +551,7 @@ def write_catalogue_evidence(
         for column, value in additions.items():
             evidence = evidence.withColumn(column, F.lit(value))
         evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
-        write_lakehouse_table(evidence, config, env, "metadata", metadata_table, mode=mode)
+        write_lakehouse_table(evidence, config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
         statuses[name] = "written"
     return statuses
 
@@ -639,7 +639,7 @@ def write_pipeline_lineage(
                     **audit,
                 })
     if rows:
-        write_lakehouse_table(spark.createDataFrame(rows), config, env, "metadata", metadata_table, mode=mode)
+        write_lakehouse_table(spark.createDataFrame(rows), config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
     return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
 
 
@@ -754,5 +754,5 @@ def write_pipeline_run_summary(
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
         "created_at": _now_iso(config),
     }
-    write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", metadata_table, mode=mode)
+    write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
     return row

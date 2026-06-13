@@ -216,7 +216,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     assert result["active_metadata_tables"] == list(schemas)
     assert [table for _, _, table, _ in writes] == list(schemas)
     assert all(target == "metadata" for _, target, _, _ in writes)
-    assert all(kwargs == {"schema": None, "mode": "overwrite", "overwrite_schema": True} for *_, kwargs in writes)
+    assert all(kwargs == {"schema": None, "mode": "overwrite", "options": {"overwriteSchema": "true"}} for *_, kwargs in writes)
     assert result["metadata_schema"] is None
     assert result["fully_qualified_tables"] == list(schemas)
     assert spark.created_dataframes == [([], schema.fieldNames()) for schema in schemas.values()]
@@ -364,7 +364,7 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
 
     result = setup_metadata_tables(spark=Spark(), config=cfg, env="dev")
 
-    assert result["metadata_schema"] is None
+    assert result["metadata_schema"] == "dbo"
     assert result["fully_qualified_tables"] == ["dbo.METADATA_DATA_AGREEMENT"]
     assert result["registration_validation"]["fully_qualified_tables"] == ["dbo.METADATA_DATA_AGREEMENT"]
 

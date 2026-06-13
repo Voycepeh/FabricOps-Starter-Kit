@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from typing import Any
 from .config import _current_audit_timestamp
-from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
+from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
 NOTEBOOK_REGISTRY_BASE_FIELDS = [
@@ -246,7 +246,7 @@ def _register_current_notebook(
     config : FrameworkConfig or dict, optional
         Recommended metadata route configuration from ``00_env_config``. When
         paired with ``env``, the row is written through
-        ``write_lakehouse_table(df, config, env, "metadata", metadata_table)``.
+        ``write_lakehouse_table(df, config, env, "metadata", metadata_table, schema=<configured_metadata_schema>)``.
     env : str, optional
         Environment key paired with ``config`` for metadata lakehouse routing.
     agreement_id : str
@@ -329,7 +329,7 @@ def _register_current_notebook(
     row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
     df = spark.createDataFrame(_rows_for_spark([row]))
-    write_lakehouse_table(df, config, env, "metadata", metadata_table, mode="append")
+    write_lakehouse_table(df, config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
     return row
 
 
@@ -351,7 +351,7 @@ def _load_notebook_registry(
     if config is None or env is None:
         raise ValueError("config and env are required to read notebook registry metadata without an attached default lakehouse.")
     try:
-        table = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
+        table = read_lakehouse_table(config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark)
         rows = _coerce_row_dicts(table)
     except Exception:
         if missing_ok:

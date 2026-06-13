@@ -19,7 +19,7 @@ If you see `Unidentified` folders in a schema-enabled Lakehouse, the tables were
 All workflow notebooks read and write metadata through the configured metadata route:
 
 ```python
-read_lakehouse_table(CONFIG, env_name, "metadata", "<table_name>")
+read_lakehouse_table(CONFIG, env_name, "metadata", "<table_name>", schema=METADATA_SCHEMA)
 
 write_lakehouse_table(
     df,
@@ -27,6 +27,7 @@ write_lakehouse_table(
     env_name,
     "metadata",
     "<table_name>",
+    schema=METADATA_SCHEMA,
     mode="append",
 )
 ```

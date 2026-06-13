@@ -17,7 +17,7 @@ import sys
 from typing import Any
 
 from .config import DEFAULT_STEWARD_ROLE_OPTIONS
-from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
+from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
@@ -483,7 +483,7 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
 
 
 def _write_row(*, spark: Any, config: Any, env_name: str, table: str, row: dict[str, Any]) -> None:
-    write_lakehouse_table(spark.createDataFrame([row]), config, env_name, "metadata", table, mode="append")
+    write_lakehouse_table(spark.createDataFrame([row]), config, env_name, "metadata", table, schema=_configured_lakehouse_schema(config, env_name, "metadata"), mode="append")
 
 
 def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> str:
@@ -590,7 +590,7 @@ def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: 
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), spark_session=spark_session)
+        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), schema=_configured_lakehouse_schema(config, env_name, "metadata"), spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []

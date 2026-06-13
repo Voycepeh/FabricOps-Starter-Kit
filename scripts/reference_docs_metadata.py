@@ -274,7 +274,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'use_when': 'Use when reading a Delta table from a configured Fabric lakehouse target by ABFSS Tables path without an attached default lakehouse.',
   'do_not_use_when': 'Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for '
                      'warehouse SQL tables.',
-  'parameters': 'config, env, target, table, optional schema, verbose flag, and spark_session.',
+  'parameters': 'config, env, target, table, optional schema, and spark_session.',
   'returns': 'Spark DataFrame loaded from the configured lakehouse table.',
   'raises': 'Raises configuration, Spark, or table-read errors when the target or table cannot be '
             'resolved/read.',
@@ -284,7 +284,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'ai_verification': 'Verify the target/table name comes from CONFIG and check the returned '
                      'DataFrame schema or row count before downstream transformations.',
   'preferred_example': 'df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", '
-                       'table="orders", spark_session=spark)',
+                       'table="orders", schema=SOURCE_SCHEMA, spark_session=spark)',
   'related_functions': ['write_lakehouse_table',
                         'read_lakehouse_csv',
                         'read_lakehouse_parquet',
@@ -298,8 +298,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric lakehouse Delta table by ABFSS Tables path without an attached default lakehouse.',
   'do_not_use_when': 'Do not use for warehouse tables; metadata evidence tables are supported through the configured metadata lakehouse target.',
-  'parameters': 'df, config, env, target, table, optional schema, mode, and partitioning/write '
-                'options.',
+  'parameters': 'df, config, env, target, table, optional schema, mode, partitioning, writer options, and verbose flag.',
   'returns': 'None; the DataFrame is written to the configured lakehouse table.',
   'raises': 'Raises configuration, Spark, or write errors when the target cannot be resolved or '
             'the write fails.',
@@ -309,7 +308,7 @@ PUBLIC_SYMBOL_DOCS: list[PublicSymbolDocMetadata] = [{'kind': 'function',
   'ai_verification': 'Verify upstream guardrails passed, confirm target routing from CONFIG, and '
                      'check the intended write mode before generating code that calls this helper.',
   'preferred_example': 'write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", '
-                       'table="orders_curated", mode="overwrite")',
+                       'table="orders_curated", schema=UNIFIED_SCHEMA, mode="overwrite", options={"overwriteSchema": "true"})',
   'related_functions': ['read_lakehouse_table', 'write_warehouse_table', 'stop_if_failed']},
  {'kind': 'function',
   'module': 'fabric_input_output',

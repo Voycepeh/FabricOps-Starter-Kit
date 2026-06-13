@@ -149,6 +149,14 @@ def _resolve_lakehouse_table_identifier(store: FabricStore, table: str, schema: 
     return _qualified_table_name(schema_name, table_name)
 
 
+def _configured_lakehouse_schema(config, env: str, target: str) -> str | None:
+    """Return the configured schema for a Lakehouse target, if enabled."""
+    store = _get_store(config, env, target)
+    if store.kind != "lakehouse" or not getattr(store, "schema_enabled", False):
+        return None
+    return _normalize_schema_name(getattr(store, "schema", None))
+
+
 DEFAULT_ENV = "Sandbox"
 DEFAULT_TARGET = "Source"
 
@@ -244,7 +252,7 @@ def read_lakehouse_table(config, env, target, table, schema=None, spark_session=
 
     Examples
     --------
-    >>> df = read_lakehouse_table(CONFIG, ENV, "source", "RAW_ORDERS")
+    >>> df = read_lakehouse_table(CONFIG, ENV, "source", "RAW_ORDERS", schema=SOURCE_SCHEMA)
     """
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
@@ -266,7 +274,8 @@ def write_lakehouse_table(
     mode="append",
     partition_by=None,
     repartition_by=None,
-    overwrite_schema=True,
+    options=None,
+    verbose=True,
 ):
     """Write a Spark DataFrame to a Fabric lakehouse Delta table.
 
@@ -300,8 +309,11 @@ def write_lakehouse_table(
         Column or columns used to physically partition the Delta table.
     repartition_by : int, str, list, or tuple, optional
         Optional repartitioning before write.
-    overwrite_schema : bool, default True
-        Whether to set Spark Delta `overwriteSchema=true` before saving.
+    options : dict, optional
+        Additional Spark DataFrameWriter options to apply before saving, such
+        as ``{"overwriteSchema": "true"}``.
+    verbose : bool, default=True
+        Whether to print the resolved output path before writing.
 
     Returns
     -------
@@ -322,7 +334,7 @@ def write_lakehouse_table(
 
     Examples
     --------
-    >>> write_lakehouse_table(df, CONFIG, ENV, "unified", "CLEAN_ORDERS")
+    >>> write_lakehouse_table(df, CONFIG, ENV, "unified", "CLEAN_ORDERS", schema=UNIFIED_SCHEMA)
     """
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
@@ -354,8 +366,11 @@ def write_lakehouse_table(
         else:
             writer = writer.partitionBy(partition_by)
 
-    if overwrite_schema:
-        writer = writer.option("overwriteSchema", "true")
+    for key, value in (options or {}).items():
+        writer = writer.option(key, value)
+
+    if verbose:
+        print(f"Writing Lakehouse table to {path}")
 
     writer.save(path)
 

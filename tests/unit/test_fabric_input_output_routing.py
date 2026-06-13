@@ -75,14 +75,14 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
 
     for target in ("source", "unified", "product"):
         spark = _Spark()
-        io.read_lakehouse_table(config, "dev", target, "orders", spark_session=spark)
+        io.read_lakehouse_table(config, "dev", target, "orders", schema=None, spark_session=spark)
 
         expected_path = f"abfss://dev-{target}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target}-item/Tables/orders"
         assert ("format", "delta") in spark.read.calls
         assert ("load", expected_path) in spark.read.calls
 
     metadata_spark = _Spark()
-    io.read_lakehouse_table(config, "dev", "metadata", "orders", spark_session=metadata_spark)
+    io.read_lakehouse_table(config, "dev", "metadata", "orders", schema=None, spark_session=metadata_spark)
     metadata_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/orders"
     assert ("format", "delta") in metadata_spark.read.calls
     assert ("load", metadata_path) in metadata_spark.read.calls
@@ -93,7 +93,7 @@ def test_lakehouse_table_write_routes_to_configured_store():
     config = _io_config()
     frame = _Frame()
 
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "metadata_orders", mode="overwrite")
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "metadata_orders", schema=None, mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/metadata_orders"
     assert ("mode", "overwrite") in frame.write.calls
@@ -185,7 +185,7 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
     config = _io_config()
     frame = _Frame()
 
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", schema="METADATA", mode="overwrite")
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", schema="METADATA", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_DQ_RULES"
     assert ("save", expected_path) in frame.write.calls
@@ -197,8 +197,8 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
     spark = _Spark()
     frame = _Frame()
 
-    io.read_lakehouse_table(config, "dev", "source", "orders", spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", mode="overwrite")
+    io.read_lakehouse_table(config, "dev", "source", "orders", schema="src", spark_session=spark)
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", schema="meta", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
     metadata_store = config.paths["dev"]["metadata"]
 
     assert ("load", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders") in spark.read.calls
@@ -226,4 +226,4 @@ def test_lakehouse_table_schema_validation_rejects_unsafe_names(schema):
 @pytest.mark.parametrize("table", ["schema.table", "bad/name", "bad-name", "1TABLE", ""])
 def test_lakehouse_table_validation_rejects_unsafe_names(table):
     with pytest.raises(ValueError):
-        io.read_lakehouse_table(_io_config(), "dev", "metadata", table, spark_session=_Spark())
+        io.read_lakehouse_table(_io_config(), "dev", "metadata", table, schema=None, spark_session=_Spark())

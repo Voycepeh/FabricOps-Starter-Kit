@@ -722,10 +722,10 @@ def enforce_profile_behavior(
     current_min, current_max = _profile_watermark_bounds(current_profile_df, watermark_column)
 
     if catalogue_df is None and config is not None and env is not None:
-        from fabricops_kit.fabric_input_output import read_lakehouse_table
+        from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table
 
         try:
-            catalogue_df = read_lakehouse_table(config, env, "metadata", metadata_table, spark_session=spark)
+            catalogue_df = read_lakehouse_table(config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark)
         except Exception as exc:
             if _is_missing_table_error(exc):
                 catalogue_df = None

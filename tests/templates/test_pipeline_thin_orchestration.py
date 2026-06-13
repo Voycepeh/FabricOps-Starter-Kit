@@ -249,6 +249,9 @@ def test_explicit_target_write_loop_uses_existing_write_helpers_and_checked_data
     assert "for target_config in TARGET_TABLES:" in write_block
     assert "write_lakehouse_table(" in write_block
     assert "write_warehouse_table(" in write_block
+    assert "TARGET_LAYER_SCHEMAS" in code
+    assert 'schema=target_config.get("schema", TARGET_LAYER_SCHEMAS.get(target_layer))' in write_block
+    assert 'options=target_config.get("options", {"overwriteSchema": "true"} if target_mode == "overwrite" else None)' in write_block
     assert 'target_config["df"]' in write_block
     assert "write_target_tables" not in write_block
     assert "Unsupported target kind" in write_block
