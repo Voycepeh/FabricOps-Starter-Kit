@@ -7,7 +7,7 @@ Load column profile rows for the selected catalogue table.
 
 `fabricops_kit/governance_review.py:344`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L344-L369">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L344-L369">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -78,6 +78,7 @@ Not documented yet
 
 ### Calls
 
+- `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 - `fabricops_kit.governance_review._coerce_rows`
 - `fabricops_kit.governance_review._is_success`
@@ -110,35 +111,57 @@ No additional callable notes are documented.
     ├── _build_metadata_table_key(...)
     │   └── _stable_metadata_key(...)
     ├── _coerce_rows(...)
+    ├── _configured_lakehouse_schema(...)
+    │   ├── _get_store(...)
+    │   └── _normalize_schema_name(...)
     ├── _is_success(...)
     │   └── _value(...)
     ├── _value(...)
     └── read_lakehouse_table(...)
         ├── _get_spark(...)
         ├── _get_store(...)
-        └── _normalize_table_name(...)
+        ├── _normalize_table_name(...)
+        └── _resolve_lakehouse_table_path(...)
+            ├── _normalize_table_name(...)
+            └── _resolve_lakehouse_schema(...)
+                └── _normalize_schema_name(...)
     ```
 
-??? info "Internal helpers used: 5"
+??? info "Internal helpers used: 8"
 
-    This callable uses 5 internal helpers for metadata loading and other.
+    This callable uses 8 internal helpers for metadata loading, rule parsing, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L152-L157"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L105-L116"><code>_normalize_schema_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L74-L75"><code>_is_success</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L74-L75"><code>_is_success</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
         </div>
       </section>
     </div>
@@ -158,7 +181,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source line: `344`
 - Inbound references count: 1
-- Outbound references count: 5
+- Outbound references count: 6
 - Used in templates: 03_governance
 - Glossary terms: catalogue evidence, accepted catalogue profile evidence, metadata lakehouse
 
@@ -177,6 +200,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
+- `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
 - `fabricops_kit.governance_review._coerce_rows`
 - `fabricops_kit.governance_review._is_success`
@@ -186,7 +210,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L344-L369">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/governance_review.py#L344-L369</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L344-L369">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L344-L369</a>
 - Start line: `344`
 - End line: `369`
 - Signature:
@@ -208,7 +232,7 @@ def load_catalogue_profile_rows(
 
 ### Internal implementation summary
 
-- Internal helper count: 5
+- Internal helper count: 8
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

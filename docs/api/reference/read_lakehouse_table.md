@@ -5,9 +5,9 @@ Read a Delta table from a configured Fabric lakehouse target by ABFSS path.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:146`
+`fabricops_kit/fabric_input_output.py:213`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L146-L192">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L213-L264">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -23,7 +23,7 @@ Read a Delta table from a configured Fabric lakehouse target by ABFSS path.
 
 **Additional context:**
 
-Reads a Delta table from {store.root}/Tables/{table} for the configured Fabric lakehouse target, including metadata, without requiring an attached default lakehouse.
+Reads a Delta table from the configured Fabric lakehouse target, resolving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} for schema-enabled targets.
 
 </details>
 
@@ -32,7 +32,7 @@ Reads a Delta table from {store.root}/Tables/{table} for the configured Fabric l
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def read_lakehouse_table(config, env, target, table, spark_session=None)
+def read_lakehouse_table(config, env, target, table, schema=None, spark_session=None)
 ```
 
 </div>
@@ -42,7 +42,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", spark_session=spark)
+df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders", schema=SOURCE_SCHEMA, spark_session=spark)
 ```
 
 </div>
@@ -54,7 +54,8 @@ df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", table="orders"
 | `config` | `FrameworkConfig \| dict` | Yes | FabricOps FrameworkConfig or compatible config object. |
 | `env` | `str` | Yes | Environment key such as `"dev"`. |
 | `target` | `str` | Yes | Logical target name such as `"source"` or `"unified"`. |
-| `table` | `str` | Yes | Table name under the lakehouse `Tables` area. |
+| `table` | `str` | Yes | Simple table name. Do not pass ``schema.table``; use ``schema`` separately. |
+| `schema` | `str or None` | No | Optional schema override for schema-enabled Lakehouses. When omitted, schema routing comes from the configured lakehouse target. Schema-enabled targets read from ``Tables/<schema>/<table>``; classic targets read from ``Tables/<table>``. |
 | `spark_session` | `object` | No | Spark session to use. If omitted, the helper uses the notebook global `spark`. |
 
 ## Returns
@@ -96,6 +97,7 @@ Raises configuration, Spark, or table-read errors when the target or table canno
 - `fabricops_kit.config._get_store`
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._resolve_lakehouse_table_path`
 
 ## Implementation details
 
@@ -126,27 +128,40 @@ No additional callable notes are documented.
     read_lakehouse_table(...)
     ├── _get_spark(...)
     ├── _get_store(...)
-    └── _normalize_table_name(...)
+    ├── _normalize_table_name(...)
+    └── _resolve_lakehouse_table_path(...)
+        ├── _normalize_table_name(...)
+        └── _resolve_lakehouse_schema(...)
+            └── _normalize_schema_name(...)
     ```
 
-??? info "Internal helpers used: 3"
+??? info "Internal helpers used: 6"
 
-    This callable uses 3 internal helpers for metadata loading and fabric or spark access.
+    This callable uses 6 internal helpers for metadata loading, rule parsing, and fabric or spark access.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L93-L102"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L126-L132"><code>_resolve_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L135-L142"><code>_resolve_lakehouse_table_path</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L105-L116"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L100-L130"><code>_get_spark</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L167-L197"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -164,16 +179,16 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `146`
+- Source line: `213`
 - Inbound references count: 10
-- Outbound references count: 3
+- Outbound references count: 4
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
 - Glossary terms: source table, metadata lakehouse
 
 ### AI implementation contract
 
-- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; loads {store.root}/Tables/{table} and never uses registered Spark table names, partial namespaces, or the current/default lakehouse.
-- **inputs:** config, env, target, table, optional schema, verbose flag, and spark_session.
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; loads {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} when the configured lakehouse target has schemas enabled.
+- **inputs:** config, env, target, table, optional schema, and spark_session.
 - **output:** Spark DataFrame loaded from the configured lakehouse table.
 - **side_effects:** Reads from a lakehouse table; it does not write metadata, tables, or files.
 - **failure_modes:** Raises configuration, Spark, or table-read errors when the target or table cannot be resolved/read.
@@ -197,17 +212,18 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - `fabricops_kit.config._get_store`
 - `fabricops_kit.fabric_input_output._get_spark`
 - `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._resolve_lakehouse_table_path`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L146-L192">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L146-L192</a>
-- Start line: `146`
-- End line: `192`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L213-L264">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L213-L264</a>
+- Start line: `213`
+- End line: `264`
 - Signature:
 
 ```python
-def read_lakehouse_table(config, env, target, table, spark_session=None)
+def read_lakehouse_table(config, env, target, table, schema=None, spark_session=None)
 ```
 
 ### Internal relationship graph
@@ -221,7 +237,7 @@ def read_lakehouse_table(config, env, target, table, spark_session=None)
 
 ### Internal implementation summary
 
-- Internal helper count: 3
+- Internal helper count: 6
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

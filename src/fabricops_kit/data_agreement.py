@@ -17,7 +17,7 @@ import sys
 from typing import Any
 
 from .config import DEFAULT_STEWARD_ROLE_OPTIONS
-from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
+from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
@@ -450,7 +450,7 @@ def _generate_steward_id(values: dict[str, Any]) -> str:
     return f"STEW-{digest}"
 
 
-def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False) -> list[dict[str, Any]]:
+def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest append-only steward rows from the metadata lakehouse.
 
     Parameters
@@ -473,7 +473,7 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
     """
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), spark_session=spark_session)
+        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), schema=metadata_schema, spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
@@ -483,7 +483,7 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
 
 
 def _write_row(*, spark: Any, config: Any, env_name: str, table: str, row: dict[str, Any]) -> None:
-    write_lakehouse_table(spark.createDataFrame([row]), config, env_name, "metadata", table, mode="append")
+    write_lakehouse_table(spark.createDataFrame([row]), config, env_name, "metadata", table, schema=_configured_lakehouse_schema(config, env_name, "metadata"), mode="append")
 
 
 def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> str:
@@ -586,11 +586,11 @@ def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
     return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
 
 
-def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False) -> list[dict[str, Any]]:
+def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), spark_session=spark_session)
+        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), schema=metadata_schema or _configured_lakehouse_schema(config, env_name, "metadata"), spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
@@ -598,9 +598,9 @@ def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: 
     return _coerce_row_dicts(rows)
 
 
-def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False) -> list[dict[str, Any]]:
+def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest versioned agreements from the configured metadata lakehouse."""
-    rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark_session, missing_ok=missing_ok)
+    rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark_session, missing_ok=missing_ok, metadata_schema=metadata_schema)
     agreements = _latest_agreement_versions(rows)
     if not active_only:
         return agreements
@@ -770,7 +770,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
     return rows
 
 
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
+def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
     """Render a downstream agreement selector and retain the selected row.
 
     Parameters
@@ -782,6 +782,10 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
         Environment key used to load agreements when ``CONFIG`` is supplied.
     spark_session : pyspark.sql.SparkSession, optional
         Fabric Spark session used for configured metadata-table reads.
+    metadata_schema : str, optional
+        Explicit metadata Lakehouse schema override. Pass ``METADATA_SCHEMA``
+        from ``00_env_config`` in schema-enabled Lakehouses so agreement reads
+        and notebook registration use the same metadata route.
     register_notebook : bool, default=False
         When True, render registration status and a button that links the
         current notebook to the selected agreement.
@@ -803,7 +807,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
     global _SELECTED_AGREEMENT
     if env_name is not None:
         try:
-            rows = _list_data_agreements(agreement_rows_or_config, env_name, spark_session=spark_session)
+            rows = _list_data_agreements(agreement_rows_or_config, env_name, spark_session=spark_session, metadata_schema=metadata_schema)
         except Exception as exc:
             raise RuntimeError("No agreements found. Run 01_agreement first.") from exc
     else:
@@ -885,6 +889,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
             spark_session,
             config=config,
             env=env_name,
+            metadata_schema=metadata_schema,
             notebook_type=notebook_type,
             environment_name=environment_name or env_name,
         )
@@ -939,6 +944,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
                 contract_version=selected_version,
                 registration_role=role,
                 registration_status="active",
+                metadata_schema=metadata_schema,
                 notebook_type=notebook_type,
                 environment_name=environment_name or env_name,
                 dataset_name=dataset_name,
@@ -957,6 +963,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
                         contract_version=previous.get("agreement_contract_version"),
                         registration_role=previous.get("registration_role") or "primary",
                         registration_status="superseded",
+                        metadata_schema=metadata_schema,
                         registration_id=previous.get("registration_id"),
                         superseded_at=superseded_at,
                         superseded_by_registration_id=new_row.get("registration_id"),
@@ -1450,5 +1457,4 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
         Rendered controls, including read-only generated-identifier context.
     """
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
-
 

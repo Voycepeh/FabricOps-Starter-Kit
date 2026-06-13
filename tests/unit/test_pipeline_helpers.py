@@ -228,6 +228,49 @@ def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonbloc
     assert pipeline._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"
 
 
+def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_boolean_columns(spark_session):
+    evidence = spark_session.createDataFrame(
+        [
+            {
+                "row_count": 3,
+                "dq_rule_count": 2,
+                "dq_failed_rule_count": 1,
+                "dq_warning_rule_count": 1,
+                "dq_error_rule_count": 0,
+                "dq_failed_row_count": 1,
+                "null_percent": 0,
+                "distinct_percent": 100,
+                "dq_failed_row_percent": 33,
+                "run_timestamp": "2026-01-01T00:00:00",
+                "stability_check_enabled": True,
+                "freshness_can_continue": True,
+                "stability_can_continue": False,
+                "dataset_name": "orders",
+            }
+        ]
+    )
+
+    normalized = pipeline._normalize_catalogue_evidence_types(evidence)
+    dtypes = dict(normalized.dtypes)
+
+    for column_name in [
+        "row_count",
+        "dq_rule_count",
+        "dq_failed_rule_count",
+        "dq_warning_rule_count",
+        "dq_error_rule_count",
+        "dq_failed_row_count",
+    ]:
+        assert dtypes[column_name] == "bigint"
+    for column_name in ["null_percent", "distinct_percent", "dq_failed_row_percent"]:
+        assert dtypes[column_name] == "double"
+    assert dtypes["run_timestamp"] == "timestamp"
+    assert dtypes["stability_check_enabled"] == "boolean"
+    assert dtypes["freshness_can_continue"] == "boolean"
+    assert dtypes["stability_can_continue"] == "boolean"
+    assert dtypes["dataset_name"] == "string"
+
+
 
 def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves_target_fields():
     definitions = pipeline._build_guardrail_evidence_definitions(

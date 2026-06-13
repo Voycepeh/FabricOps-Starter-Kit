@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 28</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>28</td>
+      <td>29</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -80,7 +80,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>Callable</td>
       <td>function</td>
       <td>Create or validate all FabricOps metadata tables through one setup action.</td>
-      <td><code>_get_metadata_table_schema_registry</code> (internal), <code>_metadata_schema_field_names</code> (internal), <code>_metadata_tables_from_setup_results</code> (internal), <code>_setup_metadata_table_registry</code> (internal), <code>_validate_framework_config</code> (internal), <code>_validate_metadata_table_registration</code> (internal)</td>
+      <td><code>_get_metadata_table_schema_registry</code> (internal), <code>_metadata_schema_field_names</code> (internal), <code>_metadata_tables_from_setup_results</code> (internal), <code>_resolve_metadata_schema</code> (internal), <code>_setup_metadata_table_registry</code> (internal), <code>_validate_framework_config</code> (internal), <code>_validate_metadata_table_registration</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
@@ -108,7 +108,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <li>
 <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_get_metadata_table_schema_registry</code></span>, <span class="reference-chip"><code>_metadata_schema_field_names</code></span>, <span class="reference-chip"><code>_metadata_tables_from_setup_results</code></span>, <span class="reference-chip"><code>_setup_metadata_table_registry</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>, <span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
+<span class="reference-chip"><code>_get_metadata_table_schema_registry</code></span>, <span class="reference-chip"><code>_metadata_schema_field_names</code></span>, <span class="reference-chip"><code>_metadata_tables_from_setup_results</code></span>, <span class="reference-chip"><code>_resolve_metadata_schema</code></span>, <span class="reference-chip"><code>_setup_metadata_table_registry</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>, <span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
@@ -210,6 +210,10 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td><code>_metadata_tables_from_setup_results</code></td>
+      <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_resolve_metadata_schema</code></td>
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
     <tr>
@@ -331,6 +335,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <span class="reference-chip"><code>_metadata_tables_from_setup_results</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_resolve_metadata_schema</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_get_store</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_run_config_smoke_tests</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_check_spark_session</code></span>, <span class="reference-chip"><code>_get_fabric_runtime_metadata</code></span>, <span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_validate_notebook_name</code></span>
@@ -359,7 +368,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <li>
 <span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_detect_nested_metadata_delta_folders</code></span>, <span class="reference-chip"><code>_get_active_metadata_tables</code></span>, <span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>
+<span class="reference-chip"><code>_detect_nested_metadata_delta_folders</code></span>, <span class="reference-chip"><code>_get_active_metadata_tables</code></span>, <span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_resolve_metadata_schema</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_validate_notebook_name</code></span>
@@ -376,7 +385,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
+<a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
 
 **governance_review**
 <a class="reference-chip" href="../governance_review/#_dq_summary"><code>_dq_summary</code></a>, <a class="reference-chip" href="../governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>

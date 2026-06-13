@@ -5,9 +5,9 @@ Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:195`
+`fabricops_kit/fabric_input_output.py:267`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L195-L290">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L267-L375">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -23,7 +23,7 @@ Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.
 
 **Additional context:**
 
-Writes a DataFrame to {store.root}/Tables/{table} for the configured Fabric lakehouse target, including metadata, without requiring an attached default lakehouse.
+Writes a DataFrame to the configured Fabric lakehouse target, resolving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} for schema-enabled targets.
 
 </details>
 
@@ -38,10 +38,12 @@ def write_lakehouse_table(
     env,
     target,
     table,
+    schema=None,
     mode='append',
     partition_by=None,
     repartition_by=None,
-    overwrite_schema=True,
+    options=None,
+    verbose=True,
 ):
 ```
 
@@ -52,7 +54,7 @@ def write_lakehouse_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", mode="overwrite")
+write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table="orders_curated", schema=UNIFIED_SCHEMA, mode="overwrite", options={"overwriteSchema": "true"})
 ```
 
 </div>
@@ -65,11 +67,13 @@ write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", table
 | `config` | `FrameworkConfig \| dict` | Yes | FabricOps FrameworkConfig or compatible config object. |
 | `env` | `str` | Yes | Environment key such as `"dev"`. |
 | `target` | `str` | Yes | Logical target name such as `"source"` or `"unified"`. |
-| `table` | `str` | Yes | Target table name under the lakehouse `Tables` area. |
+| `table` | `str` | Yes | Simple target table name. Do not pass ``schema.table``; use ``schema`` separately. |
+| `schema` | `str or None` | No | Optional schema override for schema-enabled Lakehouses. When omitted, schema routing comes from the configured lakehouse target. Schema-enabled targets save to ``Tables/<schema>/<table>``; classic targets save to ``Tables/<table>``. |
 | `mode` | `str, default "append"` | No | Spark write mode. Supported values are `"append"`, `"overwrite"`, `"errorifexists"`, and `"ignore"`. |
 | `partition_by` | `str or list[str]` | No | Column or columns used to physically partition the Delta table. |
 | `repartition_by` | `int, str, list, or tuple` | No | Optional repartitioning before write. |
-| `overwrite_schema` | `bool, default True` | No | Whether to set Spark Delta `overwriteSchema=true` before saving. |
+| `options` | `dict` | No | Additional Spark DataFrameWriter options to apply before saving, such as ``{"overwriteSchema": "true"}``. |
+| `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 
 ## Returns
 
@@ -107,6 +111,7 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 
 - `fabricops_kit.config._get_store`
 - `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._resolve_lakehouse_table_path`
 
 ## Implementation details
 
@@ -123,12 +128,12 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 
 **Side effects:**
 
-Writes data to a Fabric lakehouse Delta table by saving to {store.root}/Tables/{table} using the selected write mode.
+Writes data to a Fabric lakehouse Delta table by saving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} when the configured lakehouse target has schemas enabled.
 
 **Notes:**
 
 Side effects:
-- Persists data to OneLake Delta storage under ``Tables/<table>``.
+- Persists data to OneLake Delta storage under ``Tables/<table>`` or ``Tables/<schema>/<table>`` when schema routing is enabled.
 - Optional repartitioning can change output file sizing and partition
   layout.
 
@@ -139,26 +144,39 @@ Side effects:
     ```text
     write_lakehouse_table(...)
     ├── _get_store(...)
-    └── _normalize_table_name(...)
+    ├── _normalize_table_name(...)
+    └── _resolve_lakehouse_table_path(...)
+        ├── _normalize_table_name(...)
+        └── _resolve_lakehouse_schema(...)
+            └── _normalize_schema_name(...)
     ```
 
-??? info "Internal helpers used: 2"
+??? info "Internal helpers used: 5"
 
-    This callable uses 2 internal helpers for metadata loading and fabric or spark access.
+    This callable uses 5 internal helpers for metadata loading, rule parsing, and fabric or spark access.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L81-L90"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L93-L102"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L126-L132"><code>_resolve_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L135-L142"><code>_resolve_lakehouse_table_path</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L105-L116"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -176,18 +194,18 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `195`
+- Source line: `267`
 - Inbound references count: 8
-- Outbound references count: 2
+- Outbound references count: 3
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
 - Glossary terms: target table, guardrail, metadata lakehouse
 
 ### AI implementation contract
 
-- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; saves {store.root}/Tables/{table} and never uses saveAsTable, registered Spark table names, partial namespaces, or the current/default lakehouse.
-- **inputs:** df, config, env, target, table, optional schema, mode, and partitioning/write options.
+- **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; saves {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} when the configured lakehouse target has schemas enabled.
+- **inputs:** df, config, env, target, table, optional schema, mode, partitioning, writer options, and verbose flag.
 - **output:** None; the DataFrame is written to the configured lakehouse table.
-- **side_effects:** Writes data to a Fabric lakehouse Delta table by saving to {store.root}/Tables/{table} using the selected write mode.
+- **side_effects:** Writes data to a Fabric lakehouse Delta table by saving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} when the configured lakehouse target has schemas enabled.
 - **failure_modes:** Raises configuration, Spark, or write errors when the target cannot be resolved or the write fails.
 - **verification:** Verify upstream guardrails passed, confirm target routing from CONFIG, and check the intended write mode before generating code that calls this helper.
 
@@ -206,13 +224,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 - `fabricops_kit.config._get_store`
 - `fabricops_kit.fabric_input_output._normalize_table_name`
+- `fabricops_kit.fabric_input_output._resolve_lakehouse_table_path`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L195-L290">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b2463f3ad64a5b0679b3763509f3526351aa247c/src/fabricops_kit/fabric_input_output.py#L195-L290</a>
-- Start line: `195`
-- End line: `290`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L267-L375">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L267-L375</a>
+- Start line: `267`
+- End line: `375`
 - Signature:
 
 ```python
@@ -222,10 +241,12 @@ def write_lakehouse_table(
     env,
     target,
     table,
+    schema=None,
     mode='append',
     partition_by=None,
     repartition_by=None,
-    overwrite_schema=True,
+    options=None,
+    verbose=True,
 ):
 ```
 
@@ -239,7 +260,7 @@ def write_lakehouse_table(
 
 ### Internal implementation summary
 
-- Internal helper count: 2
+- Internal helper count: 5
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

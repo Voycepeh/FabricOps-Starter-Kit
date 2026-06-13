@@ -952,13 +952,17 @@ def _detect_nested_metadata_delta_folders(*, config: FrameworkConfig | dict[str,
         return []
     metadata_store = _get_store(config=config, env=env, target="metadata")
     nested: list[str] = []
+    schema = getattr(metadata_store, "schema", None) if getattr(metadata_store, "schema_enabled", False) else None
     for table in expected_tables:
-        path = f"{metadata_store.root.rstrip('/')}/Tables/{table}/Unidentified/_delta_log"
-        try:
-            if exists(path):
-                nested.append(path)
-        except Exception:
-            continue
+        candidate_paths = [f"{metadata_store.root.rstrip('/')}/Tables/{table}/Unidentified/_delta_log"]
+        if schema:
+            candidate_paths.append(f"{metadata_store.root.rstrip('/')}/Tables/{schema}/{table}/Unidentified/_delta_log")
+        for path in candidate_paths:
+            try:
+                if exists(path):
+                    nested.append(path)
+            except Exception:
+                continue
     return nested
 
 
@@ -1042,8 +1046,18 @@ def _create_empty_metadata_dataframe(spark: Any, schema: Any) -> Any:
     return spark.createDataFrame([], schema=schema)
 
 
+
+def _resolve_metadata_schema(config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None) -> str | None:
+    """Return explicit metadata schema or configured metadata target schema."""
+    if metadata_schema is not None:
+        return str(metadata_schema).strip() or None
+    store = _get_store(config=config, env=env, target="metadata")
+    if getattr(store, "schema_enabled", False):
+        return str(getattr(store, "schema", "") or "").strip() or None
+    return None
+
 def _setup_metadata_table_registry(
-    *, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, registry: dict[str, Any]
+    *, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, registry: dict[str, Any], metadata_schema: str | None = None
 ) -> dict[str, Any]:
     """Create missing metadata tables through configured lakehouse IO helpers."""
     from fabricops_kit.fabric_input_output import read_lakehouse_table, write_lakehouse_table
@@ -1052,15 +1066,15 @@ def _setup_metadata_table_registry(
     created: list[str] = []
     for table_name, schema in registry.items():
         try:
-            table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
+            table = read_lakehouse_table(config, env, "metadata", table_name, schema=metadata_schema, spark_session=spark)
         except Exception as exc:
             if not _is_table_not_found_error(exc):
                 raise RuntimeError(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc
             empty_df = _create_empty_metadata_dataframe(spark, schema)
-            write_lakehouse_table(empty_df, config, env, "metadata", table_name, mode="overwrite", overwrite_schema=True)
-            table = read_lakehouse_table(config, env, "metadata", table_name, spark_session=spark)
+            write_lakehouse_table(empty_df, config, env, "metadata", table_name, schema=metadata_schema, mode="overwrite", options={"overwriteSchema": "true"})
+            table = read_lakehouse_table(config, env, "metadata", table_name, schema=metadata_schema, spark_session=spark)
             created.append(table_name)
 
         missing = [field for field in _metadata_schema_field_names(schema) if field not in _metadata_table_columns(table)]
@@ -1075,17 +1089,19 @@ def _validate_metadata_table_registration(
     config: FrameworkConfig | dict[str, Any],
     env: str,
     expected_tables: list[str] | None = None,
+    metadata_schema: str | None = None,
 ) -> dict[str, Any]:
     """Validate active metadata tables through configured metadata target reads."""
     from fabricops_kit.fabric_input_output import read_lakehouse_table
 
     normalized = _validate_framework_config(config)
     expected = list(expected_tables or _get_active_metadata_tables(normalized))
+    resolved_metadata_schema = _resolve_metadata_schema(normalized, env, metadata_schema)
     missing: list[str] = []
     warnings: list[str] = []
     for table in expected:
         try:
-            read_lakehouse_table(normalized, env, "metadata", table, spark_session=spark)
+            read_lakehouse_table(normalized, env, "metadata", table, schema=resolved_metadata_schema, spark_session=spark)
         except Exception:
             missing.append(table)
     nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)
@@ -1095,7 +1111,7 @@ def _validate_metadata_table_registration(
         warnings.append(
             "Detected legacy nested metadata Delta folders under Tables/<metadata_table>/Unidentified/_delta_log. "
             "FabricOps will not delete or migrate user data automatically; review and migrate those folders manually if needed. "
-            "New metadata setup writes directly to configured ABFSS Lakehouse table paths."
+            + ("When metadata schema routing is configured, new metadata setup uses schema-aware Lakehouse paths. " if resolved_metadata_schema else "New metadata setup writes directly to configured ABFSS Lakehouse table paths.")
         )
     return {
         "status": "ready" if not missing else "not_ready",
@@ -1106,6 +1122,8 @@ def _validate_metadata_table_registration(
         "missing_tables": missing,
         "nested_metadata_delta_paths": nested_paths,
         "warnings": warnings,
+        "metadata_schema": resolved_metadata_schema,
+        "fully_qualified_tables": [f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in expected],
         "show_tables_statement": None,
         "optional_documented_tables": ["METADATA_DATA_ACCESS"],
     }
@@ -1116,6 +1134,7 @@ def setup_metadata_tables(
     spark: Any,
     config: FrameworkConfig | dict[str, Any],
     env: str,
+    metadata_schema: str | None = None,
     require_active_steward: bool = False,
 ) -> dict[str, Any]:
     """Prepare all FabricOps metadata tables for the configured environment.
@@ -1128,6 +1147,12 @@ def setup_metadata_tables(
         Shared ``00_env_config`` configuration containing the metadata target.
     env : str
         Environment key to prepare.
+    metadata_schema : str or None, default=None
+        Optional schema name for schema-enabled Fabric Lakehouses. Keep
+        ``None`` for classic Lakehouses that store metadata tables under
+        ``Tables/<table_name>``. Use a simple schema such as ``"METADATA"``
+        to create and validate registered tables such as
+        ``METADATA.METADATA_DATA_AGREEMENT``.
     require_active_steward : bool, default=False
         Forwarded to the agreement metadata setup to optionally require an
         active steward before returning success.
@@ -1136,14 +1161,21 @@ def setup_metadata_tables(
     -------
     dict[str, Any]
         Combined setup summary keyed by ``data_agreement``,
-        ``notebook_registry``, and ``governance``.
+        ``notebook_registry``, and ``governance``. The payload also includes
+        ``metadata_schema`` and ``fully_qualified_tables`` for schema-enabled
+        Lakehouse visibility.
 
     Notes
     -----
     This is the v1 notebook setup action for metadata provisioning. It keeps
     ``00_env_config`` simple while delegating to internal helpers that route all
-    metadata reads and writes through configured metadata target ABFSS paths,
-    never Spark partial namespaces or the current/default lakehouse context.
+    metadata reads and writes through the configured metadata target. With
+    ``metadata_schema=None``, setup preserves classic path-based Lakehouse
+    behavior under ``Tables/<table_name>``. With ``metadata_schema`` set, setup
+    uses schema-aware Lakehouse paths such as ``Tables/<schema>/<table>`` and
+    does not bake the schema into configured metadata table names. FabricOps may warn about
+    legacy nested or unidentified Delta folders, but it does not delete or
+    migrate user data automatically.
     """
     from fabricops_kit.data_agreement import (
         DATA_AGREEMENT_EVIDENCE_TABLE,
@@ -1156,8 +1188,10 @@ def setup_metadata_tables(
 
     normalized = _validate_framework_config(config)
     registry = _get_metadata_table_schema_registry(normalized)
-    setup_registry = _setup_metadata_table_registry(spark=spark, config=normalized, env=env, registry=registry)
+    resolved_metadata_schema = _resolve_metadata_schema(normalized, env, metadata_schema)
+    setup_registry = _setup_metadata_table_registry(spark=spark, config=normalized, env=env, registry=registry, metadata_schema=resolved_metadata_schema)
     expected_tables = list(registry)
+    fully_qualified_tables = [f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in expected_tables]
     created_tables = list(setup_registry["created_tables"])
 
     metadata_tables = normalized.data_agreement_config.metadata_tables or {}
@@ -1166,7 +1200,7 @@ def setup_metadata_tables(
         str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
         str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
     ]
-    active_stewards = _list_data_stewards(normalized, env, spark_session=spark, active_only=True, missing_ok=True)
+    active_stewards = _list_data_stewards(normalized, env, spark_session=spark, active_only=True, missing_ok=True, metadata_schema=resolved_metadata_schema)
     data_agreement = {
         "status": "ready" if active_stewards else "not_ready",
         "tables": data_agreement_tables,
@@ -1200,6 +1234,7 @@ def setup_metadata_tables(
         config=config,
         env=env,
         expected_tables=expected_tables,
+        metadata_schema=resolved_metadata_schema,
     )
     statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
     registration_status = registration_validation.get("status")
@@ -1209,6 +1244,8 @@ def setup_metadata_tables(
         "notebook_registry": notebook_registry,
         "governance": governance,
         "tables": expected_tables,
+        "metadata_schema": resolved_metadata_schema,
+        "fully_qualified_tables": fully_qualified_tables,
         "created_tables": created_tables,
         "warnings": registration_validation.get("warnings", []),
         "active_metadata_tables": expected_tables,

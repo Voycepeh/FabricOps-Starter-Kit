@@ -100,7 +100,7 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     frame = _Frame()
 
     io.read_lakehouse_csv(config, "dev", "source", "Files/raw/orders.csv", spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "unified", "orders_clean", mode="overwrite", partition_by=["status"])
+    io.write_lakehouse_table(frame, config, "dev", "unified", "orders_clean", schema=None, mode="overwrite", partition_by=["status"], options={"overwriteSchema": "true"}, verbose=False)
 
     csv_call = next(call for call in spark.read.calls if call[0] == "csv")
     save_call = next(call for call in frame.write.calls if call[0] == "save")
@@ -115,8 +115,8 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
     spark = _Spark()
     frame = _Frame()
 
-    read_result = io.read_lakehouse_table(config, "dev", "metadata", "METADATA_DQ_RULES", spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", mode="ignore")
+    read_result = io.read_lakehouse_table(config, "dev", "metadata", "METADATA_DQ_RULES", schema=None, spark_session=spark)
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", schema=None, mode="ignore", verbose=False)
 
     expected_path = "abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/METADATA_DQ_RULES"
     assert read_result.count() == 1
@@ -130,8 +130,8 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
 def test_lakehouse_table_helpers_reject_nested_table_paths():
     config = framework_config()
 
-    with pytest.raises(ValueError, match="not a file path"):
-        io.write_lakehouse_table(_Frame(), config, "dev", "metadata", "METADATA_DQ_RULES/Unidentified", mode="ignore")
+    with pytest.raises(ValueError, match="simple table name"):
+        io.write_lakehouse_table(_Frame(), config, "dev", "metadata", "METADATA_DQ_RULES/Unidentified", schema=None, mode="ignore", verbose=False)
 
 
 def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeypatch):

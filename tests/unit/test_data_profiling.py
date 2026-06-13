@@ -25,6 +25,14 @@ def test_profile_dataframe_profiles_schema_nulls_distincts_min_and_max(spark_ses
     assert rows["amount"]["MAX_VALUE"] == "30.0"
 
 
+def test_profile_dataframe_row_count_is_long_type(spark_session):
+    df = spark_session.createDataFrame([(1, "a"), (2, "b")], ["id", "category"])
+
+    profile = profile_dataframe(df, "orders")
+
+    assert dict(profile.dtypes)["ROW_COUNT"] == "bigint"
+
+
 
 def test_profile_dataframe_excludes_dq_technical_columns(spark_session):
     df = spark_session.createDataFrame(

@@ -57,6 +57,14 @@ def test_pipeline_notebook_uses_minimal_public_helpers_and_no_pr_only_wrappers()
     assert "through `run_table_guardrails`" in markdown
 
 
+def test_pipeline_agreement_selector_passes_metadata_schema():
+    _markdown, code, _cells = _notebook_sources()
+
+    selector_block = code[code.index("widget_select_agreement(") : code.index("AGREEMENT = get_selected_agreement()")]
+    assert "metadata_schema=METADATA_SCHEMA" in selector_block
+    assert "register_notebook=True" in selector_block
+
+
 def test_pipeline_notebook_contains_final_thin_flow_sections():
     markdown, _code, _cells = _notebook_sources()
     expected_sections = [
@@ -249,6 +257,9 @@ def test_explicit_target_write_loop_uses_existing_write_helpers_and_checked_data
     assert "for target_config in TARGET_TABLES:" in write_block
     assert "write_lakehouse_table(" in write_block
     assert "write_warehouse_table(" in write_block
+    assert "TARGET_LAYER_SCHEMAS" in code
+    assert 'schema=target_config.get("schema", TARGET_LAYER_SCHEMAS.get(target_layer))' in write_block
+    assert 'options=target_config.get("options", {"overwriteSchema": "true"} if target_mode == "overwrite" else None)' in write_block
     assert 'target_config["df"]' in write_block
     assert "write_target_tables" not in write_block
     assert "Unsupported target kind" in write_block

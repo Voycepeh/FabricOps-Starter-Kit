@@ -27,10 +27,10 @@ For detailed behavior, continue to [Pipeline Guardrails](pipeline-guardrails.md)
 
 Use these generated API references when you want implementation details for the helper functions used by each notebook step:
 
-- `00_env_config`: [setup_notebook](../api/reference/setup_notebook.md) and [setup_metadata_tables](../api/reference/setup_metadata_tables.md).
-- `01_agreement`: [widget_render_data_steward](../api/reference/widget_render_data_steward.md), [widget_render_data_agreement](../api/reference/widget_render_data_agreement.md), [widget_render_agreement_evidence](../api/reference/widget_render_agreement_evidence.md), [widget_select_agreement](../api/reference/widget_select_agreement.md), and [get_selected_agreement](../api/reference/get_selected_agreement.md).
-- `02_pipeline`: [prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs.md), [run_table_guardrails](../api/reference/run_table_guardrails.md), [profile_dataframe](../api/reference/profile_dataframe.md), [write_pipeline_lineage](../api/reference/write_pipeline_lineage.md), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary.md).
-- `03_governance`: [widget_select_catalogue_table](../api/reference/widget_select_catalogue_table.md), [load_catalogue_profile_rows](../api/reference/load_catalogue_profile_rows.md), [widget_review_dq_rules](../api/reference/widget_review_dq_rules.md), and [record_table_governance](../api/reference/record_table_governance.md).
+- `00_env_config`: central environment, target, and Lakehouse schema settings; [setup_notebook](../api/reference/setup_notebook/); plus an optional commented [setup_metadata_tables](../api/reference/setup_metadata_tables/) block. Uncomment and run metadata setup once per environment, then comment it back so downstream `%run 00_env_config` stays fast.
+- `01_agreement`: [widget_render_data_steward](../api/reference/widget_render_data_steward/), [widget_render_data_agreement](../api/reference/widget_render_data_agreement/), [widget_render_agreement_evidence](../api/reference/widget_render_agreement_evidence/), [widget_select_agreement](../api/reference/widget_select_agreement/), and [get_selected_agreement](../api/reference/get_selected_agreement/).
+- `02_pipeline`: [prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/), [run_table_guardrails](../api/reference/run_table_guardrails/), [profile_dataframe](../api/reference/profile_dataframe/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/).
+- `03_governance`: [widget_select_catalogue_table](../api/reference/widget_select_catalogue_table/), [load_catalogue_profile_rows](../api/reference/load_catalogue_profile_rows/), [widget_review_dq_rules](../api/reference/widget_review_dq_rules/), and [record_table_governance](../api/reference/record_table_governance/).
 
 ## Template notebooks
 

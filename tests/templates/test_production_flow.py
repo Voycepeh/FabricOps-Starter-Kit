@@ -220,3 +220,16 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
                 offenders.append(f"{path.relative_to(ROOT)} contains {needle}")
 
     assert offenders == []
+
+
+def test_example_pipeline_smoke_test_uses_shared_lakehouse_write_helper_without_unidentified_paths():
+    import json
+    from pathlib import Path
+
+    notebook = json.loads(Path("templates/notebooks/example_pipeline_smoke_test.ipynb").read_text(encoding="utf-8"))
+    code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
+
+    assert "write_lakehouse_table(" in code
+    assert "Unidentified" not in code
+    assert "/Tables/" not in code
+    assert 'schema="dbo"' not in code

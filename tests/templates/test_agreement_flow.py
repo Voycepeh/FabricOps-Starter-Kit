@@ -55,3 +55,20 @@ def test_templates_do_not_reintroduce_old_numbered_stage_references():
     combined = "\n".join(path.read_text(encoding="utf-8") for path in TEMPLATES.glob("*.ipynb"))
 
     assert not any(term in combined for term in stale_terms)
+
+
+def test_env_config_keeps_metadata_setup_commented_by_default():
+    import json
+
+    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
+    code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
+
+    assert "Run this block manually once per environment." in code
+    assert "Keep it commented during normal downstream notebook runs" in code
+    assert "# METADATA_TABLE_SETUP = setup_metadata_tables(" in code
+    assert "\nMETADATA_TABLE_SETUP = setup_metadata_tables(" not in code
+    assert "metadata_schema=METADATA_SCHEMA" in code
+    assert "LAKEHOUSE_SCHEMAS_ENABLED = True" in code
+    assert 'DEFAULT_LAKEHOUSE_SCHEMA = "dbo"' in code
+    assert "SOURCE_SCHEMA = DEFAULT_LAKEHOUSE_SCHEMA" in code
+    assert "schema_enabled=LAKEHOUSE_SCHEMAS_ENABLED" in code

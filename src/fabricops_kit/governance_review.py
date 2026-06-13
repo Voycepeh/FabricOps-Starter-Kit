@@ -10,7 +10,7 @@ import uuid
 from typing import Any, Iterable
 
 from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp, _get_audit_timezone
-from .fabric_input_output import read_lakehouse_table, write_lakehouse_table
+from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key
 from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
@@ -318,7 +318,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
-    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
+    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
     options = _catalogue_table_options(rows)
     by_label = {o["label"]: o for o in options}
     combo = widgets.Combobox(placeholder="Search profiled tables", options=[o["label"] for o in options], description="Table", ensure_option=True, layout=widgets.Layout(width="980px"))
@@ -343,7 +343,7 @@ def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
-    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, spark_session=spark_session))
+    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
     filtered = []
     for row in rows:
         table_key = str(
@@ -824,7 +824,7 @@ def _status_is_warning(value: Any) -> bool:
 
 
 def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    return _coerce_rows(read_lakehouse_table(config, env, "metadata", table, spark_session=spark_session))
+    return _coerce_rows(read_lakehouse_table(config, env, "metadata", table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
 
 
 def _review_governance_evidence(
@@ -972,7 +972,7 @@ def _review_governance_evidence(
         "reviewed_by": actor,
         **audit,
     }
-    write_lakehouse_table(spark_session.createDataFrame([row]), config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, mode=mode)
+    write_lakehouse_table(spark_session.createDataFrame([row]), config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
     return {"review": row, "outcome": outcome, "blockers": blockers, "warnings": warnings, "evidence_summary": evidence_summary}
 
 def record_table_governance(
@@ -1057,7 +1057,7 @@ def record_table_governance(
     }
     for table_name, records in writes.items():
         if records:
-            write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", table_name, mode=mode)
+            write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", table_name, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
 
     governance_review = None
     if write_governance_review:
@@ -1545,7 +1545,7 @@ def enforce_dq_rules(
     does not quarantine rows, write row-level failure metadata, filter invalid
     rows, send alerts, or partially write targets.
     """
-    metadata_df = read_lakehouse_table(config, env, "metadata", DQ_RULES_TABLE, spark_session=spark_session)
+    metadata_df = read_lakehouse_table(config, env, "metadata", DQ_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session)
     rules = _load_active_dq_rules(metadata_df, table_name=table_name, env_name=env, dataset_name=dataset_name)
     checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
     total_count = int(dataframe.count())
