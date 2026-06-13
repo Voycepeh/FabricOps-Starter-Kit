@@ -202,6 +202,9 @@ def test_active_default_source_transform_and_target_schema_are_coherent_many_sou
     transform_block = code[code.index("df_orders_enriched = (") : code.index("TARGET_TABLES = [")]
     assert 'df_orders.alias("orders")' in transform_block
     assert '.join(df_customers.alias("customers"), on="customer_id", how="left")' in transform_block
+    assert 'F.col("orders.country_code")' in transform_block
+    assert 'F.col("customers.customer_country_code")' in transform_block
+    assert 'F.coalesce(F.col("customers.country_code"), F.col("orders.country_code"))' not in transform_block
     assert '"order_amount_band"' in transform_block
     assert 'df_orders_summary = (' in transform_block
     assert '.groupBy("customer_segment", "country_code")' in transform_block
@@ -216,7 +219,8 @@ def test_active_default_source_transform_and_target_schema_are_coherent_many_sou
         '"status": "string"',
         '"order_amount": "double"',
         '"country_code": "string"',
-        '"_fabricops_run_id": "string"',
+        '"customer_country_code": "string"',
+        '"_fabricops_run_id": "string",',
         '"_fabricops_pipeline_name": "string"',
         '"_fabricops_created_at": "string"',
     ]:
