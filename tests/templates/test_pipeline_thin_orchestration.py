@@ -57,6 +57,14 @@ def test_pipeline_notebook_uses_minimal_public_helpers_and_no_pr_only_wrappers()
     assert "through `run_table_guardrails`" in markdown
 
 
+def test_pipeline_agreement_selector_passes_metadata_schema():
+    _markdown, code, _cells = _notebook_sources()
+
+    selector_block = code[code.index("widget_select_agreement(") : code.index("AGREEMENT = get_selected_agreement()")]
+    assert "metadata_schema=METADATA_SCHEMA" in selector_block
+    assert "register_notebook=True" in selector_block
+
+
 def test_pipeline_notebook_contains_final_thin_flow_sections():
     markdown, _code, _cells = _notebook_sources()
     expected_sections = [

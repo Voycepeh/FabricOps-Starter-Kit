@@ -233,6 +233,7 @@ def _register_current_notebook(
     superseded_at=None,
     superseded_by_registration_id=None,
     metadata_table=NOTEBOOK_REGISTRY_TABLE,
+    metadata_schema: str | None = None,
     *,
     config: Any = None,
     env: str | None = None,
@@ -271,6 +272,10 @@ def _register_current_notebook(
         Audit values populated when a prior registration is superseded.
     metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
         Physical notebook registry table name.
+    metadata_schema : str, optional
+        Explicit metadata Lakehouse schema override. When omitted, the helper
+        uses the configured metadata target schema when schema routing is
+        enabled.
 
     Returns
     -------
@@ -329,7 +334,7 @@ def _register_current_notebook(
     row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
     df = spark.createDataFrame(_rows_for_spark([row]))
-    write_lakehouse_table(df, config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
+    write_lakehouse_table(df, config, env, "metadata", metadata_table, schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), mode="append")
     return row
 
 
@@ -347,11 +352,12 @@ def _load_notebook_registry(
     notebook_id: str | None = None,
     notebook_name: str | None = None,
     registration_role: str | None = None,
+    metadata_schema: str | None = None,
 ) -> list[dict[str, Any]]:
     if config is None or env is None:
         raise ValueError("config and env are required to read notebook registry metadata without an attached default lakehouse.")
     try:
-        table = read_lakehouse_table(config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark)
+        table = read_lakehouse_table(config, env, "metadata", metadata_table, schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), spark_session=spark)
         rows = _coerce_row_dicts(table)
     except Exception:
         if missing_ok:
@@ -394,6 +400,7 @@ def _current_notebook_active_registrations(
     notebook_type: str | None = None,
     environment_name: str | None = None,
     registration_role: str | None = None,
+    metadata_schema: str | None = None,
     missing_ok: bool = True,
 ) -> list[dict[str, Any]]:
     """Return active agreement registrations for the running notebook.
@@ -413,6 +420,9 @@ def _current_notebook_active_registrations(
         additional registration role.
     missing_ok : bool, default=True
         Return an empty list when the registry cannot be read.
+    metadata_schema : str, optional
+        Explicit metadata Lakehouse schema override used when reading the
+        notebook registry.
 
     Returns
     -------
@@ -434,5 +444,6 @@ def _current_notebook_active_registrations(
         notebook_id=notebook_id or None,
         notebook_name=None if notebook_id else notebook_name,
         registration_role=registration_role,
+        metadata_schema=metadata_schema,
     )
     return rows
