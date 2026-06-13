@@ -321,7 +321,7 @@ def profile_dataframe(
             _audit_timestamp_expr(timezone_name=run_timestamp_timezone).alias("RUN_TIMESTAMP"),
             F.lit(column_name).alias("COLUMN_NAME"),
             F.lit(dtype_map[column_name]).alias("DATA_TYPE"),
-            F.lit(row_count).alias("ROW_COUNT"),
+            F.lit(row_count).cast("long").alias("ROW_COUNT"),
             F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("long").alias("NULL_COUNT"),
             F.round((F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("NULL_PERCENT"),
             F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("long").alias("DISTINCT_COUNT"),

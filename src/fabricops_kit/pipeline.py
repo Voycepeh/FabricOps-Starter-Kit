@@ -109,6 +109,35 @@ def _canonical_catalogue_profile_df(profile_df: Any):
     return profile_df.select(*expressions) if expressions else profile_df
 
 
+def _normalize_catalogue_evidence_types(evidence_df: Any):
+    """Cast catalogue evidence columns to the persisted metadata table schema."""
+    from pyspark.sql import functions as F
+
+    casts = {
+        "row_count": "long",
+        "null_count": "long",
+        "distinct_count": "long",
+        "dq_rule_count": "long",
+        "dq_failed_rule_count": "long",
+        "dq_warning_rule_count": "long",
+        "dq_error_rule_count": "long",
+        "dq_failed_row_count": "long",
+        "null_percent": "double",
+        "distinct_percent": "double",
+        "dq_failed_row_percent": "double",
+        "run_timestamp": "timestamp",
+        "stability_check_enabled": "boolean",
+        "freshness_can_continue": "boolean",
+        "stability_can_continue": "boolean",
+    }
+    normalized = evidence_df
+    columns = set(getattr(evidence_df, "columns", []) or [])
+    for column_name, data_type in casts.items():
+        if column_name in columns:
+            normalized = normalized.withColumn(column_name, F.col(column_name).cast(data_type))
+    return normalized
+
+
 
 def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any = None):
     """Return a DataFrame with standard FabricOps target audit columns."""
@@ -551,6 +580,7 @@ def write_catalogue_evidence(
         for column, value in additions.items():
             evidence = evidence.withColumn(column, F.lit(value))
         evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
+        evidence = _normalize_catalogue_evidence_types(evidence)
         write_lakehouse_table(evidence, config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
         statuses[name] = "written"
     return statuses
