@@ -39,7 +39,7 @@ Each guardrail returns run evidence that can be displayed in the notebook and us
 
 Use these generated API references for the runtime helpers behind this guardrail flow:
 
-- [run_table_guardrails](../api/reference/run_table_guardrails.md) coordinates the table-level guardrail checks.
+- [run_table_guardrails](../api/reference/run_table_guardrails/) coordinates the table-level guardrail checks.
 - [validate_schema](../api/reference/validate_schema.md), [enforce_freshness](../api/reference/enforce_freshness.md), [enforce_profile_behavior](../api/reference/enforce_profile_behavior.md), and [enforce_dq_rules](../api/reference/enforce_dq_rules.md) implement the main check types.
 - [stop_if_failed](../api/reference/stop_if_failed.md) is the compact notebook stop helper for failed guardrail results.
 - [profile_dataframe](../api/reference/profile_dataframe.md) and [write_catalogue_evidence](../api/reference/write_catalogue_evidence.md) create the profile evidence that later checks and governance review use.

@@ -624,7 +624,50 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     return normalized
 
 
-def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: str) -> Any:
+def _normalize_path_config(config: Any | None, *, require_paths: bool = True) -> PathConfig:
+    """Return the shared runtime path configuration for accepted config shapes."""
+    if config is None:
+        if require_paths:
+            raise ValueError("No Fabric config was provided. Pass a FrameworkConfig, PathConfig, or compatible object.")
+        return PathConfig(paths={"__missing__": {}})
+
+    candidate = config
+    if isinstance(candidate, FrameworkConfig):
+        return candidate.path_config
+    if isinstance(candidate, PathConfig):
+        return candidate
+    if isinstance(candidate, dict):
+        if "path_config" in candidate:
+            candidate = candidate.get("path_config")
+        elif "paths" in candidate:
+            candidate = candidate.get("paths")
+        else:
+            if require_paths:
+                raise ValueError("config mapping must contain 'path_config' or 'paths'.")
+            return PathConfig(paths={"__missing__": {}})
+    elif hasattr(candidate, "path_config"):
+        candidate = getattr(candidate, "path_config")
+    elif not hasattr(candidate, "paths"):
+        if require_paths:
+            raise ValueError("config must provide path_config or paths for Fabric target routing.")
+        return PathConfig(paths={"__missing__": {}})
+
+    if isinstance(candidate, PathConfig):
+        return candidate
+    if isinstance(candidate, dict):
+        if "paths" in candidate and isinstance(candidate.get("paths"), dict):
+            return PathConfig(paths=candidate["paths"])
+        return PathConfig(paths=candidate)
+    if hasattr(candidate, "paths"):
+        paths = getattr(candidate, "paths")
+        if isinstance(paths, dict):
+            return PathConfig(paths=paths)
+    if require_paths:
+        raise ValueError("path_config must provide a non-empty paths mapping.")
+    return PathConfig(paths={"__missing__": {}})
+
+
+def _get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | None, env: str, target: str) -> Any:
     """Resolve a configured Fabric path for an environment and target.
 
     Parameters
@@ -651,9 +694,7 @@ def _get_store(config: FrameworkConfig | PathConfig | None, env: str, target: st
     >>> get_path("Sandbox", "Source", config=CONFIG)
     Housepath(...)
     """
-    if config is None:
-        raise ValueError("No Fabric config was provided. Pass a FrameworkConfig or PathConfig instance.")
-    paths = config.path_config.paths if isinstance(config, FrameworkConfig) else config.paths
+    paths = _normalize_path_config(config).paths
     if env not in paths:
         available_envs = ", ".join(sorted(paths.keys())) or "<none>"
         raise ValueError(
@@ -1066,7 +1107,10 @@ def _setup_metadata_table_registry(
     created: list[str] = []
     for table_name, schema in registry.items():
         try:
-            table = read_lakehouse_table(config, env, "metadata", table_name, schema=metadata_schema, spark_session=spark)
+            read_kwargs = {"spark_session": spark}
+            if metadata_schema is not None:
+                read_kwargs["schema"] = metadata_schema
+            table = read_lakehouse_table(config, env, "metadata", table_name, **read_kwargs)
         except Exception as exc:
             if not _is_table_not_found_error(exc):
                 raise RuntimeError(
@@ -1074,7 +1118,10 @@ def _setup_metadata_table_registry(
                 ) from exc
             empty_df = _create_empty_metadata_dataframe(spark, schema)
             write_lakehouse_table(empty_df, config, env, "metadata", table_name, schema=metadata_schema, mode="overwrite", options={"overwriteSchema": "true"})
-            table = read_lakehouse_table(config, env, "metadata", table_name, schema=metadata_schema, spark_session=spark)
+            read_kwargs = {"spark_session": spark}
+            if metadata_schema is not None:
+                read_kwargs["schema"] = metadata_schema
+            table = read_lakehouse_table(config, env, "metadata", table_name, **read_kwargs)
             created.append(table_name)
 
         missing = [field for field in _metadata_schema_field_names(schema) if field not in _metadata_table_columns(table)]
@@ -1216,10 +1263,11 @@ def setup_metadata_tables(
         raise ValueError(data_agreement["message"])
 
     governance_tables = list(_get_governance_metadata_schemas())
+    notebook_schema = registry.get(NOTEBOOK_REGISTRY_TABLE)
     notebook_registry = {
         "status": "ready",
         "table": NOTEBOOK_REGISTRY_TABLE,
-        "schema": _metadata_schema_field_names(registry[NOTEBOOK_REGISTRY_TABLE]),
+        "schema": _metadata_schema_field_names(notebook_schema) if notebook_schema is not None else [],
         "created": NOTEBOOK_REGISTRY_TABLE in created_tables,
         "created_tables": [NOTEBOOK_REGISTRY_TABLE] if NOTEBOOK_REGISTRY_TABLE in created_tables else [],
     }
