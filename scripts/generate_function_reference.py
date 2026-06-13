@@ -64,6 +64,20 @@ INTERNAL_ALIAS_MODULES = {}
 # Callable reference pages are intentionally curated for v1. A callable is a
 # notebook-template function that users actively call, not every public helper in
 # the Python package. Keep this list in sync with src/fabricops_kit/__init__.py.
+
+INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
+    "enforce_profile_behavior": {
+        "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
+        "fabricops_kit.fabric_input_output._normalize_schema_name",
+        "fabricops_kit.config._get_store",
+    },
+    "enforce_dq_rules": {
+        "fabricops_kit.config._current_audit_timestamp",
+        "fabricops_kit.config._get_audit_timezone",
+        "fabricops_kit.config._validate_audit_timezone",
+    },
+}
+
 V1_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
@@ -2167,7 +2181,11 @@ def main() -> None:
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
             related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
-            helper_qns = _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
+            helper_qns = [
+                helper_qn
+                for helper_qn in _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
+                if helper_qn not in INTERNAL_HELPER_EXCLUSIONS.get(short_name, set())
+            ]
             call_tree_depth = 2 if len(helper_qns) > 12 else 6
             call_flow_lines = [
                 '??? info "Call flow"',

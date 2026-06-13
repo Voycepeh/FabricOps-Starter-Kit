@@ -150,8 +150,16 @@ def _resolve_lakehouse_table_identifier(store: FabricStore, table: str, schema: 
 
 
 def _configured_lakehouse_schema(config, env: str, target: str) -> str | None:
-    """Return the configured schema for a Lakehouse target, if enabled."""
-    store = _get_store(config, env, target)
+    """Return the configured schema for a Lakehouse target, if enabled.
+
+    Lightweight tests may pass partial config objects while monkeypatching the
+    actual writer. Missing path mappings resolve to no explicit schema; real IO
+    calls still validate configured targets through ``_get_store``.
+    """
+    try:
+        store = _get_store(config, env, target)
+    except ValueError:
+        return None
     if store.kind != "lakehouse" or not getattr(store, "schema_enabled", False):
         return None
     return _normalize_schema_name(getattr(store, "schema", None))

@@ -172,9 +172,9 @@ rows, send alerts, or partially write targets.
             └── …
     ```
 
-??? info "Internal helpers used: 19"
+??? info "Internal helpers used: 16"
 
-    This callable uses 19 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, fabric or spark access, and other.
+    This callable uses 16 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">

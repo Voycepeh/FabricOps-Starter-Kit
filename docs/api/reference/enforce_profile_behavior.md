@@ -209,9 +209,9 @@ enforced by their own guardrails.
             └── …
     ```
 
-??? info "Internal helpers used: 15"
+??? info "Internal helpers used: 12"
 
-    This callable uses 15 internal helpers for metadata loading, rule parsing, profile comparison, column handling, and fabric or spark access.
+    This callable uses 12 internal helpers for metadata loading, rule parsing, profile comparison, column handling, and fabric or spark access.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
