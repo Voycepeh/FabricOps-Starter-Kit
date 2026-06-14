@@ -1148,7 +1148,10 @@ def _validate_metadata_table_registration(
     warnings: list[str] = []
     for table in expected:
         try:
-            read_lakehouse_table(normalized, env, "metadata", table, schema=resolved_metadata_schema, spark_session=spark)
+            read_kwargs = {"spark_session": spark}
+            if resolved_metadata_schema is not None:
+                read_kwargs["schema"] = resolved_metadata_schema
+            read_lakehouse_table(normalized, env, "metadata", table, **read_kwargs)
         except Exception:
             missing.append(table)
     nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)

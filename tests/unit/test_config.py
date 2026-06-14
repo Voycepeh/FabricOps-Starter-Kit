@@ -237,19 +237,27 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
             self.columns = list(fields)
 
     schemas = {"METADATA_DATA_STEWARD": Schema(["steward_id", "is_active"])}
+    reads = []
+
+    def read_table(config, env, target, table, spark_session=None):
+        reads.append((env, target, table, spark_session))
+        return Table(schemas[table].fieldNames())
 
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
-    monkeypatch.setattr(io, "read_lakehouse_table", lambda config, env, target, table, **kwargs: Table(schemas[table].fieldNames()))
+    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
     monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: pytest.fail("valid existing metadata tables should not be recreated"))
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [])
 
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    spark = object()
+    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev")
 
     assert result["status"] == "ready"
     assert result["data_agreement"]["status"] == "not_ready"
     assert result["warnings"] == []
     assert result["created_tables"] == []
+    assert reads == [("dev", "metadata", "METADATA_DATA_STEWARD", spark), ("dev", "metadata", "METADATA_DATA_STEWARD", spark)]
+
 
 def test_active_metadata_tables_are_source_driven_and_explain_optional_access_table():
     tables = _get_active_metadata_tables(framework_config())
