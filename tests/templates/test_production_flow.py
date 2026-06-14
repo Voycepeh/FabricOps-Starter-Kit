@@ -48,7 +48,7 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
 
     source_guardrails = production.index("source_guardrail_results = run_table_guardrails")
     source_stop = production.index("stop_on_failure=True", source_guardrails)
-    transformation = production.index("df_target_01 = df_source_01", source_stop)
+    transformation = production.index("df_orders_enriched = (", source_stop)
     target_guardrails = production.index("target_guardrail_results = run_table_guardrails", transformation)
     target_stop = production.index("stop_on_failure=True", target_guardrails)
     target_write = production.index("target_write_status = {}", target_stop)
@@ -140,6 +140,7 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
         "source scenario generator",
         "02_pipeline",
         "smoke_src_orders_happy",
+        "smoke_src_customers_happy",
         "smoke_src_orders_schema_drift",
         "smoke_src_orders_dq_issue",
         "smoke_src_orders_stale",
@@ -150,6 +151,7 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
 
     for scenario_table in [
         "smoke_src_orders_happy",
+        "smoke_src_customers_happy",
         "smoke_src_orders_schema_drift",
         "smoke_src_orders_dq_issue",
         "smoke_src_orders_stale",

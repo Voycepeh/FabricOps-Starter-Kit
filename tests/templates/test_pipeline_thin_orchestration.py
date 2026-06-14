@@ -71,14 +71,14 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
         "## 1. Run `00_env_config`",
         "## 2. Import required functions",
         "## 3. Select data agreement and capture run context",
-        "## 4. USER EDIT SECTION — load source DataFrames",
-        "## 5. USER EDIT SECTION — source guardrail configuration",
+        "## 4. USER EDIT SECTION — read source DataFrames",
+        "## 5. USER EDIT SECTION — configure source guardrails",
         "## 6. Source guardrail defaults",
         "## 7. Prepare source table configs",
         "## 8. Optional: inspect a source schema",
         "## 9. Run source guardrails before transformation",
         "## 10. USER EDIT SECTION — DIY transformations",
-        "## 11. USER EDIT SECTION — target table configuration",
+        "## 11. USER EDIT SECTION — configure target tables after transformation",
         "## 12. Target guardrail and write defaults",
         "## 13. Prepare target table configs",
         "## 14. Run target guardrails before writes",
@@ -100,16 +100,20 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
 def test_source_loading_uses_existing_read_helpers_directly():
     _markdown, code, _cells = _notebook_sources()
 
-    load_block = code[code.index("df_source_01 = read_lakehouse_table(") : code.index("SOURCE_TABLES = [")]
+    load_block = code[code.index("df_orders = read_lakehouse_table(") : code.index("SOURCE_TABLES = [")]
     assert 'read_lakehouse_table(' in load_block
     assert 'read_lakehouse_csv(' in load_block
     assert 'read_lakehouse_parquet(' in load_block
     assert 'read_lakehouse_excel(' in load_block
     assert 'read_warehouse_table(' in load_block
-    assert 'spark.read.table("CHANGE_ME_database.CHANGE_ME_table")' in load_block
+    assert 'spark.read.table("database.customers")' in load_block
     assert '"source",' in load_block
-    assert '"CHANGE_ME_source_table",' in load_block
+    assert '"smoke_src_orders_happy",' in load_block
+    assert '"smoke_src_customers_happy",' in load_block
     assert 'spark_session=spark' in load_block
+    assert "PIPELINE_SOURCE_TABLE_NAME" not in code
+    assert "PIPELINE_TARGET_TABLE_NAME" not in code
+    assert "PIPELINE_DATASET_NAME" not in code
 
 def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discoverable():
     _markdown, code, _cells = _notebook_sources()
@@ -117,14 +121,18 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
     assert re.search(r"^DATASET_NAME\s*=", code, re.MULTILINE) is None
     assert "DATA_PRODUCT_NAME" not in code
     assert "SOURCE_TABLES = [" in code
-    assert '"key": "source_01"' in code
+    assert '"key": "orders"' in code
+    assert '"key": "customers"' in code
     assert '"layer": "source"' in code
-    assert '"df": df_source_01' in code
-    assert '"table_name": PIPELINE_SOURCE_TABLE_NAME' in code
+    assert '"df": df_orders' in code
+    assert '"df": df_customers' in code
+    assert '"table_name": "smoke_src_orders_happy"' in code
+    assert '"table_name": "smoke_src_customers_happy"' in code
     assert '"watermark_column": "order_date"' in code
+    assert '"watermark_column": "effective_date"' in code
 
     source_user_block = code[code.index("SOURCE_TABLES = [") : code.index("DEFAULT_SOURCE_GUARDRAILS = {")]
-    source_default_example = source_user_block[: source_user_block.index("# To add a second source table")]
+    source_default_example = source_user_block[: source_user_block.index("# Optional advanced per-table guardrail overrides")]
     for beginner_field in [
         '"order_id": "bigint"',
         '"customer_id": "bigint"',
@@ -135,22 +143,23 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
         '"country_code": "string"',
     ]:
         assert beginner_field in source_default_example
-    assert '"dataset_name": PIPELINE_DATASET_NAME' in source_default_example
+    assert '"dataset_name"' not in source_default_example
     assert '"stage"' not in source_default_example
     for advanced_override in [
-        '"dataset_name": "CHANGE_ME_governance_dataset"',
+        '"dataset_name": "governance_dataset_override",',
         '"stage": "source"',
         '"dq_preset": "approved_rules"',
     ]:
         assert advanced_override in source_user_block
 
     assert "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(" in code
-    source_prepare_block = code[code.index("SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(") : code.index("df_source_01 = SOURCE_CONFIG_BY_KEY")]
+    source_prepare_block = code[code.index("SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(") : code.index("df_orders = SOURCE_CONFIG_BY_KEY")]
     assert 'table_role="source"' in source_prepare_block
     assert "config=CONFIG" not in source_prepare_block
     assert "env=ENV_NAME" not in source_prepare_block
     assert "spark_session=spark" not in source_prepare_block
-    assert 'df_source_01 = SOURCE_CONFIG_BY_KEY["source_01"]["df"]' in code
+    assert 'df_orders = SOURCE_CONFIG_BY_KEY["orders"]["df"]' in code
+    assert 'df_customers = SOURCE_CONFIG_BY_KEY["customers"]["df"]' in code
 
 
 def test_guardrail_default_sections_include_supported_preset_comments():
@@ -187,17 +196,21 @@ def test_guardrail_default_sections_include_supported_preset_comments():
     assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {" in code
 
 
-def test_active_default_source_transform_and_target_schema_are_coherent_passthrough():
+def test_active_default_source_transform_and_target_schema_are_coherent_many_source():
     _markdown, code, _cells = _notebook_sources()
 
-    transform_block = code[code.index("# DIY your transformations here.") : code.index("TARGET_TABLES = [")]
-    assert "df_target_01 = df_source_01" in transform_block
-    assert ".withColumn(" in transform_block  # commented example only
-    assert '"order_amount_band"' in transform_block  # commented example only
-    assert '"order_amount"' in transform_block
+    transform_block = code[code.index("df_orders_enriched = (") : code.index("TARGET_TABLES = [")]
+    assert 'df_orders.alias("orders")' in transform_block
+    assert '.join(df_customers.alias("customers"), on="customer_id", how="left")' in transform_block
+    assert 'F.col("orders.country_code")' in transform_block
+    assert 'F.col("customers.customer_country_code")' in transform_block
+    assert 'F.coalesce(F.col("customers.country_code"), F.col("orders.country_code"))' not in transform_block
+    assert '"order_amount_band"' in transform_block
+    assert 'df_orders_summary = (' in transform_block
+    assert '.groupBy("customer_segment", "country_code")' in transform_block
 
     target_user_block = code[code.index("TARGET_TABLES = [") : code.index("DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {")]
-    target_default_example = target_user_block[: target_user_block.index("# To add a second target table")]
+    target_default_example = target_user_block[: target_user_block.index("# Optional advanced per-table overrides")]
     for expected_column in [
         '"order_id": "bigint"',
         '"customer_id": "bigint"',
@@ -206,13 +219,18 @@ def test_active_default_source_transform_and_target_schema_are_coherent_passthro
         '"status": "string"',
         '"order_amount": "double"',
         '"country_code": "string"',
-        '"_fabricops_run_id": "string"',
+        '"customer_country_code": "string"',
+        '"_fabricops_run_id": "string",',
         '"_fabricops_pipeline_name": "string"',
         '"_fabricops_created_at": "string"',
     ]:
         assert expected_column in target_default_example
-    assert '"order_amount_band": "string"' not in target_default_example
-    assert '"dataset_name": PIPELINE_DATASET_NAME' in target_default_example
+    assert '"order_amount_band": "string"' in target_default_example
+    assert '"key": "orders_enriched"' in target_default_example
+    assert '"key": "orders_summary"' in target_default_example
+    assert '"table_name": "smoke_unified_orders_enriched"' in target_default_example
+    assert '"table_name": "smoke_product_orders_summary"' in target_default_example
+    assert '"dataset_name"' not in target_default_example
     for hidden_beginner_field in ['"stage"', '"target_kind"', '"kind"']:
         assert hidden_beginner_field not in target_default_example
 
@@ -225,7 +243,7 @@ def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_fl
 
     source_guardrails = code.index("source_guardrail_results = run_table_guardrails(")
     source_stop_flag = code.index("stop_on_failure=True", source_guardrails)
-    transform = code.index("df_target_01 = df_source_01")
+    transform = code.index("df_orders_enriched = (")
     target_prepare = code.index("TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(")
     target_guardrails = code.index("target_guardrail_results = run_table_guardrails(")
     target_stop_flag = code.index("stop_on_failure=True", target_guardrails)
@@ -272,5 +290,7 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert "write_pipeline_run_summary(" in code
     assert 'source_definitions=source_evidence_definitions' in code
     assert 'target_definitions=target_evidence_definitions' in code
-    assert 'dataset_name=TARGET_01_CONFIG["dataset_name"]' in code
+    assert 'dataset_name=PRIMARY_TARGET_CONFIG["dataset_name"]' in code
+    assert '"sources": ["orders", "customers"]' in code
+    assert '"targets": ["orders_enriched", "orders_summary"]' in code
     assert "METADATA_PIPELINE_RUNS" in _markdown
