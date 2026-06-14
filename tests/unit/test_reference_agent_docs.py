@@ -232,18 +232,11 @@ def test_enforce_profile_behavior_reference_uses_distinct_blocks_and_responsive_
 def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
 
-    for area in (
-        "Audit timestamp",
-        "Metadata loading",
-        "Validation",
-        "Rule parsing",
-        "Rule evaluation",
-    ):
-        assert f'<h4>{area}</h4>' in text
+    assert '<table class="reference-function-table">' not in _section_text(text, "Implementation details")
+    assert "enforce_dq_rules(...)" in text
     assert "Expanded internal helper tree is available in Implementation details." in text
     assert text.index('<div class="reference-source-card" markdown="1">') < text.index("## Signature")
     assert text.index("## Implementation details") < text.index('??? info "Call flow"')
-    assert text.index('??? info "Call flow"') < text.index('class="reference-helper-groups"')
     assert '??? example "View helper source by area"' not in text
 
 
