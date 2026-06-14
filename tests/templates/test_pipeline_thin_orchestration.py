@@ -283,3 +283,47 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert '"sources": ["orders", "customers"]' in code
     assert '"targets": ["orders_enriched", "orders_summary"]' in code
     assert "METADATA_PIPELINE_RUNS" in _markdown
+
+
+def test_pipeline_template_smoke_keeps_guardrails_inline_per_table():
+    _markdown, code, _cells = _notebook_sources()
+
+    assert "DEFAULT_SOURCE_GUARDRAILS" not in code
+    assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS" not in code
+
+    source_block = code[code.index("SOURCE_TABLES = [") : code.index("SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(")]
+    target_block = code[code.index("TARGET_TABLES = [") : code.index("TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(")]
+
+    for source_key in ['"key": "orders"', '"key": "customers"']:
+        source_entry_start = source_block.index(source_key)
+        source_entry = source_block[source_entry_start : source_block.find("    },", source_entry_start)]
+        for field in [
+            '"schema_preset"',
+            '"load_behavior"',
+            '"freshness_column"',
+            '"freshness_max_lag_days"',
+            '"freshness_severity"',
+            '"dq_preset"',
+            '"distribution_columns"',
+            '"exclude_columns"',
+            '"expected_schema"',
+        ]:
+            assert field in source_entry
+
+    for target_key in ['"key": "orders_enriched"', '"key": "orders_summary"']:
+        target_entry_start = target_block.index(target_key)
+        target_entry = target_block[target_entry_start : target_block.find("    },", target_entry_start)]
+        for field in [
+            '"write_mode"',
+            '"load_behavior"',
+            '"schema"',
+            '"schema_preset"',
+            '"freshness_column"',
+            '"freshness_max_lag_days"',
+            '"freshness_severity"',
+            '"dq_preset"',
+            '"distribution_columns"',
+            '"exclude_columns"',
+            '"expected_schema"',
+        ]:
+            assert field in target_entry
