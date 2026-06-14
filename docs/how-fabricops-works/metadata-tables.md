@@ -59,9 +59,9 @@ For how schema, freshness, profile behavior, and DQ settings produce this eviden
 
 Use these generated API references for helpers that create, read, or write metadata evidence:
 
-- [setup_metadata_tables](../api/reference/setup_metadata_tables.md) prepares the configured metadata tables.
-- [write_catalogue_evidence](../api/reference/write_catalogue_evidence.md), [write_pipeline_lineage](../api/reference/write_pipeline_lineage.md), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary.md) write pipeline evidence.
-- [record_table_governance](../api/reference/record_table_governance.md) writes approved governance metadata.
+- [setup_metadata_tables](../api/reference/setup_metadata_tables/) prepares the configured metadata tables.
+- [write_catalogue_evidence](../api/reference/write_catalogue_evidence/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/) write pipeline evidence.
+- [record_table_governance](../api/reference/record_table_governance/) writes approved governance metadata.
 
 ## Standard runtime audit columns
 

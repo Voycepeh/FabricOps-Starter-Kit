@@ -1284,10 +1284,12 @@ def setup_metadata_tables(
         expected_tables=expected_tables,
         metadata_schema=resolved_metadata_schema,
     )
-    statuses = [data_agreement.get("status"), notebook_registry.get("status"), governance.get("status")]
+    setup_statuses = [notebook_registry.get("status"), governance.get("status")]
+    if require_active_steward:
+        setup_statuses.append(data_agreement.get("status"))
     registration_status = registration_validation.get("status")
     return {
-        "status": "ready" if all(status == "ready" for status in statuses) and registration_status in {"ready", "skipped"} else "not_ready",
+        "status": "ready" if all(status == "ready" for status in setup_statuses) and registration_status in {"ready", "skipped"} else "not_ready",
         "data_agreement": data_agreement,
         "notebook_registry": notebook_registry,
         "governance": governance,

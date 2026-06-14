@@ -85,10 +85,10 @@ The important control point is the commit. Nothing becomes governed metadata unt
 
 Use these generated API references for the helpers behind the governance review flow:
 
-- [widget_select_catalogue_table](../api/reference/widget_select_catalogue_table.md), [get_selected_catalogue_table](../api/reference/get_selected_catalogue_table.md), and [load_catalogue_profile_rows](../api/reference/load_catalogue_profile_rows.md) select the profiled table under review.
-- [widget_review_column_context](../api/reference/widget_review_column_context.md), [widget_review_dq_rules](../api/reference/widget_review_dq_rules.md), and [widget_review_column_classification](../api/reference/widget_review_column_classification.md) capture reviewer decisions.
-- [record_table_governance](../api/reference/record_table_governance.md) writes approved governance metadata for later pipeline enforcement.
-- [enforce_dq_rules](../api/reference/enforce_dq_rules.md) is the pipeline-side runtime consumer of approved DQ rules.
+- [widget_select_catalogue_table](../api/reference/widget_select_catalogue_table/), [get_selected_catalogue_table](../api/reference/get_selected_catalogue_table/), and [load_catalogue_profile_rows](../api/reference/load_catalogue_profile_rows/) select the profiled table under review.
+- [widget_review_column_context](../api/reference/widget_review_column_context/), [widget_review_dq_rules](../api/reference/widget_review_dq_rules/), and [widget_review_column_classification](../api/reference/widget_review_column_classification/) capture reviewer decisions.
+- [record_table_governance](../api/reference/record_table_governance/) writes approved governance metadata for later pipeline enforcement.
+- [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of approved DQ rules.
 
 ## DQ expectations in the control panel
 
