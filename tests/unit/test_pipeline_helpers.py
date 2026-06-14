@@ -430,3 +430,264 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
     assert stopped[0]["status"] == "failed"
     assert stopped[0]["can_continue"] is False
     assert stopped[0]["failed_tables"] == ["target_01"]
+
+
+def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
+    from fabricops_kit.guardrails import validate_schema
+
+    happy_df = spark_session.createDataFrame([(1, "new")], "id int, status string")
+    additive_df = spark_session.createDataFrame([(1, "new", "extra")], "id int, status string, source_file string")
+    incompatible_df = spark_session.createDataFrame([("1", "new")], "id string, status string")
+    expected_schema = {"id": "int", "status": "string"}
+
+    happy = validate_schema(happy_df, expected_schema, preset="strict")
+    assert happy["status"] == "passed"
+    assert happy["can_continue"] is True
+
+    strict_additive = validate_schema(additive_df, expected_schema, preset="strict")
+    assert strict_additive["status"] == "failed"
+    assert strict_additive["can_continue"] is False
+    assert strict_additive["unexpected_columns"] == ["source_file"]
+
+    allowed_additive = validate_schema(additive_df, expected_schema, preset="allow_new_columns")
+    assert allowed_additive["status"] == "warning"
+    assert allowed_additive["can_continue"] is True
+    assert allowed_additive["unexpected_columns"] == ["source_file"]
+
+    incompatible = validate_schema(incompatible_df, expected_schema, preset="strict")
+    assert incompatible["status"] == "failed"
+    assert incompatible["can_continue"] is False
+    assert incompatible["datatype_mismatches"] == [{"column": "id", "expected": "int", "actual": "string"}]
+
+    incompatible_allow_new = validate_schema(incompatible_df, expected_schema, preset="allow_new_columns")
+    assert incompatible_allow_new["status"] == "failed"
+    assert incompatible_allow_new["can_continue"] is False
+
+
+def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):
+    from fabricops_kit.guardrails import enforce_freshness
+
+    current_df = spark_session.createDataFrame([("2026-06-14",), ("2026-06-13",)], "business_date string")
+    stale_df = spark_session.createDataFrame([("2026-06-01",), ("2026-06-02",)], "business_date string")
+
+    current = enforce_freshness(current_df, "business_date", 1, severity="blocking", reference_date="2026-06-14")
+    assert current["status"] == "passed"
+    assert current["can_continue"] is True
+    assert current["latest_value"] == "2026-06-14"
+
+    stale_blocking = enforce_freshness(stale_df, "business_date", 1, severity="blocking", reference_date="2026-06-14")
+    assert stale_blocking["status"] == "failed"
+    assert stale_blocking["can_continue"] is False
+    assert stale_blocking["required_min_value"] == "2026-06-13"
+
+    stale_warning = enforce_freshness(stale_df, "business_date", 1, severity="warning", reference_date="2026-06-14")
+    assert stale_warning["status"] == "warning"
+    assert stale_warning["can_continue"] is True
+
+
+def test_profile_behavior_guardrail_append_overwrite_and_skip_modes(spark_session):
+    from fabricops_kit.guardrails import enforce_profile_behavior
+
+    current_profile = [
+        {
+            "dataset_name": "sales",
+            "table_name": "orders",
+            "profile_stage": "source",
+            "column_name": "business_date",
+            "row_count": 5,
+            "min_value": "2026-06-10",
+            "max_value": "2026-06-12",
+        }
+    ]
+    catalogue_profile = [
+        {
+            "dataset_name": "sales",
+            "table_name": "orders",
+            "profile_stage": "source",
+            "load_behavior": "append",
+            "stability_status": "passed",
+            "profile_status": "success",
+            "profile_run_id": "baseline-run",
+            "profiled_at": "2026-06-13T00:00:00Z",
+            "column_name": "business_date",
+            "row_count": 10,
+            "min_value": "2026-06-01",
+            "max_value": "2026-06-14",
+        }
+    ]
+    df = spark_session.createDataFrame([(1, "2026-06-12")], "id int, business_date string")
+
+    append = enforce_profile_behavior(
+        spark_session,
+        df,
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="source",
+        run_id="current-run",
+        load_behavior="append",
+        watermark_column="business_date",
+        catalogue_df=catalogue_profile,
+        current_profile=current_profile,
+    )
+    assert append["status"] == "failed"
+    assert append["can_continue"] is False
+    assert "append_row_count_must_not_decrease" in append["stability_difference_summary"]
+
+    overwrite = enforce_profile_behavior(
+        spark_session,
+        df,
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="source",
+        run_id="current-run",
+        load_behavior="overwrite",
+        watermark_column="business_date",
+        catalogue_df=catalogue_profile,
+        current_profile=current_profile,
+    )
+    assert overwrite["status"] == "passed"
+    assert overwrite["can_continue"] is True
+    assert "accepted current profile" in overwrite["message"]
+
+    skipped = enforce_profile_behavior(
+        spark_session,
+        df,
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="source",
+        run_id="current-run",
+        load_behavior="skip",
+        watermark_column="business_date",
+        catalogue_df=catalogue_profile,
+        current_profile=current_profile,
+    )
+    assert skipped["status"] == "skipped"
+    assert skipped["can_continue"] is True
+    assert skipped["stability_check_enabled"] is False
+
+
+def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or_dq(monkeypatch, spark_session):
+    df = spark_session.createDataFrame([("not-an-int", "2026-06-01")], "id string, business_date string")
+
+    monkeypatch.setattr(
+        pipeline,
+        "profile_dataframe",
+        lambda dataframe, **kwargs: [
+            {
+                "table_name": kwargs["table_name"],
+                "column_name": "business_date",
+                "row_count": dataframe.count(),
+                "min_value": "2026-06-01",
+                "max_value": "2026-06-01",
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "enforce_freshness",
+        lambda dataframe, freshness_column, max_lag_days, severity="blocking", **kwargs: {
+            "status": "failed",
+            "can_continue": False,
+            "freshness_column": freshness_column,
+            "freshness_max_lag_days": max_lag_days,
+            "freshness_severity": severity,
+        },
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "enforce_profile_behavior",
+        lambda *args, **kwargs: {
+            "status": "skipped",
+            "can_continue": True,
+            "stability_status": "skipped",
+            "stability_can_continue": True,
+            "stability_check_enabled": False,
+            "message": "Profile behavior guardrail skipped; other guardrails still apply.",
+        },
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "enforce_dq_rules",
+        lambda *args, **kwargs: {"status": "failed", "can_continue": False, "checks": [{"rule_id": "id_required", "status": "failed"}]},
+    )
+    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+
+    result = pipeline.run_table_guardrails(
+        [
+            {
+                "key": "orders",
+                "df": df,
+                "table_name": "orders",
+                "dataset_name": "sales",
+                "stage": "source",
+                "expected_schema": {"id": "int", "business_date": "string"},
+                "schema_preset": "strict",
+                "freshness_column": "business_date",
+                "freshness_max_lag_days": 1,
+                "freshness_severity": "blocking",
+                "load_behavior": "skip",
+                "dq_preset": "approved_rules",
+            }
+        ],
+        config=framework_config(),
+        env="dev",
+        run_id="run-1",
+        spark_session=spark_session,
+    )
+
+    assert result["can_continue"] is False
+    assert result["failed_tables"] == ["orders"]
+    assert result["schema_results"]["orders"]["status"] == "failed"
+    assert result["freshness_results"]["orders"]["status"] == "failed"
+    assert result["stability_results"]["orders"]["status"] == "skipped"
+    assert result["dq_results"]["orders"]["status"] == "failed"
+
+
+def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark_session):
+    df = spark_session.createDataFrame([(1, "2026-06-14")], "id int, business_date string")
+
+    monkeypatch.setattr(
+        pipeline,
+        "profile_dataframe",
+        lambda dataframe, **kwargs: [{"table_name": kwargs["table_name"], "column_name": "id", "row_count": dataframe.count()}],
+    )
+    monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError("dq_preset='skip' should not call enforce_dq_rules")
+
+    monkeypatch.setattr(pipeline, "enforce_dq_rules", fail_if_called)
+
+    result = pipeline.run_table_guardrails(
+        [
+            {
+                "key": "orders",
+                "df": df,
+                "table_name": "orders",
+                "dataset_name": "sales",
+                "stage": "source",
+                "expected_schema": {"id": "int", "business_date": "string"},
+                "freshness_column": "business_date",
+                "freshness_max_lag_days": 10000,
+                "freshness_severity": "blocking",
+                "load_behavior": "append",
+                "dq_preset": "skip",
+            }
+        ],
+        config=framework_config(),
+        env="dev",
+        run_id="run-1",
+        spark_session=spark_session,
+    )
+
+    assert result["can_continue"] is True
+    assert result["dq_results"]["orders"] == {
+        "status": "skipped",
+        "can_continue": True,
+        "checks": [],
+        "message": "DQ guardrail skipped by preset.",
+    }

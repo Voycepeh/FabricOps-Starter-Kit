@@ -72,28 +72,24 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
         "## 2. Import required functions",
         "## 3. Select data agreement and capture run context",
         "## 4. USER EDIT SECTION — read source DataFrames",
-        "## 5. USER EDIT SECTION — configure source guardrails",
-        "## 6. Source guardrail defaults",
-        "## 7. Prepare source table configs",
-        "## 8. Optional: inspect a source schema",
-        "## 9. Run source guardrails before transformation",
-        "## 10. USER EDIT SECTION — DIY transformations",
-        "## 11. USER EDIT SECTION — configure target tables after transformation",
-        "## 12. Target guardrail and write defaults",
-        "## 13. Prepare target table configs",
-        "## 14. Run target guardrails before writes",
-        "## 15. Write target tables",
-        "## 16. USER EDIT SECTION — lineage relationships",
-        "## 17. Write lineage",
-        "## 18. Write runtime summary",
+        "## 5. USER EDIT SECTION — configure source tables and source guardrails",
+        "## 6. Optional: inspect source schemas",
+        "## 7. Run source guardrails before transformation",
+        "## 8. USER EDIT SECTION — transform source DataFrames into target DataFrames",
+        "## 9. USER EDIT SECTION — configure target tables, write behavior, and target guardrails",
+        "## 10. Run target guardrails before writes",
+        "## 11. Write target tables",
+        "## 12. USER EDIT SECTION — lineage relationships",
+        "## 13. Write lineage",
+        "## 14. Write runtime summary",
     ]
     for section in expected_sections:
         assert section in markdown
 
     assert "This is the only section where most users write business transformation logic" in markdown
     assert "Keep this section visible because it is the point where data is published" in markdown
-    assert "These are the default guardrails applied to every source table" in markdown
-    assert "These are the default guardrails and write options applied to every target table" in markdown
+    assert "with the guardrails and catalogue evidence that belong to that specific source" in markdown
+    assert "write behavior, schema, freshness, DQ, profile" in markdown
 
 
 
@@ -111,6 +107,7 @@ def test_source_loading_uses_existing_read_helpers_directly():
     assert '"smoke_src_orders_happy",' in load_block
     assert '"smoke_src_customers_happy",' in load_block
     assert 'spark_session=spark' in load_block
+    assert 'schema="SmokeTest"' in load_block
     assert "PIPELINE_SOURCE_TABLE_NAME" not in code
     assert "PIPELINE_TARGET_TABLE_NAME" not in code
     assert "PIPELINE_DATASET_NAME" not in code
@@ -131,8 +128,8 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
     assert '"watermark_column": "order_date"' in code
     assert '"watermark_column": "effective_date"' in code
 
-    source_user_block = code[code.index("SOURCE_TABLES = [") : code.index("DEFAULT_SOURCE_GUARDRAILS = {")]
-    source_default_example = source_user_block[: source_user_block.index("# Optional advanced per-table guardrail overrides")]
+    source_user_block = code[code.index("SOURCE_TABLES = [") : code.index("source_guardrail_results = run_table_guardrails(")]
+    source_default_example = source_user_block[: source_user_block.index("# Optional advanced per-table governance overrides")]
     for beginner_field in [
         '"order_id": "bigint"',
         '"customer_id": "bigint"',
@@ -149,6 +146,10 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
         '"dataset_name": "governance_dataset_override",',
         '"stage": "source"',
         '"dq_preset": "approved_rules"',
+        '"freshness_column": "order_date"',
+        '"freshness_column": "effective_date"',
+        '"schema_preset": "allow_new_columns"',
+        '"load_behavior": "append"',
     ]:
         assert advanced_override in source_user_block
 
@@ -162,39 +163,27 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
     assert 'df_customers = SOURCE_CONFIG_BY_KEY["customers"]["df"]' in code
 
 
-def test_guardrail_default_sections_include_supported_preset_comments():
+def test_table_configs_include_supported_guardrail_and_write_fields():
     _markdown, code, _cells = _notebook_sources()
 
-    for preset_comment in [
-        '# Schema preset options:',
-        '#   "allow_new_columns" = allow additive columns, block incompatible schema drift',
-        '#   "strict" = require the schema to match exactly',
-        '#   "monitor_only" = report schema differences without blocking',
-        '# Load behavior guardrail options:',
-        '#   "append" = protect existing history',
-        '#   "overwrite" = accept full refresh/rebuild as the new state',
-        '#   "skip" = skip only profile behavior enforcement',
-        '# Freshness guardrail options:',
-        '#   freshness_column = date/timestamp column that proves latest data arrived',
-        "#   freshness_max_lag_days = allowed lag from today's date",
-        '#   freshness_severity = "blocking" or "warning"',
-        '# DQ preset options:',
-        '#   "approved_rules" = enforce approved DQ rules from governance metadata',
-        '#   "skip" = skip DQ enforcement for this table',
-        '# Write mode options for Lakehouse targets:',
-        '#   "overwrite" = replace the target table',
-        '#   "append" = add rows to the target table',
-        '#   "errorifexists" = fail if the target table already exists',
-        '#   "ignore" = skip the write if the target table already exists',
-        '# Target kind options:',
-        '#   "lakehouse" = write a Lakehouse Delta table',
-        '#   "warehouse" = write a Fabric Warehouse table',
+    for field in [
+        '"schema_preset": "allow_new_columns"',
+        '"schema_preset": "strict"',
+        '"load_behavior": "append"',
+        '"load_behavior": "overwrite"',
+        '"freshness_max_lag_days": 1',
+        '"freshness_severity": "blocking"',
+        '"dq_preset": "approved_rules"',
+        '"dq_preset": "skip"',
+        '"distribution_columns": ["status", "order_amount", "country_code"]',
+        '"exclude_columns": None',
+        '"write_mode": "overwrite"',
+        '"schema": "SmokeTest"',
     ]:
-        assert preset_comment in code
+        assert field in code
 
-    assert "DEFAULT_SOURCE_GUARDRAILS = {" in code
-    assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {" in code
-
+    assert "DEFAULT_SOURCE_GUARDRAILS = {" not in code
+    assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {" not in code
 
 def test_active_default_source_transform_and_target_schema_are_coherent_many_source():
     _markdown, code, _cells = _notebook_sources()
@@ -209,7 +198,7 @@ def test_active_default_source_transform_and_target_schema_are_coherent_many_sou
     assert 'df_orders_summary = (' in transform_block
     assert '.groupBy("customer_segment", "country_code")' in transform_block
 
-    target_user_block = code[code.index("TARGET_TABLES = [") : code.index("DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {")]
+    target_user_block = code[code.index("TARGET_TABLES = [") : code.index("target_guardrail_results = run_table_guardrails(")]
     target_default_example = target_user_block[: target_user_block.index("# Optional advanced per-table overrides")]
     for expected_column in [
         '"order_id": "bigint"',
@@ -294,3 +283,47 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert '"sources": ["orders", "customers"]' in code
     assert '"targets": ["orders_enriched", "orders_summary"]' in code
     assert "METADATA_PIPELINE_RUNS" in _markdown
+
+
+def test_pipeline_template_smoke_keeps_guardrails_inline_per_table():
+    _markdown, code, _cells = _notebook_sources()
+
+    assert "DEFAULT_SOURCE_GUARDRAILS" not in code
+    assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS" not in code
+
+    source_block = code[code.index("SOURCE_TABLES = [") : code.index("SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(")]
+    target_block = code[code.index("TARGET_TABLES = [") : code.index("TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(")]
+
+    for source_key in ['"key": "orders"', '"key": "customers"']:
+        source_entry_start = source_block.index(source_key)
+        source_entry = source_block[source_entry_start : source_block.find("    },", source_entry_start)]
+        for field in [
+            '"schema_preset"',
+            '"load_behavior"',
+            '"freshness_column"',
+            '"freshness_max_lag_days"',
+            '"freshness_severity"',
+            '"dq_preset"',
+            '"distribution_columns"',
+            '"exclude_columns"',
+            '"expected_schema"',
+        ]:
+            assert field in source_entry
+
+    for target_key in ['"key": "orders_enriched"', '"key": "orders_summary"']:
+        target_entry_start = target_block.index(target_key)
+        target_entry = target_block[target_entry_start : target_block.find("    },", target_entry_start)]
+        for field in [
+            '"write_mode"',
+            '"load_behavior"',
+            '"schema"',
+            '"schema_preset"',
+            '"freshness_column"',
+            '"freshness_max_lag_days"',
+            '"freshness_severity"',
+            '"dq_preset"',
+            '"distribution_columns"',
+            '"exclude_columns"',
+            '"expected_schema"',
+        ]:
+            assert field in target_entry

@@ -9344,7 +9344,7 @@
         "path": "../../how-fabricops-works/pipeline-guardrails.md"
       }
     ],
-    "preferred_example": "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role=\"source\")",
+    "preferred_example": "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role=\"source\")",
     "verification": "Verify the correct table_role is used and enriched configs are passed to run_table_guardrails before transformation or writes.",
     "related_functions": [
       "run_table_guardrails",
