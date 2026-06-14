@@ -48,7 +48,7 @@ def prepare_pipeline_table_configs(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, DEFAULT_SOURCE_GUARDRAILS, table_role="source")
+SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role="source")
 ```
 
 </div>
