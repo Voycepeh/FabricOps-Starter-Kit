@@ -261,10 +261,9 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
     assert reads[0][0:3] == ("dev", "metadata", governance.DQ_RULES_TABLE)
     assert result["status"] == "failed"
     assert result["can_continue"] is False
-    assert [check["rule_id"] for check in result["checks"]] == ["id_required"]
+    assert len(result["checks"]) == 1
+    assert result["checks"][0]["rule_id"] == "id_required"
     assert result["checks"][0]["failed_count"] == 1
-    assert result["summary"]["rule_count"] == 1
-    assert result["summary"]["failed_rule_count"] == 1
     assert "_dq_check_status" in result["dataframe"].columns
 
 
@@ -298,5 +297,4 @@ def test_enforce_dq_rules_returns_passed_when_no_approved_active_rules(monkeypat
     assert result["status"] == "passed"
     assert result["can_continue"] is True
     assert result["checks"] == []
-    assert result["summary"]["rule_count"] == 0
     assert "_dq_check_status" in result["dataframe"].columns

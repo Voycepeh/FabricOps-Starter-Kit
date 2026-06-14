@@ -598,6 +598,18 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
     )
     monkeypatch.setattr(
         pipeline,
+        "enforce_profile_behavior",
+        lambda *args, **kwargs: {
+            "status": "skipped",
+            "can_continue": True,
+            "stability_status": "skipped",
+            "stability_can_continue": True,
+            "stability_check_enabled": False,
+            "message": "Profile behavior guardrail skipped; other guardrails still apply.",
+        },
+    )
+    monkeypatch.setattr(
+        pipeline,
         "enforce_dq_rules",
         lambda *args, **kwargs: {"status": "failed", "can_continue": False, "checks": [{"rule_id": "id_required", "status": "failed"}]},
     )
