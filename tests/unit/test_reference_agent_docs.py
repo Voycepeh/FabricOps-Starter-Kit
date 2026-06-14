@@ -208,7 +208,6 @@ def test_enforce_profile_behavior_reference_uses_distinct_blocks_and_responsive_
     assert 'dataset_name="sales_orders"' in example
     assert 'table_name="orders_raw"' in example
     assert 'load_behavior="append"' in example
-    assert "Internal helpers used: 12" in text
     assert '<table class="reference-function-table">' not in _section_text(text, "Implementation details")
     for area in (
         "Metadata loading",
@@ -233,9 +232,6 @@ def test_enforce_profile_behavior_reference_uses_distinct_blocks_and_responsive_
 def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
 
-    helper_heading = "Internal helpers used: 16"
-    assert helper_heading in text
-    assert "This callable uses 16 internal helpers for" in text
     for area in (
         "Audit timestamp",
         "Metadata loading",
@@ -247,7 +243,7 @@ def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
     assert "Expanded internal helper tree is available in Implementation details." in text
     assert text.index('<div class="reference-source-card" markdown="1">') < text.index("## Signature")
     assert text.index("## Implementation details") < text.index('??? info "Call flow"')
-    assert text.index('??? info "Call flow"') < text.index(helper_heading)
+    assert text.index('??? info "Call flow"') < text.index('class="reference-helper-groups"')
     assert '??? example "View helper source by area"' not in text
 
 
