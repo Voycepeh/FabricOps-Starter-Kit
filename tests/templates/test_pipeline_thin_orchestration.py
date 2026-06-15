@@ -246,16 +246,22 @@ def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_fl
     _markdown, code, _cells = _notebook_sources()
 
     source_guardrails = code.index("source_guardrail_results = run_table_guardrails(")
-    source_stop_flag = code.index("stop_on_failure=True", source_guardrails)
+    source_stop_flag = code.index("stop_on_failure=False", source_guardrails)
+    source_display = code.index("display(source_guardrail_display)", source_stop_flag)
+    source_stop = code.index("stop_if_failed({", source_display)
     transform = code.index("df_orders_enriched = (")
     target_prepare = code.index("TARGET_TABLES, TARGET_CONFIG_BY_KEY = prepare_pipeline_table_configs(")
     target_guardrails = code.index("target_guardrail_results = run_table_guardrails(")
-    target_stop_flag = code.index("stop_on_failure=True", target_guardrails)
+    target_stop_flag = code.index("stop_on_failure=False", target_guardrails)
+    target_display = code.index("display(target_guardrail_display)", target_stop_flag)
+    target_stop = code.index("stop_if_failed({", target_display)
     target_write = code.index("target_write_status = {}")
 
-    assert source_guardrails < source_stop_flag < transform < target_prepare < target_guardrails < target_stop_flag < target_write
+    assert source_guardrails < source_stop_flag < source_display < source_stop < transform < target_prepare
+    assert target_guardrails < target_stop_flag < target_display < target_stop < target_write
     assert "source_guardrail_display = display_guardrail_results(" in code
     assert "display(source_guardrail_display)" in code
+    assert "spark_session=spark" in code
     assert "target_guardrail_display = display_guardrail_results(" in code
     assert "display(target_guardrail_display)" in code
 

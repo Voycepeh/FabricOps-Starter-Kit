@@ -220,9 +220,15 @@ def _profile_behavior_reason(result: Mapping[str, Any]) -> str:
 def _dq_reason(result: Mapping[str, Any]) -> str:
     checks = result.get("checks") or []
     blocking = [check for check in checks if str(check.get("status") or "").lower() in {"failed", "error"} and str(check.get("severity") or "warning").lower() in {"error", "blocking"}]
-    failed = blocking or [check for check in checks if str(check.get("status") or "").lower() in {"failed", "error"}]
-    if failed:
-        return f"DQ failed: {len(failed)} blocking DQ rule(s) failed."
+    warnings = [
+        check for check in checks
+        if str(check.get("status") or "").lower() in {"failed", "error", "warning"}
+        and str(check.get("severity") or "warning").lower() not in {"error", "blocking"}
+    ]
+    if blocking:
+        return f"DQ failed: {len(blocking)} blocking DQ rule(s) failed."
+    if warnings:
+        return f"DQ warning: {len(warnings)} warning DQ rule(s) failed."
     return _result_reason(result) or "DQ guardrail passed."
 
 
@@ -295,7 +301,7 @@ def build_guardrail_summary_rows(result_bundle: Mapping[str, Any]) -> list[dict[
             elif warning_guardrail:
                 status = "warning"
                 failed_guardrail = warning_guardrail
-                main_reason = "Guardrail warning: see detailed mode."
+                main_reason = _guardrail_reason(warning_guardrail, results[warning_guardrail])
         can_continue = status != "failed"
         rows.append(
             {
@@ -361,7 +367,23 @@ def _blocking_guardrail_message(summary_rows: list[dict[str, Any]], failed_table
     return f"Blocking guardrail failure for {len(failed_tables)} table(s). See guardrail summary table above for details."
 
 
-def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = "summary") -> Any:
+def _build_guardrail_blocking_message_from_bundle(result_bundle: Mapping[str, Any]) -> str:
+    """Build the concise blocking message for a guardrail result bundle."""
+    failed_tables = [str(table) for table in result_bundle.get("failed_tables") or []]
+    if not failed_tables:
+        return ""
+    summary_rows = list(result_bundle.get("summary_rows") or build_guardrail_summary_rows(result_bundle))
+    return _blocking_guardrail_message(summary_rows, failed_tables)
+
+
+def _rows_for_display(rows: list[dict[str, Any]], spark_session: Any | None):
+    """Return Spark DataFrame display rows when a Spark session is available."""
+    if spark_session is None or not rows:
+        return rows
+    return spark_session.createDataFrame(rows)
+
+
+def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None) -> Any:
     """Return guardrail results prepared for summary, detailed, or debug display.
 
     Parameters
@@ -371,6 +393,10 @@ def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = "sum
     mode : {"summary", "detailed", "debug"}, default="summary"
         Display mode for notebook output. ``summary`` is compact, ``detailed``
         is per-guardrail diagnostics, and ``debug`` returns raw nested results.
+    spark_session : pyspark.sql.SparkSession, optional
+        Spark session used to convert summary or detailed rows to a
+        display-friendly DataFrame. When omitted, a list of dictionaries is
+        returned.
 
     Returns
     -------
@@ -380,9 +406,9 @@ def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = "sum
     """
     normalized = str(mode or "summary").lower().strip()
     if normalized == "summary":
-        return build_guardrail_summary_rows(result_bundle)
+        return _rows_for_display(build_guardrail_summary_rows(result_bundle), spark_session)
     if normalized == "detailed":
-        return build_guardrail_detail_rows(result_bundle)
+        return _rows_for_display(build_guardrail_detail_rows(result_bundle), spark_session)
     if normalized == "debug":
         return result_bundle.get("summary", result_bundle)
     raise ValueError("mode must be one of: summary, detailed, debug")
@@ -751,13 +777,14 @@ def run_table_guardrails(
     }
     result["summary_rows"] = build_guardrail_summary_rows(result)
     result["detail_rows"] = build_guardrail_detail_rows(result)
+    result["blocking_message"] = _build_guardrail_blocking_message_from_bundle(result)
 
     if stop_on_failure and failed_tables:
         stop_if_failed(
             {
                 "status": "failed",
                 "can_continue": False,
-                "message": _blocking_guardrail_message(result["summary_rows"], failed_tables),
+                "message": result["blocking_message"],
                 "failed_tables": failed_tables,
             }
         )

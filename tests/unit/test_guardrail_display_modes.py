@@ -104,6 +104,17 @@ def test_summary_mode_dq_failure_reason():
     assert rows[0]["main_reason"] == "DQ failed: 1 blocking DQ rule(s) failed."
 
 
+def test_summary_mode_dq_warning_reason():
+    """Verify DQ warning-only failures get non-blocking warning wording."""
+    rows = build_guardrail_summary_rows(_bundle(dq_results={"orders": {"status": "warning", "can_continue": True, "checks": [{"status": "warning", "severity": "warning"}, {"status": "passed", "severity": "error"}]}}))
+
+    assert rows[0]["status"] == "warning"
+    assert rows[0]["failed_guardrail"] == "dq"
+    assert rows[0]["main_reason"] == "DQ warning: 1 warning DQ rule(s) failed."
+    details = build_guardrail_detail_rows(_bundle(dq_results={"orders": {"status": "warning", "can_continue": True, "checks": [{"status": "warning", "severity": "warning"}]}}))
+    assert details[0]["reason"] == "DQ warning: 1 warning DQ rule(s) failed."
+
+
 def test_detailed_mode_returns_per_guardrail_rows_with_expected_actual_reason():
     """Verify detailed rows include diagnostic fields."""
     rows = build_guardrail_detail_rows(
@@ -129,3 +140,24 @@ def test_display_modes_return_summary_detail_and_debug_without_mutation():
     assert display_guardrail_results(bundle, mode="detailed") == build_guardrail_detail_rows(bundle)
     assert display_guardrail_results(bundle, mode="debug") is original_summary
     assert bundle["summary"] is original_summary
+
+
+def test_display_modes_return_spark_dataframe_when_session_supplied():
+    """Verify summary and detailed modes return display-friendly Spark tables."""
+    bundle = _bundle(schema_results={"orders": {"status": "passed", "can_continue": True}})
+
+    class Spark:
+        def __init__(self):
+            self.rows = None
+
+        def createDataFrame(self, rows):
+            self.rows = rows
+            return {"spark_rows": rows}
+
+    spark = Spark()
+
+    rendered = display_guardrail_results(bundle, mode="summary", spark_session=spark)
+
+    assert rendered == {"spark_rows": build_guardrail_summary_rows(bundle)}
+    assert spark.rows == build_guardrail_summary_rows(bundle)
+    assert display_guardrail_results(_bundle(), mode="summary", spark_session=spark) == []

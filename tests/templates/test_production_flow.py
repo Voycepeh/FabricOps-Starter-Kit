@@ -52,13 +52,18 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
     production = _code("02_pipeline.ipynb")
 
     source_guardrails = production.index("source_guardrail_results = run_table_guardrails")
-    source_stop = production.index("stop_on_failure=True", source_guardrails)
+    source_stop_flag = production.index("stop_on_failure=False", source_guardrails)
+    source_display = production.index("display(source_guardrail_display)", source_stop_flag)
+    source_stop = production.index("stop_if_failed({", source_display)
     transformation = production.index("df_orders_enriched = (", source_stop)
     target_guardrails = production.index("target_guardrail_results = run_table_guardrails", transformation)
-    target_stop = production.index("stop_on_failure=True", target_guardrails)
+    target_stop_flag = production.index("stop_on_failure=False", target_guardrails)
+    target_display = production.index("display(target_guardrail_display)", target_stop_flag)
+    target_stop = production.index("stop_if_failed({", target_display)
     target_write = production.index("target_write_status = {}", target_stop)
 
-    assert source_guardrails < source_stop < transformation < target_guardrails < target_stop < target_write
+    assert source_guardrails < source_stop_flag < source_display < source_stop < transformation
+    assert target_guardrails < target_stop_flag < target_display < target_stop < target_write
     assert "valid_rows" not in production
     assert "quarantine_rows" not in production
     assert "failure_rows" not in production

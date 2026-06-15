@@ -551,6 +551,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
 
     assert stopped[0]["status"] == "failed"
     assert stopped[0]["can_continue"] is False
+    assert "schema failed" in stopped[0]["message"]
     assert stopped[0]["failed_tables"] == ["target_01"]
 
 
