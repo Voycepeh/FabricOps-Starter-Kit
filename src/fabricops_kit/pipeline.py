@@ -120,7 +120,6 @@ def _normalize_catalogue_evidence_types(evidence_df: Any):
         "distinct_count": "long",
         "null_percent": "double",
         "distinct_percent": "double",
-        "dq_failed_row_percent": "double",
         "run_timestamp": "timestamp",
     }
     normalized = evidence_df

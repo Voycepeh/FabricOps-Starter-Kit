@@ -159,7 +159,7 @@ def _select_profile_behavior_rule(rules_df, *, dataset_name: str, table_name: st
         if _string_value(_catalogue_value(row, "is_active")).lower() in {"false", "0", "no"}:
             continue
         review_status = _string_value(_catalogue_value(row, "review_status")).lower()
-        if review_status and review_status not in {"approved", "governance_approved", "engineer_approved", "active"}:
+        if review_status and review_status not in {"self_approved", "governance_approved", "approved", "bypass_active_pending_review"}:
             continue
         candidates.append(row)
     if not candidates:

@@ -7,7 +7,7 @@ import importlib
 import json
 import re
 import uuid
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp, _get_audit_timezone
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
@@ -20,7 +20,7 @@ COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
 GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
-GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "engineer_approved", "governance_approved", "rejected", "superseded", "inactive"]
+GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "self_approved", "governance_approved", "approved", "bypass_active_pending_review", "rejected", "superseded"]
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -177,24 +177,23 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     audit = [("_committed_at", string), ("_committed_by", string), ("_workspace_name", string), ("_notebook_name", string), ("_metadata_lakehouse_name", string), ("_activity_id", string)]
     catalogue = [
         ("metadata_table_key", string), ("metadata_column_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string),
-        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string), ("baseline_status", string),
+        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string),
         ("profiled_at", string), ("run_timestamp", timestamp), ("evidence_role", string),
         ("data_type", string), ("row_count", long), ("null_count", long), ("null_percent", double), ("distinct_count", long), ("distinct_percent", double),
         ("min_value", string), ("max_value", string), ("distribution_type", string), ("distribution_json", string),
         ("profile_mode", string), ("watermark_column", string), ("watermark_value", string), ("profile_hash", string), ("profile_payload_json", string),
         ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string),
-        ("source_schema_check", string), ("target_schema_check", string), ("dq_status", string),
         *audit,
     ]
     return {
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
         COLUMN_CONTEXT_TABLE: _schema(COLUMN_CONTEXT_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
-        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), *audit]),
+        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), *audit]),
         GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
         COLUMN_CLASSIFICATION_TABLE: _schema(COLUMN_CLASSIFICATION_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
         PIPELINE_RUNS_TABLE: _schema(PIPELINE_RUNS_TABLE, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
-        GOVERNANCE_REVIEWS_TABLE: _schema(GOVERNANCE_REVIEWS_TABLE, [("review_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("metadata_table_key", string), ("profile_run_id", string), ("profile_stage", string), ("pipeline_run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("outcome", string), ("blocker_count", long), ("warning_count", long), ("blockers_json", string), ("warnings_json", string), ("evidence_summary_json", string), ("reviewed_at", string), ("reviewed_by", string), *audit]),
+        GOVERNANCE_REVIEWS_TABLE: _schema(GOVERNANCE_REVIEWS_TABLE, [("review_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("metadata_table_key", string), ("profile_run_id", string), ("profile_stage", string), ("pipeline_run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("outcome", string), ("blocker_count", long), ("warning_count", long), ("blockers_json", string), ("warnings_json", string), ("evidence_summary_json", string), ("reviewed_at", string), ("reviewed_by", string), ("governance_mode", string), ("approval_policy", string), ("governance_status", string), ("approval_bypass_allowed", boolean), ("requires_post_review", boolean), ("policy_reason", string), ("effective_from", string), ("effective_to", string), *audit]),
     }
 
 
@@ -785,7 +784,7 @@ def widget_review_dq_rules(
             "severity": severity.value,
             "description": description.value,
             "is_active": action_type != "deactivated",
-            "review_status": "approved",
+            "review_status": "self_approved",
             "action_type": action_type,
             "commit": True,
             **extra,
@@ -1353,7 +1352,7 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
     if "action_type" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
     if "review_status" in columns:
-        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("governance_approved"))).isin("approved", "engineer_approved", "governance_approved"))
+        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("governance_approved"))).isin("self_approved", "governance_approved", "approved", "bypass_active_pending_review"))
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
@@ -1375,6 +1374,7 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
                 "columns": rule_columns,
                 "severity": str(row.get("severity") or "warning"),
                 "description": str(row.get("description") or ""),
+                "review_status": str(row.get("review_status") or ""),
                 **params,
             }
         )
@@ -1671,6 +1671,10 @@ def enforce_dq_rules(
     total_count = int(dataframe.count())
     failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
     result = _summarize_dq_guardrail(checks)
+    if any(str(rule.get("review_status") or "").lower() == "bypass_active_pending_review" for rule in rules):
+        warning = "Rule is active through approval bypass and requires governance post-review."
+        result["reason"] = warning if not result.get("reason") else f"{result.get('reason')} {warning}"
+        result["bypass_warning"] = warning
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
     result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
     if write_results:
@@ -1725,3 +1729,226 @@ def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_conte
     rules = list(by_id.values())
     _validate_dq_rules(rules)
     return rules
+
+
+def resolve_table_governance_policy(governance_rows: Any, *, environment_name: str = "", dataset_name: str = "", table_name: str = "", metadata_table_key: str = "") -> dict[str, Any]:
+    """Return the latest active table-level governance policy.
+
+    Parameters
+    ----------
+    governance_rows : Any
+        Governance review rows or a DataFrame-like object containing rows from
+        ``METADATA_GOVERNANCE_REVIEWS``.
+    environment_name, dataset_name, table_name, metadata_table_key : str, optional
+        Table identity used to filter policy rows.
+
+    Returns
+    -------
+    dict[str, Any]
+        Effective policy. Tables default to ungoverned with no approval
+        required unless the latest active policy row marks them governed.
+
+    """
+    default = {"governance_mode": "ungoverned", "approval_policy": "no_approval_required", "governance_status": "active", "approval_bypass_allowed": False, "requires_post_review": False}
+    rows = []
+    for row in _coerce_rows(governance_rows):
+        if metadata_table_key and str(row.get("metadata_table_key") or "") not in {"", metadata_table_key}:
+            continue
+        if environment_name and str(row.get("environment_name") or "") not in {"", environment_name}:
+            continue
+        if dataset_name and str(row.get("dataset_name") or "") not in {"", dataset_name}:
+            continue
+        if table_name and str(row.get("table_name") or "") != table_name:
+            continue
+        if str(row.get("governance_status") or "active").lower() != "active":
+            continue
+        rows.append(row)
+    if not rows:
+        return default
+    rows.sort(key=lambda row: str(row.get("effective_from") or row.get("reviewed_at") or row.get("_committed_at") or ""), reverse=True)
+    latest = rows[0]
+    mode = str(latest.get("governance_mode") or "ungoverned").lower()
+    policy = str(latest.get("approval_policy") or ("approval_required" if mode == "governed" else "no_approval_required")).lower()
+    return {**default, **latest, "governance_mode": mode, "approval_policy": policy, "approval_bypass_allowed": bool(latest.get("approval_bypass_allowed", policy == "approval_required_with_bypass"))}
+
+
+def guardrail_authoring_status(policy: Mapping[str, Any], *, bypass_reason: str = "", actor: str | None = None, config: Any = None) -> dict[str, Any]:
+    """Return rule lifecycle fields for engineering-authored guardrail rules.
+
+    Parameters
+    ----------
+    policy : mapping
+        Effective table governance policy.
+    bypass_reason : str, optional
+        User-entered justification when bypassing required approval.
+    actor : str, optional
+        Current user identifier.
+    config : Any, optional
+        Runtime configuration used for timestamp formatting.
+
+    Returns
+    -------
+    dict[str, Any]
+        Lifecycle fields for a ``METADATA_GUARDRAIL_RULES`` row.
+
+    """
+    governed = str(policy.get("governance_mode") or "ungoverned").lower() == "governed"
+    if not governed:
+        return {"is_active": True, "review_status": "self_approved", "approval_required": False, "approval_bypassed": False, "requires_post_review": False, "author_role": "engineering", "governance_mode": "ungoverned", "approval_policy": "no_approval_required"}
+    if bypass_reason:
+        return {"is_active": True, "review_status": "bypass_active_pending_review", "approval_required": True, "approval_bypassed": True, "requires_post_review": True, "bypass_reason": bypass_reason, "bypassed_by": _resolve_action_by(actor), "bypassed_at": _now_utc_iso(config), "author_role": "engineering", "governance_mode": "governed", "approval_policy": str(policy.get("approval_policy") or "approval_required_with_bypass")}
+    return {"is_active": False, "review_status": "proposed", "approval_required": True, "approval_bypassed": False, "requires_post_review": False, "author_role": "engineering", "governance_mode": "governed", "approval_policy": str(policy.get("approval_policy") or "approval_required")}
+
+
+def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor: str | None = None, superseded_by_rule_key: str = "", config: Any = None) -> dict[str, Any]:
+    """Return an append-only governance action row for a rule.
+
+    Parameters
+    ----------
+    rule : mapping
+        Existing rule row.
+    action : str
+        One of ``approve``, ``reject``, or ``supersede``.
+    actor : str, optional
+        Reviewer identity.
+    superseded_by_rule_key : str, optional
+        Replacement rule key for supersede actions.
+    config : Any, optional
+        Runtime configuration used for timestamps.
+
+    Returns
+    -------
+    dict[str, Any]
+        Rule row with updated governance lifecycle fields.
+
+    """
+    row = dict(rule)
+    now = _now_utc_iso(config)
+    if action == "approve":
+        row.update({"is_active": True, "review_status": "governance_approved", "approved_by": _resolve_action_by(actor), "approved_at": now, "requires_post_review": False})
+    elif action == "reject":
+        row.update({"is_active": False, "review_status": "rejected"})
+    elif action == "supersede":
+        row.update({"is_active": False, "review_status": "superseded", "superseded_by_rule_key": superseded_by_rule_key})
+    else:
+        raise ValueError("action must be one of approve, reject, or supersede")
+    return row
+
+
+def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str, rule_type: str, column_name: str = "", parameters: Mapping[str, Any] | None = None, severity: str = "warning", description: str = "", policy: Mapping[str, Any] | None = None, bypass_reason: str = "", actor: str | None = None, source_notebook_type: str = "02_pipeline", config: Any = None) -> dict[str, Any]:
+    """Build one ``METADATA_GUARDRAIL_RULES`` record for widget save actions."""
+    env_name = str(state.get("environment_name") or "")
+    dataset = str(state.get("dataset_name") or "")
+    table = str(state.get("table_name") or "")
+    rule_id = f"{table}.{column_name or '_table'}.{guardrail_type}.{rule_type}"
+    lifecycle = guardrail_authoring_status(policy or state, bypass_reason=bypass_reason, actor=actor, config=config)
+    return {"rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env_name, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)), "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": _resolve_action_by(actor), "created_at": _now_utc_iso(config), "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
+
+
+def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any) -> dict[str, Any]:
+    """Select a guardrail target and return the shared handover state.
+
+    Parameters
+    ----------
+    config : Any
+        Runtime configuration containing metadata lakehouse routing.
+    env : str
+        Environment name used to read metadata tables.
+    spark_session : Any
+        Spark session for metadata reads.
+
+    Returns
+    -------
+    dict[str, Any]
+        Handover state containing table identity, catalogue rows, rules, and
+        effective governance policy.
+
+    """
+    catalogue = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    rules = _coerce_rows(read_lakehouse_table(config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    reviews = _coerce_rows(read_lakehouse_table(config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    if not catalogue:
+        raise ValueError("METADATA_DATA_CATALOGUE has no guardrail targets.")
+    latest = sorted(catalogue, key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or ""), reverse=True)[0]
+    table_key = str(latest.get("metadata_table_key") or _build_metadata_table_key(env, latest.get("dataset_name"), latest.get("table_name")))
+    table_rows = [row for row in catalogue if str(row.get("metadata_table_key") or "") in {"", table_key} and str(row.get("table_name") or "") == str(latest.get("table_name") or "")]
+    table_rules = [row for row in rules if str(row.get("metadata_table_key") or "") == table_key or str(row.get("table_name") or "") == str(latest.get("table_name") or "")]
+    policy = resolve_table_governance_policy(reviews, environment_name=env, dataset_name=str(latest.get("dataset_name") or ""), table_name=str(latest.get("table_name") or ""), metadata_table_key=table_key)
+    return {"environment_name": env, "dataset_name": str(latest.get("dataset_name") or ""), "table_name": str(latest.get("table_name") or ""), "metadata_table_key": table_key, "profile_run_id": str(latest.get("profile_run_id") or ""), "profile_stage": str(latest.get("profile_stage") or ""), "columns": sorted({str(row.get("column_name") or "") for row in table_rows if row.get("column_name")}), "existing_rules": table_rules, "catalogue_profile_rows": table_rows, **policy}
+
+
+def widget_author_schema_freshness_profile_rules(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None, bypass_reason: str = "", commit: bool = False) -> list[dict[str, Any]]:
+    """Create table schema, freshness, and profile behavior guardrail rules.
+
+    Parameters
+    ----------
+    state : mapping
+        Handover state from :func:`widget_select_guardrail_target`.
+    config, env, spark_session : Any, optional
+        Runtime objects used when ``commit=True``.
+    bypass_reason : str, optional
+        Approval-bypass reason for governed tables.
+    commit : bool, default=False
+        Whether to append generated records to ``METADATA_GUARDRAIL_RULES``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Generated guardrail rule rows.
+
+    """
+    columns = list(state.get("columns") or [])
+    data_types = {str(row.get("column_name") or ""): str(row.get("data_type") or "") for row in state.get("catalogue_profile_rows", [])}
+    records = [
+        _base_guardrail_rule_record(state, guardrail_type="schema", rule_type="relaxed", parameters={"columns": columns, "data_types": data_types}, description="Selected-table schema guardrail", bypass_reason=bypass_reason, config=config),
+        _base_guardrail_rule_record(state, guardrail_type="freshness", rule_type="skip", parameters={"freshness_column": "", "max_lag_days": 0}, description="Freshness guardrail", bypass_reason=bypass_reason, config=config),
+        _base_guardrail_rule_record(state, guardrail_type="profile_behavior", rule_type="skip", parameters={"watermark_column": ""}, description="Profile behavior guardrail", bypass_reason=bypass_reason, config=config),
+    ]
+    if commit:
+        if spark_session is None or config is None or env is None:
+            raise ValueError("config, env, and spark_session are required when commit=True.")
+        write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
+    return records
+
+
+def widget_author_dq_rules(state: Mapping[str, Any], *, dq_authoring_mode: str = "manual", rule_type: str = "not_null", selected_columns: Iterable[str] | None = None, parameters: Mapping[str, Any] | None = None, severity: str = "warning", config: Any = None, env: str | None = None, spark_session: Any = None, bypass_reason: str = "", commit: bool = False) -> list[dict[str, Any]]:
+    """Create DQ guardrail rules from manual selections or AI suggestions.
+
+    Parameters
+    ----------
+    state : mapping
+        Handover state from :func:`widget_select_guardrail_target`.
+    dq_authoring_mode : str, default="manual"
+        ``manual`` or ``ai_suggest``.
+    rule_type : str, default="not_null"
+        DQ rule type for manual mode.
+    selected_columns : iterable of str, optional
+        Columns to receive the rule. Defaults to all state columns.
+    parameters : mapping, optional
+        Rule parameters shared by selected columns.
+    severity : str, default="warning"
+        Rule severity.
+    config, env, spark_session : Any, optional
+        Runtime objects used for AI suggestions and committed writes.
+    bypass_reason : str, optional
+        Approval-bypass reason for governed tables.
+    commit : bool, default=False
+        Whether to append generated records to ``METADATA_GUARDRAIL_RULES``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Generated DQ rule rows.
+
+    """
+    columns = list(selected_columns or state.get("columns") or [])
+    if dq_authoring_mode == "ai_suggest" and spark_session is not None:
+        profile_df = spark_session.createDataFrame(list(state.get("catalogue_profile_rows") or []))
+        suggestions = _draft_dq_rules(profile_df=profile_df, table_name=str(state.get("table_name") or ""), config=config)
+        columns = [str(rule.get("column_name") or (rule.get("columns") or [""])[0]) for rule in suggestions] or columns
+    records = [_base_guardrail_rule_record(state, guardrail_type="dq", rule_type=rule_type, column_name=column, parameters={"columns": [column], **dict(parameters or {})}, severity=severity, description=f"{rule_type} DQ guardrail", bypass_reason=bypass_reason, config=config) for column in columns]
+    if commit:
+        if spark_session is None or config is None or env is None:
+            raise ValueError("config, env, and spark_session are required when commit=True.")
+        write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
+    return records

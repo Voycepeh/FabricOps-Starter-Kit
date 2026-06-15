@@ -39,6 +39,12 @@ from .governance_review import (
     widget_review_column_context,
     widget_review_dq_rules,
     widget_select_governance_profile_target,
+    widget_select_guardrail_target,
+    widget_author_schema_freshness_profile_rules,
+    widget_author_dq_rules,
+    resolve_table_governance_policy,
+    guardrail_authoring_status,
+    apply_governance_rule_action,
 )
 
 
@@ -90,4 +96,10 @@ __all__ = [
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "widget_select_guardrail_target",
+    "widget_author_schema_freshness_profile_rules",
+    "widget_author_dq_rules",
+    "resolve_table_governance_policy",
+    "guardrail_authoring_status",
+    "apply_governance_rule_action",
 ]
