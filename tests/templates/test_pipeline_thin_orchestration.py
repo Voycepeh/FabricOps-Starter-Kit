@@ -75,10 +75,10 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
         "## 5. USER EDIT SECTION — configure source tables and source guardrails",
         "## 6. Optional: inspect source schemas",
         "## 7. Run source guardrails before transformation",
-        "## 8. USER EDIT SECTION — transform source DataFrames into target DataFrames",
-        "## 9. USER EDIT SECTION — configure target tables, write behavior, and target guardrails",
+        "## 8. USER EDIT SECTION — main business transformation logic",
+        "## 9. USER EDIT SECTION — configure target tables and target guardrails",
         "## 10. Run target guardrails before writes",
-        "## 11. Write target tables",
+        "## 11. Write target Lakehouse tables",
         "## 12. USER EDIT SECTION — lineage relationships",
         "## 13. Write lineage",
         "## 14. Write runtime summary",
@@ -86,10 +86,13 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
     for section in expected_sections:
         assert section in markdown
 
-    assert "This is the only section where most users write business transformation logic" in markdown
-    assert "Keep this section visible because it is the point where data is published" in markdown
+    assert "SOURCE AREA — Steps 4 to 7" in markdown
+    assert "TRANSFORMATION AREA — Step 8" in markdown
+    assert "TARGET AREA — Steps 9 to 14" in markdown
+    assert "Most users should make their business logic changes here" in markdown
+    assert "without warehouse write permissions" in markdown
     assert "with the guardrails and catalogue evidence that belong to that specific source" in markdown
-    assert "write behavior, schema, freshness, DQ, profile" in markdown
+    assert "schema, freshness, DQ, profile" in markdown
 
 
 
@@ -218,7 +221,7 @@ def test_active_default_source_transform_and_target_schema_are_coherent_many_sou
     assert '"key": "orders_enriched"' in target_default_example
     assert '"key": "orders_summary"' in target_default_example
     assert '"table_name": "smoke_unified_orders_enriched"' in target_default_example
-    assert '"table_name": "smoke_product_orders_summary"' in target_default_example
+    assert '"table_name": "smoke_unified_orders_summary"' in target_default_example
     assert '"dataset_name"' not in target_default_example
     for hidden_beginner_field in ['"stage"', '"target_kind"', '"kind"']:
         assert hidden_beginner_field not in target_default_example
@@ -257,19 +260,26 @@ def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_fl
         assert runtime_alias in code
 
 
-def test_explicit_target_write_loop_uses_existing_write_helpers_and_checked_dataframes():
+def test_explicit_target_writes_use_existing_lakehouse_helper_and_checked_dataframes():
     _markdown, code, _cells = _notebook_sources()
 
     write_block = code[code.index("target_write_status = {}") : code.index("LINEAGE_RELATIONSHIPS = [")]
-    assert "for target_config in TARGET_TABLES:" in write_block
+    assert "for target_config in TARGET_TABLES:" not in write_block
     assert "write_lakehouse_table(" in write_block
     assert "write_warehouse_table(" in write_block
-    assert "TARGET_LAYER_SCHEMAS" in code
-    assert 'schema=target_config.get("schema", TARGET_LAYER_SCHEMAS.get(target_layer))' in write_block
-    assert 'options=target_config.get("options", {"overwriteSchema": "true"} if target_mode == "overwrite" else None)' in write_block
-    assert 'target_config["df"]' in write_block
+    assert "TARGET_LAYER_SCHEMAS" not in code
+    assert "df_orders_enriched" in write_block
+    assert "df_orders_summary" in write_block
+    assert '"smoke_unified_orders_enriched"' in write_block
+    assert '"smoke_unified_orders_summary"' in write_block
+    assert 'schema="SmokeTest"' in write_block
+    assert 'mode="overwrite"' in write_block
+    assert 'options=target_write_options' in write_block
+    assert 'display(target_write_status)' in write_block
+    assert "Optional warehouse example" in write_block
+    assert "not part of the default happy path" in write_block
     assert "write_target_tables" not in write_block
-    assert "Unsupported target kind" in write_block
+    assert "Unsupported target kind" not in write_block
 
 
 def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
