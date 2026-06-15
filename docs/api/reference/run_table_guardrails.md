@@ -5,9 +5,9 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:289`
+`fabricops_kit/pipeline.py:291`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L289-L477">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/pipeline.py#L291-L480">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -148,11 +148,6 @@ are routed through the configured metadata target by the called helpers.
     ├── _table_key(...)
     ├── _table_name(...)
     ├── enforce_dq_rules(...)
-    │   ├── _configured_lakehouse_schema(...)
-    │   │   ├── _get_store(...)
-    │   │   │   └── _normalize_path_config(...)
-    │   │   │       └── PathConfig(...)
-    │   │   └── _normalize_schema_name(...)
     │   ├── _dq_failed_row_count(...)
     │   │   ├── _dq_failed_expression(...)
     │   │   │   ├── _spark_sql_helpers(...)
@@ -178,6 +173,23 @@ are routed through the configured metadata target by the called helpers.
     │   │   ├── _spark_sql_helpers(...)
     │   │   └── _validate_dq_rules(...)
     │   │       └── _canonical_dq_rule_type(...)
+    │   ├── _read_guardrail_rule_metadata(...)
+    │   │   ├── _configured_lakehouse_schema(...)
+    │   │   │   ├── _get_store(...)
+    │   │   │   │   └── _normalize_path_config(...)
+    │   │   │   │       └── PathConfig(...)
+    │   │   │   └── _normalize_schema_name(...)
+    │   │   ├── _spark_sql_helpers(...)
+    │   │   └── read_lakehouse_table(...)
+    │   │       ├── _get_spark(...)
+    │   │       ├── _get_store(...)
+    │   │       │   └── _normalize_path_config(...)
+    │   │       │       └── PathConfig(...)
+    │   │       ├── _normalize_table_name(...)
+    │   │       └── _resolve_lakehouse_table_path(...)
+    │   │           ├── _normalize_table_name(...)
+    │   │           └── _resolve_lakehouse_schema(...)
+    │   │               └── _normalize_schema_name(...)
     │   ├── _run_dq_guardrail_checks(...)
     │   │   ├── _dq_check_status(...)
     │   │   ├── _dq_failed_expression(...)
@@ -187,17 +199,7 @@ are routed through the configured metadata target by the called helpers.
     │   │   ├── _spark_sql_helpers(...)
     │   │   └── _validate_dq_rules(...)
     │   │       └── _canonical_dq_rule_type(...)
-    │   ├── _summarize_dq_guardrail(...)
-    │   └── read_lakehouse_table(...)
-    │       ├── _get_spark(...)
-    │       ├── _get_store(...)
-    │       │   └── _normalize_path_config(...)
-    │       │       └── PathConfig(...)
-    │       ├── _normalize_table_name(...)
-    │       └── _resolve_lakehouse_table_path(...)
-    │           ├── _normalize_table_name(...)
-    │           └── _resolve_lakehouse_schema(...)
-    │               └── _normalize_schema_name(...)
+    │   └── _summarize_dq_guardrail(...)
     ├── enforce_freshness(...)
     │   ├── _coerce_date(...)
     │   ├── _iso_date_value(...)
@@ -325,16 +327,16 @@ are routed through the configured metadata target by the called helpers.
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L257-L286"><code>_build_guardrail_evidence_definitions</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L245-L246"><code>_table_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L249-L250"><code>_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/pipeline.py#L258-L288"><code>_build_guardrail_evidence_definitions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/pipeline.py#L246-L247"><code>_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/pipeline.py#L250-L251"><code>_table_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L253-L254"><code>_guardrail_can_continue</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/pipeline.py#L254-L255"><code>_guardrail_can_continue</code></a>
         </div>
       </section>
     </div>
@@ -352,7 +354,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `289`
+- Source line: `291`
 - Inbound references count: 0
 - Outbound references count: 11
 - Used in templates: 02_pipeline
@@ -388,9 +390,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L289-L477">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L289-L477</a>
-- Start line: `289`
-- End line: `477`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/pipeline.py#L291-L480">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/pipeline.py#L291-L480</a>
+- Start line: `291`
+- End line: `480`
 - Signature:
 
 ```python

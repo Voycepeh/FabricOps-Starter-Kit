@@ -18,12 +18,9 @@ from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
 GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
-GUARDRAIL_PROFILES_TABLE = "METADATA_GUARDRAIL_PROFILES"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
-GUARDRAIL_BASELINE_EVENTS_TABLE = "METADATA_GUARDRAIL_BASELINE_EVENTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "engineer_approved", "governance_approved", "rejected", "superseded", "inactive"]
-GUARDRAIL_BASELINE_EVENT_TYPES = ["baseline_created", "baseline_reset_requested", "baseline_reset_approved", "baseline_reset_rejected", "change_accepted", "change_blocked"]
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -185,7 +182,8 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         ("distribution_type", string), ("distribution_json", string), ("profiled_at", string), ("run_timestamp", timestamp), ("null_percent", double), ("distinct_percent", double), ("min_value", string), ("max_value", string),
         ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("evidence_role", string),
         ("source_schema_check", string), ("target_schema_check", string),
-        ("stability_check_enabled", boolean), ("load_behavior", string), ("watermark_column", string),
+        ("stability_check_enabled", boolean), ("load_behavior", string), ("watermark_column", string), ("watermark_value", string),
+        ("profile_hash", string), ("profile_payload_json", string),
         ("freshness_column", string), ("freshness_max_lag_days", string), ("freshness_status", string), ("freshness_can_continue", boolean), ("freshness_message", string),
         ("baseline_run_id", string), ("stability_status", string), ("stability_can_continue", boolean), ("stability_message", string), ("stability_difference_summary", string),
         ("source_change_signal_json", string),
@@ -196,9 +194,7 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
         COLUMN_CONTEXT_TABLE: _schema(COLUMN_CONTEXT_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), *audit]),
-        GUARDRAIL_PROFILES_TABLE: _schema(GUARDRAIL_PROFILES_TABLE, [("profile_id", string), ("run_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("guardrail_type", string), ("profile_scope", string), ("watermark_column", string), ("watermark_value", string), ("row_count", long), ("column_count", long), ("profile_hash", string), ("profile_payload_json", string), ("baseline_status", string), ("created_at", string), *audit]),
         GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
-        GUARDRAIL_BASELINE_EVENTS_TABLE: _schema(GUARDRAIL_BASELINE_EVENTS_TABLE, [("event_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("guardrail_type", string), ("watermark_column", string), ("watermark_value", string), ("old_baseline_run_id", string), ("new_baseline_run_id", string), ("event_type", string), ("reason", string), ("change_reference", string), ("approved_by", string), ("approved_at", string), ("created_at", string), *audit]),
         COLUMN_CLASSIFICATION_TABLE: _schema(COLUMN_CLASSIFICATION_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
         PIPELINE_RUNS_TABLE: _schema(PIPELINE_RUNS_TABLE, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
