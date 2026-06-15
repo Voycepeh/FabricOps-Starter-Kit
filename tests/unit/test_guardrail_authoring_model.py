@@ -401,6 +401,10 @@ def test_dq_widget_manual_individual_clear_and_ai_drafts(monkeypatch):
     assert individual[0]["column_name"] == "order_id"
     assert cleared[0]["is_active"] is False
     assert widget["suggest_ai"]() == [{"rule_id": "ai", "rule_type": "not_null", "columns": ["order_id"], "review_status": "draft", "is_active": False}]
+    approved = widget["approve_ai"]()
+    assert approved[0]["guardrail_type"] == "dq"
+    widget["reject_ai"]()
+    assert widget["suggestions"] == []
 
 
 def test_governance_review_widget_actions(monkeypatch):
@@ -443,3 +447,65 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
     assert state["existing_rules"] == rules
     assert state["governance_mode"] == "governed"
     assert state["approval_bypass_allowed"] is True
+    assert len(state["_controls"]["target"].options) == 1
+
+
+def test_schema_widget_freshness_lag_rejects_negative(monkeypatch):
+    """Verify freshness max lag rejects negative values when enforce mode is active."""
+    _install_fake_notebook_widgets(monkeypatch)
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["business_date"], "catalogue_profile_rows": [{"column_name": "business_date", "data_type": "string"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
+    widget = widget_author_schema_freshness_profile_rules(state)
+    widget["controls"]["freshness_mode"].value = "enforce"
+    widget["controls"]["freshness_column"].value = "business_date"
+    widget["controls"]["max_lag"].value = -1
+
+    try:
+        widget["build_records"]()
+    except ValueError as exc:
+        assert "max_lag_days" in str(exc)
+    else:
+        raise AssertionError("negative max lag should fail")
+
+
+def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
+    """Verify authoring widget save writes only METADATA_GUARDRAIL_RULES."""
+    _install_fake_notebook_widgets(monkeypatch)
+    from fabricops_kit import governance_review
+
+    writes = []
+
+    class Spark:
+        def createDataFrame(self, records):
+            return records
+
+    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, config, env, target, table, **kwargs: writes.append(table))
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
+    widget = widget_author_schema_freshness_profile_rules(state, config=object(), env="dev", spark_session=Spark())
+
+    widget["save"]()
+
+    assert writes == [governance_review.GUARDRAIL_RULES_TABLE]
+    assert governance_review.CATALOGUE_TABLE not in writes
+    assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
+
+
+def test_governance_policy_widget_writes_only_governance_reviews(monkeypatch):
+    """Verify governance policy widget saves only METADATA_GOVERNANCE_REVIEWS."""
+    _install_fake_notebook_widgets(monkeypatch)
+    from fabricops_kit import governance_review
+
+    writes = []
+
+    class Spark:
+        def createDataFrame(self, records):
+            return records
+
+    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, config, env, target, table, **kwargs: writes.append(table))
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": []}
+    widget = governance_review.widget_review_guardrail_governance(state, config=object(), env="dev", spark_session=Spark())
+
+    widget["mark_governed"]()
+
+    assert writes == [governance_review.GOVERNANCE_REVIEWS_TABLE]
+    assert governance_review.CATALOGUE_TABLE not in writes
+    assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes

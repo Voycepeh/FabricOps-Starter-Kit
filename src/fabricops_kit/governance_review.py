@@ -2310,6 +2310,7 @@ def widget_author_dq_rules(
     bypass_button.layout.display = "" if governed and bool(state.get("approval_bypass_allowed")) else "none"
     ai_button = widgets.Button(description="Generate AI suggestions")
     ai_button.layout.display = "" if mode == "ai_suggest" else "none"
+    approve_ai_button = widgets.Button(description="Approve AI suggestions", button_style="success")
     reject_ai_button = widgets.Button(description="Reject AI suggestions")
 
     def _batch_parameters() -> dict[str, Any]:
@@ -2379,6 +2380,17 @@ def widget_author_dq_rules(
         message.value = f"<b>Loaded {len(suggestions)} AI draft suggestion(s). Edit and save approved suggestions.</b>"
         return suggestions
 
+    def approve_ai(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        records = []
+        for suggestion in records_state["suggestions"]:
+            suggestion_columns = suggestion.get("columns") or [suggestion.get("column_name") or ""]
+            params = {key: value for key, value in suggestion.items() if key not in {"rule_id", "rule_type", "columns", "column_name", "review_status", "is_active"}}
+            records.extend(_dq_records_from_selection(state, rule_type=str(suggestion.get("rule_type") or "not_null"), selected_columns=suggestion_columns, parameters=params, severity=batch_severity.value, bypass_reason=reason, config=config))
+        return save_records(records)
+
     def reject_ai(_: Any = None) -> None:
         records_state["suggestions"] = []
         suggestions_html.value = "<i>AI suggestions rejected; no active rules were saved.</i>"
@@ -2393,6 +2405,7 @@ def widget_author_dq_rules(
     clear_one_button.on_click(lambda _: save_individual(action_type="superseded", use_bypass=False))
     bypass_button.on_click(lambda _: save_batch(use_bypass=True))
     ai_button.on_click(suggest_ai)
+    approve_ai_button.on_click(lambda _: approve_ai(use_bypass=False))
     reject_ai_button.on_click(reject_ai)
     load_existing_individual()
     refresh_preview()
@@ -2412,14 +2425,14 @@ def widget_author_dq_rules(
         history,
         ai_button,
         suggestions_html,
-        reject_ai_button,
+        widgets.HBox([approve_ai_button, reject_ai_button]),
         bypass_box,
         preview,
         widgets.HBox([save_batch_button, save_one_button, clear_one_button, bypass_button]),
         message,
     ])
     ip.display(ui)
-    return {"records": records_state["records"], "suggestions": records_state["suggestions"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "suggest_ai": suggest_ai, "reject_ai": reject_ai, "ui": ui}
+    return {"records": records_state["records"], "suggestions": records_state["suggestions"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "suggest_ai": suggest_ai, "approve_ai": approve_ai, "reject_ai": reject_ai, "ui": ui}
 
 def build_table_governance_policy_record(state: Mapping[str, Any], *, governance_mode: str, approval_policy: str | None = None, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
     """Build a table-level governance policy row.

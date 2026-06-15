@@ -799,8 +799,8 @@ def write_catalogue_evidence(
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context added to each catalogue row.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
-        Runtime guardrail results accepted for API compatibility but not written
-        to ``METADATA_DATA_CATALOGUE``.
+        Runtime guardrail results are accepted by this writer but are not
+        written to ``METADATA_DATA_CATALOGUE``.
     metadata_table : str, default="METADATA_DATA_CATALOGUE"
         Metadata table to append.
     mode : str, default="append"
