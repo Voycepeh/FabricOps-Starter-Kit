@@ -588,7 +588,7 @@ def write_catalogue_evidence(
             "source_schema_check": str(definition.get("schema_preset", "")) if stage == "source" else "",
             "target_schema_check": str(definition.get("schema_preset", "")) if stage == "target" else "",
             "stability_check_enabled": bool(stability_result.get("stability_check_enabled", False)),
-            "load_behavior": str(stability_result.get("profile_mode", definition.get("profile_mode", ""))),
+            "profile_mode": str(stability_result.get("profile_mode", definition.get("profile_mode", ""))),
             "guardrail_type": "profile_behavior" if stability_result else "",
             "freshness_column": str(freshness_result.get("freshness_column", definition.get("freshness_column", ""))),
             "freshness_max_lag_days": str(freshness_result.get("freshness_max_lag_days", definition.get("freshness_max_lag_days", ""))),

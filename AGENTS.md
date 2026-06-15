@@ -15,6 +15,9 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Do not add backwards-compatibility aliases, legacy parameter names, or
   transitional behavior unless the PR explicitly asks for migration support.
   Prefer clean APIs and update notebooks/docs/tests to the new contract.
+  When a PR intentionally replaces a model, remove old metadata fields and
+  docs language too; do not preserve old names as compatibility columns unless
+  explicitly requested.
 
 ## Public safety and positioning
 

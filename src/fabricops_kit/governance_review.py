@@ -182,7 +182,7 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         ("distribution_type", string), ("distribution_json", string), ("profiled_at", string), ("run_timestamp", timestamp), ("null_percent", double), ("distinct_percent", double), ("min_value", string), ("max_value", string),
         ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("evidence_role", string),
         ("source_schema_check", string), ("target_schema_check", string),
-        ("stability_check_enabled", boolean), ("load_behavior", string), ("watermark_column", string), ("watermark_value", string),
+        ("stability_check_enabled", boolean), ("profile_mode", string), ("watermark_column", string), ("watermark_value", string),
         ("profile_hash", string), ("profile_payload_json", string),
         ("freshness_column", string), ("freshness_max_lag_days", string), ("freshness_status", string), ("freshness_can_continue", boolean), ("freshness_message", string),
         ("baseline_run_id", string), ("stability_status", string), ("stability_can_continue", boolean), ("stability_message", string), ("stability_difference_summary", string),

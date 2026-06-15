@@ -507,7 +507,8 @@ def test_write_catalogue_evidence_adds_stability_fields_without_updates(spark_se
     assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
     assert writes[0][4]["mode"] == "append"
     assert "stability_status" in writes[0][0].columns
-    assert "load_behavior" in writes[0][0].columns
+    assert "profile_mode" in writes[0][0].columns
+    assert "load_behavior" not in writes[0][0].columns
 
 
 def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark_session, monkeypatch):
