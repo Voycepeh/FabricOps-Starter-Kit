@@ -118,28 +118,25 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
 
 
 
-def test_governance_metadata_schemas_include_guardrail_runtime_tables():
-    """Verify guardrail metadata schemas separate rules, profiles, results, and baseline events."""
+def test_governance_metadata_schemas_use_catalogue_for_profile_history():
+    """Verify guardrail schemas keep rules/results and use catalogue profile evidence."""
     schemas = governance._get_governance_metadata_schemas()
 
     assert governance.GUARDRAIL_RULES_TABLE in schemas
-    assert governance.GUARDRAIL_PROFILES_TABLE in schemas
     assert governance.GUARDRAIL_RESULTS_TABLE in schemas
-    assert governance.GUARDRAIL_BASELINE_EVENTS_TABLE in schemas
+    assert "METADATA_GUARDRAIL_PROFILES" not in schemas
+    assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in schemas
+    assert not hasattr(governance, "GUARDRAIL_BASELINE_EVENT_TYPES")
     assert governance.GUARDRAIL_TYPES == ["schema", "freshness", "profile_behavior", "dq"]
     assert "governance_approved" in governance.GUARDRAIL_REVIEW_STATUSES
-    assert "baseline_reset_approved" in governance.GUARDRAIL_BASELINE_EVENT_TYPES
     assert {"guardrail_type", "review_status", "source_notebook_type", "superseded_by_rule_key"}.issubset(
         set(schemas[governance.GUARDRAIL_RULES_TABLE].fieldNames())
     )
-    assert {"watermark_column", "watermark_value", "profile_payload_json"}.issubset(
-        set(schemas[governance.GUARDRAIL_PROFILES_TABLE].fieldNames())
+    assert {"watermark_column", "watermark_value", "profile_hash", "profile_payload_json", "baseline_status"}.issubset(
+        set(schemas[governance.CATALOGUE_TABLE].fieldNames())
     )
     assert {"status", "can_continue", "expected_value_json", "actual_value_json"}.issubset(
         set(schemas[governance.GUARDRAIL_RESULTS_TABLE].fieldNames())
-    )
-    assert {"event_type", "old_baseline_run_id", "new_baseline_run_id"}.issubset(
-        set(schemas[governance.GUARDRAIL_BASELINE_EVENTS_TABLE].fieldNames())
     )
 
 def test_widget_display_rows_include_active_and_inactive_rules():
