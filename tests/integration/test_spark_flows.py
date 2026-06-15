@@ -508,3 +508,71 @@ def test_write_catalogue_evidence_appends_stability_fields_without_updates(spark
     assert writes[0][4]["mode"] == "append"
     assert "stability_status" in writes[0][0].columns
     assert "load_behavior" in writes[0][0].columns
+
+
+def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark_session, monkeypatch):
+    """Verify changing-data catalogue writes retain per-watermark baseline fields."""
+    from fabricops_kit import pipeline
+    from fabricops_kit.data_profiling import profile_dataframe
+
+    writes = []
+    monkeypatch.setattr(
+        pipeline,
+        "write_lakehouse_table",
+        lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)),
+    )
+    df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
+    profile_df = profile_dataframe(df, "orders")
+
+    result = pipeline.write_catalogue_evidence(
+        {"orders": profile_df},
+        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "profile_mode": "changing_data"}},
+        config={},
+        env="dev",
+        run_id="run-1",
+        stability_results={
+            "orders": {
+                "status": "baseline_created",
+                "can_continue": True,
+                "stability_check_enabled": True,
+                "load_behavior": "changing_data",
+                "profile_mode": "changing_data",
+                "stability_status": "baseline_created",
+                "stability_can_continue": True,
+                "profile_evidence_rows": [
+                    {
+                        "watermark_column": "business_date",
+                        "watermark_value": "2026-06-14",
+                        "profile_payload_json": '{"watermark_value":"2026-06-14"}',
+                        "profile_hash": "hash-2026-06-14",
+                        "row_count": 1,
+                    },
+                    {
+                        "watermark_column": "business_date",
+                        "watermark_value": "2026-06-15",
+                        "profile_payload_json": '{"watermark_value":"2026-06-15"}',
+                        "profile_hash": "hash-2026-06-15",
+                        "row_count": 1,
+                    },
+                ],
+            }
+        },
+    )
+
+    assert result == {"orders": "written"}
+    assert len(writes) == 2
+    persisted = [write[0].select("watermark_column", "watermark_value", "profile_payload_json", "profile_hash").first().asDict() for write in writes]
+    assert persisted == [
+        {
+            "watermark_column": "business_date",
+            "watermark_value": "2026-06-14",
+            "profile_payload_json": '{"watermark_value":"2026-06-14"}',
+            "profile_hash": "hash-2026-06-14",
+        },
+        {
+            "watermark_column": "business_date",
+            "watermark_value": "2026-06-15",
+            "profile_payload_json": '{"watermark_value":"2026-06-15"}',
+            "profile_hash": "hash-2026-06-15",
+        },
+    ]

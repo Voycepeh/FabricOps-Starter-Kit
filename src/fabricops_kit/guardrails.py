@@ -781,6 +781,12 @@ def enforce_profile_behavior(
         Required for ``changing_data``. Values define independent profile groups.
     severity : {"blocking", "warning"}, default="blocking"
         Blocking failures stop continuation; warning failures report but allow continuation.
+    rule_key : str, default="profile_behavior_default"
+        Rule identifier written to guardrail result evidence when no approved rule row supplies one.
+    exclude_columns : list-like, optional
+        Business or technical columns to exclude from generated profile evidence.
+    exclude_run_id : str, optional
+        Run identifier to exclude from previous catalogue baseline lookup. Defaults to ``run_id``.
     config, env : object, str, optional
         Metadata route from ``00_env_config`` used to read catalogue evidence and
         write ``METADATA_GUARDRAIL_RESULTS`` when available.
@@ -788,6 +794,12 @@ def enforce_profile_behavior(
         Preloaded ``METADATA_DATA_CATALOGUE`` evidence.
     current_profile : DataFrame or iterable of mappings, optional
         Current profile evidence for static mode.
+    write_results : bool, default=True
+        Whether to append runtime outcome rows to ``METADATA_GUARDRAIL_RESULTS`` when ``config`` and ``env`` are supplied.
+    rules_table : str, default="METADATA_GUARDRAIL_RULES"
+        Metadata table used to load approved profile behavior rules.
+    rules_df : DataFrame or iterable of mappings, optional
+        Preloaded guardrail rules. When supplied, no rules-table read is performed.
 
     Returns
     -------
@@ -802,6 +814,7 @@ def enforce_profile_behavior(
     previous accepted or passed catalogue evidence. Intentional blocked changes
     should be reviewed in governance or handled by superseding/resetting the
     relevant guardrail rule.
+
     """
     if rules_df is None and config is not None and env is not None:
         from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table

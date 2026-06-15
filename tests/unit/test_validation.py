@@ -320,6 +320,7 @@ def test_enforce_freshness_skips_when_column_not_configured():
 
 
 def test_profile_behavior_static_data_baseline_created_and_unchanged_passes(spark_session):
+    """Verify static profile behavior creates and reuses a full-table baseline."""
     df = spark_session.createDataFrame([(1, "a")], "id int, name string")
     first = enforce_profile_behavior(
         spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "customers",
@@ -341,6 +342,7 @@ def test_profile_behavior_static_data_baseline_created_and_unchanged_passes(spar
 
 
 def test_profile_behavior_static_data_changed_warns_when_warning_severity(spark_session):
+    """Verify static profile behavior returns warnings for changed warning rules."""
     df = spark_session.createDataFrame([(1, "a")], "id int, name string")
     baseline_result = enforce_profile_behavior(
         spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "customers",
@@ -358,6 +360,7 @@ def test_profile_behavior_static_data_changed_warns_when_warning_severity(spark_
 
 
 def test_profile_behavior_changing_data_baseline_new_changed_and_missing_groups(spark_session):
+    """Verify changing profile behavior handles new, changed, and missing groups."""
     df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
     baseline = enforce_profile_behavior(
         spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "orders",

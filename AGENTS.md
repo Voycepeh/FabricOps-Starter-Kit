@@ -81,6 +81,19 @@ For new/modified public APIs in `src/fabricops_kit/` (public functions/classes/d
 - Deprecated callables must not be promoted as the recommended path when a replacement exists.
 - New public callables must be added to `__all__`, have useful NumPy-style docstrings, and appear in generated reference docs.
 
+### Ruff docstring linting
+
+The active `pyproject.toml` Ruff configuration selects Ruff `D` docstring rules
+globally. This is a repository lint rule, not personal preference.
+
+- New or modified public functions need complete NumPy-style docstrings.
+- When a `Parameters` section is present, every parameter in the function
+  signature must be documented.
+- Multiline docstring sections need blank lines between sections and after the
+  final section body.
+- Tests are linted too, so new public test functions need concise docstrings
+  unless the Ruff configuration is intentionally changed.
+
 
 Compact NumPy-style example:
 
