@@ -80,9 +80,9 @@ Use the finder below to look up public callables from active v1 modules. For int
 
   </div>
 </article>
-<article id="governance_review-get_selected_catalogue_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_catalogue_table" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Return the table selected by widget_select_catalogue_table.">
+<article id="governance_review-get_selected_catalogue_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_catalogue_table" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Return the table selected by widget_select_governance_profile_target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the table selected by widget_select_catalogue_table.</p>
+  <p class="reference-catalogue-item-purpose">Return the table selected by widget_select_governance_profile_target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
   <div class="reference-catalogue-item-counts">
@@ -157,7 +157,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_read_metadata_rows</code></li><li><code>enforce_dq_rules</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_catalogue_table</code></li><li><code>enforce_profile_behavior</code></li><li><code>_load_notebook_registry</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_read_metadata_rows</code></li><li><code>enforce_dq_rules</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_governance_profile_target</code></li><li><code>enforce_profile_behavior</code></li><li><code>_load_notebook_registry</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="00_env_config, 02_pipeline, 99_explore" data-function-type="callable" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
@@ -300,13 +300,13 @@ Use the finder below to look up public callables from active v1 modules. For int
 
   </div>
 </article>
-<article id="governance_review-widget_select_catalogue_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_catalogue_table" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Render a searchable selector for latest successful catalogue profiles.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render a searchable selector for latest successful catalogue profiles.</p>
+<article id="governance_review-widget_select_governance_profile_target" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_governance_profile_target" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Render dependent selectors for physical catalogue profile targets.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render dependent selectors for physical catalogue profile targets.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>_catalogue_table_options</code></li><li><code>_coerce_rows</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>_catalogue_profile_target_model</code></li><li><code>_coerce_rows</code></li></ul></details>
 
   </div>
 </article>
@@ -316,7 +316,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_build_metadata_table_key</code></li><li><code>_canonical_catalogue_profile_df</code></li><li><code>_definition_name</code></li><li><code>_dq_summary_fields</code></li><li><code>_now_iso</code></li><li><code>_runtime_audit_fields</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 9</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_build_metadata_table_key</code></li><li><code>_canonical_catalogue_profile_df</code></li><li><code>_definition_name</code></li><li><code>_dq_summary_fields</code></li><li><code>_normalize_catalogue_evidence_types</code></li><li><code>_now_iso</code></li><li><code>_runtime_audit_fields</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>

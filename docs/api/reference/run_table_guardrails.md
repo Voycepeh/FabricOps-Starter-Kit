@@ -5,9 +5,9 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:260`
+`fabricops_kit/pipeline.py:289`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/pipeline.py#L260-L448">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L289-L477">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -150,6 +150,8 @@ are routed through the configured metadata target by the called helpers.
     ├── enforce_dq_rules(...)
     │   ├── _configured_lakehouse_schema(...)
     │   │   ├── _get_store(...)
+    │   │   │   └── _normalize_path_config(...)
+    │   │   │       └── PathConfig(...)
     │   │   └── _normalize_schema_name(...)
     │   ├── _dq_failed_row_count(...)
     │   │   ├── _dq_failed_expression(...)
@@ -189,6 +191,8 @@ are routed through the configured metadata target by the called helpers.
     │   └── read_lakehouse_table(...)
     │       ├── _get_spark(...)
     │       ├── _get_store(...)
+    │       │   └── _normalize_path_config(...)
+    │       │       └── PathConfig(...)
     │       ├── _normalize_table_name(...)
     │       └── _resolve_lakehouse_table_path(...)
     │           ├── _normalize_table_name(...)
@@ -203,6 +207,8 @@ are routed through the configured metadata target by the called helpers.
     │   ├── _catalogue_value(...)
     │   ├── _configured_lakehouse_schema(...)
     │   │   ├── _get_store(...)
+    │   │   │   └── _normalize_path_config(...)
+    │   │   │       └── PathConfig(...)
     │   │   └── _normalize_schema_name(...)
     │   ├── _guardrail_exclude_columns(...)
     │   ├── _is_greater_than(...)
@@ -238,6 +244,8 @@ are routed through the configured metadata target by the called helpers.
     │   └── read_lakehouse_table(...)
     │       ├── _get_spark(...)
     │       ├── _get_store(...)
+    │       │   └── _normalize_path_config(...)
+    │       │       └── PathConfig(...)
     │       ├── _normalize_table_name(...)
     │       └── _resolve_lakehouse_table_path(...)
     │           ├── _normalize_table_name(...)
@@ -267,6 +275,8 @@ are routed through the configured metadata target by the called helpers.
         ├── _canonical_catalogue_profile_df(...)
         ├── _configured_lakehouse_schema(...)
         │   ├── _get_store(...)
+        │   │   └── _normalize_path_config(...)
+        │   │       └── PathConfig(...)
         │   └── _normalize_schema_name(...)
         ├── _definition_name(...)
         ├── _dq_summary_fields(...)
@@ -274,6 +284,7 @@ are routed through the configured metadata target by the called helpers.
         │       └── _current_audit_timestamp(...)
         │           └── _get_audit_timezone(...)
         │               └── _validate_audit_timezone(...)
+        ├── _normalize_catalogue_evidence_types(...)
         ├── _now_iso(...)
         │   └── _current_audit_timestamp(...)
         │       └── _get_audit_timezone(...)
@@ -284,6 +295,9 @@ are routed through the configured metadata target by the called helpers.
         │   │   ├── _current_audit_timestamp(...)
         │   │   │   └── _get_audit_timezone(...)
         │   │   │       └── _validate_audit_timezone(...)
+        │   │   ├── _get_store(...)
+        │   │   │   └── _normalize_path_config(...)
+        │   │   │       └── PathConfig(...)
         │   │   ├── _runtime_context(...)
         │   │   │   └── _context_get(...)
         │   │   └── _safe_str(...)
@@ -293,6 +307,8 @@ are routed through the configured metadata target by the called helpers.
         │               └── _validate_audit_timezone(...)
         └── write_lakehouse_table(...)
             ├── _get_store(...)
+            │   └── _normalize_path_config(...)
+            │       └── PathConfig(...)
             ├── _normalize_table_name(...)
             └── _resolve_lakehouse_table_path(...)
                 ├── _normalize_table_name(...)
@@ -309,16 +325,16 @@ are routed through the configured metadata target by the called helpers.
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/pipeline.py#L228-L257"><code>_build_guardrail_evidence_definitions</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/pipeline.py#L216-L217"><code>_table_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/pipeline.py#L220-L221"><code>_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L257-L286"><code>_build_guardrail_evidence_definitions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L245-L246"><code>_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L249-L250"><code>_table_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/pipeline.py#L224-L225"><code>_guardrail_can_continue</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L253-L254"><code>_guardrail_can_continue</code></a>
         </div>
       </section>
     </div>
@@ -336,7 +352,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `260`
+- Source line: `289`
 - Inbound references count: 0
 - Outbound references count: 11
 - Used in templates: 02_pipeline
@@ -372,9 +388,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/pipeline.py#L260-L448">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/pipeline.py#L260-L448</a>
-- Start line: `260`
-- End line: `448`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L289-L477">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/pipeline.py#L289-L477</a>
+- Start line: `289`
+- End line: `477`
 - Signature:
 
 ```python

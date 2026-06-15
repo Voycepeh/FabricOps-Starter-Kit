@@ -238,7 +238,7 @@ No public exports in this module.
 <a class="reference-chip" href="../data_agreement/#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="../data_agreement/#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="../data_agreement/#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>, <a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../governance_review/#_approved_column_identity"><code>_approved_column_identity</code></a>, <a class="reference-chip" href="../governance_review/#_approved_review_context"><code>_approved_review_context</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_table_options"><code>_catalogue_table_options</code></a>, <a class="reference-chip" href="../governance_review/#_review_governance_evidence"><code>_review_governance_evidence</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
+<a class="reference-chip" href="../governance_review/#_approved_column_identity"><code>_approved_column_identity</code></a>, <a class="reference-chip" href="../governance_review/#_approved_review_context"><code>_approved_review_context</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_physical_identity"><code>_catalogue_physical_identity</code></a>, <a class="reference-chip" href="../governance_review/#_review_governance_evidence"><code>_review_governance_evidence</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
 
 **pipeline**
 <a class="reference-chip" href="../pipeline/#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
@@ -246,7 +246,7 @@ No public exports in this module.
 ### External callees
 
 **config**
-<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>
+<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>, <a class="reference-chip" href="../config/#_get_store"><code>_get_store</code></a>
 
 **fabric_input_output**
 <a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>

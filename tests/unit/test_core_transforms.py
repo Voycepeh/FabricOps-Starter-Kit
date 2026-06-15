@@ -9,7 +9,7 @@ from fabricops_kit.governance_review import (
     _build_classification_records,
     _build_column_context_records,
     _build_dq_rule_records,
-    _catalogue_table_options,
+    _catalogue_profile_target_model,
 )
 
 pytestmark = pytest.mark.unit
@@ -128,12 +128,56 @@ def test_governance_review_builders_commit_only_human_approved_records():
         )
 
 
-def test_catalogue_selection_keeps_latest_successful_profile():
-    options = _catalogue_table_options([
-        {**_profile_rows("run-1")[0], "profiled_at": "2026-01-01T00:00:00Z"},
-        *_profile_rows("run-2"),
-        {**_profile_rows("run-3")[0], "profile_status": "failed", "profiled_at": "2026-01-03T00:00:00Z"},
+def test_governance_profile_target_groups_profiles_by_physical_table_not_stage_or_pipeline():
+    rows = [
+        {**_profile_rows("run-source-old")[0], "profile_stage": "source", "pipeline_name": "pipe-a", "profiled_at": "2026-01-01T00:00:00Z"},
+        {**_profile_rows("run-target-new")[0], "profile_stage": "target", "pipeline_name": "pipe-b", "profiled_at": "2026-01-03T00:00:00Z"},
+        {**_profile_rows("run-source-newer")[0], "profile_stage": "source", "pipeline_name": "pipe-c", "profiled_at": "2026-01-04T00:00:00Z"},
+    ]
+
+    model = _catalogue_profile_target_model(rows)
+    asset = model["assets"]["dev / asset / sales"]
+    table = asset["schemas"]["-"]["tables"]["orders"]
+
+    assert len(table["profiles"]) == 3
+    assert table["default"]["profile_run_id"] == "run-source-newer"
+    assert table["default"]["profile_stage"] == "source"
+
+
+def test_governance_profile_target_defaults_to_latest_successful_profile():
+    rows = [
+        {**_profile_rows("run-success")[0], "profile_status": "success", "profiled_at": "2026-01-02T00:00:00Z"},
+        {**_profile_rows("run-failed")[0], "profile_status": "failed", "profiled_at": "2026-01-05T00:00:00Z"},
+    ]
+
+    model = _catalogue_profile_target_model(rows)
+    table = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]
+
+    assert table["default"]["profile_run_id"] == "run-success"
+    assert [profile["profile_run_id"] for profile in table["profiles"]] == ["run-failed", "run-success"]
+
+
+def test_governance_profile_target_defaults_to_latest_when_no_status_column_exists():
+    older = {k: v for k, v in _profile_rows("run-old")[0].items() if k != "profile_status"}
+    newer = {k: v for k, v in _profile_rows("run-new")[0].items() if k != "profile_status"}
+    older["profiled_at"] = "2026-01-01T00:00:00Z"
+    newer["profiled_at"] = "2026-01-06T00:00:00Z"
+
+    model = _catalogue_profile_target_model([older, newer])
+    table = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]
+
+    assert table["default"]["profile_run_id"] == "run-new"
+
+
+def test_governance_profile_target_profile_labels_are_readable():
+    model = _catalogue_profile_target_model([
+        {**_profile_rows("run-1")[0], "profile_stage": "target", "pipeline_name": "daily-pipeline", "profiled_at": "2026-01-02T00:00:00Z"}
     ])
 
-    assert len(options) == 1
-    assert options[0]["profile_run_id"] == "run-2"
+    label = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]["profiles"][0]["label"]
+
+    assert "2026-01-02T00:00:00Z" in label
+    assert "run run-1" in label
+    assert "stage target" in label
+    assert "daily-pipeline" in label
+    assert not label.startswith("{")

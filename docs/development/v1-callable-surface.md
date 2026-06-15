@@ -36,7 +36,7 @@ This list is kept as release-planning context only. The source of truth is the p
 23. `write_catalogue_evidence`
 24. `write_pipeline_lineage`
 25. `write_pipeline_run_summary`
-26. `widget_select_catalogue_table`
+26. `widget_select_governance_profile_target`
 27. `get_selected_catalogue_table`
 28. `load_catalogue_profile_rows`
 29. `widget_review_column_context`
@@ -79,7 +79,7 @@ Non-v1 helpers that are still needed internally now use leading-underscore names
 
 ## 03_governance wrapper rationale
 
-`get_selected_catalogue_table` remains public because users must explicitly read the stable table identity after interacting with `widget_select_catalogue_table`. It accepts the selector returned by the widget for readability while preserving widget state fallback.
+`get_selected_catalogue_table` remains public because users must explicitly read the stable table identity after interacting with `widget_select_governance_profile_target`. It accepts the selector returned by the widget for readability while preserving widget state fallback.
 
 `load_catalogue_profile_rows` remains public because it expresses the v1 action "load profile rows for the selected catalogue table". It is more than a pass-through read: it routes to the configured metadata lakehouse, filters to the selected environment/dataset/table/profile run/stage/key, requires successful profile evidence, and fails fast when no selected profile rows exist.
 

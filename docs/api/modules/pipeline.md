@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 12</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>11</td>
+      <td>12</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -94,7 +94,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td>Callable</td>
       <td>function</td>
       <td>Enrich profile rows with guardrail context and write catalogue evidence.</td>
-      <td><code>_canonical_catalogue_profile_df</code> (internal), <code>_definition_name</code> (internal), <code>_dq_summary_fields</code> (internal), <code>_now_iso</code> (internal), <code>_runtime_audit_fields</code> (internal)</td>
+      <td><code>_canonical_catalogue_profile_df</code> (internal), <code>_definition_name</code> (internal), <code>_dq_summary_fields</code> (internal), <code>_normalize_catalogue_evidence_types</code> (internal), <code>_now_iso</code> (internal), <code>_runtime_audit_fields</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
@@ -139,7 +139,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_canonical_catalogue_profile_df</code></span>, <span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_dq_summary_fields</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
+<span class="reference-chip"><code>_canonical_catalogue_profile_df</code></span>, <span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_dq_summary_fields</code></span>, <span class="reference-chip"><code>_normalize_catalogue_evidence_types</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
@@ -193,6 +193,10 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
+      <td><code>_normalize_catalogue_evidence_types</code></td>
+      <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
+    </tr>
+    <tr>
       <td><code>_now_iso</code></td>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
@@ -239,6 +243,9 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 </li>
 <li>
 <span class="reference-chip"><code>_guardrail_can_continue</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_normalize_catalogue_evidence_types</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_now_iso</code></span>

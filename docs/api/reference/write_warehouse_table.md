@@ -5,9 +5,9 @@ Write a DataFrame to a configured Fabric warehouse target.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:485`
+`fabricops_kit/fabric_input_output.py:493`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L485-L549">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/fabric_input_output.py#L493-L557">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -114,18 +114,27 @@ Fabric runtime connector APIs.
     ```text
     write_warehouse_table(...)
     └── _get_store(...)
+        └── _normalize_path_config(...)
+            └── PathConfig(...)
     ```
 
-??? info "Internal helpers used: 1"
+??? info "Internal helpers used: 2"
 
-    This callable uses 1 internal helpers for fabric or spark access.
+    This callable uses 2 internal helpers for rule parsing and fabric or spark access.
 
     <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/config.py#L627-L667"><code>_normalize_path_config</code></a>
+        </div>
+      </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/config.py#L670-L708"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -143,7 +152,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `485`
+- Source line: `493`
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 00_env_config, 02_pipeline
@@ -169,9 +178,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L485-L549">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L485-L549</a>
-- Start line: `485`
-- End line: `549`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/fabric_input_output.py#L493-L557">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/fabric_input_output.py#L493-L557</a>
+- Start line: `493`
+- End line: `557`
 - Signature:
 
 ```python
@@ -188,7 +197,7 @@ def write_warehouse_table(df, config, env, target, schema, table, mode='append')
 
 ### Internal implementation summary
 
-- Internal helper count: 1
+- Internal helper count: 2
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
