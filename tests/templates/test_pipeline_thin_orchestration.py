@@ -91,6 +91,8 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
     assert "TARGET AREA — Steps 9 to 14" in markdown
     assert "Most users should make their business logic changes here" in markdown
     assert "without warehouse write permissions" in markdown
+    assert "also add a matching explicit write call in Step 11" in markdown
+    assert "prepared configs in `TARGET_CONFIG_BY_KEY` include FabricOps audit columns" in markdown
     assert "with the guardrails and catalogue evidence that belong to that specific source" in markdown
     assert "schema, freshness, DQ, profile" in markdown
 
@@ -260,26 +262,51 @@ def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_fl
         assert runtime_alias in code
 
 
-def test_explicit_target_writes_use_existing_lakehouse_helper_and_checked_dataframes():
+def test_explicit_target_writes_use_prepared_target_configs_and_lakehouse_helper():
     _markdown, code, _cells = _notebook_sources()
 
-    write_block = code[code.index("target_write_status = {}") : code.index("LINEAGE_RELATIONSHIPS = [")]
+    write_block = code[code.index("target_write_options =") : code.index("LINEAGE_RELATIONSHIPS = [")]
+    active_write_lines = "\n".join(line for line in write_block.splitlines() if not line.lstrip().startswith("#"))
+
     assert "for target_config in TARGET_TABLES:" not in write_block
     assert "write_lakehouse_table(" in write_block
     assert "write_warehouse_table(" in write_block
     assert "TARGET_LAYER_SCHEMAS" not in code
-    assert "df_orders_enriched" in write_block
-    assert "df_orders_summary" in write_block
-    assert '"smoke_unified_orders_enriched"' in write_block
-    assert '"smoke_unified_orders_summary"' in write_block
-    assert 'schema="SmokeTest"' in write_block
-    assert 'mode="overwrite"' in write_block
-    assert 'options=target_write_options' in write_block
+    assert 'orders_enriched_target = TARGET_CONFIG_BY_KEY["orders_enriched"]' in write_block
+    assert 'orders_summary_target = TARGET_CONFIG_BY_KEY["orders_summary"]' in write_block
+    assert 'orders_enriched_target["df"]' in write_block
+    assert 'orders_summary_target["df"]' in write_block
+    assert 'df_orders_enriched' not in active_write_lines
+    assert 'df_orders_summary' not in active_write_lines
+    for prepared_field in [
+        '["target_layer"]',
+        '["target_name"]',
+        '.get("schema")',
+        '.get("write_mode", "overwrite")',
+        '.get("partition_by")',
+        '.get("repartition_by")',
+        '.get("options", target_write_options)',
+    ]:
+        assert prepared_field in write_block
     assert 'display(target_write_status)' in write_block
     assert "Optional warehouse example" in write_block
     assert "not part of the default happy path" in write_block
     assert "write_target_tables" not in write_block
     assert "Unsupported target kind" not in write_block
+
+
+def test_each_default_target_config_has_matching_explicit_write_call():
+    _markdown, code, _cells = _notebook_sources()
+
+    target_user_block = code[code.index("TARGET_TABLES = [") : code.index("target_guardrail_results = run_table_guardrails(")]
+    write_block = code[code.index("target_write_options =") : code.index("LINEAGE_RELATIONSHIPS = [")]
+    target_keys = re.findall(r'"key": "([^"]+)"', target_user_block)
+
+    assert target_keys == ["orders_enriched", "orders_summary"]
+    for target_key in target_keys:
+        variable_name = f"{target_key}_target"
+        assert f'{variable_name} = TARGET_CONFIG_BY_KEY["{target_key}"]' in write_block
+        assert f'target_write_status["{target_key}"]' in write_block
 
 
 def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
