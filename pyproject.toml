@@ -66,7 +66,7 @@ line-length = 120
 extend-exclude = ["templates/notebooks"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "D", "DOC"]
 ignore = ["E402", "E501", "E701", "E702", "E712", "F401", "F821", "I001"]
 
 [dependency-groups]
