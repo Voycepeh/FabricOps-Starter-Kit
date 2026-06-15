@@ -1,7 +1,7 @@
 [
   {
     "term": "profile behavior",
-    "plain_language_definition": "The expected way a table is loaded.",
+    "plain_language_definition": "The expected way a table profile should behave over time.",
     "technical_definition": "The approved profile mode used by guardrail checks: static_data, changing_data, or skip.",
     "example": "A changing-data table may add a new business-date group while previous groups remain unchanged.",
     "related_terms": [
@@ -153,6 +153,26 @@
     "related_terms": [
       "guardrail",
       "stage"
+    ]
+  },
+  {
+    "term": "append",
+    "plain_language_definition": "Add new rows to an existing target without replacing existing rows.",
+    "technical_definition": "A physical Spark write mode, not a FabricOps profile behavior mode.",
+    "example": "Use append as a write mode when new pipeline output should be added to the target table.",
+    "related_terms": [
+      "overwrite",
+      "profile behavior"
+    ]
+  },
+  {
+    "term": "overwrite",
+    "plain_language_definition": "Replace existing target data during a physical write.",
+    "technical_definition": "A physical Spark write mode, not a FabricOps profile behavior mode.",
+    "example": "Use overwrite as a write mode when the target table should be replaced by the latest output.",
+    "related_terms": [
+      "append",
+      "profile behavior"
     ]
   }
 ]

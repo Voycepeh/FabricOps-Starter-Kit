@@ -177,12 +177,13 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     audit = [("_committed_at", string), ("_committed_by", string), ("_workspace_name", string), ("_notebook_name", string), ("_metadata_lakehouse_name", string), ("_activity_id", string)]
     catalogue = [
         ("metadata_table_key", string), ("metadata_column_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string),
-        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string),
+        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string), ("baseline_status", string),
         ("profiled_at", string), ("run_timestamp", timestamp), ("evidence_role", string),
         ("data_type", string), ("row_count", long), ("null_count", long), ("null_percent", double), ("distinct_count", long), ("distinct_percent", double),
         ("min_value", string), ("max_value", string), ("distribution_type", string), ("distribution_json", string),
         ("profile_mode", string), ("watermark_column", string), ("watermark_value", string), ("profile_hash", string), ("profile_payload_json", string),
         ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string),
+        ("source_schema_check", string), ("target_schema_check", string), ("dq_status", string),
         *audit,
     ]
     return {

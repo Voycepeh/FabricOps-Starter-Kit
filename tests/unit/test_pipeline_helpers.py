@@ -655,6 +655,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
         lambda *args, **kwargs: {"status": "failed", "can_continue": False, "checks": [{"rule_id": "id_required", "status": "failed"}]},
     )
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
 
     result = pipeline.run_table_guardrails(
         [
@@ -698,6 +699,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
     )
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
 
     def fail_if_called(*args, **kwargs):
         raise AssertionError("dq_preset='skip' should not call enforce_dq_rules")

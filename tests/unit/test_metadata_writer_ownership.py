@@ -29,7 +29,7 @@ def test_catalogue_type_normalizer_keeps_only_profile_evidence_casts():
     """Verify catalogue type casts do not include retired result fields."""
     source = _function_source("pipeline.py", "_normalize_catalogue_evidence_types")
 
-    for profile_field in ("row_count", "null_count", "distinct_count", "null_percent", "distinct_percent", "run_timestamp"):
+    for profile_field in ("row_count", "null_count", "distinct_count", "null_percent", "distinct_percent", "dq_failed_row_percent", "run_timestamp"):
         assert profile_field in source
     for result_field in (
         "dq_rule_count",
@@ -37,7 +37,6 @@ def test_catalogue_type_normalizer_keeps_only_profile_evidence_casts():
         "dq_warning_rule_count",
         "dq_error_rule_count",
         "dq_failed_row_count",
-        "dq_failed_row_percent",
         "stability_check_enabled",
         "freshness_can_continue",
         "stability_can_continue",
