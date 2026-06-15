@@ -645,8 +645,10 @@ def enforce_profile_behavior(
         Spark DataFrame being checked.
     metadata_table : str
         Metadata catalogue table, normally ``METADATA_DATA_CATALOGUE``.
-    dataset_name, table_name : str
-        Dataset and table identifiers used for rule and baseline lookup.
+    dataset_name : str
+        Dataset identifier used for rule and baseline lookup.
+    table_name : str
+        Table identifier used for rule and baseline lookup.
     stage : str
         Pipeline stage used in returned evidence.
     run_id : str
@@ -659,24 +661,33 @@ def enforce_profile_behavior(
     severity : {"blocking", "warning"}, default="blocking"
         Blocking failures stop continuation; warning failures report but allow continuation.
     rule_key : str, default="profile_behavior_default"
-        Rule identifier written to guardrail result evidence when no approved rule row supplies one.
+        Rule identifier written to guardrail result evidence when no approved
+        rule row supplies one.
     exclude_columns : list-like, optional
-        Business or technical columns to exclude from generated profile evidence.
+        Business or technical columns to exclude from generated profile
+        evidence.
     exclude_run_id : str, optional
-        Run identifier to exclude from previous catalogue baseline lookup. Defaults to ``run_id``.
-    config, env : object, str, optional
-        Metadata route from ``00_env_config`` used to read catalogue evidence and
-        write ``METADATA_GUARDRAIL_RESULTS`` when available.
+        Run identifier to exclude from previous catalogue baseline lookup.
+        Defaults to ``run_id``.
+    config : object, optional
+        Runtime configuration from ``00_env_config`` used to read metadata and
+        write result evidence when paired with ``env``.
+    env : str, optional
+        Environment key used with ``config`` for configured metadata routing.
     catalogue_df : DataFrame or iterable of mappings, optional
         Preloaded ``METADATA_DATA_CATALOGUE`` evidence.
     current_profile : DataFrame or iterable of mappings, optional
         Current profile evidence for static mode.
     write_results : bool, default=True
-        Whether to append runtime outcome rows to ``METADATA_GUARDRAIL_RESULTS`` when ``config`` and ``env`` are supplied.
+        Whether to append runtime outcome rows to
+        ``METADATA_GUARDRAIL_RESULTS`` when ``config`` and ``env`` are
+        supplied.
     rules_table : str, default="METADATA_GUARDRAIL_RULES"
-        Metadata table used to load approved profile behavior rules.
+        Metadata table used to load approved profile behavior rules when
+        ``rules_df`` is not supplied.
     rules_df : DataFrame or iterable of mappings, optional
-        Preloaded guardrail rules. When supplied, no rules-table read is performed.
+        Preloaded guardrail rules. When supplied, no rules-table read is
+        performed.
 
     Returns
     -------
@@ -691,6 +702,7 @@ def enforce_profile_behavior(
     previous accepted or passed catalogue evidence. Intentional blocked changes
     should be reviewed in governance or handled by superseding/resetting the
     relevant guardrail rule.
+
 
     """
     if rules_df is None and config is not None and env is not None:
