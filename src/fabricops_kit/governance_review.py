@@ -218,6 +218,101 @@ def _is_table_not_found_error(exc: Exception) -> bool:
     return any(marker in message for marker in not_found_markers) and not any(marker in message for marker in non_not_found_markers)
 
 
+
+
+def _first_present(row: dict[str, Any], names: Iterable[str], default: Any = "") -> Any:
+    """Return the first present catalogue value from a list of candidate names."""
+    for name in names:
+        value = _value(row, name, None)
+        if value not in (None, ""):
+            return value
+    return default
+
+
+def _profile_sort_key(row: dict[str, Any]) -> tuple[str, str, str, str]:
+    """Return deterministic newest-first profile ordering fields."""
+    return (
+        str(_value(row, "profiled_at")),
+        str(_value(row, "profile_run_id")),
+        str(_value(row, "run_id") or _value(row, "pipeline_run_id")),
+        str(_value(row, "profile_stage")),
+    )
+
+
+def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
+    """Return stable physical table identity without profile stage or pipeline identity."""
+    env = str(_first_present(row, ["environment_name", "env_name"]))
+    asset_kind = str(_first_present(row, ["asset_kind", "asset_type"]))
+    asset_name = str(_first_present(row, ["asset_name", "dataset_name", "lakehouse_name", "warehouse_name"]))
+    schema_or_layer = str(_first_present(row, ["schema_name", "layer"]))
+    table = str(_value(row, "table_name"))
+    table_key = str(_first_present(row, ["physical_asset_id", "metadata_table_key"], ""))
+    if not table_key:
+        table_key = _build_metadata_table_key(env, asset_name, table)
+    return {
+        "environment_name": env,
+        "asset_kind": asset_kind,
+        "asset_name": asset_name,
+        "dataset_name": str(_value(row, "dataset_name") or asset_name),
+        "schema_or_layer": schema_or_layer,
+        "layer": str(_value(row, "layer") or schema_or_layer),
+        "schema_name": str(_value(row, "schema_name") or schema_or_layer),
+        "table_name": table,
+        "metadata_table_key": table_key,
+    }
+
+
+def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    """Build dependent governance profile target selector options."""
+    rows = [dict(r) for r in catalogue_rows or []]
+    if not rows:
+        raise ValueError("METADATA_DATA_CATALOGUE has no rows. Run 02_pipeline profiling before 03_governance.")
+    has_status = any(any(k.lower() == "profile_status" for k in r) for r in rows)
+    table_groups: dict[tuple[str, str, str, str, str], list[dict[str, Any]]] = {}
+    for row in rows:
+        ident = _catalogue_physical_identity(row)
+        if not ident["table_name"]:
+            continue
+        key = (ident["environment_name"], ident["asset_kind"], ident["asset_name"], ident["schema_or_layer"], ident["table_name"])
+        table_groups.setdefault(key, []).append(row)
+    if not table_groups:
+        raise ValueError("METADATA_DATA_CATALOGUE has no table profile evidence for governance review.")
+
+    assets: dict[str, dict[str, Any]] = {}
+    for key, group in table_groups.items():
+        env, kind, asset, schema, table = key
+        default_pool = [r for r in group if _is_success(r)] if has_status else group
+        if has_status and not default_pool:
+            default_pool = group
+        latest = max(default_pool, key=_profile_sort_key)
+        ident = _catalogue_physical_identity(latest)
+        asset_label = " / ".join(part for part in [env, kind or "asset", asset] if part)
+        assets.setdefault(asset_label, {"label": asset_label, "schemas": {}})
+        schema_label = schema or "-"
+        schema_entry = assets[asset_label]["schemas"].setdefault(schema_label, {"label": schema_label, "tables": {}})
+        profiles = []
+        seen_profiles = set()
+        for row in sorted(group, key=_profile_sort_key, reverse=True):
+            p_ident = _catalogue_physical_identity(row)
+            run_id = str(_value(row, "profile_run_id"))
+            stage = str(_value(row, "profile_stage"))
+            profiled_at = str(_value(row, "profiled_at"))
+            pkey = (run_id, stage, profiled_at)
+            if pkey in seen_profiles:
+                continue
+            seen_profiles.add(pkey)
+            pipeline = str(_value(row, "pipeline_name") or _value(row, "notebook_id") or _value(row, "notebook_registry_id") or _value(row, "pipeline_run_id") or _value(row, "run_id"))
+            label_parts = [profiled_at or "unknown profile date", f"run {run_id or '-'}"]
+            if stage:
+                label_parts.append(f"stage {stage}")
+            if pipeline:
+                label_parts.append(pipeline)
+            profiles.append({**p_ident, "profile_run_id": run_id, "profile_stage": stage, "profiled_at": profiled_at, "profile_status": str(_value(row, "profile_status")), "label": " | ".join(label_parts)})
+        default_identity = {**ident, "profile_run_id": str(_value(latest, "profile_run_id")), "profile_stage": str(_value(latest, "profile_stage")), "profiled_at": str(_value(latest, "profiled_at")), "profile_status": str(_value(latest, "profile_status"))}
+        schema_entry["tables"][table] = {"label": table, "profiles": profiles, "default": default_identity}
+    return {"assets": assets, "has_status": has_status}
+
+
 def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return one option per logical table using its latest successful profile.
 
@@ -295,6 +390,91 @@ def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str,
         except json.JSONDecodeError:
             pass
     raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
+
+
+def widget_select_governance_profile_target(config: Any, env: str, *, spark_session: Any):
+    """Render dependent selectors for a governed table profile target.
+
+    Parameters
+    ----------
+    config : FrameworkConfig or dict
+        Runtime config containing the metadata lakehouse route.
+    env : str
+        Environment used to read ``METADATA_DATA_CATALOGUE``.
+    spark_session : pyspark.sql.SparkSession
+        Spark session used for the catalogue read.
+
+    Returns
+    -------
+    ipywidgets.VBox
+        Container with dependent asset, schema/layer, table, and profile-run
+        dropdowns. The selected profile row identity is available through
+        ``get_selected_catalogue_table``.
+
+    Notes
+    -----
+    Table identity is based on physical catalogue fields and intentionally
+    excludes ``profile_stage`` and pipeline metadata. Source/target stage and
+    pipeline values remain visible as profile evidence for the selected table.
+    """
+    global _SELECTED_CATALOGUE_TABLE
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    model = _catalogue_profile_target_model(rows)
+    assets = model["assets"]
+    asset_dropdown = widgets.Dropdown(options=list(assets), description="Asset", layout=widgets.Layout(width="760px"))
+    schema_dropdown = widgets.Dropdown(description="Schema/layer", layout=widgets.Layout(width="760px"))
+    table_dropdown = widgets.Dropdown(description="Table", layout=widgets.Layout(width="760px"))
+    profile_dropdown = widgets.Dropdown(description="Profile", layout=widgets.Layout(width="980px"))
+    context = widgets.HTML()
+
+    def current_table_entry() -> dict[str, Any]:
+        return assets[asset_dropdown.value]["schemas"][schema_dropdown.value]["tables"][table_dropdown.value]
+
+    def apply_selection() -> None:
+        global _SELECTED_CATALOGUE_TABLE
+        entry = current_table_entry()
+        profile_by_label = {p["label"]: p for p in entry["profiles"]}
+        selected = profile_by_label.get(profile_dropdown.value) or entry["default"]
+        _SELECTED_CATALOGUE_TABLE = dict(selected)
+        context.value = (
+            f"<b>Selected table:</b> {selected.get('environment_name','')} / {selected.get('asset_name','')} / "
+            f"{selected.get('schema_or_layer','') or '-'} / {selected.get('table_name','')}<br/>"
+            f"<b>Profile:</b> {selected.get('profiled_at','')} | run {selected.get('profile_run_id','-')} "
+            f"| stage {selected.get('profile_stage','-')} | status {selected.get('profile_status','-')}"
+        )
+
+    def refresh_profiles(*_: Any) -> None:
+        entry = current_table_entry()
+        labels = [p["label"] for p in entry["profiles"]]
+        profile_dropdown.options = labels
+        default = entry["default"]
+        default_label = next((p["label"] for p in entry["profiles"] if p["profile_run_id"] == default.get("profile_run_id") and p["profile_stage"] == default.get("profile_stage") and p["profiled_at"] == default.get("profiled_at")), labels[0])
+        profile_dropdown.value = default_label
+        apply_selection()
+
+    def refresh_tables(*_: Any) -> None:
+        tables = assets[asset_dropdown.value]["schemas"][schema_dropdown.value]["tables"]
+        table_dropdown.options = sorted(tables)
+        table_dropdown.value = table_dropdown.options[0]
+        refresh_profiles()
+
+    def refresh_schemas(*_: Any) -> None:
+        schemas = assets[asset_dropdown.value]["schemas"]
+        schema_dropdown.options = sorted(schemas)
+        schema_dropdown.value = schema_dropdown.options[0]
+        refresh_tables()
+
+    asset_dropdown.observe(lambda change: refresh_schemas() if change.get("name") == "value" else None, names="value")
+    schema_dropdown.observe(lambda change: refresh_tables() if change.get("name") == "value" else None, names="value")
+    table_dropdown.observe(lambda change: refresh_profiles() if change.get("name") == "value" else None, names="value")
+    profile_dropdown.observe(lambda change: apply_selection() if change.get("name") == "value" else None, names="value")
+    refresh_schemas()
+    box = widgets.VBox([asset_dropdown, schema_dropdown, table_dropdown, profile_dropdown, context])
+    ip.display(box)
+    return box
 
 
 def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):

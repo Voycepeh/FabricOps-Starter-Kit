@@ -5,9 +5,9 @@ Read a table from a configured Fabric warehouse target.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:423`
+`fabricops_kit/fabric_input_output.py:431`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L423-L482">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L431-L490">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -115,19 +115,28 @@ No additional callable notes are documented.
     read_warehouse_table(...)
     ├── _get_spark(...)
     └── _get_store(...)
+        └── _normalize_path_config(...)
+            └── PathConfig(...)
     ```
 
-??? info "Internal helpers used: 2"
+??? info "Internal helpers used: 3"
 
-    This callable uses 2 internal helpers for fabric or spark access.
+    This callable uses 3 internal helpers for rule parsing and fabric or spark access.
 
     <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L627-L667"><code>_normalize_path_config</code></a>
+        </div>
+      </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L167-L197"><code>_get_spark</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L175-L205"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L670-L708"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -145,7 +154,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `423`
+- Source line: `431`
 - Inbound references count: 0
 - Outbound references count: 2
 - Used in templates: 00_env_config, 02_pipeline, 99_explore
@@ -172,9 +181,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L423-L482">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L423-L482</a>
-- Start line: `423`
-- End line: `482`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L431-L490">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L431-L490</a>
+- Start line: `431`
+- End line: `490`
 - Signature:
 
 ```python
@@ -190,7 +199,7 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
 ### Internal implementation summary
 
-- Internal helper count: 2
+- Internal helper count: 3
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

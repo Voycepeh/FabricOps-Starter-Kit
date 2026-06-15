@@ -5,9 +5,9 @@ Create or validate all FabricOps metadata tables through one setup action.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config.py:1132`
+`fabricops_kit/config.py:1182`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1132-L1255">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1182-L1308">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -161,6 +161,7 @@ migrate user data automatically.
     ├── _metadata_tables_from_setup_results(...)
     ├── _resolve_metadata_schema(...)
     │   └── _get_store(...)
+    │       └── …
     ├── _setup_metadata_table_registry(...)
     │   ├── _create_empty_metadata_dataframe(...)
     │   ├── _is_table_not_found_error(...)
@@ -180,6 +181,7 @@ migrate user data automatically.
         ├── _get_active_metadata_tables(...)
         │   └── …
         ├── _get_store(...)
+        │   └── …
         ├── _resolve_metadata_schema(...)
         │   └── …
         ├── _validate_framework_config(...)
@@ -188,71 +190,78 @@ migrate user data automatically.
             └── …
     ```
 
-??? info "Internal helpers used: 26"
+??? info "Internal helpers used: 27"
 
-    This callable uses 26 internal helpers for audit timestamp, metadata loading, validation, rule evaluation, fabric or spark access, and other.
+    This callable uses 27 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L27-L58"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1044-L1046"><code>_create_empty_metadata_dataframe</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L942-L966"><code>_detect_nested_metadata_delta_folders</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L898-L925"><code>_get_active_metadata_tables</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L152-L195"><code>_get_governance_metadata_schemas</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L994-L1023"><code>_get_metadata_table_schema_registry</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L198-L218"><code>_is_table_not_found_error</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/data_agreement.py#L453-L482"><code>_list_data_stewards</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L969-L973"><code>_metadata_schema_field_names</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1035-L1041"><code>_metadata_table_columns</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L928-L939"><code>_metadata_tables_from_setup_results</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1050-L1057"><code>_resolve_metadata_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1059-L1083"><code>_setup_metadata_table_registry</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L976-L991"><code>_string_metadata_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/data_agreement.py#L414-L430"><code>_to_bool</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1086-L1129"><code>_validate_metadata_table_registration</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L112-L137"><code>_validate_schema_field_names</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1085-L1087"><code>_create_empty_metadata_dataframe</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L983-L1007"><code>_detect_nested_metadata_delta_folders</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L939-L966"><code>_get_active_metadata_tables</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L152-L195"><code>_get_governance_metadata_schemas</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1035-L1064"><code>_get_metadata_table_schema_registry</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L198-L218"><code>_is_table_not_found_error</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/data_agreement.py#L453-L482"><code>_list_data_stewards</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1010-L1014"><code>_metadata_schema_field_names</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1076-L1082"><code>_metadata_table_columns</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L969-L980"><code>_metadata_tables_from_setup_results</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1091-L1098"><code>_resolve_metadata_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1100-L1130"><code>_setup_metadata_table_registry</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1017-L1032"><code>_string_metadata_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/data_agreement.py#L414-L430"><code>_to_bool</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1133-L1179"><code>_validate_metadata_table_registration</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L112-L137"><code>_validate_schema_field_names</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Validation</h4>
         <p>Validate inputs and guard conditions before the workflow continues.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L551-L624"><code>_validate_framework_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L551-L624"><code>_validate_framework_config</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L627-L667"><code>_normalize_path_config</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule evaluation</h4>
         <p>Convert configured rules into executable checks and evaluation results.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L103-L109"><code>_spark_types</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L103-L109"><code>_spark_types</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1026-L1032"><code>_coerce_row_dicts</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1067-L1073"><code>_coerce_row_dicts</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L670-L708"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/data_agreement.py#L433-L443"><code>_active_steward</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/data_agreement.py#L397-L402"><code>_coerce_row_dicts</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/data_agreement.py#L149-L153"><code>_config_value</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/data_agreement.py#L405-L411"><code>_latest_by_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L140-L143"><code>_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/data_agreement.py#L433-L443"><code>_active_steward</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/data_agreement.py#L397-L402"><code>_coerce_row_dicts</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/data_agreement.py#L149-L153"><code>_config_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/data_agreement.py#L405-L411"><code>_latest_by_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L140-L143"><code>_schema</code></a>
         </div>
       </section>
     </div>
@@ -270,7 +279,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `1132`
+- Source line: `1182`
 - Inbound references count: 0
 - Outbound references count: 10
 - Used in templates: 00_env_config
@@ -304,9 +313,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1132-L1255">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L1132-L1255</a>
-- Start line: `1132`
-- End line: `1255`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1182-L1308">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L1182-L1308</a>
+- Start line: `1182`
+- End line: `1308`
 - Signature:
 
 ```python
@@ -328,7 +337,7 @@ def setup_metadata_tables(
 
 ### Internal implementation summary
 
-- Internal helper count: 26
+- Internal helper count: 27
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

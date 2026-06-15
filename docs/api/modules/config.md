@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 30</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>29</td>
+      <td>30</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -213,6 +213,10 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
     <tr>
+      <td><code>_normalize_path_config</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_resolve_metadata_schema</code></td>
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
@@ -309,6 +313,8 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <span class="reference-chip"><code>_get_store</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_normalize_path_config</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_load_and_validate_dataset_contract</code></span>
@@ -333,6 +339,9 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <span class="reference-chip"><code>_metadata_tables_from_setup_results</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_normalize_path_config</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_resolve_metadata_schema</code></span>

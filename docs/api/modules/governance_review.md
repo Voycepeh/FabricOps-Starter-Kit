@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 46</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 9</span><span class="reference-chip">Internal helpers: 50</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>8</td>
+      <td>9</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>46</td>
+      <td>50</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -131,6 +131,13 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>Render a searchable selector for latest successful catalogue profiles.</td>
       <td><code>_catalogue_table_options</code> (internal), <code>_coerce_rows</code> (internal)</td>
     </tr>
+    <tr>
+      <td><a href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Render dependent selectors for physical catalogue profile targets.</td>
+      <td><code>_catalogue_profile_target_model</code> (internal), <code>_coerce_rows</code> (internal)</td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -187,6 +194,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_catalogue_table_options</code></span>, <span class="reference-chip"><code>_coerce_rows</code></span>
 </li>
+<li>
+<a class="reference-chip" href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_catalogue_profile_target_model</code></span>, <span class="reference-chip"><code>_coerce_rows</code></span>
+</li>
 </ul>
 </section>
 
@@ -229,12 +241,20 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
+      <td><code>_catalogue_physical_identity</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_catalogue_profile_target_model</code></td>
+      <td><a href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a></td>
+    </tr>
+    <tr>
       <td><code>_catalogue_table_options</code></td>
       <td><a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
     </tr>
     <tr>
       <td><code>_coerce_rows</code></td>
-      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a></td>
+      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_select_catalogue_table/"><code>widget_select_catalogue_table</code></a>, <a href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a></td>
     </tr>
     <tr>
       <td><code>_display_review_guidance</code></td>
@@ -293,6 +313,10 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_first_present</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_get_governance_metadata_schemas</code></td>
       <td>—</td>
     </tr>
@@ -330,6 +354,10 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_prepare_dq_profile_input_rows</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_profile_sort_key</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -423,6 +451,16 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_catalogue_physical_identity</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_first_present</code></span>, <span class="reference-chip"><code>_value</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_catalogue_profile_target_model</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_catalogue_physical_identity</code></span>, <span class="reference-chip"><code>_is_success</code></span>, <span class="reference-chip"><code>_value</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_catalogue_table_options</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_is_success</code></span>, <span class="reference-chip"><code>_value</code></span>
@@ -495,6 +533,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_parse_ai_dict_response</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_first_present</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_value</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_get_governance_metadata_schemas</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_schema</code></span>, <span class="reference-chip"><code>_spark_types</code></span>
@@ -537,6 +580,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_prepare_dq_profile_input_rows</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_spark_sql_helpers</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_profile_sort_key</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_read_metadata_rows</code></span>

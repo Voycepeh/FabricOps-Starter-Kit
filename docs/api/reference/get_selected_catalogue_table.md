@@ -5,9 +5,9 @@ Return the table selected by widget_select_catalogue_table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:273`
+`fabricops_kit/governance_review.py:368`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L273-L297">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L368-L392">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -122,7 +122,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `273`
+- Source line: `368`
 - Inbound references count: 0
 - Outbound references count: 0
 - Used in templates: 03_governance
@@ -151,9 +151,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L273-L297">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/governance_review.py#L273-L297</a>
-- Start line: `273`
-- End line: `297`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L368-L392">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L368-L392</a>
+- Start line: `368`
+- End line: `392`
 - Signature:
 
 ```python

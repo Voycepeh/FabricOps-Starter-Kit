@@ -1,25 +1,21 @@
-# load_catalogue_profile_rows
+# widget_select_governance_profile_target
 
-Load column profile rows for the selected catalogue table.
+Render dependent selectors for physical catalogue profile targets.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:524`
+`fabricops_kit/governance_review.py:395`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L524-L549">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L395-L477">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
-**Use when:**
-
-- Use in 03_governance after selecting a catalogue table and before rendering review widgets.
-
 **Additional context:**
 
-Loads catalogue profile evidence rows for a selected table so governance review widgets can display approved or proposed context.
+Use in 03_governance to select the governed physical table first, then choose a profile date/run. Source/target profile_stage and pipeline metadata are shown as supporting evidence, not table identity.
 
 </details>
 
@@ -28,12 +24,11 @@ Loads catalogue profile evidence rows for a selected table so governance review 
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def load_catalogue_profile_rows(
+def widget_select_governance_profile_target(
     config: Any,
     env: str,
-    selection: dict[str, Any],
     spark_session: Any,
-) -> list[dict[str, Any]]:
+):
 ```
 
 </div>
@@ -46,44 +41,33 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `config` | `Any` | Yes | Not documented yet |
-| `env` | `str` | Yes | Not documented yet |
-| `selection` | `dict[str, Any]` | Yes | Not documented yet |
-| `spark_session` | `Any` | Yes | Not documented yet |
+| `config` | `Any` | Yes | Runtime config containing the metadata lakehouse route. |
+| `env` | `str` | Yes | Environment used to read ``METADATA_DATA_CATALOGUE``. |
+| `spark_session` | `Any` | Yes | Spark session used for the catalogue read. |
 
 ## Returns
 
-Not documented yet
-
-### Return interpretation
-
-Returned rows provide the profile context that review widgets display. Empty results usually mean evidence has not been recorded for that table or stage.
+ipywidgets.VBox
+    Container with dependent asset, schema/layer, table, and profile-run
+    dropdowns. The selected profile row identity is available through
+    ``get_selected_catalogue_table``.
 
 ## Raises / Errors
 
 Not documented yet
 
-### Common failure causes
-
-- The selected table context is incomplete.
-- The metadata lakehouse cannot be read.
-- Profile evidence has not been generated yet.
-- Filters for dataset, table, or stage do not match stored evidence.
-
 ## Relationships
 
 ### Used by
 
-- `fabricops_kit.governance_review._review_governance_evidence`
+Not documented yet
 
 ### Calls
 
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._catalogue_profile_target_model`
 - `fabricops_kit.governance_review._coerce_rows`
-- `fabricops_kit.governance_review._is_success`
-- `fabricops_kit.governance_review._value`
-- `fabricops_kit.metadata._build_metadata_table_key`
 
 ## Implementation details
 
@@ -100,25 +84,32 @@ Not documented yet
 
 **Notes:**
 
-No additional callable notes are documented.
+Table identity is based on physical catalogue fields and intentionally
+excludes ``profile_stage`` and pipeline metadata. Source/target stage and
+pipeline values remain visible as profile evidence for the selected table.
 
 </details>
 
 ??? info "Call flow"
 
     ```text
-    load_catalogue_profile_rows(...)
-    ├── _build_metadata_table_key(...)
-    │   └── _stable_metadata_key(...)
+    widget_select_governance_profile_target(...)
+    ├── _catalogue_profile_target_model(...)
+    │   ├── _catalogue_physical_identity(...)
+    │   │   ├── _build_metadata_table_key(...)
+    │   │   │   └── _stable_metadata_key(...)
+    │   │   ├── _first_present(...)
+    │   │   │   └── _value(...)
+    │   │   └── _value(...)
+    │   ├── _is_success(...)
+    │   │   └── _value(...)
+    │   └── _value(...)
     ├── _coerce_rows(...)
     ├── _configured_lakehouse_schema(...)
     │   ├── _get_store(...)
     │   │   └── _normalize_path_config(...)
     │   │       └── PathConfig(...)
     │   └── _normalize_schema_name(...)
-    ├── _is_success(...)
-    │   └── _value(...)
-    ├── _value(...)
     └── read_lakehouse_table(...)
         ├── _get_spark(...)
         ├── _get_store(...)
@@ -131,9 +122,9 @@ No additional callable notes are documented.
                 └── _normalize_schema_name(...)
     ```
 
-??? info "Internal helpers used: 9"
+??? info "Internal helpers used: 12"
 
-    This callable uses 9 internal helpers for metadata loading, rule parsing, fabric or spark access, and other.
+    This callable uses 12 internal helpers for metadata loading, rule parsing, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
@@ -141,6 +132,7 @@ No additional callable notes are documented.
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L242-L262"><code>_catalogue_physical_identity</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L152-L165"><code>_configured_lakehouse_schema</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
         </div>
@@ -149,6 +141,7 @@ No additional callable notes are documented.
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L223-L229"><code>_first_present</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L627-L667"><code>_normalize_path_config</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L105-L116"><code>_normalize_schema_name</code></a>
         </div>
@@ -164,6 +157,7 @@ No additional callable notes are documented.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L265-L313"><code>_catalogue_profile_target_model</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L74-L75"><code>_is_success</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
@@ -178,55 +172,60 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Function manifest
 
-- Fully qualified function name: `fabricops_kit.governance_review.load_catalogue_profile_rows`
-- Short name: `load_catalogue_profile_rows`
+- Fully qualified function name: `fabricops_kit.governance_review.widget_select_governance_profile_target`
+- Short name: `widget_select_governance_profile_target`
 - Module: `governance_review`
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `524`
-- Inbound references count: 1
-- Outbound references count: 6
+- Source line: `395`
+- Inbound references count: 0
+- Outbound references count: 4
 - Used in templates: 03_governance
-- Glossary terms: catalogue evidence, accepted catalogue profile evidence, metadata lakehouse
+- Glossary terms: —
 
 ### AI implementation contract
 
 - **required_context:** Starter template: `03_governance`; segment: `Governance review`.
-- **inputs:** Not documented yet
-- **output:** Not documented yet
+- **inputs:** config : FrameworkConfig or dict
+    Runtime config containing the metadata lakehouse route.
+env : str
+    Environment used to read ``METADATA_DATA_CATALOGUE``.
+spark_session : pyspark.sql.SparkSession
+    Spark session used for the catalogue read.
+- **output:** ipywidgets.VBox
+    Container with dependent asset, schema/layer, table, and profile-run
+    dropdowns. The selected profile row identity is available through
+    ``get_selected_catalogue_table``.
 - **side_effects:** Not documented yet
 - **failure_modes:** Not documented yet
 - **verification:** Not documented yet
 
 ### Inbound references
 
-- `fabricops_kit.governance_review._review_governance_evidence`
+Not documented yet
 
 ### Outbound references
 
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
+- `fabricops_kit.governance_review._catalogue_profile_target_model`
 - `fabricops_kit.governance_review._coerce_rows`
-- `fabricops_kit.governance_review._is_success`
-- `fabricops_kit.governance_review._value`
-- `fabricops_kit.metadata._build_metadata_table_key`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L524-L549">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L524-L549</a>
-- Start line: `524`
-- End line: `549`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L395-L477">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L395-L477</a>
+- Start line: `395`
+- End line: `477`
 - Signature:
 
 ```python
-def load_catalogue_profile_rows(
+def widget_select_governance_profile_target(
     config: Any,
     env: str,
-    selection: dict[str, Any],
     spark_session: Any,
-) -> list[dict[str, Any]]:
+):
 ```
 
 ### Internal relationship graph
@@ -237,20 +236,11 @@ def load_catalogue_profile_rows(
 
 ### Internal implementation summary
 
-- Internal helper count: 9
+- Internal helper count: 12
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
 
-## Glossary
-
-- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-- **Accepted catalogue profile evidence:** The approved profile record that FabricOps treats as the trusted baseline for a table.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
 ## See also
 
-- [Governance Review](../../how-fabricops-works/governance-review.md)
-- [Metadata Tables](../../how-fabricops-works/metadata-tables.md)
+No related guides documented.

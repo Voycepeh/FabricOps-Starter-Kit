@@ -5,9 +5,9 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:607`
+`fabricops_kit/fabric_input_output.py:615`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L607-L729">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L615-L737">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -125,34 +125,43 @@ conversion paths (``/lakehouse/default/Files/...``).
     ├── _convert_single_parquet_ns_to_us(...)
     ├── _get_spark(...)
     ├── _get_store(...)
+    │   └── _normalize_path_config(...)
+    │       └── PathConfig(...)
     └── _lakehouse_file_path(...)
     ```
 
-??? info "Internal helpers used: 4"
+??? info "Internal helpers used: 5"
 
-    This callable uses 4 internal helpers for audit timestamp, metadata loading, and fabric or spark access.
+    This callable uses 5 internal helpers for audit timestamp, metadata loading, rule parsing, and fabric or spark access.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L552-L604"><code>_convert_single_parquet_ns_to_us</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L560-L612"><code>_convert_single_parquet_ns_to_us</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L200-L210"><code>_lakehouse_file_path</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L208-L218"><code>_lakehouse_file_path</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L627-L667"><code>_normalize_path_config</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L167-L197"><code>_get_spark</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/config.py#L627-L667"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L175-L205"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L670-L708"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -170,7 +179,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `607`
+- Source line: `615`
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 02_pipeline, 99_explore
@@ -199,9 +208,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L607-L729">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c532a3833c706478ccf9b4b479d2157a0e5f129c/src/fabricops_kit/fabric_input_output.py#L607-L729</a>
-- Start line: `607`
-- End line: `729`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L615-L737">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L615-L737</a>
+- Start line: `615`
+- End line: `737`
 - Signature:
 
 ```python
@@ -225,7 +234,7 @@ def read_lakehouse_parquet(
 
 ### Internal implementation summary
 
-- Internal helper count: 4
+- Internal helper count: 5
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
