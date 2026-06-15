@@ -243,7 +243,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `source_data_change_check` | Source `load_behavior` label used by the pipeline. |
 | `target_data_change_check` | Target `load_behavior` label used by the pipeline. |
 | `stability_check_enabled` | Whether profile behavior enforcement was enabled for this table. |
-| `load_behavior` | `append`, `overwrite`, or `skip`. This is the user-facing profile behavior model. |
+| `load_behavior` | Legacy profile behavior label when present. Current profile-behavior rules use `rule_type` values `static_data` and `changing_data`. |
 | `watermark_column` | Watermark column used for append behavior comparisons when configured. |
 | `profile_payload_json` | Compact JSON payload with additional profile evidence used by comparison or review workflows. |
 | `profile_hash` | Stable hash of the relevant profile observation used for comparison. |
@@ -363,11 +363,11 @@ Supported `guardrail_type` values are `schema`, `freshness`, `profile_behavior`,
 | `source_workspace_id` | Source workspace identifier when available. |
 | `superseded_by_rule_key` | Replacement rule key when this rule is superseded. |
 
-**Workflow connection:** approved active `dq` expectations become runtime DQ guardrails when `02_pipeline` calls `enforce_dq_rules`. `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` only and enforces active approved rows with `guardrail_type="dq"`. Includes the standard runtime audit columns.
+**Workflow connection:** approved active `profile_behavior` expectations tell `02_pipeline` whether to compare the full table (`rule_type="static_data"`) or watermark groups (`rule_type="changing_data"`). Approved active `dq` expectations become runtime DQ guardrails when `02_pipeline` calls `enforce_dq_rules`. `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` only and enforces active approved rows with `guardrail_type="dq"`. Includes the standard runtime audit columns.
 
 ### `METADATA_GUARDRAIL_RESULTS`
 
-**For:** pass/fail outcomes: what passed, warned, failed, or blocked continuation. Key fields include `result_id`, `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, `expected_value_json`, `actual_value_json`, `result_payload_json`, and `created_at`.
+**For:** pass/fail outcomes: what passed, warned, failed, or blocked continuation. For profile behavior, this is the runtime outcome while `METADATA_DATA_CATALOGUE` remains the profile history and baseline source. Key fields include `result_id`, `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, `expected_value_json`, `actual_value_json`, `result_payload_json`, and `created_at`.
 
 ### `METADATA_DQ_RULES`
 

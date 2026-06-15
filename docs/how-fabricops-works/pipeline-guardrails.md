@@ -76,17 +76,18 @@ For each configured table, `02_pipeline` checks whether `max(freshness_column)` 
 
 ## Profile behavior guardrails
 
-Profile behavior guardrails use catalogue/profile evidence from `METADATA_DATA_CATALOGUE` to enforce the configured `load_behavior`. This guardrail is about expected table behavior over time; low-level storage edit detection is intentionally out of scope.
+Profile behavior guardrails use `METADATA_DATA_CATALOGUE` as the profile history and baseline source. `METADATA_GUARDRAIL_RULES` stores what should be checked (`guardrail_type="profile_behavior"`), and `METADATA_GUARDRAIL_RESULTS` stores what happened during the run. The guardrail detects silent data behavior changes in profiled data; it does not inspect or enforce Spark write mode.
 
-FabricOps reuses accepted catalogue evidence such as `row_count`, `column_name`, `min_value`, `max_value`, `profile_stage`, `profile_status`, `stability_status`, `freshness_status`, and `dq_status`.
+Both supported modes follow the same pattern: profile the current data, write current profile evidence to `METADATA_DATA_CATALOGUE`, compare against previous accepted or passed catalogue evidence, and write the runtime outcome to `METADATA_GUARDRAIL_RESULTS`. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed and approved in governance or handled by superseding/resetting the relevant rule.
 
 ![Load behaviour guardrails](../assets/fabricops-load-behaviour-guardrails.png){ .full-width }
 
-| `load_behavior` | Use when | Guardrail behavior |
+| `rule_type` | Use when | Guardrail behavior |
 | --- | --- | --- |
-| `append` | History should be preserved. | Compare against the latest accepted append profile. Fail if row count decreases, watermark minimum moves forward, or watermark maximum moves backward. |
-| `overwrite` | Full refresh/rebuild is normal. | Do not fail because the profile differs from the previous run. Current profile becomes the accepted state when other guardrails pass. |
-| `skip` | Temporary exemption. | Return skipped/`can_continue=True` for profile behavior only. Schema, freshness, and DQ still run. |
+| `static_data` | The full table should remain stable. | Treat the full table as one profile group with `watermark_value="__FULL_TABLE__"`. Row count, schema signature, profile hash, and configured profile differences must match the previous accepted or passed full-table profile. |
+| `changing_data` | New business periods or partitions can arrive, but old periods must remain stable. | Require `watermark_column`, profile one group per watermark value, allow new watermark values, fail or warn when a previously seen watermark group changes or disappears. |
+
+Current profile evidence is retained in the catalogue fields `profile_payload_json`, `profile_hash`, `watermark_column`, `watermark_value`, `row_count`, `profile_status`, `stability_status`, and run/profile identifiers. Runtime result rows include `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, expected and actual JSON, a result payload, and `created_at`.
 
 ## DQ guardrails
 

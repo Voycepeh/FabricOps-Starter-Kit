@@ -317,3 +317,64 @@ def test_enforce_freshness_skips_when_column_not_configured():
 
     assert result["status"] == "skipped"
     assert result["can_continue"] is True
+
+
+def test_profile_behavior_static_data_baseline_created_and_unchanged_passes(spark_session):
+    df = spark_session.createDataFrame([(1, "a")], "id int, name string")
+    first = enforce_profile_behavior(
+        spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "customers",
+        stage="source", run_id="run-1", load_behavior="static_data", catalogue_df=[]
+    )
+    assert first["status"] == "baseline_created"
+    baseline = {
+        "environment_name": "", "dataset_name": "sales", "table_name": "customers",
+        "guardrail_type": "profile_behavior", "watermark_column": "", "watermark_value": "__FULL_TABLE__",
+        "profile_hash": first["profile_hash"], "profile_status": "success", "stability_status": "passed",
+        "profile_run_id": "run-1", "row_count": first["row_count"],
+    }
+    second = enforce_profile_behavior(
+        spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "customers",
+        stage="source", run_id="run-2", load_behavior="static_data", catalogue_df=[baseline]
+    )
+    assert second["status"] == "passed"
+    assert second["can_continue"] is True
+
+
+def test_profile_behavior_static_data_changed_warns_when_warning_severity(spark_session):
+    df = spark_session.createDataFrame([(1, "a")], "id int, name string")
+    baseline_result = enforce_profile_behavior(
+        spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "customers",
+        stage="source", run_id="run-1", load_behavior="static_data", catalogue_df=[]
+    )
+    changed = spark_session.createDataFrame([(1, "a"), (2, "b")], "id int, name string")
+    result = enforce_profile_behavior(
+        spark_session, changed, "METADATA_DATA_CATALOGUE", "sales", "customers",
+        stage="source", run_id="run-2", load_behavior="static_data", severity="warning",
+        catalogue_df=[{"dataset_name": "sales", "table_name": "customers", "watermark_column": "", "watermark_value": "__FULL_TABLE__", "profile_hash": baseline_result["profile_hash"], "profile_status": "success", "stability_status": "passed"}],
+    )
+    assert result["status"] == "warning"
+    assert result["can_continue"] is True
+    assert "Review and approve" in result["message"]
+
+
+def test_profile_behavior_changing_data_baseline_new_changed_and_missing_groups(spark_session):
+    df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
+    baseline = enforce_profile_behavior(
+        spark_session, df, "METADATA_DATA_CATALOGUE", "sales", "orders",
+        stage="source", run_id="run-1", load_behavior="changing_data", watermark_column="business_date", catalogue_df=[]
+    )
+    assert baseline["status"] == "baseline_created"
+    baseline_rows = [
+        {"dataset_name": "sales", "table_name": "orders", "guardrail_type": "profile_behavior", "watermark_column": row["watermark_column"], "watermark_value": row["watermark_value"], "profile_hash": row["profile_hash"], "profile_status": "success", "stability_status": "passed", "profile_run_id": "run-1"}
+        for row in baseline["profile_evidence_rows"]
+    ]
+    with_new = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15"), (3, "2026-06-16")], "id int, business_date string")
+    assert enforce_profile_behavior(spark_session, with_new, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-2", load_behavior="changing_data", watermark_column="business_date", catalogue_df=baseline_rows)["status"] == "passed"
+    changed_previous = spark_session.createDataFrame([(1, "2026-06-14"), (9, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
+    failed = enforce_profile_behavior(spark_session, changed_previous, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-3", load_behavior="changing_data", watermark_column="business_date", catalogue_df=baseline_rows)
+    assert failed["status"] == "failed"
+    assert "profile_changed" in failed["stability_difference_summary"]
+    missing = spark_session.createDataFrame([(1, "2026-06-14")], "id int, business_date string")
+    missing_result = enforce_profile_behavior(spark_session, missing, "METADATA_DATA_CATALOGUE", "sales", "orders", stage="source", run_id="run-4", load_behavior="changing_data", watermark_column="business_date", catalogue_df=baseline_rows)
+    assert missing_result["status"] == "failed"
+    assert "missing_watermark_value" in missing_result["stability_difference_summary"]

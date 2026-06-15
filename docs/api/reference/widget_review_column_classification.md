@@ -7,7 +7,7 @@ Render standalone sensitivity and PII classification review guidance for selecte
 
 `fabricops_kit/governance_review.py:891`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/governance_review.py#L891-L910">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9a0e1546051850dab8d19d48a966fc699c10a46a/src/fabricops_kit/governance_review.py#L891-L910">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -112,8 +112,8 @@ No additional callable notes are documented.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/governance_review.py#L597-L611"><code>_display_review_guidance</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/governance_review.py#L73-L74"><code>_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9a0e1546051850dab8d19d48a966fc699c10a46a/src/fabricops_kit/governance_review.py#L597-L611"><code>_display_review_guidance</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9a0e1546051850dab8d19d48a966fc699c10a46a/src/fabricops_kit/governance_review.py#L73-L74"><code>_value</code></a>
         </div>
       </section>
     </div>
@@ -160,7 +160,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/governance_review.py#L891-L910">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e6766f0a6882345999f458d924a400acd3720fbf/src/fabricops_kit/governance_review.py#L891-L910</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9a0e1546051850dab8d19d48a966fc699c10a46a/src/fabricops_kit/governance_review.py#L891-L910">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9a0e1546051850dab8d19d48a966fc699c10a46a/src/fabricops_kit/governance_review.py#L891-L910</a>
 - Start line: `891`
 - End line: `910`
 - Signature:
