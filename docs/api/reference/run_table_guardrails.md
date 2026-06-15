@@ -5,9 +5,9 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:291`
+`fabricops_kit/pipeline.py:292`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/69767b4512b05ee766d2f2a1ed0bf7d7c2f1f8fa/src/fabricops_kit/pipeline.py#L291-L485">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L292-L506">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -112,6 +112,7 @@ Not documented yet
 - `fabricops_kit.pipeline._guardrail_can_continue`
 - `fabricops_kit.pipeline._table_key`
 - `fabricops_kit.pipeline._table_name`
+- `fabricops_kit.pipeline._write_guardrail_result_row`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 ## Implementation details
@@ -139,6 +140,10 @@ are routed through the configured metadata target by the called helpers.
 
 ??? info "Call flow"
 
+    Large call graph shown to two levels.
+
+    Expanded internal helper tree is available in Implementation details.
+
     ```text
     run_table_guardrails(...)
     ├── _build_guardrail_evidence_definitions(...)
@@ -147,210 +152,140 @@ are routed through the configured metadata target by the called helpers.
     ├── _guardrail_can_continue(...)
     ├── _table_key(...)
     ├── _table_name(...)
+    ├── _write_guardrail_result_row(...)
+    │   ├── _configured_lakehouse_schema(...)
+    │   │   └── …
+    │   ├── _now_iso(...)
+    │   │   └── …
+    │   ├── _runtime_audit_fields(...)
+    │   │   └── …
+    │   └── write_lakehouse_table(...)
+    │       └── …
     ├── enforce_dq_rules(...)
     │   ├── _dq_failed_row_count(...)
-    │   │   ├── _dq_failed_expression(...)
-    │   │   │   ├── _spark_sql_helpers(...)
-    │   │   │   └── _validate_dq_rules(...)
-    │   │   │       └── _canonical_dq_rule_type(...)
-    │   │   └── _spark_sql_helpers(...)
+    │   │   └── …
     │   ├── _dq_summary(...)
-    │   │   ├── _current_audit_timestamp(...)
-    │   │   │   └── _get_audit_timezone(...)
-    │   │   │       └── _validate_audit_timezone(...)
-    │   │   └── _summarize_dq_guardrail(...)
+    │   │   └── …
     │   ├── _dq_tagged_dataframe(...)
-    │   │   ├── _dq_failed_expression(...)
-    │   │   │   ├── _spark_sql_helpers(...)
-    │   │   │   └── _validate_dq_rules(...)
-    │   │   │       └── _canonical_dq_rule_type(...)
-    │   │   └── _spark_sql_helpers(...)
+    │   │   └── …
     │   ├── _load_active_dq_rules(...)
-    │   │   ├── _canonical_dq_rule_type(...)
-    │   │   ├── _coerce_rows(...)
-    │   │   ├── _latest_dq_rule_versions(...)
-    │   │   │   └── _spark_sql_helpers(...)
-    │   │   ├── _spark_sql_helpers(...)
-    │   │   └── _validate_dq_rules(...)
-    │   │       └── _canonical_dq_rule_type(...)
+    │   │   └── …
     │   ├── _read_guardrail_rule_metadata(...)
-    │   │   ├── _configured_lakehouse_schema(...)
-    │   │   │   ├── _get_store(...)
-    │   │   │   │   └── _normalize_path_config(...)
-    │   │   │   │       └── PathConfig(...)
-    │   │   │   └── _normalize_schema_name(...)
-    │   │   ├── _spark_sql_helpers(...)
-    │   │   └── read_lakehouse_table(...)
-    │   │       ├── _get_spark(...)
-    │   │       ├── _get_store(...)
-    │   │       │   └── _normalize_path_config(...)
-    │   │       │       └── PathConfig(...)
-    │   │       ├── _normalize_table_name(...)
-    │   │       └── _resolve_lakehouse_table_path(...)
-    │   │           ├── _normalize_table_name(...)
-    │   │           └── _resolve_lakehouse_schema(...)
-    │   │               └── _normalize_schema_name(...)
+    │   │   └── …
     │   ├── _run_dq_guardrail_checks(...)
-    │   │   ├── _dq_check_status(...)
-    │   │   ├── _dq_failed_expression(...)
-    │   │   │   ├── _spark_sql_helpers(...)
-    │   │   │   └── _validate_dq_rules(...)
-    │   │   │       └── _canonical_dq_rule_type(...)
-    │   │   ├── _spark_sql_helpers(...)
-    │   │   └── _validate_dq_rules(...)
-    │   │       └── _canonical_dq_rule_type(...)
-    │   └── _summarize_dq_guardrail(...)
+    │   │   └── …
+    │   ├── _summarize_dq_guardrail(...)
+    │   └── _write_guardrail_result_row(...)
+    │       └── …
     ├── enforce_freshness(...)
     │   ├── _coerce_date(...)
     │   ├── _iso_date_value(...)
-    │   │   └── _coerce_date(...)
+    │   │   └── …
     │   └── _max_column_value(...)
     ├── enforce_profile_behavior(...)
     │   ├── _accepted_profile_rows(...)
-    │   │   ├── _catalogue_value(...)
-    │   │   ├── _row_to_dict(...)
-    │   │   └── _string_value(...)
+    │   │   └── …
     │   ├── _catalogue_value(...)
     │   ├── _configured_lakehouse_schema(...)
-    │   │   ├── _get_store(...)
-    │   │   │   └── _normalize_path_config(...)
-    │   │   │       └── PathConfig(...)
-    │   │   └── _normalize_schema_name(...)
+    │   │   └── …
     │   ├── _guardrail_exclude_columns(...)
     │   ├── _is_missing_table_error(...)
     │   ├── _json_dumps_stable(...)
     │   ├── _profile_hash(...)
-    │   │   └── _json_dumps_stable(...)
+    │   │   └── …
     │   ├── _profile_payload_from_profile(...)
-    │   │   ├── _normalize_profile(...)
-    │   │   │   └── _normalize_profile(...) (recursive)
-    │   │   ├── _profile_row_count(...)
-    │   │   │   └── _normalize_profile(...)
-    │   │   │       └── _normalize_profile(...) (recursive)
-    │   │   ├── _schema_signature(...)
-    │   │   │   └── _actual_schema(...)
-    │   │   │       └── _normalize_datatype(...)
-    │   │   └── _string_value(...)
+    │   │   └── …
     │   ├── _select_profile_behavior_rule(...)
-    │   │   ├── _catalogue_value(...)
-    │   │   ├── _row_to_dict(...)
-    │   │   └── _string_value(...)
+    │   │   └── …
     │   ├── _string_value(...)
     │   ├── profile_dataframe(...)
-    │   │   ├── _audit_timestamp_expr(...)
-    │   │   │   └── _get_audit_timezone(...)
-    │   │   │       └── _validate_audit_timezone(...)
-    │   │   ├── _build_distribution_summaries(...)
-    │   │   │   ├── _build_categorical_distribution(...)
-    │   │   │   ├── _build_numeric_distribution(...)
-    │   │   │   └── _numeric_bin_edges(...)
-    │   │   ├── _get_audit_timezone(...)
-    │   │   │   └── _validate_audit_timezone(...)
-    │   │   ├── _get_profiled_columns(...)
-    │   │   └── _is_min_max_supported_type(...)
+    │   │   └── …
     │   ├── read_lakehouse_table(...)
-    │   │   ├── _get_spark(...)
-    │   │   ├── _get_store(...)
-    │   │   │   └── _normalize_path_config(...)
-    │   │   │       └── PathConfig(...)
-    │   │   ├── _normalize_table_name(...)
-    │   │   └── _resolve_lakehouse_table_path(...)
-    │   │       ├── _normalize_table_name(...)
-    │   │       └── _resolve_lakehouse_schema(...)
-    │   │           └── _normalize_schema_name(...)
+    │   │   └── …
     │   └── write_lakehouse_table(...)
-    │       ├── _get_store(...)
-    │       │   └── _normalize_path_config(...)
-    │       │       └── PathConfig(...)
-    │       ├── _normalize_table_name(...)
-    │       └── _resolve_lakehouse_table_path(...)
-    │           ├── _normalize_table_name(...)
-    │           └── _resolve_lakehouse_schema(...)
-    │               └── _normalize_schema_name(...)
+    │       └── …
     ├── profile_dataframe(...)
     │   ├── _audit_timestamp_expr(...)
-    │   │   └── _get_audit_timezone(...)
-    │   │       └── _validate_audit_timezone(...)
+    │   │   └── …
     │   ├── _build_distribution_summaries(...)
-    │   │   ├── _build_categorical_distribution(...)
-    │   │   ├── _build_numeric_distribution(...)
-    │   │   └── _numeric_bin_edges(...)
+    │   │   └── …
     │   ├── _get_audit_timezone(...)
-    │   │   └── _validate_audit_timezone(...)
+    │   │   └── …
     │   ├── _get_profiled_columns(...)
     │   └── _is_min_max_supported_type(...)
     ├── stop_if_failed(...)
     │   └── SchemaDriftError(...)
     ├── validate_schema(...)
     │   ├── _actual_schema(...)
-    │   │   └── _normalize_datatype(...)
+    │   │   └── …
     │   └── _normalize_datatype(...)
     └── write_catalogue_evidence(...)
         ├── _build_metadata_table_key(...)
-        │   └── _stable_metadata_key(...)
+        │   └── …
         ├── _canonical_catalogue_profile_df(...)
         ├── _configured_lakehouse_schema(...)
-        │   ├── _get_store(...)
-        │   │   └── _normalize_path_config(...)
-        │   │       └── PathConfig(...)
-        │   └── _normalize_schema_name(...)
+        │   └── …
         ├── _definition_name(...)
-        ├── _dq_summary_fields(...)
-        │   └── _now_iso(...)
-        │       └── _current_audit_timestamp(...)
-        │           └── _get_audit_timezone(...)
-        │               └── _validate_audit_timezone(...)
         ├── _normalize_catalogue_evidence_types(...)
         ├── _now_iso(...)
-        │   └── _current_audit_timestamp(...)
-        │       └── _get_audit_timezone(...)
-        │           └── _validate_audit_timezone(...)
+        │   └── …
         ├── _runtime_audit_fields(...)
-        │   ├── _build_runtime_audit_fields(...)
-        │   │   ├── _context_get(...)
-        │   │   ├── _current_audit_timestamp(...)
-        │   │   │   └── _get_audit_timezone(...)
-        │   │   │       └── _validate_audit_timezone(...)
-        │   │   ├── _get_store(...)
-        │   │   │   └── _normalize_path_config(...)
-        │   │   │       └── PathConfig(...)
-        │   │   ├── _runtime_context(...)
-        │   │   │   └── _context_get(...)
-        │   │   └── _safe_str(...)
-        │   └── _now_iso(...)
-        │       └── _current_audit_timestamp(...)
-        │           └── _get_audit_timezone(...)
-        │               └── _validate_audit_timezone(...)
+        │   └── …
         └── write_lakehouse_table(...)
-            ├── _get_store(...)
-            │   └── _normalize_path_config(...)
-            │       └── PathConfig(...)
-            ├── _normalize_table_name(...)
-            └── _resolve_lakehouse_table_path(...)
-                ├── _normalize_table_name(...)
-                └── _resolve_lakehouse_schema(...)
-                    └── _normalize_schema_name(...)
+            └── …
     ```
 
-??? info "Internal helpers used: 4"
+??? info "Internal helpers used: 18"
 
-    This callable uses 4 internal helpers for metadata loading and other.
+    This callable uses 18 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/metadata.py#L149-L222"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L70-L76"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L50-L61"><code>_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/69767b4512b05ee766d2f2a1ed0bf7d7c2f1f8fa/src/fabricops_kit/pipeline.py#L258-L288"><code>_build_guardrail_evidence_definitions</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/69767b4512b05ee766d2f2a1ed0bf7d7c2f1f8fa/src/fabricops_kit/pipeline.py#L246-L247"><code>_table_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/69767b4512b05ee766d2f2a1ed0bf7d7c2f1f8fa/src/fabricops_kit/pipeline.py#L250-L251"><code>_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L259-L289"><code>_build_guardrail_evidence_definitions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L247-L248"><code>_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L251-L252"><code>_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L509-L556"><code>_write_guardrail_result_row</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L688-L727"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/69767b4512b05ee766d2f2a1ed0bf7d7c2f1f8fa/src/fabricops_kit/pipeline.py#L254-L255"><code>_guardrail_can_continue</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/metadata.py#L103-L115"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L255-L256"><code>_guardrail_can_continue</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L20-L21"><code>_now_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/metadata.py#L122-L146"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/metadata.py#L118-L119"><code>_safe_str</code></a>
         </div>
       </section>
     </div>
@@ -368,9 +303,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `291`
+- Source line: `292`
 - Inbound references count: 0
-- Outbound references count: 11
+- Outbound references count: 12
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, can_continue, source table, target table, catalogue evidence
 
@@ -399,14 +334,15 @@ Not documented yet
 - `fabricops_kit.pipeline._guardrail_can_continue`
 - `fabricops_kit.pipeline._table_key`
 - `fabricops_kit.pipeline._table_name`
+- `fabricops_kit.pipeline._write_guardrail_result_row`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/69767b4512b05ee766d2f2a1ed0bf7d7c2f1f8fa/src/fabricops_kit/pipeline.py#L291-L485">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/69767b4512b05ee766d2f2a1ed0bf7d7c2f1f8fa/src/fabricops_kit/pipeline.py#L291-L485</a>
-- Start line: `291`
-- End line: `485`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L292-L506">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L292-L506</a>
+- Start line: `292`
+- End line: `506`
 - Signature:
 
 ```python
@@ -434,7 +370,7 @@ def run_table_guardrails(
 
 ### Internal implementation summary
 
-- Internal helper count: 4
+- Internal helper count: 18
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

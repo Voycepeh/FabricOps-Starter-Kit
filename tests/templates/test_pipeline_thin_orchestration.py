@@ -335,6 +335,14 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert "METADATA_PIPELINE_RUNS" in _markdown
 
 
+
+def test_pipeline_template_uses_profile_mode_not_load_behavior():
+    """Verify pipeline template uses the clean profile_mode contract."""
+    _markdown, code, _cells = _notebook_sources()
+
+    assert '"profile_mode"' in code
+    assert "load_behavior" not in code
+
 def test_pipeline_template_smoke_keeps_guardrails_inline_per_table():
     """Verify pipeline template smoke keeps guardrails inline per table."""
     _markdown, code, _cells = _notebook_sources()

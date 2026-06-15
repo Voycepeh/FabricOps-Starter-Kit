@@ -288,6 +288,32 @@ def test_active_metadata_tables_are_source_driven_and_explain_optional_access_ta
     assert "METADATA_DATA_ACCESS" not in tables
 
 
+
+def test_metadata_data_catalogue_schema_is_profile_evidence_only():
+    """Verify catalogue schema has profile_mode but excludes old result fields."""
+    from fabricops_kit.governance_review import CATALOGUE_TABLE, _get_governance_metadata_schemas
+
+    fields = set(_get_governance_metadata_schemas()[CATALOGUE_TABLE].fieldNames())
+
+    assert "profile_mode" in fields
+    assert "load_behavior" not in fields
+    for result_field in {
+        "freshness_status",
+        "freshness_can_continue",
+        "stability_status",
+        "dq_status",
+        "dq_rule_count",
+        "dq_failed_rule_count",
+        "source_schema_check",
+        "target_schema_check",
+        "freshness_message",
+        "stability_can_continue",
+        "stability_message",
+        "source_change_signal_json",
+        "profile_baseline_mode",
+    }:
+        assert result_field not in fields
+
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
     """Verify metadata registration validation reads configured metadata target."""
     import fabricops_kit.fabric_input_output as io

@@ -32,7 +32,7 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 | `METADATA_DATA_AGREEMENT` | `01_agreement` | Versioned agreements and approved usage context. |
 | `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_agreement` | Supporting agreement evidence file references. |
 | `METADATA_NOTEBOOK_REGISTRY` | `02_pipeline`, optional `99_explore` | Notebook-to-agreement registrations. |
-| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Table and column profile evidence plus guardrail summary context. |
+| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Observed table and column profile evidence only. |
 | `METADATA_DATA_LINEAGE_TABLE` | `02_pipeline` | Source-to-target lineage rows for pipeline runs. |
 | `METADATA_PIPELINE_RUNS` | `02_pipeline` | One runtime summary row per pipeline run. |
 | `METADATA_COLUMN_CONTEXT` | `03_governance` | Reviewed business context for columns. |
@@ -42,6 +42,18 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 | `METADATA_GOVERNANCE_REVIEWS` | `03_governance` | Final review outcomes, blockers, warnings, and evidence summaries. |
 
 For schema, freshness, profile behavior, and DQ evidence flow, see [Pipeline Guardrails](pipeline-guardrails.md).
+
+## Writer ownership
+
+FabricOps writers follow the same ownership rule in functions, notebooks, and widgets:
+
+| Writer group | Destination table | Writes | Must not write |
+| --- | --- | --- | --- |
+| Catalogue writers | `METADATA_DATA_CATALOGUE` | Observed physical/profile evidence, including profile rows, profile hashes, profile payloads, profile modes, watermark columns, and watermark values generated from pipeline profiling. | Guardrail rules, approval intent, schema/freshness/DQ/stability pass-fail summaries, or runtime continuation decisions. |
+| Rule writers | `METADATA_GUARDRAIL_RULES` | Proposed or approved guardrail intent, including schema expectations, freshness rules, profile-behavior rules, and DQ rules. Governance review and rule approval widgets belong in this group. | Observed profile rows or runtime pass/fail outcomes. |
+| Result writers | `METADATA_GUARDRAIL_RESULTS` | Runtime outcomes from executed guardrails, including schema, freshness, profile behavior, and DQ status, severity, continuation decisions, reasons, and expected/actual payloads. | Physical profile evidence or proposed/approved rule definitions. |
+
+Widgets follow the same split. A widget that selects or displays catalogue profile evidence reads `METADATA_DATA_CATALOGUE` and should not write rule/result payloads into it. A widget that proposes, approves, supersedes, or deactivates guardrail rules writes those rule events to `METADATA_GUARDRAIL_RULES`. A widget or dashboard that displays latest execution status reads `METADATA_GUARDRAIL_RESULTS` rather than deriving pass/fail state from catalogue rows.
 
 ## Standard runtime audit columns
 
@@ -64,7 +76,7 @@ Fabric Delta tables do not enforce primary keys, but FabricOps uses logical keys
 | `METADATA_DATA_AGREEMENT` | `agreement_id`, `contract_version` | References a steward. |
 | `METADATA_DATA_AGREEMENT_EVIDENCE` | `agreement_id`, `contract_version`, `file_path` | References one agreement version. |
 | `METADATA_NOTEBOOK_REGISTRY` | `registration_id` | Links notebooks to agreement versions. |
-| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_table_key`, `metadata_column_key` | Feeds reviews, baselines, guardrails, and lineage joins. |
+| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_table_key`, `metadata_column_key` | Feeds reviews, profile comparisons, and lineage joins without storing runtime outcomes. |
 | `METADATA_DATA_LINEAGE_TABLE` | `lineage_id` | Links one source table to one target table in a run. |
 | `METADATA_PIPELINE_RUNS` | `run_id` | Links runtime summaries to agreement, notebook, lineage, catalogue, and guardrail evidence. |
 | `METADATA_COLUMN_CONTEXT` | `metadata_column_key`, `_committed_at` | Reviews one catalogue column. |
@@ -106,15 +118,16 @@ Fabric Delta tables do not enforce primary keys, but FabricOps uses logical keys
 
 ### Pipeline evidence tables
 
-`METADATA_DATA_CATALOGUE` fields include:
+`METADATA_DATA_CATALOGUE` fields include observed physical/profile evidence only:
 
 - Identity and context: `metadata_table_key`, `metadata_column_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`, `layer`, `asset_kind`, `pipeline_name`
-- Profile run state: `profile_run_id`, `profile_stage`, `profile_status`, `baseline_status`, `source_data_change_check`, `target_data_change_check`, `profile_baseline_mode`, `profiled_at`, `run_timestamp`
-- Profile metrics: `data_type`, `row_count`, `null_count`, `null_percent`, `distinct_count`, `distinct_percent`, `min_value`, `max_value`, `distribution_type`, `distribution_json`, `profile_hash`, `profile_payload_json`
-- Agreement and notebook context: `agreement_id`, `contract_version`, `notebook_registry_id`, `notebook_id`, `evidence_role`
-- Schema, freshness, and stability fields: `source_schema_check`, `target_schema_check`, `stability_check_enabled`, `load_behavior`, `watermark_column`, `watermark_value`, `freshness_column`, `freshness_max_lag_days`, `freshness_status`, `freshness_can_continue`, `freshness_message`, `baseline_run_id`, `stability_status`, `stability_can_continue`, `stability_message`, `stability_difference_summary`, `source_change_signal_json`
-- DQ summary fields: `dq_status`, `dq_rule_count`, `dq_failed_rule_count`, `dq_warning_rule_count`, `dq_error_rule_count`, `dq_failed_row_count`, `dq_failed_row_percent`, `dq_checked_at`
+- Profile run state: `profile_run_id`, `profile_stage`, `profile_status`, `profiled_at`, `run_timestamp`, `evidence_role`
+- Profile metrics: `data_type`, `row_count`, `null_count`, `null_percent`, `distinct_count`, `distinct_percent`, `min_value`, `max_value`, `distribution_type`, `distribution_json`
+- Profile behavior evidence: `profile_mode`, `watermark_column`, `watermark_value`, `profile_hash`, `profile_payload_json`
+- Agreement and notebook context: `agreement_id`, `contract_version`, `notebook_registry_id`, `notebook_id`
 - Standard runtime audit columns
+
+Schema, freshness, profile-behavior pass/fail, stability, and DQ outcomes are runtime results and belong in `METADATA_GUARDRAIL_RESULTS`, not in the catalogue.
 
 `METADATA_DATA_LINEAGE_TABLE` fields:
 

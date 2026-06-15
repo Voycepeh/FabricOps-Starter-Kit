@@ -484,8 +484,8 @@ def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monk
     assert result["checks"][0]["rule_type"] == "not_null"
 
 
-def test_write_catalogue_evidence_adds_stability_fields_without_updates(spark_session, monkeypatch):
-    """Verify write catalogue evidence adds stability fields without updates."""
+def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(spark_session, monkeypatch):
+    """Verify catalogue evidence excludes runtime guardrail result fields."""
     from fabricops_kit.data_profiling import profile_dataframe
     from fabricops_kit import pipeline
 
@@ -506,10 +506,39 @@ def test_write_catalogue_evidence_adds_stability_fields_without_updates(spark_se
     assert result == {"orders": "written"}
     assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
     assert writes[0][4]["mode"] == "append"
-    assert "stability_status" in writes[0][0].columns
+    assert "stability_status" not in writes[0][0].columns
+    assert "freshness_status" not in writes[0][0].columns
+    assert "dq_status" not in writes[0][0].columns
     assert "profile_mode" in writes[0][0].columns
     assert "load_behavior" not in writes[0][0].columns
 
+
+
+def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
+    """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
+    from fabricops_kit import pipeline
+
+    writes = []
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
+
+    pipeline._write_guardrail_result_row(
+        spark_session=spark_session,
+        config={},
+        env="dev",
+        run_id="run-1",
+        dataset_name="sales",
+        table_name="orders",
+        guardrail_type="freshness",
+        rule_type="max_age_days",
+        result={"status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
+        rule_key="freshness_orders",
+    )
+
+    assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
+    written_row = writes[0][0].collect()[0].asDict()
+    assert written_row["guardrail_type"] == "freshness"
+    assert written_row["status"] == "failed"
+    assert written_row["can_continue"] is False
 
 def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark_session, monkeypatch):
     """Verify changing-data catalogue writes retain per-watermark baseline fields."""

@@ -177,17 +177,12 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     audit = [("_committed_at", string), ("_committed_by", string), ("_workspace_name", string), ("_notebook_name", string), ("_metadata_lakehouse_name", string), ("_activity_id", string)]
     catalogue = [
         ("metadata_table_key", string), ("metadata_column_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string),
-        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string), ("baseline_status", string),
-        ("source_data_change_check", string), ("target_data_change_check", string), ("profile_baseline_mode", string), ("data_type", string), ("row_count", long), ("null_count", long), ("distinct_count", long),
-        ("distribution_type", string), ("distribution_json", string), ("profiled_at", string), ("run_timestamp", timestamp), ("null_percent", double), ("distinct_percent", double), ("min_value", string), ("max_value", string),
-        ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("evidence_role", string),
-        ("source_schema_check", string), ("target_schema_check", string),
-        ("stability_check_enabled", boolean), ("profile_mode", string), ("watermark_column", string), ("watermark_value", string),
-        ("profile_hash", string), ("profile_payload_json", string),
-        ("freshness_column", string), ("freshness_max_lag_days", string), ("freshness_status", string), ("freshness_can_continue", boolean), ("freshness_message", string),
-        ("baseline_run_id", string), ("stability_status", string), ("stability_can_continue", boolean), ("stability_message", string), ("stability_difference_summary", string),
-        ("source_change_signal_json", string),
-        ("dq_status", string), ("dq_rule_count", long), ("dq_failed_rule_count", long), ("dq_warning_rule_count", long), ("dq_error_rule_count", long), ("dq_failed_row_count", long), ("dq_failed_row_percent", double), ("dq_checked_at", string),
+        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string),
+        ("profiled_at", string), ("run_timestamp", timestamp), ("evidence_role", string),
+        ("data_type", string), ("row_count", long), ("null_count", long), ("null_percent", double), ("distinct_count", long), ("distinct_percent", double),
+        ("min_value", string), ("max_value", string), ("distribution_type", string), ("distribution_json", string),
+        ("profile_mode", string), ("watermark_column", string), ("watermark_value", string), ("profile_hash", string), ("profile_payload_json", string),
+        ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string),
         *audit,
     ]
     return {
@@ -1619,6 +1614,8 @@ def enforce_dq_rules(
     table_name,
     *,
     spark_session=None,
+    run_id: str = "",
+    write_results: bool = False,
 ) -> dict:
     """Enforce active approved DQ rules as a simple pipeline guardrail.
 
@@ -1641,13 +1638,18 @@ def enforce_dq_rules(
     spark_session : pyspark.sql.SparkSession, optional
         Spark session used to read metadata when required by the configured
         storage helper.
+    run_id : str, optional
+        Pipeline run identifier written to runtime result evidence.
+    write_results : bool, default=False
+        Whether to append the aggregate DQ runtime outcome to
+        ``METADATA_GUARDRAIL_RESULTS`` when a Spark session is available.
 
     Returns
     -------
     dict
         Guardrail result with ``status``, ``can_continue``, ``checks``, and
         ``message``. The result also carries the full tagged ``dataframe`` and
-        aggregate ``summary`` fields for the existing catalogue evidence path.
+        aggregate ``summary`` fields for runtime result evidence.
         Error-severity rule failures return ``status='failed'`` and
         ``can_continue=False``. Warning-severity failures return
         ``status='warning'`` and ``can_continue=True``. Passing or absent rules
@@ -1656,7 +1658,8 @@ def enforce_dq_rules(
     Notes
     -----
     This v1 guardrail reads approved active DQ rules from
-    ``METADATA_GUARDRAIL_RULES`` via the configured metadata route. It records aggregate rule outcomes only; it
+    ``METADATA_GUARDRAIL_RULES`` via the configured metadata route and writes the aggregate runtime
+    outcome to ``METADATA_GUARDRAIL_RESULTS`` when result writing is enabled. It
     does not quarantine rows, write row-level failure metadata, filter invalid
     rows, send alerts, or partially write targets.
 
@@ -1669,7 +1672,69 @@ def enforce_dq_rules(
     result = _summarize_dq_guardrail(checks)
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
     result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
+    if write_results:
+        _write_guardrail_result_row(
+            spark_session=spark_session,
+            config=config,
+            env=env,
+            run_id=run_id,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            guardrail_type="dq",
+            rule_type="approved_rules",
+            result=result,
+            rule_key="dq_approved_rules",
+        )
     return result
+
+
+def _write_guardrail_result_row(
+    *,
+    spark_session: Any,
+    config: Any,
+    env: str,
+    run_id: str,
+    dataset_name: str,
+    table_name: str,
+    guardrail_type: str,
+    rule_type: str,
+    result: dict[str, Any],
+    rule_key: str = "",
+    column_name: str = "",
+) -> None:
+    """Append one runtime guardrail outcome to ``METADATA_GUARDRAIL_RESULTS``."""
+    if spark_session is None or not hasattr(spark_session, "createDataFrame"):
+        return
+    audit = _build_runtime_audit_fields(config=config, env=env)
+    row = {
+        "result_id": str(uuid.uuid4()),
+        "run_id": str(run_id or ""),
+        "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
+        "environment_name": env,
+        "dataset_name": dataset_name,
+        "table_name": table_name,
+        "column_name": column_name,
+        "guardrail_type": guardrail_type,
+        "rule_type": rule_type,
+        "status": str(result.get("status") or "not_run"),
+        "can_continue": bool(result.get("can_continue", True)),
+        "severity": str(result.get("severity") or "blocking"),
+        "reason": str(result.get("message") or result.get("reason") or ""),
+        "expected_value_json": json.dumps(result.get("expected") or {}, default=str, sort_keys=True),
+        "actual_value_json": json.dumps(result.get("actual") or {}, default=str, sort_keys=True),
+        "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
+        "created_at": _now_utc_iso(config),
+        **audit,
+    }
+    write_lakehouse_table(
+        spark_session.createDataFrame([row]),
+        config,
+        env,
+        "metadata",
+        GUARDRAIL_RESULTS_TABLE,
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        mode="append",
+    )
 
 def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
     """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""

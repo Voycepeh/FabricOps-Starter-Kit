@@ -78,7 +78,7 @@ For each configured table, `02_pipeline` checks whether `max(freshness_column)` 
 
 Profile behavior guardrails use `METADATA_DATA_CATALOGUE` as the profile history and baseline source. `METADATA_GUARDRAIL_RULES` stores what should be checked (`guardrail_type="profile_behavior"`), and `METADATA_GUARDRAIL_RESULTS` stores what happened during the run. The guardrail detects silent data behavior changes in profiled data; it does not inspect or enforce Spark write mode.
 
-Both supported modes follow the same pattern: profile the current data, write current profile evidence to `METADATA_DATA_CATALOGUE`, compare against previous accepted or passed catalogue evidence, and write the runtime outcome to `METADATA_GUARDRAIL_RESULTS`. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed and approved in governance or handled by superseding/resetting the relevant rule.
+The three profile modes are `static_data`, `changing_data`, and `skip`. `append` and `overwrite` are physical write modes only; they are not profile behavior concepts. The two enforcing modes follow the same pattern: profile the current data, write current profile evidence to `METADATA_DATA_CATALOGUE`, compare against previous accepted or passed catalogue evidence, and write the runtime outcome to `METADATA_GUARDRAIL_RESULTS`. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed and approved in governance or handled by superseding/resetting the relevant rule.
 
 ![Load behaviour guardrails](../assets/fabricops-load-behaviour-guardrails.png){ .full-width }
 
@@ -86,8 +86,9 @@ Both supported modes follow the same pattern: profile the current data, write cu
 | --- | --- | --- |
 | `static_data` | The full table should remain stable. | Treat the full table as one profile group with `watermark_value="__FULL_TABLE__"`. Row count, schema signature, profile hash, and configured profile differences must match the previous accepted or passed full-table profile. |
 | `changing_data` | New business periods or partitions can arrive, but old periods must remain stable. | Require `watermark_column`, profile one group per watermark value, allow new watermark values, fail or warn when a previously seen watermark group changes or disappears. |
+| `skip` | Profile behavior should not run for the table. | Do not create profile-behavior comparison evidence; other guardrails still run. |
 
-Current profile evidence is retained in the catalogue fields `profile_payload_json`, `profile_hash`, `watermark_column`, `watermark_value`, `row_count`, `profile_status`, `stability_status`, and run/profile identifiers. Runtime result rows include `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, expected and actual JSON, a result payload, and `created_at`.
+Current profile observations are retained in catalogue fields such as `profile_payload_json`, `profile_hash`, `watermark_column`, `watermark_value`, `row_count`, `profile_status`, and run/profile identifiers. Runtime result rows include `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, expected and actual JSON, a result payload, and `created_at`.
 
 ## DQ guardrails
 
@@ -95,7 +96,7 @@ DQ rules are defined and approved in `03_governance`, then enforced in `02_pipel
 
 - schema checks validate structure;
 - freshness checks validate recency;
-- profile behavior checks validate expected load behavior;
+- profile behavior checks validate whether profiled data should be `static_data`, `changing_data`, or `skip`;
 - DQ checks validate approved business and quality rules.
 
 This separation keeps failures easier to explain and makes handover evidence clearer for junior engineers.

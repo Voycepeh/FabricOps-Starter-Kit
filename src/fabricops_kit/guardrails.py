@@ -3,7 +3,7 @@
 Use :func:`validate_schema`, :func:`enforce_freshness`,
 :func:`enforce_profile_behavior`, and :func:`stop_if_failed` in production
 pipeline notebooks. FabricOps enforces technical data-contract expectations
-with simple freshness and load behavior choices.
+with simple freshness and profile behavior choices.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import json
 import re
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 
 _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
@@ -705,7 +706,12 @@ def enforce_profile_behavior(
         rule_key = _string_value(_catalogue_value(selected_rule, "rule_key", "rule_id")) or rule_key
         severity = _catalogue_value(selected_rule, "severity") or severity
         profile_mode = profile_mode or _catalogue_value(selected_rule, "rule_type", "profile_mode")
-        watermark_column = watermark_column or _catalogue_value(selected_rule, "watermark_column", "column_name")
+        rule_parameters = _catalogue_value(selected_rule, "rule_parameters_json") or "{}"
+        try:
+            rule_parameters = json.loads(rule_parameters) if isinstance(rule_parameters, str) else dict(rule_parameters or {})
+        except Exception:
+            rule_parameters = {}
+        watermark_column = watermark_column or rule_parameters.get("watermark_column") or _catalogue_value(selected_rule, "watermark_column", "column_name")
 
     mode = str(profile_mode or "static_data").lower().strip()
     normalized_severity = str(severity or "blocking").lower().strip()
@@ -812,7 +818,7 @@ def enforce_profile_behavior(
         try:
             from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
             from pyspark.sql import Row
-            result_row = Row(run_id=run_id, rule_key=rule_key, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, guardrail_type="profile_behavior", rule_type=mode, status=status, can_continue=can_continue, severity=normalized_severity, reason=message, expected_value_json=result["expected_value_json"], actual_value_json=result["actual_value_json"], result_payload_json=result["result_payload_json"], created_at=datetime.utcnow().isoformat() + "Z")
+            result_row = Row(result_id=str(uuid4()), run_id=run_id, rule_key=rule_key, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, column_name="", guardrail_type="profile_behavior", rule_type=mode, status=status, can_continue=can_continue, severity=normalized_severity, reason=message, expected_value_json=result["expected_value_json"], actual_value_json=result["actual_value_json"], result_payload_json=result["result_payload_json"], created_at=datetime.utcnow().isoformat() + "Z")
             write_lakehouse_table(spark.createDataFrame([result_row]), config, env, "metadata", "METADATA_GUARDRAIL_RESULTS", schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
         except Exception as exc:
             if not _is_missing_table_error(exc):
