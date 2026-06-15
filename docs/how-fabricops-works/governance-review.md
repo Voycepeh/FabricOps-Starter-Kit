@@ -21,9 +21,9 @@ FabricOps keeps metadata configuration separate from runtime pipeline engineerin
 - `02_pipeline` runs first and writes the real target tables.
 - `02_pipeline` profiles those tables and records catalogue/profile metadata for the real columns, row counts, data types, null counts, distinct counts, min/max values, and related run context.
 - `03_governance` runs separately as a metadata control panel over that profiled catalogue output.
-- Governance users augment the catalogue with human-approved meaning, classification, DQ expectations, and notes.
+- Governance users augment the catalogue with human-approved meaning, classification, DQ expectations, and shared guardrail decisions.
 - Approved augmentations are stored in metadata tables as append-only governed configuration.
-- Later pipeline runs consume approved metadata and apply relevant guardrails, checks, and behaviours.
+- Later pipeline runs consume approved metadata and apply relevant guardrails, checks, and behaviours; `03_governance` does not enforce runtime guardrails directly.
 - AI suggestions stay advisory until a human reviewer commits them.
 
 Some governance metadata cannot be created safely before actual tables and columns exist. For example, reviewers need to see the real column names and profiling signals before approving column meaning, sensitivity, identifier classification, or DQ expectations. That is why `03_governance` works after `02_pipeline` has created and profiled the table.
@@ -86,9 +86,18 @@ The important control point is the commit. Nothing becomes governed metadata unt
 Use these generated API references for the helpers behind the governance review flow:
 
 - [widget_select_governance_profile_target](../api/reference/widget_select_governance_profile_target/), [get_selected_catalogue_table](../api/reference/get_selected_catalogue_table/), and [load_catalogue_profile_rows](../api/reference/load_catalogue_profile_rows/) select the profiled table under review. The selector treats source/target `profile_stage` and pipeline/run metadata as supporting evidence for profile history, not as the physical table identity.
-- [widget_review_column_context](../api/reference/widget_review_column_context/), [widget_review_dq_rules](../api/reference/widget_review_dq_rules/), and [widget_review_column_classification](../api/reference/widget_review_column_classification/) capture reviewer decisions.
+- [widget_review_column_context](../api/reference/widget_review_column_context/), [widget_review_table_guardrails](../api/reference/widget_review_table_guardrails/), [widget_review_dq_rules](../api/reference/widget_review_dq_rules/), and [widget_review_column_classification](../api/reference/widget_review_column_classification/) capture reviewer decisions.
 - [record_table_governance](../api/reference/record_table_governance/) writes approved governance metadata for later pipeline enforcement.
 - [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of approved DQ rules.
+
+## Cross-workspace guardrail review
+
+`02_pipeline` and `03_governance` intentionally share `METADATA_GUARDRAIL_RULES`:
+
+- Engineering users in the engineering workspace can create first-pass `schema`, `freshness`, `profile_behavior`, or `dq` guardrails in `02_pipeline` while they are closest to the source and target pipeline logic.
+- Governance users in the governance workspace review those same rows in `03_governance` and can approve, reject, enhance, supersede, deactivate, or reset them.
+- Approved active guardrails are enforced by later `02_pipeline` runs during runtime guardrail steps; the governance notebook only authors and reviews metadata.
+- Existing DQ rule types such as `not_null`, `unique`, `greater_than_or_equal`, and `accepted_values` continue to use the same DQ enforcement path.
 
 ## DQ expectations in the control panel
 

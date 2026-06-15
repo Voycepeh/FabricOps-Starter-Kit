@@ -2,7 +2,7 @@
 
 Pipeline guardrails are the runtime checks in `02_pipeline` that decide whether a run can continue, continue with warnings, or stop before writing governed outputs. They turn contract expectations into executable checks for schema, freshness, profile behavior, and data quality (DQ).
 
-Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` workflow. This page focuses on the guardrails enforced by `02_pipeline`.
+Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` workflow. This page focuses on the guardrails enforced by `02_pipeline`, while also explaining how engineering and governance author the shared guardrail metadata.
 
 ![Schema, freshness, profile behavior, and DQ guardrails showing source, transform, and target validation flow](../assets/fabricops-pipeline-guardrails.png){ .full-width }
 
@@ -14,6 +14,17 @@ FabricOps keeps the responsibility split clear:
 - **Guardrail = runtime enforcement.** A guardrail turns an expectation into a runtime pass, warning, fail, or skipped result.
 - **`02_pipeline` = technical enforcement layer.** The pipeline validates schemas, freshness, profile behavior, and approved DQ rules before governed outputs are written.
 - **`03_governance` = governance and business definition layer.** Governance review defines and approves business context, classifications, and DQ metadata; it does not replace runtime enforcement.
+
+## Role-based guardrail authoring and enforcement
+
+FabricOps uses one shared guardrail rules table with clear role ownership:
+
+- **Engineering in `02_pipeline`** creates first-pass technical guardrails near the pipeline work, usually as `proposed` or `engineer_approved` rows.
+- **Governance in `03_governance`** reviews those same rows and can enhance, approve, reject, supersede, deactivate, or reset them.
+- **Runtime enforcement happens only in `02_pipeline`** during the source and target guardrail runtime steps. Authoring metadata does not enforce anything by itself.
+- Both roles append to `METADATA_GUARDRAIL_RULES` through the configured metadata lakehouse route from `00_env_config`; do not rely on a default attached lakehouse for guardrail metadata.
+
+The shared `widget_review_table_guardrails` helper supports `schema`, `freshness`, `profile_behavior`, and `dq` categories; `static data` and `changing data` choices; `warning` and `blocking` severity; and the review statuses `draft`, `proposed`, `engineer_approved`, `governance_approved`, `rejected`, `superseded`, and `inactive`. Changing-data guardrails must include a watermark column.
 
 ## Guardrail flow in `02_pipeline`
 
@@ -90,7 +101,7 @@ FabricOps reuses accepted catalogue evidence such as `row_count`, `column_name`,
 
 ## DQ guardrails
 
-DQ rules are defined and approved in `03_governance`, then enforced in `02_pipeline`. DQ is separate from schema, freshness, and profile behavior:
+DQ rules can be proposed by engineering in `02_pipeline` or reviewed by governance in `03_governance`, then the latest active approved rules are enforced in `02_pipeline`. DQ is separate from schema, freshness, and profile behavior:
 
 - schema checks validate structure;
 - freshness checks validate recency;

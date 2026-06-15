@@ -111,6 +111,7 @@ V1_CALLABLES = {
     "load_catalogue_profile_rows",
     "widget_review_column_context",
     "widget_review_dq_rules",
+    "widget_review_table_guardrails",
     "widget_review_column_classification",
     "record_table_governance",
 }

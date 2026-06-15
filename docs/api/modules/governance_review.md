@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 49</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 9</span><span class="reference-chip">Internal helpers: 54</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>8</td>
+      <td>9</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>49</td>
+      <td>54</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -80,7 +80,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>Callable</td>
       <td>function</td>
       <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
-      <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
+      <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_read_guardrail_rule_metadata</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></td>
@@ -94,14 +94,14 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>Callable</td>
       <td>function</td>
       <td>Load column profile rows for the selected catalogue table.</td>
-      <td><code>_coerce_rows</code> (internal), <code>_is_success</code> (internal), <code>_value</code> (internal)</td>
+      <td><code>_catalogue_physical_identity</code> (internal), <code>_coerce_rows</code> (internal), <code>_is_success</code> (internal), <code>_value</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Persist approved table-governance context, DQ-rule, and classification evidence in one v1 commit action.</td>
-      <td><code>_build_classification_records</code> (internal), <code>_build_column_context_records</code> (internal), <code>_build_dq_rule_records</code> (internal), <code>_review_governance_evidence</code> (internal)</td>
+      <td><code>_build_classification_records</code> (internal), <code>_build_column_context_records</code> (internal), <code>_build_dq_rule_records</code> (internal), <code>_build_guardrail_rule_records</code> (internal), <code>_review_governance_evidence</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a></td>
@@ -123,6 +123,13 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>function</td>
       <td>Render standalone DQ-rule review guidance for selected profile rows.</td>
       <td><code>_canonical_dq_rule_type</code> (internal), <code>_dq_parameter_fields_for_rule_type</code> (internal), <code>_dq_rule_display_rows</code> (internal), <code>_draft_dq_rules</code> (internal), <code>_validate_dq_rules</code> (internal), <code>_value</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../../reference/widget_review_table_guardrails/"><code>widget_review_table_guardrails</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Render shared schema, freshness, profile-behavior, and DQ guardrail authoring guidance.</td>
+      <td><code>_build_guardrail_rule_records</code> (internal), <code>_value</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a></td>
@@ -150,7 +157,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <li>
 <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
+<span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a>
@@ -160,12 +167,12 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <li>
 <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_is_success</code></span>, <span class="reference-chip"><code>_value</code></span>
+<span class="reference-chip"><code>_catalogue_physical_identity</code></span>, <span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_is_success</code></span>, <span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/record_table_governance/"><code>record_table_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_build_classification_records</code></span>, <span class="reference-chip"><code>_build_column_context_records</code></span>, <span class="reference-chip"><code>_build_dq_rule_records</code></span>, <span class="reference-chip"><code>_review_governance_evidence</code></span>
+<span class="reference-chip"><code>_build_classification_records</code></span>, <span class="reference-chip"><code>_build_column_context_records</code></span>, <span class="reference-chip"><code>_build_dq_rule_records</code></span>, <span class="reference-chip"><code>_build_guardrail_rule_records</code></span>, <span class="reference-chip"><code>_review_governance_evidence</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_review_column_classification/"><code>widget_review_column_classification</code></a>
@@ -181,6 +188,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <a class="reference-chip" href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_dq_parameter_fields_for_rule_type</code></span>, <span class="reference-chip"><code>_dq_rule_display_rows</code></span>, <span class="reference-chip"><code>_draft_dq_rules</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>, <span class="reference-chip"><code>_value</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../../reference/widget_review_table_guardrails/"><code>widget_review_table_guardrails</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_build_guardrail_rule_records</code></span>, <span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a>
@@ -225,12 +237,16 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a></td>
     </tr>
     <tr>
+      <td><code>_build_guardrail_rule_records</code></td>
+      <td><a href="../../reference/record_table_governance/"><code>record_table_governance</code></a>, <a href="../../reference/widget_review_table_guardrails/"><code>widget_review_table_guardrails</code></a></td>
+    </tr>
+    <tr>
       <td><code>_canonical_dq_rule_type</code></td>
       <td><a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_catalogue_physical_identity</code></td>
-      <td>—</td>
+      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
     </tr>
     <tr>
       <td><code>_catalogue_profile_target_model</code></td>
@@ -305,6 +321,10 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_guardrail_parameter_payload</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_is_success</code></td>
       <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></td>
     </tr>
@@ -329,6 +349,14 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
+      <td><code>_normalize_guardrail_review_status</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_normalize_guardrail_severity</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_parse_ai_dict_response</code></td>
       <td>—</td>
     </tr>
@@ -343,6 +371,10 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     <tr>
       <td><code>_profile_sort_key</code></td>
       <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_read_guardrail_rule_metadata</code></td>
+      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_read_metadata_rows</code></td>
@@ -398,7 +430,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td><code>_value</code></td>
-      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
+      <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a>, <a href="../../reference/widget_review_table_guardrails/"><code>widget_review_table_guardrails</code></a></td>
     </tr>
   </tbody>
 </table>
@@ -430,6 +462,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_build_dq_rule_records</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_dq_rule_parameter_payload</code></span>, <span class="reference-chip"><code>_json</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_build_guardrail_rule_records</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_guardrail_parameter_payload</code></span>, <span class="reference-chip"><code>_json</code></span>, <span class="reference-chip"><code>_normalize_guardrail_review_status</code></span>, <span class="reference-chip"><code>_normalize_guardrail_severity</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>
@@ -522,6 +559,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_schema</code></span>, <span class="reference-chip"><code>_spark_types</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_guardrail_parameter_payload</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_dq_rule_parameter_payload</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_is_success</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_value</code></span>
@@ -548,6 +590,12 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_latest_dq_rule_versions</code></span>, <span class="reference-chip"><code>_spark_sql_helpers</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_normalize_guardrail_review_status</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_normalize_guardrail_severity</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_parse_ai_dict_response</code></span>
 </li>
 <li>
@@ -564,6 +612,11 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <span class="reference-chip"><code>_profile_sort_key</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_value</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_spark_sql_helpers</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_read_metadata_rows</code></span>

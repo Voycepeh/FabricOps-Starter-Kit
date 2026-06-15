@@ -41,8 +41,9 @@ This list is kept as release-planning context only. The source of truth is the p
 28. `load_catalogue_profile_rows`
 29. `widget_review_column_context`
 30. `widget_review_dq_rules`
-31. `widget_review_column_classification`
-32. `record_table_governance`
+31. `widget_review_table_guardrails`
+32. `widget_review_column_classification`
+33. `record_table_governance`
 
 ## Deleted from the public callable surface
 
@@ -71,7 +72,7 @@ The following previous public/exported functions were removed from the v1 callab
 
 ## Restored standalone widgets
 
-The standalone agreement widgets `widget_render_data_steward`, `widget_render_data_agreement`, and `widget_render_agreement_evidence` are v1 callables because large combined widgets are fragile in Microsoft Fabric notebooks. The standalone governance review widgets `widget_review_column_context`, `widget_review_dq_rules`, and `widget_review_column_classification` are also public for the same reason.
+The standalone agreement widgets `widget_render_data_steward`, `widget_render_data_agreement`, and `widget_render_agreement_evidence` are v1 callables because large combined widgets are fragile in Microsoft Fabric notebooks. The standalone governance review widgets `widget_review_column_context`, `widget_review_dq_rules`, `widget_review_table_guardrails`, and `widget_review_column_classification` are also public for the same reason.
 
 ## Renamed/private functions
 

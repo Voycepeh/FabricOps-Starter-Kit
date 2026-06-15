@@ -23,6 +23,8 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_BASELINE_EVENTS_TABLE = "METADATA_GUARDRAIL_BASELINE_EVENTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "engineer_approved", "governance_approved", "rejected", "superseded", "inactive"]
+GUARDRAIL_DATA_CHANGE_CHOICES = ["static data", "changing data"]
+GUARDRAIL_ACTIVE_APPROVED_STATUSES = {"engineer_approved", "governance_approved"}
 GUARDRAIL_BASELINE_EVENT_TYPES = ["baseline_created", "baseline_reset_requested", "baseline_reset_approved", "baseline_reset_rejected", "change_accepted", "change_blocked"]
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
@@ -505,6 +507,110 @@ def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict
     return payload
 
 
+
+def _normalize_guardrail_review_status(value: Any, *, default: str) -> str:
+    """Return a supported guardrail review workflow status."""
+    status = str(value or default).strip().lower()
+    if status == "approved":
+        status = "governance_approved"
+    if status not in GUARDRAIL_REVIEW_STATUSES:
+        raise ValueError(f"Unsupported guardrail review_status: {status}")
+    return status
+
+
+def _normalize_guardrail_severity(value: Any) -> str:
+    """Return the persisted warning/blocking guardrail severity."""
+    severity = str(value or "warning").strip().lower()
+    if severity == "error":
+        severity = "blocking"
+    if severity not in {"warning", "blocking"}:
+        raise ValueError("guardrail severity must be 'warning' or 'blocking'.")
+    return severity
+
+
+def _guardrail_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]:
+    """Return non-identity guardrail authoring parameters for metadata storage."""
+    payload = _dq_rule_parameter_payload(rule, columns) if str(rule.get("guardrail_type") or "").lower() == "dq" else {}
+    for key in ("data_change_choice", "watermark_column", "load_behavior", "freshness_column", "freshness_max_lag_days", "expected_schema", "profile_baseline_mode"):
+        if rule.get(key) not in (None, ""):
+            payload[key] = rule.get(key)
+    if str(payload.get("data_change_choice") or "").lower() == "changing data" and not str(payload.get("watermark_column") or "").strip():
+        raise ValueError("Changing data guardrails require a watermark_column.")
+    return payload
+
+
+def _build_guardrail_rule_records(
+    profile_rows: list[dict[str, Any]],
+    reviewed_rules: list[dict[str, Any]],
+    *,
+    config: Any = None,
+    env: str | None = None,
+    approved_by: str | None = None,
+    default_author_role: str = "governance",
+    default_source_notebook_type: str = "03_governance",
+) -> list[dict[str, Any]]:
+    """Build append-only shared guardrail rule records for metadata persistence."""
+    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
+    rows: list[dict[str, Any]] = []
+    for rule in reviewed_rules or []:
+        if not rule.get("commit"):
+            continue
+        guardrail_type = str(rule.get("guardrail_type") or "dq").strip().lower()
+        if guardrail_type not in GUARDRAIL_TYPES:
+            raise ValueError(f"Unsupported guardrail_type: {guardrail_type}")
+        action_type = str(rule.get("action_type") or "created").strip().lower()
+        if action_type == "delete":
+            action_type = "deactivated"
+        if action_type not in {"created", "updated", "approved", "rejected", "superseded", "deactivated", "reactivated", "reset"}:
+            raise ValueError(f"Unsupported guardrail action_type: {action_type}")
+        review_status = _normalize_guardrail_review_status(rule.get("review_status"), default="proposed")
+        is_active = bool(rule.get("is_active", review_status in GUARDRAIL_ACTIVE_APPROVED_STATUSES and action_type not in {"rejected", "deactivated", "superseded"}))
+        if action_type in {"rejected", "deactivated", "superseded"} or review_status in {"rejected", "inactive", "superseded"}:
+            is_active = False
+        severity = _normalize_guardrail_severity(rule.get("severity"))
+        columns = rule.get("columns") or ([rule.get("column_name")] if rule.get("column_name") else [])
+        if isinstance(columns, str):
+            columns = [c.strip() for c in columns.split(",") if c.strip()]
+        columns = [str(c) for c in columns if str(c).strip()]
+        draft = dict(rule, columns=columns, severity="error" if severity == "blocking" else "warning")
+        if guardrail_type == "dq":
+            draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
+            _validate_dq_rules([draft])
+        display_column = str(rule.get("column_name") or ", ".join(columns) or "")
+        primary_column = columns[0] if columns else display_column
+        identity = _approved_column_identity(profile.get(primary_column, {}), {**rule, "column_name": display_column, "columns": columns}, env=env)
+        identity["column_name"] = display_column
+        rule_type = str(draft.get("rule_type") or guardrail_type)
+        rule_id = str(rule.get("rule_id") or f"{identity['table_name']}.{display_column or 'table'}.{rule_type}")
+        approved_at = str(rule.get("approved_at") or (now if review_status in GUARDRAIL_ACTIVE_APPROVED_STATUSES else ""))
+        approved_by_value = str(rule.get("approved_by") or (actor if review_status in GUARDRAIL_ACTIVE_APPROVED_STATUSES else ""))
+        rows.append({
+            "rule_key": str(rule.get("rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
+            "rule_id": rule_id,
+            **identity,
+            "guardrail_type": guardrail_type,
+            "rule_type": rule_type,
+            "rule_parameters_json": _json(_guardrail_parameter_payload(draft, columns)),
+            "severity": severity,
+            "description": str(rule.get("description") or ""),
+            "is_active": is_active,
+            "review_status": review_status,
+            "author_role": str(rule.get("author_role") or default_author_role),
+            "created_by": str(rule.get("created_by") or actor),
+            "created_at": str(rule.get("created_at") or now),
+            "approved_by": approved_by_value,
+            "approved_at": approved_at,
+            "ai_suggestion_json": _json(rule.get("ai_suggestion_json") or rule.get("ai_suggestion")),
+            "action_type": action_type,
+            "source_notebook_type": str(rule.get("source_notebook_type") or default_source_notebook_type),
+            "source_notebook_id": str(rule.get("source_notebook_id") or ""),
+            "source_workspace_id": str(rule.get("source_workspace_id") or ""),
+            "superseded_by_rule_key": str(rule.get("superseded_by_rule_key") or ""),
+            "notes": str(rule.get("notes") or ""),
+            **audit,
+        })
+    return rows
+
 def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
     """Build append-only approved DQ-rule records without enforcing them."""
     profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
@@ -725,6 +831,125 @@ def _parse_dq_ai_suggestions(response_rows: Any, *, response_col: str = "respons
         drafts.append(draft)
     return drafts
 
+
+
+def widget_review_table_guardrails(
+    profile_rows: list[dict[str, Any]],
+    *,
+    existing_rules: list[dict[str, Any]] | None = None,
+    author_role: str = "governance",
+    default_review_status: str | None = None,
+    source_notebook_type: str = "03_governance",
+) -> list[dict[str, Any]]:
+    """Render shared table-guardrail authoring guidance for pipeline and governance notebooks.
+
+    Parameters
+    ----------
+    profile_rows : list of dict
+        Selected table profile rows used to identify environment, dataset, table,
+        and available columns for new guardrail rules.
+    existing_rules : list of dict, optional
+        Previously persisted guardrail rows for the selected table. The widget
+        displays these rows as review context; updates are persisted as new
+        append-only rows in ``METADATA_GUARDRAIL_RULES``.
+    author_role : {"engineering", "governance"}, default="governance"
+        Role stamped on queued guardrail rows. Use ``"engineering"`` from
+        ``02_pipeline`` and ``"governance"`` from ``03_governance``.
+    default_review_status : str, optional
+        Initial workflow status for queued rows. Engineering defaults to
+        ``"proposed"``; governance defaults to ``"governance_approved"``.
+    source_notebook_type : str, default="03_governance"
+        Notebook type stamped on queued rows.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Mutable review list. Queue draft, proposed, engineer-approved,
+        governance-approved, rejected, superseded, or inactive guardrail rows and
+        pass the list to ``record_table_governance(guardrail_reviews=...)`` to
+        append them to ``METADATA_GUARDRAIL_RULES``.
+
+    Notes
+    -----
+    This shared widget supports ``schema``, ``freshness``,
+    ``profile_behavior``, and ``dq`` guardrail categories. If ``data_change_choice``
+    is ``"changing data"``, queued rows must include ``watermark_column``.
+    Runtime enforcement remains owned by ``02_pipeline``; ``03_governance`` only
+    authors, reviews, approves, rejects, supersedes, or inactivates metadata.
+
+    """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    review_rows: list[dict[str, Any]] = []
+    columns = [str(_value(row, "column_name")) for row in profile_rows]
+    selected_table = str(_value(profile_rows[0], "table_name") if profile_rows else "")
+    default_status = default_review_status or ("proposed" if author_role == "engineering" else "governance_approved")
+
+    guardrail_type = widgets.Dropdown(options=GUARDRAIL_TYPES, value="dq", description="Category")
+    data_change_choice = widgets.ToggleButtons(options=GUARDRAIL_DATA_CHANGE_CHOICES, value="static data", description="Data")
+    watermark_column = widgets.Dropdown(options=[""] + columns, value="", description="Watermark")
+    rule_type = widgets.Dropdown(options=DQ_RULE_TYPES, value="not_null", description="DQ rule")
+    column_select = widgets.SelectMultiple(options=columns, description="Columns", rows=min(max(len(columns), 4), 12), layout=widgets.Layout(width="420px"))
+    severity = widgets.ToggleButtons(options=["warning", "blocking"], value="warning", description="Severity")
+    review_status = widgets.Dropdown(options=GUARDRAIL_REVIEW_STATUSES, value=default_status, description="Status")
+    action_type = widgets.Dropdown(options=["created", "updated", "approved", "rejected", "superseded", "deactivated", "reactivated", "reset"], value="created", description="Action")
+    rule_id = widgets.Text(description="Rule ID", layout=widgets.Layout(width="760px"))
+    params = widgets.Textarea(description="Parameters JSON", value="{}", layout=widgets.Layout(width="760px", height="90px"))
+    description = widgets.Textarea(description="Description", layout=widgets.Layout(width="760px", height="70px"))
+    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="160px"))
+    message = widgets.HTML()
+
+    def current_rule() -> dict[str, Any]:
+        extra = json.loads(params.value or "{}")
+        if data_change_choice.value == "changing data" and not watermark_column.value:
+            raise ValueError("Select a watermark column for changing data.")
+        draft = {
+            "rule_id": rule_id.value or f"{selected_table}_{guardrail_type.value}_{uuid.uuid4().hex[:8]}",
+            "guardrail_type": guardrail_type.value,
+            "rule_type": rule_type.value if guardrail_type.value == "dq" else guardrail_type.value,
+            "columns": list(column_select.value),
+            "severity": severity.value,
+            "description": description.value,
+            "data_change_choice": data_change_choice.value,
+            "watermark_column": watermark_column.value,
+            "review_status": review_status.value,
+            "author_role": author_role,
+            "action_type": action_type.value,
+            "source_notebook_type": source_notebook_type,
+            "is_active": review_status.value in GUARDRAIL_ACTIVE_APPROVED_STATUSES and action_type.value not in {"rejected", "deactivated", "superseded"},
+            "commit": True,
+            **extra,
+        }
+        _build_guardrail_rule_records(profile_rows, [draft], default_author_role=author_role, default_source_notebook_type=source_notebook_type)
+        return draft
+
+    def refresh(*_: Any) -> None:
+        try:
+            preview.value = json.dumps(current_rule(), indent=2, default=str)
+            message.value = ""
+        except Exception as exc:
+            preview.value = ""
+            message.value = f"<b>Validation:</b> {exc}"
+
+    def queue(_: Any = None) -> None:
+        try:
+            review_rows.append(current_rule())
+            message.value = "<b>Queued guardrail.</b> Pass returned rows to record_table_governance(guardrail_reviews=...)."
+        except Exception as exc:
+            message.value = f"<b>Cannot queue guardrail:</b> {exc}"
+
+    for control in (guardrail_type, data_change_choice, watermark_column, rule_type, column_select, severity, review_status, action_type, rule_id, params, description):
+        control.observe(lambda change: refresh(), names="value")
+    queue_button = widgets.Button(description="Queue guardrail", button_style="success")
+    queue_button.on_click(queue)
+    refresh()
+    ip.display(widgets.VBox([
+        widgets.HTML(f"<h3>Shared table guardrail authoring</h3><p>Table: <b>{selected_table}</b>. Engineering can propose or engineer-approve first-pass guardrails in 02_pipeline; governance can approve, reject, enhance, supersede, or deactivate them in 03_governance. Approved active rows are stored in METADATA_GUARDRAIL_RULES and enforced by later 02_pipeline runtime steps.</p>"),
+        widgets.HTML("<h4>Existing guardrails</h4><pre>" + json.dumps(existing_rules or [], indent=2, default=str) + "</pre>"),
+        guardrail_type, data_change_choice, watermark_column, rule_type, column_select, severity, review_status, action_type, rule_id, params, description, preview, queue_button, message,
+    ]))
+    return review_rows
 
 def widget_review_dq_rules(
     profile_rows: list[dict[str, Any]],
@@ -1091,6 +1316,7 @@ def record_table_governance(
     spark_session: Any,
     context_reviews: list[dict[str, Any]] | None = None,
     dq_rule_reviews: list[dict[str, Any]] | None = None,
+    guardrail_reviews: list[dict[str, Any]] | None = None,
     classification_reviews: list[dict[str, Any]] | None = None,
     approved_by: str | None = None,
     governance_selection: dict[str, Any] | None = None,
@@ -1110,9 +1336,11 @@ def record_table_governance(
         Column-profile rows loaded for the selected catalogue table.
     spark_session : pyspark.sql.SparkSession
         Spark session used to create DataFrames for metadata writes.
-    context_reviews, dq_rule_reviews, classification_reviews : list of dict, optional
-        Human-approved rows from the governance review workflow. Only rows with
-        ``review_status="approved"`` and ``commit=True`` are written.
+    context_reviews, dq_rule_reviews, guardrail_reviews, classification_reviews : list of dict, optional
+        Human-reviewed rows from the governance workflow. Context and classification rows require
+        ``review_status="approved"`` and ``commit=True``. Shared guardrail rows from
+        ``widget_review_table_guardrails`` are appended to ``METADATA_GUARDRAIL_RULES`` when
+        ``commit=True``.
     approved_by : str, optional
         Reviewer identity to stamp on records. When omitted, runtime defaults
         are used.
@@ -1152,6 +1380,15 @@ def record_table_governance(
         env=env,
         approved_by=approved_by,
     )
+    guardrail_records = _build_guardrail_rule_records(
+        profile_rows,
+        guardrail_reviews or [],
+        config=config,
+        env=env,
+        approved_by=approved_by,
+        default_author_role="governance",
+        default_source_notebook_type="03_governance",
+    )
     classification_records = _build_classification_records(
         profile_rows,
         classification_reviews or [],
@@ -1161,7 +1398,7 @@ def record_table_governance(
     )
     writes = {
         COLUMN_CONTEXT_TABLE: context_records,
-        GUARDRAIL_RULES_TABLE: [dict(record, guardrail_type="dq") for record in dq_rule_records],
+        GUARDRAIL_RULES_TABLE: [dict(record, guardrail_type="dq") for record in dq_rule_records] + guardrail_records,
         COLUMN_CLASSIFICATION_TABLE: classification_records,
     }
     for table_name, records in writes.items():
@@ -1184,6 +1421,7 @@ def record_table_governance(
     return {
         "column_context": context_records,
         "dq_rules": dq_rule_records,
+        "guardrail_rules": guardrail_records,
         "column_classification": classification_records,
         "governance_review": governance_review,
     }
@@ -1361,7 +1599,7 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
     if "action_type" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
     if "review_status" in columns:
-        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("governance_approved"))).isin("approved", "engineer_approved", "governance_approved"))
+        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("governance_approved"))).isin("engineer_approved", "governance_approved"))
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
@@ -1381,7 +1619,7 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
                 "rule_id": str(row.get("rule_id") or ""),
                 "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
                 "columns": rule_columns,
-                "severity": str(row.get("severity") or "warning"),
+                "severity": "error" if str(row.get("severity") or "warning").lower() == "blocking" else str(row.get("severity") or "warning"),
                 "description": str(row.get("description") or ""),
                 **params,
             }
