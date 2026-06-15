@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Internal helpers: 24</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Internal helpers: 22</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>24</td>
+      <td>22</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -86,8 +86,8 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Enforce append, overwrite, or skip profile behavior against accepted catalogue profile evidence.</td>
-      <td><code>_accepted_profile_rows</code> (internal), <code>_catalogue_value</code> (internal), <code>_guardrail_exclude_columns</code> (internal), <code>_is_greater_than</code> (internal), <code>_is_less_than</code> (internal), <code>_is_missing_table_error</code> (internal), <code>_json_dumps_stable</code> (internal), <code>_latest_catalogue_behavior_profile_row</code> (internal), <code>_profile_hash</code> (internal), <code>_profile_payload_from_profile</code> (internal), <code>_profile_row_count</code> (internal), <code>_profile_watermark_bounds</code> (internal), <code>_select_profile_behavior_rule</code> (internal), <code>_string_value</code> (internal)</td>
+      <td>Enforce static, changing, or skipped profile behavior against accepted catalogue profile evidence.</td>
+      <td><code>_accepted_profile_rows</code> (internal), <code>_catalogue_value</code> (internal), <code>_guardrail_exclude_columns</code> (internal), <code>_is_missing_table_error</code> (internal), <code>_json_dumps_stable</code> (internal), <code>_profile_hash</code> (internal), <code>_profile_payload_from_profile</code> (internal), <code>_select_profile_behavior_rule</code> (internal), <code>_string_value</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
@@ -127,7 +127,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <li>
 <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_accepted_profile_rows</code></span>, <span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_guardrail_exclude_columns</code></span>, <span class="reference-chip"><code>_is_greater_than</code></span>, <span class="reference-chip"><code>_is_less_than</code></span>, <span class="reference-chip"><code>_is_missing_table_error</code></span>, <span class="reference-chip"><code>_json_dumps_stable</code></span>, <span class="reference-chip"><code>_latest_catalogue_behavior_profile_row</code></span>, <span class="reference-chip"><code>_profile_hash</code></span>, <span class="reference-chip"><code>_profile_payload_from_profile</code></span>, <span class="reference-chip"><code>_profile_row_count</code></span>, <span class="reference-chip"><code>_profile_watermark_bounds</code></span>, <span class="reference-chip"><code>_select_profile_behavior_rule</code></span>, <span class="reference-chip"><code>_string_value</code></span>
+<span class="reference-chip"><code>_accepted_profile_rows</code></span>, <span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_guardrail_exclude_columns</code></span>, <span class="reference-chip"><code>_is_missing_table_error</code></span>, <span class="reference-chip"><code>_json_dumps_stable</code></span>, <span class="reference-chip"><code>_profile_hash</code></span>, <span class="reference-chip"><code>_profile_payload_from_profile</code></span>, <span class="reference-chip"><code>_select_profile_behavior_rule</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
@@ -182,7 +182,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_is_greater_than</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_is_guardrail_excluded_column</code></td>
@@ -190,7 +190,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_is_less_than</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_is_missing_table_error</code></td>
@@ -202,10 +202,6 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_json_dumps_stable</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_latest_catalogue_behavior_profile_row</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
@@ -230,11 +226,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_profile_row_count</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_profile_watermark_bounds</code></td>
-      <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_row_to_dict</code></td>
@@ -305,11 +297,6 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <span class="reference-chip"><code>_json_dumps_stable</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_latest_catalogue_behavior_profile_row</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_is_missing_table_error</code></span>, <span class="reference-chip"><code>_row_to_dict</code></span>, <span class="reference-chip"><code>_string_value</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_max_column_value</code></span>
 </li>
 <li>
@@ -334,11 +321,6 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <span class="reference-chip"><code>_profile_row_count</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_normalize_profile</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_profile_watermark_bounds</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_normalize_profile</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_row_to_dict</code></span>

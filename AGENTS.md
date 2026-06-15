@@ -12,6 +12,9 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Keep AI in the loop and optimize for junior-friendly handover.
 - Prefer small, focused PRs over broad restructures.
 - Prefer updating existing files/modules; add new files only when clearly justified.
+- Do not add backwards-compatibility aliases, legacy parameter names, or
+  transitional behavior unless the PR explicitly asks for migration support.
+  Prefer clean APIs and update notebooks/docs/tests to the new contract.
 
 ## Public safety and positioning
 

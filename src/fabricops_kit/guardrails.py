@@ -493,7 +493,7 @@ def enforce_freshness(
 
     Notes
     -----
-    Freshness is separate from profile behavior. ``load_behavior="skip"`` only
+    Freshness is separate from profile behavior. ``profile_mode="skip"`` only
     skips profile behavior enforcement; freshness still runs when configured.
 
     """
@@ -611,128 +611,6 @@ def _is_greater_than(left, right) -> bool:
     return str(left_value) > str(right_value)
 
 
-def _profile_watermark_bounds(profile, watermark_column: str | None) -> tuple[str, str]:
-    normalized = _normalize_profile(profile) or {}
-    if not watermark_column:
-        return "", ""
-    for column in normalized.get("columns", []) or []:
-        if str(column.get("column_name") or "").lower() == str(watermark_column).lower():
-            return _string_value(column.get("min_value")), _string_value(column.get("max_value"))
-    return "", ""
-
-
-def _latest_catalogue_behavior_profile_row(
-    catalogue_df,
-    *,
-    dataset_name: str,
-    table_name: str,
-    profile_stage: str,
-    load_behavior: str,
-    watermark_column: str | None = None,
-    exclude_run_id: str | None = None,
-) -> dict | None:
-    if catalogue_df is None:
-        return None
-
-    try:
-        if hasattr(catalogue_df, "collect") and hasattr(catalogue_df, "columns"):
-            from pyspark.sql import functions as F
-
-            df = catalogue_df
-            columns_by_lower = {str(column).lower(): column for column in df.columns}
-
-            def catalogue_col(*names: str) -> str | None:
-                for name in names:
-                    if name in df.columns:
-                        return name
-                    if name.lower() in columns_by_lower:
-                        return columns_by_lower[name.lower()]
-                return None
-
-            stage = str(profile_stage).lower()
-            stage_roles = [stage, f"{stage}_profile"]
-            if stage == "target":
-                stage_roles.append("output_profile")
-
-            dataset_col = catalogue_col("dataset_name")
-            table_col = catalogue_col("table_name", "profiled_table_name")
-            stage_col = catalogue_col("profile_stage", "evidence_role")
-            behavior_col = catalogue_col("load_behavior")
-            stability_status_col = catalogue_col("stability_status")
-            profile_status_col = catalogue_col("profile_status")
-            run_col = catalogue_col("profile_run_id", "run_id")
-            time_col = catalogue_col("profiled_at", "run_timestamp", "created_at")
-            column_col = catalogue_col("column_name")
-            required = [dataset_col, table_col, stage_col, behavior_col, stability_status_col]
-            if watermark_column:
-                required.append(column_col)
-            if any(column is None for column in required):
-                return None
-
-            filters = [
-                F.col(dataset_col) == dataset_name,
-                F.col(table_col) == table_name,
-                F.lower(F.col(stage_col)).isin(stage_roles),
-                F.lower(F.col(behavior_col)) == str(load_behavior).lower(),
-                F.lower(F.col(stability_status_col)).isin("passed", "baseline_created"),
-            ]
-            if profile_status_col:
-                filters.append(F.lower(F.col(profile_status_col)).isin("success", "successful"))
-            if exclude_run_id and run_col:
-                filters.append(F.col(run_col) != exclude_run_id)
-            if watermark_column and column_col:
-                filters.append(F.lower(F.col(column_col)) == str(watermark_column).lower())
-
-            for condition in filters:
-                df = df.filter(condition)
-            order_columns = []
-            if time_col:
-                order_columns.append(F.col(time_col).desc())
-            if run_col:
-                order_columns.append(F.col(run_col).desc())
-            if order_columns:
-                df = df.orderBy(*order_columns)
-            rows = df.limit(1).collect()
-            return _row_to_dict(rows[0]) if rows else None
-
-        rows = catalogue_df
-        if isinstance(catalogue_df, dict):
-            rows = [catalogue_df]
-        candidates = []
-        stage = str(profile_stage).lower()
-        stage_roles = {stage, f"{stage}_profile"}
-        if stage == "target":
-            stage_roles.add("output_profile")
-        for raw_row in rows or []:
-            row = _row_to_dict(raw_row)
-            if str(_catalogue_value(row, "dataset_name")) != dataset_name:
-                continue
-            if str(_catalogue_value(row, "table_name", "profiled_table_name")) != table_name:
-                continue
-            if str(_catalogue_value(row, "profile_stage", "evidence_role")).lower() not in stage_roles:
-                continue
-            if str(_catalogue_value(row, "load_behavior")).lower() != str(load_behavior).lower():
-                continue
-            if str(_catalogue_value(row, "stability_status")).lower() not in {"passed", "baseline_created"}:
-                continue
-            profile_status = _catalogue_value(row, "profile_status")
-            if profile_status and str(profile_status).lower() not in {"success", "successful"}:
-                continue
-            if exclude_run_id and str(_catalogue_value(row, "profile_run_id", "run_id")) == str(exclude_run_id):
-                continue
-            if watermark_column and str(_catalogue_value(row, "column_name")).lower() != str(watermark_column).lower():
-                continue
-            candidates.append(row)
-        if not candidates:
-            return None
-        candidates.sort(key=lambda row: (_string_value(_catalogue_value(row, "profiled_at", "run_timestamp", "created_at")), _string_value(_catalogue_value(row, "profile_run_id", "run_id"))), reverse=True)
-        return candidates[0]
-    except Exception as exc:
-        if _is_missing_table_error(exc):
-            return None
-        raise
-
-
 def enforce_profile_behavior(
     spark,
     dataframe,
@@ -742,7 +620,6 @@ def enforce_profile_behavior(
     *,
     stage: str,
     run_id: str,
-    load_behavior: str | None = None,
     profile_mode: str | None = None,
     watermark_column: str | None = None,
     severity: str = "blocking",
@@ -773,10 +650,9 @@ def enforce_profile_behavior(
         Pipeline stage used in returned evidence.
     run_id : str
         Current pipeline run identifier.
-    load_behavior, profile_mode : {"static_data", "changing_data"}, optional
-        Profile behavior mode. Legacy ``append`` maps to ``changing_data``;
-        legacy ``overwrite`` maps to ``static_data``; legacy ``skip`` skips only
-        this guardrail.
+    profile_mode : {"static_data", "changing_data", "skip"}, optional
+        Profile behavior mode. Defaults to ``"static_data"`` when no approved
+        rule supplies a mode.
     watermark_column : str, optional
         Required for ``changing_data``. Values define independent profile groups.
     severity : {"blocking", "warning"}, default="blocking"
@@ -831,57 +707,12 @@ def enforce_profile_behavior(
         profile_mode = profile_mode or _catalogue_value(selected_rule, "rule_type", "profile_mode")
         watermark_column = watermark_column or _catalogue_value(selected_rule, "watermark_column", "column_name")
 
-    raw_mode = str(profile_mode or load_behavior or "static_data").lower().strip()
-    legacy_map = {"append": "changing_data", "overwrite": "static_data", "skip": "skip"}
-    mode = legacy_map.get(raw_mode, raw_mode)
+    mode = str(profile_mode or "static_data").lower().strip()
     normalized_severity = str(severity or "blocking").lower().strip()
     if normalized_severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
     if mode not in {"static_data", "changing_data", "skip"}:
-        raise ValueError("profile_behavior mode must be one of: static_data, changing_data, skip")
-
-    if raw_mode in {"append", "overwrite"}:
-        if current_profile is None:
-            from fabricops_kit.data_profiling import profile_dataframe
-            current_profile = profile_dataframe(dataframe, table_name, exclude_columns=_guardrail_exclude_columns(exclude_columns), config=config)
-        current_row_count = _profile_row_count(current_profile)
-        result = {"status": "passed", "can_continue": True, "check_type": "profile_behavior", "guardrail_type": "profile_behavior", "rule_type": raw_mode, "stability_check_enabled": True, "load_behavior": raw_mode, "profile_mode": mode, "watermark_column": watermark_column or "", "row_count": current_row_count, "baseline_run_id": "", "baseline_row_count": None, "baseline_watermark_min_value": "", "baseline_watermark_max_value": "", "stability_status": "passed", "stability_can_continue": True, "stability_message": "Profile behavior guardrail passed.", "stability_difference_summary": "", "message": "Profile behavior guardrail passed."}
-        if raw_mode == "overwrite":
-            result["stability_message"] = result["message"] = "Overwrite load behavior accepted current profile as the new state."
-            return result
-        baseline = _latest_catalogue_behavior_profile_row(catalogue_df, dataset_name=dataset_name, table_name=table_name, profile_stage=stage, load_behavior="append", exclude_run_id=exclude_run_id or run_id)
-        watermark_baseline = _latest_catalogue_behavior_profile_row(catalogue_df, dataset_name=dataset_name, table_name=table_name, profile_stage=stage, load_behavior="append", watermark_column=watermark_column, exclude_run_id=exclude_run_id or run_id) if watermark_column else None
-        if baseline is None:
-            result.update(status="baseline_created", stability_status="baseline_created", stability_message="No previous accepted append profile was available; current profile establishes the baseline.")
-            result["message"] = result["stability_message"]
-            return result
-        baseline_row_count_raw = _catalogue_value(baseline, "row_count", "profiled_row_count")
-        try:
-            baseline_row_count = int(baseline_row_count_raw) if baseline_row_count_raw is not None else None
-        except (TypeError, ValueError):
-            baseline_row_count = None
-        result["baseline_row_count"] = baseline_row_count
-        differences = {}
-        if baseline_row_count is not None and current_row_count is not None and current_row_count < baseline_row_count:
-            differences["row_count"] = {"previous": baseline_row_count, "current": current_row_count, "rule": "append_row_count_must_not_decrease"}
-        current_min, current_max = _profile_watermark_bounds(current_profile, watermark_column)
-        if watermark_column:
-            if watermark_baseline is None:
-                differences["watermark_comparison"] = {"status": "skipped", "column": watermark_column, "reason": "No previous accepted profile row was found for the configured watermark column."}
-            else:
-                baseline_min = _string_value(_catalogue_value(watermark_baseline, "min_value")); baseline_max = _string_value(_catalogue_value(watermark_baseline, "max_value"))
-                result["baseline_watermark_min_value"] = baseline_min; result["baseline_watermark_max_value"] = baseline_max
-                if baseline_min and current_min and _is_greater_than(current_min, baseline_min):
-                    differences["watermark_min"] = {"previous": baseline_min, "current": current_min, "column": watermark_column, "rule": "append_watermark_min_must_not_move_forward"}
-                if baseline_max and current_max and _is_less_than(current_max, baseline_max):
-                    differences["watermark_max"] = {"previous": baseline_max, "current": current_max, "column": watermark_column, "rule": "append_watermark_max_must_not_move_backwards"}
-        blocking = {k: v for k, v in differences.items() if v.get("status") != "skipped"}
-        if blocking:
-            result.update(status="failed", can_continue=False, stability_status="failed", stability_can_continue=False, stability_message="Append load behavior failed because existing history appears to have been removed or moved.", stability_difference_summary=json.dumps(differences, default=str, sort_keys=True))
-            result["message"] = result["stability_message"]
-        elif differences:
-            result["stability_difference_summary"] = json.dumps(differences, default=str, sort_keys=True)
-        return result
+        raise ValueError("profile_mode must be one of: static_data, changing_data, skip")
 
     if catalogue_df is None and config is not None and env is not None:
         from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table
@@ -897,7 +728,7 @@ def enforce_profile_behavior(
     evidence_rows: list[dict] = []
     if mode == "skip":
         message = "Profile behavior guardrail skipped; other guardrails still apply."
-        return {"status": "skipped", "can_continue": True, "check_type": "profile_behavior", "guardrail_type": "profile_behavior", "rule_type": "skip", "stability_check_enabled": False, "load_behavior": "skip", "profile_mode": "skip", "watermark_column": watermark_column or "", "stability_status": "skipped", "stability_can_continue": True, "stability_message": message, "message": message, "profile_evidence_rows": []}
+        return {"status": "skipped", "can_continue": True, "check_type": "profile_behavior", "guardrail_type": "profile_behavior", "rule_type": "skip", "stability_check_enabled": False, "profile_mode": "skip", "watermark_column": watermark_column or "", "stability_status": "skipped", "stability_can_continue": True, "stability_message": message, "message": message, "profile_evidence_rows": []}
 
     effective_exclude_columns = _guardrail_exclude_columns(exclude_columns)
     if mode == "static_data":
@@ -956,7 +787,6 @@ def enforce_profile_behavior(
         "severity": normalized_severity,
         "rule_key": rule_key,
         "stability_check_enabled": True,
-        "load_behavior": mode,
         "profile_mode": mode,
         "watermark_column": watermark_column or "",
         "watermark_value": "__FULL_TABLE__" if mode == "static_data" else "",

@@ -161,7 +161,7 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
         '"freshness_column": "order_date"',
         '"freshness_column": "effective_date"',
         '"schema_preset": "allow_new_columns"',
-        '"load_behavior": "append"',
+        '"profile_mode": "changing_data"',
     ]:
         assert advanced_override in source_user_block
 
@@ -182,8 +182,8 @@ def test_table_configs_include_supported_guardrail_and_write_fields():
     for field in [
         '"schema_preset": "allow_new_columns"',
         '"schema_preset": "strict"',
-        '"load_behavior": "append"',
-        '"load_behavior": "overwrite"',
+        '"profile_mode": "changing_data"',
+        '"profile_mode": "static_data"',
         '"freshness_max_lag_days": 1',
         '"freshness_severity": "blocking"',
         '"dq_preset": "approved_rules"',
@@ -350,7 +350,7 @@ def test_pipeline_template_smoke_keeps_guardrails_inline_per_table():
         source_entry = source_block[source_entry_start : source_block.find("    },", source_entry_start)]
         for field in [
             '"schema_preset"',
-            '"load_behavior"',
+            '"profile_mode"',
             '"freshness_column"',
             '"freshness_max_lag_days"',
             '"freshness_severity"',
@@ -366,7 +366,7 @@ def test_pipeline_template_smoke_keeps_guardrails_inline_per_table():
         target_entry = target_block[target_entry_start : target_block.find("    },", target_entry_start)]
         for field in [
             '"write_mode"',
-            '"load_behavior"',
+            '"profile_mode"',
             '"schema"',
             '"schema_preset"',
             '"freshness_column"',

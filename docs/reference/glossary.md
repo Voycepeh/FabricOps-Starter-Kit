@@ -12,16 +12,6 @@ Simple definitions for repeated FabricOps terms used across generated callable r
 
 **Related terms:** `baseline profile`, `catalogue evidence`, `metadata lakehouse`
 
-## append
-
-**Plain language:** Add new rows without replacing existing rows.
-
-**Technical:** A load behavior where pipeline writes preserve existing table history and add incoming records.
-
-**Example:** Daily transaction records are appended to keep prior days available.
-
-**Related terms:** `profile behavior`, `overwrite`, `skip`
-
 ## baseline profile
 
 **Plain language:** The previous approved profile used as the comparison point.
@@ -51,6 +41,16 @@ Simple definitions for repeated FabricOps terms used across generated callable r
 **Example:** A governance review records catalogue evidence that later pipeline guardrails can read.
 
 **Related terms:** `accepted catalogue profile evidence`, `metadata lakehouse`
+
+## changing_data
+
+**Plain language:** New groups may arrive, but previously seen groups should not change or disappear.
+
+**Technical:** Profile behavior mode that groups current data by watermark_column and compares each previous watermark value with accepted catalogue evidence.
+
+**Example:** A table partitioned by business date uses changing_data to allow new dates while protecting prior dates.
+
+**Related terms:** `profile behavior`, `static_data`, `skip`
 
 ## guardrail
 
@@ -82,33 +82,23 @@ Simple definitions for repeated FabricOps terms used across generated callable r
 
 **Related terms:** `guardrail`, `stage`
 
-## overwrite
-
-**Plain language:** Replace the existing table contents with the current output.
-
-**Technical:** A load behavior where a write can remove prior records by replacing the target table or partition contents.
-
-**Example:** A small reference table may be overwritten each run when the latest file is the complete truth.
-
-**Related terms:** `profile behavior`, `append`, `skip`
-
 ## profile behavior
 
 **Plain language:** The expected way a table is loaded.
 
-**Technical:** The approved load behavior value used by guardrail checks, commonly append, overwrite, or skip.
+**Technical:** The approved profile mode used by guardrail checks: static_data, changing_data, or skip.
 
-**Example:** A table approved as append should keep adding new rows instead of replacing the whole table.
+**Example:** A changing-data table may add a new business-date group while previous groups remain unchanged.
 
-**Related terms:** `append`, `overwrite`, `skip`, `profile behavior check`
+**Related terms:** `static_data`, `changing_data`, `skip`, `profile behavior check`
 
 ## profile behavior check
 
 **Plain language:** A check that confirms the current table load pattern still matches the approved pattern.
 
-**Technical:** A guardrail comparison between current load_behavior/profile fields and accepted catalogue profile evidence.
+**Technical:** A guardrail comparison between current profile_mode evidence and accepted catalogue profile evidence.
 
-**Example:** A target table configured as overwrite fails if the approved baseline says it should append.
+**Example:** A changing_data table fails if a previously accepted watermark group changes or disappears.
 
 **Related terms:** `profile behavior`, `guardrail`, `can_continue`
 
@@ -120,7 +110,7 @@ Simple definitions for repeated FabricOps terms used across generated callable r
 
 **Example:** A table can be marked skip while it is being onboarded and is not ready for enforcement.
 
-**Related terms:** `profile behavior`, `append`, `overwrite`
+**Related terms:** `profile behavior`, `static_data`, `changing_data`
 
 ## source table
 
@@ -141,6 +131,16 @@ Simple definitions for repeated FabricOps terms used across generated callable r
 **Example:** Source guardrails run before transformation, while target guardrails run before writes.
 
 **Related terms:** `source table`, `target table`
+
+## static_data
+
+**Plain language:** The full table should keep the same profile unless governance accepts a change.
+
+**Technical:** Profile behavior mode that compares one full-table profile group with watermark_value=__FULL_TABLE__.
+
+**Example:** A reference table uses static_data when row count, schema, and profile hash should remain stable.
+
+**Related terms:** `profile behavior`, `changing_data`, `skip`
 
 ## target table
 

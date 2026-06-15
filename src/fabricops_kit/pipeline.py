@@ -312,9 +312,7 @@ def run_table_guardrails(
         ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``,
         ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``,
         ``distribution_columns``, and ``exclude_columns`` control the guardrail
-        behavior. Legacy ``load_behavior`` remains supported as a backwards-
-        compatible alias for older ``append``, ``overwrite``, and ``skip``
-        profile-behavior configurations.
+        behavior.
     config : Any
         FabricOps framework configuration from ``00_env_config``.
     env : str
@@ -395,7 +393,6 @@ def run_table_guardrails(
             table_name,
             stage=stage,
             run_id=run_id,
-            load_behavior=table_config.get("load_behavior"),
             profile_mode=table_config.get("profile_mode"),
             watermark_column=table_config.get("watermark_column"),
             severity=table_config.get("profile_behavior_severity", table_config.get("severity", "blocking")),
@@ -558,7 +555,7 @@ def write_catalogue_evidence(
                         stability_result.get(
                             "watermark_value",
                             "__FULL_TABLE__"
-                            if str(stability_result.get("profile_mode", stability_result.get("load_behavior", ""))) == "static_data"
+                            if str(stability_result.get("profile_mode", "")) == "static_data"
                             else "",
                         )
                     ),
@@ -579,9 +576,9 @@ def write_catalogue_evidence(
             "profile_stage": stage,
             "profile_status": "success",
             "baseline_status": str(stability_result.get("baseline_status", stability_result.get("status", ""))),
-            "source_data_change_check": str(definition.get("load_behavior", "")) if stage == "source" else "",
-            "target_data_change_check": str(definition.get("load_behavior", "")) if stage == "target" else "",
-            "profile_baseline_mode": str(stability_result.get("load_behavior", "")),
+            "source_data_change_check": str(definition.get("profile_mode", "")) if stage == "source" else "",
+            "target_data_change_check": str(definition.get("profile_mode", "")) if stage == "target" else "",
+            "profile_baseline_mode": str(stability_result.get("profile_mode", "")),
             "profiled_at": _now_iso(),
             "agreement_id": agreement_id,
             "contract_version": agreement_contract_version,
@@ -591,7 +588,7 @@ def write_catalogue_evidence(
             "source_schema_check": str(definition.get("schema_preset", "")) if stage == "source" else "",
             "target_schema_check": str(definition.get("schema_preset", "")) if stage == "target" else "",
             "stability_check_enabled": bool(stability_result.get("stability_check_enabled", False)),
-            "load_behavior": str(stability_result.get("load_behavior", definition.get("load_behavior", ""))),
+            "load_behavior": str(stability_result.get("profile_mode", definition.get("profile_mode", ""))),
             "guardrail_type": "profile_behavior" if stability_result else "",
             "freshness_column": str(freshness_result.get("freshness_column", definition.get("freshness_column", ""))),
             "freshness_max_lag_days": str(freshness_result.get("freshness_max_lag_days", definition.get("freshness_max_lag_days", ""))),

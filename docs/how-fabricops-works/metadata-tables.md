@@ -240,11 +240,11 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `baseline_status` | `observed` or `approved`. |
 | `source_schema_check` | Source schema-check preset used by the pipeline. |
 | `target_schema_check` | Target schema-check preset used by the pipeline. |
-| `source_data_change_check` | Source `load_behavior` label used by the pipeline. |
-| `target_data_change_check` | Target `load_behavior` label used by the pipeline. |
+| `source_data_change_check` | Source `profile_mode` label used by the pipeline. |
+| `target_data_change_check` | Target `profile_mode` label used by the pipeline. |
 | `stability_check_enabled` | Whether profile behavior enforcement was enabled for this table. |
-| `load_behavior` | Legacy profile behavior label when present. Current profile-behavior rules use `rule_type` values `static_data` and `changing_data`. |
-| `watermark_column` | Watermark column used for append behavior comparisons when configured. |
+| `load_behavior` | Existing catalogue compatibility column populated with the current `profile_mode` value. |
+| `watermark_column` | Watermark column used for `changing_data` profile group comparisons when configured. |
 | `profile_payload_json` | Compact JSON payload with additional profile evidence used by comparison or review workflows. |
 | `profile_hash` | Stable hash of the relevant profile observation used for comparison. |
 | `watermark_value` | Watermark value for a grouped or incremental profile snapshot. |
