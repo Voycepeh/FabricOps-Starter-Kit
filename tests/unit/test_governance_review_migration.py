@@ -49,7 +49,6 @@ EXPECTED_V1_CALLABLES = [
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_governance_profile_target",
-    "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
     "widget_review_column_context",

@@ -313,65 +313,13 @@ def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) ->
     return {"assets": assets, "has_status": has_status}
 
 
-def _catalogue_table_options(catalogue_rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return one option per logical table using its latest successful profile.
-
-    Parameters
-    ----------
-    catalogue_rows : iterable of dict
-        Rows from ``METADATA_DATA_CATALOGUE``.
-
-    Returns
-    -------
-    list[dict[str, Any]]
-        Stable table selections sorted by display label.
-
-    Raises
-    ------
-    ValueError
-        If there are no catalogue rows or no successful profile rows.
-    """
-    rows = [dict(r) for r in catalogue_rows or []]
-    if not rows:
-        raise ValueError("METADATA_DATA_CATALOGUE has no rows. Run 02_pipeline profiling before 03_governance.")
-    successes = [r for r in rows if _is_success(r)]
-    if not successes:
-        raise ValueError("METADATA_DATA_CATALOGUE has no successful profile evidence for governance review.")
-    latest: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for row in successes:
-        env = str(_value(row, "environment_name"))
-        dataset = str(_value(row, "dataset_name"))
-        table = str(_value(row, "table_name"))
-        key = (env, dataset, table)
-        current = latest.get(key)
-        sort_key = (str(_value(row, "profiled_at")), str(_value(row, "profile_run_id")), str(_value(row, "profile_stage")))
-        if current is None or sort_key > current["_sort_key"]:
-            latest[key] = {"row": row, "_sort_key": sort_key}
-    options = []
-    for (env, dataset, table), item in latest.items():
-        row = item["row"]
-        table_key = str(_value(row, "metadata_table_key") or _build_metadata_table_key(env, dataset, table))
-        profile_run_id = str(_value(row, "profile_run_id"))
-        profile_stage = str(_value(row, "profile_stage"))
-        layer = str(_value(row, "layer"))
-        asset_kind = str(_value(row, "asset_kind"))
-        label = f"{env} / {dataset} / {layer or '-'} / {asset_kind or '-'} / {table} / {profile_stage or '-'} / {profile_run_id}"
-        options.append({
-            "label": label,
-            "value": json.dumps({"environment_name": env, "dataset_name": dataset, "table_name": table, "metadata_table_key": table_key, "profile_run_id": profile_run_id, "profile_stage": profile_stage, "layer": layer, "asset_kind": asset_kind, "profiled_at": str(_value(row, "profiled_at"))}, sort_keys=True),
-            "environment_name": env, "dataset_name": dataset, "table_name": table, "metadata_table_key": table_key,
-            "profile_run_id": profile_run_id, "profile_stage": profile_stage, "layer": layer, "asset_kind": asset_kind, "profiled_at": str(_value(row, "profiled_at")),
-        })
-    return sorted(options, key=lambda r: r["label"])
-
-
 def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str, Any]:
-    """Return the catalogue table selected by ``widget_select_catalogue_table``.
+    """Return the catalogue table selected by ``widget_select_governance_profile_target``.
 
     Parameters
     ----------
-    table_selector : ipywidgets.Combobox, optional
-        Selector returned by ``widget_select_catalogue_table``. Passing it is
+    table_selector : ipywidgets.VBox, optional
+        Selector returned by ``widget_select_governance_profile_target``. Passing it is
         optional because the widget also maintains module-level selection state.
 
     Returns
@@ -389,7 +337,7 @@ def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str,
                 return dict(parsed)
         except json.JSONDecodeError:
             pass
-    raise ValueError("No catalogue table has been selected. Run widget_select_catalogue_table first.")
+    raise ValueError("No catalogue table has been selected. Run widget_select_governance_profile_target first.")
 
 
 def widget_select_governance_profile_target(config: Any, env: str, *, spark_session: Any):
@@ -475,50 +423,6 @@ def widget_select_governance_profile_target(config: Any, env: str, *, spark_sess
     box = widgets.VBox([asset_dropdown, schema_dropdown, table_dropdown, profile_dropdown, context])
     ip.display(box)
     return box
-
-
-def widget_select_catalogue_table(config: Any, env: str, *, spark_session: Any):
-    """Render a searchable selector for latest successful catalogue tables.
-
-    Parameters
-    ----------
-    config : FrameworkConfig or dict
-        Runtime config containing the metadata lakehouse route.
-    env : str
-        Environment used to read ``METADATA_DATA_CATALOGUE``.
-    spark_session : pyspark.sql.SparkSession
-        Spark session used for the catalogue read.
-
-    Returns
-    -------
-    ipywidgets.Combobox
-        Searchable selector whose value stores stable JSON identity.
-    """
-    global _SELECTED_CATALOGUE_TABLE
-    widgets = importlib.import_module("ipywidgets")
-    from IPython import display as ip
-
-    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
-    options = _catalogue_table_options(rows)
-    by_label = {o["label"]: o for o in options}
-    combo = widgets.Combobox(placeholder="Search profiled tables", options=[o["label"] for o in options], description="Table", ensure_option=True, layout=widgets.Layout(width="980px"))
-    context = widgets.HTML()
-
-    def select(label: str) -> None:
-        global _SELECTED_CATALOGUE_TABLE
-        option = by_label.get(label) or options[0]
-        _SELECTED_CATALOGUE_TABLE = {k: option[k] for k in ["environment_name", "dataset_name", "table_name", "metadata_table_key", "profile_run_id", "profile_stage", "layer", "asset_kind", "profiled_at"]}
-        context.value = f"<b>Selected table:</b> {_SELECTED_CATALOGUE_TABLE['environment_name']} / {_SELECTED_CATALOGUE_TABLE['dataset_name']} / {_SELECTED_CATALOGUE_TABLE['table_name']}<br/><b>Profile run:</b> {_SELECTED_CATALOGUE_TABLE['profile_run_id']} ({_SELECTED_CATALOGUE_TABLE['profile_stage']})"
-
-    def on_change(change: dict[str, Any]) -> None:
-        if change.get("name") == "value" and change.get("new") in by_label:
-            select(change["new"])
-
-    combo.observe(on_change, names="value")
-    combo.value = options[0]["label"]
-    select(combo.value)
-    ip.display(widgets.VBox([combo, context]))
-    return combo
 
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:

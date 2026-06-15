@@ -9,7 +9,6 @@ from fabricops_kit.governance_review import (
     _build_classification_records,
     _build_column_context_records,
     _build_dq_rule_records,
-    _catalogue_table_options,
     _catalogue_profile_target_model,
 )
 
@@ -127,18 +126,6 @@ def test_governance_review_builders_commit_only_human_approved_records():
             profile_rows,
             [{"column_name": "order_id", "sensitivity_label": "secret", "personal_data_classification": "unknown", "review_status": "approved", "commit": True}],
         )
-
-
-def test_catalogue_selection_keeps_latest_successful_profile():
-    options = _catalogue_table_options([
-        {**_profile_rows("run-1")[0], "profiled_at": "2026-01-01T00:00:00Z"},
-        *_profile_rows("run-2"),
-        {**_profile_rows("run-3")[0], "profile_status": "failed", "profiled_at": "2026-01-03T00:00:00Z"},
-    ])
-
-    assert len(options) == 1
-    assert options[0]["profile_run_id"] == "run-2"
-
 
 
 def test_governance_profile_target_groups_profiles_by_physical_table_not_stage_or_pipeline():

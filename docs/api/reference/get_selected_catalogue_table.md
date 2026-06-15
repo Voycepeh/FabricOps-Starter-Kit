@@ -1,13 +1,13 @@
 # get_selected_catalogue_table
 
-Return the table selected by widget_select_catalogue_table.
+Return the table selected by widget_select_governance_profile_target.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:368`
+`fabricops_kit/governance_review.py:316`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L368-L392">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/governance_review.py#L316-L340">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -15,11 +15,11 @@ Return the table selected by widget_select_catalogue_table.
 
 **Use when:**
 
-- Use after the catalogue selector has been rendered and the reviewer has chosen a table.
+- Use after the governance profile target selector has been rendered and the reviewer has chosen a table.
 
 **Additional context:**
 
-Returns the catalogue table selected by widget_select_catalogue_table for downstream governance review cells.
+Returns the catalogue table selected by widget_select_governance_profile_target for downstream governance review cells.
 
 </details>
 
@@ -41,7 +41,7 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_selector` | `Any \| None` | No | Selector returned by ``widget_select_catalogue_table``. Passing it is optional because the widget also maintains module-level selection state. |
+| `table_selector` | `Any \| None` | No | Selector returned by ``widget_select_governance_profile_target``. Passing it is optional because the widget also maintains module-level selection state. |
 
 ## Returns
 
@@ -122,7 +122,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `368`
+- Source line: `316`
 - Inbound references count: 0
 - Outbound references count: 0
 - Used in templates: 03_governance
@@ -131,8 +131,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### AI implementation contract
 
 - **required_context:** Starter template: `03_governance`; segment: `Governance review`.
-- **inputs:** table_selector : ipywidgets.Combobox, optional
-    Selector returned by ``widget_select_catalogue_table``. Passing it is
+- **inputs:** table_selector : ipywidgets.VBox, optional
+    Selector returned by ``widget_select_governance_profile_target``. Passing it is
     optional because the widget also maintains module-level selection state.
 - **output:** dict[str, Any]
     Stable table identity used by ``load_catalogue_profile_rows``.
@@ -151,9 +151,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L368-L392">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L368-L392</a>
-- Start line: `368`
-- End line: `392`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/governance_review.py#L316-L340">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad2fcc19aa4b83b0f36592c2535bd0207c4c6158/src/fabricops_kit/governance_review.py#L316-L340</a>
+- Start line: `316`
+- End line: `340`
 - Signature:
 
 ```python

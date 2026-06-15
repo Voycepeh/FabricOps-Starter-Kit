@@ -64,7 +64,6 @@ nav:
           - widget_review_column_context: api/reference/widget_review_column_context.md
           - widget_review_dq_rules: api/reference/widget_review_dq_rules.md
           - widget_select_agreement: api/reference/widget_select_agreement.md
-          - widget_select_catalogue_table: api/reference/widget_select_catalogue_table.md
           - widget_select_governance_profile_target: api/reference/widget_select_governance_profile_target.md
           - write_catalogue_evidence: api/reference/write_catalogue_evidence.md
           - write_lakehouse_table: api/reference/write_lakehouse_table.md
