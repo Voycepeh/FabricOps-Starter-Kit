@@ -69,7 +69,7 @@ Run the required delivery templates in this order:
 | 2 | `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
 | 3 | `02_pipeline` | Builds repeatable transformations, validates source and target data, enforces active approved DQ rules, publishes outputs, records runtime audit columns, captures lineage, and writes profiles. |
 | 4 | `03_governance` | Checks evidence, metadata, ownership, rules, and readiness; approved DQ expectations are stored for the next pipeline run. |
-| 5 | Rerun `02_pipeline` when needed | Loads active approved DQ rules from `METADATA_DQ_RULES` and enforces them before the target write. |
+| 5 | Rerun `02_pipeline` when needed | Loads active approved DQ rows from `METADATA_GUARDRAIL_RULES` and enforces them before the target write. |
 | 6 | Operational support | Use the production notebook export plus FabricOps metadata evidence for support and review. |
 
 ## Optional: run the pipeline guardrail demo

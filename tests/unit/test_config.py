@@ -197,7 +197,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
         DATA_AGREEMENT_TABLE: Schema(["agreement_id"]),
         DATA_AGREEMENT_EVIDENCE_TABLE: Schema(["agreement_id", "file_path"]),
         NOTEBOOK_REGISTRY_TABLE: Schema(["agreement_id", "registration_id"]),
-        "METADATA_DQ_RULES": Schema(["rule_id"]),
+        "METADATA_GUARDRAIL_RULES": Schema(["rule_id"]),
     }
     reads = {table: 0 for table in schemas}
     writes = []
@@ -209,7 +209,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
         return Table(schemas[table].fieldNames())
 
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_DQ_RULES": schemas["METADATA_DQ_RULES"]})
+    monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
     monkeypatch.setattr(io, "read_lakehouse_table", read_table)
     monkeypatch.setattr(io, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((env, target, table, kwargs)))
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
@@ -220,7 +220,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     assert result["status"] == "ready"
     assert result["data_agreement"]["status"] == "ready"
     assert result["notebook_registry"]["created"] is True
-    assert result["governance"]["created_tables"] == ["METADATA_DQ_RULES"]
+    assert result["governance"]["created_tables"] == ["METADATA_GUARDRAIL_RULES"]
     assert result["tables"] == list(schemas)
     assert result["created_tables"] == list(schemas)
     assert result["warnings"] == []
@@ -275,12 +275,15 @@ def test_active_metadata_tables_are_source_driven_and_explain_optional_access_ta
     """Verify active metadata tables are source driven and explain optional access table."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 11
+    assert len(tables) == 14
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_AGREEMENT_EVIDENCE" in tables
     assert "METADATA_NOTEBOOK_REGISTRY" in tables
-    assert "METADATA_DQ_RULES" in tables
+    assert "METADATA_GUARDRAIL_RULES" in tables
+    assert "METADATA_GUARDRAIL_PROFILES" in tables
+    assert "METADATA_GUARDRAIL_RESULTS" in tables
+    assert "METADATA_GUARDRAIL_BASELINE_EVENTS" in tables
     assert "METADATA_GOVERNANCE_REVIEWS" in tables
     assert "METADATA_DATA_ACCESS" not in tables
 
@@ -305,18 +308,18 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
         spark=spark,
         config=framework_config(),
         env="dev",
-        expected_tables=["METADATA_DATA_STEWARD", "METADATA_DQ_RULES"],
+        expected_tables=["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL_RULES"],
     )
 
     assert result["status"] == "ready"
     assert result["missing_tables"] == []
     assert result["expected_table_count"] == 2
-    assert result["registered_tables"] == ["METADATA_DATA_STEWARD", "METADATA_DQ_RULES"]
+    assert result["registered_tables"] == ["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL_RULES"]
     assert result["show_tables_statement"] is None
     assert result["optional_documented_tables"] == ["METADATA_DATA_ACCESS"]
     assert calls == [
         ("dev", "metadata", "METADATA_DATA_STEWARD", None, spark),
-        ("dev", "metadata", "METADATA_DQ_RULES", None, spark),
+        ("dev", "metadata", "METADATA_GUARDRAIL_RULES", None, spark),
     ]
 
 

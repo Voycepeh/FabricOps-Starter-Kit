@@ -190,7 +190,8 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
         approved_by="reviewer@example.com",
     )
 
-    assert [table for table, _ in writes] == [governance.DQ_RULES_TABLE]
+    assert [table for table, _ in writes] == [governance.GUARDRAIL_RULES_TABLE]
+    assert writes[0][1].collect()[0]["guardrail_type"] == "dq"
     loaded = governance._load_active_dq_rules(writes[0][1], table_name="orders")
 
     assert loaded == [

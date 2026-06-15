@@ -1,6 +1,6 @@
 # DQ rule reference
 
-FabricOps supports **23 native DQ rule types** for metadata-driven checks. Reviewers approve these rules in Governance Review, FabricOps stores them in `METADATA_DQ_RULES`, and `enforce_dq_rules` evaluates the active approved rules during later `02_pipeline` runs.
+FabricOps supports **23 native DQ rule types** for metadata-driven checks. Reviewers approve these rules in Governance Review, FabricOps stores them as `guardrail_type="dq"` rows in `METADATA_GUARDRAIL_RULES`, and `enforce_dq_rules` evaluates the active approved rules during later `02_pipeline` runs.
 
 FabricOps uses one canonical DQ rule vocabulary. It does **not** require Great Expectations or dbt at runtime, and it does not expose one Python callable per rule. Rules are metadata: choose the rule type, provide the required parameters, approve the row, and let the pipeline load the approved metadata.
 
@@ -10,7 +10,7 @@ For the Governance Review operating model, see [Governance Review](../../how-fab
 
 Each rule below shows:
 
-- **Rule**: the `rule_type` value to store in `METADATA_DQ_RULES`.
+- **Rule**: the `rule_type` value to store in `METADATA_GUARDRAIL_RULES` for rows with `guardrail_type="dq"`.
 - **When to use it**: the plain-language reason a reviewer would approve the rule.
 - **Required parameters**: the minimum fields that must be present in the rule JSON. Most rules also include `rule_type`, `severity`, and a description in the approved metadata row.
 - **Example JSON**: a small public-safe example that can be adapted in `03_governance`.
@@ -96,4 +96,4 @@ Set `severity="error"` when a failure should block unsafe or misleading output. 
 
 ## Runtime behavior
 
-`METADATA_DQ_RULES` is append-only. Create, update, deactivate, and reactivate actions add new metadata rows instead of deleting history. During a pipeline run, `enforce_dq_rules` resolves the newest version of each rule, keeps only active approved rules, evaluates them, and records the DQ outcome as guardrail evidence.
+`METADATA_GUARDRAIL_RULES` is append-only for DQ rows. Create, update, deactivate, and reactivate actions add new metadata rows instead of deleting history. During a pipeline run, `enforce_dq_rules` resolves the newest version of each rule, keeps only active approved rules, evaluates them, and records the DQ outcome as guardrail evidence.

@@ -61,7 +61,7 @@ stop_if_failed(dq_result)
 | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | Spark DataFrame to evaluate before the target write. The full DataFrame is never filtered or split by this helper. |
 | `config` | `FrameworkConfig or dict` | Yes | Runtime configuration containing the configured metadata lakehouse route from ``00_env_config``. |
-| `env` | `str` | Yes | Environment name used to read ``METADATA_DQ_RULES`` from the configured metadata target. |
+| `env` | `str` | Yes | Environment name used to read ``METADATA_GUARDRAIL_RULES`` from the configured metadata target. |
 | `dataset_name` | `str` | Yes | Dataset identifier used with ``table_name`` to scope approved DQ rules when those columns exist in the metadata table. |
 | `table_name` | `str` | Yes | Target table name whose approved active DQ rules should be enforced. |
 | `spark_session` | `pyspark.sql.SparkSession` | No | Spark session used to read metadata when required by the configured storage helper. |
@@ -118,7 +118,7 @@ Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it d
 
 **Notes:**
 
-This v1 guardrail reads approved active rules from ``METADATA_DQ_RULES`` via
+This v1 guardrail reads approved active DQ rules from ``METADATA_GUARDRAIL_RULES`` via
 the configured metadata route. It records aggregate rule outcomes only; it
 does not quarantine rows, write row-level failure metadata, filter invalid
 rows, send alerts, or partially write targets.

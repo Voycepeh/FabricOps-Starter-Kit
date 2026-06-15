@@ -76,7 +76,7 @@ For each configured table, `02_pipeline` checks whether `max(freshness_column)` 
 
 ## Profile behavior guardrails
 
-Profile behavior guardrails use daily profile evidence from `METADATA_DATA_CATALOGUE` to enforce the configured `load_behavior`. This guardrail is about expected table behavior over time; low-level storage edit detection is intentionally out of scope.
+Profile behavior guardrails use catalogue/profile evidence from `METADATA_DATA_CATALOGUE` to enforce the configured `load_behavior`. This guardrail is about expected table behavior over time; low-level storage edit detection is intentionally out of scope.
 
 FabricOps reuses accepted catalogue evidence such as `row_count`, `column_name`, `min_value`, `max_value`, `profile_stage`, `profile_status`, `stability_status`, `freshness_status`, and `dq_status`.
 
@@ -107,7 +107,11 @@ After guardrails run, FabricOps writes metadata evidence that describes what was
 
 | Metadata table | Evidence written |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | Profile evidence and guardrail results, including reusable evidence such as `row_count`, `column_name`, `min_value`, `max_value`, `profile_stage`, `profile_status`, `stability_status`, `freshness_status`, and `dq_status`. |
+| `METADATA_DATA_CATALOGUE` | Catalogue/profile discovery anchor: what exists and what was profiled. |
+| `METADATA_GUARDRAIL_RULES` | What should be checked. DQ rows use `guardrail_type="dq"`. |
+| `METADATA_GUARDRAIL_PROFILES` | Newly introduced schema table for observed guardrail profile snapshots, including future watermark-grouped snapshots. |
+| `METADATA_GUARDRAIL_RESULTS` | Newly introduced schema table for runtime pass/fail outcomes and continuation decisions. |
+| `METADATA_GUARDRAIL_BASELINE_EVENTS` | Newly introduced schema table for future human baseline acceptance, reset, approval, rejection, and block decisions. |
 | `METADATA_PIPELINE_RUNS` | Run-level summary showing the pipeline result and key execution details. |
 | `METADATA_DATA_LINEAGE_TABLE` | Source-to-target lineage for the governed output. |
 

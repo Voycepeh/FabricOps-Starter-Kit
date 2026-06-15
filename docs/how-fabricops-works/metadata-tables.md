@@ -2,7 +2,7 @@
 
 FabricOps metadata tables live in the Governance workspace `metadata_lakehouse`. They coordinate the notebook workflow and keep metadata evidence available for review, support, and visibility.
 
-`00_env_config` contains the metadata setup call as an optional commented block. Uncomment and run that block manually once per environment to create the current 11 active metadata tables, then comment it back before normal use. Rerun it only after metadata schema/table changes. Keeping setup commented makes downstream `%run 00_env_config` calls fast for `01_agreement`, `02_pipeline`, and `03_governance`. The setup creates missing metadata tables by building empty Spark DataFrames from the known schemas and writing them through the configured `metadata` lakehouse target; the notebook does **not** need a default lakehouse attachment for metadata setup. `METADATA_DATA_ACCESS` remains documented as optional access-capture metadata, but it is not created by the standard setup until an access-capture workflow enables it. Most users should not create or edit these schemas by hand.
+`00_env_config` contains the metadata setup call as an optional commented block. Uncomment and run that block manually once per environment to create the current active metadata tables, then comment it back before normal use. Rerun it only after metadata schema/table changes. Keeping setup commented makes downstream `%run 00_env_config` calls fast for `01_agreement`, `02_pipeline`, and `03_governance`. The setup creates missing metadata tables by building empty Spark DataFrames from the known schemas and writing them through the configured `metadata` lakehouse target; the notebook does **not** need a default lakehouse attachment for metadata setup. `METADATA_DATA_ACCESS` remains documented as optional access-capture metadata, but it is not created by the standard setup until an access-capture workflow enables it. Most users should not create or edit these schemas by hand.
 
 A healthy metadata table is rooted directly at `Tables/<metadata_table>/_delta_log`; it should not be created as a nested path such as `Tables/<metadata_table>/Unidentified/_delta_log`. FabricOps does not automatically migrate older or malformed metadata tables. If schema validation reports missing columns or you find an older nested folder, recreate the affected table or manually migrate the data before rerunning setup. If you choose to inspect the metadata lakehouse catalog manually, run catalog checks against the configured metadata lakehouse rather than relying on a notebook default lakehouse.
 
@@ -43,15 +43,18 @@ write_lakehouse_table(
 | `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_agreement` | Stores file references that support an agreement version. |
 | `METADATA_NOTEBOOK_REGISTRY` | `02_pipeline`, optional `99_explore` | Stores notebook-to-agreement relationships. |
 | `METADATA_DATA_LINEAGE_TABLE` | `02_pipeline` | Stores current table-level lineage evidence for a notebook. |
-| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Stores table context, profile evidence, and guardrail context. |
+| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Catalogue/profile discovery anchor: records what table/column evidence exists and what was profiled. It is not the all-purpose store for guardrail rules, runtime results, baselines, or reset approvals. |
 | `METADATA_PIPELINE_RUNS` | `02_pipeline` | Stores one runtime summary row per pipeline run, tied to agreement and notebook registry context. |
-| `METADATA_DATA_ACCESS` | Optional access capture process | Optional table-level access assignments when captured; not part of the current 11-table setup registry. |
+| `METADATA_DATA_ACCESS` | Optional access capture process | Optional table-level access assignments when captured; not part of the current active setup registry. |
 | `METADATA_COLUMN_CONTEXT` | `03_governance` | Stores reviewed business meaning for catalogue columns. |
-| `METADATA_DQ_RULES` | `03_governance` | Stores approved DQ expectations only; runtime DQ results stay with notebook guardrail output and existing catalogue/profile evidence. |
+| `METADATA_GUARDRAIL_RULES` | `03_governance` | Stores approved or proposed guardrail rules: what should be checked for `schema`, `freshness`, `profile_behavior`, and `dq` guardrails. DQ rows use `guardrail_type="dq"`. |
+| `METADATA_GUARDRAIL_PROFILES` | Runtime evidence schema | Newly introduced schema table intended for observed guardrail profile snapshots: what was observed for a run, including multiple rows per table when grouped by watermark. |
+| `METADATA_GUARDRAIL_RESULTS` | Runtime evidence schema | Newly introduced schema table intended for pass/fail guardrail outcomes: what passed, warned, failed, or blocked continuation. |
+| `METADATA_GUARDRAIL_BASELINE_EVENTS` | Baseline decision schema | Newly introduced schema table intended for baseline creation, reset, approval, rejection, accepted-change, and blocked-change decisions. |
 | `METADATA_COLUMN_CLASSIFICATION` | `03_governance` | Stores reviewed sensitivity and PII classifications. |
 | `METADATA_GOVERNANCE_REVIEWS` | `03_governance` | Stores final review outcomes such as approved, rejected, or needs remediation with blockers and warnings. |
 
-`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue, lineage, profile, guardrail, and run evidence. `03_governance` writes reviewed metadata such as column context, DQ expectations, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
+`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue/profile discovery evidence, lineage, and run evidence. Guardrail profile/result tables are introduced as schemas for runtime evidence but are not claimed as current write targets unless a write path is implemented. `03_governance` writes reviewed metadata such as column context, guardrail rules, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
 
 For how schema, freshness, profile behavior, and DQ settings produce this evidence, see [Pipeline Guardrails](pipeline-guardrails.md).
 
@@ -89,11 +92,14 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `METADATA_DATA_AGREEMENT_EVIDENCE` | `agreement_id`, `contract_version`, `file_path` | Links to one agreement version. |
 | `METADATA_NOTEBOOK_REGISTRY` | `registration_id` | Links notebooks to agreement versions. |
 | `METADATA_DATA_LINEAGE_TABLE` | `lineage_id` | Links lineage to notebook identity and catalogue table keys. |
-| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_column_key` | Provides stable table and column keys used by review metadata. |
+| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_column_key` | Provides stable table and column catalogue/profile evidence used by review metadata. |
 | `METADATA_PIPELINE_RUNS` | `run_id` | Links runtime summaries to agreements, notebook registrations, catalogue evidence, and lineage rows. |
 | `METADATA_DATA_ACCESS` | `user_principal`, `table_id`, `granted_date` | `table_id` links to catalogue table keys. |
 | `METADATA_COLUMN_CONTEXT` | `metadata_column_key`, `_committed_at` | Links reviewed context to a catalogue column. |
-| `METADATA_DQ_RULES` | `rule_key`, `action_ts` | Links DQ expectations to catalogue table or column keys. |
+| `METADATA_GUARDRAIL_RULES` | `rule_key`, `_committed_at` | Links approved or proposed guardrail expectations to catalogue table or column keys. |
+| `METADATA_GUARDRAIL_PROFILES` | `profile_id` | Links observed guardrail profile snapshots to run, dataset, table, guardrail type, and optional watermark value. |
+| `METADATA_GUARDRAIL_RESULTS` | `result_id` | Links runtime pass/fail outcomes to a guardrail rule, run, table, and optional column. |
+| `METADATA_GUARDRAIL_BASELINE_EVENTS` | `event_id` | Links human baseline reset or acceptance decisions to table, guardrail type, old/new baseline runs, and approvals. |
 | `METADATA_COLUMN_CLASSIFICATION` | `metadata_column_key`, `_committed_at` | Links reviewed classification to a catalogue column. |
 | `METADATA_GOVERNANCE_REVIEWS` | `review_id` | Links the final `03_governance` outcome to agreement, pipeline run, catalogue profile, blockers, warnings, and evidence-summary context. |
 
@@ -208,7 +214,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 
 ### `METADATA_DATA_CATALOGUE`
 
-**For:** table context, profile evidence, and guardrail context written by `02_pipeline` for each successful source or target profile run.
+**For:** table and column catalogue/profile evidence written by `02_pipeline` for each source or target profile run. The catalogue answers “what exists and what was profiled.” It should not become the storage table for all guardrail rules, guardrail baselines, guardrail results, or baseline reset approvals; those responsibilities belong to the guardrail metadata tables below.
 
 | Column | Purpose |
 | --- | --- |
@@ -323,9 +329,11 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 
 **Workflow connection:** AI suggestions are advisory. A person must approve reviewed metadata before it is treated as trusted context. Includes the standard runtime audit columns.
 
-### `METADATA_DQ_RULES`
+### `METADATA_GUARDRAIL_RULES`
 
-**For:** approved DQ expectations only, written by `03_governance`.
+**For:** approved or proposed guardrail rules written by governance and consumed by runtime guardrails. This table generalizes the pre-cutover `METADATA_DQ_RULES` model so one rules table can describe `schema`, `freshness`, `profile_behavior`, and `dq` expectations. Supported `review_status` values include `draft`, `proposed`, `engineer_approved`, `governance_approved`, `rejected`, `superseded`, and `inactive`.
+
+Supported `guardrail_type` values are `schema`, `freshness`, `profile_behavior`, and `dq`.
 
 | Column | Purpose |
 | --- | --- |
@@ -335,7 +343,8 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `metadata_column_key` | Stable column identifier where applicable. |
 | `table_name` | Selected table. |
 | `column_name` | Selected column where applicable. |
-| `rule_type` | Rule type. |
+| `guardrail_type` | Guardrail family: `schema`, `freshness`, `profile_behavior`, or `dq`. |
+| `rule_type` | Specific rule type within the guardrail family. |
 | `threshold` | Optional warning or failure threshold. |
 | `severity` | Rule severity. |
 | `description` | Human-readable rule description. |
@@ -343,15 +352,35 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 | `min_value` | Optional minimum value stored inside `rule_parameters_json`. |
 | `max_value` | Optional maximum value stored inside `rule_parameters_json`. |
 | `regex_pattern` | Optional regular expression. |
-| `status` | Review status. |
+| `review_status` | Review state, such as `draft`, `proposed`, `engineer_approved`, `governance_approved`, `rejected`, `superseded`, or `inactive`. |
 | `is_active` | Active rule state. |
 | `action_type` | Lifecycle action. |
 | `action_by` | User generated by the rule workflow. |
-| `action_ts` | Action timestamp generated by the rule workflow. |
+| `created_at` | Rule proposal/create timestamp. |
+| `approved_at` | Approval timestamp when applicable. |
 | `action_reason` | Reason for the action. |
-| `rule_source` | Source of the rule or suggestion. |
+| `source_notebook_type` | Notebook/workflow type that proposed the rule. |
+| `source_notebook_id` | Source notebook identifier when available. |
+| `source_workspace_id` | Source workspace identifier when available. |
+| `superseded_by_rule_key` | Replacement rule key when this rule is superseded. |
 
-**Workflow connection:** approved active DQ expectations become runtime guardrails only when `02_pipeline` calls `enforce_dq_rules`. DQ run results are notebook/runtime guardrail output: aggregated rule-level results are printed in the notebook, and warning/passed annotation evidence can be captured through the existing profiling/catalogue path. FabricOps v1 does not add new metadata tables for failed rows or filter rows from the target. Includes the standard runtime audit columns.
+**Workflow connection:** approved active `dq` expectations become runtime DQ guardrails when `02_pipeline` calls `enforce_dq_rules`. `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` only and enforces active approved rows with `guardrail_type="dq"`. Includes the standard runtime audit columns.
+
+### `METADATA_GUARDRAIL_PROFILES`
+
+**For:** observed profile snapshots: what was observed during a guardrail run. Supports multiple rows per table per run, especially when grouped by `watermark_column` and `watermark_value`. Key fields include `profile_id`, `run_id`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `profile_scope`, `watermark_column`, `watermark_value`, `row_count`, `column_count`, `profile_hash`, `profile_payload_json`, `baseline_status`, and `created_at`.
+
+### `METADATA_GUARDRAIL_RESULTS`
+
+**For:** pass/fail outcomes: what passed, warned, failed, or blocked continuation. Key fields include `result_id`, `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, `expected_value_json`, `actual_value_json`, `result_payload_json`, and `created_at`.
+
+### `METADATA_GUARDRAIL_BASELINE_EVENTS`
+
+**For:** human baseline reset and acceptance decisions. Supported `event_type` values include `baseline_created`, `baseline_reset_requested`, `baseline_reset_approved`, `baseline_reset_rejected`, `change_accepted`, and `change_blocked`. Key fields include `event_id`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `watermark_column`, `watermark_value`, `old_baseline_run_id`, `new_baseline_run_id`, `event_type`, `reason`, `change_reference`, `approved_by`, `approved_at`, and `created_at`.
+
+### `METADATA_DQ_RULES`
+
+**For:** obsolete pre-cutover DQ metadata only. It is not part of the active setup registry, and runtime DQ enforcement no longer reads it. Migrate any needed approved rules into `METADATA_GUARDRAIL_RULES` with `guardrail_type="dq"` before relying on them in new runs.
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 

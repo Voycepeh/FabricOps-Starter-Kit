@@ -172,7 +172,19 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
     assert "spark.createDataFrame" in smoke
     assert "write_lakehouse_table" in smoke
     assert '"source",' in smoke
-    assert "METADATA_DQ_RULES" in smoke
+    assert "METADATA_GUARDRAIL_RULES" in smoke
+    for guardrail_field in [
+        "guardrail_type",
+        "author_role",
+        "created_by",
+        "created_at",
+        "source_notebook_type",
+        "source_notebook_id",
+        "source_workspace_id",
+        "superseded_by_rule_key",
+        "notes",
+    ]:
+        assert guardrail_field in smoke
     assert "scenario_catalogue_df" in smoke
     assert "Refusing to write non-smoke table" in smoke
 
@@ -193,6 +205,19 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
         assert orchestration_concern not in smoke
 
     dq_smoke = _code_from_notebook(TEMPLATES / "example_dq_rule_smoke_test.ipynb")
+    assert "METADATA_GUARDRAIL_RULES" in dq_smoke
+    for guardrail_field in [
+        "guardrail_type",
+        "author_role",
+        "created_by",
+        "created_at",
+        "source_notebook_type",
+        "source_notebook_id",
+        "source_workspace_id",
+        "superseded_by_rule_key",
+        "notes",
+    ]:
+        assert guardrail_field in dq_smoke
     assert "mode=\"overwrite\"" not in dq_smoke
     assert "mode = \"overwrite\"" not in dq_smoke
 

@@ -178,12 +178,13 @@ def test_record_table_governance_writes_context_dq_and_classification(monkeypatc
 
     assert {table for table, *_ in writes} == {
         governance.COLUMN_CONTEXT_TABLE,
-        governance.DQ_RULES_TABLE,
+        governance.GUARDRAIL_RULES_TABLE,
         governance.COLUMN_CLASSIFICATION_TABLE,
     }
     assert all((env, target) == ("dev", "metadata") for _, _, env, target, _ in writes)
     assert result["column_context"][0]["business_context"] == "Order identifier"
     assert result["dq_rules"][0]["rule_id"] == "order_id_required"
+    assert result["dq_rules"][0]["guardrail_type"] == "dq"
     assert result["column_classification"][0]["sensitivity_label"] == "internal"
 
 
@@ -242,11 +243,11 @@ def test_schema_field_validation_names_table_and_duplicate_logical_columns():
         )
 
 
-def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
-    """Verify governance metadata schemas do not add dq failure tables."""
+def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tables():
+    """Verify governance metadata schemas include guardrail rules without failure tables."""
     schemas = governance._get_governance_metadata_schemas()
 
-    assert governance.DQ_RULES_TABLE in schemas
+    assert governance.GUARDRAIL_RULES_TABLE in schemas
     assert governance.PIPELINE_RUNS_TABLE in schemas
     assert governance.GOVERNANCE_REVIEWS_TABLE in schemas
     assert "run_summary_json" in schemas[governance.PIPELINE_RUNS_TABLE].fieldNames()

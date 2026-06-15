@@ -61,7 +61,7 @@ Governance Review captures append-only human-approved metadata/configuration:
 | Business context | `METADATA_COLUMN_CONTEXT` | Human-readable meaning, notes, and context for real profiled columns. |
 | Sensitivity/classification | `METADATA_COLUMN_CLASSIFICATION` | Sensitivity labels and handling requirements for profiled columns. |
 | Personal-data or identifier classification | `METADATA_COLUMN_CLASSIFICATION` | Whether columns represent personal data, identifiers, or other governed classification signals. |
-| DQ expectations | `METADATA_DQ_RULES` | Active approved DQ rules that later pipeline runs can load and enforce. |
+| Guardrail rules | `METADATA_GUARDRAIL_RULES` | Active approved or proposed schema, freshness, profile-behavior, and DQ rules that later pipeline runs can load and enforce. |
 | Governance outcome notes | `METADATA_GOVERNANCE_REVIEWS` | Optional outcome notes, blockers, warnings, or review decisions for the table. |
 
 AI suggestions can be useful starting points, especially for first-pass descriptions or candidate DQ expectations, but they are never auto-approved.
@@ -95,7 +95,7 @@ Use these generated API references for the helpers behind the governance review 
 DQ expectations are one kind of metadata augmentation in Governance Review; they are not the purpose of the whole page.
 
 - `03_governance` lets reviewers add, edit, approve, deactivate, or reactivate DQ expectations for profiled tables and columns.
-- Approved rules are stored as governed metadata/configuration in `METADATA_DQ_RULES`.
+- Approved rules are stored as governed metadata/configuration in `METADATA_GUARDRAIL_RULES`.
 - Later `02_pipeline` runs load the newest active approved rules for the table.
 - `enforce_dq_rules` enforces those approved rules at runtime and records the outcome as guardrail evidence.
 
@@ -108,6 +108,6 @@ Approved metadata affects later runs only after it is written to metadata tables
 - Approved business context and classification become metadata/configuration for downstream reporting, handover, governance review, and runtime decisions where relevant.
 - Approved sensitivity and personal-data classifications can influence later pipeline behaviours, handling expectations, and review decisions.
 - Approved active DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`.
-- `enforce_dq_rules` reads `METADATA_DQ_RULES` from the configured metadata lakehouse target, resolves the newest version for each rule, keeps only active approved rules, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
+- `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` from the configured metadata lakehouse target, resolves the newest version for each DQ rule, keeps only active approved rows with `guardrail_type="dq"`, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
 
 Error-severity DQ failures return `status="failed"` and `can_continue=false`. Warning-severity DQ failures return `status="warning"` and `can_continue=true`.

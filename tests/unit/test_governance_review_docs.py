@@ -33,7 +33,7 @@ def test_dq_rule_index_contains_supported_catalogue():
     for rule_type in governance.DQ_RULE_TYPES:
         assert f"`{rule_type}`" in text
     assert "Great Expectations or dbt" in text
-    assert "METADATA_DQ_RULES" in text
+    assert "METADATA_GUARDRAIL_RULES" in text
 
 
 def test_dq_rule_reference_pages_exist_for_supported_catalogue():
