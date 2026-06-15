@@ -80,8 +80,10 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "read_lakehouse_parquet," in production
     assert "read_lakehouse_excel," in production
     assert "read_warehouse_table," in production
-    assert 'display(source_guardrail_results["summary"])' in production
-    assert 'display(target_guardrail_results["summary"])' in production
+    assert "source_guardrail_display = display_guardrail_results(" in production
+    assert "display(source_guardrail_display)" in production
+    assert "target_guardrail_display = display_guardrail_results(" in production
+    assert "display(target_guardrail_display)" in production
     assert 'target_dq_results = target_guardrail_results["dq_results"]' in production
     assert "target_write_status = {}" in production
     assert "_load_source_dataframe" not in production

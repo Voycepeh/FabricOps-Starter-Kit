@@ -254,8 +254,10 @@ def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_fl
     target_write = code.index("target_write_status = {}")
 
     assert source_guardrails < source_stop_flag < transform < target_prepare < target_guardrails < target_stop_flag < target_write
-    assert 'display(source_guardrail_results["summary"])' in code
-    assert 'display(target_guardrail_results["summary"])' in code
+    assert "source_guardrail_display = display_guardrail_results(" in code
+    assert "display(source_guardrail_display)" in code
+    assert "target_guardrail_display = display_guardrail_results(" in code
+    assert "display(target_guardrail_display)" in code
 
     for runtime_alias in [
         'source_schema_results = source_guardrail_results["schema_results"]',

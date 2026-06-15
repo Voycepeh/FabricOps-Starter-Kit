@@ -125,3 +125,13 @@ Use these settings independently so each guardrail has a clear purpose:
 - Configure freshness separately using `freshness_*` fields.
 - Use `schema_preset` separately for schema strictness.
 - Keep DQ controlled by approved governance rules and `dq_preset`.
+
+## Runtime display modes
+
+`02_pipeline` keeps the raw guardrail result bundle in `source_guardrail_results` and `target_guardrail_results`, but the notebook no longer displays the nested bundle by default. Set `GUARDRAIL_DISPLAY_MODE` near the runtime settings cell:
+
+- `summary` is the default compact pass/fail view for normal users. It shows one row per table with the failed guardrail, continuation decision, main reason, and next action.
+- `detailed` shows per-table, per-guardrail diagnostics for engineers troubleshooting failures. It includes status, severity, reason, expected value, actual value, and next action.
+- `debug` returns the raw nested summary object for framework developers and deeper inspection.
+
+Use `summary` during routine runs, switch to `detailed` when a row fails or warns, and use `debug` only when you need raw internals. Raw results remain available in `source_guardrail_results` and `target_guardrail_results` regardless of the display mode.
