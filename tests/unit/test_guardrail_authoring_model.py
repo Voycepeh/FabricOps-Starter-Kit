@@ -295,7 +295,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
     )
 
     dq_rules_df = spark_session.createDataFrame([
-        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
+        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
     ])
     monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
     dq = governance_review.enforce_dq_rules(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
@@ -546,13 +546,13 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     from fabricops_kit.governance_review import _load_active_dq_rules
 
     rows = [
-        _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="bypass_active_pending_review", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="not_null", column_name="order_id", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="not_null", column_name="order_id", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="missing_active", rule_id="missing_active", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="bypass_active_pending_review", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="missing_active", rule_id="missing_active", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
     ]
     rows[-2].pop("review_status")
     rows[-1].pop("is_active")

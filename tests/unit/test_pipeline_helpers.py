@@ -248,23 +248,16 @@ def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonbloc
 
 
 def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_boolean_columns(spark_session):
-    """Verify normalize catalogue evidence types casts numeric percent timestamp and boolean columns."""
+    """Verify normalize catalogue evidence types casts only catalogue-owned fields."""
     evidence = spark_session.createDataFrame(
         [
             {
                 "row_count": 3,
-                "dq_rule_count": 2,
-                "dq_failed_rule_count": 1,
-                "dq_warning_rule_count": 1,
-                "dq_error_rule_count": 0,
-                "dq_failed_row_count": 1,
+                "null_count": 0,
+                "distinct_count": 3,
                 "null_percent": 0,
                 "distinct_percent": 100,
-                "dq_failed_row_percent": 33,
                 "run_timestamp": "2026-01-01T00:00:00",
-                "stability_check_enabled": True,
-                "freshness_can_continue": True,
-                "stability_can_continue": False,
                 "dataset_name": "orders",
             }
         ]
@@ -273,21 +266,11 @@ def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_
     normalized = pipeline._normalize_catalogue_evidence_types(evidence)
     dtypes = dict(normalized.dtypes)
 
-    for column_name in [
-        "row_count",
-        "dq_rule_count",
-        "dq_failed_rule_count",
-        "dq_warning_rule_count",
-        "dq_error_rule_count",
-        "dq_failed_row_count",
-    ]:
+    for column_name in ["row_count", "null_count", "distinct_count"]:
         assert dtypes[column_name] == "bigint"
-    for column_name in ["null_percent", "distinct_percent", "dq_failed_row_percent"]:
+    for column_name in ["null_percent", "distinct_percent"]:
         assert dtypes[column_name] == "double"
     assert dtypes["run_timestamp"] == "timestamp"
-    assert dtypes["stability_check_enabled"] == "boolean"
-    assert dtypes["freshness_can_continue"] == "boolean"
-    assert dtypes["stability_can_continue"] == "boolean"
     assert dtypes["dataset_name"] == "string"
 
 

@@ -2372,17 +2372,16 @@ def widget_author_dq_rules(
         return save_records(build_individual_record(action_type=action_type, use_bypass=use_bypass))
 
     def suggest_ai(_: Any = None) -> list[dict[str, Any]]:
-        if spark_session is None:
-            message.value = "<b>AI suggestions require spark_session.</b>"
-            return []
-        profile_df = spark_session.createDataFrame(list(state.get("catalogue_profile_rows") or []))
+        profile_rows = list(state.get("catalogue_profile_rows") or [])
+        profile_df = spark_session.createDataFrame(profile_rows) if spark_session is not None else profile_rows
         suggestions = _draft_dq_rules(profile_df=profile_df, table_name=str(state.get("table_name") or ""), config=config)
         for suggestion in suggestions:
             suggestion.update({"review_status": "draft", "is_active": False})
-        records_state["suggestions"] = suggestions
+        records_state["suggestions"].clear()
+        records_state["suggestions"].extend(suggestions)
         suggestions_html.value = "<pre>" + json.dumps(suggestions, indent=2, default=str) + "</pre>"
         message.value = f"<b>Loaded {len(suggestions)} AI draft suggestion(s). Edit and save approved suggestions.</b>"
-        return suggestions
+        return records_state["suggestions"]
 
     def approve_ai(*, use_bypass: bool = False) -> list[dict[str, Any]]:
         reason = bypass_box.value.strip() if use_bypass else ""
@@ -2396,7 +2395,7 @@ def widget_author_dq_rules(
         return save_records(records)
 
     def reject_ai(_: Any = None) -> None:
-        records_state["suggestions"] = []
+        records_state["suggestions"].clear()
         suggestions_html.value = "<i>AI suggestions rejected; no active rules were saved.</i>"
         message.value = "<b>Rejected AI suggestions.</b>"
 

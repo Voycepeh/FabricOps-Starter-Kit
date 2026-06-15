@@ -132,9 +132,28 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     assert {"guardrail_type", "review_status", "source_notebook_type", "superseded_by_rule_key"}.issubset(
         set(schemas[governance.GUARDRAIL_RULES_TABLE].fieldNames())
     )
-    assert {"watermark_column", "watermark_value", "profile_hash", "profile_payload_json", "baseline_status"}.issubset(
-        set(schemas[governance.CATALOGUE_TABLE].fieldNames())
-    )
+    catalogue_fields = set(schemas[governance.CATALOGUE_TABLE].fieldNames())
+    assert {
+        "watermark_column",
+        "watermark_value",
+        "profile_hash",
+        "profile_payload_json",
+        "row_count",
+        "null_percent",
+    }.issubset(catalogue_fields)
+    assert {
+        "baseline_status",
+        "source_schema_check",
+        "target_schema_check",
+        "dq_status",
+        "dq_rule_count",
+        "dq_failed_rule_count",
+        "dq_failed_row_count",
+        "load_behavior",
+        "source_data_change_check",
+        "target_data_change_check",
+        "source_change_signal_json",
+    }.isdisjoint(catalogue_fields)
     assert {"status", "can_continue", "expected_value_json", "actual_value_json"}.issubset(
         set(schemas[governance.GUARDRAIL_RESULTS_TABLE].fieldNames())
     )
