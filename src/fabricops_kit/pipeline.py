@@ -11,7 +11,7 @@ from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_fai
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .config import _current_audit_timestamp, _get_audit_timezone
-from .metadata import _build_metadata_table_key, _build_runtime_audit_fields
+from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
@@ -118,18 +118,9 @@ def _normalize_catalogue_evidence_types(evidence_df: Any):
         "row_count": "long",
         "null_count": "long",
         "distinct_count": "long",
-        "dq_rule_count": "long",
-        "dq_failed_rule_count": "long",
-        "dq_warning_rule_count": "long",
-        "dq_error_rule_count": "long",
-        "dq_failed_row_count": "long",
         "null_percent": "double",
         "distinct_percent": "double",
-        "dq_failed_row_percent": "double",
         "run_timestamp": "timestamp",
-        "stability_check_enabled": "boolean",
-        "freshness_can_continue": "boolean",
-        "stability_can_continue": "boolean",
     }
     normalized = evidence_df
     columns = set(getattr(evidence_df, "columns", []) or [])
@@ -504,56 +495,6 @@ def run_table_guardrails(
         )
 
     return result
-
-
-def _write_guardrail_result_row(
-    *,
-    spark_session: Any,
-    config: Any,
-    env: str,
-    run_id: str,
-    dataset_name: str,
-    table_name: str,
-    guardrail_type: str,
-    rule_type: str,
-    result: Mapping[str, Any],
-    rule_key: str = "",
-    column_name: str = "",
-) -> None:
-    """Append one runtime guardrail outcome row to metadata results."""
-    from pyspark.sql import Row
-
-    audit = _runtime_audit_fields(config, env)
-    status = str(result.get("status") or result.get(f"{guardrail_type}_status") or "not_run")
-    row = Row(
-        result_id=str(uuid4()),
-        run_id=run_id,
-        rule_key=str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
-        environment_name=env,
-        dataset_name=dataset_name,
-        table_name=table_name,
-        column_name=column_name,
-        guardrail_type=guardrail_type,
-        rule_type=str(rule_type or result.get("rule_type") or result.get("check_type") or guardrail_type),
-        status=status,
-        can_continue=bool(result.get("can_continue", True)),
-        severity=str(result.get("severity") or "blocking"),
-        reason=str(result.get("message") or result.get("reason") or ""),
-        expected_value_json=json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
-        actual_value_json=json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
-        result_payload_json=json.dumps({k: v for k, v in result.items() if k != "dataframe"}, default=str, sort_keys=True),
-        created_at=_now_iso(config),
-        **audit,
-    )
-    write_lakehouse_table(
-        spark_session.createDataFrame([row]),
-        config,
-        env,
-        "metadata",
-        GUARDRAIL_RESULTS_TABLE,
-        schema=_configured_lakehouse_schema(config, env, "metadata"),
-        mode="append",
-    )
 
 
 def write_catalogue_evidence(

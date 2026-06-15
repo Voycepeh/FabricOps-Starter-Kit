@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 51</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 50</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>51</td>
+      <td>50</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -80,7 +80,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td>Callable</td>
       <td>function</td>
       <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
-      <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_read_guardrail_rule_metadata</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal), <code>_write_guardrail_result_row</code> (internal)</td>
+      <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_read_guardrail_rule_metadata</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a></td>
@@ -150,7 +150,7 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <li>
 <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>, <span class="reference-chip"><code>_write_guardrail_result_row</code></span>
+<span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/get_selected_catalogue_table/"><code>get_selected_catalogue_table</code></a>
@@ -404,10 +404,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
       <td><code>_value</code></td>
       <td><a href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a href="../../reference/widget_review_dq_rules/"><code>widget_review_dq_rules</code></a></td>
     </tr>
-    <tr>
-      <td><code>_write_guardrail_result_row</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
-    </tr>
   </tbody>
 </table>
 </div>
@@ -630,9 +626,6 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <li>
 <span class="reference-chip"><code>_value</code></span>
 </li>
-<li>
-<span class="reference-chip"><code>_write_guardrail_result_row</code></span>
-</li>
 </ul>
 </details>
 
@@ -656,4 +649,4 @@ Owns table-scoped 03_governance catalogue selection, business context review, DQ
 <a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>
+<a class="reference-chip" href="../metadata/#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="../metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

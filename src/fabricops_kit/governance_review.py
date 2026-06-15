@@ -12,7 +12,7 @@ from typing import Any, Iterable
 from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp, _get_audit_timezone
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
-from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key
+from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row
 from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -1687,54 +1687,6 @@ def enforce_dq_rules(
         )
     return result
 
-
-def _write_guardrail_result_row(
-    *,
-    spark_session: Any,
-    config: Any,
-    env: str,
-    run_id: str,
-    dataset_name: str,
-    table_name: str,
-    guardrail_type: str,
-    rule_type: str,
-    result: dict[str, Any],
-    rule_key: str = "",
-    column_name: str = "",
-) -> None:
-    """Append one runtime guardrail outcome to ``METADATA_GUARDRAIL_RESULTS``."""
-    if spark_session is None or not hasattr(spark_session, "createDataFrame"):
-        return
-    audit = _build_runtime_audit_fields(config=config, env=env)
-    row = {
-        "result_id": str(uuid.uuid4()),
-        "run_id": str(run_id or ""),
-        "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
-        "environment_name": env,
-        "dataset_name": dataset_name,
-        "table_name": table_name,
-        "column_name": column_name,
-        "guardrail_type": guardrail_type,
-        "rule_type": rule_type,
-        "status": str(result.get("status") or "not_run"),
-        "can_continue": bool(result.get("can_continue", True)),
-        "severity": str(result.get("severity") or "blocking"),
-        "reason": str(result.get("message") or result.get("reason") or ""),
-        "expected_value_json": json.dumps(result.get("expected") or {}, default=str, sort_keys=True),
-        "actual_value_json": json.dumps(result.get("actual") or {}, default=str, sort_keys=True),
-        "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
-        "created_at": _now_utc_iso(config),
-        **audit,
-    }
-    write_lakehouse_table(
-        spark_session.createDataFrame([row]),
-        config,
-        env,
-        "metadata",
-        GUARDRAIL_RESULTS_TABLE,
-        schema=_configured_lakehouse_schema(config, env, "metadata"),
-        mode="append",
-    )
 
 def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
     """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""

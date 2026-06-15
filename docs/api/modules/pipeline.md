@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 13</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 12</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>13</td>
+      <td>12</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -87,7 +87,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td>Callable</td>
       <td>function</td>
       <td>Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</td>
-      <td><code>_build_guardrail_evidence_definitions</code> (internal), <code>_guardrail_can_continue</code> (internal), <code>_table_key</code> (internal), <code>_table_name</code> (internal), <code>_write_guardrail_result_row</code> (internal)</td>
+      <td><code>_build_guardrail_evidence_definitions</code> (internal), <code>_guardrail_can_continue</code> (internal), <code>_table_key</code> (internal), <code>_table_name</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
@@ -134,7 +134,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_guardrail_can_continue</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <span class="reference-chip"><code>_write_guardrail_result_row</code></span>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
+<span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_guardrail_can_continue</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
@@ -216,10 +216,6 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td><code>_table_name</code></td>
       <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
-    <tr>
-      <td><code>_write_guardrail_result_row</code></td>
-      <td><a href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
-    </tr>
   </tbody>
 </table>
 </div>
@@ -268,11 +264,6 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <span class="reference-chip"><code>_table_name</code></span>
 </li>
-<li>
-<span class="reference-chip"><code>_write_guardrail_result_row</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
-</li>
 </ul>
 </details>
 
@@ -297,4 +288,4 @@ None.
 <a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>, <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>, <a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>
+<a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

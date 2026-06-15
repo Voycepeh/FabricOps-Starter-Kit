@@ -24,6 +24,26 @@ def _calls_write_lakehouse_table(source: str) -> bool:
     return any(isinstance(node, ast.Call) and getattr(node.func, "id", "") == "write_lakehouse_table" for node in ast.walk(tree))
 
 
+
+def test_catalogue_type_normalizer_keeps_only_profile_evidence_casts():
+    """Verify catalogue type casts do not include retired result fields."""
+    source = _function_source("pipeline.py", "_normalize_catalogue_evidence_types")
+
+    for profile_field in ("row_count", "null_count", "distinct_count", "null_percent", "distinct_percent", "run_timestamp"):
+        assert profile_field in source
+    for result_field in (
+        "dq_rule_count",
+        "dq_failed_rule_count",
+        "dq_warning_rule_count",
+        "dq_error_rule_count",
+        "dq_failed_row_count",
+        "dq_failed_row_percent",
+        "stability_check_enabled",
+        "freshness_can_continue",
+        "stability_can_continue",
+    ):
+        assert result_field not in source
+
 def test_catalogue_writer_targets_catalogue_only():
     """Verify catalogue writer writes observed evidence to catalogue only."""
     source = _function_source("pipeline.py", "write_catalogue_evidence")
@@ -38,13 +58,10 @@ def test_catalogue_writer_targets_catalogue_only():
 
 def test_runtime_result_writers_target_guardrail_results_only():
     """Verify runtime outcome writers target METADATA_GUARDRAIL_RESULTS only."""
-    for path, function_name in [
-        ("pipeline.py", "_write_guardrail_result_row"),
-        ("governance_review.py", "_write_guardrail_result_row"),
-    ]:
+    for path, function_name in [("metadata.py", "_write_guardrail_result_row")]:
         source = _function_source(path, function_name)
         assert _calls_write_lakehouse_table(source)
-        assert "GUARDRAIL_RESULTS_TABLE" in source
+        assert "METADATA_GUARDRAIL_RESULTS" in source
         assert "CATALOGUE_TABLE" not in source
         assert "GUARDRAIL_RULES_TABLE" not in source
 
@@ -81,8 +98,31 @@ def test_runtime_enforcement_functions_route_outcomes_to_results():
         assert guardrail_type in pipeline_source
     assert "_write_guardrail_result_row" in pipeline_source
 
+
+def test_guardrail_result_writer_has_single_shared_implementation():
+    """Verify guardrail result writing is consolidated in metadata utilities."""
+    writer_definitions = []
+    for path in SRC.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        writer_definitions.extend(
+            f"{path.name}:{node.name}"
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == "_write_guardrail_result_row"
+        )
+
+    assert writer_definitions == ["metadata.py:_write_guardrail_result_row"]
+
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
-    """Verify widget functions do not directly write catalogue/rule/result metadata."""
+    """Verify widget functions do not directly write mixed metadata payloads."""
+    dq_widget_source = _function_source("governance_review.py", "widget_review_dq_rules")
+    catalogue_widget_source = _function_source("governance_review.py", "widget_select_governance_profile_target")
+
+    assert "METADATA_GUARDRAIL_RULES" in dq_widget_source
+    assert "METADATA_DATA_CATALOGUE" in catalogue_widget_source
+    assert "read_lakehouse_table" in catalogue_widget_source
+    assert "write_lakehouse_table" not in catalogue_widget_source
+
     for path in SRC.glob("*.py"):
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
@@ -91,3 +131,4 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
                 function_source = ast.get_source_segment(source, node) or ""
                 assert "write_lakehouse_table" not in function_source, f"{path}:{node.name} writes metadata directly"
                 assert "METADATA_DATA_CATALOGUE" not in function_source or "read_lakehouse_table" in function_source
+                assert not ("METADATA_DATA_CATALOGUE" in function_source and "METADATA_GUARDRAIL_RESULTS" in function_source)

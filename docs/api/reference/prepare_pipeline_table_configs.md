@@ -5,9 +5,9 @@ Prepare source or target table configs for 02_pipeline.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:156`
+`fabricops_kit/pipeline.py:147`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L156-L245">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/pipeline.py#L147-L236">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -138,10 +138,10 @@ FabricOps audit columns.
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L143-L153"><code>_add_audit_columns</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L70-L76"><code>_current_audit_timestamp</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/pipeline.py#L134-L144"><code>_add_audit_columns</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/config.py#L70-L76"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
     </div>
@@ -159,7 +159,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `156`
+- Source line: `147`
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 02_pipeline
@@ -186,9 +186,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L156-L245">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/pipeline.py#L156-L245</a>
-- Start line: `156`
-- End line: `245`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/pipeline.py#L147-L236">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/pipeline.py#L147-L236</a>
+- Start line: `147`
+- End line: `236`
 - Signature:
 
 ```python

@@ -7,7 +7,7 @@ Validate a DataFrame schema using strict, allow-new-columns, or monitor-only pre
 
 `fabricops_kit/guardrails.py:205`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/guardrails.py#L205-L295">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/guardrails.py#L205-L295">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -127,14 +127,14 @@ No additional callable notes are documented.
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/guardrails.py#L40-L86"><code>_normalize_datatype</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/guardrails.py#L40-L86"><code>_normalize_datatype</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/guardrails.py#L89-L104"><code>_actual_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/guardrails.py#L89-L104"><code>_actual_schema</code></a>
         </div>
       </section>
     </div>
@@ -179,7 +179,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/guardrails.py#L205-L295">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/c24f473b71c0f84854756792a922952af3d534a7/src/fabricops_kit/guardrails.py#L205-L295</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/guardrails.py#L205-L295">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/62335d6d19ea7b929d2220fad2d0a33f2f0b8aca/src/fabricops_kit/guardrails.py#L205-L295</a>
 - Start line: `205`
 - End line: `295`
 - Signature:

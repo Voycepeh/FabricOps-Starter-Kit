@@ -290,16 +290,16 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <a class="reference-chip" href="../data_agreement/#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="../data_agreement/#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="../data_agreement/#_write_row"><code>_write_row</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../governance_review/#_read_guardrail_rule_metadata"><code>_read_guardrail_rule_metadata</code></a>, <a class="reference-chip" href="../governance_review/#_read_metadata_rows"><code>_read_metadata_rows</code></a>, <a class="reference-chip" href="../governance_review/#_review_governance_evidence"><code>_review_governance_evidence</code></a>, <a class="reference-chip" href="../governance_review/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/record_table_governance/"><code>record_table_governance</code></a>, <a class="reference-chip" href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a>
+<a class="reference-chip" href="../governance_review/#_read_guardrail_rule_metadata"><code>_read_guardrail_rule_metadata</code></a>, <a class="reference-chip" href="../governance_review/#_read_metadata_rows"><code>_read_metadata_rows</code></a>, <a class="reference-chip" href="../governance_review/#_review_governance_evidence"><code>_review_governance_evidence</code></a>, <a class="reference-chip" href="../../reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="../../reference/record_table_governance/"><code>record_table_governance</code></a>, <a class="reference-chip" href="../../reference/widget_select_governance_profile_target/"><code>widget_select_governance_profile_target</code></a>
 
 **guardrails**
 <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="../metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>
+<a class="reference-chip" href="../metadata/#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="../metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>, <a class="reference-chip" href="../metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../pipeline/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a>
+<a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a>
 
 ### External callees
 
