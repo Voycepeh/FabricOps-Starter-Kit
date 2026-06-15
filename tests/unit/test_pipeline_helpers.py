@@ -421,6 +421,68 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
 
 
 
+def test_run_table_guardrails_profile_mode_defaults_and_legacy_alias(monkeypatch):
+    """Verify profile behavior config prefers profile_mode without defaulting to append."""
+    stability_calls = []
+
+    monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline, "validate_schema", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
+
+    def fake_stability(*args, **kwargs):
+        stability_calls.append(kwargs)
+        return {"status": "passed", "can_continue": True}
+
+    monkeypatch.setattr(pipeline, "enforce_profile_behavior", fake_stability)
+    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
+
+    table_configs = [
+        {
+            "key": "default_new_model",
+            "df": "df-default",
+            "table_name": "orders_default",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "dq_preset": "skip",
+        },
+        {
+            "key": "legacy_append",
+            "df": "df-legacy",
+            "table_name": "orders_legacy",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "load_behavior": "append",
+            "dq_preset": "skip",
+        },
+        {
+            "key": "changing_data",
+            "df": "df-changing",
+            "table_name": "orders_changing",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "profile_mode": "changing_data",
+            "watermark_column": "business_date",
+            "dq_preset": "skip",
+        },
+    ]
+
+    pipeline.run_table_guardrails(
+        table_configs,
+        config={},
+        env="dev",
+        run_id="run-1",
+        spark_session="spark",
+    )
+
+    assert stability_calls[0]["profile_mode"] is None
+    assert stability_calls[0]["load_behavior"] is None
+    assert stability_calls[1]["profile_mode"] is None
+    assert stability_calls[1]["load_behavior"] == "append"
+    assert stability_calls[2]["profile_mode"] == "changing_data"
+    assert stability_calls[2]["load_behavior"] is None
+    assert stability_calls[2]["watermark_column"] == "business_date"
+
+
 def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monkeypatch):
     """Verify run table guardrails stop on failure delegates to standard stopper."""
     stopped = []

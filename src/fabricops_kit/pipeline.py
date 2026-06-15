@@ -395,7 +395,7 @@ def run_table_guardrails(
             table_name,
             stage=stage,
             run_id=run_id,
-            load_behavior=table_config.get("load_behavior", "append"),
+            load_behavior=table_config.get("load_behavior"),
             profile_mode=table_config.get("profile_mode"),
             watermark_column=table_config.get("watermark_column"),
             severity=table_config.get("profile_behavior_severity", table_config.get("severity", "blocking")),
