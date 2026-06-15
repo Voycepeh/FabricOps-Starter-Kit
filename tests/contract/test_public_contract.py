@@ -39,6 +39,7 @@ APPROVED_V1_CALLABLES = {
     "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
+    "widget_select_governance_profile_target",
     "widget_select_catalogue_table",
     "get_selected_catalogue_table",
     "load_catalogue_profile_rows",
@@ -118,7 +119,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 def test_root_exports_only_approved_v1_template_callables():
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 32
+    assert len(fabricops_kit.__all__) == 33
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))

@@ -951,6 +951,14 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL: dict[str, dict[str, object]] = {
         "return_interpretation": "The widget stores the selected table in notebook state; call get_selected_catalogue_table after the user chooses a row.",
         "common_failure_causes": ["No catalogue profile rows are available.", "The user has not selected a table.", "Profile metadata cannot be read.", "Widget state was reset by rerunning cells."],
     },
+    "widget_select_governance_profile_target": {
+        "expanded_purpose": "Renders dependent profile-target selectors so governance reviewers choose the physical table first, then select the profile date/run to review. Source/target profile stage and pipeline metadata remain visible as supporting evidence but are not part of table identity.",
+        "when_to_use": "Use in 03_governance when a reviewer needs to select a governed physical table by asset/lakehouse, schema/layer, and table name before choosing the profile date/run to review.",
+        "do_not_use_when": "Do not use for non-interactive pipeline execution, when code already has a specific profile_run_id, or when the flat latest-profile table selector is sufficient. Do not use it to decide pipeline ownership; source/target profile stage and pipeline metadata are supporting evidence only.",
+        "glossary_terms": ["catalogue evidence", "source table", "target table", "notebook template"],
+        "return_interpretation": "The widget stores the selected physical table and profile run in notebook state; call get_selected_catalogue_table after the reviewer chooses a profile target.",
+        "common_failure_causes": ["METADATA_DATA_CATALOGUE has no rows because 02_pipeline profiling has not run.", "Catalogue rows are missing stable physical identity fields such as asset/lakehouse, schema/layer, or table name.", "ipywidgets is unavailable in the notebook runtime.", "No profiled_at or profile run metadata exists, causing profile labels to be less useful."],
+    },
     "get_selected_catalogue_table": {
         "expanded_purpose": "Returns the catalogue table selected by widget_select_catalogue_table for downstream governance review cells.",
         "when_to_use": "Use after the catalogue selector has been rendered and the reviewer has chosen a table.",
@@ -1026,6 +1034,7 @@ RELATED_GUIDES_BY_SYMBOL: dict[str, list[dict[str, str]]] = {
     "write_catalogue_evidence": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_METADATA_TABLES],
     "write_pipeline_lineage": [RELATED_GUIDE_NOTEBOOK_TEMPLATES, RELATED_GUIDE_METADATA_TABLES],
     "write_pipeline_run_summary": [RELATED_GUIDE_PIPELINE_GUARDRAILS, RELATED_GUIDE_METADATA_TABLES],
+    "widget_select_governance_profile_target": [RELATED_GUIDE_GOVERNANCE_REVIEW],
     "widget_select_catalogue_table": [RELATED_GUIDE_GOVERNANCE_REVIEW],
     "get_selected_catalogue_table": [RELATED_GUIDE_GOVERNANCE_REVIEW],
     "load_catalogue_profile_rows": [RELATED_GUIDE_GOVERNANCE_REVIEW, RELATED_GUIDE_METADATA_TABLES],

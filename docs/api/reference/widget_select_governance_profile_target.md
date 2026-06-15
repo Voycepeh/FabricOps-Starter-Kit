@@ -7,15 +7,23 @@ Render dependent selectors for physical catalogue profile targets.
 
 `fabricops_kit/governance_review.py:395`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L395-L477">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L395-L477">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
 <summary>Usage guidance</summary>
 
+**Use when:**
+
+- Use in 03_governance when a reviewer needs to select a governed physical table by asset/lakehouse, schema/layer, and table name before choosing the profile date/run to review.
+
+**Do not use when:**
+
+- Do not use for non-interactive pipeline execution, when code already has a specific profile_run_id, or when the flat latest-profile table selector is sufficient. Do not use it to decide pipeline ownership; source/target profile stage and pipeline metadata are supporting evidence only.
+
 **Additional context:**
 
-Use in 03_governance to select the governed physical table first, then choose a profile date/run. Source/target profile_stage and pipeline metadata are shown as supporting evidence, not table identity.
+Renders dependent profile-target selectors so governance reviewers choose the physical table first, then select the profile date/run to review. Source/target profile stage and pipeline metadata remain visible as supporting evidence but are not part of table identity.
 
 </details>
 
@@ -52,9 +60,20 @@ ipywidgets.VBox
     dropdowns. The selected profile row identity is available through
     ``get_selected_catalogue_table``.
 
+### Return interpretation
+
+The widget stores the selected physical table and profile run in notebook state; call get_selected_catalogue_table after the reviewer chooses a profile target.
+
 ## Raises / Errors
 
 Not documented yet
+
+### Common failure causes
+
+- METADATA_DATA_CATALOGUE has no rows because 02_pipeline profiling has not run.
+- Catalogue rows are missing stable physical identity fields such as asset/lakehouse, schema/layer, or table name.
+- ipywidgets is unavailable in the notebook runtime.
+- No profiled_at or profile run metadata exists, causing profile labels to be less useful.
 
 ## Relationships
 
@@ -131,36 +150,36 @@ pipeline values remain visible as profile evidence for the selected table.
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L242-L262"><code>_catalogue_physical_identity</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L152-L165"><code>_configured_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/metadata.py#L77-L78"><code>_build_metadata_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L242-L262"><code>_catalogue_physical_identity</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/fabric_input_output.py#L152-L165"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/metadata.py#L72-L74"><code>_stable_metadata_key</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L223-L229"><code>_first_present</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L627-L667"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/fabric_input_output.py#L105-L116"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L223-L229"><code>_first_present</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/config.py#L627-L667"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/fabric_input_output.py#L105-L116"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/config.py#L670-L708"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/config.py#L670-L708"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L265-L313"><code>_catalogue_profile_target_model</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L74-L75"><code>_is_success</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L265-L313"><code>_catalogue_profile_target_model</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L74-L75"><code>_is_success</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
         </div>
       </section>
     </div>
@@ -182,7 +201,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: catalogue evidence, source table, target table, notebook template
 
 ### AI implementation contract
 
@@ -215,7 +234,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L395-L477">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d1423d81f7a0be7dd3813caaae442a08fabf7468/src/fabricops_kit/governance_review.py#L395-L477</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L395-L477">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/90404aee64fb7f15ba5b780173a118228334688a/src/fabricops_kit/governance_review.py#L395-L477</a>
 - Start line: `395`
 - End line: `477`
 - Signature:
@@ -241,6 +260,15 @@ def widget_select_governance_profile_target(
 
 </details>
 
+## Glossary
+
+- **Catalogue evidence:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
+- **Source table:** An input table or file read by the pipeline.
+- **Target table:** An output table written by the pipeline.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
 ## See also
 
-No related guides documented.
+- [Governance Review](../../how-fabricops-works/governance-review.md)
