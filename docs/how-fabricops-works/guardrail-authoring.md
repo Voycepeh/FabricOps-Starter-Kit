@@ -23,4 +23,4 @@ For ungoverned tables, engineering-authored rules are saved active with `review_
 
 ## Runtime enforcement
 
-Pipeline enforcement loads active rules only when their status is `self_approved`, `governance_approved`, `approved`, or `bypass_active_pending_review`. Draft, proposed, rejected, and superseded rules are not enforced. Bypassed active rules carry a warning in runtime outcome metadata so reviewers can identify rules that still require post-review.
+Pipeline enforcement loads active rules only when their status is `self_approved`, `governance_approved`, or `bypass_active_pending_review`. Draft, proposed, rejected, and superseded rules are not enforced. Bypassed active rules carry a warning in runtime outcome metadata so reviewers can identify rules that still require post-review.

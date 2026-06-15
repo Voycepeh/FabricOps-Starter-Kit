@@ -108,9 +108,9 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
     """Verify latest active rule resolution and inactive not enforced."""
     metadata = spark_session.createDataFrame(
         [
-            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "not_null", "rule_parameters_json": json.dumps({"columns": ["id"]}), "severity": "error", "description": "old", "is_active": True, "review_status": "approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
-            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "not_null", "rule_parameters_json": json.dumps({"columns": ["id"]}), "severity": "error", "description": "off", "is_active": False, "review_status": "approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
-            {"rule_key": "k2", "rule_id": "r2", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "accepted_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "not_null", "rule_parameters_json": json.dumps({"columns": ["id"]}), "severity": "error", "description": "old", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "not_null", "rule_parameters_json": json.dumps({"columns": ["id"]}), "severity": "error", "description": "off", "is_active": False, "review_status": "governance_approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
+            {"rule_key": "k2", "rule_id": "r2", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "accepted_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
         ]
     )
     rules = governance._load_active_dq_rules(metadata, "orders", env_name="dev", dataset_name="sales")
@@ -225,12 +225,12 @@ def test_cross_column_rules_use_consistent_null_behavior(spark_session):
 
 
 def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch, spark_session):
-    """Verify enforce dq rules loads only approved active metadata rules."""
+    """Verify enforce dq rules loads only active guardrail metadata rules."""
     df = spark_session.createDataFrame([(1, "ok"), (None, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
         [
             {
-                "rule_key": "approved-active",
+                "rule_key": "governance-approved-active",
                 "rule_id": "id_required",
                 "environment_name": "dev",
                 "dataset_name": "sales",
@@ -241,7 +241,7 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
                 "severity": "error",
                 "description": "id required",
                 "is_active": True,
-                "review_status": "approved",
+                "review_status": "governance_approved",
                 "action_type": "created",
                 "approved_at": "2026-06-14T00:00:00Z",
                 "_committed_at": "2026-06-14T00:00:00Z",
@@ -264,7 +264,7 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
                 "_committed_at": "2026-06-14T00:00:00Z",
             },
             {
-                "rule_key": "approved-inactive",
+                "rule_key": "governance-approved-inactive",
                 "rule_id": "inactive_rule",
                 "environment_name": "dev",
                 "dataset_name": "sales",
@@ -275,7 +275,7 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
                 "severity": "error",
                 "description": "inactive should not run",
                 "is_active": False,
-                "review_status": "approved",
+                "review_status": "governance_approved",
                 "action_type": "deactivated",
                 "approved_at": "2026-06-14T00:00:00Z",
                 "_committed_at": "2026-06-15T00:00:00Z",
@@ -303,7 +303,7 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
 
 
 def test_enforce_dq_rules_returns_passed_when_no_approved_active_rules(monkeypatch, spark_session):
-    """Verify enforce dq rules returns passed when no approved active rules."""
+    """Verify enforce dq rules returns passed when no active guardrail rules."""
     df = spark_session.createDataFrame([(1, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
         [

@@ -509,3 +509,55 @@ def test_governance_policy_widget_writes_only_governance_reviews(monkeypatch):
     assert writes == [governance_review.GOVERNANCE_REVIEWS_TABLE]
     assert governance_review.CATALOGUE_TABLE not in writes
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
+
+
+def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
+    """Verify only new active rule statuses are enforced for schema rules."""
+    from fabricops_kit.guardrails import validate_schema_rule
+
+    class Frame:
+        dtypes = [("order_id", "int")]
+        columns = ["order_id"]
+
+    active_statuses = {"self_approved", "governance_approved", "bypass_active_pending_review"}
+    for status in active_statuses:
+        result = validate_schema_rule(
+            Frame(),
+            [_rule(guardrail_type="schema", rule_type="strict", review_status=status, rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}}))],
+            dataset_name="sales",
+            table_name="orders",
+        )
+        assert result["guardrail_type"] == "schema"
+        assert result["rule_key"] == "rule-key"
+
+    for inactive_rule in [
+        _rule(guardrail_type="schema", rule_type="strict", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})),
+        _rule(guardrail_type="schema", rule_type="strict", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}}), review_status=""),
+        {key: value for key, value in _rule(guardrail_type="schema", rule_type="strict", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})).items() if key != "is_active"},
+        _rule(guardrail_type="schema", rule_type="strict", review_status="self_approved", dataset_name="", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})),
+    ]:
+        result = validate_schema_rule(Frame(), [inactive_rule], dataset_name="sales", table_name="orders")
+        assert result["preset"] == "monitor_only"
+        assert "rule_key" not in result
+
+
+def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session):
+    """Verify DQ loading excludes approved, missing status, missing active, and blank dataset rows."""
+    from fabricops_kit.governance_review import _load_active_dq_rules
+
+    rows = [
+        _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="bypass_active_pending_review", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="not_null", column_name="order_id", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="not_null", column_name="order_id", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="missing_active", rule_id="missing_active", guardrail_type="dq", rule_type="not_null", column_name="order_id", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+    ]
+    rows[-2].pop("review_status")
+    rows[-1].pop("is_active")
+    frame = spark_session.createDataFrame(rows)
+
+    loaded = _load_active_dq_rules(frame, table_name="orders", env_name="dev", dataset_name="sales")
+
+    assert {rule["rule_id"] for rule in loaded} == {"self", "gov", "bypass"}

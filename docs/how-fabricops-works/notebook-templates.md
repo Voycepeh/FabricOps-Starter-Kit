@@ -19,7 +19,7 @@ These links open the current development templates. Released documentation shoul
 | 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile source data before production delivery. |
 | 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record catalogue, lineage, DQ, and run evidence. |
 | 5 | `03_governance` | Governance | Review and approve metadata, classifications, sensitivity labels, and DQ rules. |
-| 6 | `02_pipeline` | Engineering | Rerun the pipeline so approved rules are enforced during delivery. |
+| 6 | `02_pipeline` | Engineering | Rerun the pipeline so governance-approved rules are enforced during delivery. |
 
 For detailed behavior, continue to [Pipeline Guardrails](pipeline-guardrails.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
 
@@ -103,7 +103,7 @@ Engineering.
 
 **Key function**
 
-Reads source data, registers source and target DataFrames, applies schema checks, applies freshness and profile behavior checks, runs approved active DQ rules, writes configured outputs, and records runtime evidence. It also writes catalogue, profile, lineage, DQ, and pipeline run metadata so governance can review what was produced.
+Reads source data, registers source and target DataFrames, applies schema checks, applies freshness and profile behavior checks, runs active governance-approved DQ rules, writes configured outputs, and records runtime evidence. It also writes catalogue, profile, lineage, DQ, and pipeline run metadata so governance can review what was produced.
 
 **Output**
 
@@ -129,7 +129,7 @@ Governance, data stewards, or reviewers.
 
 **Key function**
 
-Reviews and commits business context, sensitivity labels, PII classifications, column classifications, and DQ rules. It stores reviewed metadata, but does not itself enforce the rules. Enforcement happens when `02_pipeline` runs again using the approved metadata.
+Reviews and commits business context, sensitivity labels, PII classifications, column classifications, and DQ rules. It stores reviewed metadata, but does not itself enforce the rules. Enforcement happens when `02_pipeline` runs again using the reviewed metadata.
 
 **Output**
 

@@ -449,7 +449,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
             "table_name": "orders",
             "stage": "source",
             "expected_schema": {"id": "bigint"},
-            "dq_preset": "approved_rules",
+            "dq_preset": "active_rules",
         }],
         config={},
         env="dev",
@@ -671,7 +671,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
                 "freshness_max_lag_days": 1,
                 "freshness_severity": "blocking",
                 "profile_mode": "skip",
-                "dq_preset": "approved_rules",
+                "dq_preset": "active_rules",
             }
         ],
         config=framework_config(),

@@ -20,7 +20,7 @@ COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
 GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
-GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "self_approved", "governance_approved", "approved", "bypass_active_pending_review", "rejected", "superseded"]
+GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "self_approved", "governance_approved", "bypass_active_pending_review", "rejected", "superseded"]
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -497,24 +497,24 @@ def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict
 
 
 def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved DQ-rule records without enforcing them."""
+    """Build append-only governance-approved DQ-rule records without enforcing them."""
     profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
     rows = []
     for rule in reviewed_rules or []:
         if not rule.get("commit"):
             continue
-        review_status = str(rule.get("review_status", "approved")).lower()
+        review_status = str(rule.get("review_status", "governance_approved")).lower()
         action_type = str(rule.get("action_type") or ("created" if rule.get("is_active", True) else "deactivated")).lower()
         if action_type == "delete":
             action_type = "deactivated"
-        if action_type not in {"created", "updated", "deactivated", "reactivated", "approved"}:
+        if action_type not in {"created", "updated", "deactivated", "reactivated"}:
             raise ValueError(f"Unsupported DQ action_type: {action_type}")
         is_active = bool(rule.get("is_active", action_type != "deactivated"))
         if action_type == "deactivated":
             is_active = False
         if action_type == "reactivated":
             is_active = True
-        if review_status != "approved":
+        if review_status != "governance_approved":
             continue
         draft = dict(rule)
         draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
@@ -852,7 +852,7 @@ def widget_review_dq_rules(
     if hasattr(existing_select, "observe"):
         existing_select.observe(lambda change: load_existing(), names="value")
 
-    create_button = widgets.Button(description="Save approved active rule", button_style="success")
+    create_button = widgets.Button(description="Save active rule", button_style="success")
     update_button = widgets.Button(description="Update selected rule", button_style="info")
     delete_button = widgets.Button(description="Delete / deactivate", button_style="warning")
     reactivate_button = widgets.Button(description="Reactivate", button_style="success")
@@ -1102,8 +1102,10 @@ def record_table_governance(
     spark_session : pyspark.sql.SparkSession
         Spark session used to create DataFrames for metadata writes.
     context_reviews, dq_rule_reviews, classification_reviews : list of dict, optional
-        Human-approved rows from the governance review workflow. Only rows with
-        ``review_status="approved"`` and ``commit=True`` are written.
+        Human-reviewed rows from the governance review workflow. Business context
+        and classification rows use ``review_status="approved"``. DQ rule rows
+        use ``review_status="governance_approved"``. All rows must set
+        ``commit=True`` to be written.
     approved_by : str, optional
         Reviewer identity to stamp on records. When omitted, runtime defaults
         are used.
@@ -1343,16 +1345,18 @@ def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None 
 
 
 def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
-    """Load active approved DQ rules from append-only metadata rows."""
+    """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, _ = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
     latest = _latest_dq_rule_versions(metadata_df, table_name, env_name=env_name, dataset_name=dataset_name)
-    if "is_active" in columns:
-        latest = latest.filter(F.col("is_active") == True)
+    if "is_active" not in columns:
+        return []
+    latest = latest.filter(F.col("is_active") == True)
     if "action_type" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
-    if "review_status" in columns:
-        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("governance_approved"))).isin("self_approved", "governance_approved", "approved", "bypass_active_pending_review"))
+    if "review_status" not in columns:
+        return []
+    latest = latest.filter(F.lower(F.col("review_status")).isin("self_approved", "governance_approved", "bypass_active_pending_review"))
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
@@ -1589,11 +1593,11 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
         can_continue = True
     failed_checks = [check for check in checks if check.get("status") in {"warning", "failed"}]
     if not checks:
-        message = "No active approved DQ rules found."
+        message = "No active guardrail DQ rules found."
     elif failed_checks:
         message = f"DQ guardrail found {len(failed_checks)} rule failure(s): {status}."
     else:
-        message = f"DQ guardrail passed {len(checks)} active approved rule(s)."
+        message = f"DQ guardrail passed {len(checks)} active guardrail rule(s)."
     return {"status": status, "can_continue": can_continue, "checks": checks, "message": message}
 
 
@@ -1618,7 +1622,7 @@ def enforce_dq_rules(
     run_id: str = "",
     write_results: bool = False,
 ) -> dict:
-    """Enforce active approved DQ rules as a simple pipeline guardrail.
+    """Enforce active DQ guardrail rules as a simple pipeline guardrail.
 
     Parameters
     ----------
@@ -1632,10 +1636,10 @@ def enforce_dq_rules(
         Environment name used to read ``METADATA_GUARDRAIL_RULES`` from the
         configured metadata target.
     dataset_name : str
-        Dataset identifier used with ``table_name`` to scope approved DQ rules
+        Dataset identifier used with ``table_name`` to scope active DQ guardrail rules
         when those columns exist in the metadata table.
     table_name : str
-        Target table name whose approved active DQ rules should be enforced.
+        Target table name whose active DQ guardrail rules should be enforced.
     spark_session : pyspark.sql.SparkSession, optional
         Spark session used to read metadata when required by the configured
         storage helper.
@@ -1658,7 +1662,7 @@ def enforce_dq_rules(
 
     Notes
     -----
-    This v1 guardrail reads approved active DQ rules from
+    This v1 guardrail reads active DQ guardrail rules from
     ``METADATA_GUARDRAIL_RULES`` via the configured metadata route and writes the aggregate runtime
     outcome to ``METADATA_GUARDRAIL_RESULTS`` when result writing is enabled. It
     does not quarantine rows, write row-level failure metadata, filter invalid
@@ -1686,9 +1690,9 @@ def enforce_dq_rules(
             dataset_name=dataset_name,
             table_name=table_name,
             guardrail_type="dq",
-            rule_type="approved_rules",
+            rule_type="active_rules",
             result=result,
-            rule_key="dq_approved_rules",
+            rule_key="dq_active_rules",
         )
     return result
 

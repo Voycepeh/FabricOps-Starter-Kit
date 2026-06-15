@@ -23,7 +23,7 @@ FabricOps keeps metadata configuration separate from runtime pipeline engineerin
 - `03_governance` runs separately as a metadata control panel over that profiled catalogue output.
 - Governance users augment the catalogue with human-approved meaning, classification, DQ expectations, and notes.
 - Approved augmentations are stored in metadata tables as append-only governed configuration.
-- Later pipeline runs consume approved metadata and apply relevant guardrails, checks, and behaviours.
+- Later pipeline runs consume reviewed metadata and apply relevant guardrails, checks, and behaviours.
 - AI suggestions stay advisory until a human reviewer commits them.
 
 Some governance metadata cannot be created safely before actual tables and columns exist. For example, reviewers need to see the real column names and profiling signals before approving column meaning, sensitivity, identifier classification, or DQ expectations. That is why `03_governance` works after `02_pipeline` has created and profiled the table.
@@ -54,7 +54,7 @@ In this page, “evidence” means the profile/catalogue and run signals produce
 
 ## What reviewers augment
 
-Governance Review captures append-only human-approved metadata/configuration:
+Governance Review captures append-only human-reviewed metadata/configuration:
 
 | Augmentation area | Metadata table | What reviewers add or approve |
 |---|---|---|
@@ -75,9 +75,9 @@ A typical metadata augmentation flow is:
 3. The user selects a profile target with [widget_select_governance_profile_target](../api/reference/widget_select_governance_profile_target/), choosing the physical asset first (asset/lakehouse or warehouse, schema/layer, table) and then the profile date/run.
 4. The notebook loads the profiled catalogue rows with `load_catalogue_profile_rows`.
 5. The user augments column business context, sensitivity/classification, personal-data or identifier classification, and DQ expectations.
-6. The user commits approved metadata with `record_table_governance` and related commit actions.
+6. The user commits reviewed metadata with `record_table_governance` and related commit actions.
 7. Optional governance outcome notes are stored when useful for handover.
-8. Later `02_pipeline` runs read the approved metadata/configuration and apply the relevant behaviours.
+8. Later `02_pipeline` runs read the reviewed metadata/configuration and apply the relevant behaviours.
 
 The important control point is the commit. Nothing becomes governed metadata until a human reviewer explicitly commits it.
 
@@ -87,8 +87,8 @@ Use these generated API references for the helpers behind the governance review 
 
 - [widget_select_governance_profile_target](../api/reference/widget_select_governance_profile_target/), [get_selected_catalogue_table](../api/reference/get_selected_catalogue_table/), and [load_catalogue_profile_rows](../api/reference/load_catalogue_profile_rows/) select the profiled table under review. The selector treats source/target `profile_stage` and pipeline/run metadata as supporting evidence for profile history, not as the physical table identity.
 - [widget_review_column_context](../api/reference/widget_review_column_context/), [widget_review_dq_rules](../api/reference/widget_review_dq_rules/), and [widget_review_column_classification](../api/reference/widget_review_column_classification/) capture reviewer decisions.
-- [record_table_governance](../api/reference/record_table_governance/) writes approved governance metadata for later pipeline enforcement.
-- [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of approved DQ rules.
+- [record_table_governance](../api/reference/record_table_governance/) writes reviewed governance metadata for later pipeline enforcement.
+- [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of governance-approved DQ rules.
 
 ## DQ expectations in the control panel
 
@@ -96,18 +96,18 @@ DQ expectations are one kind of metadata augmentation in Governance Review; they
 
 - `03_governance` lets reviewers add, edit, approve, deactivate, or reactivate DQ expectations for profiled tables and columns.
 - Approved rules are stored as governed metadata/configuration in `METADATA_GUARDRAIL_RULES`.
-- Later `02_pipeline` runs load the newest active approved rules for the table.
-- `enforce_dq_rules` enforces those approved rules at runtime and records the outcome as guardrail evidence.
+- Later `02_pipeline` runs load the newest active governance-approved rules for the table.
+- `enforce_dq_rules` enforces those governance-approved rules at runtime and records the outcome as guardrail evidence.
 
 FabricOps uses one canonical DQ rule vocabulary and does not require Great Expectations or dbt at runtime. For the full list of supported rule types, parameters, and examples, see the [DQ rule reference](../reference/dq-rules/index.md).
 
-## How approved metadata controls later pipeline runs
+## How reviewed metadata controls later pipeline runs
 
 Approved metadata affects later runs only after it is written to metadata tables.
 
 - Approved business context and classification become metadata/configuration for downstream reporting, handover, governance review, and runtime decisions where relevant.
 - Approved sensitivity and personal-data classifications can influence later pipeline behaviours, handling expectations, and review decisions.
-- Approved active DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`.
-- `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` from the configured metadata lakehouse target, resolves the newest version for each DQ rule, keeps only active approved rows with `guardrail_type="dq"`, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
+- Active governance-approved DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`.
+- `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` from the configured metadata lakehouse target, resolves the newest version for each DQ rule, keeps only active governance-reviewed rows with `guardrail_type="dq"`, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
 
 Error-severity DQ failures return `status="failed"` and `can_continue=false`. Warning-severity DQ failures return `status="warning"` and `can_continue=true`.

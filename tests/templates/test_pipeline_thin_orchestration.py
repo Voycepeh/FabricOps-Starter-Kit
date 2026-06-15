@@ -157,7 +157,7 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
     for advanced_override in [
         '"dataset_name": "governance_dataset_override",',
         '"stage": "source"',
-        '"dq_preset": "approved_rules"',
+        '"dq_preset": "active_rules"',
         '"freshness_column": "order_date"',
         '"freshness_column": "effective_date"',
         '"schema_preset": "allow_new_columns"',
@@ -186,7 +186,7 @@ def test_table_configs_include_supported_guardrail_and_write_fields():
         '"profile_mode": "static_data"',
         '"freshness_max_lag_days": 1',
         '"freshness_severity": "blocking"',
-        '"dq_preset": "approved_rules"',
+        '"dq_preset": "active_rules"',
         '"dq_preset": "skip"',
         '"distribution_columns": ["status", "order_amount", "country_code"]',
         '"exclude_columns": None',

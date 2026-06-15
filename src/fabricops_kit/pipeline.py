@@ -625,7 +625,7 @@ def run_table_guardrails(
         schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
         freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
         if schema_rules_df is not None:
-            schema_results[table_key] = validate_schema_rule(dataframe, schema_rules_df, dataset_name=dataset_name, table_name=table_name)
+            schema_results[table_key] = validate_schema_rule(dataframe, schema_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
         else:
             schema_results[table_key] = validate_schema(
                 dataframe,
@@ -634,7 +634,7 @@ def run_table_guardrails(
             )
 
         if freshness_rules_df is not None:
-            freshness_results[table_key] = enforce_freshness_rule(dataframe, freshness_rules_df, dataset_name=dataset_name, table_name=table_name)
+            freshness_results[table_key] = enforce_freshness_rule(dataframe, freshness_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
         else:
             freshness_results[table_key] = enforce_freshness(
                 dataframe,
@@ -665,7 +665,7 @@ def run_table_guardrails(
             rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
         )
 
-        if table_config.get("dq_preset", "approved_rules") == "skip":
+        if table_config.get("dq_preset", "active_rules") == "skip":
             dq_results[table_key] = {
                 "status": "skipped",
                 "can_continue": True,
@@ -691,7 +691,7 @@ def run_table_guardrails(
             for guardrail_type, rule_type, guardrail_result in (
                 ("schema", table_config.get("schema_preset", "strict"), schema_results[table_key]),
                 ("freshness", table_config.get("freshness_column", "freshness"), freshness_results[table_key]),
-                ("dq", table_config.get("dq_preset", "approved_rules"), dq_results[table_key]),
+                ("dq", table_config.get("dq_preset", "active_rules"), dq_results[table_key]),
             ):
                 _write_guardrail_result_row(
                     spark_session=spark_session,

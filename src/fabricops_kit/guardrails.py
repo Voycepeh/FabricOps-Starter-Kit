@@ -25,7 +25,7 @@ _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
 }
 _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
-_ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "approved", "bypass_active_pending_review"}
+_ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "bypass_active_pending_review"}
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
 
@@ -34,10 +34,9 @@ def _rule_review_status(row: dict) -> str:
 
 
 def _is_active_guardrail_rule(row: dict) -> bool:
-    if _string_value(_catalogue_value(row, "is_active")).lower() in {"false", "0", "no"}:
+    if _catalogue_value(row, "is_active") is not True:
         return False
-    review_status = _rule_review_status(row)
-    return not review_status or review_status in _ACTIVE_RULE_REVIEW_STATUSES
+    return _rule_review_status(row) in _ACTIVE_RULE_REVIEW_STATUSES
 
 
 def _parse_rule_parameters(row: dict) -> dict:
@@ -48,7 +47,7 @@ def _parse_rule_parameters(row: dict) -> dict:
         return {}
 
 
-def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str) -> dict | None:
+def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict | None:
     if rules_df is None:
         return None
     rows = rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
@@ -57,9 +56,15 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
         row = _row_to_dict(raw)
         if _string_value(_catalogue_value(row, "guardrail_type")).lower() != guardrail_type:
             continue
-        if _string_value(_catalogue_value(row, "dataset_name")) not in {"", dataset_name}:
+        rule_environment = _string_value(_catalogue_value(row, "environment_name"))
+        if rule_environment and environment_name and rule_environment != environment_name:
+            continue
+        if _string_value(_catalogue_value(row, "dataset_name")) != dataset_name:
             continue
         if _string_value(_catalogue_value(row, "table_name")) != table_name:
+            continue
+        rule_table_key = _string_value(_catalogue_value(row, "metadata_table_key"))
+        if metadata_table_key and rule_table_key != metadata_table_key:
             continue
         if not _is_active_guardrail_rule(row):
             continue
@@ -80,9 +85,9 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     return result
 
 
-def validate_schema_rule(dataframe, rules_df, *, dataset_name: str, table_name: str) -> dict:
+def validate_schema_rule(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
     """Validate schema using the latest active schema rule row."""
-    rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name)
+    rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
         return validate_schema(dataframe, {}, preset="monitor_only")
     params = _parse_rule_parameters(rule)
@@ -96,9 +101,9 @@ def validate_schema_rule(dataframe, rules_df, *, dataset_name: str, table_name: 
     return _apply_bypass_post_review_warning(result, rule)
 
 
-def enforce_freshness_rule(dataframe, rules_df, *, dataset_name: str, table_name: str, reference_date=None) -> dict:
+def enforce_freshness_rule(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "", reference_date=None) -> dict:
     """Enforce freshness using the latest active freshness rule row."""
-    rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name)
+    rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
         return enforce_freshness(dataframe, None, None, reference_date=reference_date)
     params = _parse_rule_parameters(rule)
@@ -234,7 +239,7 @@ def _profile_payload_from_profile(profile, *, dataframe=None, watermark_column: 
 
 
 
-def _select_profile_behavior_rule(rules_df, *, dataset_name: str, table_name: str) -> dict | None:
+def _select_profile_behavior_rule(rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict | None:
     if rules_df is None:
         return None
     rows = rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
@@ -243,9 +248,15 @@ def _select_profile_behavior_rule(rules_df, *, dataset_name: str, table_name: st
         row = _row_to_dict(raw)
         if _string_value(_catalogue_value(row, "guardrail_type")).lower() != "profile_behavior":
             continue
-        if _string_value(_catalogue_value(row, "dataset_name")) not in {"", dataset_name}:
+        rule_environment = _string_value(_catalogue_value(row, "environment_name"))
+        if rule_environment and environment_name and rule_environment != environment_name:
+            continue
+        if _string_value(_catalogue_value(row, "dataset_name")) != dataset_name:
             continue
         if _string_value(_catalogue_value(row, "table_name")) != table_name:
+            continue
+        rule_table_key = _string_value(_catalogue_value(row, "metadata_table_key"))
+        if metadata_table_key and rule_table_key != metadata_table_key:
             continue
         if not _is_active_guardrail_rule(row):
             continue
@@ -801,7 +812,7 @@ def enforce_profile_behavior(
             if not _is_missing_table_error(exc):
                 raise
 
-    selected_rule = _select_profile_behavior_rule(rules_df, dataset_name=dataset_name, table_name=table_name)
+    selected_rule = _select_profile_behavior_rule(rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env or "", metadata_table_key="")
     if selected_rule:
         rule_key = _string_value(_catalogue_value(selected_rule, "rule_key", "rule_id")) or rule_key
         severity = _catalogue_value(selected_rule, "severity") or severity
