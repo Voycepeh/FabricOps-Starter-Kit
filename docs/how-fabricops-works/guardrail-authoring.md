@@ -1,4 +1,4 @@
-# Governed guardrail authoring foundation
+# Governed guardrail authoring
 
 FabricOps separates metadata ownership so each table has one clear purpose:
 
@@ -13,13 +13,13 @@ Tables default to `governance_mode="ungoverned"` and `approval_policy="no_approv
 
 ## 02 engineering authoring flow
 
-This PR provides backend authoring helpers and notebook examples, not the final interactive Fabric widget UX. `widget_select_guardrail_target` reads catalogue targets, current rule history, and the latest governance policy, then returns a handover state. `widget_author_schema_freshness_profile_rules` creates schema, freshness, and profile behavior rule records. `widget_author_dq_rules` creates DQ rule records in either `DQ_AUTHORING_MODE = "manual"` or `DQ_AUTHORING_MODE = "ai_suggest"`. A follow-up can wrap these helpers in richer Fabric UI controls.
+This PR implements a basic runnable Fabric notebook widget flow. `widget_select_guardrail_target` renders an interactive target selector, reads catalogue targets, current rule history, and the latest governance policy, then returns a handover state. `widget_author_schema_freshness_profile_rules` renders schema, freshness, and profile behavior controls with preview/save actions. `widget_author_dq_rules` renders manual and AI-assisted DQ authoring controls for `DQ_AUTHORING_MODE = "manual"` or `DQ_AUTHORING_MODE = "ai_suggest"`. Richer styling can come later; the current flow is intentionally small and composable.
 
 For ungoverned tables, engineering-authored rules are saved active with `review_status="self_approved"`. For governed tables, the default action saves inactive proposed rules. When the table policy allows bypass, “Skip approval and activate now” requires a reason and saves active rules with `review_status="bypass_active_pending_review"` and `requires_post_review=true`.
 
 ## 03 governance review flow
 
-`03_governance` can mark a table governed or ungoverned, approve proposed rules, reject rules, supersede rules, and review bypassed active rules. Approval activates the rule as `governance_approved` and clears post-review requirements. Rejection and superseding deactivate the rule intent without deleting history.
+`03_governance` uses `widget_review_guardrail_governance` to mark a table governed or ungoverned, approve proposed rules, reject rules, supersede rules, and review bypassed active rules. Approval activates the rule as `governance_approved` and clears post-review requirements. Rejection and superseding deactivate the rule intent without deleting history.
 
 ## Runtime enforcement
 

@@ -1845,8 +1845,96 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     return {"rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env_name, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)), "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": _resolve_action_by(actor), "created_at": _now_utc_iso(config), "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
 
 
+def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
+    """Read a metadata table and return row dictionaries."""
+    try:
+        frame = read_lakehouse_table(
+            config,
+            env,
+            "metadata",
+            table_name,
+            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            spark_session=spark_session,
+        )
+    except Exception as exc:
+        if _is_table_not_found_error(exc):
+            return []
+        raise
+    return _coerce_rows(frame)
+
+
+def _filter_table_rows(rows: Iterable[Mapping[str, Any]], *, environment_name: str, dataset_name: str, table_name: str, metadata_table_key: str = "") -> list[dict[str, Any]]:
+    """Return rows matching a selected table identity."""
+    filtered = []
+    for row in rows:
+        item = dict(row)
+        if metadata_table_key and str(item.get("metadata_table_key") or "") not in {"", metadata_table_key}:
+            continue
+        if environment_name and str(item.get("environment_name") or "") not in {"", environment_name}:
+            continue
+        if dataset_name and str(item.get("dataset_name") or "") not in {"", dataset_name}:
+            continue
+        if table_name and str(item.get("table_name") or "") != table_name:
+            continue
+        filtered.append(item)
+    return filtered
+
+
+def _latest_rule(existing_rules: Iterable[Mapping[str, Any]], guardrail_type: str, rule_type: str | None = None, column_name: str | None = None) -> dict[str, Any]:
+    """Return the newest matching rule row for widget prepopulation."""
+    matches = []
+    for row in existing_rules or []:
+        item = dict(row)
+        if str(item.get("guardrail_type") or "") != guardrail_type:
+            continue
+        if rule_type is not None and str(item.get("rule_type") or "") != rule_type:
+            continue
+        if column_name is not None and str(item.get("column_name") or "") != column_name:
+            continue
+        matches.append(item)
+    matches.sort(key=lambda row: str(row.get("created_at") or row.get("approved_at") or row.get("_committed_at") or ""), reverse=True)
+    return matches[0] if matches else {}
+
+
+def _rule_params(rule: Mapping[str, Any]) -> dict[str, Any]:
+    """Return parsed rule parameters for widget prepopulation."""
+    raw = rule.get("rule_parameters_json") or "{}"
+    try:
+        return json.loads(raw) if isinstance(raw, str) else dict(raw or {})
+    except Exception:
+        return {}
+
+
+def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
+    """Append rule records to ``METADATA_GUARDRAIL_RULES``."""
+    if not records:
+        return
+    write_lakehouse_table(
+        spark_session.createDataFrame(records),
+        config,
+        env,
+        "metadata",
+        GUARDRAIL_RULES_TABLE,
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        mode="append",
+    )
+
+
+def _write_governance_policy_record(record: dict[str, Any], *, config: Any, env: str, spark_session: Any) -> None:
+    """Append a policy row to ``METADATA_GOVERNANCE_REVIEWS``."""
+    write_lakehouse_table(
+        spark_session.createDataFrame([record]),
+        config,
+        env,
+        "metadata",
+        GOVERNANCE_REVIEWS_TABLE,
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        mode="append",
+    )
+
+
 def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any) -> dict[str, Any]:
-    """Select a guardrail target and return the shared handover state.
+    """Render an interactive guardrail target selector and return handover state.
 
     Parameters
     ----------
@@ -1860,98 +1948,478 @@ def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any)
     Returns
     -------
     dict[str, Any]
-        Handover state containing table identity, catalogue rows, rules, and
-        effective governance policy.
+        Mutable handover state containing table identity, catalogue profile rows,
+        existing rules, and effective table governance policy. The returned
+        state updates when the user changes the selected target.
 
     """
-    catalogue = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
-    rules = _coerce_rows(read_lakehouse_table(config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
-    reviews = _coerce_rows(read_lakehouse_table(config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    catalogue = _read_metadata_table_or_empty(config, env, CATALOGUE_TABLE, spark_session=spark_session)
+    rules = _read_metadata_table_or_empty(config, env, GUARDRAIL_RULES_TABLE, spark_session=spark_session)
+    reviews = _read_metadata_table_or_empty(config, env, GOVERNANCE_REVIEWS_TABLE, spark_session=spark_session)
     if not catalogue:
         raise ValueError("METADATA_DATA_CATALOGUE has no guardrail targets.")
-    latest = sorted(catalogue, key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or ""), reverse=True)[0]
-    table_key = str(latest.get("metadata_table_key") or _build_metadata_table_key(env, latest.get("dataset_name"), latest.get("table_name")))
-    table_rows = [row for row in catalogue if str(row.get("metadata_table_key") or "") in {"", table_key} and str(row.get("table_name") or "") == str(latest.get("table_name") or "")]
-    table_rules = [row for row in rules if str(row.get("metadata_table_key") or "") == table_key or str(row.get("table_name") or "") == str(latest.get("table_name") or "")]
-    policy = resolve_table_governance_policy(reviews, environment_name=env, dataset_name=str(latest.get("dataset_name") or ""), table_name=str(latest.get("table_name") or ""), metadata_table_key=table_key)
-    return {"environment_name": env, "dataset_name": str(latest.get("dataset_name") or ""), "table_name": str(latest.get("table_name") or ""), "metadata_table_key": table_key, "profile_run_id": str(latest.get("profile_run_id") or ""), "profile_stage": str(latest.get("profile_stage") or ""), "columns": sorted({str(row.get("column_name") or "") for row in table_rows if row.get("column_name")}), "existing_rules": table_rules, "catalogue_profile_rows": table_rows, **policy}
+
+    targets = {}
+    for row in catalogue:
+        environment_name = str(row.get("environment_name") or env)
+        dataset_name = str(row.get("dataset_name") or "")
+        table_name = str(row.get("table_name") or "")
+        if not table_name:
+            continue
+        metadata_table_key = str(row.get("metadata_table_key") or _build_metadata_table_key(environment_name, dataset_name, table_name))
+        key = (environment_name, dataset_name, table_name, metadata_table_key)
+        label = f"{environment_name} / {dataset_name or '(no dataset)'} / {table_name}"
+        targets.setdefault(label, key)
+    if not targets:
+        raise ValueError("METADATA_DATA_CATALOGUE has no table-level guardrail targets.")
+
+    target_dropdown = widgets.Dropdown(options=[(label, value) for label, value in sorted(targets.items())], description="Target", layout=widgets.Layout(width="760px"))
+    governance_badge = widgets.HTML()
+    profile_preview = widgets.HTML()
+    rules_preview = widgets.HTML()
+    state: dict[str, Any] = {}
+
+    def refresh(*_: Any) -> None:
+        environment_name, dataset_name, table_name, metadata_table_key = target_dropdown.value
+        table_rows = _filter_table_rows(catalogue, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        table_rules = _filter_table_rows(rules, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        policy = resolve_table_governance_policy(reviews, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        latest = sorted(table_rows, key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or row.get("profile_run_id") or ""), reverse=True)[0]
+        columns = sorted({str(row.get("column_name") or "") for row in table_rows if row.get("column_name")})
+        state.clear()
+        state.update(
+            {
+                "environment_name": environment_name,
+                "dataset_name": dataset_name,
+                "table_name": table_name,
+                "metadata_table_key": metadata_table_key,
+                "profile_run_id": str(latest.get("profile_run_id") or ""),
+                "profile_stage": str(latest.get("profile_stage") or ""),
+                "columns": columns,
+                "catalogue_profile_rows": table_rows,
+                "existing_rules": table_rules,
+                **policy,
+            }
+        )
+        governance_badge.value = f"<b>Governance:</b> {state['governance_mode']} · <b>Approval policy:</b> {state['approval_policy']} · <b>Bypass allowed:</b> {state['approval_bypass_allowed']}"
+        profile_preview.value = f"<b>Profile rows:</b> {len(table_rows)} · <b>Columns:</b> {', '.join(columns) if columns else '(none)'}"
+        rules_preview.value = f"<b>Existing guardrail rules:</b> {len(table_rules)}"
+
+    target_dropdown.observe(refresh, names="value")
+    refresh()
+    state["_controls"] = {"target": target_dropdown, "governance_badge": governance_badge, "profile_preview": profile_preview, "rules_preview": rules_preview}
+    ip.display(widgets.VBox([widgets.HTML("<h3>Select guardrail target</h3>"), target_dropdown, governance_badge, profile_preview, rules_preview]))
+    return state
+
+def _schema_freshness_profile_records_from_selection(
+    state: Mapping[str, Any],
+    *,
+    selected_columns: Iterable[str],
+    schema_mode: str,
+    freshness_mode: str,
+    freshness_column: str,
+    max_lag_days: int | str,
+    profile_mode: str,
+    watermark_column: str,
+    bypass_reason: str = "",
+    config: Any = None,
+) -> list[dict[str, Any]]:
+    """Build schema, freshness, and profile behavior rule rows from selections."""
+    if str(profile_mode) == "changing_data" and not str(watermark_column or "").strip():
+        raise ValueError("watermark_column is required when profile_mode is changing_data")
+    if str(freshness_mode) == "enforce":
+        try:
+            lag_days = int(max_lag_days)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("max_lag_days must be a non-negative integer") from exc
+        if lag_days < 0:
+            raise ValueError("max_lag_days must be a non-negative integer")
+    else:
+        lag_days = 0
+    columns = [str(column) for column in selected_columns]
+    data_types = {str(row.get("column_name") or ""): str(row.get("data_type") or "") for row in state.get("catalogue_profile_rows", [])}
+    return [
+        _base_guardrail_rule_record(
+            state,
+            guardrail_type="schema",
+            rule_type=str(schema_mode),
+            parameters={"columns": columns, "data_types": {column: data_types.get(column, "") for column in columns}},
+            description="Selected-table schema guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        ),
+        _base_guardrail_rule_record(
+            state,
+            guardrail_type="freshness",
+            rule_type="max_lag_days" if str(freshness_mode) == "enforce" else "skip",
+            parameters={"freshness_column": freshness_column if str(freshness_mode) == "enforce" else "", "max_lag_days": lag_days},
+            description="Freshness guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        ),
+        _base_guardrail_rule_record(
+            state,
+            guardrail_type="profile_behavior",
+            rule_type=str(profile_mode),
+            parameters={"watermark_column": watermark_column if str(profile_mode) == "changing_data" else ""},
+            description="Profile behavior guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        ),
+    ]
 
 
-def widget_author_schema_freshness_profile_rules(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None, bypass_reason: str = "", commit: bool = False) -> list[dict[str, Any]]:
-    """Create table schema, freshness, and profile behavior guardrail rules.
+def widget_author_schema_freshness_profile_rules(
+    state: Mapping[str, Any],
+    *,
+    config: Any = None,
+    env: str | None = None,
+    spark_session: Any = None,
+    bypass_reason: str = "",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Render interactive schema, freshness, and profile behavior authoring UI.
 
     Parameters
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
     config, env, spark_session : Any, optional
-        Runtime objects used when ``commit=True``.
+        Runtime objects used for save actions.
     bypass_reason : str, optional
-        Approval-bypass reason for governed tables.
+        Initial approval-bypass reason.
     commit : bool, default=False
-        Whether to append generated records to ``METADATA_GUARDRAIL_RULES``.
+        Whether to save the initial generated records immediately.
 
     Returns
     -------
-    list[dict[str, Any]]
-        Generated guardrail rule rows.
+    dict[str, Any]
+        Widget state containing controls, generated records, and callable
+        ``build_records``/``save`` helpers for tests and notebook automation.
 
     """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
     columns = list(state.get("columns") or [])
-    data_types = {str(row.get("column_name") or ""): str(row.get("data_type") or "") for row in state.get("catalogue_profile_rows", [])}
-    records = [
-        _base_guardrail_rule_record(state, guardrail_type="schema", rule_type="relaxed", parameters={"columns": columns, "data_types": data_types}, description="Selected-table schema guardrail", bypass_reason=bypass_reason, config=config),
-        _base_guardrail_rule_record(state, guardrail_type="freshness", rule_type="skip", parameters={"freshness_column": "", "max_lag_days": 0}, description="Freshness guardrail", bypass_reason=bypass_reason, config=config),
-        _base_guardrail_rule_record(state, guardrail_type="profile_behavior", rule_type="skip", parameters={"watermark_column": ""}, description="Profile behavior guardrail", bypass_reason=bypass_reason, config=config),
-    ]
-    if commit:
+    existing_rules = list(state.get("existing_rules") or [])
+    schema_rule = _latest_rule(existing_rules, "schema")
+    schema_params = _rule_params(schema_rule)
+    selected_schema_columns = tuple(column for column in (schema_params.get("columns") or columns) if column in columns)
+    freshness_rule = _latest_rule(existing_rules, "freshness")
+    freshness_params = _rule_params(freshness_rule)
+    profile_rule = _latest_rule(existing_rules, "profile_behavior")
+    profile_params = _rule_params(profile_rule)
+
+    schema_columns = widgets.SelectMultiple(options=columns, value=selected_schema_columns or tuple(columns), description="Columns", rows=min(max(len(columns), 4), 12), layout=widgets.Layout(width="420px"))
+    schema_mode = widgets.Dropdown(options=["strict", "relaxed", "skip"], value=str(schema_rule.get("rule_type") or "relaxed"), description="Schema mode")
+    freshness_mode = widgets.Dropdown(options=["enforce", "skip"], value="skip" if str(freshness_rule.get("rule_type") or "skip") == "skip" else "enforce", description="Freshness")
+    freshness_column = widgets.Dropdown(options=[""] + columns, value=str(freshness_params.get("freshness_column") or freshness_rule.get("column_name") or ""), description="Column")
+    max_lag = widgets.BoundedIntText(value=int(freshness_params.get("max_lag_days") or 0), min=0, description="Max lag days")
+    profile_mode = widgets.Dropdown(options=["static_data", "changing_data", "skip"], value=str(profile_rule.get("rule_type") or "static_data"), description="Profile mode")
+    watermark_column = widgets.Dropdown(options=[""] + columns, value=str(profile_params.get("watermark_column") or profile_rule.get("column_name") or ""), description="Watermark")
+    bypass_box = widgets.Textarea(value=bypass_reason, description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
+    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="220px"))
+    message = widgets.HTML()
+    records_state: dict[str, Any] = {"records": []}
+
+    governed = str(state.get("governance_mode") or "ungoverned") == "governed"
+    primary_label = "Submit for governance approval" if governed else "Save active rules"
+    save_button = widgets.Button(description=primary_label, button_style="success")
+    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
+    bypass_button.layout.display = "" if governed and bool(state.get("approval_bypass_allowed")) else "none"
+    cancel_button = widgets.Button(description="Cancel")
+
+    def build_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        return _schema_freshness_profile_records_from_selection(
+            state,
+            selected_columns=list(schema_columns.value),
+            schema_mode=schema_mode.value,
+            freshness_mode=freshness_mode.value,
+            freshness_column=freshness_column.value,
+            max_lag_days=max_lag.value,
+            profile_mode=profile_mode.value,
+            watermark_column=watermark_column.value,
+            bypass_reason=reason,
+            config=config,
+        )
+
+    def refresh_preview(*_: Any) -> None:
+        try:
+            records_state["records"] = build_records(use_bypass=False)
+            preview.value = json.dumps(records_state["records"], indent=2, default=str)
+            message.value = ""
+        except Exception as exc:
+            preview.value = ""
+            message.value = f"<b style='color:#b00020'>Validation error:</b> {exc}"
+
+    def save(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        records = build_records(use_bypass=use_bypass)
+        records_state["records"] = records
         if spark_session is None or config is None or env is None:
-            raise ValueError("config, env, and spark_session are required when commit=True.")
-        write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save."
+            return records
+        _write_rule_records(records, config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {len(records)} guardrail rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
+        return records
+
+    def cancel(_: Any = None) -> None:
+        records_state["records"] = []
+        preview.value = ""
+        message.value = "<b>Cancelled.</b>"
+
+    for control in (schema_columns, schema_mode, freshness_mode, freshness_column, max_lag, profile_mode, watermark_column, bypass_box):
+        control.observe(lambda change: refresh_preview(), names="value")
+    save_button.on_click(lambda _: save(use_bypass=False))
+    bypass_button.on_click(lambda _: save(use_bypass=True))
+    cancel_button.on_click(cancel)
+    refresh_preview()
+    if commit:
+        save(use_bypass=bool(bypass_reason))
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>Author schema, freshness, and profile behavior rules</h3>"),
+        widgets.HTML(f"<b>Table:</b> {state.get('dataset_name', '')}.{state.get('table_name', '')} · <b>Governance:</b> {state.get('governance_mode', 'ungoverned')}"),
+        widgets.HTML("<h4>Schema guardrail</h4>"),
+        widgets.HBox([schema_mode, schema_columns]),
+        widgets.HTML("<h4>Freshness guardrail</h4>"),
+        widgets.HBox([freshness_mode, freshness_column, max_lag]),
+        widgets.HTML("<h4>Profile behavior guardrail</h4>"),
+        widgets.HBox([profile_mode, watermark_column]),
+        bypass_box,
+        preview,
+        widgets.HBox([save_button, bypass_button, cancel_button]),
+        message,
+    ])
+    ip.display(ui)
+    return {"records": records_state["records"], "controls": {"schema_columns": schema_columns, "schema_mode": schema_mode, "freshness_mode": freshness_mode, "freshness_column": freshness_column, "max_lag": max_lag, "profile_mode": profile_mode, "watermark_column": watermark_column, "bypass_reason": bypass_box}, "build_records": build_records, "save": save, "ui": ui}
+
+def _dq_records_from_selection(
+    state: Mapping[str, Any],
+    *,
+    rule_type: str,
+    selected_columns: Iterable[str],
+    parameters: Mapping[str, Any] | None = None,
+    severity: str = "warning",
+    bypass_reason: str = "",
+    action_type: str = "created",
+    config: Any = None,
+) -> list[dict[str, Any]]:
+    """Build DQ rule records from selected columns."""
+    records = []
+    for column in selected_columns:
+        record = _base_guardrail_rule_record(
+            state,
+            guardrail_type="dq",
+            rule_type=rule_type,
+            column_name=str(column),
+            parameters={"columns": [str(column)], **dict(parameters or {})},
+            severity=severity,
+            description=f"{rule_type} DQ guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        )
+        record["action_type"] = action_type
+        if action_type in {"deactivated", "superseded"}:
+            record["is_active"] = False
+            record["review_status"] = "superseded" if action_type == "superseded" else "rejected"
+        records.append(record)
     return records
 
 
-def widget_author_dq_rules(state: Mapping[str, Any], *, dq_authoring_mode: str = "manual", rule_type: str = "not_null", selected_columns: Iterable[str] | None = None, parameters: Mapping[str, Any] | None = None, severity: str = "warning", config: Any = None, env: str | None = None, spark_session: Any = None, bypass_reason: str = "", commit: bool = False) -> list[dict[str, Any]]:
-    """Create DQ guardrail rules from manual selections or AI suggestions.
+def widget_author_dq_rules(
+    state: Mapping[str, Any],
+    *,
+    dq_authoring_mode: str = "manual",
+    rule_type: str = "not_null",
+    selected_columns: Iterable[str] | None = None,
+    parameters: Mapping[str, Any] | None = None,
+    severity: str = "warning",
+    config: Any = None,
+    env: str | None = None,
+    spark_session: Any = None,
+    bypass_reason: str = "",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Render interactive manual or AI-assisted DQ rule authoring UI.
 
     Parameters
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
-    dq_authoring_mode : str, default="manual"
-        ``manual`` or ``ai_suggest``.
+    dq_authoring_mode : {"manual", "ai_suggest"}, default="manual"
+        Authoring mode selected before the notebook cell runs.
     rule_type : str, default="not_null"
-        DQ rule type for manual mode.
+        Initial DQ rule type for manual mode.
     selected_columns : iterable of str, optional
-        Columns to receive the rule. Defaults to all state columns.
+        Initial batch-selected columns. Defaults to all selected table columns.
     parameters : mapping, optional
-        Rule parameters shared by selected columns.
+        Initial JSON rule parameters.
     severity : str, default="warning"
-        Rule severity.
+        Initial rule severity.
     config, env, spark_session : Any, optional
-        Runtime objects used for AI suggestions and committed writes.
+        Runtime objects used for AI suggestions and saves.
     bypass_reason : str, optional
-        Approval-bypass reason for governed tables.
+        Initial approval-bypass reason.
     commit : bool, default=False
-        Whether to append generated records to ``METADATA_GUARDRAIL_RULES``.
+        Whether to save the initial generated records immediately.
 
     Returns
     -------
-    list[dict[str, Any]]
-        Generated DQ rule rows.
+    dict[str, Any]
+        Widget state containing controls, generated records, suggestions, and
+        callable helpers for tests and notebook automation.
 
     """
-    columns = list(selected_columns or state.get("columns") or [])
-    if dq_authoring_mode == "ai_suggest" and spark_session is not None:
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    columns = list(state.get("columns") or [])
+    initial_columns = tuple(column for column in (selected_columns or columns) if column in columns)
+    existing_rules = list(state.get("existing_rules") or [])
+    existing_dq = [row for row in existing_rules if str(row.get("guardrail_type") or "") == "dq"]
+    mode = str(dq_authoring_mode or "manual")
+
+    batch_rule_type = widgets.Dropdown(options=DQ_RULE_TYPES, value=rule_type if rule_type in DQ_RULE_TYPES else "not_null", description="Rule type")
+    batch_columns = widgets.SelectMultiple(options=columns, value=initial_columns or tuple(columns), description="Columns", rows=min(max(len(columns), 4), 12), layout=widgets.Layout(width="420px"))
+    batch_params = widgets.Textarea(value=json.dumps(parameters or {}, indent=2), description="Parameters", layout=widgets.Layout(width="760px", height="90px"))
+    batch_severity = widgets.ToggleButtons(options=["warning", "error"], value=severity if severity in {"warning", "error"} else "warning", description="Severity")
+
+    search_column = widgets.Combobox(options=columns, value=columns[0] if columns else "", description="Column")
+    individual_rule_type = widgets.Dropdown(options=DQ_RULE_TYPES, value=rule_type if rule_type in DQ_RULE_TYPES else "not_null", description="Rule")
+    individual_params = widgets.Textarea(value="{}", description="Parameters", layout=widgets.Layout(width="760px", height="90px"))
+    bypass_box = widgets.Textarea(value=bypass_reason, description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
+    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="220px"))
+    history = widgets.HTML("<pre>" + json.dumps(existing_dq, indent=2, default=str) + "</pre>")
+    suggestions_html = widgets.HTML()
+    message = widgets.HTML()
+    records_state: dict[str, Any] = {"records": [], "suggestions": []}
+
+    governed = str(state.get("governance_mode") or "ungoverned") == "governed"
+    primary_label = "Submit for governance approval" if governed else "Save active rules"
+    save_batch_button = widgets.Button(description=primary_label, button_style="success")
+    save_one_button = widgets.Button(description="Save/update selected rule", button_style="info")
+    clear_one_button = widgets.Button(description="Clear / supersede selected rule", button_style="warning")
+    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
+    bypass_button.layout.display = "" if governed and bool(state.get("approval_bypass_allowed")) else "none"
+    ai_button = widgets.Button(description="Generate AI suggestions")
+    ai_button.layout.display = "" if mode == "ai_suggest" else "none"
+    reject_ai_button = widgets.Button(description="Reject AI suggestions")
+
+    def _batch_parameters() -> dict[str, Any]:
+        try:
+            return json.loads(batch_params.value or "{}")
+        except json.JSONDecodeError as exc:
+            raise ValueError("Parameters must be valid JSON") from exc
+
+    def _individual_parameters() -> dict[str, Any]:
+        try:
+            return json.loads(individual_params.value or "{}")
+        except json.JSONDecodeError as exc:
+            raise ValueError("Individual parameters must be valid JSON") from exc
+
+    def load_existing_individual(*_: Any) -> None:
+        rule = _latest_rule(existing_dq, "dq", individual_rule_type.value, search_column.value)
+        params = _rule_params(rule)
+        params.pop("columns", None)
+        individual_params.value = json.dumps(params, indent=2, default=str)
+
+    def build_batch_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        return _dq_records_from_selection(state, rule_type=batch_rule_type.value, selected_columns=list(batch_columns.value), parameters=_batch_parameters(), severity=batch_severity.value, bypass_reason=reason, config=config)
+
+    def build_individual_record(*, action_type: str = "created", use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        return _dq_records_from_selection(state, rule_type=individual_rule_type.value, selected_columns=[search_column.value], parameters=_individual_parameters(), severity=batch_severity.value, bypass_reason=reason, action_type=action_type, config=config)
+
+    def refresh_preview(*_: Any) -> None:
+        try:
+            records_state["records"] = build_batch_records(use_bypass=False)
+            preview.value = json.dumps(records_state["records"], indent=2, default=str)
+            message.value = ""
+        except Exception as exc:
+            preview.value = ""
+            message.value = f"<b style='color:#b00020'>Validation error:</b> {exc}"
+
+    def save_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        records_state["records"] = records
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save."
+            return records
+        _write_rule_records(records, config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
+        return records
+
+    def save_batch(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        return save_records(build_batch_records(use_bypass=use_bypass))
+
+    def save_individual(*, action_type: str = "created", use_bypass: bool = False) -> list[dict[str, Any]]:
+        return save_records(build_individual_record(action_type=action_type, use_bypass=use_bypass))
+
+    def suggest_ai(_: Any = None) -> list[dict[str, Any]]:
+        if spark_session is None:
+            message.value = "<b>AI suggestions require spark_session.</b>"
+            return []
         profile_df = spark_session.createDataFrame(list(state.get("catalogue_profile_rows") or []))
         suggestions = _draft_dq_rules(profile_df=profile_df, table_name=str(state.get("table_name") or ""), config=config)
-        columns = [str(rule.get("column_name") or (rule.get("columns") or [""])[0]) for rule in suggestions] or columns
-    records = [_base_guardrail_rule_record(state, guardrail_type="dq", rule_type=rule_type, column_name=column, parameters={"columns": [column], **dict(parameters or {})}, severity=severity, description=f"{rule_type} DQ guardrail", bypass_reason=bypass_reason, config=config) for column in columns]
+        for suggestion in suggestions:
+            suggestion.update({"review_status": "draft", "is_active": False})
+        records_state["suggestions"] = suggestions
+        suggestions_html.value = "<pre>" + json.dumps(suggestions, indent=2, default=str) + "</pre>"
+        message.value = f"<b>Loaded {len(suggestions)} AI draft suggestion(s). Edit and save approved suggestions.</b>"
+        return suggestions
+
+    def reject_ai(_: Any = None) -> None:
+        records_state["suggestions"] = []
+        suggestions_html.value = "<i>AI suggestions rejected; no active rules were saved.</i>"
+        message.value = "<b>Rejected AI suggestions.</b>"
+
+    for control in (batch_rule_type, batch_columns, batch_params, batch_severity, bypass_box):
+        control.observe(lambda change: refresh_preview(), names="value")
+    for control in (search_column, individual_rule_type):
+        control.observe(lambda change: load_existing_individual(), names="value")
+    save_batch_button.on_click(lambda _: save_batch(use_bypass=False))
+    save_one_button.on_click(lambda _: save_individual(action_type="created", use_bypass=False))
+    clear_one_button.on_click(lambda _: save_individual(action_type="superseded", use_bypass=False))
+    bypass_button.on_click(lambda _: save_batch(use_bypass=True))
+    ai_button.on_click(suggest_ai)
+    reject_ai_button.on_click(reject_ai)
+    load_existing_individual()
+    refresh_preview()
     if commit:
-        if spark_session is None or config is None or env is None:
-            raise ValueError("config, env, and spark_session are required when commit=True.")
-        write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
-    return records
+        save_batch(use_bypass=bool(bypass_reason))
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>Author DQ rules</h3>"),
+        widgets.HTML(f"<b>Mode:</b> {mode} · <b>Table:</b> {state.get('dataset_name', '')}.{state.get('table_name', '')} · <b>Governance:</b> {state.get('governance_mode', 'ungoverned')}"),
+        widgets.HTML("<h4>Batch by rule type</h4>"),
+        widgets.HBox([batch_rule_type, batch_columns, batch_severity]),
+        batch_params,
+        widgets.HTML("<h4>Individual rule editing</h4>"),
+        widgets.HBox([search_column, individual_rule_type]),
+        individual_params,
+        widgets.HTML("<h4>Existing rule history</h4>"),
+        history,
+        ai_button,
+        suggestions_html,
+        reject_ai_button,
+        bypass_box,
+        preview,
+        widgets.HBox([save_batch_button, save_one_button, clear_one_button, bypass_button]),
+        message,
+    ])
+    ip.display(ui)
+    return {"records": records_state["records"], "suggestions": records_state["suggestions"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "suggest_ai": suggest_ai, "reject_ai": reject_ai, "ui": ui}
 
 def build_table_governance_policy_record(state: Mapping[str, Any], *, governance_mode: str, approval_policy: str | None = None, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
     """Build a table-level governance policy row.
@@ -2018,3 +2486,94 @@ def mark_table_governed(state: Mapping[str, Any], *, actor: str | None = None, r
 def mark_table_ungoverned(state: Mapping[str, Any], *, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
     """Return an active ungoverned table policy row."""
     return build_table_governance_policy_record(state, governance_mode="ungoverned", approval_policy="no_approval_required", actor=actor, reason=reason, config=config)
+
+
+def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None) -> dict[str, Any]:
+    """Render interactive 03 governance policy and rule-review controls.
+
+    Parameters
+    ----------
+    state : mapping
+        Handover state from :func:`widget_select_guardrail_target`.
+    config, env, spark_session : Any, optional
+        Runtime objects used for save actions.
+
+    Returns
+    -------
+    dict[str, Any]
+        Widget state with controls and callable action helpers.
+
+    """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    rules = list(state.get("existing_rules") or [])
+    proposed_or_bypassed = [row for row in rules if str(row.get("review_status") or "") in {"proposed", "bypass_active_pending_review"}]
+    rule_options = [(f"{row.get('review_status')} · {row.get('guardrail_type')} · {row.get('rule_type')} · {row.get('column_name') or '_table'}", idx) for idx, row in enumerate(proposed_or_bypassed)]
+    selected_rule = widgets.Dropdown(options=rule_options or [("No proposed or bypassed rules", -1)], description="Rule", layout=widgets.Layout(width="760px"))
+    replacement_key = widgets.Text(description="New rule key", layout=widgets.Layout(width="520px"))
+    policy_reason = widgets.Textarea(description="Policy reason", layout=widgets.Layout(width="760px", height="70px"))
+    history = widgets.HTML("<pre>" + json.dumps(rules, indent=2, default=str) + "</pre>")
+    status = widgets.HTML(f"<b>Current governance:</b> {state.get('governance_mode', 'ungoverned')} · <b>Approval policy:</b> {state.get('approval_policy', 'no_approval_required')}")
+    message = widgets.HTML()
+    records_state: dict[str, Any] = {"last_record": None}
+
+    governed_button = widgets.Button(description="Mark table governed", button_style="warning")
+    ungoverned_button = widgets.Button(description="Mark table ungoverned", button_style="info")
+    approve_button = widgets.Button(description="Approve rule", button_style="success")
+    reject_button = widgets.Button(description="Reject rule", button_style="danger")
+    supersede_button = widgets.Button(description="Supersede rule", button_style="warning")
+
+    def _save_policy(record: dict[str, Any]) -> dict[str, Any]:
+        records_state["last_record"] = record
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save policy."
+            return record
+        _write_governance_policy_record(record, config=config, env=env, spark_session=spark_session)
+        message.value = "<b style='color:green'>Saved table policy row to METADATA_GOVERNANCE_REVIEWS.</b>"
+        return record
+
+    def mark_governed(_: Any = None) -> dict[str, Any]:
+        record = mark_table_governed(state, reason=policy_reason.value, config=config)
+        return _save_policy(record)
+
+    def mark_ungoverned(_: Any = None) -> dict[str, Any]:
+        record = mark_table_ungoverned(state, reason=policy_reason.value, config=config)
+        return _save_policy(record)
+
+    def _selected_rule_row() -> dict[str, Any]:
+        if selected_rule.value == -1:
+            raise ValueError("No proposed or bypassed rule is selected.")
+        return proposed_or_bypassed[int(selected_rule.value)]
+
+    def save_rule_action(action: str) -> dict[str, Any]:
+        row = apply_governance_rule_action(_selected_rule_row(), action, superseded_by_rule_key=replacement_key.value, config=config)
+        records_state["last_record"] = row
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save rule action."
+            return row
+        _write_rule_records([row], config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {action} rule event to METADATA_GUARDRAIL_RULES.</b>"
+        return row
+
+    governed_button.on_click(mark_governed)
+    ungoverned_button.on_click(mark_ungoverned)
+    approve_button.on_click(lambda _: save_rule_action("approve"))
+    reject_button.on_click(lambda _: save_rule_action("reject"))
+    supersede_button.on_click(lambda _: save_rule_action("supersede"))
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>Governance policy and guardrail review</h3>"),
+        status,
+        policy_reason,
+        widgets.HBox([governed_button, ungoverned_button]),
+        widgets.HTML("<h4>Proposed and bypass-active rules requiring review</h4>"),
+        selected_rule,
+        replacement_key,
+        widgets.HBox([approve_button, reject_button, supersede_button]),
+        widgets.HTML("<h4>Rule history by table</h4>"),
+        history,
+        message,
+    ])
+    ip.display(ui)
+    return {"controls": {"selected_rule": selected_rule, "replacement_key": replacement_key, "policy_reason": policy_reason}, "mark_governed": mark_governed, "mark_ungoverned": mark_ungoverned, "save_rule_action": save_rule_action, "last_record": records_state, "ui": ui}

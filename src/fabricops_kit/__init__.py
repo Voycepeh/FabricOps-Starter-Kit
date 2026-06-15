@@ -48,6 +48,7 @@ from .governance_review import (
     build_table_governance_policy_record,
     mark_table_governed,
     mark_table_ungoverned,
+    widget_review_guardrail_governance,
 )
 
 
@@ -108,4 +109,5 @@ __all__ = [
     "build_table_governance_policy_record",
     "mark_table_governed",
     "mark_table_ungoverned",
+    "widget_review_guardrail_governance",
 ]

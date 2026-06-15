@@ -16,6 +16,58 @@ from fabricops_kit.governance_review import (
 )
 
 
+def _install_fake_notebook_widgets(monkeypatch):
+    """Install minimal ipywidgets/IPython fakes for widget unit tests."""
+    import sys
+    import types
+
+    class Widget:
+        def __init__(self, *args, **kwargs):
+            options = kwargs.get("options", [])
+            self.options = options
+            if "value" in kwargs:
+                self.value = kwargs["value"]
+            elif options:
+                first = options[0]
+                self.value = first[1] if isinstance(first, tuple) and len(first) == 2 else first
+            else:
+                self.value = ""
+            self.description = kwargs.get("description", "")
+            self.layout = kwargs.get("layout") or types.SimpleNamespace(display="")
+            self.button_style = kwargs.get("button_style", "")
+            self.disabled = kwargs.get("disabled", False)
+            self.rows = kwargs.get("rows", None)
+
+        def observe(self, callback, names=None):
+            self._observer = callback
+
+        def on_click(self, callback):
+            self._click = callback
+
+    class Box(Widget):
+        def __init__(self, children=None, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.children = children or []
+
+    fake_widgets = types.SimpleNamespace(
+        Dropdown=Widget,
+        SelectMultiple=Widget,
+        Textarea=Widget,
+        Text=Widget,
+        BoundedIntText=Widget,
+        ToggleButtons=Widget,
+        Combobox=Widget,
+        Button=Widget,
+        HTML=Widget,
+        VBox=Box,
+        HBox=Box,
+        Layout=lambda **kwargs: types.SimpleNamespace(**kwargs),
+    )
+    fake_display = types.SimpleNamespace(display=lambda *args, **kwargs: None)
+    monkeypatch.setitem(sys.modules, "IPython", types.SimpleNamespace(display=fake_display))
+    monkeypatch.setattr("importlib.import_module", lambda name: fake_widgets if name == "ipywidgets" else __import__(name))
+
+
 def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
     """Verify catalogue, rule, result, and governance policy fields stay separated."""
     schemas = _get_governance_metadata_schemas()
@@ -75,8 +127,9 @@ def test_governance_rule_actions_approve_reject_and_supersede():
     assert superseded["superseded_by_rule_key"] == "new"
 
 
-def test_authoring_widgets_write_rule_intent_records_only():
+def test_authoring_widgets_write_rule_intent_records_only(monkeypatch):
     """Verify authoring widgets return guardrail-rule rows instead of catalogue or result rows."""
+    _install_fake_notebook_widgets(monkeypatch)
     state = {
         "environment_name": "dev",
         "dataset_name": "sales",
@@ -87,7 +140,9 @@ def test_authoring_widgets_write_rule_intent_records_only():
         "governance_mode": "ungoverned",
         "approval_policy": "no_approval_required",
     }
-    records = widget_author_schema_freshness_profile_rules(state) + widget_author_dq_rules(state, selected_columns=["order_id"])
+    sfp_widget = widget_author_schema_freshness_profile_rules(state)
+    dq_widget = widget_author_dq_rules(state, selected_columns=["order_id"])
+    records = sfp_widget["build_records"]() + dq_widget["build_batch_records"]()
     assert {record["guardrail_type"] for record in records} == {"schema", "freshness", "profile_behavior", "dq"}
     assert all("rule_parameters_json" in record for record in records)
     assert all(json.loads(record["rule_parameters_json"]) is not None for record in records)
@@ -276,3 +331,115 @@ def test_governance_can_approve_or_reject_bypassed_active_rule():
     assert approved["requires_post_review"] is False
     assert rejected["review_status"] == "rejected"
     assert rejected["is_active"] is False
+
+
+def test_schema_widget_prepopulates_and_validates_user_inputs(monkeypatch):
+    """Verify schema/freshness/profile widget prepopulates and validates selections."""
+    _install_fake_notebook_widgets(monkeypatch)
+    state = {
+        "environment_name": "dev",
+        "dataset_name": "sales",
+        "table_name": "orders",
+        "metadata_table_key": "table-key",
+        "columns": ["order_id", "business_date"],
+        "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}, {"column_name": "business_date", "data_type": "string"}],
+        "existing_rules": [
+            _rule(guardrail_type="schema", rule_type="strict", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})),
+            _rule(guardrail_type="freshness", rule_type="max_lag_days", rule_parameters_json=json.dumps({"freshness_column": "business_date", "max_lag_days": 3})),
+            _rule(guardrail_type="profile_behavior", rule_type="changing_data", rule_parameters_json=json.dumps({"watermark_column": "business_date"})),
+        ],
+        "governance_mode": "governed",
+        "approval_policy": "approval_required_with_bypass",
+        "approval_bypass_allowed": True,
+    }
+    widget = widget_author_schema_freshness_profile_rules(state)
+
+    assert widget["controls"]["schema_mode"].value == "strict"
+    assert widget["controls"]["freshness_column"].value == "business_date"
+    assert widget["controls"]["max_lag"].value == 3
+    assert widget["controls"]["watermark_column"].value == "business_date"
+    widget["controls"]["watermark_column"].value = ""
+    try:
+        widget["build_records"]()
+    except ValueError as exc:
+        assert "watermark_column" in str(exc)
+    else:
+        raise AssertionError("changing_data without watermark_column should fail")
+
+
+def test_governed_bypass_widget_save_requires_reason(monkeypatch):
+    """Verify governed bypass widget save requires a reason and creates bypass rows."""
+    _install_fake_notebook_widgets(monkeypatch)
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
+    widget = widget_author_schema_freshness_profile_rules(state)
+
+    try:
+        widget["build_records"](use_bypass=True)
+    except ValueError as exc:
+        assert "Bypass reason" in str(exc)
+    else:
+        raise AssertionError("bypass without reason should fail")
+    widget["controls"]["bypass_reason"].value = "urgent production fix"
+    records = widget["build_records"](use_bypass=True)
+    assert all(record["review_status"] == "bypass_active_pending_review" for record in records)
+    assert all(record["approval_bypassed"] is True for record in records)
+
+
+def test_dq_widget_manual_individual_clear_and_ai_drafts(monkeypatch):
+    """Verify DQ widget supports batch, individual, clear, and AI draft flows."""
+    _install_fake_notebook_widgets(monkeypatch)
+    from fabricops_kit import governance_review
+
+    monkeypatch.setattr(governance_review, "_draft_dq_rules", lambda **kwargs: [{"rule_id": "ai", "rule_type": "not_null", "columns": ["order_id"]}])
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
+    widget = widget_author_dq_rules(state, selected_columns=["order_id"], dq_authoring_mode="ai_suggest")
+
+    batch = widget["build_batch_records"]()
+    individual = widget["build_individual_record"]()
+    cleared = widget["build_individual_record"](action_type="superseded")
+    assert len(batch) == 1
+    assert individual[0]["column_name"] == "order_id"
+    assert cleared[0]["is_active"] is False
+    assert widget["suggest_ai"]() == [{"rule_id": "ai", "rule_type": "not_null", "columns": ["order_id"], "review_status": "draft", "is_active": False}]
+
+
+def test_governance_review_widget_actions(monkeypatch):
+    """Verify governance review widget exposes policy and rule actions."""
+    _install_fake_notebook_widgets(monkeypatch)
+    from fabricops_kit.governance_review import widget_review_guardrail_governance
+
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="proposed", is_active=False)]}
+    widget = widget_review_guardrail_governance(state)
+    governed = widget["mark_governed"]()
+    ungoverned = widget["mark_ungoverned"]()
+    approved = widget["save_rule_action"]("approve")
+    rejected = widget["save_rule_action"]("reject")
+    superseded = widget["save_rule_action"]("supersede")
+
+    assert governed["governance_mode"] == "governed"
+    assert ungoverned["governance_mode"] == "ungoverned"
+    assert approved["review_status"] == "governance_approved"
+    assert rejected["review_status"] == "rejected"
+    assert superseded["review_status"] == "superseded"
+
+
+def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatch):
+    """Verify target selector reads catalogue, rules, and governance policy."""
+    _install_fake_notebook_widgets(monkeypatch)
+    from fabricops_kit import governance_review
+
+    catalogue = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "profile-1", "profile_stage": "target", "column_name": "order_id", "data_type": "int"}]
+    rules = [_rule(metadata_table_key="table-key")]
+    reviews = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "governance_status": "active", "approval_bypass_allowed": True, "effective_from": "2026-01-01T00:00:00Z"}]
+
+    def fake_read(config, env, table_name, *, spark_session):
+        return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_RULES_TABLE: rules, governance_review.GOVERNANCE_REVIEWS_TABLE: reviews}[table_name]
+
+    monkeypatch.setattr(governance_review, "_read_metadata_table_or_empty", fake_read)
+    state = governance_review.widget_select_guardrail_target(object(), "dev", spark_session=object())
+
+    assert state["environment_name"] == "dev"
+    assert state["columns"] == ["order_id"]
+    assert state["existing_rules"] == rules
+    assert state["governance_mode"] == "governed"
+    assert state["approval_bypass_allowed"] is True
