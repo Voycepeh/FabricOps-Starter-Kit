@@ -51,7 +51,6 @@ def test_table_policy_defaults_to_ungoverned_no_approval():
 
 def test_authoring_status_matches_ungoverned_governed_and_bypass_paths():
     """Verify authoring lifecycle fields for all table governance paths."""
-    assert guardrail_authoring_status({"governance_mode": "ungoverned"}) | {"created": True}
     ungoverned = guardrail_authoring_status({"governance_mode": "ungoverned"})
     governed = guardrail_authoring_status({"governance_mode": "governed", "approval_policy": "approval_required"})
     bypassed = guardrail_authoring_status({"governance_mode": "governed", "approval_policy": "approval_required_with_bypass"}, bypass_reason="urgent fix", actor="engineer@example.com")
@@ -94,3 +93,186 @@ def test_authoring_widgets_write_rule_intent_records_only():
     assert all(json.loads(record["rule_parameters_json"]) is not None for record in records)
     assert all("result_id" not in record for record in records)
     assert all("profile_payload_json" not in record for record in records)
+
+
+def _rule(**overrides):
+    base = {
+        "rule_key": "rule-key",
+        "rule_id": "rule-id",
+        "environment_name": "dev",
+        "dataset_name": "sales",
+        "table_name": "orders",
+        "column_name": "",
+        "guardrail_type": "schema",
+        "rule_type": "relaxed",
+        "rule_parameters_json": "{}",
+        "severity": "blocking",
+        "is_active": True,
+        "review_status": "self_approved",
+        "created_at": "2026-01-01T00:00:00Z",
+    }
+    base.update(overrides)
+    return base
+
+
+def test_schema_rules_from_guardrail_metadata_are_enforced(spark_session):
+    """Verify schema rule rows are loaded and enforced."""
+    from fabricops_kit.guardrails import validate_schema_rule
+
+    df = spark_session.createDataFrame([(1, "ok", "extra")], "order_id int, status string, extra string")
+    rules = [_rule(rule_parameters_json=json.dumps({"columns": ["order_id", "status"], "data_types": {"order_id": "int", "status": "string"}}))]
+
+    result = validate_schema_rule(df, rules, dataset_name="sales", table_name="orders")
+
+    assert result["status"] == "warning"
+    assert result["can_continue"] is True
+    assert result["guardrail_type"] == "schema"
+
+
+def test_freshness_rules_from_guardrail_metadata_are_enforced(spark_session):
+    """Verify freshness rule rows are loaded and enforced."""
+    from fabricops_kit.guardrails import enforce_freshness_rule
+
+    df = spark_session.createDataFrame([("2026-06-14",)], "business_date string")
+    rules = [
+        _rule(
+            guardrail_type="freshness",
+            rule_type="max_lag_days",
+            rule_parameters_json=json.dumps({"freshness_column": "business_date", "max_lag_days": 2}),
+        )
+    ]
+
+    result = enforce_freshness_rule(df, rules, dataset_name="sales", table_name="orders", reference_date="2026-06-15")
+
+    assert result["status"] == "passed"
+    assert result["guardrail_type"] == "freshness"
+
+
+def test_profile_behavior_rules_from_guardrail_metadata_are_enforced(spark_session):
+    """Verify profile behavior rule rows are loaded and enforced."""
+    from fabricops_kit.guardrails import enforce_profile_behavior
+
+    df = spark_session.createDataFrame([(1, "2026-06-14")], "order_id int, business_date string")
+    rules = [
+        _rule(
+            guardrail_type="profile_behavior",
+            rule_type="static_data",
+            rule_parameters_json=json.dumps({}),
+        )
+    ]
+
+    result = enforce_profile_behavior(
+        spark_session,
+        df,
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="target",
+        run_id="run-1",
+        rules_df=rules,
+        catalogue_df=[],
+        write_results=False,
+    )
+
+    assert result["status"] == "baseline_created"
+    assert result["guardrail_type"] == "profile_behavior"
+    assert result["rule_type"] == "static_data"
+
+
+def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session, monkeypatch):
+    """Verify DQ rule rows are loaded and enforced."""
+    from fabricops_kit import governance_review
+
+    df = spark_session.createDataFrame([(1,), (None,)], "order_id int")
+    rules_df = spark_session.createDataFrame([
+        _rule(
+            rule_key="dq-rule",
+            rule_id="orders.order_id.not_null",
+            guardrail_type="dq",
+            rule_type="not_null",
+            column_name="order_id",
+            rule_parameters_json=json.dumps({"columns": ["order_id"]}),
+            severity="error",
+        )
+    ])
+    monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: rules_df)
+
+    result = governance_review.enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+
+    assert result["status"] == "failed"
+    assert result["can_continue"] is False
+    assert result["checks"][0]["rule_id"] == "orders.order_id.not_null"
+
+
+def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
+    """Verify bypass-active rules are enforced with post-review warning metadata."""
+    from fabricops_kit import governance_review
+    from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, validate_schema_rule
+
+    warning = "Rule is active through approval bypass and requires governance post-review."
+    schema_df = spark_session.createDataFrame([(1,)], "order_id int")
+    bypass_base = {"review_status": "bypass_active_pending_review"}
+
+    schema = validate_schema_rule(
+        schema_df,
+        [_rule(**bypass_base, rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}}))],
+        dataset_name="sales",
+        table_name="orders",
+    )
+    freshness = enforce_freshness_rule(
+        spark_session.createDataFrame([("2026-06-14",)], "business_date string"),
+        [_rule(**bypass_base, guardrail_type="freshness", rule_type="max_lag_days", rule_parameters_json=json.dumps({"freshness_column": "business_date", "max_lag_days": 2}))],
+        dataset_name="sales",
+        table_name="orders",
+        reference_date="2026-06-15",
+    )
+    profile = enforce_profile_behavior(
+        spark_session,
+        schema_df,
+        "METADATA_DATA_CATALOGUE",
+        "sales",
+        "orders",
+        stage="target",
+        run_id="run-1",
+        rules_df=[_rule(**bypass_base, guardrail_type="profile_behavior", rule_type="static_data")],
+        catalogue_df=[],
+        write_results=False,
+    )
+
+    dq_rules_df = spark_session.createDataFrame([
+        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
+    ])
+    monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
+    dq = governance_review.enforce_dq_rules(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+
+    for result in (schema, freshness, profile, dq):
+        assert result["can_continue"] is True
+        assert warning in result.get("reason", result.get("message", "")) or result.get("bypass_warning") == warning
+
+
+def test_table_governance_policy_records_mark_governed_and_ungoverned():
+    """Verify 03 governance helper records can mark table policy state."""
+    from fabricops_kit.governance_review import mark_table_governed, mark_table_ungoverned
+
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key"}
+    governed = mark_table_governed(state, actor="steward@example.com", reason="critical table")
+    ungoverned = mark_table_ungoverned(state, actor="steward@example.com", reason="sandbox table")
+
+    assert governed["governance_mode"] == "governed"
+    assert governed["approval_policy"] == "approval_required_with_bypass"
+    assert governed["approval_bypass_allowed"] is True
+    assert ungoverned["governance_mode"] == "ungoverned"
+    assert ungoverned["approval_policy"] == "no_approval_required"
+
+
+def test_governance_can_approve_or_reject_bypassed_active_rule():
+    """Verify 03 governance can approve or reject bypass-active rules."""
+    bypassed = {"rule_key": "rule", "review_status": "bypass_active_pending_review", "is_active": True, "requires_post_review": True}
+
+    approved = apply_governance_rule_action(bypassed, "approve", actor="steward@example.com")
+    rejected = apply_governance_rule_action(bypassed, "reject", actor="steward@example.com")
+
+    assert approved["review_status"] == "governance_approved"
+    assert approved["requires_post_review"] is False
+    assert rejected["review_status"] == "rejected"
+    assert rejected["is_active"] is False

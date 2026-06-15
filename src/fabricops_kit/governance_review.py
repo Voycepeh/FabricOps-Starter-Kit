@@ -1952,3 +1952,69 @@ def widget_author_dq_rules(state: Mapping[str, Any], *, dq_authoring_mode: str =
             raise ValueError("config, env, and spark_session are required when commit=True.")
         write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
     return records
+
+def build_table_governance_policy_record(state: Mapping[str, Any], *, governance_mode: str, approval_policy: str | None = None, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
+    """Build a table-level governance policy row.
+
+    Parameters
+    ----------
+    state : mapping
+        Table identity state containing environment, dataset, table, and table key.
+    governance_mode : {"governed", "ungoverned"}
+        Desired table governance mode.
+    approval_policy : str, optional
+        Approval policy. Defaults to approval-required with bypass for governed
+        tables and no approval required for ungoverned tables.
+    actor : str, optional
+        Reviewer identity.
+    reason : str, optional
+        Human-readable policy reason.
+    config : Any, optional
+        Runtime configuration used for timestamps.
+
+    Returns
+    -------
+    dict[str, Any]
+        ``METADATA_GOVERNANCE_REVIEWS`` policy row.
+
+    """
+    mode = str(governance_mode or "ungoverned").lower()
+    if mode not in {"governed", "ungoverned"}:
+        raise ValueError("governance_mode must be governed or ungoverned")
+    policy = str(approval_policy or ("approval_required_with_bypass" if mode == "governed" else "no_approval_required"))
+    now = _now_utc_iso(config)
+    return {
+        "review_id": str(uuid.uuid4()),
+        "environment_name": str(state.get("environment_name") or ""),
+        "dataset_name": str(state.get("dataset_name") or ""),
+        "table_name": str(state.get("table_name") or ""),
+        "metadata_table_key": str(state.get("metadata_table_key") or ""),
+        "profile_run_id": str(state.get("profile_run_id") or ""),
+        "profile_stage": str(state.get("profile_stage") or ""),
+        "outcome": "policy_updated",
+        "blocker_count": 0,
+        "warning_count": 0,
+        "blockers_json": "[]",
+        "warnings_json": "[]",
+        "evidence_summary_json": json.dumps({"policy_reason": reason}, sort_keys=True),
+        "reviewed_at": now,
+        "reviewed_by": _resolve_action_by(actor),
+        "governance_mode": mode,
+        "approval_policy": policy,
+        "governance_status": "active",
+        "approval_bypass_allowed": policy == "approval_required_with_bypass",
+        "requires_post_review": False,
+        "policy_reason": reason,
+        "effective_from": now,
+        "effective_to": "",
+    }
+
+
+def mark_table_governed(state: Mapping[str, Any], *, actor: str | None = None, reason: str = "", approval_policy: str = "approval_required_with_bypass", config: Any = None) -> dict[str, Any]:
+    """Return an active governed table policy row."""
+    return build_table_governance_policy_record(state, governance_mode="governed", approval_policy=approval_policy, actor=actor, reason=reason, config=config)
+
+
+def mark_table_ungoverned(state: Mapping[str, Any], *, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
+    """Return an active ungoverned table policy row."""
+    return build_table_governance_policy_record(state, governance_mode="ungoverned", approval_policy="no_approval_required", actor=actor, reason=reason, config=config)

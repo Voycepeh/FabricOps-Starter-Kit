@@ -25,6 +25,97 @@ _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
 }
 _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
+_ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "approved", "bypass_active_pending_review"}
+_BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
+
+
+def _rule_review_status(row: dict) -> str:
+    return _string_value(_catalogue_value(row, "review_status")).lower()
+
+
+def _is_active_guardrail_rule(row: dict) -> bool:
+    if _string_value(_catalogue_value(row, "is_active")).lower() in {"false", "0", "no"}:
+        return False
+    review_status = _rule_review_status(row)
+    return not review_status or review_status in _ACTIVE_RULE_REVIEW_STATUSES
+
+
+def _parse_rule_parameters(row: dict) -> dict:
+    raw = _catalogue_value(row, "rule_parameters_json") or "{}"
+    try:
+        return json.loads(raw) if isinstance(raw, str) else dict(raw or {})
+    except Exception:
+        return {}
+
+
+def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str) -> dict | None:
+    if rules_df is None:
+        return None
+    rows = rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
+    candidates = []
+    for raw in rows or []:
+        row = _row_to_dict(raw)
+        if _string_value(_catalogue_value(row, "guardrail_type")).lower() != guardrail_type:
+            continue
+        if _string_value(_catalogue_value(row, "dataset_name")) not in {"", dataset_name}:
+            continue
+        if _string_value(_catalogue_value(row, "table_name")) != table_name:
+            continue
+        if not _is_active_guardrail_rule(row):
+            continue
+        candidates.append(row)
+    if not candidates:
+        return None
+    candidates.sort(key=lambda row: _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at")), reverse=True)
+    return candidates[0]
+
+
+def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
+    if rule and _rule_review_status(rule) == "bypass_active_pending_review":
+        reason = str(result.get("reason") or result.get("message") or "")
+        message = _BYPASS_POST_REVIEW_WARNING if not reason else f"{reason} {_BYPASS_POST_REVIEW_WARNING}"
+        result["reason"] = message
+        result["message"] = message
+        result["bypass_warning"] = _BYPASS_POST_REVIEW_WARNING
+    return result
+
+
+def validate_schema_rule(dataframe, rules_df, *, dataset_name: str, table_name: str) -> dict:
+    """Validate schema using the latest active schema rule row."""
+    rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name)
+    if not rule:
+        return validate_schema(dataframe, {}, preset="monitor_only")
+    params = _parse_rule_parameters(rule)
+    expected = params.get("data_types") or params.get("expected_data_types") or {}
+    selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
+    expected_schema = {column: expected.get(column, "") for column in selected_columns}
+    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
+    preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
+    result = validate_schema(dataframe, expected_schema, preset=preset)
+    result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
+    return _apply_bypass_post_review_warning(result, rule)
+
+
+def enforce_freshness_rule(dataframe, rules_df, *, dataset_name: str, table_name: str, reference_date=None) -> dict:
+    """Enforce freshness using the latest active freshness rule row."""
+    rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name)
+    if not rule:
+        return enforce_freshness(dataframe, None, None, reference_date=reference_date)
+    params = _parse_rule_parameters(rule)
+    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
+    if rule_type == "skip":
+        result = enforce_freshness(dataframe, None, None, reference_date=reference_date)
+    else:
+        result = enforce_freshness(
+            dataframe,
+            params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name"),
+            params.get("max_lag_days"),
+            severity=_catalogue_value(rule, "severity") or "blocking",
+            reference_date=reference_date,
+        )
+    result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
+    return _apply_bypass_post_review_warning(result, rule)
+
 
 class SchemaDriftError(Exception):
     """Raised when a guardrail check is configured to stop execution.
@@ -156,10 +247,7 @@ def _select_profile_behavior_rule(rules_df, *, dataset_name: str, table_name: st
             continue
         if _string_value(_catalogue_value(row, "table_name")) != table_name:
             continue
-        if _string_value(_catalogue_value(row, "is_active")).lower() in {"false", "0", "no"}:
-            continue
-        review_status = _string_value(_catalogue_value(row, "review_status")).lower()
-        if review_status and review_status not in {"self_approved", "governance_approved", "approved", "bypass_active_pending_review"}:
+        if not _is_active_guardrail_rule(row):
             continue
         candidates.append(row)
     if not candidates:
@@ -746,7 +834,7 @@ def enforce_profile_behavior(
     evidence_rows: list[dict] = []
     if mode == "skip":
         message = "Profile behavior guardrail skipped; other guardrails still apply."
-        return {"status": "skipped", "can_continue": True, "check_type": "profile_behavior", "guardrail_type": "profile_behavior", "rule_type": "skip", "stability_check_enabled": False, "profile_mode": "skip", "watermark_column": watermark_column or "", "stability_status": "skipped", "stability_can_continue": True, "stability_message": message, "message": message, "profile_evidence_rows": []}
+        return _apply_bypass_post_review_warning({"status": "skipped", "can_continue": True, "check_type": "profile_behavior", "guardrail_type": "profile_behavior", "rule_type": "skip", "stability_check_enabled": False, "profile_mode": "skip", "watermark_column": watermark_column or "", "stability_status": "skipped", "stability_can_continue": True, "stability_message": message, "message": message, "profile_evidence_rows": []}, selected_rule)
 
     effective_exclude_columns = _guardrail_exclude_columns(exclude_columns)
     if mode == "static_data":
@@ -825,13 +913,12 @@ def enforce_profile_behavior(
         "actual_value_json": json.dumps({"current": current_by_wm}, default=str, sort_keys=True),
         "result_payload_json": json.dumps(result_payload, default=str, sort_keys=True),
     }
+    result = _apply_bypass_post_review_warning(result, selected_rule)
 
     if write_results and config is not None and env is not None:
         try:
-            from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
-            from pyspark.sql import Row
-            result_row = Row(result_id=str(uuid4()), run_id=run_id, rule_key=rule_key, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, column_name="", guardrail_type="profile_behavior", rule_type=mode, status=status, can_continue=can_continue, severity=normalized_severity, reason=message, expected_value_json=result["expected_value_json"], actual_value_json=result["actual_value_json"], result_payload_json=result["result_payload_json"], created_at=datetime.utcnow().isoformat() + "Z")
-            write_lakehouse_table(spark.createDataFrame([result_row]), config, env, "metadata", "METADATA_GUARDRAIL_RESULTS", schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
+            from fabricops_kit.metadata import _write_guardrail_result_row
+            _write_guardrail_result_row(spark_session=spark, config=config, env=env, run_id=run_id, dataset_name=dataset_name, table_name=table_name, guardrail_type="profile_behavior", rule_type=mode, result=result, rule_key=rule_key)
         except Exception as exc:
             if not _is_missing_table_error(exc):
                 raise

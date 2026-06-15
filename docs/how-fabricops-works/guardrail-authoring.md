@@ -1,4 +1,4 @@
-# Governed guardrail authoring
+# Governed guardrail authoring foundation
 
 FabricOps separates metadata ownership so each table has one clear purpose:
 
@@ -13,7 +13,7 @@ Tables default to `governance_mode="ungoverned"` and `approval_policy="no_approv
 
 ## 02 engineering authoring flow
 
-`02_pipeline` uses small composable widgets. `widget_select_guardrail_target` reads catalogue targets, current rule history, and the latest governance policy, then returns a handover state. `widget_author_schema_freshness_profile_rules` creates schema, freshness, and profile behavior rules. `widget_author_dq_rules` creates DQ rules in either `DQ_AUTHORING_MODE = "manual"` or `DQ_AUTHORING_MODE = "ai_suggest"`.
+This PR provides backend authoring helpers and notebook examples, not the final interactive Fabric widget UX. `widget_select_guardrail_target` reads catalogue targets, current rule history, and the latest governance policy, then returns a handover state. `widget_author_schema_freshness_profile_rules` creates schema, freshness, and profile behavior rule records. `widget_author_dq_rules` creates DQ rule records in either `DQ_AUTHORING_MODE = "manual"` or `DQ_AUTHORING_MODE = "ai_suggest"`. A follow-up can wrap these helpers in richer Fabric UI controls.
 
 For ungoverned tables, engineering-authored rules are saved active with `review_status="self_approved"`. For governed tables, the default action saves inactive proposed rules. When the table policy allows bypass, “Skip approval and activate now” requires a reason and saves active rules with `review_status="bypass_active_pending_review"` and `requires_post_review=true`.
 

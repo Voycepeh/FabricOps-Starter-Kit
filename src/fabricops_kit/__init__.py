@@ -45,6 +45,9 @@ from .governance_review import (
     resolve_table_governance_policy,
     guardrail_authoring_status,
     apply_governance_rule_action,
+    build_table_governance_policy_record,
+    mark_table_governed,
+    mark_table_ungoverned,
 )
 
 
@@ -102,4 +105,7 @@ __all__ = [
     "resolve_table_governance_policy",
     "guardrail_authoring_status",
     "apply_governance_rule_action",
+    "build_table_governance_policy_record",
+    "mark_table_governed",
+    "mark_table_ungoverned",
 ]

@@ -7,7 +7,7 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from .data_profiling import profile_dataframe
-from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_failed, validate_schema
+from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, validate_schema, validate_schema_rule
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .config import _current_audit_timestamp, _get_audit_timezone
@@ -364,18 +364,27 @@ def run_table_guardrails(
             run_timestamp_timezone=table_config.get("run_timestamp_timezone"),
         )
 
-        schema_results[table_key] = validate_schema(
-            dataframe,
-            table_config["expected_schema"],
-            preset=table_config.get("schema_preset", "strict"),
-        )
+        guardrail_rules_df = table_config.get("guardrail_rules_df")
+        schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
+        freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
+        if schema_rules_df is not None:
+            schema_results[table_key] = validate_schema_rule(dataframe, schema_rules_df, dataset_name=dataset_name, table_name=table_name)
+        else:
+            schema_results[table_key] = validate_schema(
+                dataframe,
+                table_config["expected_schema"],
+                preset=table_config.get("schema_preset", "strict"),
+            )
 
-        freshness_results[table_key] = enforce_freshness(
-            dataframe,
-            table_config.get("freshness_column"),
-            table_config.get("freshness_max_lag_days"),
-            severity=table_config.get("freshness_severity", "blocking"),
-        )
+        if freshness_rules_df is not None:
+            freshness_results[table_key] = enforce_freshness_rule(dataframe, freshness_rules_df, dataset_name=dataset_name, table_name=table_name)
+        else:
+            freshness_results[table_key] = enforce_freshness(
+                dataframe,
+                table_config.get("freshness_column"),
+                table_config.get("freshness_max_lag_days"),
+                severity=table_config.get("freshness_severity", "blocking"),
+            )
 
         stability_results[table_key] = enforce_profile_behavior(
             spark_session,
@@ -396,7 +405,7 @@ def run_table_guardrails(
             current_profile=profiles[table_key],
             write_results=table_config.get("write_profile_behavior_results", True),
             rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL_RULES"),
-            rules_df=table_config.get("profile_behavior_rules_df"),
+            rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
         )
 
         if table_config.get("dq_preset", "approved_rules") == "skip":
