@@ -117,6 +117,32 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
     assert [r["rule_id"] for r in rules] == ["r2"]
 
 
+
+def test_governance_metadata_schemas_include_guardrail_runtime_tables():
+    """Verify guardrail metadata schemas separate rules, profiles, results, and baseline events."""
+    schemas = governance._get_governance_metadata_schemas()
+
+    assert governance.GUARDRAIL_RULES_TABLE in schemas
+    assert governance.GUARDRAIL_PROFILES_TABLE in schemas
+    assert governance.GUARDRAIL_RESULTS_TABLE in schemas
+    assert governance.GUARDRAIL_BASELINE_EVENTS_TABLE in schemas
+    assert governance.DQ_RULES_TABLE in schemas
+    assert governance.GUARDRAIL_TYPES == ["schema", "freshness", "profile_behavior", "dq"]
+    assert "governance_approved" in governance.GUARDRAIL_REVIEW_STATUSES
+    assert "baseline_reset_approved" in governance.GUARDRAIL_BASELINE_EVENT_TYPES
+    assert {"guardrail_type", "review_status", "source_notebook_type", "superseded_by_rule_key"}.issubset(
+        set(schemas[governance.GUARDRAIL_RULES_TABLE].fieldNames())
+    )
+    assert {"watermark_column", "watermark_value", "profile_payload_json"}.issubset(
+        set(schemas[governance.GUARDRAIL_PROFILES_TABLE].fieldNames())
+    )
+    assert {"status", "can_continue", "expected_value_json", "actual_value_json"}.issubset(
+        set(schemas[governance.GUARDRAIL_RESULTS_TABLE].fieldNames())
+    )
+    assert {"event_type", "old_baseline_run_id", "new_baseline_run_id"}.issubset(
+        set(schemas[governance.GUARDRAIL_BASELINE_EVENTS_TABLE].fieldNames())
+    )
+
 def test_widget_display_rows_include_active_and_inactive_rules():
     """Verify widget display rows include active and inactive rules."""
     rows = governance._dq_rule_display_rows([
@@ -271,7 +297,8 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
 
     result = governance.enforce_dq_rules(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
 
-    assert reads[0][0:3] == ("dev", "metadata", governance.DQ_RULES_TABLE)
+    assert reads[0][0:3] == ("dev", "metadata", governance.GUARDRAIL_RULES_TABLE)
+    assert reads[1][0:3] == ("dev", "metadata", governance.DQ_RULES_TABLE)
     assert result["status"] == "failed"
     assert result["can_continue"] is False
     assert len(result["checks"]) == 1

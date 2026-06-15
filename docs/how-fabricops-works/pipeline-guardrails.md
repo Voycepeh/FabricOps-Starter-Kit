@@ -76,7 +76,7 @@ For each configured table, `02_pipeline` checks whether `max(freshness_column)` 
 
 ## Profile behavior guardrails
 
-Profile behavior guardrails use daily profile evidence from `METADATA_DATA_CATALOGUE` to enforce the configured `load_behavior`. This guardrail is about expected table behavior over time; low-level storage edit detection is intentionally out of scope.
+Profile behavior guardrails use catalogue/profile evidence from `METADATA_DATA_CATALOGUE` and runtime guardrail profile snapshots from `METADATA_GUARDRAIL_PROFILES` to enforce the configured `load_behavior`. This guardrail is about expected table behavior over time; low-level storage edit detection is intentionally out of scope.
 
 FabricOps reuses accepted catalogue evidence such as `row_count`, `column_name`, `min_value`, `max_value`, `profile_stage`, `profile_status`, `stability_status`, `freshness_status`, and `dq_status`.
 
@@ -107,7 +107,11 @@ After guardrails run, FabricOps writes metadata evidence that describes what was
 
 | Metadata table | Evidence written |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | Profile evidence and guardrail results, including reusable evidence such as `row_count`, `column_name`, `min_value`, `max_value`, `profile_stage`, `profile_status`, `stability_status`, `freshness_status`, and `dq_status`. |
+| `METADATA_DATA_CATALOGUE` | Catalogue/profile discovery anchor: what exists and what was profiled. |
+| `METADATA_GUARDRAIL_RULES` | What should be checked. DQ rows use `guardrail_type="dq"`; legacy `METADATA_DQ_RULES` rows are still readable during transition. |
+| `METADATA_GUARDRAIL_PROFILES` | What was observed for a guardrail run, including watermark-grouped snapshots. |
+| `METADATA_GUARDRAIL_RESULTS` | What passed, warned, failed, and whether the pipeline can continue. |
+| `METADATA_GUARDRAIL_BASELINE_EVENTS` | What humans accepted, reset, approved, rejected, or blocked for baselines. |
 | `METADATA_PIPELINE_RUNS` | Run-level summary showing the pipeline result and key execution details. |
 | `METADATA_DATA_LINEAGE_TABLE` | Source-to-target lineage for the governed output. |
 

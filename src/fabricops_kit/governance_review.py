@@ -17,7 +17,14 @@ from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
+GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
 DQ_RULES_TABLE = "METADATA_DQ_RULES"
+GUARDRAIL_PROFILES_TABLE = "METADATA_GUARDRAIL_PROFILES"
+GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
+GUARDRAIL_BASELINE_EVENTS_TABLE = "METADATA_GUARDRAIL_BASELINE_EVENTS"
+GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
+GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "engineer_approved", "governance_approved", "rejected", "superseded", "inactive"]
+GUARDRAIL_BASELINE_EVENT_TYPES = ["baseline_created", "baseline_reset_requested", "baseline_reset_approved", "baseline_reset_rejected", "change_accepted", "change_blocked"]
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -189,6 +196,10 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     return {
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
         COLUMN_CONTEXT_TABLE: _schema(COLUMN_CONTEXT_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
+        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), *audit]),
+        GUARDRAIL_PROFILES_TABLE: _schema(GUARDRAIL_PROFILES_TABLE, [("profile_id", string), ("run_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("guardrail_type", string), ("profile_scope", string), ("watermark_column", string), ("watermark_value", string), ("row_count", long), ("column_count", long), ("profile_hash", string), ("profile_payload_json", string), ("baseline_status", string), ("created_at", string), *audit]),
+        GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
+        GUARDRAIL_BASELINE_EVENTS_TABLE: _schema(GUARDRAIL_BASELINE_EVENTS_TABLE, [("event_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("guardrail_type", string), ("watermark_column", string), ("watermark_value", string), ("old_baseline_run_id", string), ("new_baseline_run_id", string), ("event_type", string), ("reason", string), ("change_reference", string), ("approved_by", string), ("approved_at", string), ("created_at", string), *audit]),
         DQ_RULES_TABLE: _schema(DQ_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), *audit]),
         COLUMN_CLASSIFICATION_TABLE: _schema(COLUMN_CLASSIFICATION_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
@@ -535,16 +546,25 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             "rule_key": str(rule.get("rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
             "rule_id": rule_id,
             **identity,
+            "guardrail_type": str(rule.get("guardrail_type") or "dq"),
             "rule_type": draft["rule_type"],
             "rule_parameters_json": _json(params),
             "severity": str(rule.get("severity") or "warning").lower(),
             "description": str(rule.get("description") or ""),
             "is_active": is_active,
-            "review_status": "approved",
+            "review_status": str(rule.get("target_review_status") or "governance_approved"),
+            "author_role": str(rule.get("author_role") or "governance_reviewer"),
+            "created_by": str(rule.get("created_by") or actor),
+            "created_at": str(rule.get("created_at") or now),
             "approved_by": str(rule.get("approved_by") or actor),
             "approved_at": str(rule.get("approved_at") or now),
             "ai_suggestion_json": _json(rule.get("ai_suggestion_json") or rule.get("ai_suggestion")),
             "action_type": action_type,
+            "source_notebook_type": str(rule.get("source_notebook_type") or "03_governance"),
+            "source_notebook_id": str(rule.get("source_notebook_id") or ""),
+            "source_workspace_id": str(rule.get("source_workspace_id") or ""),
+            "superseded_by_rule_key": str(rule.get("superseded_by_rule_key") or ""),
+            "notes": str(rule.get("notes") or ""),
             **audit,
         })
     return rows
@@ -1143,7 +1163,7 @@ def record_table_governance(
     )
     writes = {
         COLUMN_CONTEXT_TABLE: context_records,
-        DQ_RULES_TABLE: dq_rule_records,
+        GUARDRAIL_RULES_TABLE: [dict(record, guardrail_type="dq") for record in dq_rule_records],
         COLUMN_CLASSIFICATION_TABLE: classification_records,
     }
     for table_name, records in writes.items():
@@ -1343,7 +1363,7 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
     if "action_type" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
     if "review_status" in columns:
-        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("approved"))) == "approved")
+        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("governance_approved"))).isin("approved", "engineer_approved", "governance_approved"))
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
@@ -1587,6 +1607,34 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
     return {"status": status, "can_continue": can_continue, "checks": checks, "message": message}
 
 
+
+def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
+    """Read current guardrail rules plus legacy DQ rules during transition."""
+    schema = _configured_lakehouse_schema(config, env, "metadata")
+    frames = []
+    errors = []
+    for table_name in (GUARDRAIL_RULES_TABLE, DQ_RULES_TABLE):
+        try:
+            frame = read_lakehouse_table(config, env, "metadata", table_name, schema=schema, spark_session=spark_session)
+        except Exception as exc:
+            if _is_table_not_found_error(exc):
+                errors.append(f"{table_name}: not found")
+                continue
+            raise
+        if table_name == GUARDRAIL_RULES_TABLE and "guardrail_type" in set(getattr(frame, "columns", [])):
+            _, F, _ = _spark_sql_helpers()
+            frame = frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit("dq"))) == "dq")
+        frames.append(frame)
+    if not frames:
+        raise RuntimeError("No guardrail rule metadata table found. Expected METADATA_GUARDRAIL_RULES or legacy METADATA_DQ_RULES in the configured metadata target.")
+    combined = frames[0]
+    for frame in frames[1:]:
+        if hasattr(combined, "unionByName"):
+            combined = combined.unionByName(frame, allowMissingColumns=True)
+        else:
+            combined = frame
+    return combined
+
 def enforce_dq_rules(
     dataframe,
     config,
@@ -1607,8 +1655,9 @@ def enforce_dq_rules(
         Runtime configuration containing the configured metadata lakehouse
         route from ``00_env_config``.
     env : str
-        Environment name used to read ``METADATA_DQ_RULES`` from the configured
-        metadata target.
+        Environment name used to read ``METADATA_GUARDRAIL_RULES`` and, during
+        transition, legacy ``METADATA_DQ_RULES`` from the configured metadata
+        target.
     dataset_name : str
         Dataset identifier used with ``table_name`` to scope approved DQ rules
         when those columns exist in the metadata table.
@@ -1631,13 +1680,15 @@ def enforce_dq_rules(
 
     Notes
     -----
-    This v1 guardrail reads approved active rules from ``METADATA_DQ_RULES`` via
-    the configured metadata route. It records aggregate rule outcomes only; it
+    This v1 guardrail reads approved active DQ rules from
+    ``METADATA_GUARDRAIL_RULES`` and falls back to legacy
+    ``METADATA_DQ_RULES`` rows during transition via the configured metadata
+    route. It records aggregate rule outcomes only; it
     does not quarantine rows, write row-level failure metadata, filter invalid
     rows, send alerts, or partially write targets.
 
     """
-    metadata_df = read_lakehouse_table(config, env, "metadata", DQ_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session)
+    metadata_df = _read_guardrail_rule_metadata(config, env, spark_session=spark_session)
     rules = _load_active_dq_rules(metadata_df, table_name=table_name, env_name=env, dataset_name=dataset_name)
     checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
     total_count = int(dataframe.count())
