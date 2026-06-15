@@ -270,23 +270,23 @@ def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) ->
     if not rows:
         raise ValueError("METADATA_DATA_CATALOGUE has no rows. Run 02_pipeline profiling before 03_governance.")
     has_status = any(any(k.lower() == "profile_status" for k in r) for r in rows)
-    table_groups: dict[tuple[str, str, str, str, str], list[dict[str, Any]]] = {}
+    table_groups: dict[tuple[str, str, str, str, str, str], list[dict[str, Any]]] = {}
     for row in rows:
         ident = _catalogue_physical_identity(row)
         if not ident["table_name"]:
             continue
-        key = (ident["environment_name"], ident["asset_kind"], ident["asset_name"], ident["schema_or_layer"], ident["table_name"])
+        key = (ident["environment_name"], ident["asset_kind"], ident["asset_name"], ident["schema_or_layer"], ident["table_name"], ident["metadata_table_key"])
         table_groups.setdefault(key, []).append(row)
     if not table_groups:
         raise ValueError("METADATA_DATA_CATALOGUE has no table profile evidence for governance review.")
 
     assets: dict[str, dict[str, Any]] = {}
     for key, group in table_groups.items():
-        env, kind, asset, schema, table = key
-        default_pool = [r for r in group if _is_success(r)] if has_status else group
-        if has_status and not default_pool:
-            default_pool = group
-        latest = max(default_pool, key=_profile_sort_key)
+        env, kind, asset, schema, table, _table_key = key
+        selectable_pool = [r for r in group if _is_success(r)] if has_status else group
+        if not selectable_pool:
+            continue
+        latest = max(selectable_pool, key=_profile_sort_key)
         ident = _catalogue_physical_identity(latest)
         asset_label = " / ".join(part for part in [env, kind or "asset", asset] if part)
         assets.setdefault(asset_label, {"label": asset_label, "schemas": {}})
@@ -294,6 +294,7 @@ def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) ->
         schema_entry = assets[asset_label]["schemas"].setdefault(schema_label, {"label": schema_label, "tables": {}})
         profiles = []
         seen_profiles = set()
+        history_profiles = []
         for row in sorted(group, key=_profile_sort_key, reverse=True):
             p_ident = _catalogue_physical_identity(row)
             run_id = str(_value(row, "profile_run_id"))
@@ -309,9 +310,15 @@ def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) ->
                 label_parts.append(f"stage {stage}")
             if pipeline:
                 label_parts.append(pipeline)
-            profiles.append({**p_ident, "profile_run_id": run_id, "profile_stage": stage, "profiled_at": profiled_at, "profile_status": str(_value(row, "profile_status")), "label": " | ".join(label_parts)})
+            profile = {**p_ident, "profile_run_id": run_id, "profile_stage": stage, "profiled_at": profiled_at, "profile_status": str(_value(row, "profile_status")), "label": " | ".join(label_parts)}
+            if _is_success(row) or not has_status:
+                profiles.append(profile)
+            else:
+                history_profiles.append({**profile, "reviewable": False, "history_only": True})
         default_identity = {**ident, "profile_run_id": str(_value(latest, "profile_run_id")), "profile_stage": str(_value(latest, "profile_stage")), "profiled_at": str(_value(latest, "profiled_at")), "profile_status": str(_value(latest, "profile_status"))}
-        schema_entry["tables"][table] = {"label": table, "profiles": profiles, "default": default_identity}
+        schema_entry["tables"][table] = {"label": table, "profiles": profiles, "history_profiles": history_profiles, "default": default_identity}
+    if not assets:
+        raise ValueError("METADATA_DATA_CATALOGUE has no successful table profile evidence for governance review.")
     return {"assets": assets, "has_status": has_status}
 
 
@@ -432,24 +439,15 @@ def widget_select_governance_profile_target(config: Any, env: str, *, spark_sess
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
     rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    selection_identity = _catalogue_physical_identity(selection)
     filtered = []
     for row in rows:
-        table_key = str(
-            _value(row, "metadata_table_key")
-            or _build_metadata_table_key(
-                _value(row, "environment_name"),
-                _value(row, "dataset_name"),
-                _value(row, "table_name"),
-            )
-        )
+        row_identity = _catalogue_physical_identity(row)
         if (
             _is_success(row)
-            and str(_value(row, "environment_name")) == str(selection["environment_name"])
-            and str(_value(row, "dataset_name")) == str(selection["dataset_name"])
-            and str(_value(row, "table_name")) == str(selection["table_name"])
+            and row_identity == selection_identity
             and str(_value(row, "profile_run_id")) == str(selection["profile_run_id"])
             and str(_value(row, "profile_stage")) == str(selection["profile_stage"])
-            and table_key == str(selection["metadata_table_key"])
         ):
             filtered.append(row)
     if not filtered:
