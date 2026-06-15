@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import re
@@ -17,6 +19,7 @@ def _finder_js() -> str:
 
 
 def test_function_catalogue_uses_public_callable_filter() -> None:
+    """Verify function catalogue uses public callable filter."""
     page = _reference_index()
 
     assert "## Find a function" in page
@@ -31,6 +34,7 @@ def test_function_catalogue_uses_public_callable_filter() -> None:
 
 
 def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
+    """Verify function catalogue removes essential optional filter labels."""
     page = _reference_index()
 
     assert "> Essential<" not in page
@@ -44,6 +48,7 @@ def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
 
 
 def test_callable_is_default_and_internal_is_opt_in() -> None:
+    """Verify callable is default and internal is opt in."""
     page = _reference_index()
 
     assert re.search(r'data-function-type-filter="callable"\s+checked', page)
@@ -51,6 +56,7 @@ def test_callable_is_default_and_internal_is_opt_in() -> None:
 
 
 def test_internal_functions_are_not_indexed_for_normal_catalogue_search() -> None:
+    """Verify internal functions are not indexed for normal catalogue search."""
     page = _reference_index()
 
     assert 'data-function-type="callable"' in page
@@ -60,6 +66,7 @@ def test_internal_functions_are_not_indexed_for_normal_catalogue_search() -> Non
 
 
 def test_finder_filters_by_function_type_and_searches_all_catalogue_fields() -> None:
+    """Verify finder filters by function type and searches all catalogue fields."""
     script = _finder_js()
 
     assert "[data-function-type-filter]" in script

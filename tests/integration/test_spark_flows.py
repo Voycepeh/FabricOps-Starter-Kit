@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import json
@@ -12,6 +14,7 @@ pytestmark = pytest.mark.spark
 
 
 def test_prepare_dq_profile_input_rows_uses_configured_audit_timezone(spark_session):
+    """Verify prepare dq profile input rows uses configured audit timezone."""
     config = framework_config()
     object.__setattr__(config, "audit_timezone", "Asia/Singapore")
     profile_df = spark_session.createDataFrame(
@@ -43,6 +46,7 @@ def test_prepare_dq_profile_input_rows_uses_configured_audit_timezone(spark_sess
 
 
 def test_prepare_dq_profile_input_rows_defaults_to_utc_without_config(spark_session):
+    """Verify prepare dq profile input rows defaults to utc without config."""
     profile_df = spark_session.createDataFrame(
         [
             {
@@ -66,6 +70,7 @@ def test_prepare_dq_profile_input_rows_defaults_to_utc_without_config(spark_sess
 
 
 def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session):
+    """Verify spark schema validation and latest dq metadata are stable."""
     df = spark_session.createDataFrame([{"id": 1, "amount": 10.0, "extra": "new"}])
     schema_result = validate_schema(df, {"id": "bigint", "amount": "double"}, preset="allow_new_columns")
     metadata_df = spark_session.createDataFrame(
@@ -112,6 +117,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
 
 
 def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_session):
+    """Verify load active dq rules reconstructs current shape metadata row."""
     metadata_df = spark_session.createDataFrame(
         [
             {
@@ -147,6 +153,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
 
 
 def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_session, monkeypatch):
+    """Verify load active dq rules reconstructs current governance metadata."""
     import fabricops_kit.governance_review as governance
     from tests.helpers import framework_config
 
@@ -210,6 +217,7 @@ def _dq_metadata_df(spark_session, rows):
 
 
 def test_enforce_dq_rules_returns_passed_when_no_active_rules(spark_session, monkeypatch):
+    """Verify enforce dq rules returns passed when no active rules."""
     import fabricops_kit.governance_review as governance
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
@@ -227,6 +235,7 @@ def test_enforce_dq_rules_returns_passed_when_no_active_rules(spark_session, mon
 
 
 def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatch):
+    """Verify enforce dq rules warning failure can continue."""
     import fabricops_kit.governance_review as governance
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "invalid", "amount": 10.0}])
@@ -268,6 +277,7 @@ def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatc
 
 
 def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
+    """Verify enforce dq rules warning failure adds technical columns and preserves rows."""
     import fabricops_kit.governance_review as governance
 
     df = spark_session.createDataFrame(
@@ -339,6 +349,7 @@ def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_r
 
 
 def test_enforce_dq_rules_error_failure_blocks(spark_session, monkeypatch):
+    """Verify enforce dq rules error failure blocks."""
     import fabricops_kit.governance_review as governance
 
     df = spark_session.createDataFrame([(None, "active", 10.0)], "order_id string, status string, amount double")
@@ -378,6 +389,7 @@ def test_enforce_dq_rules_error_failure_blocks(spark_session, monkeypatch):
 
 
 def test_enforce_dq_rules_mixed_warning_and_error_failures_return_failed(spark_session, monkeypatch):
+    """Verify enforce dq rules mixed warning and error failures return failed."""
     import fabricops_kit.governance_review as governance
 
     df = spark_session.createDataFrame([(None, "invalid", 10.0)], "order_id string, status string, amount double")
@@ -434,6 +446,7 @@ def test_enforce_dq_rules_mixed_warning_and_error_failures_return_failed(spark_s
 
 
 def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monkeypatch):
+    """Verify enforce dq rules supports current v1 metadata shape."""
     import fabricops_kit.governance_review as governance
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0, "email": "a@example.com"}])
@@ -471,6 +484,7 @@ def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monk
 
 
 def test_write_catalogue_evidence_appends_stability_fields_without_updates(spark_session, monkeypatch):
+    """Verify write catalogue evidence appends stability fields without updates."""
     from fabricops_kit.data_profiling import profile_dataframe
     from fabricops_kit import pipeline
 

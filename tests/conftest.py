@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import sys
@@ -17,12 +19,15 @@ class FakeFabricFs:
     made_dirs: list[str] = field(default_factory=list)
 
     def exists(self, path: str) -> bool:
+        """Return exists."""
         return path in self.existing_paths
 
     def ls(self, path: str) -> list[Any]:
+        """Return ls."""
         return list(self.listings.get(path, []))
 
     def mkdirs(self, path: str) -> bool:
+        """Return mkdirs."""
         self.made_dirs.append(path)
         self.existing_paths.add(path)
         return True
@@ -36,9 +41,11 @@ class FakeFabricCredentials:
     secrets: dict[tuple[str, str], str] = field(default_factory=dict)
 
     def getToken(self, audience: str) -> str:  # noqa: N802 - mirrors Fabric API
+        """Return getToken."""
         return self.tokens.get(audience, f"fake-token-for-{audience}")
 
     def getSecret(self, vault: str, name: str) -> str:  # noqa: N802 - mirrors Fabric API
+        """Return getSecret."""
         try:
             return self.secrets[(vault, name)]
         except KeyError as exc:
@@ -52,6 +59,7 @@ class FakeFabricEnv:
     values: dict[str, str] = field(default_factory=dict)
 
     def get(self, key: str, default: Any = None) -> Any:
+        """Return get."""
         return self.values.get(key, default)
 
 
@@ -59,6 +67,7 @@ class FakeRuntimeContext(dict):
     """Dict-backed Fabric runtime context with attribute access."""
 
     def __getattr__(self, name: str) -> Any:
+        """Implement __getattr__ behavior."""
         try:
             return self[name]
         except KeyError as exc:
@@ -68,7 +77,6 @@ class FakeRuntimeContext(dict):
 @pytest.fixture
 def fake_fabric_runtime_context() -> FakeRuntimeContext:
     """Return a reusable Fabric runtime context for local tests."""
-
     return FakeRuntimeContext(
         currentWorkspaceId="workspace-id",
         currentWorkspaceName="FabricOps Test Workspace",
@@ -88,7 +96,6 @@ def fake_fabric_runtime_context() -> FakeRuntimeContext:
 @pytest.fixture
 def fake_notebookutils(monkeypatch: pytest.MonkeyPatch, fake_fabric_runtime_context: FakeRuntimeContext):
     """Inject configurable notebookutils and mssparkutils modules through sys.modules."""
-
     fs = FakeFabricFs()
     credentials = FakeFabricCredentials()
     env = FakeFabricEnv()
@@ -133,7 +140,6 @@ def fake_notebookutils(monkeypatch: pytest.MonkeyPatch, fake_fabric_runtime_cont
 @pytest.fixture(scope="session")
 def spark_session():
     """Return a local Spark session or skip when Spark prerequisites are unavailable."""
-
     try:
         from pyspark.sql import SparkSession
     except Exception as exc:  # pragma: no cover - environment dependent

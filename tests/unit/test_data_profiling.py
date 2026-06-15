@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import pytest
@@ -8,6 +10,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.spark]
 
 
 def test_profile_dataframe_profiles_schema_nulls_distincts_min_and_max(spark_session):
+    """Verify profile dataframe profiles schema nulls distincts min and max."""
     df = spark_session.createDataFrame(
         [(1, 10.0, "a", "skip"), (2, None, "b", "skip"), (3, 30.0, "b", "skip")],
         ["id", "amount", "category", "_pipeline_run_id"],
@@ -26,6 +29,7 @@ def test_profile_dataframe_profiles_schema_nulls_distincts_min_and_max(spark_ses
 
 
 def test_profile_dataframe_row_count_is_long_type(spark_session):
+    """Verify profile dataframe row count is long type."""
     df = spark_session.createDataFrame([(1, "a"), (2, "b")], ["id", "category"])
 
     profile = profile_dataframe(df, "orders")
@@ -35,6 +39,7 @@ def test_profile_dataframe_row_count_is_long_type(spark_session):
 
 
 def test_profile_dataframe_excludes_dq_technical_columns(spark_session):
+    """Verify profile dataframe excludes dq technical columns."""
     df = spark_session.createDataFrame(
         [
             {
@@ -52,6 +57,7 @@ def test_profile_dataframe_excludes_dq_technical_columns(spark_session):
 
 
 def test_profile_dataframe_excludes_fabricops_and_dq_annotation_prefixes(spark_session):
+    """Verify profile dataframe excludes fabricops and dq annotation prefixes."""
     df = spark_session.createDataFrame(
         [(1, "ok", "warning", "rule", "run-1", "pipe")],
         "id int, status string, _dq_check_status string, _dq_failed_rules string, _fabricops_run_id string, _fabricops_pipeline_name string",

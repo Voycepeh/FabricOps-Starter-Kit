@@ -70,6 +70,7 @@ def _get_profiled_columns(df, exclude_columns: list[str] | set[str] | None = Non
     -------
     list[str]
         Eligible business columns to profile.
+
     """
     excluded = set(_DEFAULT_PROFILE_EXCLUDE_COLUMNS)
     if exclude_columns:
@@ -282,6 +283,7 @@ def profile_dataframe(
     Distribution profiling only collects aggregated Spark results such as
     quantiles, bucket counts, and grouped category counts. It does not collect
     complete datasets to the driver.
+
     """
     from pyspark.sql import functions as F
 

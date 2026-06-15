@@ -200,6 +200,7 @@ def prepare_pipeline_table_configs(
     Target configs derive ``dataset_name``, ``stage``, ``target_layer``,
     ``target_name``, and ``target_kind`` unless overridden, then add standard
     FabricOps audit columns.
+
     """
     normalized_role = str(table_role or "").lower().strip()
     if normalized_role not in {"source", "target"}:
@@ -271,6 +272,7 @@ def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]
         Definitions keyed by table key, suitable for
         :func:`write_catalogue_evidence`. Target definitions include resolved
         write-layer, kind, and mode fields when the stage is ``target``.
+
     """
     definitions: dict[str, dict[str, Any]] = {}
     for table_config in table_configs:
@@ -341,6 +343,7 @@ def run_table_guardrails(
     annotated DataFrame update the corresponding table config ``df`` in place
     so downstream writes use the checked DataFrame. Metadata reads and writes
     are routed through the configured metadata target by the called helpers.
+
     """
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
@@ -521,6 +524,7 @@ def write_catalogue_evidence(
     -------
     dict[str, str]
         Write status keyed by dataset alias.
+
     """
     from pyspark.sql import functions as F
 
@@ -631,6 +635,7 @@ def write_pipeline_lineage(
     -------
     dict[str, Any]
         Status, row count, and written rows.
+
     """
     audit = _runtime_audit_fields(config, env)
     created_at = _now_iso(config)
@@ -741,6 +746,7 @@ def write_pipeline_run_summary(
     The row is written via ``write_lakehouse_table(..., config, env,
     "metadata", metadata_table, mode="append")`` so runtime evidence never
     relies on a default attached lakehouse.
+
     """
     completed = completed_at or _now_iso(config)
     started = started_at or completed

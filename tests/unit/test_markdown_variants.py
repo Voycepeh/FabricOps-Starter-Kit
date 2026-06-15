@@ -20,6 +20,7 @@ def _load_hook_module():
 
 
 def test_markdown_variant_hook_publishes_agent_friendly_entrypoints(tmp_path: Path) -> None:
+    """Verify markdown variant hook publishes agent friendly entrypoints."""
     hook = _load_hook_module()
     site_dir = tmp_path / "site"
 
@@ -38,6 +39,7 @@ def test_markdown_variant_hook_publishes_agent_friendly_entrypoints(tmp_path: Pa
 
 
 def test_markdown_variant_hook_publishes_versioned_agent_friendly_entrypoints(tmp_path: Path) -> None:
+    """Verify markdown variant hook publishes versioned agent friendly entrypoints."""
     hook = _load_hook_module()
     versioned_site_dir = tmp_path / "site" / "1.2.3"
 
@@ -54,6 +56,7 @@ def test_markdown_variant_hook_publishes_versioned_agent_friendly_entrypoints(tm
 
 
 def test_llms_txt_uses_relative_documentation_links_for_versioned_snapshots() -> None:
+    """Verify llms txt uses relative documentation links for versioned snapshots."""
     llms_text = (ROOT / "docs" / "llms.txt").read_text(encoding="utf-8")
 
     assert "https://voycepeh.github.io/FabricOps-Starter-Kit/" not in llms_text

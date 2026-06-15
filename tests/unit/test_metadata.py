@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,6 +15,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_notebookutils):
+    """Verify runtime audit fields resolve fabric context and allow overrides."""
     audit = metadata._build_runtime_audit_fields(
         config=framework_config(),
         env="dev",
@@ -26,6 +29,7 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
 
 
 def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
+    """Verify notebook registration uses configured metadata route."""
     writes = []
 
     monkeypatch.setattr(
@@ -65,6 +69,7 @@ def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
 
 
 def test_current_notebook_active_registrations_filters_current_runtime_rows(monkeypatch):
+    """Verify current notebook active registrations filters current runtime rows."""
     rows = [
         {
             "agreement_id": "DA-1",
@@ -112,6 +117,7 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
 
 
 def test_notebook_registry_read_requires_configured_metadata_route():
+    """Verify notebook registry read requires configured metadata route."""
     class Spark:
         def table(self, table):
             raise AssertionError(f"notebook registry must not call spark.table: {table}")
@@ -121,6 +127,7 @@ def test_notebook_registry_read_requires_configured_metadata_route():
 
 
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
+    """Verify metadata key builders are stable for governance and dq rules."""
     table_key = metadata._build_metadata_table_key(" DEV ", "Sales", "Orders")
     column_key = metadata._build_metadata_column_key("dev", "sales", "orders", "Order_ID")
     dq_key = metadata._build_dq_rule_key("dev", "sales", "orders", "order_id_required")
@@ -133,6 +140,7 @@ def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
 
 
 def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(monkeypatch):
+    """Verify data agreement metadata write and read use configured metadata route."""
     writes = []
     steward_rows = []
 
@@ -174,6 +182,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
 
 
 def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
+    """Verify deleted metadata helpers are not referenced by active modules."""
     deleted_helpers = (
         "_get" + "_notebook_registry_schema",
         "_notebook_registry_base_schema",
@@ -201,6 +210,7 @@ def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
 
 
 def test_public_v1_callable_list_unchanged_after_metadata_cleanup():
+    """Verify public v1 callable list unchanged after metadata cleanup."""
     assert fabricops_kit.__all__ == [
         "setup_notebook",
         "setup_metadata_tables",

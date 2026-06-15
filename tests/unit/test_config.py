@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import json
@@ -31,6 +33,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_dq_ai_suggestion_prompt_guidance_stays_in_package_defaults():
+    """Verify dq ai suggestion prompt guidance stays in package defaults."""
     from fabricops_kit.governance_review import DQ_RULE_TYPES
 
     prompt = DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
@@ -61,6 +64,7 @@ def test_dq_ai_suggestion_prompt_guidance_stays_in_package_defaults():
 
 
 def test_ai_prompt_config_uses_only_implemented_prompt_defaults():
+    """Verify ai prompt config uses only implemented prompt defaults."""
     prompts = AIPromptConfig()
 
     assert prompts.business_context_prompt_template.strip()
@@ -71,6 +75,7 @@ def test_ai_prompt_config_uses_only_implemented_prompt_defaults():
 
 
 def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
+    """Verify env config template does not expose prompt boilerplate or unused defaults."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
@@ -85,6 +90,7 @@ def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaul
 
 
 def test_framework_config_defaults_framework_only_sections_when_omitted():
+    """Verify framework config defaults framework only sections when omitted."""
     config = FrameworkConfig(
         path_config=PathConfig(paths={"dev": {"source": store()}}),
         notebook_runtime_config=NotebookRuntimeConfig(),
@@ -98,6 +104,7 @@ def test_framework_config_defaults_framework_only_sections_when_omitted():
 
 
 def test_dict_framework_config_defaults_framework_only_sections_when_omitted():
+    """Verify dict framework config defaults framework only sections when omitted."""
     config = setup_notebook.__globals__["_validate_framework_config"]({
         "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
         "notebook_runtime_config": NotebookRuntimeConfig(),
@@ -111,6 +118,7 @@ def test_dict_framework_config_defaults_framework_only_sections_when_omitted():
 
 
 def test_framework_config_keeps_type_validation_for_present_defaulted_sections():
+    """Verify framework config keeps type validation for present defaulted sections."""
     with pytest.raises(ValueError, match="quality_config must be a QualityConfig object"):
         setup_notebook.__globals__["_validate_framework_config"]({
             "path_config": PathConfig(paths={"dev": {"source": store()}}),
@@ -121,6 +129,7 @@ def test_framework_config_keeps_type_validation_for_present_defaulted_sections()
 
 
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):
+    """Verify setup notebook resolves environment paths and reports invalid targets."""
     config = framework_config()
 
     required_targets = ["source", "unified", "product", "metadata"]
@@ -140,6 +149,7 @@ def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(f
 
 
 def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
+    """Verify config objects copy nested agreement defaults and validate paths."""
     source = {"visible_columns": ["steward_name"], "custom_fields": [{"key": "group", "options": ["A"]}]}
     config = DataAgreementConfig(data_steward_widget=source)
     source["custom_fields"][0]["options"].append("B")
@@ -154,6 +164,7 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
 
 def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypatch):
+    """Verify setup metadata tables creates missing tables with write helper."""
     from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
     from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
     import fabricops_kit.fabric_input_output as io
@@ -223,6 +234,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
 
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
+    """Verify setup metadata tables ready without active steward when not required."""
     import fabricops_kit.fabric_input_output as io
 
     class Schema:
@@ -260,6 +272,7 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
 
 
 def test_active_metadata_tables_are_source_driven_and_explain_optional_access_table():
+    """Verify active metadata tables are source driven and explain optional access table."""
     tables = _get_active_metadata_tables(framework_config())
 
     assert len(tables) == 11
@@ -273,6 +286,7 @@ def test_active_metadata_tables_are_source_driven_and_explain_optional_access_ta
 
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
+    """Verify metadata registration validation reads configured metadata target."""
     import fabricops_kit.fabric_input_output as io
 
     calls = []
@@ -307,6 +321,7 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
 
 
 def test_metadata_registration_validation_warns_for_missing_configured_tables(monkeypatch):
+    """Verify metadata registration validation warns for missing configured tables."""
     import fabricops_kit.fabric_input_output as io
 
     def read_table(config, env, target, table, schema=None, spark_session=None):
@@ -327,6 +342,7 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
 
 
 def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch):
+    """Verify setup metadata tables passes metadata schema to io helpers."""
     import fabricops_kit.fabric_input_output as io
 
     class Schema:
@@ -367,6 +383,7 @@ def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch)
 
 
 def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
+    """Verify setup metadata tables reports configured metadata schema."""
     import fabricops_kit.fabric_input_output as io
 
     class Schema:
@@ -406,6 +423,7 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     assert result["registration_validation"]["fully_qualified_tables"] == ["dbo.METADATA_DATA_AGREEMENT"]
 
 def test_audit_timezone_defaults_validates_and_fails_clearly():
+    """Verify audit timezone defaults validates and fails clearly."""
     assert _validate_audit_timezone(None) == "UTC"
     assert _validate_audit_timezone("Asia/Singapore") == "Asia/Singapore"
     with pytest.raises(ValueError, match='Invalid FABRICOPS_AUDIT_TIMEZONE: "Singapore"'):
@@ -413,6 +431,7 @@ def test_audit_timezone_defaults_validates_and_fails_clearly():
 
 
 def test_framework_config_and_current_audit_timestamp_use_configured_timezone():
+    """Verify framework config and current audit timestamp use configured timezone."""
     config = FrameworkConfig(
         **{**framework_config().__dict__, "audit_timezone": "Asia/Singapore"}
     )
@@ -422,6 +441,7 @@ def test_framework_config_and_current_audit_timestamp_use_configured_timezone():
 
 
 def test_env_config_template_exposes_audit_timezone_setting():
+    """Verify env config template exposes audit timezone setting."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
@@ -436,6 +456,7 @@ def test_env_config_template_exposes_audit_timezone_setting():
 
 
 def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
+    """Verify downstream notebooks use config aware audit timestamps only."""
     notebook_paths = [
         Path("templates/notebooks/01_agreement.ipynb"),
         Path("templates/notebooks/02_pipeline.ipynb"),
@@ -458,6 +479,7 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
 
 
 def test_governance_review_imports_current_prompt_constants():
+    """Verify governance review imports current prompt constants."""
     import fabricops_kit.governance_review as governance_review
 
     assert governance_review.BUSINESS_CONTEXT_PROMPT.strip()

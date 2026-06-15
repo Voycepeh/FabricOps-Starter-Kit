@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import json
@@ -45,6 +47,7 @@ def _rule(rule_type: str, **kwargs):
     ],
 )
 def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
+    """Verify dq rule engine supports catalogue rules."""
     df = spark_session.createDataFrame(
         [
             ("1", "2026A", "good@example.com", "Alice", "Active", "US", 50, 10, 0, 0.5, 99, "2000-01-01", "2025-01-01", "2099-01-01", "2099-01-01", "A", "A", "2026-01-02", "2026-01-01", "2026-01-02", "2026-01-01", "2026-01-01", "Graduated", False, 10, 9),
@@ -59,11 +62,13 @@ def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
 
 @pytest.mark.parametrize("old_rule_type", ["unique_key", "regex_format", "value_range", "regex", "unique_compound", "compound_unique", "datatype", "referential_integrity", "custom_expression"])
 def test_legacy_or_external_rule_names_fail_validation(old_rule_type):
+    """Verify legacy or external rule names fail validation."""
     with pytest.raises(ValueError, match="unsupported rule_type"):
         governance._validate_dq_rules([_rule(old_rule_type, columns=["id"])])
 
 
 def test_not_null_and_non_empty_string_have_distinct_semantics(spark_session):
+    """Verify not null and non empty string have distinct semantics."""
     df = spark_session.createDataFrame([(None,), ("",), ("   ",), ("ok",)], "name string")
 
     not_null = _rule("not_null", columns=["name"])
@@ -77,6 +82,7 @@ def test_not_null_and_non_empty_string_have_distinct_semantics(spark_session):
 
 
 def test_dq_metadata_actions_are_append_only_and_preserve_multicolumns(fake_notebookutils):
+    """Verify dq metadata actions are append only and preserve multicolumns."""
     profile_rows = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "student_id"}]
     base = {"rule_id": "grain", "rule_type": "unique_combination", "columns": ["student_id", "semester"], "severity": "error", "description": "grain", "commit": True}
     rows = governance._build_dq_rule_records(
@@ -99,6 +105,7 @@ def test_dq_metadata_actions_are_append_only_and_preserve_multicolumns(fake_note
 
 
 def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
+    """Verify latest active rule resolution and inactive not enforced."""
     metadata = spark_session.createDataFrame(
         [
             {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "not_null", "rule_parameters_json": json.dumps({"columns": ["id"]}), "severity": "error", "description": "old", "is_active": True, "review_status": "approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
@@ -111,6 +118,7 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
 
 
 def test_widget_display_rows_include_active_and_inactive_rules():
+    """Verify widget display rows include active and inactive rules."""
     rows = governance._dq_rule_display_rows([
         {"rule_id": "r1", "rule_type": "not_null", "column_name": "id", "is_active": True},
         {"rule_id": "r2", "rule_type": "unique", "column_name": "id", "is_active": False},
@@ -119,6 +127,7 @@ def test_widget_display_rows_include_active_and_inactive_rules():
 
 
 def test_ai_suggestion_parser_rejects_unsupported_and_keeps_drafts():
+    """Verify ai suggestion parser rejects unsupported and keeps drafts."""
     payload = {"DQ_RULES": {"orders": [{"rule_id": "r1", "rule_type": "not_null", "columns": ["id"], "severity": "warning", "description": "draft"}]}}
     drafts = governance._parse_dq_ai_suggestions([{"response": json.dumps(payload)}], table_name="orders")
     assert drafts[0]["review_status"] == "draft"
@@ -129,6 +138,7 @@ def test_ai_suggestion_parser_rejects_unsupported_and_keeps_drafts():
 
 
 def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_session):
+    """Verify dq tagged dataframe uses row level warning and error status."""
     df = spark_session.createDataFrame(
         [(None, "bad", -1), ("ok", "bad", -1), ("ok", "good", 1), (None, "good", -1)],
         "id string, status string, amount int",
@@ -149,6 +159,7 @@ def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_sessi
 
 
 def test_value_when_uses_null_safe_expected_value_comparison(spark_session):
+    """Verify value when uses null safe expected value comparison."""
     df = spark_session.createDataFrame(
         [
             ("Graduated", True, None, None, None),
@@ -176,6 +187,7 @@ def test_value_when_uses_null_safe_expected_value_comparison(spark_session):
 
 
 def test_cross_column_rules_use_consistent_null_behavior(spark_session):
+    """Verify cross column rules use consistent null behavior."""
     df = spark_session.createDataFrame(
         [(None, None), (None, 1), (1, None), (1, 1), (2, 1), (1, 2)],
         "a int, b int",
@@ -191,6 +203,7 @@ def test_cross_column_rules_use_consistent_null_behavior(spark_session):
 
 
 def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch, spark_session):
+    """Verify enforce dq rules loads only approved active metadata rules."""
     df = spark_session.createDataFrame([(1, "ok"), (None, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
         [
@@ -268,6 +281,7 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
 
 
 def test_enforce_dq_rules_returns_passed_when_no_approved_active_rules(monkeypatch, spark_session):
+    """Verify enforce dq rules returns passed when no approved active rules."""
     df = spark_session.createDataFrame([(1, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
         [

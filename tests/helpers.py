@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,6 +17,7 @@ from fabricops_kit.fabric_input_output import FabricStore
 
 
 def store(kind: str = "lakehouse", *, env: str = "dev", name: str | None = None) -> FabricStore:
+    """Return store."""
     return FabricStore(
         env=env,
         workspace_id=f"{env}-workspace",
@@ -25,6 +28,7 @@ def store(kind: str = "lakehouse", *, env: str = "dev", name: str | None = None)
 
 
 def framework_config() -> FrameworkConfig:
+    """Return framework config."""
     return FrameworkConfig(
         path_config=PathConfig(
             paths={
@@ -44,6 +48,7 @@ def framework_config() -> FrameworkConfig:
 
 
 def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> SimpleNamespace:
+    """Return agreement config."""
     from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
 
     return SimpleNamespace(
@@ -82,6 +87,7 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
 
 
 def steward_row(**overrides: Any) -> dict[str, Any]:
+    """Return steward row."""
     row = {
         "steward_id": "steward-001",
         "steward_name": "Configured Steward",
@@ -96,6 +102,7 @@ def steward_row(**overrides: Any) -> dict[str, Any]:
 
 
 def agreement_row(**overrides: Any) -> dict[str, Any]:
+    """Return agreement row."""
     row = {
         "agreement_name": "Orders Agreement",
         "domain": "Operations",
@@ -114,22 +121,30 @@ def agreement_row(**overrides: Any) -> dict[str, Any]:
 
 @dataclass
 class FakeFrame:
+    """Fakeframe test double."""
+
     rows: list[dict[str, Any]]
     columns: list[str] | None = None
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         if self.columns is None:
             self.columns = list(self.rows[0]) if self.rows else []
 
     def limit(self, count: int) -> "FakeFrame":
+        """Return limit."""
         return FakeFrame(self.rows[:count], columns=list(self.columns or []))
 
 
 class FakeSpark:
+    """Fakespark test double."""
+
     def __init__(self) -> None:
+        """Initialize the test helper."""
         self.source_rows: list[list[dict[str, Any]]] = []
 
     def createDataFrame(self, rows, schema=None):  # noqa: N802
+        """Return createDataFrame."""
         if schema is not None:
             columns = schema.fieldNames()
             shaped_rows = [dict(zip(columns, row)) if not isinstance(row, dict) else row for row in rows]

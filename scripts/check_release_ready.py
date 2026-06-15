@@ -70,6 +70,7 @@ def version_from_tag(tag_name: str) -> str:
 
 
 def main(tag_name: str | None = None) -> int:
+    """Run the command-line workflow."""
     pyproject_version = get_pyproject_version(PYPROJECT_PATH.read_text(encoding="utf-8"))
     if not SEMVER_RE.match(pyproject_version):
         print(f"Release-ready version check failed: {pyproject_version!r} is not MAJOR.MINOR.PATCH")

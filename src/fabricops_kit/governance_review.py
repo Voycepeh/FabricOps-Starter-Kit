@@ -124,6 +124,7 @@ def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]])
     ValueError
         Raised when two or more physical field names collapse to the same
         logical name under Spark/Delta's case-insensitive column resolution.
+
     """
     logical_names: dict[str, list[str]] = {}
     for name, _data_type in fields:
@@ -162,6 +163,7 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     The bootstrap creates empty Delta tables with these explicit schemas instead
     of inferring all columns from empty strings. It does not seed data,
     duplicate pipeline configuration, or create a data-contract table.
+
     """
     BooleanType, DoubleType, LongType, StringType, _, _, TimestampType = _spark_types()
     string = StringType()
@@ -326,6 +328,7 @@ def get_selected_catalogue_table(table_selector: Any | None = None) -> dict[str,
     -------
     dict[str, Any]
         Stable table identity used by ``load_catalogue_profile_rows``.
+
     """
     if _SELECTED_CATALOGUE_TABLE is not None:
         return dict(_SELECTED_CATALOGUE_TABLE)
@@ -364,6 +367,7 @@ def widget_select_governance_profile_target(config: Any, env: str, *, spark_sess
     Table identity is based on physical catalogue fields and intentionally
     excludes ``profile_stage`` and pipeline metadata. Source/target stage and
     pipeline values remain visible as profile evidence for the selected table.
+
     """
     global _SELECTED_CATALOGUE_TABLE
     widgets = importlib.import_module("ipywidgets")
@@ -608,6 +612,7 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
     list[dict[str, Any]]
         Empty editable review list. Add approved context rows before calling
         ``record_table_governance``.
+
     """
     return _display_review_guidance(
         "Business context review",
@@ -738,6 +743,7 @@ def widget_review_dq_rules(
         Mutable review list. The widget appends approved create, update,
         deactivation, and reactivation dictionaries to this list; pass it to
         ``record_table_governance`` to persist append-only metadata history.
+
     """
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
@@ -883,6 +889,7 @@ def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> l
     list[dict[str, Any]]
         Empty editable review list. Add approved classification dictionaries
         before calling ``record_table_governance``.
+
     """
     return _display_review_guidance(
         "Sensitivity and PII classification review",
@@ -947,6 +954,7 @@ def _review_governance_evidence(
     The function intentionally re-reads agreement, catalogue, pipeline-run, and
     evidence metadata from the configured ``metadata`` target so ``03_governance``
     can run in a separate session after ``02_pipeline``.
+
     """
     profile_rows = load_catalogue_profile_rows(config, env, selection, spark_session=spark_session)
     first_profile = profile_rows[0]
@@ -1112,6 +1120,7 @@ def record_table_governance(
     This is the v1 governance commit action for ``03_governance`` notebooks. It merges
     the previous row-builder and per-table commit helpers into one explicit
     human approval step while preserving configured metadata lakehouse routing.
+
     """
     context_records = _build_column_context_records(
         profile_rows,
@@ -1628,6 +1637,7 @@ def enforce_dq_rules(
     the configured metadata route. It records aggregate rule outcomes only; it
     does not quarantine rows, write row-level failure metadata, filter invalid
     rows, send alerts, or partially write targets.
+
     """
     metadata_df = read_lakehouse_table(config, env, "metadata", DQ_RULES_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session)
     rules = _load_active_dq_rules(metadata_df, table_name=table_name, env_name=env, dataset_name=dataset_name)

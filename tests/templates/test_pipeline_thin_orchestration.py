@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import ast
@@ -23,6 +25,7 @@ def _notebook_sources() -> tuple[str, str, list[str]]:
 
 
 def test_pipeline_notebook_uses_minimal_public_helpers_and_no_pr_only_wrappers():
+    """Verify pipeline notebook uses minimal public helpers and no pr only wrappers."""
     markdown, code, _ = _notebook_sources()
 
     for helper in [
@@ -58,6 +61,7 @@ def test_pipeline_notebook_uses_minimal_public_helpers_and_no_pr_only_wrappers()
 
 
 def test_pipeline_agreement_selector_passes_metadata_schema():
+    """Verify pipeline agreement selector passes metadata schema."""
     _markdown, code, _cells = _notebook_sources()
 
     selector_block = code[code.index("widget_select_agreement(") : code.index("AGREEMENT = get_selected_agreement()")]
@@ -66,6 +70,7 @@ def test_pipeline_agreement_selector_passes_metadata_schema():
 
 
 def test_pipeline_notebook_contains_final_thin_flow_sections():
+    """Verify pipeline notebook contains final thin flow sections."""
     markdown, _code, _cells = _notebook_sources()
     expected_sections = [
         "## 1. Run `00_env_config`",
@@ -99,6 +104,7 @@ def test_pipeline_notebook_contains_final_thin_flow_sections():
 
 
 def test_source_loading_uses_existing_read_helpers_directly():
+    """Verify source loading uses existing read helpers directly."""
     _markdown, code, _cells = _notebook_sources()
 
     load_block = code[code.index("df_orders = read_lakehouse_table(") : code.index("SOURCE_TABLES = [")]
@@ -118,6 +124,7 @@ def test_source_loading_uses_existing_read_helpers_directly():
     assert "PIPELINE_DATASET_NAME" not in code
 
 def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discoverable():
+    """Verify source config defaults are reduced but advanced overrides remain discoverable."""
     _markdown, code, _cells = _notebook_sources()
 
     assert re.search(r"^DATASET_NAME\s*=", code, re.MULTILINE) is None
@@ -169,6 +176,7 @@ def test_source_config_defaults_are_reduced_but_advanced_overrides_remain_discov
 
 
 def test_table_configs_include_supported_guardrail_and_write_fields():
+    """Verify table configs include supported guardrail and write fields."""
     _markdown, code, _cells = _notebook_sources()
 
     for field in [
@@ -191,6 +199,7 @@ def test_table_configs_include_supported_guardrail_and_write_fields():
     assert "DEFAULT_TARGET_GUARDRAILS_AND_WRITE_OPTIONS = {" not in code
 
 def test_active_default_source_transform_and_target_schema_are_coherent_many_source():
+    """Verify active default source transform and target schema are coherent many source."""
     _markdown, code, _cells = _notebook_sources()
 
     transform_block = code[code.index("df_orders_enriched = (") : code.index("TARGET_TABLES = [")]
@@ -233,6 +242,7 @@ def test_active_default_source_transform_and_target_schema_are_coherent_many_sou
 
 
 def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_flag():
+    """Verify guardrails stop before transform and writes via run table guardrails flag."""
     _markdown, code, _cells = _notebook_sources()
 
     source_guardrails = code.index("source_guardrail_results = run_table_guardrails(")
@@ -263,6 +273,7 @@ def test_guardrails_stop_before_transform_and_writes_via_run_table_guardrails_fl
 
 
 def test_explicit_target_writes_use_prepared_target_configs_and_lakehouse_helper():
+    """Verify explicit target writes use prepared target configs and lakehouse helper."""
     _markdown, code, _cells = _notebook_sources()
 
     write_block = code[code.index("target_write_options =") : code.index("LINEAGE_RELATIONSHIPS = [")]
@@ -296,6 +307,7 @@ def test_explicit_target_writes_use_prepared_target_configs_and_lakehouse_helper
 
 
 def test_each_default_target_config_has_matching_explicit_write_call():
+    """Verify each default target config has matching explicit write call."""
     _markdown, code, _cells = _notebook_sources()
 
     target_user_block = code[code.index("TARGET_TABLES = [") : code.index("target_guardrail_results = run_table_guardrails(")]
@@ -310,6 +322,7 @@ def test_each_default_target_config_has_matching_explicit_write_call():
 
 
 def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
+    """Verify lineage and runtime summary still use package evidence outputs."""
     _markdown, code, _cells = _notebook_sources()
 
     assert "write_pipeline_lineage(" in code
@@ -323,6 +336,7 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
 
 
 def test_pipeline_template_smoke_keeps_guardrails_inline_per_table():
+    """Verify pipeline template smoke keeps guardrails inline per table."""
     _markdown, code, _cells = _notebook_sources()
 
     assert "DEFAULT_SOURCE_GUARDRAILS" not in code

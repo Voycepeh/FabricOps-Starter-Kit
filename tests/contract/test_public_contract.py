@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import ast
@@ -117,6 +119,7 @@ def _template_called_fabricops_functions() -> set[str]:
 
 
 def test_root_exports_only_approved_v1_template_callables():
+    """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == 32
     assert len(fabricops_kit.__all__) < 71
@@ -125,12 +128,14 @@ def test_root_exports_only_approved_v1_template_callables():
 
 
 def test_removed_aliases_are_not_exported():
+    """Verify removed aliases are not exported."""
     for name in REMOVED_LEGACY_ALIASES:
         assert name not in fabricops_kit.__all__
         assert not hasattr(fabricops_kit, name)
 
 
 def test_source_public_functions_match_approved_v1_list():
+    """Verify source public functions match approved v1 list."""
     root = Path(__file__).parents[2]
     public_functions: set[str] = set()
     for path in (root / "src" / "fabricops_kit").glob("*.py"):
@@ -144,6 +149,7 @@ def test_source_public_functions_match_approved_v1_list():
 
 
 def test_generated_callable_manifest_matches_approved_v1_list():
+    """Verify generated callable manifest matches approved v1 list."""
     root = Path(__file__).parents[2]
     manifest = json.loads((root / "docs" / "reference" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
@@ -151,12 +157,14 @@ def test_generated_callable_manifest_matches_approved_v1_list():
 
 
 def test_notebook_templates_call_only_approved_v1_surface():
+    """Verify notebook templates call only approved v1 surface."""
     called = _template_called_fabricops_functions()
     assert called <= APPROVED_V1_CALLABLES
     assert called.isdisjoint(REMOVED_LEGACY_ALIASES)
 
 
 def test_removed_summary_module_is_not_part_of_v1_surface():
+    """Verify removed summary module is not part of v1 surface."""
     root = Path(__file__).parents[2]
     deleted_symbols = {"build" + "_hand" + "over", "render" + "_hand" + "over_markdown"}
 
@@ -179,6 +187,7 @@ def test_removed_summary_module_is_not_part_of_v1_surface():
 
 
 def test_template_function_map_matches_actual_template_calls_and_pages():
+    """Verify template function map matches actual template calls and pages."""
     root = Path(__file__).parents[2]
     manifest = json.loads((root / "docs" / "reference" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
@@ -195,6 +204,7 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
 
 
 def test_generated_module_docs_surface_only_active_v1_modules():
+    """Verify generated module docs surface only active v1 modules."""
     root = Path(__file__).parents[2]
     expected_modules = {
         "config",
@@ -212,6 +222,7 @@ def test_generated_module_docs_surface_only_active_v1_modules():
 
 
 def test_required_v1_imports_and_prompt_constants_remain_available():
+    """Verify required v1 imports and prompt constants remain available."""
     from fabricops_kit import read_lakehouse_excel, setup_metadata_tables, setup_notebook
     from fabricops_kit.governance_review import BUSINESS_CONTEXT_PROMPT, PDPA_PERSONAL_IDENTIFIER_PROMPT
 
@@ -223,6 +234,7 @@ def test_required_v1_imports_and_prompt_constants_remain_available():
 
 
 def test_reference_generation_script_succeeds_for_template_map_and_module_docs():
+    """Verify reference generation script succeeds for template map and module docs."""
     root = Path(__file__).parents[2]
     env = {**os.environ, "PYTHONPATH": str(root / "src")}
     result = subprocess.run(

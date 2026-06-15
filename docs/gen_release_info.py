@@ -49,7 +49,6 @@ def _git_sha() -> str:
 
 def render_release_info() -> str:
     """Return the release traceability page body for the current build."""
-
     package_version = _package_version()
     doc_version = _doc_version(package_version)
     git_sha = _git_sha()
@@ -71,7 +70,6 @@ def render_release_info() -> str:
 
 def write_release_info(docs_dir: str | Path | None = None) -> Path:
     """Write the generated release traceability page into the MkDocs docs directory."""
-
     output_dir = Path(docs_dir) if docs_dir is not None else ROOT / "docs"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / OUTPUT_NAME
@@ -81,7 +79,6 @@ def write_release_info(docs_dir: str | Path | None = None) -> Path:
 
 def on_config(config: Any) -> Any:
     """MkDocs hook that materializes the nav target before strict validation."""
-
     write_release_info(config["docs_dir"])
     return config
 

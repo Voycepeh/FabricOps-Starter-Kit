@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import json
@@ -14,15 +16,20 @@ pytestmark = pytest.mark.unit
 
 
 class FakeSpark:
+    """Fakespark test double."""
+
     def __init__(self):
+        """Initialize the test helper."""
         self.created = []
 
     def createDataFrame(self, rows, schema=None):
+        """Return createDataFrame."""
         self.created.append((rows, schema))
         return {"rows": rows, "schema": schema}
 
 
 def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
+    """Verify public pipeline helpers are exported without wrapper bloat."""
     assert "prepare_pipeline_table_configs" in fabricops_kit.__all__
     assert "run_table_guardrails" in fabricops_kit.__all__
     assert "write_catalogue_evidence" in fabricops_kit.__all__
@@ -51,11 +58,15 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
 
 
 class FakeDataFrame:
+    """Fakedataframe test double."""
+
     def __init__(self, name="df"):
+        """Initialize the test helper."""
         self.name = name
         self.with_columns = []
 
     def withColumn(self, name, value):
+        """Return withColumn."""
         self.with_columns.append((name, value))
         return self
 
@@ -72,6 +83,7 @@ def _install_fake_pyspark_functions(monkeypatch):
 
 
 def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloaded_dataframe():
+    """Verify prepare pipeline table configs source role derives defaults from preloaded dataframe."""
     source_df = FakeDataFrame("source")
 
     enriched, by_key = pipeline.prepare_pipeline_table_configs(
@@ -108,6 +120,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
 
 
 def test_prepare_pipeline_table_configs_source_role_requires_preloaded_dataframe():
+    """Verify prepare pipeline table configs source role requires preloaded dataframe."""
     with pytest.raises(ValueError, match="must include a pre-loaded DataFrame"):
         pipeline.prepare_pipeline_table_configs(
             [{"key": "source_01", "layer": "source", "table_name": "orders_raw"}],
@@ -117,6 +130,7 @@ def test_prepare_pipeline_table_configs_source_role_requires_preloaded_dataframe
 
 
 def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
+    """Verify pipeline module does not expose source read routing wrappers."""
     assert not hasattr(pipeline, "_load_source_dataframe")
     assert not hasattr(pipeline, "_read_source_dataframe")
     assert not hasattr(pipeline, "_source_read_type")
@@ -125,6 +139,7 @@ def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
 
 
 def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_derives_write_defaults(monkeypatch):
+    """Verify prepare pipeline table configs target role adds audit columns and derives write defaults."""
     _install_fake_pyspark_functions(monkeypatch)
     df = FakeDataFrame("target")
 
@@ -165,6 +180,7 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
 
 
 def test_add_audit_columns_uses_configured_audit_timezone(monkeypatch):
+    """Verify add audit columns uses configured audit timezone."""
     _install_fake_pyspark_functions(monkeypatch)
     df = FakeDataFrame("target")
     config = framework_config()
@@ -177,6 +193,7 @@ def test_add_audit_columns_uses_configured_audit_timezone(monkeypatch):
 
 
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):
+    """Verify write pipeline lineage supports many to many relationships."""
     writes = []
     monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
 
@@ -198,6 +215,7 @@ def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch)
 
 
 def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
+    """Verify write pipeline run summary writes metadata table."""
     writes = []
     fake_spark = FakeSpark()
     monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
@@ -223,12 +241,14 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
 
 
 def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonblocking():
+    """Verify summary status treats baseline created as passed and skipped as nonblocking."""
     assert pipeline._summary_status({"s1": {"status": "baseline_created"}}) == "passed"
     assert pipeline._summary_status({"s1": {"status": "skipped"}}) == "skipped"
     assert pipeline._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"
 
 
 def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_boolean_columns(spark_session):
+    """Verify normalize catalogue evidence types casts numeric percent timestamp and boolean columns."""
     evidence = spark_session.createDataFrame(
         [
             {
@@ -273,6 +293,7 @@ def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_
 
 
 def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves_target_fields():
+    """Verify private guardrail evidence definitions excludes dataframes and resolves target fields."""
     definitions = pipeline._build_guardrail_evidence_definitions(
         [
             {
@@ -303,6 +324,7 @@ def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves
 
 
 def test_run_table_guardrails_collects_results_and_returns_summary_before_reporting_failures(monkeypatch):
+    """Verify run table guardrails collects results and returns summary before reporting failures."""
     calls = []
     catalogue_calls = []
 
@@ -400,6 +422,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
 
 
 def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monkeypatch):
+    """Verify run table guardrails stop on failure delegates to standard stopper."""
     stopped = []
 
     monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
@@ -433,6 +456,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
 
 
 def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
+    """Verify schema guardrail strict and allow new columns behavior."""
     from fabricops_kit.guardrails import validate_schema
 
     happy_df = spark_session.createDataFrame([(1, "new")], "id int, status string")
@@ -465,6 +489,7 @@ def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
 
 
 def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):
+    """Verify freshness guardrail blocks or warns by severity."""
     from fabricops_kit.guardrails import enforce_freshness
 
     current_df = spark_session.createDataFrame([("2026-06-14",), ("2026-06-13",)], "business_date string")
@@ -486,6 +511,7 @@ def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):
 
 
 def test_profile_behavior_guardrail_append_overwrite_and_skip_modes(spark_session):
+    """Verify profile behavior guardrail append overwrite and skip modes."""
     from fabricops_kit.guardrails import enforce_profile_behavior
 
     current_profile = [
@@ -570,6 +596,7 @@ def test_profile_behavior_guardrail_append_overwrite_and_skip_modes(spark_sessio
 
 
 def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or_dq(monkeypatch, spark_session):
+    """Verify run table guardrails skip profile behavior only not schema freshness or dq."""
     df = spark_session.createDataFrame([("not-an-int", "2026-06-01")], "id string, business_date string")
 
     monkeypatch.setattr(
@@ -647,6 +674,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
 
 
 def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark_session):
+    """Verify run table guardrails dq skip bypasses dq enforcement."""
     df = spark_session.createDataFrame([(1, "2026-06-14")], "id int, business_date string")
 
     monkeypatch.setattr(

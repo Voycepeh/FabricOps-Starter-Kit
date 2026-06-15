@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import ast
@@ -21,6 +23,7 @@ def _python_cell(cell: str) -> str:
 
 
 def test_environment_and_agreement_templates_have_executable_public_workflow_cells():
+    """Verify environment and agreement templates have executable public workflow cells."""
     env_cells = "\n".join(_code_cells(TEMPLATES / "00_env_config.ipynb"))
     agreement_cells = "\n".join(_code_cells(TEMPLATES / "01_agreement.ipynb"))
 
@@ -37,6 +40,7 @@ def test_environment_and_agreement_templates_have_executable_public_workflow_cel
 
 
 def test_template_notebook_filenames_follow_v1_delivery_order():
+    """Verify template notebook filenames follow v1 delivery order."""
     expected = [
         "00_env_config.ipynb",
         "01_agreement.ipynb",
@@ -51,6 +55,7 @@ def test_template_notebook_filenames_follow_v1_delivery_order():
 
 
 def test_templates_do_not_reintroduce_old_numbered_stage_references():
+    """Verify templates do not reintroduce old numbered stage references."""
     stale_terms = ("01" + "_da", "02" + "_ex", "03" + "_pc", "04" + "_gov", "03" + "_pipeline", "02" + "_explore")
     combined = "\n".join(path.read_text(encoding="utf-8") for path in TEMPLATES.glob("*.ipynb"))
 
@@ -58,6 +63,7 @@ def test_templates_do_not_reintroduce_old_numbered_stage_references():
 
 
 def test_env_config_exposes_metadata_setup_and_schema_settings():
+    """Verify env config exposes metadata setup and schema settings."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 

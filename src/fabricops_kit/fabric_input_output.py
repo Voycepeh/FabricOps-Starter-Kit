@@ -53,6 +53,7 @@ class FabricStore:
     ... )
     >>> lh.house_name
     'DEX_SB_SOURCE'
+
     """
 
     env: str
@@ -64,6 +65,7 @@ class FabricStore:
     schema: str | None = None
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         for field_name in ("env", "workspace_id", "item_id", "name", "kind"):
             value = getattr(self, field_name)
             if not isinstance(value, str) or not value.strip():
@@ -85,6 +87,7 @@ class FabricStore:
 
     @property
     def root(self) -> str:
+        """Return root."""
         if self.kind != "lakehouse":
             raise ValueError("root is only available for lakehouse stores.")
         return f"abfss://{self.workspace_id}@onelake.dfs.fabric.microsoft.com/{self.item_id}"
@@ -193,6 +196,7 @@ def _get_spark(spark_session=None):
     ------
     RuntimeError
         If no Spark session is passed and no global `spark` object exists.
+
     """
     if spark_session is not None:
         return spark_session
@@ -261,6 +265,7 @@ def read_lakehouse_table(config, env, target, table, schema=None, spark_session=
     Examples
     --------
     >>> df = read_lakehouse_table(CONFIG, ENV, "source", "RAW_ORDERS", schema=SOURCE_SCHEMA)
+
     """
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
@@ -343,6 +348,7 @@ def write_lakehouse_table(
     Examples
     --------
     >>> write_lakehouse_table(df, CONFIG, ENV, "unified", "CLEAN_ORDERS", schema=UNIFIED_SCHEMA)
+
     """
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
@@ -422,6 +428,7 @@ def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, h
     Examples
     --------
     >>> df = read_lakehouse_csv(CONFIG, ENV, "source", "raw/orders.csv")
+
     """
     store = _get_store(config, env, target)
     spark_obj = _get_spark(spark_session)
@@ -468,6 +475,7 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
     Examples
     --------
     >>> df = read_warehouse_table(CONFIG, ENV, "product", "dbo", "TABLE_NAME")
+
     """
     spark_obj = _get_spark(spark_session)
     store = _get_store(config, env, target)
@@ -535,6 +543,7 @@ def write_warehouse_table(df, config, env, target, schema, table, mode="append")
     Examples
     --------
     >>> write_warehouse_table(df, CONFIG, ENV, "product", "dbo", "TABLE_NAME")
+
     """
     store = _get_store(config, env, target)
     if store.kind != "warehouse":
@@ -586,6 +595,7 @@ def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True
     ...     "/lakehouse/default/Files/raw/orders.parquet",
     ...     "/lakehouse/default/Files/raw_tsus/orders.parquet",
     ... )
+
     """
     import pyarrow as pa
     import pyarrow.parquet as pq
@@ -655,10 +665,12 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
     Examples
     --------
     >>> df = read_lakehouse_parquet(CONFIG, ENV, "source", "raw/orders.parquet")
+
     Notes
     -----
     Assumes Fabric notebook runtime filesystem conventions for local fallback
     conversion paths (``/lakehouse/default/Files/...``).
+
     """
     store = _get_store(config, env, target)
     spark_obj = _get_spark(spark_session)
@@ -798,11 +810,13 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     ...     sheet_name=0,
     ...     skiprows=1,
     ... )
+
     Notes
     -----
     Side effects:
     - Creates a temporary local file during conversion.
     - Materializes rows through pandas before creating a Spark DataFrame.
+
     """
     store = _get_store(config, env, target)
     spark_obj = _get_spark(spark_session)

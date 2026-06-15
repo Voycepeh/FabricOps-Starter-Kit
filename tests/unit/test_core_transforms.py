@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import pytest
@@ -53,6 +55,7 @@ def _profile_rows(run: str = "run-2") -> list[dict]:
 
 
 def test_profile_helper_returns_notebook_ready_structure():
+    """Verify profile helper returns notebook ready structure."""
     profile = {"table_name": "orders", "row_count": 3, "columns": [{"column_name": "amount"}]}
 
     assert profile["table_name"] == "orders"
@@ -60,6 +63,7 @@ def test_profile_helper_returns_notebook_ready_structure():
 
 
 def test_private_lineage_records_use_configured_audit_timezone():
+    """Verify private lineage records use configured audit timezone."""
     config = framework_config()
     object.__setattr__(config, "audit_timezone", "Asia/Singapore")
 
@@ -82,6 +86,7 @@ def test_private_lineage_records_use_configured_audit_timezone():
 
 
 def test_private_lineage_records_default_to_utc_without_config():
+    """Verify private lineage records default to utc without config."""
     rows = _build_lineage_records(
         "sales",
         [{
@@ -100,6 +105,7 @@ def test_private_lineage_records_default_to_utc_without_config():
 
 
 def test_governance_review_builders_commit_only_human_approved_records():
+    """Verify governance review builders commit only human approved records."""
     profile_rows = _profile_rows()
     context = _build_column_context_records(
         profile_rows,
@@ -129,6 +135,7 @@ def test_governance_review_builders_commit_only_human_approved_records():
 
 
 def test_governance_profile_target_groups_profiles_by_physical_table_not_stage_or_pipeline():
+    """Verify governance profile target groups profiles by physical table not stage or pipeline."""
     rows = [
         {**_profile_rows("run-source-old")[0], "profile_stage": "source", "pipeline_name": "pipe-a", "profiled_at": "2026-01-01T00:00:00Z"},
         {**_profile_rows("run-target-new")[0], "profile_stage": "target", "pipeline_name": "pipe-b", "profiled_at": "2026-01-03T00:00:00Z"},
@@ -145,6 +152,7 @@ def test_governance_profile_target_groups_profiles_by_physical_table_not_stage_o
 
 
 def test_governance_profile_target_defaults_to_latest_successful_profile():
+    """Verify governance profile target defaults to latest successful profile."""
     rows = [
         {**_profile_rows("run-success")[0], "profile_status": "success", "profiled_at": "2026-01-02T00:00:00Z"},
         {**_profile_rows("run-failed")[0], "profile_status": "failed", "profiled_at": "2026-01-05T00:00:00Z"},
@@ -158,6 +166,7 @@ def test_governance_profile_target_defaults_to_latest_successful_profile():
 
 
 def test_governance_profile_target_defaults_to_latest_when_no_status_column_exists():
+    """Verify governance profile target defaults to latest when no status column exists."""
     older = {k: v for k, v in _profile_rows("run-old")[0].items() if k != "profile_status"}
     newer = {k: v for k, v in _profile_rows("run-new")[0].items() if k != "profile_status"}
     older["profiled_at"] = "2026-01-01T00:00:00Z"
@@ -170,6 +179,7 @@ def test_governance_profile_target_defaults_to_latest_when_no_status_column_exis
 
 
 def test_governance_profile_target_profile_labels_are_readable():
+    """Verify governance profile target profile labels are readable."""
     model = _catalogue_profile_target_model([
         {**_profile_rows("run-1")[0], "profile_stage": "target", "pipeline_name": "daily-pipeline", "profiled_at": "2026-01-02T00:00:00Z"}
     ])
