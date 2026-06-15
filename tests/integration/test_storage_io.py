@@ -119,10 +119,10 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
     spark = _Spark()
     frame = _Frame()
 
-    read_result = io.read_lakehouse_table(config, "dev", "metadata", "METADATA_DQ_RULES", schema=None, spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", schema=None, mode="ignore", verbose=False)
+    read_result = io.read_lakehouse_table(config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema=None, spark_session=spark)
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema=None, mode="ignore", verbose=False)
 
-    expected_path = "abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/METADATA_DQ_RULES"
+    expected_path = "abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/METADATA_GUARDRAIL_RULES"
     assert read_result.count() == 1
     assert spark.table_calls == []
     assert ("load", expected_path) in spark.read.calls
@@ -136,7 +136,7 @@ def test_lakehouse_table_helpers_reject_nested_table_paths():
     config = framework_config()
 
     with pytest.raises(ValueError, match="simple table name"):
-        io.write_lakehouse_table(_Frame(), config, "dev", "metadata", "METADATA_DQ_RULES/Unidentified", schema=None, mode="ignore", verbose=False)
+        io.write_lakehouse_table(_Frame(), config, "dev", "metadata", "METADATA_GUARDRAIL_RULES/Unidentified", schema=None, mode="ignore", verbose=False)
 
 
 def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeypatch):

@@ -126,7 +126,6 @@ def test_governance_metadata_schemas_include_guardrail_runtime_tables():
     assert governance.GUARDRAIL_PROFILES_TABLE in schemas
     assert governance.GUARDRAIL_RESULTS_TABLE in schemas
     assert governance.GUARDRAIL_BASELINE_EVENTS_TABLE in schemas
-    assert governance.DQ_RULES_TABLE in schemas
     assert governance.GUARDRAIL_TYPES == ["schema", "freshness", "profile_behavior", "dq"]
     assert "governance_approved" in governance.GUARDRAIL_REVIEW_STATUSES
     assert "baseline_reset_approved" in governance.GUARDRAIL_BASELINE_EVENT_TYPES
@@ -297,8 +296,7 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
 
     result = governance.enforce_dq_rules(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
 
-    assert reads[0][0:3] == ("dev", "metadata", governance.GUARDRAIL_RULES_TABLE)
-    assert reads[1][0:3] == ("dev", "metadata", governance.DQ_RULES_TABLE)
+    assert reads == [("dev", "metadata", governance.GUARDRAIL_RULES_TABLE, {"schema": None, "spark_session": spark_session})]
     assert result["status"] == "failed"
     assert result["can_continue"] is False
     assert len(result["checks"]) == 1

@@ -172,7 +172,7 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
     assert "spark.createDataFrame" in smoke
     assert "write_lakehouse_table" in smoke
     assert '"source",' in smoke
-    assert "METADATA_DQ_RULES" in smoke
+    assert "METADATA_GUARDRAIL_RULES" in smoke
     assert "scenario_catalogue_df" in smoke
     assert "Refusing to write non-smoke table" in smoke
 

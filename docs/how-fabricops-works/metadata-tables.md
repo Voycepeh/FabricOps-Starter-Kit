@@ -47,15 +47,14 @@ write_lakehouse_table(
 | `METADATA_PIPELINE_RUNS` | `02_pipeline` | Stores one runtime summary row per pipeline run, tied to agreement and notebook registry context. |
 | `METADATA_DATA_ACCESS` | Optional access capture process | Optional table-level access assignments when captured; not part of the current active setup registry. |
 | `METADATA_COLUMN_CONTEXT` | `03_governance` | Stores reviewed business meaning for catalogue columns. |
-| `METADATA_GUARDRAIL_RULES` | `03_governance` | Stores approved or proposed guardrail rules: what should be checked for `schema`, `freshness`, `profile_behavior`, and `dq` guardrails. DQ rules formerly stored in `METADATA_DQ_RULES` move here; legacy DQ rows remain readable during transition. |
-| `METADATA_GUARDRAIL_PROFILES` | `02_pipeline` | Stores observed guardrail profile snapshots: what was observed for a run, including multiple rows per table when grouped by watermark. |
-| `METADATA_GUARDRAIL_RESULTS` | `02_pipeline` | Stores pass/fail guardrail outcomes: what passed, warned, failed, or blocked continuation. |
-| `METADATA_GUARDRAIL_BASELINE_EVENTS` | Human governance/review process | Stores baseline creation, reset, approval, rejection, accepted-change, and blocked-change decisions. |
-| `METADATA_DQ_RULES` | Legacy transition | Legacy DQ rule table. Existing flows can still be read while new approvals are written as `dq` rows in `METADATA_GUARDRAIL_RULES`. |
+| `METADATA_GUARDRAIL_RULES` | `03_governance` | Stores approved or proposed guardrail rules: what should be checked for `schema`, `freshness`, `profile_behavior`, and `dq` guardrails. DQ rows use `guardrail_type="dq"`. |
+| `METADATA_GUARDRAIL_PROFILES` | Runtime evidence schema | Newly introduced schema table intended for observed guardrail profile snapshots: what was observed for a run, including multiple rows per table when grouped by watermark. |
+| `METADATA_GUARDRAIL_RESULTS` | Runtime evidence schema | Newly introduced schema table intended for pass/fail guardrail outcomes: what passed, warned, failed, or blocked continuation. |
+| `METADATA_GUARDRAIL_BASELINE_EVENTS` | Baseline decision schema | Newly introduced schema table intended for baseline creation, reset, approval, rejection, accepted-change, and blocked-change decisions. |
 | `METADATA_COLUMN_CLASSIFICATION` | `03_governance` | Stores reviewed sensitivity and PII classifications. |
 | `METADATA_GOVERNANCE_REVIEWS` | `03_governance` | Stores final review outcomes such as approved, rejected, or needs remediation with blockers and warnings. |
 
-`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue/profile discovery evidence, lineage, guardrail profiles/results, and run evidence. `03_governance` writes reviewed metadata such as column context, guardrail rules, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
+`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue/profile discovery evidence, lineage, and run evidence. Guardrail profile/result tables are introduced as schemas for runtime evidence but are not claimed as current write targets unless a write path is implemented. `03_governance` writes reviewed metadata such as column context, guardrail rules, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
 
 For how schema, freshness, profile behavior, and DQ settings produce this evidence, see [Pipeline Guardrails](pipeline-guardrails.md).
 
@@ -101,7 +100,6 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `METADATA_GUARDRAIL_PROFILES` | `profile_id` | Links observed guardrail profile snapshots to run, dataset, table, guardrail type, and optional watermark value. |
 | `METADATA_GUARDRAIL_RESULTS` | `result_id` | Links runtime pass/fail outcomes to a guardrail rule, run, table, and optional column. |
 | `METADATA_GUARDRAIL_BASELINE_EVENTS` | `event_id` | Links human baseline reset or acceptance decisions to table, guardrail type, old/new baseline runs, and approvals. |
-| `METADATA_DQ_RULES` | `rule_key`, `_committed_at` | Legacy DQ rule table read during transition. |
 | `METADATA_COLUMN_CLASSIFICATION` | `metadata_column_key`, `_committed_at` | Links reviewed classification to a catalogue column. |
 | `METADATA_GOVERNANCE_REVIEWS` | `review_id` | Links the final `03_governance` outcome to agreement, pipeline run, catalogue profile, blockers, warnings, and evidence-summary context. |
 
@@ -333,7 +331,7 @@ This table stores one summary row per pipeline run. It is tied to the selected a
 
 ### `METADATA_GUARDRAIL_RULES`
 
-**For:** approved or proposed guardrail rules written by governance and consumed by runtime guardrails. This table generalizes the legacy `METADATA_DQ_RULES` model so one rules table can describe `schema`, `freshness`, `profile_behavior`, and `dq` expectations. Supported `review_status` values include `draft`, `proposed`, `engineer_approved`, `governance_approved`, `rejected`, `superseded`, and `inactive`.
+**For:** approved or proposed guardrail rules written by governance and consumed by runtime guardrails. This table generalizes the pre-cutover `METADATA_DQ_RULES` model so one rules table can describe `schema`, `freshness`, `profile_behavior`, and `dq` expectations. Supported `review_status` values include `draft`, `proposed`, `engineer_approved`, `governance_approved`, `rejected`, `superseded`, and `inactive`.
 
 Supported `guardrail_type` values are `schema`, `freshness`, `profile_behavior`, and `dq`.
 
@@ -366,7 +364,7 @@ Supported `guardrail_type` values are `schema`, `freshness`, `profile_behavior`,
 | `source_workspace_id` | Source workspace identifier when available. |
 | `superseded_by_rule_key` | Replacement rule key when this rule is superseded. |
 
-**Workflow connection:** approved active `dq` expectations become runtime DQ guardrails when `02_pipeline` calls `enforce_dq_rules`. During transition, `enforce_dq_rules` reads both `METADATA_GUARDRAIL_RULES` and legacy `METADATA_DQ_RULES`. Includes the standard runtime audit columns.
+**Workflow connection:** approved active `dq` expectations become runtime DQ guardrails when `02_pipeline` calls `enforce_dq_rules`. `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` only and enforces active approved rows with `guardrail_type="dq"`. Includes the standard runtime audit columns.
 
 ### `METADATA_GUARDRAIL_PROFILES`
 
@@ -382,7 +380,7 @@ Supported `guardrail_type` values are `schema`, `freshness`, `profile_behavior`,
 
 ### `METADATA_DQ_RULES`
 
-**For:** legacy DQ rules during transition. New approvals should use `METADATA_GUARDRAIL_RULES` with `guardrail_type="dq"`; existing DQ enforcement remains compatible by reading legacy rows too.
+**For:** obsolete pre-cutover DQ metadata only. It is not part of the active setup registry, and runtime DQ enforcement no longer reads it. Migrate any needed approved rules into `METADATA_GUARDRAIL_RULES` with `guardrail_type="dq"` before relying on them in new runs.
 
 ### `METADATA_COLUMN_CLASSIFICATION`
 

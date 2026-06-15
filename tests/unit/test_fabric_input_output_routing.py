@@ -184,9 +184,9 @@ def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
     config = _io_config()
     spark = _Spark()
 
-    io.read_lakehouse_table(config, "dev", "metadata", "METADATA_DQ_RULES", schema="METADATA", spark_session=spark)
+    io.read_lakehouse_table(config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema="METADATA", spark_session=spark)
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_DQ_RULES"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
     assert ("load", expected_path) in spark.read.calls
     assert spark.table_calls == []
 
@@ -196,9 +196,9 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
     config = _io_config()
     frame = _Frame()
 
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", schema="METADATA", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema="METADATA", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_DQ_RULES"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
     assert ("save", expected_path) in frame.write.calls
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
 
@@ -210,12 +210,12 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
     frame = _Frame()
 
     io.read_lakehouse_table(config, "dev", "source", "orders", schema="src", spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_DQ_RULES", schema="meta", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
+    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema="meta", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
     metadata_store = config.paths["dev"]["metadata"]
 
     assert ("load", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders") in spark.read.calls
-    assert ("save", "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_DQ_RULES") in frame.write.calls
-    assert io._resolve_lakehouse_table_identifier(metadata_store, "METADATA_DQ_RULES") == "meta.METADATA_DQ_RULES"
+    assert ("save", "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL_RULES") in frame.write.calls
+    assert io._resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES") == "meta.METADATA_GUARDRAIL_RULES"
 
 
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():

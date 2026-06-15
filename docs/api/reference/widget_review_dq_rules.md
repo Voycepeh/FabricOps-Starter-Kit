@@ -50,7 +50,7 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `profile_rows` | `list[dict[str, Any]]` | Yes | Selected catalogue profile rows containing columns and profile evidence. |
-| `existing_rules` | `list[dict[str, Any]] \| None` | No | Previously persisted active and inactive DQ rule rows for the selected table. When supplied, the widget displays them in an editable review table. Runtime enforcement still reads ``METADATA_DQ_RULES`` later. |
+| `existing_rules` | `list[dict[str, Any]] \| None` | No | Previously persisted active and inactive DQ rule rows for the selected table. When supplied, the widget displays them in an editable review table. Runtime enforcement reads ``METADATA_GUARDRAIL_RULES``. |
 | `config` | `Any` | No | Runtime objects used only when reviewers click AI suggestion actions. |
 | `env` | `str \| None` | No | Not documented yet |
 | `spark_session` | `Any` | No | Not documented yet |
@@ -227,7 +227,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 existing_rules : list of dict, optional
     Previously persisted active and inactive DQ rule rows for the selected
     table. When supplied, the widget displays them in an editable review
-    table. Runtime enforcement still reads ``METADATA_DQ_RULES`` later.
+    table. Runtime enforcement reads ``METADATA_GUARDRAIL_RULES``.
 config, env, spark_session : optional
     Runtime objects used only when reviewers click AI suggestion actions.
 table_name : str, optional
