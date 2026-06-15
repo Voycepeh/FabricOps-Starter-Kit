@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,6 +12,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_governance_review_page_frames_metadata_control_panel():
+    """Verify governance review page frames metadata control panel."""
     text = Path("docs/how-fabricops-works/governance-review.md").read_text(encoding="utf-8")
     assert "metadata control panel" in text
     assert "`02_pipeline` runs first" in text
@@ -24,6 +27,7 @@ def test_governance_review_page_frames_metadata_control_panel():
 
 
 def test_dq_rule_index_contains_supported_catalogue():
+    """Verify dq rule index contains supported catalogue."""
     text = Path("docs/reference/dq-rules/index.md").read_text(encoding="utf-8")
     assert "23 native DQ rule types" in text
     for rule_type in governance.DQ_RULE_TYPES:
@@ -33,6 +37,7 @@ def test_dq_rule_index_contains_supported_catalogue():
 
 
 def test_dq_rule_reference_pages_exist_for_supported_catalogue():
+    """Verify dq rule reference pages exist for supported catalogue."""
     docs_dir = Path("docs/reference/dq-rules")
     mkdocs_text = Path("mkdocs.yml").read_text(encoding="utf-8")
     assert "23 native DQ rule types" in docs_dir.joinpath("index.md").read_text(encoding="utf-8")

@@ -111,6 +111,7 @@ def _serialize_custom_fields(values: dict[str, Any] | None) -> str:
     -------
     str
         JSON object text suitable for ``custom_fields_json``.
+
     """
     return json.dumps(values or {}, sort_keys=True, default=_to_iso_date)
 
@@ -132,6 +133,7 @@ def _deserialize_custom_fields(custom_fields_json: Any) -> dict[str, Any]:
     ------
     ValueError
         If non-blank text is not a JSON object.
+
     """
     if custom_fields_json in (None, ""):
         return {}
@@ -167,6 +169,7 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     -------
     list[str]
         Safe editable fields. Technical audit fields are always excluded.
+
     """
     configured = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(_config_value(config, kind, {}) or {})}.get("visible_columns", [])
     hidden = set(STANDARD_RUNTIME_AUDIT_COLUMNS) | {"custom_fields_json"}
@@ -326,6 +329,7 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
     -----
     Supported field types are ``text``, ``textarea``, ``select``,
     ``multiselect``, ``date``, and ``boolean``.
+
     """
     widgets = _require_ipywidgets()
 
@@ -378,6 +382,7 @@ def _collect_custom_fields(config: list[dict[str, Any]] | dict[str, Any], widget
     ------
     ValueError
         If a required configured field is blank.
+
     """
     definitions = config.get("custom_fields", []) if isinstance(config, dict) else config
     values: dict[str, Any] = {}
@@ -465,11 +470,14 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
         Return only currently effective active steward assignments.
     missing_ok : bool, default=False
         Return an empty list when the table is not available.
+    metadata_schema : str or None, default=None
+        Optional schema override for metadata table reads.
 
     Returns
     -------
     list[dict[str, Any]]
         Latest steward rows sorted by stable ID.
+
     """
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
@@ -515,11 +523,18 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
         omitting it creates a backend-generated stable steward identifier.
     custom_fields : dict[str, Any], optional
         Organization-specific configured values.
+    committed_by : str or None, default=None
+        Optional identity recorded with the steward update.
+    committed_at : str or None, default=None
+        Optional timestamp recorded with the steward update.
+    runtime_context : dict[str, Any] or None, default=None
+        Optional runtime metadata recorded with the steward update.
 
     Returns
     -------
     dict[str, Any]
         Appended steward row.
+
     """
     row = {field: values.get(field, "") for field in DATA_STEWARD_VISIBLE_FIELDS}
     required = ["steward_name", "steward_role", "contact"]
@@ -800,6 +815,7 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
         ``value`` remains the stable ``agreement_id`` for existing callers.
         When registration is enabled, registration widgets are attached as
         attributes on the selector for advanced notebook automation.
+
     """
     widgets = _require_ipywidgets()
     from IPython import display as ip
@@ -1016,6 +1032,7 @@ def get_selected_agreement() -> dict[str, Any]:
     ------
     RuntimeError
         If no selector has established a selected agreement.
+
     """
     if not _SELECTED_AGREEMENT:
         raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
@@ -1411,6 +1428,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
     ``Files`` area first. The widget appends one file-reference row per
     pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
     does not read or write binary file content.
+
     """
     return _render_agreement_evidence_widget(
         spark=spark,
@@ -1435,6 +1453,7 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
     -------
     dict[str, Any]
         Rendered widget controls keyed for notebook customization.
+
     """
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_steward_widget")
 
@@ -1455,6 +1474,7 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
     -------
     dict[str, Any]
         Rendered controls, including read-only generated-identifier context.
+
     """
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
 

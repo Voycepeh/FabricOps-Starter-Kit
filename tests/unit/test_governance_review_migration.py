@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import json
@@ -59,10 +61,12 @@ EXPECTED_V1_CALLABLES = [
 
 
 def test_public_v1_callable_list_remains_unchanged():
+    """Verify public v1 callable list remains unchanged."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
 
 
 def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callables():
+    """Verify no source tests docs or templates reference removed modules or callables."""
     root = Path(__file__).parents[2]
     scanned_suffixes = {".py", ".md", ".yml", ".yaml", ".json", ".ipynb"}
     removed_callables = (
@@ -89,6 +93,7 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
 
 
 def test_business_context_ai_parsing_and_suggestion_extraction():
+    """Verify business context ai parsing and suggestion extraction."""
     parsed = governance._parse_ai_dict_response("BUSINESS_CONTEXT = {'column_name': 'customer_id', 'business_context': 'Customer identifier'}")
     assert parsed["column_name"] == "customer_id"
 
@@ -100,6 +105,7 @@ def test_business_context_ai_parsing_and_suggestion_extraction():
 
 
 def test_governance_sensitivity_and_pii_suggestion_extraction():
+    """Verify governance sensitivity and pii suggestion extraction."""
     rows = [
         {
             "ai_governance_response": json.dumps(
@@ -121,6 +127,7 @@ def test_governance_sensitivity_and_pii_suggestion_extraction():
 
 
 def test_dq_ai_response_parsing_and_candidate_rule_extraction():
+    """Verify dq ai response parsing and candidate rule extraction."""
     payload = "DQ_RULES = {'orders': [{'rule_id': 'id_required', 'rule_type': 'not_null', 'columns': ['order_id'], 'severity': 'error', 'description': 'Required'}]}"
     parsed = governance._parse_ai_dict_response(payload)
     assert parsed["orders"][0]["rule_id"] == "id_required"
@@ -133,6 +140,7 @@ def test_dq_ai_response_parsing_and_candidate_rule_extraction():
 
 
 def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
+    """Verify dq rule validation rejects unsupported runtime rule types."""
     rules = [{"rule_id": "id_required", "rule_type": "not_null", "columns": ["id"], "severity": "error", "description": "Required"}]
     assert governance._validate_dq_rules(rules) == rules
     with pytest.raises(ValueError):
@@ -143,6 +151,7 @@ def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
 
 
 def test_record_table_governance_writes_context_dq_and_classification(monkeypatch):
+    """Verify record table governance writes context dq and classification."""
     writes = []
     monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows, env, target, kwargs)))
     profile_rows = [
@@ -180,6 +189,7 @@ def test_record_table_governance_writes_context_dq_and_classification(monkeypatc
 
 
 def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns():
+    """Verify governance metadata schemas have no case insensitive duplicate columns."""
     schemas = governance._get_governance_metadata_schemas()
 
     for table_name, schema in schemas.items():
@@ -188,6 +198,7 @@ def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns(
 
 
 def test_catalogue_schema_uses_lowercase_canonical_columns_only():
+    """Verify catalogue schema uses lowercase canonical columns only."""
     catalogue_fields = governance._get_governance_metadata_schemas()[governance.CATALOGUE_TABLE].fieldNames()
 
     assert all(field == field.lower() for field in catalogue_fields)
@@ -221,6 +232,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
 
 
 def test_schema_field_validation_names_table_and_duplicate_logical_columns():
+    """Verify schema field validation names table and duplicate logical columns."""
     string = governance._spark_types()[3]()
 
     with pytest.raises(ValueError, match="METADATA_DATA_CATALOGUE.*table_name.*table_name.*TABLE_NAME"):
@@ -231,6 +243,7 @@ def test_schema_field_validation_names_table_and_duplicate_logical_columns():
 
 
 def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
+    """Verify governance metadata schemas do not add dq failure tables."""
     schemas = governance._get_governance_metadata_schemas()
 
     assert governance.DQ_RULES_TABLE in schemas
@@ -242,6 +255,7 @@ def test_governance_metadata_schemas_do_not_add_dq_failure_tables():
 
 
 def test_review_governance_evidence_reads_metadata_and_writes_approved_outcome(monkeypatch):
+    """Verify review governance evidence reads metadata and writes approved outcome."""
     writes = []
     selection = {
         "environment_name": "dev",
@@ -276,6 +290,7 @@ def test_review_governance_evidence_reads_metadata_and_writes_approved_outcome(m
 
 
 def test_review_governance_evidence_blocks_missing_agreement_and_failed_dq(monkeypatch):
+    """Verify review governance evidence blocks missing agreement and failed dq."""
     writes = []
     selection = {
         "environment_name": "dev",
@@ -355,6 +370,7 @@ def _run_governance_review_for_pipeline_dq_status(monkeypatch, pipeline_dq_statu
 
 
 def test_review_governance_evidence_blocks_pipeline_failed_dq_status(monkeypatch):
+    """Verify review governance evidence blocks pipeline failed dq status."""
     result, writes = _run_governance_review_for_pipeline_dq_status(monkeypatch, "failed")
 
     assert result["outcome"] == "rejected"
@@ -364,6 +380,7 @@ def test_review_governance_evidence_blocks_pipeline_failed_dq_status(monkeypatch
 
 
 def test_review_governance_evidence_warns_on_pipeline_warning_dq_status(monkeypatch):
+    """Verify review governance evidence warns on pipeline warning dq status."""
     result, writes = _run_governance_review_for_pipeline_dq_status(monkeypatch, "warning")
 
     assert result["outcome"] == "needs_remediation"
@@ -373,6 +390,7 @@ def test_review_governance_evidence_warns_on_pipeline_warning_dq_status(monkeypa
 
 
 def test_review_governance_evidence_ignores_pipeline_passed_dq_status(monkeypatch):
+    """Verify review governance evidence ignores pipeline passed dq status."""
     result, writes = _run_governance_review_for_pipeline_dq_status(monkeypatch, "passed", catalogue_dq_status="passed")
 
     assert result["outcome"] == "approved"

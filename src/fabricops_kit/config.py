@@ -41,6 +41,7 @@ def _validate_audit_timezone(timezone_name: str | None) -> str:
     ------
     ValueError
         If a non-blank value is not a valid IANA timezone name.
+
     """
     value = str(timezone_name or DEFAULT_AUDIT_TIMEZONE).strip() or DEFAULT_AUDIT_TIMEZONE
     if value != DEFAULT_AUDIT_TIMEZONE and "/" not in value:
@@ -101,11 +102,13 @@ class PathConfig:
     --------
     >>> PathConfig(paths={"dev": {"source": object()}}).paths["dev"] is not None
     True
+
     """
 
     paths: dict[str, dict[str, Any]]
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         if not isinstance(self.paths, dict) or not self.paths:
             raise ValueError("paths must be a non-empty mapping of environments to targets.")
 
@@ -123,6 +126,7 @@ class NotebookRuntimeConfig:
     )
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         prefixes = tuple(prefix.strip() for prefix in self.allowed_notebook_prefixes if str(prefix).strip())
         if not prefixes:
             raise ValueError("allowed_notebook_prefixes must contain at least one non-empty prefix.")
@@ -273,6 +277,7 @@ class AIPromptConfig:
     governance_personal_identifier_prompt_template : str, optional
         Prompt used for personal-identifier classification suggestions. Blank
         values use the package default.
+
     """
 
     business_context_prompt_template: str = ""
@@ -280,6 +285,7 @@ class AIPromptConfig:
     governance_personal_identifier_prompt_template: str = ""
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         defaults = {
             "business_context_prompt_template": DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE,
             "dq_rule_suggestion_prompt_template": DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
@@ -309,6 +315,7 @@ class QualityConfig:
     quarantine_on_failure : bool, default=False
         Whether failed records should be routed to a quarantine path when that
         workflow is enabled by runtime helpers.
+
     """
 
     default_severity: str = "warning"
@@ -316,6 +323,7 @@ class QualityConfig:
     quarantine_on_failure: bool = False
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         severity = str(self.default_severity).strip().lower()
         if severity not in {"info", "warning", "critical"}:
             raise ValueError("default_severity must be one of: info, warning, critical.")
@@ -335,12 +343,14 @@ class GovernanceConfig:
     sensitivity_rules : dict[str, str]
         Mapping of rule keys to expected sensitivity labels used by governance
         notebook checks and reporting summaries.
+
     """
 
     required_classification: bool = True
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         object.__setattr__(self, "required_classification", bool(self.required_classification))
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
 
@@ -369,6 +379,7 @@ class DataAgreementConfig:
     steward_role_options : list[str]
         Controlled Data Steward role labels rendered by ``01_agreement`` as the
         ``steward_role`` dropdown.
+
     """
 
     metadata_tables: dict[str, str] = field(
@@ -410,6 +421,7 @@ class DataAgreementConfig:
     steward_role_options: list[str] = field(default_factory=lambda: list(DEFAULT_STEWARD_ROLE_OPTIONS))
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         object.__setattr__(self, "metadata_tables", deepcopy(dict(self.metadata_tables or {})))
         object.__setattr__(self, "data_steward_widget", deepcopy(dict(self.data_steward_widget or {})))
         object.__setattr__(self, "data_agreement_widget", deepcopy(dict(self.data_agreement_widget or {})))
@@ -444,12 +456,14 @@ class LineageConfig:
     capture_transformation_steps : bool, default=True
         Whether transformation-level steps should be included in lineage
         capture payloads.
+
     """
 
     capture_ai_summaries: bool = True
     capture_transformation_steps: bool = True
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         object.__setattr__(self, "capture_ai_summaries", bool(self.capture_ai_summaries))
         object.__setattr__(self, "capture_transformation_steps", bool(self.capture_transformation_steps))
 
@@ -486,6 +500,7 @@ class FrameworkConfig:
     ... )
     >>> isinstance(cfg, FrameworkConfig)
     True
+
     """
 
     path_config: PathConfig
@@ -499,6 +514,7 @@ class FrameworkConfig:
     audit_timezone: str = DEFAULT_AUDIT_TIMEZONE
 
     def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
         object.__setattr__(self, "audit_timezone", _validate_audit_timezone(self.audit_timezone))
 
 
@@ -535,6 +551,7 @@ class NotebookSetupContext:
         Raw runtime metadata for troubleshooting and logging.
     readiness_status : str
         Overall readiness status derived from validation checks.
+
     """
 
     run_id: str
@@ -579,6 +596,7 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     >>> normalized = _validate_framework_config(framework_config)
     >>> isinstance(normalized, FrameworkConfig)
     True
+
     """
     if isinstance(config, FrameworkConfig):
         normalized = config
@@ -693,6 +711,7 @@ def _get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | Non
     --------
     >>> get_path("Sandbox", "Source", config=CONFIG)
     Housepath(...)
+
     """
     paths = _normalize_path_config(config).paths
     if env not in paths:
@@ -771,6 +790,7 @@ def _run_config_smoke_tests(
     >>> checks = _run_config_smoke_tests(config=my_config, env="Sandbox", notebook_name="00_env_config")
     >>> any(c.status == "fail" for c in checks)
     False
+
     """
     results: list[ConfigSmokeCheckResult] = []
     required_targets = required_targets or ["Source", "Unified"]
@@ -869,6 +889,7 @@ def setup_notebook(
     -----
     Validation and smoke checks are local to notebook startup. This helper does
     not provision Fabric resources or persist metadata.
+
     """
     from uuid import uuid4
     from datetime import datetime, timezone
@@ -1226,6 +1247,7 @@ def setup_metadata_tables(
     does not bake the schema into configured metadata table names. FabricOps may warn about
     legacy nested or unidentified Delta folders, but it does not delete or
     migrate user data automatically.
+
     """
     from fabricops_kit.data_agreement import (
         DATA_AGREEMENT_EVIDENCE_TABLE,
@@ -1396,6 +1418,7 @@ def _load_dataset_contract(path: str | Path) -> dict:
     >>> contract = _load_dataset_contract("configs/sales_contract.yml")
     >>> isinstance(contract, dict)
     True
+
     """
     contract_path = Path(path)
     with contract_path.open("r", encoding="utf-8") as handle:
@@ -1435,6 +1458,7 @@ def _validate_dataset_contract(contract: dict, schema_path: str | Path | None = 
     -----
     This function does not raise by default, allowing notebook orchestration to
     collect all schema issues before deciding whether to fail fast.
+
     """
     schema = _load_schema(schema_path=schema_path)
     validator = Draft202012Validator(schema)
@@ -1460,6 +1484,7 @@ def _assert_valid_dataset_contract(contract: dict, schema_path: str | Path | Non
     ------
     DatasetContractValidationError
         Raised when one or more validation issues are found.
+
     """
     errors = _validate_dataset_contract(contract, schema_path=schema_path)
     if errors:
@@ -1490,6 +1515,7 @@ def _load_and_validate_dataset_contract(
     >>> contract, errors = _load_and_validate_dataset_contract("configs/orders.yml")
     >>> len(errors) >= 0
     True
+
     """
     contract = _load_dataset_contract(path)
     return contract, _validate_dataset_contract(contract, schema_path=schema_path)

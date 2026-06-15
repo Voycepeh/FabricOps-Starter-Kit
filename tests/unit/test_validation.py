@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 import pytest
 
@@ -7,6 +9,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_validate_schema_supports_strict_allow_new_and_monitor_modes():
+    """Verify validate schema supports strict allow new and monitor modes."""
     class FakeFrame:
         def __init__(self, dtypes):
             self.dtypes = dtypes
@@ -60,6 +63,7 @@ def _catalogue_row(row_count: int, minimum: str = "2026-01-01", maximum: str = "
 
 
 def test_enforce_profile_behavior_append_passes_when_row_count_grows(monkeypatch):
+    """Verify enforce profile behavior append passes when row count grows."""
     from fabricops_kit import data_profiling
 
     monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile_rows(12))
@@ -82,6 +86,7 @@ def test_enforce_profile_behavior_append_passes_when_row_count_grows(monkeypatch
 
 
 def test_enforce_profile_behavior_append_fails_when_row_count_drops(monkeypatch):
+    """Verify enforce profile behavior append fails when row count drops."""
     from fabricops_kit import data_profiling
 
     monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile_rows(9))
@@ -105,6 +110,7 @@ def test_enforce_profile_behavior_append_fails_when_row_count_drops(monkeypatch)
 
 
 def test_enforce_profile_behavior_append_fails_when_watermark_min_moves_forward(monkeypatch):
+    """Verify enforce profile behavior append fails when watermark min moves forward."""
     from fabricops_kit import data_profiling
 
     monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile_rows(12, minimum="2026-01-02"))
@@ -129,6 +135,7 @@ def test_enforce_profile_behavior_append_fails_when_watermark_min_moves_forward(
 
 
 def test_enforce_profile_behavior_does_not_use_non_watermark_row_for_watermark_comparison(monkeypatch):
+    """Verify enforce profile behavior does not use non watermark row for watermark comparison."""
     from fabricops_kit import data_profiling
 
     monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile_rows(12, minimum="2026-01-02", maximum="2026-01-31"))
@@ -159,6 +166,7 @@ def test_enforce_profile_behavior_does_not_use_non_watermark_row_for_watermark_c
 
 
 def test_enforce_profile_behavior_reuses_current_profile_when_supplied(monkeypatch):
+    """Verify enforce profile behavior reuses current profile when supplied."""
     from fabricops_kit import data_profiling
 
     def fail_profile(*args, **kwargs):
@@ -184,6 +192,7 @@ def test_enforce_profile_behavior_reuses_current_profile_when_supplied(monkeypat
     assert result["row_count"] == 12
 
 def test_enforce_profile_behavior_overwrite_accepts_profile_differences(monkeypatch):
+    """Verify enforce profile behavior overwrite accepts profile differences."""
     from fabricops_kit import data_profiling
 
     monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile_rows(1, minimum="2026-02-01", maximum="2026-02-02"))
@@ -207,6 +216,7 @@ def test_enforce_profile_behavior_overwrite_accepts_profile_differences(monkeypa
 
 
 def test_enforce_profile_behavior_skip_returns_skipped_and_can_continue(monkeypatch):
+    """Verify enforce profile behavior skip returns skipped and can continue."""
     from fabricops_kit import data_profiling
 
     monkeypatch.setattr(data_profiling, "profile_dataframe", lambda *args, **kwargs: _profile_rows(1))
@@ -231,6 +241,7 @@ def test_enforce_profile_behavior_skip_returns_skipped_and_can_continue(monkeypa
 
 
 def test_profile_row_count_falls_back_to_first_normalized_column_row_count():
+    """Verify profile row count falls back to first normalized column row count."""
     from fabricops_kit.guardrails import _profile_row_count
 
     result = _profile_row_count({"columns": [{"column_name": "business_date", "row_count": "42"}]})
@@ -239,6 +250,7 @@ def test_profile_row_count_falls_back_to_first_normalized_column_row_count():
 
 
 def test_profile_row_count_returns_none_for_invalid_row_count():
+    """Verify profile row count returns none for invalid row count."""
     from fabricops_kit.guardrails import _profile_row_count
 
     result = _profile_row_count({"row_count": "not-a-number", "columns": [{"row_count": "also-invalid"}]})
@@ -246,6 +258,7 @@ def test_profile_row_count_returns_none_for_invalid_row_count():
     assert result is None
 
 def test_enforce_freshness_passes_when_latest_value_within_lag():
+    """Verify enforce freshness passes when latest value within lag."""
     from fabricops_kit.guardrails import enforce_freshness
 
     result = enforce_freshness(
@@ -263,6 +276,7 @@ def test_enforce_freshness_passes_when_latest_value_within_lag():
 
 
 def test_enforce_freshness_blocks_when_latest_value_is_stale():
+    """Verify enforce freshness blocks when latest value is stale."""
     from fabricops_kit.guardrails import enforce_freshness
 
     result = enforce_freshness(
@@ -280,6 +294,7 @@ def test_enforce_freshness_blocks_when_latest_value_is_stale():
 
 
 def test_enforce_freshness_warns_when_stale_warning_severity():
+    """Verify enforce freshness warns when stale warning severity."""
     from fabricops_kit.guardrails import enforce_freshness
 
     result = enforce_freshness(
@@ -295,6 +310,7 @@ def test_enforce_freshness_warns_when_stale_warning_severity():
 
 
 def test_enforce_freshness_skips_when_column_not_configured():
+    """Verify enforce freshness skips when column not configured."""
     from fabricops_kit.guardrails import enforce_freshness
 
     result = enforce_freshness([], None, None)

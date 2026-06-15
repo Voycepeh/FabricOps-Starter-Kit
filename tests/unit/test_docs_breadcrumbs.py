@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -14,6 +16,7 @@ def _section(title: str, children: list[object]):
 
 
 def test_breadcrumbs_follow_configured_nav_hierarchy() -> None:
+    """Verify breadcrumbs follow configured nav hierarchy."""
     current = _page("setup_notebook", "api/reference/setup_notebook/")
     module_page = _page("config", "api/modules/config/")
     nav = SimpleNamespace(
@@ -41,6 +44,7 @@ def test_breadcrumbs_follow_configured_nav_hierarchy() -> None:
 
 
 def test_breadcrumbs_keep_current_page_non_clickable() -> None:
+    """Verify breadcrumbs keep current page non clickable."""
     current = _page("Overview", "quick-start/")
     nav = SimpleNamespace(items=[_page("Home", ""), _section("Quick Start", [current])])
     context: dict[str, object] = {}
@@ -52,6 +56,7 @@ def test_breadcrumbs_keep_current_page_non_clickable() -> None:
 
 
 def test_breadcrumbs_fall_back_for_pages_outside_nav() -> None:
+    """Verify breadcrumbs fall back for pages outside nav."""
     current = _page("Generated Function", "api/reference/generated-function/")
     nav = SimpleNamespace(items=[_page("Home", "")])
     context: dict[str, object] = {}

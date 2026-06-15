@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import ast
@@ -71,6 +73,7 @@ def _schema_io_config() -> PathConfig:
 
 
 def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
+    """Verify lakehouse table read routes every configured lakehouse store."""
     config = _io_config()
 
     for target in ("source", "unified", "product"):
@@ -90,6 +93,7 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
 
 
 def test_lakehouse_table_write_routes_to_configured_store():
+    """Verify lakehouse table write routes to configured store."""
     config = _io_config()
     frame = _Frame()
 
@@ -103,6 +107,7 @@ def test_lakehouse_table_write_routes_to_configured_store():
 
 
 def test_lakehouse_file_readers_build_configured_files_paths():
+    """Verify lakehouse file readers build configured files paths."""
     config = _io_config()
     spark = _Spark()
 
@@ -114,12 +119,14 @@ def test_lakehouse_file_readers_build_configured_files_paths():
 
 
 def test_lakehouse_excel_remains_exposed_and_callable():
+    """Verify lakehouse excel remains exposed and callable."""
     assert hasattr(io, "read_lakehouse_excel")
     assert callable(io.read_lakehouse_excel)
     assert inspect.signature(io.read_lakehouse_excel).parameters["relative_path"]
 
 
 def test_warehouse_helpers_build_configured_query(monkeypatch):
+    """Verify warehouse helpers build configured query."""
     config = _io_config()
 
     class Constants:
@@ -151,6 +158,7 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
 
 
 def test_deleted_internal_helpers_are_absent_and_unreferenced():
+    """Verify deleted internal helpers are absent and unreferenced."""
     source = Path("src/fabricops_kit/fabric_input_output.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
@@ -161,6 +169,7 @@ def test_deleted_internal_helpers_are_absent_and_unreferenced():
 
 
 def test_public_v1_io_callable_list_remains_unchanged():
+    """Verify public v1 io callable list remains unchanged."""
     public_functions = {
         name
         for name, value in vars(io).items()
@@ -171,6 +180,7 @@ def test_public_v1_io_callable_list_remains_unchanged():
 
 
 def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
+    """Verify lakehouse table read with explicit schema uses schema physical path."""
     config = _io_config()
     spark = _Spark()
 
@@ -182,6 +192,7 @@ def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
 
 
 def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
+    """Verify lakehouse table write with explicit schema uses schema physical path."""
     config = _io_config()
     frame = _Frame()
 
@@ -193,6 +204,7 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
 
 
 def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_config():
+    """Verify lakehouse schema enabled target routes paths and identifiers from config."""
     config = _schema_io_config()
     spark = _Spark()
     frame = _Frame()
@@ -207,6 +219,7 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
 
 
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
+    """Verify lakehouse schema disabled target routes legacy paths and identifiers."""
     config = _io_config()
     metadata_store = config.paths["dev"]["metadata"]
 
@@ -219,11 +232,13 @@ import pytest
 
 @pytest.mark.parametrize("schema", ["", "bad-name", "METADATA.TABLE", "META/DATA", "1META"])
 def test_lakehouse_table_schema_validation_rejects_unsafe_names(schema):
+    """Verify lakehouse table schema validation rejects unsafe names."""
     with pytest.raises(ValueError):
         io.read_lakehouse_table(_io_config(), "dev", "metadata", "TABLE", schema=schema, spark_session=_Spark())
 
 
 @pytest.mark.parametrize("table", ["schema.table", "bad/name", "bad-name", "1TABLE", ""])
 def test_lakehouse_table_validation_rejects_unsafe_names(table):
+    """Verify lakehouse table validation rejects unsafe names."""
     with pytest.raises(ValueError):
         io.read_lakehouse_table(_io_config(), "dev", "metadata", table, schema=None, spark_session=_Spark())

@@ -31,6 +31,7 @@ class SchemaDriftError(Exception):
     -----
     This exception is shared by schema-check workflows so notebook callers
     have one failure type to catch when they choose fail-fast behavior.
+
     """
 
 
@@ -136,6 +137,7 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
     --------
     >>> validate_schema(df, {"id": "int"}, preset="allow_new_columns")
     {'status': 'passed', 'can_continue': True, ...}
+
     """
     normalized_preset = str(preset).lower()
     if normalized_preset not in _SCHEMA_PRESETS:
@@ -399,6 +401,7 @@ def enforce_freshness(
     -----
     Freshness is separate from profile behavior. ``load_behavior="skip"`` only
     skips profile behavior enforcement; freshness still runs when configured.
+
     """
     column = str(freshness_column or "").strip()
     normalized_severity = str(severity or "blocking").lower().strip()
@@ -707,6 +710,7 @@ def enforce_profile_behavior(
     This guardrail uses existing profile evidence: row count plus the configured
     watermark column's ``min_value`` and ``max_value``. Schema and DQ checks are
     enforced by their own guardrails.
+
     """
     behavior = str(load_behavior or "").lower().strip()
     if behavior not in {"append", "overwrite", "skip"}:
@@ -849,6 +853,7 @@ def stop_if_failed(result) -> None:
     ------
     SchemaDriftError
         If the resolved result has ``can_continue=False``.
+
     """
     resolved = (result or {}).get("result") if isinstance(result, dict) and "result" in result else result
     resolved = resolved or {}

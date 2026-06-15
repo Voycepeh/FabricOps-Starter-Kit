@@ -13,7 +13,6 @@ ROOT_TEXT_FILES = {"llms.txt"}
 
 def _is_public_markdown(path: Path, docs_dir: Path) -> bool:
     """Return whether ``path`` should be copied as a public Markdown variant."""
-
     if path.suffix != ".md" or not path.is_file():
         return False
     relative = path.relative_to(docs_dir)
@@ -29,7 +28,6 @@ def on_post_build(config: Any) -> None:
     documentation site for people. Section index pages are also copied to a
     sibling path such as ``site/guide.md`` for the HTML URL ``/guide/``.
     """
-
     docs_dir = Path(config["docs_dir"]).resolve()
     site_dir = Path(config["site_dir"]).resolve()
     site_dir.mkdir(parents=True, exist_ok=True)

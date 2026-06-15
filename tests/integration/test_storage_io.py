@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -95,6 +97,7 @@ class _Frame:
 
 
 def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
+    """Verify lakehouse read and write helpers route to configured paths."""
     config = framework_config()
     spark = _Spark()
     frame = _Frame()
@@ -111,6 +114,7 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
 
 
 def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tables():
+    """Verify metadata lakehouse table helpers use abfss paths without registered tables."""
     config = framework_config()
     spark = _Spark()
     frame = _Frame()
@@ -128,6 +132,7 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
 
 
 def test_lakehouse_table_helpers_reject_nested_table_paths():
+    """Verify lakehouse table helpers reject nested table paths."""
     config = framework_config()
 
     with pytest.raises(ValueError, match="simple table name"):
@@ -135,6 +140,7 @@ def test_lakehouse_table_helpers_reject_nested_table_paths():
 
 
 def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeypatch):
+    """Verify file readers validate source paths and excel uses pandas kwargs."""
     config = framework_config()
     spark = _Spark()
     captured = {}
@@ -151,6 +157,7 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
 
 
 def test_warehouse_helpers_fail_clearly_outside_fabric_runtime():
+    """Verify warehouse helpers fail clearly outside fabric runtime."""
     config = framework_config()
 
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):

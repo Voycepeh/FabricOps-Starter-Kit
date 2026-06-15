@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,6 +11,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_business_columns():
+    """Verify agreement metadata schemas and widget fields keep only supported business columns."""
     config = agreement_config()
 
     steward_fields = agreement._get_widget_visible_fields(config, "data_steward_widget")
@@ -22,6 +25,7 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
 
 
 def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypatch):
+    """Verify steward and agreement create update write append only metadata."""
     audit_columns = agreement.STANDARD_RUNTIME_AUDIT_COLUMNS
     writes = []
 
@@ -49,6 +53,7 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 
 
 def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monkeypatch):
+    """Verify agreement validation and evidence path parsing fail before writes."""
     monkeypatch.setattr(agreement, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
     monkeypatch.setattr(agreement, "_write_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
 

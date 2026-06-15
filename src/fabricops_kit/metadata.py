@@ -1,3 +1,5 @@
+"""Metadata utilities."""
+
 from __future__ import annotations
 
 import hashlib
@@ -189,6 +191,7 @@ def _build_runtime_audit_fields(
     underscore-prefixed names. This helper centralizes the metadata-table
     convention so notebooks can reuse runtime context when adding dataframe
     audit columns inline.
+
     """
     context = {**_runtime_context(), **(runtime_context or {})}
 
@@ -295,6 +298,7 @@ def _register_current_notebook(
     :func:`fabricops_kit.config.setup_metadata_tables`. New notebooks should
     pass ``config=CONFIG`` and ``env=ENV`` so metadata writes use the
     configured ``metadata`` target from ``00_env_config``.
+
     """
     if config is None or env is None:
         raise ValueError("_register_current_notebook requires config and env for metadata routing.")
@@ -430,6 +434,7 @@ def _current_notebook_active_registrations(
     -------
     list[dict[str, Any]]
         Active latest registration rows for the current notebook runtime.
+
     """
     ctx = _runtime_context()
     notebook_id = _safe_str(_context_get(ctx, "currentNotebookId", "notebookId"))

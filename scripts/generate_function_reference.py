@@ -1,3 +1,5 @@
+"""Generate function reference helpers."""
+
 from __future__ import annotations
 
 import ast
@@ -115,6 +117,8 @@ V1_CALLABLES = {
 
 @dataclass
 class Symbol:
+    """Symbol metadata container."""
+
     name: str
     actual_module: str
     public_module: str
@@ -125,6 +129,7 @@ class Symbol:
 
 
 def first_sentence(doc: str | None) -> str:
+    """Return the first sentence."""
     if not doc:
         return ""
     line = doc.strip().splitlines()[0].strip()
@@ -229,6 +234,7 @@ def _parameter_rows_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef, para
 
 
 def parse_module(path: Path) -> dict[str, Any]:
+    """Parse module."""
     source_text = path.read_text(encoding="utf-8")
     tree = ast.parse(source_text)
     functions: dict[str, str] = {}
@@ -291,6 +297,7 @@ def parse_module(path: Path) -> dict[str, Any]:
 
 
 def parse_import_aliases(nodes: list[ast.stmt]) -> tuple[dict[str, str], dict[str, str]]:
+    """Parse import aliases."""
     module_aliases: dict[str, str] = {}
     symbol_aliases: dict[str, str] = {}
     for node in nodes:
@@ -310,6 +317,7 @@ def parse_import_aliases(nodes: list[ast.stmt]) -> tuple[dict[str, str], dict[st
 
 
 def collect_function_calls(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[dict[str, str]]:
+    """Collect function calls."""
     calls: list[dict[str, str]] = []
     for child in ast.walk(node):
         if not isinstance(child, ast.Call):
@@ -340,6 +348,7 @@ def resolve_call_target(
     exported_symbol_map: dict[str, Symbol],
     package_module_names: set[str],
 ) -> tuple[str | None, str, str]:
+    """Resolve call target."""
     def _classify_callee(module_name: str, symbol_name: str) -> str:
         mapped = exported_symbol_map.get(symbol_name)
         if mapped and mapped.actual_module == module_name:
@@ -391,6 +400,7 @@ def build_callable_graph(
     public_exports: list[str],
     docs_metadata: dict[str, dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Build callable graph."""
     package_modules = {m for m in module_data if m not in {"docs_metadata"}}
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
@@ -472,6 +482,7 @@ def build_callable_graph(
 
 
 def parse_public_exports() -> list[str]:
+    """Parse public exports."""
     tree = ast.parse(INIT_PATH.read_text(encoding="utf-8"))
     for node in tree.body:
         if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
@@ -482,6 +493,7 @@ def parse_public_exports() -> list[str]:
 
 
 def parse_docs_metadata() -> dict[str, dict[str, Any]]:
+    """Parse docs metadata."""
     namespace = runpy.run_path(str(DOCS_METADATA_PATH))
     rows = namespace.get("PUBLIC_SYMBOL_DOCS")
     if not isinstance(rows, list):
@@ -498,6 +510,7 @@ def parse_docs_metadata() -> dict[str, dict[str, Any]]:
 
 
 def parse_template_flow_docs() -> list[dict[str, Any]]:
+    """Parse template flow docs."""
     tree = ast.parse(DOCS_METADATA_PATH.read_text(encoding="utf-8"))
     for node in tree.body:
         is_assign = isinstance(node, ast.Assign) and any(
@@ -510,6 +523,7 @@ def parse_template_flow_docs() -> list[dict[str, Any]]:
 
 
 def parse_module_docs_metadata() -> list[dict[str, Any]]:
+    """Parse module docs metadata."""
     tree = ast.parse(DOCS_METADATA_PATH.read_text(encoding="utf-8"))
     for node in tree.body:
         is_assign = isinstance(node, ast.Assign) and any(
@@ -795,6 +809,7 @@ def canonical_public_module(module_name: str) -> str:
 
 
 def render_html_table(headers: list[str], rows: list[list[str]], *, table_class: str = "") -> list[str]:
+    """Render html table."""
     class_attr = f' class="{table_class}"' if table_class else ""
     lines = [f"<table{class_attr}>", "  <thead>", "    <tr>"]
     for header in headers:
@@ -1330,6 +1345,7 @@ def parse_simple_yaml(path: Path) -> dict[str, dict[str, Any]]:
     return data
 
 def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, Any]], module_summary: list[dict[str, Any]]) -> str:
+    """Render callable map page."""
     module_edges = sorted(
         {
             (e["caller_qualified_name"].split(".")[-2], e["callee_qualified_name"].split(".")[-2])
@@ -1396,6 +1412,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
     return "\n".join(lines) + "\n"
 
 def main() -> None:
+    """Run the command-line workflow."""
     public = parse_public_exports()
     if set(public) != V1_CALLABLES:
         missing = sorted(V1_CALLABLES - set(public))

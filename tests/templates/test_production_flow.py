@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import ast
@@ -25,6 +27,7 @@ def _code(path: str) -> str:
 
 
 def test_production_and_governance_templates_cover_output_summary_and_review_flows():
+    """Verify production and governance templates cover output summary and review flows."""
     production = _code("02_pipeline.ipynb")
     governance = _code("03_governance.ipynb")
 
@@ -45,6 +48,7 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
 
 
 def test_production_template_enforces_guardrails_before_full_dataset_write():
+    """Verify production template enforces guardrails before full dataset write."""
     production = _code("02_pipeline.ipynb")
 
     source_guardrails = production.index("source_guardrail_results = run_table_guardrails")
@@ -64,6 +68,7 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
 
 
 def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
+    """Verify guardrail orchestration is imported and documents simple v1 behavior."""
     production = _code("02_pipeline.ipynb")
 
     assert "def run_table_guardrails(" not in production
@@ -88,6 +93,7 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "blocks before the next critical step" in guardrail_docs
 
 def test_notebook_template_docs_describe_optional_example_notebooks():
+    """Verify notebook template docs describe optional example notebooks."""
     notebook_docs = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md").read_text(
         encoding="utf-8"
     )
@@ -100,6 +106,7 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
 
 
 def test_quick_start_links_optional_pipeline_guardrail_demo():
+    """Verify quick start links optional pipeline guardrail demo."""
     quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
 
     for expected in [
@@ -131,6 +138,7 @@ def test_quick_start_links_optional_pipeline_guardrail_demo():
 
 
 def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
+    """Verify smoke test example notebook exists and generates pipeline scenarios."""
     smoke_notebook = TEMPLATES / "example_pipeline_smoke_test.ipynb"
 
     assert smoke_notebook.exists()
@@ -190,6 +198,7 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
 
 
 def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
+    """Verify docs and templates do not add dq failure table behavior."""
     checked_paths = [
         ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md",
         ROOT / "docs" / "how-fabricops-works" / "governance-review.md",
@@ -226,6 +235,7 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
 
 
 def test_example_pipeline_smoke_test_uses_shared_lakehouse_write_helper_without_unidentified_paths():
+    """Verify example pipeline smoke test uses shared lakehouse write helper without unidentified paths."""
     import json
     from pathlib import Path
 

@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,6 +11,7 @@ pytestmark = pytest.mark.integration
 
 
 def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
+    """Verify central metadata setup preserves existing valid tables."""
     import fabricops_kit.config as config_module
     import fabricops_kit.fabric_input_output as io
     import fabricops_kit.governance_review as governance
@@ -61,6 +64,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
 
 
 def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypatch):
+    """Verify central metadata setup rejects existing tables missing columns."""
     import fabricops_kit.config as config_module
     import fabricops_kit.fabric_input_output as io
     import fabricops_kit.governance_review as governance

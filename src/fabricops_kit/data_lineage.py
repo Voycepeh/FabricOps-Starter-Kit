@@ -46,6 +46,7 @@ def _scan_notebook_lineage(code: str) -> list[dict[str, Any]]:
     -------
     list of dict of str to Any
         Ordered lineage step dictionaries inferred from read, transform, and write calls.
+
     """
     def name(node: ast.AST) -> str | None:
         return node.id if isinstance(node, ast.Name) else None
@@ -98,6 +99,7 @@ def _scan_notebook_cells(cells: list[str]) -> list[dict[str, Any]]:
     -------
     list of dict of str to Any
         Combined lineage steps with ``cell:<index>`` entries in ``code_refs``.
+
     """
     out: list[dict[str, Any]] = []
     for idx, cell in enumerate(cells):
@@ -121,6 +123,7 @@ def _enrich_lineage_steps_with_ai(lineage_steps: list[dict[str, Any]], ai_helper
     -------
     dict of str to Any
         Enrichment payload containing steps, AI usage flag, fallback prompt, and notes.
+
     """
     if ai_helper is None:
         return {"steps": lineage_steps, "ai_used": False, "fallback_prompt": "Review these deterministic lineage steps and improve reasons/notes only; do not change structure. steps=" + str(lineage_steps), "notes": "AI helper unavailable; Copilot fallback prompt generated."}
@@ -139,6 +142,7 @@ def _validate_lineage_steps(lineage_steps: Any) -> dict[str, Any]:
     -------
     dict of str to Any
         Validation result with ``is_valid``, ``errors``, ``warnings``, and ``review_required``.
+
     """
     errors: list[str] = []
     warnings: list[str] = []
@@ -178,6 +182,10 @@ def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id:
         Optional notebook name.
     workspace_name : str or None, default=None
         Optional workspace display name.
+    workspace_id : str or None, default=None
+        Optional workspace identifier.
+    notebook_id : str or None, default=None
+        Optional notebook identifier.
     created_by : str or None, default=None
         Optional creator identity.
     config : Any, optional
@@ -187,6 +195,7 @@ def _build_lineage_records(dataset_name: str, lineage_steps: list[dict], run_id:
     -------
     list of dict
         Lineage rows suitable for metadata persistence.
+
     """
     validation = _validate_lineage_steps(lineage_steps)
     if not validation["is_valid"]:

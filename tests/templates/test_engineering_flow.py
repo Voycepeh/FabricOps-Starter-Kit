@@ -1,3 +1,5 @@
+"""Test FabricOps behavior and reference contracts."""
+
 from __future__ import annotations
 
 import ast
@@ -20,6 +22,7 @@ def _code(path: str) -> str:
 
 
 def test_engineering_template_runs_supported_ingestion_quality_and_metadata_flow():
+    """Verify engineering template runs supported ingestion quality and metadata flow."""
     code = _code("99_explore.ipynb")
 
     assert "%run 00_env_config" in code
