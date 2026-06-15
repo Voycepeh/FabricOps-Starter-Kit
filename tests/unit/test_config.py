@@ -275,15 +275,15 @@ def test_active_metadata_tables_are_source_driven_and_explain_optional_access_ta
     """Verify active metadata tables are source driven and explain optional access table."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 14
+    assert len(tables) == 12
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_AGREEMENT_EVIDENCE" in tables
     assert "METADATA_NOTEBOOK_REGISTRY" in tables
     assert "METADATA_GUARDRAIL_RULES" in tables
-    assert "METADATA_GUARDRAIL_PROFILES" in tables
+    assert "METADATA_GUARDRAIL_PROFILES" not in tables
     assert "METADATA_GUARDRAIL_RESULTS" in tables
-    assert "METADATA_GUARDRAIL_BASELINE_EVENTS" in tables
+    assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in tables
     assert "METADATA_GOVERNANCE_REVIEWS" in tables
     assert "METADATA_DATA_ACCESS" not in tables
 

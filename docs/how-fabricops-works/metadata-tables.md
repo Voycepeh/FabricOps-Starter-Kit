@@ -43,18 +43,16 @@ write_lakehouse_table(
 | `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_agreement` | Stores file references that support an agreement version. |
 | `METADATA_NOTEBOOK_REGISTRY` | `02_pipeline`, optional `99_explore` | Stores notebook-to-agreement relationships. |
 | `METADATA_DATA_LINEAGE_TABLE` | `02_pipeline` | Stores current table-level lineage evidence for a notebook. |
-| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Catalogue/profile discovery anchor: records what table/column evidence exists and what was profiled. It is not the all-purpose store for guardrail rules, runtime results, baselines, or reset approvals. |
+| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Profile evidence/history table: records table and column observations, profile snapshots, profile hashes/payloads, watermark context, and accepted/passed evidence used for guardrail comparison. |
 | `METADATA_PIPELINE_RUNS` | `02_pipeline` | Stores one runtime summary row per pipeline run, tied to agreement and notebook registry context. |
 | `METADATA_DATA_ACCESS` | Optional access capture process | Optional table-level access assignments when captured; not part of the current active setup registry. |
 | `METADATA_COLUMN_CONTEXT` | `03_governance` | Stores reviewed business meaning for catalogue columns. |
 | `METADATA_GUARDRAIL_RULES` | `03_governance` | Stores approved or proposed guardrail rules: what should be checked for `schema`, `freshness`, `profile_behavior`, and `dq` guardrails. DQ rows use `guardrail_type="dq"`. |
-| `METADATA_GUARDRAIL_PROFILES` | Runtime evidence schema | Newly introduced schema table intended for observed guardrail profile snapshots: what was observed for a run, including multiple rows per table when grouped by watermark. |
-| `METADATA_GUARDRAIL_RESULTS` | Runtime evidence schema | Newly introduced schema table intended for pass/fail guardrail outcomes: what passed, warned, failed, or blocked continuation. |
-| `METADATA_GUARDRAIL_BASELINE_EVENTS` | Baseline decision schema | Newly introduced schema table intended for baseline creation, reset, approval, rejection, accepted-change, and blocked-change decisions. |
+| `METADATA_GUARDRAIL_RESULTS` | Runtime evidence schema | Stores pass/warn/fail guardrail outcomes: what passed, warned, failed, or blocked continuation. |
 | `METADATA_COLUMN_CLASSIFICATION` | `03_governance` | Stores reviewed sensitivity and PII classifications. |
 | `METADATA_GOVERNANCE_REVIEWS` | `03_governance` | Stores final review outcomes such as approved, rejected, or needs remediation with blockers and warnings. |
 
-`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue/profile discovery evidence, lineage, and run evidence. Guardrail profile/result tables are introduced as schemas for runtime evidence but are not claimed as current write targets unless a write path is implemented. `03_governance` writes reviewed metadata such as column context, guardrail rules, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
+`01_agreement` writes steward, agreement, and evidence metadata. `02_pipeline` writes registry, catalogue/profile evidence, lineage, run evidence, and guardrail result evidence when checks run. Baselines are derived from previous accepted or passed profile evidence in `METADATA_DATA_CATALOGUE`; FabricOps does not create separate guardrail profile or baseline event tables for now. `03_governance` writes reviewed metadata such as column context, guardrail rules, sensitivity, classification, and final governance review outcomes. `99_explore` can support investigation, but it is optional and is not a required gate.
 
 For how schema, freshness, profile behavior, and DQ settings produce this evidence, see [Pipeline Guardrails](pipeline-guardrails.md).
 
@@ -92,14 +90,12 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `METADATA_DATA_AGREEMENT_EVIDENCE` | `agreement_id`, `contract_version`, `file_path` | Links to one agreement version. |
 | `METADATA_NOTEBOOK_REGISTRY` | `registration_id` | Links notebooks to agreement versions. |
 | `METADATA_DATA_LINEAGE_TABLE` | `lineage_id` | Links lineage to notebook identity and catalogue table keys. |
-| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_column_key` | Provides stable table and column catalogue/profile evidence used by review metadata. |
+| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_column_key` | Provides stable table and column profile evidence/history used by review metadata and guardrail comparison. |
 | `METADATA_PIPELINE_RUNS` | `run_id` | Links runtime summaries to agreements, notebook registrations, catalogue evidence, and lineage rows. |
 | `METADATA_DATA_ACCESS` | `user_principal`, `table_id`, `granted_date` | `table_id` links to catalogue table keys. |
 | `METADATA_COLUMN_CONTEXT` | `metadata_column_key`, `_committed_at` | Links reviewed context to a catalogue column. |
 | `METADATA_GUARDRAIL_RULES` | `rule_key`, `_committed_at` | Links approved or proposed guardrail expectations to catalogue table or column keys. |
-| `METADATA_GUARDRAIL_PROFILES` | `profile_id` | Links observed guardrail profile snapshots to run, dataset, table, guardrail type, and optional watermark value. |
 | `METADATA_GUARDRAIL_RESULTS` | `result_id` | Links runtime pass/fail outcomes to a guardrail rule, run, table, and optional column. |
-| `METADATA_GUARDRAIL_BASELINE_EVENTS` | `event_id` | Links human baseline reset or acceptance decisions to table, guardrail type, old/new baseline runs, and approvals. |
 | `METADATA_COLUMN_CLASSIFICATION` | `metadata_column_key`, `_committed_at` | Links reviewed classification to a catalogue column. |
 | `METADATA_GOVERNANCE_REVIEWS` | `review_id` | Links the final `03_governance` outcome to agreement, pipeline run, catalogue profile, blockers, warnings, and evidence-summary context. |
 
@@ -214,7 +210,7 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 
 ### `METADATA_DATA_CATALOGUE`
 
-**For:** table and column catalogue/profile evidence written by `02_pipeline` for each source or target profile run. The catalogue answers “what exists and what was profiled.” It should not become the storage table for all guardrail rules, guardrail baselines, guardrail results, or baseline reset approvals; those responsibilities belong to the guardrail metadata tables below.
+**For:** table and column profile evidence/history written by `02_pipeline` for each source or target profile run. The catalogue answers “what exists and what was profiled,” stores profile snapshots used for guardrail comparison, and provides previous accepted or passed evidence from which baselines can be derived. Guardrail rules remain in `METADATA_GUARDRAIL_RULES`; runtime outcomes remain in `METADATA_GUARDRAIL_RESULTS`.
 
 | Column | Purpose |
 | --- | --- |
@@ -249,6 +245,9 @@ Fabric Delta tables do not enforce primary and foreign keys. FabricOps still use
 | `stability_check_enabled` | Whether profile behavior enforcement was enabled for this table. |
 | `load_behavior` | `append`, `overwrite`, or `skip`. This is the user-facing profile behavior model. |
 | `watermark_column` | Watermark column used for append behavior comparisons when configured. |
+| `profile_payload_json` | Compact JSON payload with additional profile evidence used by comparison or review workflows. |
+| `profile_hash` | Stable hash of the relevant profile observation used for comparison. |
+| `watermark_value` | Watermark value for a grouped or incremental profile snapshot. |
 | `freshness_column` | Column whose maximum value is checked by the freshness guardrail. |
 | `freshness_max_lag_days` | Maximum allowed lag, in days, for the freshness guardrail. |
 | `freshness_status` | Freshness guardrail result status. |
@@ -366,17 +365,9 @@ Supported `guardrail_type` values are `schema`, `freshness`, `profile_behavior`,
 
 **Workflow connection:** approved active `dq` expectations become runtime DQ guardrails when `02_pipeline` calls `enforce_dq_rules`. `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` only and enforces active approved rows with `guardrail_type="dq"`. Includes the standard runtime audit columns.
 
-### `METADATA_GUARDRAIL_PROFILES`
-
-**For:** observed profile snapshots: what was observed during a guardrail run. Supports multiple rows per table per run, especially when grouped by `watermark_column` and `watermark_value`. Key fields include `profile_id`, `run_id`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `profile_scope`, `watermark_column`, `watermark_value`, `row_count`, `column_count`, `profile_hash`, `profile_payload_json`, `baseline_status`, and `created_at`.
-
 ### `METADATA_GUARDRAIL_RESULTS`
 
 **For:** pass/fail outcomes: what passed, warned, failed, or blocked continuation. Key fields include `result_id`, `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, `expected_value_json`, `actual_value_json`, `result_payload_json`, and `created_at`.
-
-### `METADATA_GUARDRAIL_BASELINE_EVENTS`
-
-**For:** human baseline reset and acceptance decisions. Supported `event_type` values include `baseline_created`, `baseline_reset_requested`, `baseline_reset_approved`, `baseline_reset_rejected`, `change_accepted`, and `change_blocked`. Key fields include `event_id`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `watermark_column`, `watermark_value`, `old_baseline_run_id`, `new_baseline_run_id`, `event_type`, `reason`, `change_reference`, `approved_by`, `approved_at`, and `created_at`.
 
 ### `METADATA_DQ_RULES`
 
