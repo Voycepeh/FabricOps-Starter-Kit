@@ -30,7 +30,7 @@ FabricOps keeps the responsibility split clear:
 | --- | --- |
 | Schema guardrail | Checks expected columns and data types. |
 | Freshness guardrail | Checks whether `max(freshness_column)` is recent enough based on `freshness_max_lag_days`. |
-| Profile behavior guardrail | Checks whether the current profile follows `load_behavior`: `append`, `overwrite`, or `skip`. |
+| Profile behavior guardrail | Checks whether the current profile follows `profile_mode`: `static_data`, `changing_data`, or `skip`. |
 | DQ guardrail | Checks approved active DQ rules from governance metadata. |
 
 Each guardrail returns run evidence that can be displayed in the notebook and used to decide whether the next critical step can continue. Warning-severity failures can continue with evidence; Error-severity failure blocks before the next critical step, as do blocking failures.
@@ -58,9 +58,9 @@ Schema guardrails check whether a source or target table still matches the expec
 
 ## Freshness guardrails
 
-Freshness guardrails answer whether the expected latest data arrived on time. Freshness is separate from profile behavior: a table can follow its `load_behavior` and still be stale if the newest business date is too old.
+Freshness guardrails answer whether the expected latest data arrived on time. Freshness is separate from profile behavior: a table can follow its `profile_mode` and still be stale if the newest business date is too old.
 
-Freshness applies to `append`, `overwrite`, and `skip`. Setting `load_behavior="skip"` skips only the profile behavior guardrail; schema, freshness, and DQ still run.
+Freshness applies to `static_data`, `changing_data`, and `skip`. Setting `profile_mode="skip"` skips only the profile behavior guardrail; schema, freshness, and DQ still run.
 
 Configure freshness with the flat config fields:
 
@@ -76,17 +76,18 @@ For each configured table, `02_pipeline` checks whether `max(freshness_column)` 
 
 ## Profile behavior guardrails
 
-Profile behavior guardrails use catalogue/profile evidence from `METADATA_DATA_CATALOGUE` to enforce the configured `load_behavior`. This guardrail is about expected table behavior over time; low-level storage edit detection is intentionally out of scope.
+Profile behavior guardrails use `METADATA_DATA_CATALOGUE` as the profile history and baseline source. `METADATA_GUARDRAIL_RULES` stores what should be checked (`guardrail_type="profile_behavior"`), and `METADATA_GUARDRAIL_RESULTS` stores what happened during the run. The guardrail detects silent data behavior changes in profiled data; it does not inspect or enforce Spark write mode.
 
-FabricOps reuses accepted catalogue evidence such as `row_count`, `column_name`, `min_value`, `max_value`, `profile_stage`, `profile_status`, `stability_status`, `freshness_status`, and `dq_status`.
+Both supported modes follow the same pattern: profile the current data, write current profile evidence to `METADATA_DATA_CATALOGUE`, compare against previous accepted or passed catalogue evidence, and write the runtime outcome to `METADATA_GUARDRAIL_RESULTS`. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed and approved in governance or handled by superseding/resetting the relevant rule.
 
 ![Load behaviour guardrails](../assets/fabricops-load-behaviour-guardrails.png){ .full-width }
 
-| `load_behavior` | Use when | Guardrail behavior |
+| `rule_type` | Use when | Guardrail behavior |
 | --- | --- | --- |
-| `append` | History should be preserved. | Compare against the latest accepted append profile. Fail if row count decreases, watermark minimum moves forward, or watermark maximum moves backward. |
-| `overwrite` | Full refresh/rebuild is normal. | Do not fail because the profile differs from the previous run. Current profile becomes the accepted state when other guardrails pass. |
-| `skip` | Temporary exemption. | Return skipped/`can_continue=True` for profile behavior only. Schema, freshness, and DQ still run. |
+| `static_data` | The full table should remain stable. | Treat the full table as one profile group with `watermark_value="__FULL_TABLE__"`. Row count, schema signature, profile hash, and configured profile differences must match the previous accepted or passed full-table profile. |
+| `changing_data` | New business periods or partitions can arrive, but old periods must remain stable. | Require `watermark_column`, profile one group per watermark value, allow new watermark values, fail or warn when a previously seen watermark group changes or disappears. |
+
+Current profile evidence is retained in the catalogue fields `profile_payload_json`, `profile_hash`, `watermark_column`, `watermark_value`, `row_count`, `profile_status`, `stability_status`, and run/profile identifiers. Runtime result rows include `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, expected and actual JSON, a result payload, and `created_at`.
 
 ## DQ guardrails
 
@@ -117,8 +118,8 @@ After guardrails run, FabricOps writes metadata evidence that describes what was
 
 Use these settings independently so each guardrail has a clear purpose:
 
-- Use `append` when old rows or history should remain.
-- Use `overwrite` when the table is intentionally rebuilt.
+- Use `static_data` when the full table should remain stable.
+- Use `changing_data` when new watermark groups may arrive but prior groups should remain stable.
 - Use `skip` only when this profile behavior guardrail should be disabled.
 - Configure freshness separately using `freshness_*` fields.
 - Use `schema_preset` separately for schema strictness.

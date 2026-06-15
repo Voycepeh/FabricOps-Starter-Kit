@@ -12,6 +12,12 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Keep AI in the loop and optimize for junior-friendly handover.
 - Prefer small, focused PRs over broad restructures.
 - Prefer updating existing files/modules; add new files only when clearly justified.
+- Do not add backwards-compatibility aliases, legacy parameter names, or
+  transitional behavior unless the PR explicitly asks for migration support.
+  Prefer clean APIs and update notebooks/docs/tests to the new contract.
+  When a PR intentionally replaces a model, remove old metadata fields and
+  docs language too; do not preserve old names as compatibility columns unless
+  explicitly requested.
 
 ## Public safety and positioning
 
@@ -80,6 +86,19 @@ For new/modified public APIs in `src/fabricops_kit/` (public functions/classes/d
 - Internal-only modules should not appear as public modules unless clearly labeled internal-only.
 - Deprecated callables must not be promoted as the recommended path when a replacement exists.
 - New public callables must be added to `__all__`, have useful NumPy-style docstrings, and appear in generated reference docs.
+
+### Ruff docstring linting
+
+The active `pyproject.toml` Ruff configuration selects Ruff `D` docstring rules
+globally. This is a repository lint rule, not personal preference.
+
+- New or modified public functions need complete NumPy-style docstrings.
+- When a `Parameters` section is present, every parameter in the function
+  signature must be documented.
+- Multiline docstring sections need blank lines between sections and after the
+  final section body.
+- Tests are linted too, so new public test functions need concise docstrings
+  unless the Ruff configuration is intentionally changed.
 
 
 Compact NumPy-style example:

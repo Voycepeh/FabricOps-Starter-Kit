@@ -218,7 +218,7 @@ def test_enforce_profile_behavior_reference_uses_distinct_blocks_and_responsive_
     assert "dataframe=df" in example
     assert 'dataset_name="sales_orders"' in example
     assert 'table_name="orders_raw"' in example
-    assert 'load_behavior="append"' in example
+    assert 'profile_mode="changing_data"' in example
     assert '<table class="reference-function-table">' not in _section_text(text, "Implementation details")
     for area in (
         "Metadata loading",
@@ -483,11 +483,11 @@ def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None
     assert "can_continue" in entry["glossary_terms"]
     assert "## Glossary" in text
     assert "<summary>Glossary terms</summary>" in text
-    assert "**Profile behavior:** The expected way a table is loaded." in text
+    assert "**Profile behavior:** The expected way a table profile should behave over time." in text
     assert "**can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running." in text
     assert "See the [full glossary](../../../reference/glossary/)" in text
-    assert "previously approved as append-only" in text
-    assert "overwrite could remove existing history" in text
+    assert "full-table static data changes unexpectedly" in text
+    assert "previous watermark group changes or disappears" in text
     assert "If can_continue is false, review whether the behavior change is intentional before writing the table." in text
     assert "The part of the pipeline being checked, such as source or target." in text
 

@@ -309,10 +309,10 @@ def run_table_guardrails(
     table_configs : list of dict
         Source or target table configs. Each config must contain ``key``,
         ``df``, and ``expected_schema``. Optional keys such as
-        ``dataset_name``, ``stage``, ``schema_preset``, ``load_behavior``,
-        ``watermark_column``,
-        ``dq_preset``, ``distribution_columns``, and ``exclude_columns``
-        control the guardrail behavior.
+        ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``,
+        ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``,
+        ``distribution_columns``, and ``exclude_columns`` control the guardrail
+        behavior.
     config : Any
         FabricOps framework configuration from ``00_env_config``.
     env : str
@@ -393,13 +393,18 @@ def run_table_guardrails(
             table_name,
             stage=stage,
             run_id=run_id,
-            load_behavior=table_config.get("load_behavior", "append"),
+            profile_mode=table_config.get("profile_mode"),
             watermark_column=table_config.get("watermark_column"),
+            severity=table_config.get("profile_behavior_severity", table_config.get("severity", "blocking")),
+            rule_key=table_config.get("profile_behavior_rule_key", "profile_behavior_default"),
             exclude_columns=table_config.get("exclude_columns"),
             exclude_run_id=run_id,
             config=config,
             env=env,
             current_profile=profiles[table_key],
+            write_results=table_config.get("write_profile_behavior_results", True),
+            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL_RULES"),
+            rules_df=table_config.get("profile_behavior_rules_df"),
         )
 
         if table_config.get("dq_preset", "approved_rules") == "skip":
@@ -539,8 +544,26 @@ def write_catalogue_evidence(
         freshness_result = dict((freshness_results or {}).get(name) or {})
         schema_result = dict((schema_results or {}).get(name) or {})
         dq_fields = _dq_summary_fields((dq_results or {}).get(name))
-        evidence = _canonical_catalogue_profile_df(profile_df)
+        base_evidence = _canonical_catalogue_profile_df(profile_df)
         metadata_table_key = _build_metadata_table_key(env, dataset_name, table_name)
+        profile_evidence_rows = list(stability_result.get("profile_evidence_rows") or [])
+        if not profile_evidence_rows:
+            profile_evidence_rows = [
+                {
+                    "watermark_column": str(stability_result.get("watermark_column", definition.get("watermark_column", ""))),
+                    "watermark_value": str(
+                        stability_result.get(
+                            "watermark_value",
+                            "__FULL_TABLE__"
+                            if str(stability_result.get("profile_mode", "")) == "static_data"
+                            else "",
+                        )
+                    ),
+                    "profile_payload_json": str(stability_result.get("profile_payload_json", "")),
+                    "profile_hash": str(stability_result.get("profile_hash", "")),
+                    "row_count": stability_result.get("row_count"),
+                }
+            ]
         additions = {
             "metadata_table_key": metadata_table_key,
             "environment_name": env,
@@ -553,9 +576,9 @@ def write_catalogue_evidence(
             "profile_stage": stage,
             "profile_status": "success",
             "baseline_status": str(stability_result.get("baseline_status", stability_result.get("status", ""))),
-            "source_data_change_check": str(definition.get("load_behavior", "")) if stage == "source" else "",
-            "target_data_change_check": str(definition.get("load_behavior", "")) if stage == "target" else "",
-            "profile_baseline_mode": str(stability_result.get("load_behavior", "")),
+            "source_data_change_check": str(definition.get("profile_mode", "")) if stage == "source" else "",
+            "target_data_change_check": str(definition.get("profile_mode", "")) if stage == "target" else "",
+            "profile_baseline_mode": str(stability_result.get("profile_mode", "")),
             "profiled_at": _now_iso(),
             "agreement_id": agreement_id,
             "contract_version": agreement_contract_version,
@@ -565,8 +588,8 @@ def write_catalogue_evidence(
             "source_schema_check": str(definition.get("schema_preset", "")) if stage == "source" else "",
             "target_schema_check": str(definition.get("schema_preset", "")) if stage == "target" else "",
             "stability_check_enabled": bool(stability_result.get("stability_check_enabled", False)),
-            "load_behavior": str(stability_result.get("load_behavior", definition.get("load_behavior", ""))),
-            "watermark_column": str(stability_result.get("watermark_column", definition.get("watermark_column", ""))),
+            "profile_mode": str(stability_result.get("profile_mode", definition.get("profile_mode", ""))),
+            "guardrail_type": "profile_behavior" if stability_result else "",
             "freshness_column": str(freshness_result.get("freshness_column", definition.get("freshness_column", ""))),
             "freshness_max_lag_days": str(freshness_result.get("freshness_max_lag_days", definition.get("freshness_max_lag_days", ""))),
             "freshness_status": str(freshness_result.get("freshness_status", freshness_result.get("status", ""))),
@@ -581,11 +604,22 @@ def write_catalogue_evidence(
             **dq_fields,
             **audit,
         }
-        for column, value in additions.items():
-            evidence = evidence.withColumn(column, F.lit(value))
-        evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
-        evidence = _normalize_catalogue_evidence_types(evidence)
-        write_lakehouse_table(evidence, config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
+        for profile_evidence in profile_evidence_rows:
+            evidence = base_evidence
+            group_additions = {
+                **additions,
+                "watermark_column": str(profile_evidence.get("watermark_column", "")),
+                "watermark_value": str(profile_evidence.get("watermark_value", "")),
+                "profile_payload_json": str(profile_evidence.get("profile_payload_json", "")),
+                "profile_hash": str(profile_evidence.get("profile_hash", "")),
+            }
+            if profile_evidence.get("row_count") not in (None, ""):
+                group_additions["row_count"] = profile_evidence.get("row_count")
+            for column, value in group_additions.items():
+                evidence = evidence.withColumn(column, F.lit(value))
+            evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
+            evidence = _normalize_catalogue_evidence_types(evidence)
+            write_lakehouse_table(evidence, config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
         statuses[name] = "written"
     return statuses
 

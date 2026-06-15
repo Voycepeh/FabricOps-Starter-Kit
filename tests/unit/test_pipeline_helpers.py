@@ -98,7 +98,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
         ],
         {
             "schema_preset": "allow_new_columns",
-            "load_behavior": "append",
+            "profile_mode": "changing_data",
         },
         table_role="source",
     )
@@ -106,7 +106,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
     assert enriched == [
         {
             "schema_preset": "allow_new_columns",
-            "load_behavior": "append",
+            "profile_mode": "changing_data",
             "key": "source_01",
             "df": source_df,
             "layer": "source",
@@ -421,6 +421,66 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
 
 
 
+def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypatch):
+    """Verify profile behavior config uses clean profile_mode values only."""
+    stability_calls = []
+
+    monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline, "validate_schema", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
+
+    def fake_stability(*args, **kwargs):
+        stability_calls.append(kwargs)
+        return {"status": "passed", "can_continue": True}
+
+    monkeypatch.setattr(pipeline, "enforce_profile_behavior", fake_stability)
+    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
+
+    table_configs = [
+        {
+            "key": "default_new_model",
+            "df": "df-default",
+            "table_name": "orders_default",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "dq_preset": "skip",
+        },
+        {
+            "key": "static_data",
+            "df": "df-static",
+            "table_name": "orders_static",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "profile_mode": "static_data",
+            "dq_preset": "skip",
+        },
+        {
+            "key": "changing_data",
+            "df": "df-changing",
+            "table_name": "orders_changing",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "profile_mode": "changing_data",
+            "watermark_column": "business_date",
+            "dq_preset": "skip",
+        },
+    ]
+
+    pipeline.run_table_guardrails(
+        table_configs,
+        config={},
+        env="dev",
+        run_id="run-1",
+        spark_session="spark",
+    )
+
+    assert "load_behavior" not in stability_calls[0]
+    assert stability_calls[0]["profile_mode"] is None
+    assert stability_calls[1]["profile_mode"] == "static_data"
+    assert stability_calls[2]["profile_mode"] == "changing_data"
+    assert stability_calls[2]["watermark_column"] == "business_date"
+
+
 def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monkeypatch):
     """Verify run table guardrails stop on failure delegates to standard stopper."""
     stopped = []
@@ -510,91 +570,6 @@ def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):
     assert stale_warning["can_continue"] is True
 
 
-def test_profile_behavior_guardrail_append_overwrite_and_skip_modes(spark_session):
-    """Verify profile behavior guardrail append overwrite and skip modes."""
-    from fabricops_kit.guardrails import enforce_profile_behavior
-
-    current_profile = [
-        {
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "profile_stage": "source",
-            "column_name": "business_date",
-            "row_count": 5,
-            "min_value": "2026-06-10",
-            "max_value": "2026-06-12",
-        }
-    ]
-    catalogue_profile = [
-        {
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "profile_stage": "source",
-            "load_behavior": "append",
-            "stability_status": "passed",
-            "profile_status": "success",
-            "profile_run_id": "baseline-run",
-            "profiled_at": "2026-06-13T00:00:00Z",
-            "column_name": "business_date",
-            "row_count": 10,
-            "min_value": "2026-06-01",
-            "max_value": "2026-06-14",
-        }
-    ]
-    df = spark_session.createDataFrame([(1, "2026-06-12")], "id int, business_date string")
-
-    append = enforce_profile_behavior(
-        spark_session,
-        df,
-        "METADATA_DATA_CATALOGUE",
-        "sales",
-        "orders",
-        stage="source",
-        run_id="current-run",
-        load_behavior="append",
-        watermark_column="business_date",
-        catalogue_df=catalogue_profile,
-        current_profile=current_profile,
-    )
-    assert append["status"] == "failed"
-    assert append["can_continue"] is False
-    assert "append_row_count_must_not_decrease" in append["stability_difference_summary"]
-
-    overwrite = enforce_profile_behavior(
-        spark_session,
-        df,
-        "METADATA_DATA_CATALOGUE",
-        "sales",
-        "orders",
-        stage="source",
-        run_id="current-run",
-        load_behavior="overwrite",
-        watermark_column="business_date",
-        catalogue_df=catalogue_profile,
-        current_profile=current_profile,
-    )
-    assert overwrite["status"] == "passed"
-    assert overwrite["can_continue"] is True
-    assert "accepted current profile" in overwrite["message"]
-
-    skipped = enforce_profile_behavior(
-        spark_session,
-        df,
-        "METADATA_DATA_CATALOGUE",
-        "sales",
-        "orders",
-        stage="source",
-        run_id="current-run",
-        load_behavior="skip",
-        watermark_column="business_date",
-        catalogue_df=catalogue_profile,
-        current_profile=current_profile,
-    )
-    assert skipped["status"] == "skipped"
-    assert skipped["can_continue"] is True
-    assert skipped["stability_check_enabled"] is False
-
-
 def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or_dq(monkeypatch, spark_session):
     """Verify run table guardrails skip profile behavior only not schema freshness or dq."""
     df = spark_session.createDataFrame([("not-an-int", "2026-06-01")], "id string, business_date string")
@@ -655,7 +630,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
                 "freshness_column": "business_date",
                 "freshness_max_lag_days": 1,
                 "freshness_severity": "blocking",
-                "load_behavior": "skip",
+                "profile_mode": "skip",
                 "dq_preset": "approved_rules",
             }
         ],
@@ -702,7 +677,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
                 "freshness_column": "business_date",
                 "freshness_max_lag_days": 10000,
                 "freshness_severity": "blocking",
-                "load_behavior": "append",
+                "profile_mode": "changing_data",
                 "dq_preset": "skip",
             }
         ],
