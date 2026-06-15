@@ -344,7 +344,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         calls.append(("stability", args[4], kwargs.get("current_profile")))
         return {"status": "passed", "can_continue": True}
 
-    def fake_dq(dataframe, config, env, dataset_name, table_name, *, spark_session=None):
+    def fake_dq(dataframe, config, env, dataset_name, table_name, **kwargs):
         calls.append(("dq", table_name))
         result = {"status": "passed", "can_continue": True, "checks": []}
         if table_name == "orders_good":
@@ -420,6 +420,45 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     assert catalogue_calls[0][2]["freshness_results"] == result["freshness_results"]
 
 
+
+
+def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch):
+    """Verify run table guardrails writes runtime outcomes to results metadata."""
+    result_writes = []
+
+    class Spark:
+        def createDataFrame(self, rows):
+            return rows
+
+    monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline, "validate_schema", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "enforce_dq_rules", lambda *args, **kwargs: {"status": "passed", "can_continue": True, "checks": []})
+    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+
+    def fake_result_writer(**kwargs):
+        result_writes.append(kwargs)
+
+    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", fake_result_writer)
+
+    pipeline.run_table_guardrails(
+        [{
+            "key": "orders",
+            "df": "df",
+            "table_name": "orders",
+            "stage": "source",
+            "expected_schema": {"id": "bigint"},
+            "dq_preset": "approved_rules",
+        }],
+        config={},
+        env="dev",
+        run_id="run-1",
+        spark_session=Spark(),
+    )
+
+    assert [write["guardrail_type"] for write in result_writes] == ["schema", "freshness", "dq"]
+    assert {write["run_id"] for write in result_writes} == {"run-1"}
 
 def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypatch):
     """Verify profile behavior config uses clean profile_mode values only."""
@@ -616,6 +655,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
         lambda *args, **kwargs: {"status": "failed", "can_continue": False, "checks": [{"rule_id": "id_required", "status": "failed"}]},
     )
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
 
     result = pipeline.run_table_guardrails(
         [
@@ -659,6 +699,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
     )
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
 
     def fail_if_called(*args, **kwargs):
         raise AssertionError("dq_preset='skip' should not call enforce_dq_rules")

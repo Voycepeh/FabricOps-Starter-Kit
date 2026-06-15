@@ -88,7 +88,7 @@ This demo is optional and is not part of the mandatory first-run setup. Use it w
 | Schema guardrail | `smoke_src_orders_schema_drift` | Missing, extra, or changed columns are detected. |
 | DQ guardrail | `smoke_src_orders_dq_issue` | Invalid records trigger DQ warning or failure. |
 | Freshness guardrail | `smoke_src_orders_stale` | Stale source data is detected. |
-| Load behaviour | `smoke_src_orders_reload_a` / `smoke_src_orders_reload_b` | Append versus overwrite/reload behaviour is visible. |
+| Profile behavior | `smoke_src_orders_reload_a` / `smoke_src_orders_reload_b` | Static versus changing profile modes are visible. |
 
 All generated demo assets are prefixed with `smoke_`, and the scenario generator is safe to rerun. `example_pipeline_smoke_test.ipynb` only generates scenario data; the actual pipeline behaviour is demonstrated by `02_pipeline.ipynb`. For isolated DQ rule checks, use [`example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb).
 

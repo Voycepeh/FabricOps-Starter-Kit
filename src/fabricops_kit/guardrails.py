@@ -3,7 +3,7 @@
 Use :func:`validate_schema`, :func:`enforce_freshness`,
 :func:`enforce_profile_behavior`, and :func:`stop_if_failed` in production
 pipeline notebooks. FabricOps enforces technical data-contract expectations
-with simple freshness and load behavior choices.
+with simple freshness and profile behavior choices.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import json
 import re
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 
 _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
@@ -644,8 +645,10 @@ def enforce_profile_behavior(
         Spark DataFrame being checked.
     metadata_table : str
         Metadata catalogue table, normally ``METADATA_DATA_CATALOGUE``.
-    dataset_name, table_name : str
-        Dataset and table identifiers used for rule and baseline lookup.
+    dataset_name : str
+        Dataset identifier used for rule and baseline lookup.
+    table_name : str
+        Table identifier used for rule and baseline lookup.
     stage : str
         Pipeline stage used in returned evidence.
     run_id : str
@@ -658,24 +661,33 @@ def enforce_profile_behavior(
     severity : {"blocking", "warning"}, default="blocking"
         Blocking failures stop continuation; warning failures report but allow continuation.
     rule_key : str, default="profile_behavior_default"
-        Rule identifier written to guardrail result evidence when no approved rule row supplies one.
+        Rule identifier written to guardrail result evidence when no approved
+        rule row supplies one.
     exclude_columns : list-like, optional
-        Business or technical columns to exclude from generated profile evidence.
+        Business or technical columns to exclude from generated profile
+        evidence.
     exclude_run_id : str, optional
-        Run identifier to exclude from previous catalogue baseline lookup. Defaults to ``run_id``.
-    config, env : object, str, optional
-        Metadata route from ``00_env_config`` used to read catalogue evidence and
-        write ``METADATA_GUARDRAIL_RESULTS`` when available.
+        Run identifier to exclude from previous catalogue baseline lookup.
+        Defaults to ``run_id``.
+    config : object, optional
+        Runtime configuration from ``00_env_config`` used to read metadata and
+        write result evidence when paired with ``env``.
+    env : str, optional
+        Environment key used with ``config`` for configured metadata routing.
     catalogue_df : DataFrame or iterable of mappings, optional
         Preloaded ``METADATA_DATA_CATALOGUE`` evidence.
     current_profile : DataFrame or iterable of mappings, optional
         Current profile evidence for static mode.
     write_results : bool, default=True
-        Whether to append runtime outcome rows to ``METADATA_GUARDRAIL_RESULTS`` when ``config`` and ``env`` are supplied.
+        Whether to append runtime outcome rows to
+        ``METADATA_GUARDRAIL_RESULTS`` when ``config`` and ``env`` are
+        supplied.
     rules_table : str, default="METADATA_GUARDRAIL_RULES"
-        Metadata table used to load approved profile behavior rules.
+        Metadata table used to load approved profile behavior rules when
+        ``rules_df`` is not supplied.
     rules_df : DataFrame or iterable of mappings, optional
-        Preloaded guardrail rules. When supplied, no rules-table read is performed.
+        Preloaded guardrail rules. When supplied, no rules-table read is
+        performed.
 
     Returns
     -------
@@ -691,6 +703,7 @@ def enforce_profile_behavior(
     should be reviewed in governance or handled by superseding/resetting the
     relevant guardrail rule.
 
+
     """
     if rules_df is None and config is not None and env is not None:
         from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table
@@ -705,7 +718,12 @@ def enforce_profile_behavior(
         rule_key = _string_value(_catalogue_value(selected_rule, "rule_key", "rule_id")) or rule_key
         severity = _catalogue_value(selected_rule, "severity") or severity
         profile_mode = profile_mode or _catalogue_value(selected_rule, "rule_type", "profile_mode")
-        watermark_column = watermark_column or _catalogue_value(selected_rule, "watermark_column", "column_name")
+        rule_parameters = _catalogue_value(selected_rule, "rule_parameters_json") or "{}"
+        try:
+            rule_parameters = json.loads(rule_parameters) if isinstance(rule_parameters, str) else dict(rule_parameters or {})
+        except Exception:
+            rule_parameters = {}
+        watermark_column = watermark_column or rule_parameters.get("watermark_column") or _catalogue_value(selected_rule, "watermark_column", "column_name")
 
     mode = str(profile_mode or "static_data").lower().strip()
     normalized_severity = str(severity or "blocking").lower().strip()
@@ -812,7 +830,7 @@ def enforce_profile_behavior(
         try:
             from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
             from pyspark.sql import Row
-            result_row = Row(run_id=run_id, rule_key=rule_key, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, guardrail_type="profile_behavior", rule_type=mode, status=status, can_continue=can_continue, severity=normalized_severity, reason=message, expected_value_json=result["expected_value_json"], actual_value_json=result["actual_value_json"], result_payload_json=result["result_payload_json"], created_at=datetime.utcnow().isoformat() + "Z")
+            result_row = Row(result_id=str(uuid4()), run_id=run_id, rule_key=rule_key, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, column_name="", guardrail_type="profile_behavior", rule_type=mode, status=status, can_continue=can_continue, severity=normalized_severity, reason=message, expected_value_json=result["expected_value_json"], actual_value_json=result["actual_value_json"], result_payload_json=result["result_payload_json"], created_at=datetime.utcnow().isoformat() + "Z")
             write_lakehouse_table(spark.createDataFrame([result_row]), config, env, "metadata", "METADATA_GUARDRAIL_RESULTS", schema=_configured_lakehouse_schema(config, env, "metadata"), mode="append")
         except Exception as exc:
             if not _is_missing_table_error(exc):

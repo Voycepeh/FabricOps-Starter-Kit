@@ -12,6 +12,16 @@ Simple definitions for repeated FabricOps terms used across generated callable r
 
 **Related terms:** `baseline profile`, `catalogue evidence`, `metadata lakehouse`
 
+## append
+
+**Plain language:** Add new rows to an existing target without replacing existing rows.
+
+**Technical:** A physical Spark write mode, not a FabricOps profile behavior mode.
+
+**Example:** Use append as a write mode when new pipeline output should be added to the target table.
+
+**Related terms:** `overwrite`, `profile behavior`
+
 ## baseline profile
 
 **Plain language:** The previous approved profile used as the comparison point.
@@ -82,9 +92,19 @@ Simple definitions for repeated FabricOps terms used across generated callable r
 
 **Related terms:** `guardrail`, `stage`
 
+## overwrite
+
+**Plain language:** Replace existing target data during a physical write.
+
+**Technical:** A physical Spark write mode, not a FabricOps profile behavior mode.
+
+**Example:** Use overwrite as a write mode when the target table should be replaced by the latest output.
+
+**Related terms:** `append`, `profile behavior`
+
 ## profile behavior
 
-**Plain language:** The expected way a table is loaded.
+**Plain language:** The expected way a table profile should behave over time.
 
 **Technical:** The approved profile mode used by guardrail checks: static_data, changing_data, or skip.
 

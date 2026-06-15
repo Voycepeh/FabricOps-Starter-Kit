@@ -94,7 +94,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td>Callable</td>
       <td>function</td>
       <td>Enrich profile rows with guardrail context and write catalogue evidence.</td>
-      <td><code>_canonical_catalogue_profile_df</code> (internal), <code>_definition_name</code> (internal), <code>_dq_summary_fields</code> (internal), <code>_normalize_catalogue_evidence_types</code> (internal), <code>_now_iso</code> (internal), <code>_runtime_audit_fields</code> (internal)</td>
+      <td><code>_canonical_catalogue_profile_df</code> (internal), <code>_definition_name</code> (internal), <code>_normalize_catalogue_evidence_types</code> (internal), <code>_now_iso</code> (internal), <code>_runtime_audit_fields</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
@@ -139,7 +139,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_canonical_catalogue_profile_df</code></span>, <span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_dq_summary_fields</code></span>, <span class="reference-chip"><code>_normalize_catalogue_evidence_types</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
+<span class="reference-chip"><code>_canonical_catalogue_profile_df</code></span>, <span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_normalize_catalogue_evidence_types</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
@@ -186,7 +186,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td><code>_dq_summary_fields</code></td>
-      <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_guardrail_can_continue</code></td>
@@ -288,4 +288,4 @@ None.
 <a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>, <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>, <a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>
+<a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

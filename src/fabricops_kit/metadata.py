@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import uuid
 from datetime import datetime
 from typing import Any
 from .config import _current_audit_timestamp, _get_store
@@ -83,6 +84,56 @@ def _build_metadata_table_key(environment_name, dataset_name, table_name) -> str
 def _build_metadata_column_key(environment_name, dataset_name, table_name, column_name) -> str:
     return _stable_metadata_key(environment_name, dataset_name, table_name, column_name)
 
+
+
+def _write_guardrail_result_row(
+    *,
+    spark_session: Any,
+    config: Any,
+    env: str,
+    run_id: str,
+    dataset_name: str,
+    table_name: str,
+    guardrail_type: str,
+    rule_type: str,
+    result: dict[str, Any],
+    rule_key: str = "",
+    column_name: str = "",
+    results_table: str = "METADATA_GUARDRAIL_RESULTS",
+) -> None:
+    """Append one runtime guardrail outcome to ``METADATA_GUARDRAIL_RESULTS``."""
+    if spark_session is None or not hasattr(spark_session, "createDataFrame"):
+        return
+    audit = _build_runtime_audit_fields(config=config, env=env)
+    row = {
+        "result_id": str(uuid.uuid4()),
+        "run_id": str(run_id or ""),
+        "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
+        "environment_name": env,
+        "dataset_name": dataset_name,
+        "table_name": table_name,
+        "column_name": column_name,
+        "guardrail_type": guardrail_type,
+        "rule_type": rule_type,
+        "status": str(result.get("status") or "not_run"),
+        "can_continue": bool(result.get("can_continue", True)),
+        "severity": str(result.get("severity") or "blocking"),
+        "reason": str(result.get("message") or result.get("reason") or ""),
+        "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
+        "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
+        "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
+        "created_at": _now_utc_iso(config),
+        **audit,
+    }
+    write_lakehouse_table(
+        spark_session.createDataFrame([row]),
+        config,
+        env,
+        "metadata",
+        results_table,
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        mode="append",
+    )
 
 def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
     return _stable_metadata_key(environment_name, dataset_name, table_name, rule_id)

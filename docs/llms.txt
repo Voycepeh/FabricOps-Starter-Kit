@@ -15,7 +15,7 @@ Use this file as a concise navigation map for LLMs, coding agents, and documenta
 
 - [How FabricOps Works](how-fabricops-works.md): Overview of the governed Fabric notebook operating model.
 - [Metadata Tables](how-fabricops-works/metadata-tables.md): Metadata table responsibilities and governance evidence model.
-- [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md): Runtime guardrails for schemas, freshness, DQ enforcement, and load behavior.
+- [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md): Runtime guardrails for schemas, freshness, DQ enforcement, and profile behavior.
 - [Metadata Dashboard](how-fabricops-works/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
 
 ## Notebook flow
