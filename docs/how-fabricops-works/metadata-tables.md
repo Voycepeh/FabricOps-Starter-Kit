@@ -1,466 +1,401 @@
 # Metadata tables
 
-FabricOps metadata tables are governed evidence tables stored in the configured `metadata` target from `00_env_config`. Workflow notebooks should read and write them through the shared Lakehouse IO helpers, not through an attached/default Lakehouse.
+FabricOps metadata tables are governed evidence tables stored in the configured `metadata` target from `00_env_config`. The active metadata table registry is prepared by [setup_metadata_tables](../api/reference/setup_metadata_tables/), which calls `_get_metadata_table_schema_registry` and then creates or validates every registered table through the configured metadata route. Setup creates or validates empty schemas; it does not populate business rows.
 
-Run the optional `setup_metadata_tables` block in `00_env_config` once per environment, and rerun it only after active metadata schema changes. Setup creates or validates active metadata tables through the configured metadata target, supports classic Lakehouse paths and schema-enabled Lakehouse paths, validates missing columns, and warns about legacy nested metadata Delta folders such as `Tables/<metadata_table>/Unidentified/_delta_log`.
+The setup registry combines agreement tables from `DataAgreementConfig`, notebook registration fields from `NOTEBOOK_REGISTRY_FIELDS`, and governance tables from `_get_governance_metadata_schemas`. Agreement and notebook registry tables are all `string` columns because `_string_metadata_schema` wraps every listed field in `StringType`; governance tables use the explicit Spark types declared by `_get_governance_metadata_schemas`.
 
-`METADATA_DATA_ACCESS` is separately collected offline/manual governance metadata. It is created by setup when present in the active schema registry so teams have an empty optional access-governance table available, but it is not currently written by standard starter-kit notebooks.
+> **Maintenance note:** When metadata schemas change, update this page from the same setup registry used by `setup_metadata_tables`. Do not document optional or planned tables unless they are part of `_get_metadata_table_schema_registry`.
 
-## Runtime routing
+## Conceptual overview
 
-Classic and schema-enabled Lakehouses are both supported:
+The metadata model still has four simple groups: agreement and context, observed catalogue/profile evidence, governance rules, and runtime execution evidence. This page is primarily the physical table dictionary for the active setup registry, so each section below lists the columns that setup creates or validates.
 
-- **Classic Lakehouses:** metadata tables are written under `Tables/<table_name>` when no metadata schema is configured.
-- **Schema-enabled Lakehouses:** metadata tables are written under `Tables/<schema>/<table_name>` when the configured metadata target has a schema such as `dbo`.
+## Summary table
 
-Use configured metadata routing for metadata operations:
-
-```python
-read_lakehouse_table(CONFIG, env_name, "metadata", "<metadata_table>")
-write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode="append")
-```
-
-## Architecture
-
-![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
-
-The architecture image is the high-level metadata model visual. It groups tables into **Agreement & Context**, **Pipeline & Execution**, **Governance & Rules**, and separately collected offline/manual **Data Access** metadata. The image intentionally shows simplified table responsibilities. The implemented fields below are the source-aligned physical columns created or written by the current code.
-
-## Active metadata table map
-
-| Metadata table | Main writer function/widget | Notebook | Contains |
+| Metadata table | Purpose | Main writer or producer | Main consumer |
 | --- | --- | --- | --- |
-| `METADATA_DATA_STEWARD` | `save_data_steward`, `widget_render_data_steward` | `01_agreement` | Steward identities and active periods. |
-| `METADATA_DATA_AGREEMENT` | `save_data_agreement`, `widget_render_data_agreement` | `01_agreement` | Versioned agreements and approved usage context. |
-| `METADATA_DATA_AGREEMENT_EVIDENCE` | `save_agreement_evidence`, `widget_render_agreement_evidence` | `01_agreement` | Supporting agreement evidence file references. |
-| `METADATA_NOTEBOOK_REGISTRY` | `_register_current_notebook`, `widget_select_agreement` | `02_pipeline`, optional `99_explore` | Notebook-to-agreement registrations. |
-| `METADATA_DATA_CATALOGUE` | `write_catalogue_evidence`, `run_table_guardrails` | `02_pipeline` | Observed table and column profile evidence plus table governance policy fields. |
-| `METADATA_DATA_LINEAGE_TABLE` | `write_pipeline_lineage` | `02_pipeline` | Source-to-target lineage rows observed for a specific pipeline run. |
-| `METADATA_PIPELINE_RUNS` | `write_pipeline_run_summary` | `02_pipeline` | One runtime summary row per pipeline run. |
-| `METADATA_ENRICHMENT_RULES` | `write_enrichment_records`, `widget_enrich_table_metadata`, governance review widgets | `02_pipeline` optional authoring, `03_governance` review | Reviewable enrichment intent for business context, classification, sensitivity, PII, ownership, and usage notes. |
-| `METADATA_GUARDRAIL_RULES` | `write_guardrail_rule_records`, `widget_author_schema_freshness_profile_rules`, `widget_author_dq_rules`, governance review widgets | `02_pipeline` optional authoring, `03_governance` review | Reviewable schema, freshness, profile-behaviour, and DQ rule intent. |
-| `METADATA_GUARDRAIL_RESULTS` | `enforce_table_guardrails`, `_write_guardrail_result_row`, `run_table_guardrails` | `02_pipeline` runtime enforcement | Runtime outcomes for executed guardrail checks. |
-| `METADATA_DATA_ACCESS` | Manual/offline collection; not written by standard notebooks | Optional/manual/offline | Separately collected user, role, permission, purpose, approval, and access-scope context. |
+| `METADATA_DATA_STEWARD` | Steward identities, contacts, roles, active windows, and audit context used by agreements. | `widget_render_data_steward → _create_or_update_data_steward` | Agreement intake |
+| `METADATA_DATA_AGREEMENT` | Versioned business agreement records and approved usage context selected by notebooks. | `widget_render_data_agreement → _create_or_update_data_agreement` | Notebook registration and governance context |
+| `METADATA_DATA_AGREEMENT_EVIDENCE` | File-reference evidence that supports one agreement version. | `widget_render_agreement_evidence → _save_agreement_evidence_records` | Governance readiness |
+| `METADATA_NOTEBOOK_REGISTRY` | Notebook-to-agreement registration events used to prove which notebook is operating under which agreement. | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | Pipeline/governance context |
+| `METADATA_DATA_CATALOGUE` | Observed physical/profile evidence for tables and columns, plus table governance policy context. | `run_table_guardrails → write_catalogue_evidence` | Governance selectors and readiness checks |
+| `METADATA_ENRICHMENT_RULES` | Reviewed enrichment intent for business meaning, ownership, classification, sensitivity, and usage context. | `record_table_governance → build_enrichment_rule_records` | Governance review and handover |
+| `METADATA_GUARDRAIL_RULES` | Approved schema, freshness, profile behavior, and DQ rule intent for enforcement. | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | Pipeline enforcement |
+| `METADATA_GUARDRAIL_RESULTS` | Runtime outcomes from executed guardrail/DQ checks. | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | Readiness checks and runtime evidence review |
+| `METADATA_DATA_LINEAGE_TABLE` | Run-specific source-to-target lineage evidence. | [write_pipeline_lineage](../api/reference/write_pipeline_lineage/) | Readiness checks and handover |
+| `METADATA_PIPELINE_RUNS` | One-row runtime summary for a pipeline execution. | `write_pipeline_run_summary` | Governance readiness |
+| `METADATA_DATA_ACCESS` | Public-safe access context table included in setup; standard notebooks do not currently populate it. | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | Manual/offline access review |
 
-The active table map intentionally excludes planned or removed metadata that is not currently part of setup. `METADATA_GOVERNANCE_REVIEWS` is not an active table; approval history is derived from append-only rows in `METADATA_ENRICHMENT_RULES` and `METADATA_GUARDRAIL_RULES`. For schema, freshness, profile behavior, and DQ evidence flow, see [Pipeline Guardrails](pipeline-guardrails.md).
-
-## Standard runtime audit columns
-
-Most metadata tables include the shared runtime audit columns below. They are generated by the shared runtime audit helper and are listed in each implemented table section only when the code schema applies them to that table.
-
-- `_committed_by`
-- `_committed_at`
-- `_notebook_name`
-- `_workspace_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
-
-## Logical keys
-
-Fabric Delta tables do not enforce primary keys, but FabricOps uses logical keys for joins, latest-record selection, and validation.
-
-| Metadata table | Logical key | Main relationship |
-| --- | --- | --- |
-| `METADATA_DATA_STEWARD` | `steward_id` | Referenced by agreement rows. |
-| `METADATA_DATA_AGREEMENT` | `agreement_id`, `contract_version` | References a steward. |
-| `METADATA_DATA_AGREEMENT_EVIDENCE` | `agreement_id`, `contract_version`, `file_path` | References one agreement version. |
-| `METADATA_NOTEBOOK_REGISTRY` | `registration_id` | Links notebooks to agreement versions. |
-| `METADATA_DATA_CATALOGUE` | `profile_run_id`, `profile_stage`, `metadata_table_key`, `metadata_column_key` | Feeds reviews, profile comparisons, and lineage joins without storing runtime outcomes. |
-| `METADATA_DATA_LINEAGE_TABLE` | `lineage_id` | Records source-to-target lineage observed in one pipeline run; references catalogue source and target identities. |
-| `METADATA_PIPELINE_RUNS` | `run_id` | Parent for run-specific lineage, catalogue evidence, guardrail results, and runtime summary. |
-| `METADATA_ENRICHMENT_RULES` | `enrichment_rule_key`, `enrichment_rule_version`, `_committed_at` | Defines reviewed enrichment intent for a table or column. |
-| `METADATA_GUARDRAIL_RULES` | `rule_key`, `_committed_at` | Defines reviewed expectations for a table or column. |
-| `METADATA_GUARDRAIL_RESULTS` | `result_id` | Records a runtime outcome for a rule, run, table, and optional column. |
-| `METADATA_DATA_ACCESS` | `user_principal`, `table_id`, `granted_date` | Optional/manual/offline access-capture metadata. |
-
-`metadata_table_key` identifies a profiled table. `metadata_column_key` identifies a profiled column within that table; catalogue evidence currently writes it as `metadata_table_key + "::" + column_name`.
-
-## Agreement & Context
+## Physical table dictionary
 
 ### `METADATA_DATA_STEWARD`
 
-Implemented columns:
+Steward identities, contacts, roles, active windows, and audit context used by agreements.
 
-- `steward_id`
-- `steward_name`
-- `steward_role`
-- `contact`
-- `effective_from`
-- `effective_to`
-- `is_active`
-- `custom_fields_json`
-- `_committed_by`
-- `_committed_at`
-- `_notebook_name`
-- `_workspace_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `steward_id` | string | `_generate_steward_id` | identity key |
+| `steward_name` | string | `widget_render_data_steward → _create_or_update_data_steward` | business intake field |
+| `steward_role` | string | `widget_render_data_steward → _create_or_update_data_steward` | business intake field |
+| `contact` | string | `widget_render_data_steward → _create_or_update_data_steward` | business intake field |
+| `effective_from` | string | `widget_render_data_steward → _create_or_update_data_steward` | version tracking |
+| `effective_to` | string | `widget_render_data_steward → _create_or_update_data_steward` | version tracking |
+| `is_active` | string | `widget_render_data_steward → _create_or_update_data_steward` | rule lifecycle |
+| `custom_fields_json` | string | `widget_render_data_steward → _create_or_update_data_steward` | business intake field |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
 ### `METADATA_DATA_AGREEMENT`
 
-Implemented columns:
+Versioned business agreement records and approved usage context selected by notebooks.
 
-- `agreement_id`
-- `contract_version`
-- `agreement_name`
-- `domain`
-- `steward_id`
-- `recipient`
-- `start_date`
-- `expiry_date`
-- `business_purpose`
-- `approved_usage_internal`
-- `approved_usage_external`
-- `approved_usage_research`
-- `custom_fields_json`
-- `_committed_by`
-- `_committed_at`
-- `_notebook_name`
-- `_workspace_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `agreement_id` | string | `_generate_agreement_id` | identity key |
+| `contract_version` | string | `_next_minor_version` | version tracking |
+| `agreement_name` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `domain` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `steward_id` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | identity key |
+| `recipient` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `start_date` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `expiry_date` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `business_purpose` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `approved_usage_internal` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `approved_usage_external` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `approved_usage_research` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `custom_fields_json` | string | `widget_render_data_agreement → _create_or_update_data_agreement` | business intake field |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
 ### `METADATA_DATA_AGREEMENT_EVIDENCE`
 
-Implemented columns:
+File-reference evidence that supports one agreement version.
 
-- `agreement_id`
-- `contract_version`
-- `evidence_type`
-- `file_name`
-- `file_path`
-- `mime_type`
-- `file_size`
-- `uploaded_at`
-- `uploaded_by`
-- `_committed_by`
-- `_committed_at`
-- `_notebook_name`
-- `_workspace_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `agreement_id` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | identity key |
+| `contract_version` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | version tracking |
+| `evidence_type` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | business intake field |
+| `file_name` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | business intake field |
+| `file_path` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | business intake field |
+| `mime_type` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | business intake field |
+| `file_size` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | business intake field |
+| `uploaded_at` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | business intake field |
+| `uploaded_by` | string | `widget_render_agreement_evidence → _save_agreement_evidence_records` | business intake field |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
 ### `METADATA_NOTEBOOK_REGISTRY`
 
-Implemented columns:
+Notebook-to-agreement registration events used to prove which notebook is operating under which agreement.
 
-- `agreement_id`
-- `environment_name`
-- `dataset_name`
-- `table_name`
-- `topic`
-- `pipeline_name`
-- `notebook_type`
-- `workspace_id`
-- `workspace_name`
-- `notebook_id`
-- `notebook_name`
-- `notebook_url`
-- `user_name`
-- `user_id`
-- `registered_at`
-- `registration_id`
-- `agreement_contract_version`
-- `registration_role`
-- `registration_status`
-- `superseded_at`
-- `superseded_by_registration_id`
-
-## Pipeline & Execution
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `agreement_id` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | identity key |
+| `environment_name` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | lineage traceability |
+| `dataset_name` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | lineage traceability |
+| `table_name` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | lineage traceability |
+| `topic` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `pipeline_name` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | lineage traceability |
+| `notebook_type` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `workspace_id` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | identity key |
+| `workspace_name` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `notebook_id` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | identity key |
+| `notebook_name` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `notebook_url` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `user_name` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `user_id` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | identity key |
+| `registered_at` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `registration_id` | string | `_notebook_registration_key` | identity key |
+| `agreement_contract_version` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | version tracking |
+| `registration_role` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `registration_status` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | business intake field |
+| `superseded_at` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | version tracking |
+| `superseded_by_registration_id` | string | `widget_select_agreement(register_notebook=True) → _register_current_notebook` | identity key |
 
 ### `METADATA_DATA_CATALOGUE`
 
-`METADATA_DATA_CATALOGUE` stores observed evidence and selected table governance policy. It does not store enrichment payloads, guardrail rules, or runtime outcomes.
+Observed physical/profile evidence for tables and columns, plus table governance policy context.
 
-Implemented columns:
-
-- `metadata_table_key`
-- `metadata_column_key`
-- `environment_name`
-- `dataset_name`
-- `table_name`
-- `column_name`
-- `layer`
-- `asset_kind`
-- `pipeline_name`
-- `profile_run_id`
-- `profile_stage`
-- `profile_status`
-- `profiled_at`
-- `run_timestamp`
-- `evidence_role`
-- `data_type`
-- `row_count`
-- `null_count`
-- `null_percent`
-- `distinct_count`
-- `distinct_percent`
-- `min_value`
-- `max_value`
-- `distribution_type`
-- `distribution_json`
-- `profile_mode`
-- `watermark_column`
-- `watermark_value`
-- `profile_hash`
-- `profile_payload_json`
-- `governance_mode`
-- `approval_policy`
-- `bypass_allowed`
-- `policy_reason`
-- `policy_updated_by`
-- `policy_updated_at`
-- `agreement_id`
-- `contract_version`
-- `notebook_registry_id`
-- `notebook_id`
-- `_committed_at`
-- `_committed_by`
-- `_workspace_name`
-- `_notebook_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
-
-Schema, freshness, profile-behavior pass/fail, stability, and DQ outcomes are runtime results and belong in `METADATA_GUARDRAIL_RESULTS`, not in the catalogue.
-
-### `METADATA_DATA_LINEAGE_TABLE`
-
-Lineage is run-specific execution evidence. One pipeline run can write many lineage rows. Catalogue keys provide stable source and target references, but the owning event is the pipeline run.
-
-Implemented columns:
-
-- `lineage_id`
-- `dataset_name`
-- `run_id`
-- `source_table`
-- `target_table`
-- `source_table_key`
-- `target_table_key`
-- `transformation_steps_json`
-- `created_at`
-- `_committed_at`
-- `_committed_by`
-- `_workspace_name`
-- `_notebook_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
-
-Relationships:
-
-- `METADATA_PIPELINE_RUNS.run_id` 1 to many `METADATA_DATA_LINEAGE_TABLE.run_id`
-- `METADATA_DATA_LINEAGE_TABLE.source_table_key` references `METADATA_DATA_CATALOGUE.metadata_table_key`
-- `METADATA_DATA_LINEAGE_TABLE.target_table_key` references `METADATA_DATA_CATALOGUE.metadata_table_key`
-
-### `METADATA_PIPELINE_RUNS`
-
-Implemented columns:
-
-- `run_id`
-- `agreement_id`
-- `agreement_contract_version`
-- `notebook_registry_id`
-- `notebook_id`
-- `notebook_type`
-- `pipeline_name`
-- `environment_name`
-- `started_at`
-- `completed_at`
-- `status`
-- `source_count`
-- `target_count`
-- `source_guardrail_status`
-- `target_guardrail_status`
-- `dq_status`
-- `lineage_status`
-- `catalogue_status`
-- `message`
-- `run_summary_json`
-- `created_at`
-
-## Governance & Rules
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `metadata_table_key` | string | `_build_metadata_table_key` | identity key |
+| `metadata_column_key` | string | `_build_metadata_column_key` | identity key |
+| `environment_name` | string | `run_table_guardrails → write_catalogue_evidence` | lineage traceability |
+| `dataset_name` | string | `run_table_guardrails → write_catalogue_evidence` | lineage traceability |
+| `table_name` | string | `run_table_guardrails → write_catalogue_evidence` | lineage traceability |
+| `column_name` | string | `run_table_guardrails → write_catalogue_evidence` | lineage traceability |
+| `layer` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `asset_kind` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `pipeline_name` | string | `run_table_guardrails → write_catalogue_evidence` | lineage traceability |
+| `profile_run_id` | string | `run_table_guardrails → write_catalogue_evidence` | identity key |
+| `profile_stage` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `profile_status` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `profiled_at` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `run_timestamp` | timestamp | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `evidence_role` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `data_type` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `row_count` | long | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `null_count` | long | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `null_percent` | double | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `distinct_count` | long | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `distinct_percent` | double | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `min_value` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `max_value` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `distribution_type` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `distribution_json` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `profile_mode` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `watermark_column` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `watermark_value` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `profile_hash` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `profile_payload_json` | string | `run_table_guardrails → write_catalogue_evidence` | schema/profile evidence |
+| `governance_mode` | string | `run_table_guardrails → write_catalogue_evidence` | governance policy |
+| `approval_policy` | string | `run_table_guardrails → write_catalogue_evidence` | governance policy |
+| `bypass_allowed` | boolean | `run_table_guardrails → write_catalogue_evidence` | governance policy |
+| `policy_reason` | string | `run_table_guardrails → write_catalogue_evidence` | governance policy |
+| `policy_updated_by` | string | `run_table_guardrails → write_catalogue_evidence` | governance policy |
+| `policy_updated_at` | string | `run_table_guardrails → write_catalogue_evidence` | governance policy |
+| `agreement_id` | string | `run_table_guardrails → write_catalogue_evidence` | identity key |
+| `contract_version` | string | `run_table_guardrails → write_catalogue_evidence` | version tracking |
+| `notebook_registry_id` | string | `run_table_guardrails → write_catalogue_evidence` | identity key |
+| `notebook_id` | string | `run_table_guardrails → write_catalogue_evidence` | identity key |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
 ### `METADATA_ENRICHMENT_RULES`
 
-Implemented columns:
+Reviewed enrichment intent for business meaning, ownership, classification, sensitivity, and usage context.
 
-- `enrichment_rule_id`
-- `enrichment_rule_version`
-- `enrichment_rule_key`
-- `metadata_table_key`
-- `metadata_column_key`
-- `table_name`
-- `column_name`
-- `enrichment_scope`
-- `enrichment_type`
-- `enrichment_payload_json`
-- `business_name`
-- `business_description`
-- `business_meaning`
-- `column_description`
-- `classification`
-- `sensitivity_label`
-- `pii_flag`
-- `pii_type`
-- `data_domain`
-- `data_owner`
-- `data_steward`
-- `usage_notes`
-- `quality_notes`
-- `review_status`
-- `is_active`
-- `approval_policy`
-- `governance_mode`
-- `submitted_by`
-- `submitted_at`
-- `reviewed_by`
-- `reviewed_at`
-- `review_decision`
-- `review_comment`
-- `bypass_reason`
-- `requires_post_review`
-- `supersedes_enrichment_rule_id`
-- `effective_from`
-- `effective_to`
-- `created_at`
-- `created_by`
-- `updated_at`
-- `updated_by`
-- `run_id`
-- `notebook_id`
-- `notebook_registry_id`
-- `_committed_at`
-- `_committed_by`
-- `_workspace_name`
-- `_notebook_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `enrichment_rule_id` | string | `record_table_governance → build_enrichment_rule_records` | identity key |
+| `enrichment_rule_version` | string | `record_table_governance → build_enrichment_rule_records` | version tracking |
+| `enrichment_rule_key` | string | `record_table_governance → build_enrichment_rule_records` | identity key |
+| `metadata_table_key` | string | `_build_metadata_table_key` | identity key |
+| `metadata_column_key` | string | `_build_metadata_column_key` | identity key |
+| `table_name` | string | `record_table_governance → build_enrichment_rule_records` | lineage traceability |
+| `column_name` | string | `record_table_governance → build_enrichment_rule_records` | lineage traceability |
+| `enrichment_scope` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `enrichment_type` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `enrichment_payload_json` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `business_name` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `business_description` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `business_meaning` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `column_description` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `classification` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `sensitivity_label` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `pii_flag` | boolean | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `pii_type` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `data_domain` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `data_owner` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `data_steward` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `usage_notes` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `quality_notes` | string | `record_table_governance → build_enrichment_rule_records` | business intake field |
+| `review_status` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `is_active` | boolean | `record_table_governance → build_enrichment_rule_records` | rule lifecycle |
+| `approval_policy` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `governance_mode` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `submitted_by` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `submitted_at` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `reviewed_by` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `reviewed_at` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `review_decision` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `review_comment` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `bypass_reason` | string | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `requires_post_review` | boolean | `record_table_governance → build_enrichment_rule_records` | governance policy |
+| `supersedes_enrichment_rule_id` | string | `record_table_governance → build_enrichment_rule_records` | identity key |
+| `effective_from` | string | `record_table_governance → build_enrichment_rule_records` | version tracking |
+| `effective_to` | string | `record_table_governance → build_enrichment_rule_records` | version tracking |
+| `created_at` | string | `record_table_governance → build_enrichment_rule_records` | lineage traceability |
+| `created_by` | string | `record_table_governance → build_enrichment_rule_records` | runtime audit |
+| `updated_at` | string | `record_table_governance → build_enrichment_rule_records` | runtime audit |
+| `updated_by` | string | `record_table_governance → build_enrichment_rule_records` | runtime audit |
+| `run_id` | string | `record_table_governance → build_enrichment_rule_records` | identity key |
+| `notebook_id` | string | `record_table_governance → build_enrichment_rule_records` | identity key |
+| `notebook_registry_id` | string | `record_table_governance → build_enrichment_rule_records` | identity key |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
 ### `METADATA_GUARDRAIL_RULES`
 
-Implemented columns:
+Approved schema, freshness, profile behavior, and DQ rule intent for enforcement.
 
-- `rule_key`
-- `rule_id`
-- `metadata_column_key`
-- `metadata_table_key`
-- `environment_name`
-- `dataset_name`
-- `table_name`
-- `column_name`
-- `guardrail_type`
-- `rule_type`
-- `rule_parameters_json`
-- `severity`
-- `description`
-- `is_active`
-- `review_status`
-- `author_role`
-- `created_by`
-- `created_at`
-- `approved_by`
-- `approved_at`
-- `ai_suggestion_json`
-- `action_type`
-- `source_notebook_type`
-- `source_notebook_id`
-- `source_workspace_id`
-- `superseded_by_rule_key`
-- `notes`
-- `approval_required`
-- `approval_bypassed`
-- `requires_post_review`
-- `bypass_reason`
-- `bypassed_by`
-- `bypassed_at`
-- `governance_mode`
-- `approval_policy`
-- `submitted_by`
-- `submitted_at`
-- `reviewed_by`
-- `reviewed_at`
-- `review_decision`
-- `review_comment`
-- `supersedes_rule_id`
-- `effective_from`
-- `effective_to`
-- `_committed_at`
-- `_committed_by`
-- `_workspace_name`
-- `_notebook_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `rule_key` | string | `_build_dq_rule_key` | identity key |
+| `rule_id` | string | `_build_dq_rule_key` | identity key |
+| `metadata_column_key` | string | `_build_metadata_column_key` | identity key |
+| `metadata_table_key` | string | `_build_metadata_table_key` | identity key |
+| `environment_name` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | lineage traceability |
+| `dataset_name` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | lineage traceability |
+| `table_name` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | lineage traceability |
+| `column_name` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | lineage traceability |
+| `guardrail_type` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `rule_type` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `rule_parameters_json` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | DQ enforcement parameter |
+| `severity` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | DQ enforcement parameter |
+| `description` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `is_active` | boolean | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `review_status` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `author_role` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `created_by` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | runtime audit |
+| `created_at` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | lineage traceability |
+| `approved_by` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `approved_at` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `ai_suggestion_json` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | runtime audit |
+| `action_type` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `source_notebook_type` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `source_notebook_id` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | identity key |
+| `source_workspace_id` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | identity key |
+| `superseded_by_rule_key` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | identity key |
+| `notes` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | rule lifecycle |
+| `approval_required` | boolean | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `approval_bypassed` | boolean | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `requires_post_review` | boolean | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `bypass_reason` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `bypassed_by` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `bypassed_at` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `governance_mode` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `approval_policy` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `submitted_by` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `submitted_at` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `reviewed_by` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `reviewed_at` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `review_decision` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `review_comment` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | governance policy |
+| `supersedes_rule_id` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | identity key |
+| `effective_from` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | version tracking |
+| `effective_to` | string | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | version tracking |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
 ### `METADATA_GUARDRAIL_RESULTS`
 
-Guardrail results are pipeline execution evidence. One pipeline run can produce many guardrail result rows. Results reference the active guardrail rule used during evaluation and the table/column being evaluated.
+Runtime outcomes from executed guardrail/DQ checks.
 
-Implemented columns:
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `result_id` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | identity key |
+| `run_id` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | identity key |
+| `rule_key` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | identity key |
+| `environment_name` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | lineage traceability |
+| `dataset_name` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | lineage traceability |
+| `table_name` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | lineage traceability |
+| `column_name` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | lineage traceability |
+| `guardrail_type` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | rule lifecycle |
+| `rule_type` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | rule lifecycle |
+| `status` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | runtime result evidence |
+| `can_continue` | boolean | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | runtime result evidence |
+| `severity` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | DQ enforcement parameter |
+| `reason` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | runtime result evidence |
+| `expected_value_json` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | runtime result evidence |
+| `actual_value_json` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | runtime result evidence |
+| `result_payload_json` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | runtime result evidence |
+| `created_at` | string | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | lineage traceability |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
-- `result_id`
-- `run_id`
-- `rule_key`
-- `environment_name`
-- `dataset_name`
-- `table_name`
-- `column_name`
-- `guardrail_type`
-- `rule_type`
-- `status`
-- `can_continue`
-- `severity`
-- `reason`
-- `expected_value_json`
-- `actual_value_json`
-- `result_payload_json`
-- `created_at`
-- `_committed_at`
-- `_committed_by`
-- `_workspace_name`
-- `_notebook_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
+### `METADATA_DATA_LINEAGE_TABLE`
 
-Relationships:
+Run-specific source-to-target lineage evidence.
 
-- `METADATA_PIPELINE_RUNS.run_id` 1 to many `METADATA_GUARDRAIL_RESULTS.run_id`
-- `METADATA_GUARDRAIL_RULES.rule_key` 1 to many `METADATA_GUARDRAIL_RESULTS.rule_key`
-- `METADATA_DATA_CATALOGUE` table/column identity fields provide the table and optional column context for `METADATA_GUARDRAIL_RESULTS`
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `lineage_id` | string | `write_pipeline_lineage` | identity key |
+| `dataset_name` | string | `write_pipeline_lineage` | lineage traceability |
+| `run_id` | string | `write_pipeline_lineage` | identity key |
+| `source_table` | string | `write_pipeline_lineage` | lineage traceability |
+| `target_table` | string | `write_pipeline_lineage` | lineage traceability |
+| `source_table_key` | string | `_build_metadata_table_key` | identity key |
+| `target_table_key` | string | `_build_metadata_table_key` | identity key |
+| `transformation_steps_json` | string | `write_pipeline_lineage` | lineage traceability |
+| `created_at` | string | `write_pipeline_lineage` | lineage traceability |
+| `_committed_at` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_committed_by` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_workspace_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_notebook_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_metadata_lakehouse_name` | string | `_build_runtime_audit_fields` | runtime audit |
+| `_activity_id` | string | `_build_runtime_audit_fields` | runtime audit |
 
-## Separately collected offline/manual Data Access
+### `METADATA_PIPELINE_RUNS`
+
+One-row runtime summary for a pipeline execution.
+
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `run_id` | string | `write_pipeline_run_summary` | identity key |
+| `agreement_id` | string | `write_pipeline_run_summary` | identity key |
+| `agreement_contract_version` | string | `write_pipeline_run_summary` | version tracking |
+| `notebook_registry_id` | string | `write_pipeline_run_summary` | identity key |
+| `notebook_id` | string | `write_pipeline_run_summary` | identity key |
+| `notebook_type` | string | `write_pipeline_run_summary` | business intake field |
+| `pipeline_name` | string | `write_pipeline_run_summary` | lineage traceability |
+| `environment_name` | string | `write_pipeline_run_summary` | lineage traceability |
+| `started_at` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `completed_at` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `status` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `source_count` | long | `write_pipeline_run_summary` | runtime result evidence |
+| `target_count` | long | `write_pipeline_run_summary` | runtime result evidence |
+| `source_guardrail_status` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `target_guardrail_status` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `dq_status` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `lineage_status` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `catalogue_status` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `message` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `run_summary_json` | string | `write_pipeline_run_summary` | runtime result evidence |
+| `created_at` | string | `write_pipeline_run_summary` | lineage traceability |
 
 ### `METADATA_DATA_ACCESS`
 
-`METADATA_DATA_ACCESS` is created by setup when present in the active schema registry. It is separately collected offline/manual governance metadata and is not currently written by standard starter-kit notebooks. One catalogue entry can have many access records because access decisions may differ by user, group, role, purpose, or approval period. Treat the relationship as a logical governance relationship for collection and reporting, not as a Fabric-enforced database constraint.
+Public-safe access context table included in setup; standard notebooks do not currently populate it.
 
-Implemented columns:
-
-- `user_principal`
-- `role_name`
-- `permission`
-- `access_purpose`
-- `approval_status`
-- `access_scope`
-- `table_id`
-- `metadata_table_key`
-- `metadata_column_key`
-- `granted_date`
-- `expires_at`
-- `approved_by`
-- `approved_at`
-- `notes`
-- `_committed_at`
-- `_committed_by`
-- `_workspace_name`
-- `_notebook_name`
-- `_metadata_lakehouse_name`
-- `_activity_id`
-
-Relationship:
-
-- `METADATA_DATA_CATALOGUE` 1 to many `METADATA_DATA_ACCESS`
-
-## Callable references
-
-- [setup_metadata_tables](../api/reference/setup_metadata_tables/) prepares the active metadata tables.
-- [write_catalogue_evidence](../api/reference/write_catalogue_evidence/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/) write pipeline evidence.
-- Current governance widgets use configured metadata routing: catalogue-based selection reads `METADATA_DATA_CATALOGUE`, enrichment writes reviewable enrichment intent to `METADATA_ENRICHMENT_RULES`, guardrail governance review writes rule intent and approval history to `METADATA_GUARDRAIL_RULES`, and runtime enforcement in `02_pipeline` writes `METADATA_GUARDRAIL_RESULTS`.
+| Column | Data type | Written by | Why it exists |
+| --- | --- | --- | --- |
+| `user_principal` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `role_name` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `permission` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `access_purpose` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `approval_status` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `access_scope` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `table_id` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | identity key |
+| `metadata_table_key` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | identity key |
+| `metadata_column_key` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | identity key |
+| `granted_date` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `expires_at` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | access context |
+| `approved_by` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | governance policy |
+| `approved_at` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | governance policy |
+| `notes` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | rule lifecycle |
+| `_committed_at` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | runtime audit |
+| `_committed_by` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | runtime audit |
+| `_workspace_name` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | runtime audit |
+| `_notebook_name` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | runtime audit |
+| `_metadata_lakehouse_name` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | runtime audit |
+| `_activity_id` | string | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | runtime audit |
