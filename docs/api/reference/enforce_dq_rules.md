@@ -7,7 +7,7 @@ Enforce approved active DQ rules as a target-write guardrail without filtering r
 
 `fabricops_kit/governance_review.py:1479`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1479-L1562">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1479-L1562">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -97,14 +97,7 @@ Raises configuration, metadata-read, or Spark expression errors when approved ru
 
 ### Calls
 
-- `fabricops_kit.governance_review._dq_failed_row_count`
-- `fabricops_kit.governance_review._dq_summary`
-- `fabricops_kit.governance_review._dq_tagged_dataframe`
-- `fabricops_kit.governance_review._load_active_dq_rules`
-- `fabricops_kit.governance_review._read_guardrail_rule_metadata`
-- `fabricops_kit.governance_review._run_dq_guardrail_checks`
-- `fabricops_kit.governance_review._summarize_dq_guardrail`
-- `fabricops_kit.metadata._write_guardrail_result_row`
+Not documented yet
 
 ## Implementation details
 
@@ -194,67 +187,67 @@ rows, send alerts, or partially write targets.
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1188-L1209"><code>_latest_dq_rule_versions</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1212-L1250"><code>_load_active_dq_rules</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1470-L1477"><code>_read_guardrail_rule_metadata</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1114-L1186"><code>_validate_dq_rules</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1188-L1209"><code>_latest_dq_rule_versions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1212-L1250"><code>_load_active_dq_rules</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1470-L1477"><code>_read_guardrail_rule_metadata</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1114-L1186"><code>_validate_dq_rules</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Validation</h4>
         <p>Validate inputs and guard conditions before the workflow continues.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1338-L1341"><code>_dq_check_status</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L84-L87"><code>_normalize_dq_severity</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1344-L1379"><code>_run_dq_guardrail_checks</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1338-L1341"><code>_dq_check_status</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L84-L87"><code>_normalize_dq_severity</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1344-L1379"><code>_run_dq_guardrail_checks</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L80-L81"><code>_canonical_dq_rule_type</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L80-L81"><code>_canonical_dq_rule_type</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule evaluation</h4>
         <p>Convert configured rules into executable checks and evaluation results.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1254-L1336"><code>_dq_failed_expression</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1418-L1428"><code>_dq_failed_row_count</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1431-L1446"><code>_dq_summary</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1382-L1415"><code>_dq_tagged_dataframe</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1061-L1068"><code>_spark_sql_helpers</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1449-L1466"><code>_summarize_dq_guardrail</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1254-L1336"><code>_dq_failed_expression</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1418-L1428"><code>_dq_failed_row_count</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1431-L1446"><code>_dq_summary</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1382-L1415"><code>_dq_tagged_dataframe</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1061-L1068"><code>_spark_sql_helpers</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1449-L1466"><code>_summarize_dq_guardrail</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L64-L69"><code>_coerce_rows</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L64-L69"><code>_coerce_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a>
         </div>
       </section>
     </div>
@@ -274,7 +267,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source line: `1479`
 - Inbound references count: 1
-- Outbound references count: 8
+- Outbound references count: 0
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, can_continue, catalogue evidence, metadata lakehouse
 
@@ -293,19 +286,12 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-- `fabricops_kit.governance_review._dq_failed_row_count`
-- `fabricops_kit.governance_review._dq_summary`
-- `fabricops_kit.governance_review._dq_tagged_dataframe`
-- `fabricops_kit.governance_review._load_active_dq_rules`
-- `fabricops_kit.governance_review._read_guardrail_rule_metadata`
-- `fabricops_kit.governance_review._run_dq_guardrail_checks`
-- `fabricops_kit.governance_review._summarize_dq_guardrail`
-- `fabricops_kit.metadata._write_guardrail_result_row`
+Not documented yet
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1479-L1562">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L1479-L1562</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1479-L1562">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/governance_review.py#L1479-L1562</a>
 - Start line: `1479`
 - End line: `1562`
 - Signature:

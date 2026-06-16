@@ -80,6 +80,22 @@ INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     },
 }
 
+
+SCHEMA_RUNTIME_INTERNAL_HELPERS = {
+    f"{PACKAGE_NAME}.guardrails._check_schema_runtime",
+    f"{PACKAGE_NAME}.guardrails._check_schema_rule_runtime",
+}
+
+
+def _is_public_reference_qn(qn: str, node_by_qn: dict[str, dict[str, Any]]) -> bool:
+    """Return whether a qualified name should appear in public relationship lists."""
+    return bool(node_by_qn.get(qn, {}).get("exported"))
+
+
+def _hide_from_public_relationships(qn: str) -> bool:
+    """Return whether an internal helper should be hidden from public relationship chips."""
+    return qn in SCHEMA_RUNTIME_INTERNAL_HELPERS
+
 V1_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
@@ -1613,7 +1629,7 @@ def main() -> None:
             def _public_callable_rows(symbols: list[Symbol], tier: str) -> list[list[str]]:
                 rows: list[list[str]] = []
                 for symbol in symbols:
-                    related = sorted([c for c in info["calls"].get(symbol.name, set()) if c in info["functions"] and c.startswith("_")])
+                    related = []
                     callable_link = callable_docs_link(symbol.name, module, docs_metadata, source_module=actual_module)
                     rows.append([
                         f'<a href="{callable_link}"><code>{symbol.name}</code></a>',
@@ -1636,7 +1652,7 @@ def main() -> None:
 
         lines.extend(["", "## Module relationships", ""])
         lines.extend(["", "### Callable relationships", ""])
-        internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
+        internal_fns = sorted([f for f in info["functions"] if f.startswith("_") and not _hide_from_public_relationships(f"{PACKAGE_NAME}.{actual_module}.{f}")])
         module_edges = [
             (e["caller_qualified_name"], e["callee_qualified_name"])
             for e in edges
@@ -1644,14 +1660,14 @@ def main() -> None:
         ]
         module_edge_pairs = sorted(set(module_edges))
         inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
-        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
-        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
+        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module and (_is_public_reference_qn(s, node_lookup) or not _hide_from_public_relationships(s))]
+        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module and (_is_public_reference_qn(d, node_lookup) or not _hide_from_public_relationships(d))]
         if module_edge_pairs:
             lines.extend(["", "#### Inside this module", ""])
             lines.append('<section class="callable-relationship-card">')
             lines.append(f"<h5>{module}</h5>")
             public_names = sorted([p.name for p in public_in_module])
-            internal_names = sorted([f for f in info["functions"] if f.startswith("_")])
+            internal_names = sorted([f for f in info["functions"] if f.startswith("_") and not _hide_from_public_relationships(f"{PACKAGE_NAME}.{actual_module}.{f}")])
             for heading, names in [("Public callables", public_names)]:
                 lines.append(f"<h6>{heading}</h6>")
                 if not names:
@@ -1660,7 +1676,7 @@ def main() -> None:
                 lines.append('<ul class="callable-relationship-rows">')
                 for name in names:
                     src_qn = f"fabricops_kit.{actual_module}.{name}"
-                    callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
+                    callees = sorted([d for s, d in inside_rows if s == src_qn and _is_public_reference_qn(d, node_lookup)], key=lambda q: _label(q))
                     src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
                     lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
@@ -1852,9 +1868,11 @@ def main() -> None:
     dependency_callables: dict[str, dict[str, Any]] = {}
     for qn in sorted(node_by_qn):
         node = node_by_qn[qn]
-        deps = sorted(set(calls_by_qn.get(qn, [])))
-        internal_helpers = [d for d in deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
-        used_by = sorted(set(used_by_qn.get(qn, [])))
+        raw_deps = sorted(set(calls_by_qn.get(qn, [])))
+        deps = [d for d in raw_deps if _is_public_reference_qn(d, node_by_qn)] if node["exported"] else raw_deps
+        internal_helpers = [d for d in raw_deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
+        raw_used_by = sorted(set(used_by_qn.get(qn, [])))
+        used_by = [u for u in raw_used_by if _is_public_reference_qn(u, node_by_qn)] if node["exported"] else raw_used_by
         used_in_templates = template_usage_by_symbol.get(node["callable_name"], []) if node["exported"] else []
         dependency_callables[qn] = {
             "qualified_name": qn,
@@ -2131,8 +2149,10 @@ def main() -> None:
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
         module_name = node["module_name"]
-        deps = sorted(set(calls_by_qn.get(qn, [])))
-        used_by = sorted(set(used_by_qn.get(qn, [])))
+        raw_deps = sorted(set(calls_by_qn.get(qn, [])))
+        raw_used_by = sorted(set(used_by_qn.get(qn, [])))
+        deps = [d for d in raw_deps if _is_public_reference_qn(d, node_by_qn)] if node["exported"] else raw_deps
+        used_by = [u for u in raw_used_by if _is_public_reference_qn(u, node_by_qn)] if node["exported"] else raw_used_by
         metadata = docs_metadata.get(short_name, {})
         module_info = module_data[module_name]
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})

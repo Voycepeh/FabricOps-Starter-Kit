@@ -86,7 +86,12 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
 
 
 def _check_schema_rule_runtime(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
-    """Validate schema using the latest active schema rule row."""
+    """Apply an internal runtime schema rule check for ``run_table_guardrails``.
+
+    This helper is not a notebook-facing callable. It translates the latest
+    active widget-authored schema guardrail rule into the runtime schema check
+    used by ``run_table_guardrails``.
+    """
     rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
         return _check_schema_runtime(dataframe, {}, preset="monitor_only")
@@ -302,7 +307,11 @@ _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 
 
 def _check_schema_runtime(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
-    """Validate a dataframe schema using an intent-based preset.
+    """Apply an internal runtime schema check for ``run_table_guardrails``.
+
+    This helper is not a notebook-facing callable. It preserves runtime schema
+    enforcement for widget-led guardrail flows without exposing a public schema
+    validation API.
 
     Parameters
     ----------
@@ -327,10 +336,11 @@ def _check_schema_runtime(dataframe, expected_schema: dict[str, str], *, preset:
     ValueError
         If ``preset`` is not one of the supported schema presets.
 
-    Examples
-    --------
-    >>> _check_schema_runtime(df, {"id": "int"}, preset="allow_new_columns")
-    {'status': 'passed', 'can_continue': True, ...}
+    Notes
+    -----
+    This private helper is called by ``run_table_guardrails`` only. Notebook
+    authors should use widget-authored rules and the guardrail gate instead of
+    calling schema validation helpers directly.
 
     """
     normalized_preset = str(preset).lower()

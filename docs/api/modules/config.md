@@ -80,14 +80,14 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>Callable</td>
       <td>function</td>
       <td>Create or validate all FabricOps metadata tables through one setup action.</td>
-      <td><code>_get_metadata_table_schema_registry</code> (internal), <code>_metadata_schema_field_names</code> (internal), <code>_metadata_tables_from_setup_results</code> (internal), <code>_resolve_metadata_schema</code> (internal), <code>_setup_metadata_table_registry</code> (internal), <code>_validate_framework_config</code> (internal), <code>_validate_metadata_table_registration</code> (internal)</td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Shared environment setup and runtime validation for notebook templates.</td>
-      <td><code>_get_store</code> (internal), <code>_run_config_smoke_tests</code> (internal), <code>_validate_framework_config</code> (internal)</td>
+      <td>—</td>
     </tr>
   </tbody>
 </table>
@@ -108,12 +108,12 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <li>
 <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_get_metadata_table_schema_registry</code></span>, <span class="reference-chip"><code>_metadata_schema_field_names</code></span>, <span class="reference-chip"><code>_metadata_tables_from_setup_results</code></span>, <span class="reference-chip"><code>_resolve_metadata_schema</code></span>, <span class="reference-chip"><code>_setup_metadata_table_registry</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>, <span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
+<span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/setup_notebook/"><code>setup_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_run_config_smoke_tests</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>
+<span>None.</span>
 </li>
 </ul>
 </section>

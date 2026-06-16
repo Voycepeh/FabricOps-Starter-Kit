@@ -80,7 +80,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
       <td>Callable</td>
       <td>function</td>
       <td>Profile a source or target DataFrame for schema, quality, and catalogue evidence.</td>
-      <td><code>_build_distribution_summaries</code> (internal), <code>_get_profiled_columns</code> (internal), <code>_is_min_max_supported_type</code> (internal)</td>
+      <td>—</td>
     </tr>
   </tbody>
 </table>
@@ -101,7 +101,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <li>
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_build_distribution_summaries</code></span>, <span class="reference-chip"><code>_get_profiled_columns</code></span>, <span class="reference-chip"><code>_is_min_max_supported_type</code></span>
+<span>None.</span>
 </li>
 </ul>
 </section>

@@ -5,9 +5,9 @@ Enforce whether the latest data arrived within the configured freshness lag.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/guardrails.py:558`
+`fabricops_kit/guardrails.py:568`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L558-L656">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L568-L666">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -92,9 +92,7 @@ ValueError when severity is unsupported, lag is missing for a configured column,
 
 ### Calls
 
-- `fabricops_kit.guardrails._coerce_date`
-- `fabricops_kit.guardrails._iso_date_value`
-- `fabricops_kit.guardrails._max_column_value`
+Not documented yet
 
 ## Implementation details
 
@@ -135,9 +133,9 @@ skips profile behavior enforcement; freshness still runs when configured.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L533-L550"><code>_coerce_date</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L553-L555"><code>_iso_date_value</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L500-L530"><code>_max_column_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L543-L560"><code>_coerce_date</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L563-L565"><code>_iso_date_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L510-L540"><code>_max_column_value</code></a>
         </div>
       </section>
     </div>
@@ -155,9 +153,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `558`
+- Source line: `568`
 - Inbound references count: 2
-- Outbound references count: 3
+- Outbound references count: 0
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, can_continue, source table, target table
 
@@ -177,16 +175,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-- `fabricops_kit.guardrails._coerce_date`
-- `fabricops_kit.guardrails._iso_date_value`
-- `fabricops_kit.guardrails._max_column_value`
+Not documented yet
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L558-L656">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L558-L656</a>
-- Start line: `558`
-- End line: `656`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L568-L666">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L568-L666</a>
+- Start line: `568`
+- End line: `666`
 - Signature:
 
 ```python

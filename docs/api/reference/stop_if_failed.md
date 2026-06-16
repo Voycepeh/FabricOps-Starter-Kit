@@ -5,9 +5,9 @@ Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/guardrails.py:907`
+`fabricops_kit/guardrails.py:917`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L907-L927">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L917-L937">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -81,7 +81,7 @@ Raises RuntimeError outside Fabric notebook exit handling when a failed guardrai
 
 ### Calls
 
-- `fabricops_kit.guardrails.SchemaDriftError`
+Not documented yet
 
 ## Implementation details
 
@@ -133,9 +133,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `907`
+- Source line: `917`
 - Inbound references count: 1
-- Outbound references count: 1
+- Outbound references count: 0
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, can_continue
 
@@ -154,14 +154,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-- `fabricops_kit.guardrails.SchemaDriftError`
+Not documented yet
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L907-L927">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/guardrails.py#L907-L927</a>
-- Start line: `907`
-- End line: `927`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L917-L937">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L917-L937</a>
+- Start line: `917`
+- End line: `937`
 - Signature:
 
 ```python
