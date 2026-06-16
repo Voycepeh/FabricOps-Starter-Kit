@@ -52,6 +52,8 @@ This separation keeps the handoff junior-friendly:
 
 In this page, “evidence” means the profile/catalogue and run signals produced by `02_pipeline`. The main job of `03_governance` is guardrail governance review over that profiled catalogue, not to act as the runtime enforcement layer.
 
+Key metadata tables in this flow include `METADATA_DATA_CATALOGUE` for profiled table targets, `METADATA_GUARDRAIL_RULES` for governed rule decisions, and `METADATA_GUARDRAIL_RESULTS` for runtime enforcement outcomes written by `02_pipeline`.
+
 ## What reviewers decide
 
 Governance Review captures append-only human-reviewed guardrail governance decisions:
