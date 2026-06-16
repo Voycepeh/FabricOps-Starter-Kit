@@ -23,7 +23,6 @@ CORE_CALLABLES = {
     "read_warehouse_table",
     "write_warehouse_table",
     "profile_dataframe",
-    "validate_schema",
     "enforce_freshness",
     "enforce_profile_behavior",
     "stop_if_failed",

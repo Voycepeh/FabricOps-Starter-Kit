@@ -339,7 +339,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         return {"status": "written"}
 
     monkeypatch.setattr(pipeline, "profile_dataframe", fake_profile)
-    monkeypatch.setattr(pipeline, "validate_schema", fake_validate)
+    monkeypatch.setattr(pipeline, "_check_schema_runtime", fake_validate)
     monkeypatch.setattr(pipeline, "enforce_freshness", fake_freshness)
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", fake_stability)
     monkeypatch.setattr(pipeline, "enforce_dq_rules", fake_dq)
@@ -414,7 +414,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
             return rows
 
     monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
-    monkeypatch.setattr(pipeline, "validate_schema", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_dq_rules", lambda *args, **kwargs: {"status": "passed", "can_continue": True, "checks": []})
@@ -448,7 +448,7 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
     stability_calls = []
 
     monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
-    monkeypatch.setattr(pipeline, "validate_schema", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
 
     def fake_stability(*args, **kwargs):
@@ -508,7 +508,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
     stopped = []
 
     monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
-    monkeypatch.setattr(pipeline, "validate_schema", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
+    monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
     monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
@@ -540,33 +540,33 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
 
 def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     """Verify schema guardrail strict and allow new columns behavior."""
-    from fabricops_kit.guardrails import validate_schema
+    from fabricops_kit.guardrails import _check_schema_runtime
 
     happy_df = spark_session.createDataFrame([(1, "new")], "id int, status string")
     additive_df = spark_session.createDataFrame([(1, "new", "extra")], "id int, status string, source_file string")
     incompatible_df = spark_session.createDataFrame([("1", "new")], "id string, status string")
     expected_schema = {"id": "int", "status": "string"}
 
-    happy = validate_schema(happy_df, expected_schema, preset="strict")
+    happy = _check_schema_runtime(happy_df, expected_schema, preset="strict")
     assert happy["status"] == "passed"
     assert happy["can_continue"] is True
 
-    strict_additive = validate_schema(additive_df, expected_schema, preset="strict")
+    strict_additive = _check_schema_runtime(additive_df, expected_schema, preset="strict")
     assert strict_additive["status"] == "failed"
     assert strict_additive["can_continue"] is False
     assert strict_additive["unexpected_columns"] == ["source_file"]
 
-    allowed_additive = validate_schema(additive_df, expected_schema, preset="allow_new_columns")
+    allowed_additive = _check_schema_runtime(additive_df, expected_schema, preset="allow_new_columns")
     assert allowed_additive["status"] == "warning"
     assert allowed_additive["can_continue"] is True
     assert allowed_additive["unexpected_columns"] == ["source_file"]
 
-    incompatible = validate_schema(incompatible_df, expected_schema, preset="strict")
+    incompatible = _check_schema_runtime(incompatible_df, expected_schema, preset="strict")
     assert incompatible["status"] == "failed"
     assert incompatible["can_continue"] is False
     assert incompatible["datatype_mismatches"] == [{"column": "id", "expected": "int", "actual": "string"}]
 
-    incompatible_allow_new = validate_schema(incompatible_df, expected_schema, preset="allow_new_columns")
+    incompatible_allow_new = _check_schema_runtime(incompatible_df, expected_schema, preset="allow_new_columns")
     assert incompatible_allow_new["status"] == "failed"
     assert incompatible_allow_new["can_continue"] is False
 

@@ -227,8 +227,6 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "read_warehouse_table",
         "write_warehouse_table",
         "profile_dataframe",
-        "validate_schema",
-        "validate_schema_rule",
         "enforce_freshness",
         "enforce_freshness_rule",
         "enforce_profile_behavior",

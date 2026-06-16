@@ -3,12 +3,12 @@
 from __future__ import annotations
 import pytest
 
-from fabricops_kit.guardrails import enforce_profile_behavior, stop_if_failed, validate_schema
+from fabricops_kit.guardrails import enforce_profile_behavior, stop_if_failed, _check_schema_runtime
 
 pytestmark = pytest.mark.unit
 
 
-def test_validate_schema_supports_strict_allow_new_and_monitor_modes():
+def test_runtime_schema_check_supports_strict_allow_new_and_monitor_modes():
     """Verify validate schema supports strict allow new and monitor modes."""
     class FakeFrame:
         def __init__(self, dtypes):
@@ -18,9 +18,9 @@ def test_validate_schema_supports_strict_allow_new_and_monitor_modes():
     df = FakeFrame([("id", "bigint"), ("amount", "double"), ("new_col", "string")])
     expected = {"id": "bigint", "amount": "double"}
 
-    strict = validate_schema(df, expected, preset="strict")
-    allow_new = validate_schema(df, expected, preset="allow_new_columns")
-    monitor = validate_schema(FakeFrame([("id", "bigint")]), expected, preset="monitor_only")
+    strict = _check_schema_runtime(df, expected, preset="strict")
+    allow_new = _check_schema_runtime(df, expected, preset="allow_new_columns")
+    monitor = _check_schema_runtime(FakeFrame([("id", "bigint")]), expected, preset="monitor_only")
 
     assert strict["status"] == "failed"
     assert strict["can_continue"] is False
@@ -29,7 +29,7 @@ def test_validate_schema_supports_strict_allow_new_and_monitor_modes():
     assert monitor["status"] == "warning"
     assert monitor["can_continue"] is True
     with pytest.raises(ValueError, match="preset"):
-        validate_schema(df, expected, preset="unknown")
+        _check_schema_runtime(df, expected, preset="unknown")
 
 
 def _profile_rows(row_count: int, minimum: str = "2026-01-01", maximum: str = "2026-01-31") -> list[dict[str, object]]:

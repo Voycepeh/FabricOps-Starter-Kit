@@ -96,8 +96,6 @@ V1_CALLABLES = {
     "read_warehouse_table",
     "write_warehouse_table",
     "profile_dataframe",
-    "validate_schema",
-    "validate_schema_rule",
     "enforce_freshness",
     "enforce_freshness_rule",
     "enforce_profile_behavior",

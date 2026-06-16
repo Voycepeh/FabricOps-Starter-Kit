@@ -7,7 +7,7 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 `fabricops_kit/governance_review.py:2456`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/governance_review.py#L2456-L2551">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L2456-L2551">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -93,6 +93,7 @@ Not documented yet
 
 **Used in templates:**
 
+- `02_pipeline`
 - `03_governance`
 
 **Side effects:**
@@ -157,7 +158,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `2456`
 - Inbound references count: 0
 - Outbound references count: 3
-- Used in templates: 03_governance
+- Used in templates: 02_pipeline, 03_governance
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
 ### AI implementation contract
@@ -182,7 +183,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/governance_review.py#L2456-L2551">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/governance_review.py#L2456-L2551</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L2456-L2551">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L2456-L2551</a>
 - Start line: `2456`
 - End line: `2551`
 - Signature:

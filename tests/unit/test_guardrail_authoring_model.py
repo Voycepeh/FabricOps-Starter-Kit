@@ -170,12 +170,12 @@ def _rule(**overrides):
 
 def test_schema_rules_from_guardrail_metadata_are_enforced(spark_session):
     """Verify schema rule rows are loaded and enforced."""
-    from fabricops_kit.guardrails import validate_schema_rule
+    from fabricops_kit.guardrails import _check_schema_rule_runtime
 
     df = spark_session.createDataFrame([(1, "ok", "extra")], "order_id int, status string, extra string")
     rules = [_rule(rule_parameters_json=json.dumps({"columns": ["order_id", "status"], "data_types": {"order_id": "int", "status": "string"}}))]
 
-    result = validate_schema_rule(df, rules, dataset_name="sales", table_name="orders")
+    result = _check_schema_rule_runtime(df, rules, dataset_name="sales", table_name="orders")
 
     assert result["status"] == "warning"
     assert result["can_continue"] is True
@@ -260,13 +260,13 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
 def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
     """Verify bypass-active rules are enforced with post-review warning metadata."""
     from fabricops_kit import governance_review
-    from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, validate_schema_rule
+    from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, _check_schema_rule_runtime
 
     warning = "Rule is active through approval bypass and requires governance post-review."
     schema_df = spark_session.createDataFrame([(1,)], "order_id int")
     bypass_base = {"review_status": "bypass_active_pending_review"}
 
-    schema = validate_schema_rule(
+    schema = _check_schema_rule_runtime(
         schema_df,
         [_rule(**bypass_base, rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}}))],
         dataset_name="sales",
@@ -505,7 +505,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
 
 def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
     """Verify only new active rule statuses are enforced for schema rules."""
-    from fabricops_kit.guardrails import validate_schema_rule
+    from fabricops_kit.guardrails import _check_schema_rule_runtime
 
     class Frame:
         dtypes = [("order_id", "int")]
@@ -513,7 +513,7 @@ def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
 
     active_statuses = {"self_approved", "governance_approved", "bypass_active_pending_review"}
     for status in active_statuses:
-        result = validate_schema_rule(
+        result = _check_schema_rule_runtime(
             Frame(),
             [_rule(guardrail_type="schema", rule_type="strict", review_status=status, rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}}))],
             dataset_name="sales",
@@ -528,7 +528,7 @@ def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
         {key: value for key, value in _rule(guardrail_type="schema", rule_type="strict", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})).items() if key != "is_active"},
         _rule(guardrail_type="schema", rule_type="strict", review_status="self_approved", dataset_name="", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})),
     ]:
-        result = validate_schema_rule(Frame(), [inactive_rule], dataset_name="sales", table_name="orders")
+        result = _check_schema_rule_runtime(Frame(), [inactive_rule], dataset_name="sales", table_name="orders")
         assert result["preset"] == "monitor_only"
         assert "rule_key" not in result
 

@@ -743,44 +743,6 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
  {'kind': 'function',
   'module': 'guardrails',
   'function_type': 'callable',
-  'summary_override': 'Validate a DataFrame schema using strict, allow-new-columns, or '
-                      'monitor-only presets.',
-  'symbol_name': 'validate_schema',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Schema validation',
-  'use_when': 'Use before writes to compare a DataFrame schema against an expected schema with '
-              'strict, allow-new-columns, or monitor-only behavior.',
-  'do_not_use_when': 'Do not use for DQ-rule enforcement or metadata persistence.',
-  'parameters': 'dataframe, expected_schema mapping, and preset controlling blocking behavior.',
-  'returns': 'Guardrail result dictionary with status, can_continue, checks, message, and schema '
-             'difference details.',
-  'raises': 'ValueError when preset is not one of the supported schema presets.',
-  'side_effects': 'Inspects DataFrame schema only; it does not write metadata, tables, or files.',
-  'fabric_context': 'Use in 02_pipeline before write helpers so schema guardrails run before '
-                    'publishing data.',
-  'ai_verification': 'Verify can_continue before calling write helpers and pass the result to '
-                     'stop_if_failed when blocking behavior is required.',
-  'preferred_example': 'schema_result = validate_schema(df, {"order_id": "string"}, '
-                       'preset="allow_new_columns")\n'
-                       'stop_if_failed(schema_result)',
-  'related_functions': ['enforce_freshness', 'enforce_profile_behavior', 'stop_if_failed'],
-  'expanded_purpose': 'Checks whether a DataFrame contains the expected columns and compatible '
-                      'types before downstream transformations or writes continue.',
-  'when_to_use': 'Use as an early guardrail when a source or target DataFrame must match a known '
-                 'schema contract.',
-  'glossary_terms': ['guardrail', 'can_continue', 'source table', 'target table'],
-  'return_interpretation': 'When can_continue is true, schema checks passed or only non-blocking '
-                           'issues were found. When false, fix missing or mismatched columns '
-                           'before writing data.',
-  'common_failure_causes': ['Required columns are missing.',
-                            'Column types differ from expected schema.',
-                            'The expected schema configuration is incomplete.',
-                            'The DataFrame supplied to the check is not the intended table.'],
-  'related_guides': [{'title': 'Pipeline Guardrails',
-                      'path': '../../how-fabricops-works/pipeline-guardrails.md'}]},
- {'kind': 'function',
-  'module': 'guardrails',
-  'function_type': 'callable',
   'summary_override': 'Enforce whether the latest data arrived within the configured freshness '
                       'lag.',
   'symbol_name': 'enforce_freshness',
@@ -789,7 +751,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'use_when': 'Use in 02_pipeline to validate max(freshness_column) is at least today minus '
               'freshness_max_lag_days.',
   'do_not_use_when': 'Do not use for schema validation, load-behavior enforcement, or DQ-rule '
-                     'enforcement; use validate_schema, enforce_profile_behavior, or '
+                     'enforcement; use enforce_profile_behavior or '
                      'enforce_dq_rules for those checks.',
   'parameters': 'dataframe, freshness_column, max_lag_days, severity, and optional reference_date '
                 'for deterministic validation.',
@@ -806,7 +768,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'preferred_example': 'freshness_result = enforce_freshness(df, "business_date", 1, '
                        'severity="blocking")\n'
                        'stop_if_failed(freshness_result)',
-  'related_functions': ['validate_schema', 'enforce_profile_behavior', 'stop_if_failed'],
+  'related_functions': ['enforce_profile_behavior', 'stop_if_failed'],
   'expanded_purpose': 'Checks whether the latest value in a freshness column is recent enough for '
                       'the configured maximum lag before pipeline writes continue.',
   'when_to_use': 'Use as a pipeline guardrail when stale source or target data should block or '
@@ -841,7 +803,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                  'static data changes unexpectedly or when a previous watermark group changes or '
                  'disappears.',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
-                     'validate_schema or enforce_dq_rules for those checks.',
+                     'run_table_guardrails or enforce_dq_rules for those checks.',
   'glossary_terms': ['profile behavior',
                      'accepted catalogue profile evidence',
                      'baseline profile',
@@ -908,7 +870,6 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                        ')\n'
                        'stop_if_failed(stability_result)',
   'related_functions': ['profile_dataframe',
-                        'validate_schema',
                         'enforce_freshness',
                         'stop_if_failed'],
   'related_guides': [{'title': 'Pipeline Guardrails',
@@ -934,14 +895,13 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
             'must stop execution.',
   'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an '
                   'exception.',
-  'fabric_context': 'Use in 02_pipeline after validate_schema, enforce_freshness, '
+  'fabric_context': 'Use in 02_pipeline after run_table_guardrails, enforce_freshness, '
                     'enforce_profile_behavior, or enforce_dq_rules and before write helpers.',
   'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
                      'before passing it to stop_if_failed.',
-  'preferred_example': 'schema_result = validate_schema(df, expected_schema)\n'
-                       'stop_if_failed(schema_result)',
-  'related_functions': ['validate_schema',
-                        'enforce_freshness',
+  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark)\n'
+                       'stop_if_failed(guardrail_result)',
+  'related_functions': ['enforce_freshness',
                         'enforce_profile_behavior',
                         'enforce_dq_rules'],
   'expanded_purpose': 'Stops or raises for a blocking guardrail result so a notebook does not '
@@ -1177,36 +1137,6 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'path': '../../how-fabricops-works/pipeline-guardrails.md'},
                      {'title': 'Metadata Tables',
                       'path': '../../how-fabricops-works/metadata-tables.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Validate a DataFrame schema using an active metadata-backed schema '
-                      'guardrail rule.',
-  'symbol_name': 'validate_schema_rule',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Guardrail enforcement',
-  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
-              'guardrail authoring, governance, or display step is required.',
-  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
-                'record parameters accepted by this helper.',
-  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
-             'the helper.',
-  'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Validates a DataFrame schema using a metadata-backed schema guardrail rule '
-                      'so runtime enforcement follows governed rule intent instead of ad hoc '
-                      'notebook configuration.',
-  'when_to_use': 'Use in 02_pipeline when active schema guardrail rules from '
-                 'METADATA_GUARDRAIL_RULES should drive schema validation for a selected table.',
-  'do_not_use_when': 'Do not use to author or approve schema rules; use the guardrail authoring '
-                     'and governance widgets for rule intent and review workflows.',
-  'glossary_terms': ['guardrail', 'metadata lakehouse', 'source table', 'target table'],
-  'return_interpretation': 'The returned schema result indicates whether the DataFrame may '
-                           'continue and includes metadata from the matched active rule when one '
-                           'is enforced.',
-  'common_failure_causes': ['No active schema rule matches the table identity.',
-                            'The DataFrame is missing required columns.',
-                            'Rule parameters are malformed.',
-                            'Metadata table routing is unavailable.']},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1627,24 +1557,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                  'summaries.',
                                                  'Excluded columns remove fields needed for '
                                                  'review.']},
- 'validate_schema': {'expanded_purpose': 'Checks whether a DataFrame contains the expected columns '
-                                         'and compatible types before downstream transformations '
-                                         'or writes continue.',
-                     'when_to_use': 'Use as an early guardrail when a source or target DataFrame '
-                                    'must match a known schema contract.',
-                     'glossary_terms': ['guardrail',
-                                        'can_continue',
-                                        'source table',
-                                        'target table'],
-                     'return_interpretation': 'When can_continue is true, schema checks passed or '
-                                              'only non-blocking issues were found. When false, '
-                                              'fix missing or mismatched columns before writing '
-                                              'data.',
-                     'common_failure_causes': ['Required columns are missing.',
-                                               'Column types differ from expected schema.',
-                                               'The expected schema configuration is incomplete.',
-                                               'The DataFrame supplied to the check is not the '
-                                               'intended table.']},
  'enforce_freshness': {'expanded_purpose': 'Checks whether the latest value in a freshness column '
                                            'is recent enough for the configured maximum lag before '
                                            'pipeline writes continue.',
@@ -1850,29 +1762,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                           'Metadata routing is unavailable.',
                                                           'The configured summary table cannot be '
                                                           'written.']},
- 'validate_schema_rule': {'expanded_purpose': 'Validates a DataFrame schema using a '
-                                              'metadata-backed schema guardrail rule so runtime '
-                                              'enforcement follows governed rule intent instead of '
-                                              'ad hoc notebook configuration.',
-                          'when_to_use': 'Use in 02_pipeline when active schema guardrail rules '
-                                         'from METADATA_GUARDRAIL_RULES should drive schema '
-                                         'validation for a selected table.',
-                          'do_not_use_when': 'Do not use to author or approve schema rules; use '
-                                             'the guardrail authoring and governance widgets for '
-                                             'rule intent and review workflows.',
-                          'glossary_terms': ['guardrail',
-                                             'metadata lakehouse',
-                                             'source table',
-                                             'target table'],
-                          'return_interpretation': 'The returned schema result indicates whether '
-                                                   'the DataFrame may continue and includes '
-                                                   'metadata from the matched active rule when one '
-                                                   'is enforced.',
-                          'common_failure_causes': ['No active schema rule matches the table '
-                                                    'identity.',
-                                                    'The DataFrame is missing required columns.',
-                                                    'Rule parameters are malformed.',
-                                                    'Metadata table routing is unavailable.']},
+
  'enforce_freshness_rule': {'expanded_purpose': 'Evaluates freshness using a metadata-backed '
                                                 'guardrail rule so active freshness intent from '
                                                 'governance is enforced during pipeline execution.',
@@ -2102,8 +1992,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Notebook Templates',
                         'path': '../../how-fabricops-works/pipeline-guardrails.md'},
                        {'title': 'Governance Review',
                         'path': '../../how-fabricops-works/governance-review.md'}],
- 'validate_schema': [{'title': 'Pipeline Guardrails',
-                      'path': '../../how-fabricops-works/pipeline-guardrails.md'}],
  'enforce_freshness': [{'title': 'Pipeline Guardrails',
                         'path': '../../how-fabricops-works/pipeline-guardrails.md'}],
  'enforce_profile_behavior': [{'title': 'Pipeline Guardrails',

@@ -7,7 +7,7 @@ import json
 import pytest
 
 from fabricops_kit.governance_review import _load_active_dq_rules, _prepare_dq_profile_input_rows, enforce_dq_rules
-from fabricops_kit.guardrails import stop_if_failed, validate_schema
+from fabricops_kit.guardrails import stop_if_failed, _check_schema_runtime
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.spark
@@ -72,7 +72,7 @@ def test_prepare_dq_profile_input_rows_defaults_to_utc_without_config(spark_sess
 def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session):
     """Verify spark schema validation and latest dq metadata are stable."""
     df = spark_session.createDataFrame([{"id": 1, "amount": 10.0, "extra": "new"}])
-    schema_result = validate_schema(df, {"id": "bigint", "amount": "double"}, preset="allow_new_columns")
+    schema_result = _check_schema_runtime(df, {"id": "bigint", "amount": "double"}, preset="allow_new_columns")
     metadata_df = spark_session.createDataFrame(
         [
             {

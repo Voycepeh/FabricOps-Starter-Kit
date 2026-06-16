@@ -7,7 +7,7 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from .data_profiling import profile_dataframe
-from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, validate_schema, validate_schema_rule
+from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, _check_schema_runtime, _check_schema_rule_runtime
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .config import _current_audit_timestamp, _get_audit_timezone
@@ -633,9 +633,9 @@ def run_table_guardrails(
         schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
         freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
         if schema_rules_df is not None:
-            schema_results[table_key] = validate_schema_rule(dataframe, schema_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
+            schema_results[table_key] = _check_schema_rule_runtime(dataframe, schema_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
         else:
-            schema_results[table_key] = validate_schema(
+            schema_results[table_key] = _check_schema_runtime(
                 dataframe,
                 table_config["expected_schema"],
                 preset=table_config.get("schema_preset", "strict"),
