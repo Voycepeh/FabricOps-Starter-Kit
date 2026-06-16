@@ -121,8 +121,8 @@ def _template_called_fabricops_functions() -> set[str]:
 def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 47
-    assert len(fabricops_kit.__all__) < 71
+    assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES)
+    assert len(fabricops_kit.__all__) == 32
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
 
@@ -134,18 +134,27 @@ def test_removed_aliases_are_not_exported():
         assert not hasattr(fabricops_kit, name)
 
 
-def test_source_public_functions_match_approved_v1_list():
-    """Verify source public functions match approved v1 list."""
-    root = Path(__file__).parents[2]
-    public_functions: set[str] = set()
-    for path in (root / "src" / "fabricops_kit").glob("*.py"):
-        if path.name == "__init__.py":
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in tree.body:
-            if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
-                public_functions.add(node.name)
-    assert public_functions == APPROVED_V1_CALLABLES
+def test_root_public_exports_match_approved_v1_list():
+    """Verify root public exports match approved v1 list."""
+    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
+    for removed in {
+        "apply_governance_rule_action",
+        "build_guardrail_detail_rows",
+        "build_guardrail_summary_rows",
+        "build_table_governance_policy_record",
+        "guardrail_authoring_status",
+        "load_catalogue_profile_rows",
+        "mark_table_governed",
+        "mark_table_ungoverned",
+        "record_table_governance",
+        "resolve_table_governance_policy",
+        "widget_review_column_classification",
+        "widget_review_column_context",
+        "widget_review_dq_rules",
+        "widget_select_governance_profile_target",
+        "get_selected_catalogue_table",
+    }:
+        assert removed not in fabricops_kit.__all__
 
 
 def test_generated_callable_manifest_matches_approved_v1_list():

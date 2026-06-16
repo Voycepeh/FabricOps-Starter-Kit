@@ -68,7 +68,7 @@ Run the required delivery templates in this order:
 | 1 | `00_env_config` | Defines environment-specific paths, lakehouses, warehouse targets, and governance metadata routing. |
 | 2 | `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
 | 3 | `02_pipeline` | Builds repeatable transformations, validates source and target data, enforces active governance-approved DQ rules, publishes outputs, records runtime audit columns, captures lineage, and writes profiles. |
-| 4 | `03_governance` | Reviews guardrail governance state, approvals, rejections, supersession, and bypass/post-review decisions for profiled tables; runtime enforcement remains in `02_pipeline`. |
+| 4 | `03_governance` | Reviews guardrail governance state, approvals, rejections, supersession, and bypass or post-review decisions for profiled tables; runtime enforcement remains in `02_pipeline`. |
 | 5 | Rerun `02_pipeline` when needed | Loads active governance-approved DQ rows from `METADATA_GUARDRAIL_RULES` and enforces them before the target write. |
 | 6 | Operational support | Use the production notebook export plus FabricOps metadata evidence for support and review. |
 

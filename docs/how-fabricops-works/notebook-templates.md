@@ -18,7 +18,7 @@ These links open the current development templates. Released documentation shoul
 | 2 | `01_agreement` | Governance | Capture the request, ownership, steward details, and agreement evidence. |
 | 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile source data before production delivery. |
 | 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record catalogue, lineage, DQ, and run evidence. |
-| 5 | `03_governance` | Governance | Review guardrail governance state, approvals, rejections, supersession, and bypass/post-review decisions for profiled tables. |
+| 5 | `03_governance` | Governance | Review guardrail governance state, approvals, rejections, supersession, and bypass or post-review decisions for profiled tables. |
 | 6 | `02_pipeline` | Engineering | Rerun the pipeline so governance-approved rules are enforced during delivery. |
 
 For detailed behavior, continue to [Pipeline Guardrails](pipeline-guardrails.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
@@ -129,7 +129,7 @@ Governance, data stewards, or reviewers.
 
 **Key function**
 
-Uses `widget_select_guardrail_target` and `widget_review_guardrail_governance` to review table governance state, approvals, rejections, supersession, and bypass/post-review decisions. It stores governance decisions, but does not enforce rules. Enforcement happens when `02_pipeline` runs again using active governance-approved rules.
+Uses `widget_select_guardrail_target` and `widget_review_guardrail_governance` to review table governance state, approvals, rejections, supersession, and bypass or post-review decisions. It stores governance decisions, but does not enforce rules. Enforcement happens when `02_pipeline` runs again using active governance-approved rules.
 
 **Output**
 

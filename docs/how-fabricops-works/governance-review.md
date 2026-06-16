@@ -1,6 +1,6 @@
 # Governance Review
 
-Governance Review is the guardrail governance control point for FabricOps. `02_pipeline` runs first: it writes real data tables, profiles the actual columns that landed, and records catalogue/profile metadata. `03_governance` then runs separately so reviewers can decide table guardrail governance state, approvals, rejections, supersession, and bypass/post-review outcomes without editing pipeline code.
+Governance Review is the guardrail governance control point for FabricOps. `02_pipeline` runs first: it writes real data tables, profiles the actual columns that landed, and records catalogue/profile metadata. `03_governance` then runs separately so reviewers can decide table guardrail governance state, approvals, rejections, supersession, and bypass or post-review outcomes without editing pipeline code.
 
 ![FabricOps Governance Review operating model](../assets/fabricops-goverance-review.png)
 
