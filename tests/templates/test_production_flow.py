@@ -38,13 +38,10 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "write_pipeline_lineage" in production
     assert "write_pipeline_run_summary" in production
     assert "run_summary" in production
-    assert "widget_select_governance_profile_target" in governance
-    assert "widget_select_catalogue_table" not in governance
-    assert "widget_review_column_context" in governance
-    assert "widget_review_dq_rules" in governance
-    assert "widget_review_column_classification" in governance
-    assert "record_table_governance" in governance
-    assert "write_governance_review=True" in governance
+    assert "widget_select_guardrail_target" in governance
+    assert "widget_review_guardrail_governance" in governance
+    assert "widget_select_governance_" + "profile_target" not in governance
+    assert "widget_review_" + "dq_rules" not in governance
 
 
 def test_production_template_enforces_guardrails_before_full_dataset_write():

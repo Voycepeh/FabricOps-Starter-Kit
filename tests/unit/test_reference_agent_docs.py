@@ -28,7 +28,6 @@ CORE_CALLABLES = {
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
-    "record_table_governance",
 }
 CORE_PAGE_SECTIONS = (
     "Signature",
@@ -547,12 +546,12 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
 
     assert "[setup_notebook](../api/reference/setup_notebook/)" in notebook_templates
     assert "[prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/)" in notebook_templates
-    assert "[record_table_governance](../api/reference/record_table_governance/)" in notebook_templates
+    assert "[widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/)" in notebook_templates
     assert "[run_table_guardrails](../api/reference/run_table_guardrails/)" in pipeline_guardrails
     assert "[enforce_profile_behavior](../api/reference/enforce_profile_behavior/)" in pipeline_guardrails
     assert "[stop_if_failed](../api/reference/stop_if_failed/)" in pipeline_guardrails
-    assert "[widget_review_dq_rules](../api/reference/widget_review_dq_rules/)" in governance_review
-    assert "[record_table_governance](../api/reference/record_table_governance/)" in governance_review
+    assert "[widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/)" in governance_review
+    assert "[widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/)" in governance_review
     assert "[setup_metadata_tables](../api/reference/setup_metadata_tables/)" in metadata_tables
     assert "[write_pipeline_lineage](../api/reference/write_pipeline_lineage/)" in metadata_tables
 

@@ -68,7 +68,7 @@ Run the required delivery templates in this order:
 | 1 | `00_env_config` | Defines environment-specific paths, lakehouses, warehouse targets, and governance metadata routing. |
 | 2 | `01_agreement` | Defines what should be built, who owns it, what rules apply, and what readiness means. |
 | 3 | `02_pipeline` | Builds repeatable transformations, validates source and target data, enforces active governance-approved DQ rules, publishes outputs, records runtime audit columns, captures lineage, and writes profiles. |
-| 4 | `03_governance` | Checks evidence, metadata, ownership, rules, and readiness; governance-approved DQ expectations are stored for the next pipeline run. |
+| 4 | `03_governance` | Reviews guardrail governance state, approvals, rejections, supersession, and bypass or post-review decisions for profiled tables; runtime enforcement remains in `02_pipeline`. |
 | 5 | Rerun `02_pipeline` when needed | Loads active governance-approved DQ rows from `METADATA_GUARDRAIL_RULES` and enforces them before the target write. |
 | 6 | Operational support | Use the production notebook export plus FabricOps metadata evidence for support and review. |
 
@@ -120,5 +120,5 @@ The goal is that support and review should no longer depend on memory or side co
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [How FabricOps Works](how-fabricops-works/index.md) | Start with the v1.0.0 metadata-backed notebook workflow, pipeline guardrails, governance review, and support story. |
 | [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md) | Learn how `02_pipeline` owns pipeline guardrails and run evidence. |
-| [Governance Review Workflow](how-fabricops-works/governance-review.md) | Learn how `03_governance` reviews profile evidence and commits governance metadata. |
+| [Governance Review Workflow](how-fabricops-works/governance-review.md) | Learn how `03_governance` reviews guardrail governance decisions for profiled tables. |
 | [Function Reference](reference/index.md)   | Review the reusable helper APIs used by the notebook templates.                                           |

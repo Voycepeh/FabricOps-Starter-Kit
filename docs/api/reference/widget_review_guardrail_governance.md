@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2512`
+`fabricops_kit/governance_review.py:2232`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L2512-L2600">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/governance_review.py#L2232-L2320">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -84,9 +84,9 @@ Not documented yet
 
 - `fabricops_kit.governance_review._write_governance_policy_record`
 - `fabricops_kit.governance_review._write_rule_records`
-- <a href="../apply_governance_rule_action/"><code>fabricops_kit.governance_review.apply_governance_rule_action</code></a>
-- <a href="../mark_table_governed/"><code>fabricops_kit.governance_review.mark_table_governed</code></a>
-- <a href="../mark_table_ungoverned/"><code>fabricops_kit.governance_review.mark_table_ungoverned</code></a>
+- `fabricops_kit.governance_review.apply_governance_rule_action`
+- `fabricops_kit.governance_review.mark_table_governed`
+- `fabricops_kit.governance_review.mark_table_ungoverned`
 
 ## Implementation details
 
@@ -181,24 +181,24 @@ No additional callable notes are documented.
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L1932-L1942"><code>_write_governance_policy_record</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L1917-L1929"><code>_write_rule_records</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/governance_review.py#L1652-L1662"><code>_write_governance_policy_record</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/governance_review.py#L1637-L1649"><code>_write_rule_records</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/config.py#L688-L727"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/config.py#L688-L727"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -216,7 +216,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2512`
+- Source line: `2232`
 - Inbound references count: 0
 - Outbound references count: 5
 - Used in templates: 03_governance
@@ -239,16 +239,16 @@ Not documented yet
 
 - `fabricops_kit.governance_review._write_governance_policy_record`
 - `fabricops_kit.governance_review._write_rule_records`
-- <a href="../apply_governance_rule_action/"><code>fabricops_kit.governance_review.apply_governance_rule_action</code></a>
-- <a href="../mark_table_governed/"><code>fabricops_kit.governance_review.mark_table_governed</code></a>
-- <a href="../mark_table_ungoverned/"><code>fabricops_kit.governance_review.mark_table_ungoverned</code></a>
+- `fabricops_kit.governance_review.apply_governance_rule_action`
+- `fabricops_kit.governance_review.mark_table_governed`
+- `fabricops_kit.governance_review.mark_table_ungoverned`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L2512-L2600">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L2512-L2600</a>
-- Start line: `2512`
-- End line: `2600`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/governance_review.py#L2232-L2320">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/governance_review.py#L2232-L2320</a>
+- Start line: `2232`
+- End line: `2320`
 - Signature:
 
 ```python
@@ -265,7 +265,7 @@ def widget_review_guardrail_governance(
 ### Public related functions
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
 
 ### Internal implementation summary
 

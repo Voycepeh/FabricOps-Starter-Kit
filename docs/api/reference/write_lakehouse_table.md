@@ -7,7 +7,7 @@ Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.
 
 `fabricops_kit/fabric_input_output.py:280`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L280-L389">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L280-L389">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -103,7 +103,7 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 - `fabricops_kit.governance_review._review_governance_evidence`
 - `fabricops_kit.governance_review._write_governance_policy_record`
 - `fabricops_kit.governance_review._write_rule_records`
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- `fabricops_kit.governance_review.record_table_governance`
 - `fabricops_kit.metadata._register_current_notebook`
 - `fabricops_kit.metadata._write_guardrail_result_row`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
@@ -127,7 +127,6 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 - `01_agreement`
 - `02_pipeline`
 - `03_governance`
-- `99_explore`
 
 **Side effects:**
 
@@ -165,24 +164,24 @@ Side effects:
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L96-L105"><code>_normalize_table_name</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L129-L135"><code>_resolve_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L138-L145"><code>_resolve_lakehouse_table_path</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L96-L105"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L129-L135"><code>_resolve_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L138-L145"><code>_resolve_lakehouse_table_path</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/config.py#L688-L727"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/config.py#L688-L727"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -203,7 +202,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `280`
 - Inbound references count: 11
 - Outbound references count: 3
-- Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore
+- Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance
 - Glossary terms: target table, guardrail, metadata lakehouse
 
 ### AI implementation contract
@@ -222,7 +221,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - `fabricops_kit.governance_review._review_governance_evidence`
 - `fabricops_kit.governance_review._write_governance_policy_record`
 - `fabricops_kit.governance_review._write_rule_records`
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- `fabricops_kit.governance_review.record_table_governance`
 - `fabricops_kit.metadata._register_current_notebook`
 - `fabricops_kit.metadata._write_guardrail_result_row`
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
@@ -238,7 +237,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L280-L389">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/fabric_input_output.py#L280-L389</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L280-L389">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/fabric_input_output.py#L280-L389</a>
 - Start line: `280`
 - End line: `389`
 - Signature:

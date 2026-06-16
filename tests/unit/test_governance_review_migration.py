@@ -25,54 +25,39 @@ DELETED_MODULE_SUFFIXES = (
 DELETED_MODULE_IMPORTS = tuple(f"fabricops_kit.{suffix}" for suffix in DELETED_MODULE_SUFFIXES)
 
 EXPECTED_V1_CALLABLES = [
-    "setup_notebook",
-    "setup_metadata_tables",
-    "widget_render_data_steward",
-    "widget_render_data_agreement",
-    "widget_render_agreement_evidence",
+        "setup_notebook",
+        "setup_metadata_tables",
+        "widget_render_data_steward",
+        "widget_render_data_agreement",
+        "widget_render_agreement_evidence",
     "widget_select_agreement",
     "get_selected_agreement",
-    "read_lakehouse_table",
-    "write_lakehouse_table",
-    "read_lakehouse_csv",
-    "read_lakehouse_parquet",
-    "read_lakehouse_excel",
-    "read_warehouse_table",
-    "write_warehouse_table",
-    "profile_dataframe",
-    "validate_schema",
-    "validate_schema_rule",
-    "enforce_freshness",
-    "enforce_freshness_rule",
-    "enforce_profile_behavior",
-    "stop_if_failed",
-    "enforce_dq_rules",
-    "build_guardrail_detail_rows",
-    "build_guardrail_summary_rows",
-    "display_guardrail_results",
-    "prepare_pipeline_table_configs",
-    "run_table_guardrails",
-    "write_catalogue_evidence",
-    "write_pipeline_lineage",
-    "write_pipeline_run_summary",
-    "widget_select_governance_profile_target",
-    "get_selected_catalogue_table",
-    "load_catalogue_profile_rows",
-    "widget_review_column_context",
-    "widget_review_dq_rules",
-    "widget_review_column_classification",
-    "record_table_governance",
-    "widget_select_guardrail_target",
-    "widget_author_schema_freshness_profile_rules",
-    "widget_author_dq_rules",
-    "resolve_table_governance_policy",
-    "guardrail_authoring_status",
-    "apply_governance_rule_action",
-    "build_table_governance_policy_record",
-    "mark_table_governed",
-    "mark_table_ungoverned",
-    "widget_review_guardrail_governance",
-]
+        "read_lakehouse_table",
+        "write_lakehouse_table",
+        "read_lakehouse_csv",
+        "read_lakehouse_parquet",
+        "read_lakehouse_excel",
+        "read_warehouse_table",
+        "write_warehouse_table",
+        "profile_dataframe",
+        "validate_schema",
+        "validate_schema_rule",
+        "enforce_freshness",
+        "enforce_freshness_rule",
+        "enforce_profile_behavior",
+        "stop_if_failed",
+        "enforce_dq_rules",
+        "display_guardrail_results",
+        "prepare_pipeline_table_configs",
+        "run_table_guardrails",
+        "write_catalogue_evidence",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary",
+        "widget_select_guardrail_target",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_author_dq_rules",
+        "widget_review_guardrail_governance",
+    ]
 
 
 def test_public_callable_list_includes_guardrail_authoring_widgets():
@@ -163,45 +148,6 @@ def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
 
     with pytest.raises(ValueError):
         governance._validate_dq_rules([{**rules[0], "rule_type": "unsupported_rule"}])
-
-
-def test_record_table_governance_writes_context_dq_and_classification(monkeypatch):
-    """Verify record table governance writes context dq and classification."""
-    writes = []
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows, env, target, kwargs)))
-    profile_rows = [
-        {
-            "environment_name": "dev",
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "column_name": "order_id",
-            "metadata_table_key": "dev|sales|orders",
-            "metadata_column_key": "dev|sales|orders|order_id",
-        }
-    ]
-
-    result = governance.record_table_governance(
-        framework_config(),
-        "dev",
-        profile_rows,
-        spark_session=FakeSpark(),
-        context_reviews=[{"column_name": "order_id", "business_context": "Order identifier", "commit": True}],
-        dq_rule_reviews=[{"rule_id": "order_id_required", "rule_type": "not_null", "columns": ["order_id"], "severity": "error", "description": "Required", "commit": True}],
-        classification_reviews=[{"column_name": "order_id", "sensitivity_label": "internal", "personal_data_classification": "not_personal_data", "commit": True}],
-        approved_by="reviewer@example.com",
-    )
-
-    assert {table for table, *_ in writes} == {
-        governance.COLUMN_CONTEXT_TABLE,
-        governance.GUARDRAIL_RULES_TABLE,
-        governance.COLUMN_CLASSIFICATION_TABLE,
-    }
-    assert all((env, target) == ("dev", "metadata") for _, _, env, target, _ in writes)
-    assert result["column_context"][0]["business_context"] == "Order identifier"
-    assert result["dq_rules"][0]["rule_id"] == "order_id_required"
-    assert result["dq_rules"][0]["guardrail_type"] == "dq"
-    assert result["column_classification"][0]["sensitivity_label"] == "internal"
-
 
 
 def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns():

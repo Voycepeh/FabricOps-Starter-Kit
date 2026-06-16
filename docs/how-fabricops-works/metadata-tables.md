@@ -185,4 +185,4 @@ Schema, freshness, profile-behavior pass/fail, stability, and DQ outcomes are ru
 
 - [setup_metadata_tables](../api/reference/setup_metadata_tables/) prepares the active metadata tables.
 - [write_catalogue_evidence](../api/reference/write_catalogue_evidence/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/) write pipeline evidence.
-- [record_table_governance](../api/reference/record_table_governance/) writes approved governance metadata.
+- Current guardrail widgets write approved governance metadata through the configured metadata target.

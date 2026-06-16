@@ -7,7 +7,7 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 `fabricops_kit/pipeline.py:386`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L386-L414">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/pipeline.py#L386-L414">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -81,8 +81,8 @@ Not documented yet
 ### Calls
 
 - `fabricops_kit.pipeline._rows_for_display`
-- <a href="../build_guardrail_detail_rows/"><code>fabricops_kit.pipeline.build_guardrail_detail_rows</code></a>
-- <a href="../build_guardrail_summary_rows/"><code>fabricops_kit.pipeline.build_guardrail_summary_rows</code></a>
+- `fabricops_kit.pipeline.build_guardrail_detail_rows`
+- `fabricops_kit.pipeline.build_guardrail_summary_rows`
 
 ## Implementation details
 
@@ -155,7 +155,7 @@ No additional callable notes are documented.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L379-L383"><code>_rows_for_display</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/pipeline.py#L379-L383"><code>_rows_for_display</code></a>
         </div>
       </section>
     </div>
@@ -195,13 +195,13 @@ Not documented yet
 ### Outbound references
 
 - `fabricops_kit.pipeline._rows_for_display`
-- <a href="../build_guardrail_detail_rows/"><code>fabricops_kit.pipeline.build_guardrail_detail_rows</code></a>
-- <a href="../build_guardrail_summary_rows/"><code>fabricops_kit.pipeline.build_guardrail_summary_rows</code></a>
+- `fabricops_kit.pipeline.build_guardrail_detail_rows`
+- `fabricops_kit.pipeline.build_guardrail_summary_rows`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L386-L414">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L386-L414</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/pipeline.py#L386-L414">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f9ca89d0f660f3a7b9b5ceff422eb658a49c73ad/src/fabricops_kit/pipeline.py#L386-L414</a>
 - Start line: `386`
 - End line: `414`
 - Signature:
@@ -219,7 +219,7 @@ def display_guardrail_results(
 ### Public related functions
 
 - <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
 
 ### Internal implementation summary
 
