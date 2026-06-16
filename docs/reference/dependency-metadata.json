@@ -3928,8 +3928,7 @@
       ],
       "used_by_count": 1,
       "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
+        "02_pipeline"
       ],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._dq_failed_row_count",

@@ -333,8 +333,7 @@
       "template_notebook": "02_pipeline",
       "template_segment": "DQ guardrails",
       "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
+        "02_pipeline"
       ]
     },
     {

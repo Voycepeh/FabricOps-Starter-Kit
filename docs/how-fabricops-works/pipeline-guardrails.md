@@ -13,7 +13,7 @@ FabricOps keeps the responsibility split clear:
 - **Data contract = expectation.** The contract describes what the data should look like, how fresh it should be, how it should behave over time, and which DQ expectations matter.
 - **Guardrail = runtime enforcement.** A guardrail turns an expectation into a runtime pass, warning, fail, or skipped result.
 - **`02_pipeline` = technical enforcement layer.** The pipeline validates schemas, freshness, profile behavior, and governance-approved DQ rules before governed outputs are written.
-- **`03_governance` = governance and business definition layer.** Governance review defines and approves business context, classifications, and DQ metadata; it does not replace runtime enforcement.
+- **`03_governance` = guardrail governance review layer.** Governance review approves, rejects, supersedes, and post-reviews guardrail rules and table governance state; it does not replace runtime enforcement.
 
 ## Guardrail flow in `02_pipeline`
 
