@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 62</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 59</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>62</td>
+      <td>59</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -193,14 +193,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_build_classification_records</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_build_column_context_records</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_build_dq_rule_records</code></td>
       <td>—</td>
     </tr>
@@ -223,10 +215,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     <tr>
       <td><code>_collect_enrichment_extra_fields</code></td>
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_display_review_guidance</code></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><code>_dq_check_status</code></td>
@@ -274,6 +262,10 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_enrichment_payload_from_review</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_evaluate_governance_readiness</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -355,10 +347,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     <tr>
       <td><code>_render_enrichment_extra_fields</code></td>
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_review_governance_evidence</code></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><code>_rule_params</code></td>
@@ -450,16 +438,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>guardrail_authoring_status</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_build_classification_records</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_json</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_build_column_context_records</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_json</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_build_dq_rule_records</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_dq_rule_parameter_payload</code></span>, <span class="reference-chip"><code>_json</code></span>, <span class="reference-chip"><code>_normalize_dq_severity</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
@@ -482,11 +460,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 </li>
 <li>
 <span class="reference-chip"><code>_collect_enrichment_extra_fields</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_display_review_guidance</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_dq_check_status</code></span>
@@ -537,6 +510,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 </li>
 <li>
 <span class="reference-chip"><code>_enrichment_payload_from_review</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_evaluate_governance_readiness</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_latest_row</code></span>, <span class="reference-chip"><code>_read_metadata_rows</code></span>, <span class="reference-chip"><code>_status_is_failed</code></span>, <span class="reference-chip"><code>_status_is_warning</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>load_catalogue_profile_rows</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_extract_assignment_payload</code></span>
@@ -623,11 +601,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 </li>
 <li>
 <span class="reference-chip"><code>_render_enrichment_extra_fields</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_review_governance_evidence</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_latest_row</code></span>, <span class="reference-chip"><code>_read_metadata_rows</code></span>, <span class="reference-chip"><code>_status_is_failed</code></span>, <span class="reference-chip"><code>_status_is_warning</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>load_catalogue_profile_rows</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_rule_params</code></span>

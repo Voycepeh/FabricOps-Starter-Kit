@@ -570,8 +570,8 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
         governance_config=types.SimpleNamespace(
             sensitivity_labels=["classified", "restricted", "public"],
             pii_classifications=["direct PII", "indirect PII", "none"],
-            column_context_extra_fields=[{"name": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}],
-            column_classification_extra_fields=[{"name": "retention_class", "label": "Retention Class", "type": "dropdown", "options": ["standard", "long_term", "temporary"]}],
+            enrichment_context_extra_fields=[{"name": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}],
+            enrichment_classification_extra_fields=[{"name": "retention_class", "label": "Retention Class", "type": "dropdown", "options": ["standard", "long_term", "temporary"]}],
         )
     )
     state = {
