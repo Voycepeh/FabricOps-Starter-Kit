@@ -34,7 +34,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Guardrail governance review using the current supported review widget flow.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Guardrail governance review</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a><a class="function-chip" href="../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a><a class="function-chip" href="../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a><a class="function-chip" href="../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></span>
 </div>
 </section>
 

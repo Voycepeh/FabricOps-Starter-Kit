@@ -343,16 +343,32 @@ class GovernanceConfig:
     sensitivity_rules : dict[str, str]
         Mapping of rule keys to expected sensitivity labels used by governance
         notebook checks and reporting summaries.
+    sensitivity_labels : list[str]
+        Controlled labels rendered by column metadata enrichment widgets.
+    pii_classifications : list[str]
+        Controlled PII classifications rendered by column metadata enrichment widgets.
+    column_context_extra_fields, column_classification_extra_fields : list[dict[str, Any]]
+        Organization-specific column enrichment fields stored in ``custom_fields_json``.
 
     """
 
     required_classification: bool = True
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
+    sensitivity_labels: list[str] = field(default_factory=lambda: ["classified", "restricted", "public"])
+    pii_classifications: list[str] = field(default_factory=lambda: ["direct PII", "indirect PII", "none"])
+    column_context_extra_fields: list[dict[str, Any]] = field(default_factory=list)
+    column_classification_extra_fields: list[dict[str, Any]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
         object.__setattr__(self, "required_classification", bool(self.required_classification))
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
+        labels = [str(option).strip() for option in (self.sensitivity_labels or []) if str(option).strip()]
+        pii = [str(option).strip() for option in (self.pii_classifications or []) if str(option).strip()]
+        object.__setattr__(self, "sensitivity_labels", labels or ["classified", "restricted", "public"])
+        object.__setattr__(self, "pii_classifications", pii or ["direct PII", "indirect PII", "none"])
+        object.__setattr__(self, "column_context_extra_fields", deepcopy(list(self.column_context_extra_fields or [])))
+        object.__setattr__(self, "column_classification_extra_fields", deepcopy(list(self.column_classification_extra_fields or [])))
 
 
 DEFAULT_STEWARD_ROLE_OPTIONS = [

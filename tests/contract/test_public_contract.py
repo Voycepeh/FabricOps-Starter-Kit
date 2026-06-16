@@ -45,6 +45,7 @@ APPROVED_V1_CALLABLES = {
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
+    "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
@@ -122,7 +123,7 @@ def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES)
-    assert len(fabricops_kit.__all__) == 32
+    assert len(fabricops_kit.__all__) == 33
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
 
