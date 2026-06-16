@@ -5,9 +5,9 @@ Render combined guardrail authoring controls for the selected table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2568`
+`fabricops_kit/governance_review.py:2661`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2568-L2593">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2661-L2692">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -37,6 +37,8 @@ def widget_author_guardrail_rules(
     config: Any=None,
     env: str | None=None,
     spark_session: Any=None,
+    source_notebook_type: str='03_governance',
+    created_by_role: str='governance',
 ) -> dict[str, Any]:
 ```
 
@@ -54,6 +56,8 @@ Example usage not documented yet.
 | `config` | `Any` | No | Runtime objects used for saves. |
 | `env` | `str \| None` | No | Not documented yet |
 | `spark_session` | `Any` | No | Not documented yet |
+| `source_notebook_type` | `str` | No | Notebook type stamped on authored records. |
+| `created_by_role` | `str` | No | Role stamped on authored records. |
 
 ## Returns
 
@@ -245,7 +249,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2568`
+- Source line: `2661`
 - Inbound references count: 0
 - Outbound references count: 2
 - Used in templates: 03_governance
@@ -272,9 +276,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2568-L2593">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2568-L2593</a>
-- Start line: `2568`
-- End line: `2593`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2661-L2692">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2661-L2692</a>
+- Start line: `2661`
+- End line: `2692`
 - Signature:
 
 ```python
@@ -283,6 +287,8 @@ def widget_author_guardrail_rules(
     config: Any=None,
     env: str | None=None,
     spark_session: Any=None,
+    source_notebook_type: str='03_governance',
+    created_by_role: str='governance',
 ) -> dict[str, Any]:
 ```
 

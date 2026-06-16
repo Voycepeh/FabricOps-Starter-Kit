@@ -2716,9 +2716,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.governance_review._dq_rule_display_rows"
+        "fabricops_kit.governance_review._dq_rule_display_rows",
+        "fabricops_kit.governance_review.widget_review_table_governance"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -3702,9 +3703,10 @@
       ],
       "calls_count": 4,
       "used_by": [
-        "fabricops_kit.governance_review.widget_review_guardrail_governance"
+        "fabricops_kit.governance_review.widget_review_guardrail_governance",
+        "fabricops_kit.governance_review.widget_review_table_governance"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._assert_governance_review_context",
@@ -3727,9 +3729,10 @@
       ],
       "calls_count": 4,
       "used_by": [
-        "fabricops_kit.governance_review.widget_review_guardrail_governance"
+        "fabricops_kit.governance_review.widget_review_guardrail_governance",
+        "fabricops_kit.governance_review.widget_review_table_governance"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._assert_governance_review_context",
@@ -3887,9 +3890,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.governance_review.widget_review_guardrail_governance"
+        "fabricops_kit.governance_review.widget_review_guardrail_governance",
+        "fabricops_kit.governance_review.widget_review_table_governance"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4103,13 +4107,10 @@
         "fabricops_kit.governance_review.load_rule_review_history"
       ],
       "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.governance_review.widget_review_table_governance"
-      ],
-      "used_by_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
       "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
+        "02_pipeline"
       ],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4123,18 +4124,22 @@
       "classification": "callable",
       "calls": [
         "fabricops_kit.governance_review._assert_governance_review_context",
-        "fabricops_kit.governance_review.widget_review_guardrail_governance"
+        "fabricops_kit.governance_review._dq_rule_parameters_summary",
+        "fabricops_kit.governance_review.apply_governance_enrichment_action",
+        "fabricops_kit.governance_review.apply_governance_rule_action",
+        "fabricops_kit.governance_review.load_rule_review_history"
       ],
-      "calls_count": 2,
+      "calls_count": 5,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [
         "03_governance"
       ],
       "internal_helpers_used": [
-        "fabricops_kit.governance_review._assert_governance_review_context"
+        "fabricops_kit.governance_review._assert_governance_review_context",
+        "fabricops_kit.governance_review._dq_rule_parameters_summary"
       ],
-      "internal_helper_count": 1
+      "internal_helper_count": 2
     },
     "fabricops_kit.governance_review.widget_select_guardrail_target": {
       "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",

@@ -417,8 +417,7 @@
       "template_notebook": "03_governance",
       "template_segment": "Governance review",
       "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
+        "02_pipeline"
       ]
     },
     {

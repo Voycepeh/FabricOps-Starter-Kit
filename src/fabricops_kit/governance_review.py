@@ -519,6 +519,9 @@ def build_enrichment_rule_records(
     env: str | None = None,
     actor: str | None = None,
     bypass_reason: str = "",
+    action: str = "submit",
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
 ) -> list[dict[str, Any]]:
     """Build append-only ``METADATA_ENRICHMENT_RULES`` rows.
 
@@ -538,6 +541,12 @@ def build_enrichment_rule_records(
         User responsible for authoring the enrichment records.
     bypass_reason : str, optional
         Required reason when bypassing approval for governed tables.
+    action : {"draft", "submit", "apply_now"}, default="submit"
+        Authoring action that determines activation and review lifecycle.
+    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+        Notebook type that authored the record.
+    created_by_role : {"engineering", "governance", "system"}, default="engineering"
+        Role that authored the record.
 
     Returns
     -------
@@ -546,7 +555,15 @@ def build_enrichment_rule_records(
 
     """
     profile, resolved_actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=actor)
-    lifecycle = guardrail_authoring_status(state or {}, bypass_reason=bypass_reason, actor=resolved_actor, config=config)
+    lifecycle = guardrail_authoring_status(
+        state or {},
+        bypass_reason=bypass_reason,
+        actor=resolved_actor,
+        config=config,
+        action=action,
+        source_notebook_type=source_notebook_type,
+        created_by_role=created_by_role,
+    )
     rows = []
     for review in reviewed_rows or []:
         if not review.get("commit", True):
@@ -629,7 +646,15 @@ def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, c
         )
 
 
-def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: Any, env: str, spark_session: Any) -> dict[str, Any]:
+def widget_enrich_table_metadata(
+    guardrail_state: Mapping[str, Any],
+    *,
+    config: Any,
+    env: str,
+    spark_session: Any,
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
+) -> dict[str, Any]:
     """Render one consolidated governed table metadata enrichment widget.
 
     Parameters
@@ -644,6 +669,10 @@ def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: 
         ``metadata`` target.
     spark_session : Any
         Spark session used to create write DataFrames.
+    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+        Notebook type stamped on authored records.
+    created_by_role : {"engineering", "governance", "system"}, default="engineering"
+        Role stamped on authored records.
 
     Returns
     -------
@@ -665,15 +694,15 @@ def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: 
     row_controls: list[dict[str, Any]] = []
     row_widgets = []
     status = widgets.HTML(value="")
-    bypass_box = widgets.Textarea(value="", description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
+    apply_reason_box = widgets.Textarea(value="", description="Apply now reason", layout=widgets.Layout(width="760px", height="70px"))
     governed = str(guardrail_state.get("governance_mode") or "ungoverned") == "governed"
     bypass_allowed = bool(guardrail_state.get("approval_bypass_allowed"))
     if not governed:
-        policy_text = "This table is ungoverned. Saving will activate enrichment as self-approved."
+        policy_text = "This table is ungoverned. Submit and apply actions save active non-pending enrichment."
     elif bypass_allowed:
-        policy_text = "This table allows approval bypass. Provide a reason to activate now and queue for post-review, or submit enrichment for approval."
+        policy_text = "This table is governed. Save a draft, submit for governance review, or apply now when continuity requires immediate activation."
     else:
-        policy_text = "This table is governed. Saving will submit enrichment for approval."
+        policy_text = "This table is governed. Save a draft, submit for governance review, or apply now when continuity requires immediate activation."
 
     for row in profile_rows:
         column_name = str(_value(row, "column_name"))
@@ -712,29 +741,49 @@ def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: 
             "commit": bool(controls["commit"].value),
         } for controls in row_controls]
 
-    def build_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
-        reason = bypass_box.value.strip() if use_bypass else ""
-        if use_bypass and not reason:
-            raise ValueError("Bypass reason is required to skip approval.")
-        return build_enrichment_rule_records(profile_rows, _review_rows(), state=guardrail_state, config=config, env=env, bypass_reason=reason)
+    def build_records(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        selected_action = "apply_now" if use_bypass else action
+        reason = apply_reason_box.value.strip() if selected_action == "apply_now" else ""
+        return build_enrichment_rule_records(
+            profile_rows,
+            _review_rows(),
+            state=guardrail_state,
+            config=config,
+            env=env,
+            bypass_reason=reason,
+            action=selected_action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
+        )
 
-    def save(*, use_bypass: bool = False) -> dict[str, list[dict[str, Any]]]:
-        records = build_records(use_bypass=use_bypass)
+    def save(*, action: str = "submit", use_bypass: bool = False) -> dict[str, list[dict[str, Any]]]:
+        selected_action = "apply_now" if use_bypass else action
+        records = build_records(action=selected_action)
         _write_table_metadata_enrichment_records(records, config=config, env=env, spark_session=spark_session)
         status.value = f"Saved {len(records)} enrichment rule row(s) to METADATA_ENRICHMENT_RULES."
         return {"enrichment_rules": records}
 
-    save_button = widgets.Button(description="Save as self-approved" if not governed else "Submit for approval", button_style="success")
-    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
-    bypass_button.layout.display = "" if governed and bypass_allowed else "none"
-    save_button.on_click(lambda _: save(use_bypass=False))
-    bypass_button.on_click(lambda _: save(use_bypass=True))
+    draft_button = widgets.Button(description="Save draft", button_style="")
+    submit_button = widgets.Button(description="Submit for governance review", button_style="success")
+    apply_now_button = widgets.Button(description="Apply now", button_style="warning")
+    draft_button.on_click(lambda _: save(action="draft"))
+    submit_button.on_click(lambda _: save(action="submit"))
+    apply_now_button.on_click(lambda _: save(action="apply_now"))
     ip.display(widgets.VBox([
         widgets.HTML("<h3>Enrich table metadata</h3>"), widgets.HTML(f"<p>{policy_text}</p>"),
-        widgets.HTML("<p><b>Views:</b> View approval logs · View active enrichment · View pending enrichment requests · View rejected enrichment · View superseded enrichment · View bypassed active enrichment pending review · Requires post-review.</p>"),
-        *row_widgets, bypass_box, widgets.HBox([save_button, bypass_button]), status,
+        widgets.HTML("<p><b>Actions:</b> Save draft · Submit for governance review · Apply now.</p>"),
+        *row_widgets, apply_reason_box, widgets.HBox([draft_button, submit_button, apply_now_button]), status,
     ]))
-    return {"rows": row_controls, "build_records": build_records, "save": save, "save_button": save_button, "bypass_button": bypass_button, "status": status, "controls": {"bypass_reason": bypass_box}}
+    return {
+        "rows": row_controls,
+        "build_records": build_records,
+        "save": save,
+        "save_draft_button": draft_button,
+        "submit_button": submit_button,
+        "apply_now_button": apply_now_button,
+        "status": status,
+        "controls": {"apply_now_reason": apply_reason_box},
+    }
 
 def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str:
     """Return compact display text for non-identity DQ parameters."""
@@ -1792,8 +1841,8 @@ def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor:
     elif action == "replace":
         new = dict(row)
         new.update(dict(replacement or {}))
-        new_id = str(new.get("rule_id") or superseded_by_rule_key or f"{_record_identity(row)}.replacement.{uuid.uuid4().hex[:8]}")
-        new_key = str(superseded_by_rule_key or (new.get("rule_key") if not legacy_supersede else "") or f"{row.get('rule_key') or _record_identity(row)}:{uuid.uuid4().hex[:8]}")
+        new_id = str((replacement or {}).get("rule_id") or superseded_by_rule_key or f"{_record_identity(row)}.replacement.{uuid.uuid4().hex[:8]}")
+        new_key = str(superseded_by_rule_key or (replacement or {}).get("rule_key") or f"{row.get('rule_key') or _record_identity(row)}:{uuid.uuid4().hex[:8]}")
         old = dict(row)
         old.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "superseded", "review_status": "superseded", "review_decision": "superseded", "superseded_by_record_id": new_id, "superseded_by_rule_key": new_key, "effective_to": now})
         new.update(common | {"rule_id": new_id, "rule_key": new_key, "activation_state": "active", "is_active": True, "review_state": "governance_approved", "review_status": "governance_approved", "approved_by": reviewer, "approved_at": now, "review_decision": "approved", "activated_by": reviewer, "activated_at": now, "effective_from": now, "effective_to": "", "supersedes_record_id": _record_identity(row), "supersedes_rule_id": str(row.get("rule_id") or "")})
@@ -1848,7 +1897,7 @@ def apply_governance_enrichment_action(record: Mapping[str, Any], action: str, *
         new = dict(row)
         new.update(dict(replacement or {}))
         old_id = _record_identity(row)
-        new_id = str(new.get("enrichment_rule_id") or supersedes_enrichment_rule_id or f"{old_id}.replacement.{uuid.uuid4().hex[:8]}")
+        new_id = str((replacement or {}).get("enrichment_rule_id") or supersedes_enrichment_rule_id or f"{old_id}.replacement.{uuid.uuid4().hex[:8]}")
         old = dict(row)
         old.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "superseded", "review_status": "superseded", "rule_status": "superseded", "review_decision": "superseded", "superseded_by_record_id": new_id, "effective_to": now})
         new.update(common | {"enrichment_rule_id": new_id, "activation_state": "active", "is_active": True, "review_state": "governance_approved", "review_status": "governance_approved", "rule_status": "governance_approved", "review_decision": "approved", "activated_by": reviewer, "activated_at": now, "effective_from": now, "effective_to": "", "supersedes_record_id": old_id, "supersedes_enrichment_rule_id": old_id})
@@ -1908,13 +1957,21 @@ def _write_enrichment_records(records: list[dict[str, Any]], *, config: Any, env
     """Append records to ``METADATA_ENRICHMENT_RULES``."""
     _write_table_metadata_enrichment_records(records, config=config, env=env, spark_session=spark_session)
 
-def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str, rule_type: str, column_name: str = "", parameters: Mapping[str, Any] | None = None, severity: str = "warning", description: str = "", policy: Mapping[str, Any] | None = None, bypass_reason: str = "", actor: str | None = None, source_notebook_type: str = "02_pipeline", config: Any = None) -> dict[str, Any]:
+def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str, rule_type: str, column_name: str = "", parameters: Mapping[str, Any] | None = None, severity: str = "warning", description: str = "", policy: Mapping[str, Any] | None = None, bypass_reason: str = "", actor: str | None = None, action: str = "submit", source_notebook_type: str = "02_pipeline", created_by_role: str = "engineering", config: Any = None) -> dict[str, Any]:
     """Build one ``METADATA_GUARDRAIL_RULES`` record for widget save actions."""
     env_name = str(state.get("environment_name") or "")
     dataset = str(state.get("dataset_name") or "")
     table = str(state.get("table_name") or "")
     rule_id = f"{table}.{column_name or '_table'}.{guardrail_type}.{rule_type}"
-    lifecycle = guardrail_authoring_status(policy or state, bypass_reason=bypass_reason, actor=actor, config=config)
+    lifecycle = guardrail_authoring_status(
+        policy or state,
+        bypass_reason=bypass_reason,
+        actor=actor,
+        config=config,
+        action=action,
+        source_notebook_type=source_notebook_type,
+        created_by_role=created_by_role,
+    )
     created_at = _now_utc_iso(config)
     created_by = _resolve_action_by(actor)
     return {"rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env_name, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)), "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": created_by, "created_at": created_at, "submitted_by": created_by, "submitted_at": created_at, "reviewed_by": created_by if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": created_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": created_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
@@ -2089,6 +2146,9 @@ def _schema_freshness_profile_records_from_selection(
     profile_mode: str,
     watermark_column: str,
     bypass_reason: str = "",
+    action: str = "submit",
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
     config: Any = None,
 ) -> list[dict[str, Any]]:
     """Build schema, freshness, and profile behavior rule rows from selections."""
@@ -2113,6 +2173,9 @@ def _schema_freshness_profile_records_from_selection(
             parameters={"columns": columns, "data_types": {column: data_types.get(column, "") for column in columns}},
             description="Selected-table schema guardrail",
             bypass_reason=bypass_reason,
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
             config=config,
         ),
         _base_guardrail_rule_record(
@@ -2122,6 +2185,9 @@ def _schema_freshness_profile_records_from_selection(
             parameters={"freshness_column": freshness_column if str(freshness_mode) == "enforce" else "", "max_lag_days": lag_days},
             description="Freshness guardrail",
             bypass_reason=bypass_reason,
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
             config=config,
         ),
         _base_guardrail_rule_record(
@@ -2131,6 +2197,9 @@ def _schema_freshness_profile_records_from_selection(
             parameters={"watermark_column": watermark_column if str(profile_mode) == "changing_data" else ""},
             description="Profile behavior guardrail",
             bypass_reason=bypass_reason,
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
             config=config,
         ),
     ]
@@ -2143,6 +2212,8 @@ def widget_author_schema_freshness_profile_rules(
     env: str | None = None,
     spark_session: Any = None,
     bypass_reason: str = "",
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
     commit: bool = False,
 ) -> dict[str, Any]:
     """Render interactive schema, freshness, and profile behavior authoring UI.
@@ -2155,6 +2226,10 @@ def widget_author_schema_freshness_profile_rules(
         Runtime objects used for save actions.
     bypass_reason : str, optional
         Initial approval-bypass reason.
+    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+        Notebook type stamped on authored records.
+    created_by_role : {"engineering", "governance", "system"}, default="engineering"
+        Role stamped on authored records.
     commit : bool, default=False
         Whether to save the initial generated records immediately.
 
@@ -2190,17 +2265,14 @@ def widget_author_schema_freshness_profile_rules(
     message = widgets.HTML()
     records_state: dict[str, Any] = {"records": []}
 
-    governed = str(state.get("governance_mode") or "ungoverned") == "governed"
-    primary_label = "Submit for governance approval" if governed else "Save active rules"
-    save_button = widgets.Button(description=primary_label, button_style="success")
-    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
-    bypass_button.layout.display = "" if governed and bool(state.get("approval_bypass_allowed")) else "none"
+    draft_button = widgets.Button(description="Save draft", button_style="")
+    submit_button = widgets.Button(description="Submit for governance review", button_style="success")
+    apply_now_button = widgets.Button(description="Apply now", button_style="warning")
     cancel_button = widgets.Button(description="Cancel")
 
-    def build_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
-        reason = bypass_box.value.strip() if use_bypass else ""
-        if use_bypass and not reason:
-            raise ValueError("Bypass reason is required to skip approval.")
+    def build_records(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        selected_action = "apply_now" if use_bypass else action
+        reason = bypass_box.value.strip() if selected_action == "apply_now" else ""
         return _schema_freshness_profile_records_from_selection(
             state,
             selected_columns=list(schema_columns.value),
@@ -2211,20 +2283,23 @@ def widget_author_schema_freshness_profile_rules(
             profile_mode=profile_mode.value,
             watermark_column=watermark_column.value,
             bypass_reason=reason,
+            action=selected_action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
             config=config,
         )
 
     def refresh_preview(*_: Any) -> None:
         try:
-            records_state["records"] = build_records(use_bypass=False)
+            records_state["records"] = build_records(action="submit")
             preview.value = json.dumps(records_state["records"], indent=2, default=str)
             message.value = ""
         except Exception as exc:
             preview.value = ""
             message.value = f"<b style='color:#b00020'>Validation error:</b> {exc}"
 
-    def save(*, use_bypass: bool = False) -> list[dict[str, Any]]:
-        records = build_records(use_bypass=use_bypass)
+    def save(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        records = build_records(action="apply_now" if use_bypass else action)
         records_state["records"] = records
         if spark_session is None or config is None or env is None:
             message.value = "<b>Preview only:</b> config, env, and spark_session are required to save."
@@ -2240,12 +2315,13 @@ def widget_author_schema_freshness_profile_rules(
 
     for control in (schema_columns, schema_mode, freshness_mode, freshness_column, max_lag, profile_mode, watermark_column, bypass_box):
         control.observe(lambda change: refresh_preview(), names="value")
-    save_button.on_click(lambda _: save(use_bypass=False))
-    bypass_button.on_click(lambda _: save(use_bypass=True))
+    draft_button.on_click(lambda _: save(action="draft"))
+    submit_button.on_click(lambda _: save(action="submit"))
+    apply_now_button.on_click(lambda _: save(action="apply_now"))
     cancel_button.on_click(cancel)
     refresh_preview()
     if commit:
-        save(use_bypass=bool(bypass_reason))
+        save(action="apply_now" if bypass_reason else "submit")
 
     ui = widgets.VBox([
         widgets.HTML("<h3>Author schema, freshness, and profile behavior rules</h3>"),
@@ -2258,11 +2334,20 @@ def widget_author_schema_freshness_profile_rules(
         widgets.HBox([profile_mode, watermark_column]),
         bypass_box,
         preview,
-        widgets.HBox([save_button, bypass_button, cancel_button]),
+        widgets.HBox([draft_button, submit_button, apply_now_button, cancel_button]),
         message,
     ])
     ip.display(ui)
-    return {"records": records_state["records"], "controls": {"schema_columns": schema_columns, "schema_mode": schema_mode, "freshness_mode": freshness_mode, "freshness_column": freshness_column, "max_lag": max_lag, "profile_mode": profile_mode, "watermark_column": watermark_column, "bypass_reason": bypass_box}, "build_records": build_records, "save": save, "ui": ui}
+    return {
+        "records": records_state["records"],
+        "controls": {"schema_columns": schema_columns, "schema_mode": schema_mode, "freshness_mode": freshness_mode, "freshness_column": freshness_column, "max_lag": max_lag, "profile_mode": profile_mode, "watermark_column": watermark_column, "apply_now_reason": bypass_box, "bypass_reason": bypass_box},
+        "build_records": build_records,
+        "save": save,
+        "save_draft_button": draft_button,
+        "submit_button": submit_button,
+        "apply_now_button": apply_now_button,
+        "ui": ui,
+    }
 
 def _dq_records_from_selection(
     state: Mapping[str, Any],
@@ -2273,6 +2358,9 @@ def _dq_records_from_selection(
     severity: str = "warning",
     bypass_reason: str = "",
     action_type: str = "created",
+    action: str = "submit",
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
     config: Any = None,
 ) -> list[dict[str, Any]]:
     """Build DQ rule records from selected columns."""
@@ -2287,6 +2375,9 @@ def _dq_records_from_selection(
             severity=severity,
             description=f"{rule_type} DQ guardrail",
             bypass_reason=bypass_reason,
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
             config=config,
         )
         record["action_type"] = action_type
@@ -2309,6 +2400,8 @@ def widget_author_dq_rules(
     env: str | None = None,
     spark_session: Any = None,
     bypass_reason: str = "",
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
     commit: bool = False,
 ) -> dict[str, Any]:
     """Render interactive manual or AI-assisted DQ rule authoring UI.
@@ -2331,6 +2424,10 @@ def widget_author_dq_rules(
         Runtime objects used for AI suggestions and saves.
     bypass_reason : str, optional
         Initial approval-bypass reason.
+    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+        Notebook type stamped on authored records.
+    created_by_role : {"engineering", "governance", "system"}, default="engineering"
+        Role stamped on authored records.
     commit : bool, default=False
         Whether to save the initial generated records immediately.
 
@@ -2365,13 +2462,11 @@ def widget_author_dq_rules(
     message = widgets.HTML()
     records_state: dict[str, Any] = {"records": [], "suggestions": []}
 
-    governed = str(state.get("governance_mode") or "ungoverned") == "governed"
-    primary_label = "Submit for governance approval" if governed else "Save active rules"
-    save_batch_button = widgets.Button(description=primary_label, button_style="success")
+    save_draft_button = widgets.Button(description="Save draft", button_style="")
+    submit_button = widgets.Button(description="Submit for governance review", button_style="success")
+    apply_now_button = widgets.Button(description="Apply now", button_style="warning")
     save_one_button = widgets.Button(description="Save/update selected rule", button_style="info")
     clear_one_button = widgets.Button(description="Clear / supersede selected rule", button_style="warning")
-    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
-    bypass_button.layout.display = "" if governed and bool(state.get("approval_bypass_allowed")) else "none"
     ai_button = widgets.Button(description="Generate AI suggestions")
     ai_button.layout.display = "" if mode == "ai_suggest" else "none"
     approve_ai_button = widgets.Button(description="Approve AI suggestions", button_style="success")
@@ -2395,21 +2490,19 @@ def widget_author_dq_rules(
         params.pop("columns", None)
         individual_params.value = json.dumps(params, indent=2, default=str)
 
-    def build_batch_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
-        reason = bypass_box.value.strip() if use_bypass else ""
-        if use_bypass and not reason:
-            raise ValueError("Bypass reason is required to skip approval.")
-        return _dq_records_from_selection(state, rule_type=batch_rule_type.value, selected_columns=list(batch_columns.value), parameters=_batch_parameters(), severity=batch_severity.value, bypass_reason=reason, config=config)
+    def build_batch_records(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        selected_action = "apply_now" if use_bypass else action
+        reason = bypass_box.value.strip() if selected_action == "apply_now" else ""
+        return _dq_records_from_selection(state, rule_type=batch_rule_type.value, selected_columns=list(batch_columns.value), parameters=_batch_parameters(), severity=batch_severity.value, bypass_reason=reason, action=selected_action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config)
 
-    def build_individual_record(*, action_type: str = "created", use_bypass: bool = False) -> list[dict[str, Any]]:
-        reason = bypass_box.value.strip() if use_bypass else ""
-        if use_bypass and not reason:
-            raise ValueError("Bypass reason is required to skip approval.")
-        return _dq_records_from_selection(state, rule_type=individual_rule_type.value, selected_columns=[search_column.value], parameters=_individual_parameters(), severity=batch_severity.value, bypass_reason=reason, action_type=action_type, config=config)
+    def build_individual_record(*, action_type: str = "created", action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        selected_action = "apply_now" if use_bypass else action
+        reason = bypass_box.value.strip() if selected_action == "apply_now" else ""
+        return _dq_records_from_selection(state, rule_type=individual_rule_type.value, selected_columns=[search_column.value], parameters=_individual_parameters(), severity=batch_severity.value, bypass_reason=reason, action_type=action_type, action=selected_action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config)
 
     def refresh_preview(*_: Any) -> None:
         try:
-            records_state["records"] = build_batch_records(use_bypass=False)
+            records_state["records"] = build_batch_records(action="submit")
             preview.value = json.dumps(records_state["records"], indent=2, default=str)
             message.value = ""
         except Exception as exc:
@@ -2425,11 +2518,11 @@ def widget_author_dq_rules(
         message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
         return records
 
-    def save_batch(*, use_bypass: bool = False) -> list[dict[str, Any]]:
-        return save_records(build_batch_records(use_bypass=use_bypass))
+    def save_batch(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        return save_records(build_batch_records(action="apply_now" if use_bypass else action))
 
-    def save_individual(*, action_type: str = "created", use_bypass: bool = False) -> list[dict[str, Any]]:
-        return save_records(build_individual_record(action_type=action_type, use_bypass=use_bypass))
+    def save_individual(*, action_type: str = "created", action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        return save_records(build_individual_record(action_type=action_type, action="apply_now" if use_bypass else action))
 
     def suggest_ai(_: Any = None) -> list[dict[str, Any]]:
         profile_rows = list(state.get("catalogue_profile_rows") or [])
@@ -2443,15 +2536,14 @@ def widget_author_dq_rules(
         message.value = f"<b>Loaded {len(suggestions)} AI draft suggestion(s). Edit and save approved suggestions.</b>"
         return records_state["suggestions"]
 
-    def approve_ai(*, use_bypass: bool = False) -> list[dict[str, Any]]:
-        reason = bypass_box.value.strip() if use_bypass else ""
-        if use_bypass and not reason:
-            raise ValueError("Bypass reason is required to skip approval.")
+    def approve_ai(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
+        selected_action = "apply_now" if use_bypass else action
+        reason = bypass_box.value.strip() if selected_action == "apply_now" else ""
         records = []
         for suggestion in records_state["suggestions"]:
             suggestion_columns = suggestion.get("columns") or [suggestion.get("column_name") or ""]
             params = {key: value for key, value in suggestion.items() if key not in {"rule_id", "rule_type", "columns", "column_name", "review_status", "is_active"}}
-            records.extend(_dq_records_from_selection(state, rule_type=str(suggestion.get("rule_type") or "not_null"), selected_columns=suggestion_columns, parameters=params, severity=batch_severity.value, bypass_reason=reason, config=config))
+            records.extend(_dq_records_from_selection(state, rule_type=str(suggestion.get("rule_type") or "not_null"), selected_columns=suggestion_columns, parameters=params, severity=batch_severity.value, bypass_reason=reason, action=selected_action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config))
         return save_records(records)
 
     def reject_ai(_: Any = None) -> None:
@@ -2463,17 +2555,18 @@ def widget_author_dq_rules(
         control.observe(lambda change: refresh_preview(), names="value")
     for control in (search_column, individual_rule_type):
         control.observe(lambda change: load_existing_individual(), names="value")
-    save_batch_button.on_click(lambda _: save_batch(use_bypass=False))
-    save_one_button.on_click(lambda _: save_individual(action_type="created", use_bypass=False))
-    clear_one_button.on_click(lambda _: save_individual(action_type="superseded", use_bypass=False))
-    bypass_button.on_click(lambda _: save_batch(use_bypass=True))
+    save_draft_button.on_click(lambda _: save_batch(action="draft"))
+    submit_button.on_click(lambda _: save_batch(action="submit"))
+    apply_now_button.on_click(lambda _: save_batch(action="apply_now"))
+    save_one_button.on_click(lambda _: save_individual(action_type="created", action="submit"))
+    clear_one_button.on_click(lambda _: save_individual(action_type="superseded", action="submit"))
     ai_button.on_click(suggest_ai)
     approve_ai_button.on_click(lambda _: approve_ai(use_bypass=False))
     reject_ai_button.on_click(reject_ai)
     load_existing_individual()
     refresh_preview()
     if commit:
-        save_batch(use_bypass=bool(bypass_reason))
+        save_batch(action="apply_now" if bypass_reason else "submit")
 
     ui = widgets.VBox([
         widgets.HTML("<h3>Author DQ rules</h3>"),
@@ -2491,11 +2584,11 @@ def widget_author_dq_rules(
         widgets.HBox([approve_ai_button, reject_ai_button]),
         bypass_box,
         preview,
-        widgets.HBox([save_batch_button, save_one_button, clear_one_button, bypass_button]),
+        widgets.HBox([save_draft_button, submit_button, apply_now_button, save_one_button, clear_one_button]),
         message,
     ])
     ip.display(ui)
-    return {"records": records_state["records"], "suggestions": records_state["suggestions"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "suggest_ai": suggest_ai, "approve_ai": approve_ai, "reject_ai": reject_ai, "ui": ui}
+    return {"records": records_state["records"], "suggestions": records_state["suggestions"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "apply_now_reason": bypass_box, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "save_draft_button": save_draft_button, "submit_button": submit_button, "apply_now_button": apply_now_button, "suggest_ai": suggest_ai, "approve_ai": approve_ai, "reject_ai": reject_ai, "ui": ui}
 
 def build_table_governance_policy_record(state: Mapping[str, Any], *, governance_mode: str, approval_policy: str | None = None, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
     """Build a table-level governance policy row.
@@ -2571,6 +2664,8 @@ def widget_author_guardrail_rules(
     config: Any = None,
     env: str | None = None,
     spark_session: Any = None,
+    source_notebook_type: str = "03_governance",
+    created_by_role: str = "governance",
 ) -> dict[str, Any]:
     """Render schema/freshness/profile and DQ guardrail authoring widgets.
 
@@ -2580,6 +2675,10 @@ def widget_author_guardrail_rules(
         Handover state from :func:`widget_select_guardrail_target`.
     config, env, spark_session : Any, optional
         Runtime objects used for saves.
+    source_notebook_type : {"02_pipeline", "03_governance"}, default="03_governance"
+        Notebook type stamped on authored records.
+    created_by_role : {"engineering", "governance", "system"}, default="governance"
+        Role stamped on authored records.
 
     Returns
     -------
@@ -2588,8 +2687,8 @@ def widget_author_guardrail_rules(
 
     """
     return {
-        "schema_freshness_profile": widget_author_schema_freshness_profile_rules(state, config=config, env=env, spark_session=spark_session),
-        "dq": widget_author_dq_rules(state, config=config, env=env, spark_session=spark_session),
+        "schema_freshness_profile": widget_author_schema_freshness_profile_rules(state, config=config, env=env, spark_session=spark_session, source_notebook_type=source_notebook_type, created_by_role=created_by_role),
+        "dq": widget_author_dq_rules(state, config=config, env=env, spark_session=spark_session, source_notebook_type=source_notebook_type, created_by_role=created_by_role),
     }
 
 
@@ -2612,7 +2711,185 @@ def widget_review_table_governance(state: Mapping[str, Any], *, config: Any = No
 
     """
     _assert_governance_review_context(source_notebook_type)
-    return widget_review_guardrail_governance(state, config=config, env=env, spark_session=spark_session)
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    guardrail_rules = [dict(row, _record_kind="guardrail") for row in list(state.get("existing_rules") or [])]
+    enrichment_rules = [dict(row, _record_kind="enrichment") for row in list(state.get("existing_enrichment_rules") or state.get("existing_enrichment") or [])]
+    runtime_results = list(state.get("existing_results") or state.get("existing_guardrail_results") or [])
+    all_records = guardrail_rules + enrichment_rules
+
+    def _review_state(row: Mapping[str, Any]) -> str:
+        return str(row.get("review_state") or row.get("review_status") or "")
+
+    def _activation_state(row: Mapping[str, Any]) -> str:
+        return str(row.get("activation_state") or ("active" if row.get("is_active") is True else "inactive"))
+
+    def _last_updated(row: Mapping[str, Any]) -> str:
+        return str(row.get("updated_at") or row.get("reviewed_at") or row.get("activated_at") or row.get("created_at") or row.get("_committed_at") or "")
+
+    def _params_summary(row: Mapping[str, Any]) -> str:
+        if row.get("_record_kind") == "enrichment":
+            payload = row.get("enrichment_payload_json") or ""
+            return str(payload or row.get("business_description") or row.get("business_meaning") or "")
+        return _dq_rule_parameters_summary(dict(row))
+
+    def _runtime_summary(row: Mapping[str, Any]) -> str:
+        if row.get("_record_kind") != "guardrail":
+            return ""
+        key = str(row.get("rule_key") or "")
+        rule_id = str(row.get("rule_id") or "")
+        matches = [dict(result) for result in runtime_results if str(result.get("rule_key") or "") == key or str(result.get("rule_id") or "") == rule_id]
+        if not matches:
+            return ""
+        latest = max(matches, key=lambda result: str(result.get("created_at") or result.get("_committed_at") or ""))
+        return str(latest.get("status") or latest.get("reason") or latest.get("result_payload_json") or "")
+
+    def _record_label(row: Mapping[str, Any], index: int) -> tuple[str, int]:
+        kind = "Enrichment" if row.get("_record_kind") == "enrichment" else "Guardrail"
+        record_type = str(row.get("enrichment_type") or row.get("rule_type") or row.get("guardrail_type") or "record")
+        column = str(row.get("column_name") or "_table")
+        return f"{kind} · {record_type} · {column} · {_activation_state(row)} · {_review_state(row)}", index
+
+    def _record_card(row: Mapping[str, Any]) -> str:
+        kind = "Enrichment" if row.get("_record_kind") == "enrichment" else "Guardrail"
+        type_value = str(row.get("enrichment_type") or row.get("rule_type") or row.get("guardrail_type") or "")
+        runtime = _runtime_summary(row)
+        parts = [
+            f"<b>Type:</b> {kind}",
+            f"<b>Column:</b> {row.get('column_name') or '_table'}",
+            f"<b>Rule/enrichment type:</b> {type_value}",
+            f"<b>Current value or parameters:</b> {_params_summary(row)}",
+            f"<b>Created by role:</b> {row.get('created_by_role') or row.get('author_role') or ''}",
+            f"<b>Created in notebook:</b> {row.get('source_notebook_type') or ''}",
+            f"<b>Activation state:</b> {_activation_state(row)}",
+            f"<b>Review state:</b> {_review_state(row)}",
+            f"<b>Last updated:</b> {_last_updated(row)}",
+            f"<b>Review comment:</b> {row.get('review_comment') or ''}",
+        ]
+        if runtime:
+            parts.append(f"<b>Runtime result:</b> {runtime}")
+        return "<div style='border:1px solid #ddd;padding:8px;margin:4px 0'>" + "<br/>".join(parts) + "</div>"
+
+    sections = {
+        "Needs governance review": [
+            row for row in all_records
+            if _review_state(row) in {"pending_governance_review", "active_pending_governance_review"}
+        ],
+        "Currently active": [
+            row for row in all_records
+            if _activation_state(row) == "active" and _review_state(row) == "governance_approved"
+        ],
+        "Rejected or inactive": [
+            row for row in all_records
+            if _review_state(row) in {"rejected_by_governance", "inactive"} or (_activation_state(row) == "inactive" and _review_state(row) not in {"draft", "pending_governance_review", "superseded"})
+        ],
+        "Superseded history": [row for row in all_records if _review_state(row) == "superseded"],
+    }
+
+    options = [_record_label(row, idx) for idx, row in enumerate(all_records)]
+    selected_record = widgets.Dropdown(options=options or [("No governance records", -1)], description="Record", layout=widgets.Layout(width="860px"))
+    replacement_key = widgets.Text(description="Replacement ID", layout=widgets.Layout(width="620px"))
+    message = widgets.HTML()
+    records_state: dict[str, Any] = {"last_record": None}
+
+    approve_button = widgets.Button(description="Approve", button_style="success")
+    approve_activate_button = widgets.Button(description="Approve and activate", button_style="success")
+    reject_button = widgets.Button(description="Reject", button_style="danger")
+    replace_button = widgets.Button(description="Replace record", button_style="warning")
+    deactivate_button = widgets.Button(description="Deactivate", button_style="warning")
+    view_history_button = widgets.Button(description="View history", button_style="info")
+
+    def _selected_record_row() -> dict[str, Any]:
+        if selected_record.value == -1:
+            raise ValueError("No governance record is selected.")
+        return all_records[int(selected_record.value)]
+
+    def allowed_actions(record: Mapping[str, Any]) -> list[str]:
+        """Return formal review actions available for a record lifecycle."""
+        state_value = _review_state(record)
+        if state_value == "pending_governance_review":
+            return ["approve_and_activate", "reject", "replace", "view_history"]
+        if state_value == "active_pending_governance_review":
+            return ["approve", "reject", "replace", "view_history"]
+        if state_value == "governance_approved":
+            return ["replace", "deactivate", "view_history"]
+        return ["view_history"]
+
+    def refresh_action_buttons(*_: Any) -> None:
+        actions = allowed_actions(_selected_record_row()) if selected_record.value != -1 else []
+        approve_button.disabled = "approve" not in actions
+        approve_activate_button.disabled = "approve_and_activate" not in actions
+        reject_button.disabled = "reject" not in actions
+        replace_button.disabled = "replace" not in actions
+        deactivate_button.disabled = "deactivate" not in actions
+        view_history_button.disabled = "view_history" not in actions
+
+    def save_record_action(action: str) -> dict[str, Any] | list[dict[str, Any]]:
+        if action == "view_history":
+            selected = _selected_record_row()
+            history_rows = load_rule_review_history(all_records, metadata_table_key=str(selected.get("metadata_table_key") or state.get("metadata_table_key") or ""), table_name=str(selected.get("table_name") or state.get("table_name") or ""), column_name=str(selected.get("column_name") or ""))
+            records_state["last_record"] = history_rows
+            message.value = "<pre>" + json.dumps(history_rows, indent=2, default=str) + "</pre>"
+            return {"history": history_rows}
+        selected = _selected_record_row()
+        if action not in allowed_actions(selected):
+            raise ValueError(f"Action {action!r} is not available for review_state={_review_state(selected)!r}.")
+        if selected.get("_record_kind") == "enrichment":
+            row = apply_governance_enrichment_action(selected, action, supersedes_enrichment_rule_id=replacement_key.value, source_notebook_type=source_notebook_type, config=config)
+            target_table = ENRICHMENT_RULES_TABLE
+            writer = _write_enrichment_records
+        else:
+            row = apply_governance_rule_action(selected, action, superseded_by_rule_key=replacement_key.value, source_notebook_type=source_notebook_type, config=config)
+            target_table = GUARDRAIL_RULES_TABLE
+            writer = _write_rule_records
+        rows_to_write = row if isinstance(row, list) else [row]
+        for review_row in rows_to_write:
+            review_row.pop("_record_kind", None)
+        records_state["last_record"] = row
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save review action."
+            return row
+        writer(rows_to_write, config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {action} formal review event to {target_table}.</b>"
+        return row
+
+    selected_record.observe(refresh_action_buttons, names="value")
+    approve_button.on_click(lambda _: save_record_action("approve"))
+    approve_activate_button.on_click(lambda _: save_record_action("approve_and_activate"))
+    reject_button.on_click(lambda _: save_record_action("reject"))
+    replace_button.on_click(lambda _: save_record_action("replace"))
+    deactivate_button.on_click(lambda _: save_record_action("deactivate"))
+    view_history_button.on_click(lambda _: save_record_action("view_history"))
+    refresh_action_buttons()
+
+    section_widgets = []
+    for title, rows in sections.items():
+        section_widgets.extend([
+            widgets.HTML(f"<h4>{title}</h4>"),
+            widgets.HTML("".join(_record_card(row) for row in rows) or "<i>No records.</i>"),
+        ])
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>Review table governance</h3>"),
+        widgets.HTML("<p>Formal review happens only in 03_governance. Review enrichment records from METADATA_ENRICHMENT_RULES and guardrail records from METADATA_GUARDRAIL_RULES.</p>"),
+        *section_widgets,
+        widgets.HTML("<h4>Formal review action</h4>"),
+        selected_record,
+        replacement_key,
+        widgets.HBox([approve_activate_button, approve_button, reject_button, replace_button, deactivate_button, view_history_button]),
+        message,
+    ])
+    ip.display(ui)
+    return {
+        "sections": sections,
+        "controls": {"selected_record": selected_record, "replacement_key": replacement_key},
+        "buttons": {"approve": approve_button, "approve_and_activate": approve_activate_button, "reject": reject_button, "replace": replace_button, "deactivate": deactivate_button, "view_history": view_history_button},
+        "allowed_actions": allowed_actions,
+        "save_record_action": save_record_action,
+        "last_record": records_state,
+        "ui": ui,
+    }
 
 def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None) -> dict[str, Any]:
     """Render interactive 03 governance policy and shared rule-review controls.
@@ -2658,10 +2935,11 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
     message = widgets.HTML()
     records_state: dict[str, Any] = {"last_record": None}
 
-    approve_button = widgets.Button(description="Approve proposed record", button_style="success")
-    reject_button = widgets.Button(description="Reject proposed record", button_style="danger")
-    supersede_button = widgets.Button(description="Supersede active record", button_style="warning")
-    clear_post_review_button = widgets.Button(description="Clear post-review requirement", button_style="info")
+    approve_button = widgets.Button(description="Approve", button_style="success")
+    approve_activate_button = widgets.Button(description="Approve and activate", button_style="success")
+    reject_button = widgets.Button(description="Reject", button_style="danger")
+    replace_button = widgets.Button(description="Replace record", button_style="warning")
+    deactivate_button = widgets.Button(description="Deactivate", button_style="warning")
 
     def _selected_record_row() -> dict[str, Any]:
         if selected_record.value == -1:
@@ -2675,10 +2953,7 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
             target_table = ENRICHMENT_RULES_TABLE
             writer = _write_enrichment_records
         else:
-            mapped_action = "approve" if action == "clear_post_review" else action
-            row = apply_governance_rule_action(selected, mapped_action, superseded_by_rule_key=replacement_key.value, config=config)
-            if action == "clear_post_review":
-                row["requires_post_review"] = False
+            row = apply_governance_rule_action(selected, action, superseded_by_rule_key=replacement_key.value, config=config)
             target_table = GUARDRAIL_RULES_TABLE
             writer = _write_rule_records
         rows_to_write = row if isinstance(row, list) else [row]
@@ -2693,9 +2968,10 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
         return row
 
     approve_button.on_click(lambda _: save_record_action("approve"))
+    approve_activate_button.on_click(lambda _: save_record_action("approve_and_activate"))
     reject_button.on_click(lambda _: save_record_action("reject"))
-    supersede_button.on_click(lambda _: save_record_action("supersede"))
-    clear_post_review_button.on_click(lambda _: save_record_action("clear_post_review"))
+    replace_button.on_click(lambda _: save_record_action("replace"))
+    deactivate_button.on_click(lambda _: save_record_action("deactivate"))
 
     ui = widgets.VBox([
         widgets.HTML("<h3>Governance policy, enrichment review, and guardrail review</h3>"),
@@ -2705,7 +2981,7 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
         widgets.HTML("<h4>Proposed, bypassed, and active records requiring governance decisions</h4>"),
         selected_record,
         replacement_key,
-        widgets.HBox([approve_button, reject_button, supersede_button, clear_post_review_button]),
+        widgets.HBox([approve_activate_button, approve_button, reject_button, replace_button, deactivate_button]),
         widgets.HTML("<h4>Approval logs and record history by table</h4>"),
         history,
         message,

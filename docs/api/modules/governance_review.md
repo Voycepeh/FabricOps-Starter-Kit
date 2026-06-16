@@ -122,7 +122,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>Callable</td>
       <td>function</td>
       <td>Render 03-only formal review controls for enrichment and guardrail records.</td>
-      <td><code>_assert_governance_review_context</code> (internal)</td>
+      <td><code>_assert_governance_review_context</code> (internal), <code>_dq_rule_parameters_summary</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
@@ -180,7 +180,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <li>
 <a class="reference-chip" href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_assert_governance_review_context</code></span>, <a class="reference-chip" href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>
+<span class="reference-chip"><code>_assert_governance_review_context</code></span>, <span class="reference-chip"><code>_dq_rule_parameters_summary</code></span>, <span class="reference-chip"><code>apply_governance_enrichment_action</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>load_rule_review_history</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
@@ -278,7 +278,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_dq_rule_parameters_summary</code></td>
-      <td>—</td>
+      <td><a href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_summary</code></td>

@@ -363,22 +363,26 @@ def test_schema_widget_prepopulates_and_validates_user_inputs(monkeypatch):
         raise AssertionError("changing_data without watermark_column should fail")
 
 
-def test_governed_bypass_widget_save_requires_reason(monkeypatch):
-    """Verify governed bypass widget save requires a reason and creates bypass rows."""
+def test_governed_authoring_widget_actions_create_required_lifecycles(monkeypatch):
+    """Verify governed schema authoring exposes draft, submit, and apply-now actions."""
     _install_fake_notebook_widgets(monkeypatch)
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
     widget = widget_author_schema_freshness_profile_rules(state)
 
-    try:
-        widget["build_records"](use_bypass=True)
-    except ValueError as exc:
-        assert "Bypass reason" in str(exc)
-    else:
-        raise AssertionError("bypass without reason should fail")
-    widget["controls"]["bypass_reason"].value = "urgent production fix"
-    records = widget["build_records"](use_bypass=True)
-    assert all(record["review_status"] == "active_pending_governance_review" for record in records)
-    assert all(record["approval_bypassed"] is True for record in records)
+    draft = widget["build_records"](action="draft")
+    submitted = widget["build_records"](action="submit")
+    applied = widget["build_records"](action="apply_now")
+
+    assert {record["review_state"] for record in draft} == {"draft"}
+    assert {record["activation_state"] for record in draft} == {"inactive"}
+    assert {record["requires_governance_review"] for record in draft} == {False}
+    assert {record["review_state"] for record in submitted} == {"pending_governance_review"}
+    assert {record["activation_state"] for record in submitted} == {"pending"}
+    assert {record["requires_governance_review"] for record in submitted} == {True}
+    assert {record["review_state"] for record in applied} == {"active_pending_governance_review"}
+    assert {record["activation_state"] for record in applied} == {"active"}
+    assert {record["activation_reason"] for record in applied} == {"engineering_apply_now"}
+    assert {record["requires_governance_review"] for record in applied} == {True}
 
 
 def test_dq_widget_manual_individual_clear_and_ai_drafts(monkeypatch):
@@ -689,3 +693,67 @@ def test_enrichment_governance_approved_lifecycle_from_record_table(monkeypatch)
     assert record["activated_by"]
     assert record["activated_at"]
     assert record["effective_from"]
+
+
+
+def test_authoring_widgets_stamp_02_and_03_sources(monkeypatch):
+    """Verify authoring widgets stamp notebook type and creator role by context."""
+    _install_fake_notebook_widgets(monkeypatch)
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required"}
+
+    engineering = widget_author_dq_rules(state, selected_columns=["order_id"])["build_batch_records"](action="submit")[0]
+    governance = widget_author_dq_rules(state, selected_columns=["order_id"], source_notebook_type="03_governance", created_by_role="governance")["build_batch_records"](action="submit")[0]
+
+    assert engineering["source_notebook_type"] == "02_pipeline"
+    assert engineering["created_by_role"] == "engineering"
+    assert governance["source_notebook_type"] == "03_governance"
+    assert governance["created_by_role"] == "governance"
+
+
+def test_enrichment_widget_exposes_required_authoring_actions(monkeypatch):
+    """Verify enrichment authoring exposes draft, submit, and apply-now lifecycle paths."""
+    _install_fake_notebook_widgets(monkeypatch)
+    import types
+
+    config = types.SimpleNamespace(governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"], enrichment_context_extra_fields=[], enrichment_classification_extra_fields=[]))
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "run", "profile_stage": "target", "catalogue_profile_rows": [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "order_id", "data_type": "int", "profile_run_id": "run", "profile_stage": "target"}], "governance_mode": "governed", "approval_policy": "approval_required"}
+    widget = governance_review.widget_enrich_table_metadata(state, config=config, env="dev", spark_session=object())
+
+    assert widget["save_draft_button"].description == "Save draft"
+    assert widget["submit_button"].description == "Submit for governance review"
+    assert widget["apply_now_button"].description == "Apply now"
+    assert widget["build_records"](action="draft")[0]["review_state"] == "draft"
+    assert widget["build_records"](action="submit")[0]["review_state"] == "pending_governance_review"
+    assert widget["build_records"](action="apply_now")[0]["review_state"] == "active_pending_governance_review"
+
+
+def test_review_table_governance_sections_actions_and_replace_mapping(monkeypatch):
+    """Verify the formal review widget sections records and uses replace actions."""
+    _install_fake_notebook_widgets(monkeypatch)
+    state = {
+        "environment_name": "dev",
+        "dataset_name": "sales",
+        "table_name": "orders",
+        "metadata_table_key": "table-key",
+        "existing_rules": [
+            _rule(rule_id="pending", rule_key="pending", activation_state="pending", is_active=False, review_state="pending_governance_review", review_status="pending_governance_review"),
+            _rule(rule_id="active", rule_key="active", activation_state="active", is_active=True, review_state="governance_approved", review_status="governance_approved"),
+            _rule(rule_id="old", rule_key="old", activation_state="inactive", is_active=False, review_state="superseded", review_status="superseded"),
+        ],
+    }
+    widget = governance_review.widget_review_table_governance(state)
+
+    assert set(widget["sections"]) == {"Needs governance review", "Currently active", "Rejected or inactive", "Superseded history"}
+    assert widget["allowed_actions"]({"review_state": "pending_governance_review"}) == ["approve_and_activate", "reject", "replace", "view_history"]
+    assert widget["buttons"]["replace"].description == "Replace record"
+    replaced = widget["save_record_action"]("replace")
+    assert len(replaced) == 2
+    assert replaced[0]["review_state"] == "superseded"
+    assert replaced[1]["review_state"] == "governance_approved"
+
+    try:
+        governance_review.widget_review_table_governance(state, source_notebook_type="02_pipeline")
+    except PermissionError:
+        pass
+    else:
+        raise AssertionError("Formal review widget should block 02_pipeline context")

@@ -5,9 +5,9 @@ Render 03-only formal review controls for enrichment and guardrail records.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2596`
+`fabricops_kit/governance_review.py:2695`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2596-L2615">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2695-L2892">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -84,7 +84,10 @@ Not documented yet
 ### Calls
 
 - `fabricops_kit.governance_review._assert_governance_review_context`
-- <a href="../widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
+- `fabricops_kit.governance_review._dq_rule_parameters_summary`
+- `fabricops_kit.governance_review.apply_governance_enrichment_action`
+- `fabricops_kit.governance_review.apply_governance_rule_action`
+- `fabricops_kit.governance_review.load_rule_review_history`
 
 ## Implementation details
 
@@ -110,42 +113,49 @@ No additional callable notes are documented.
     ```text
     widget_review_table_governance(...)
     ├── _assert_governance_review_context(...)
-    └── widget_review_guardrail_governance(...)
-        ├── apply_governance_enrichment_action(...)
-        │   ├── _assert_governance_review_context(...)
-        │   ├── _now_utc_iso(...)
-        │   │   └── _current_audit_timestamp(...)
-        │   │       └── _get_audit_timezone(...)
-        │   │           └── _validate_audit_timezone(...)
-        │   ├── _record_identity(...)
-        │   └── _resolve_action_by(...)
-        │       ├── _context_get(...)
-        │       └── _runtime_context(...)
-        │           └── _context_get(...)
-        ├── apply_governance_rule_action(...)
-        │   ├── _assert_governance_review_context(...)
-        │   ├── _now_utc_iso(...)
-        │   │   └── _current_audit_timestamp(...)
-        │   │       └── _get_audit_timezone(...)
-        │   │           └── _validate_audit_timezone(...)
-        │   ├── _record_identity(...)
-        │   └── _resolve_action_by(...)
-        │       ├── _context_get(...)
-        │       └── _runtime_context(...)
-        │           └── _context_get(...)
-        └── load_rule_review_history(...)
+    ├── _dq_rule_parameters_summary(...)
+    ├── apply_governance_enrichment_action(...)
+    │   ├── _assert_governance_review_context(...)
+    │   ├── _now_utc_iso(...)
+    │   │   └── _current_audit_timestamp(...)
+    │   │       └── _get_audit_timezone(...)
+    │   │           └── _validate_audit_timezone(...)
+    │   ├── _record_identity(...)
+    │   └── _resolve_action_by(...)
+    │       ├── _context_get(...)
+    │       └── _runtime_context(...)
+    │           └── _context_get(...)
+    ├── apply_governance_rule_action(...)
+    │   ├── _assert_governance_review_context(...)
+    │   ├── _now_utc_iso(...)
+    │   │   └── _current_audit_timestamp(...)
+    │   │       └── _get_audit_timezone(...)
+    │   │           └── _validate_audit_timezone(...)
+    │   ├── _record_identity(...)
+    │   └── _resolve_action_by(...)
+    │       ├── _context_get(...)
+    │       └── _runtime_context(...)
+    │           └── _context_get(...)
+    └── load_rule_review_history(...)
     ```
 
-??? info "Internal helpers used: 1"
+??? info "Internal helpers used: 2"
 
-    This callable uses 1 internal helpers for other.
+    This callable uses 2 internal helpers for rule evaluation and other.
 
     <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Rule evaluation</h4>
+        <p>Convert configured rules into executable checks and evaluation results.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L788-L803"><code>_dq_rule_parameters_summary</code></a>
+        </div>
+      </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L1674-L1677"><code>_assert_governance_review_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L1723-L1726"><code>_assert_governance_review_context</code></a>
         </div>
       </section>
     </div>
@@ -163,9 +173,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2596`
+- Source line: `2695`
 - Inbound references count: 0
-- Outbound references count: 2
+- Outbound references count: 5
 - Used in templates: 03_governance
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
@@ -185,14 +195,17 @@ Not documented yet
 ### Outbound references
 
 - `fabricops_kit.governance_review._assert_governance_review_context`
-- <a href="../widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
+- `fabricops_kit.governance_review._dq_rule_parameters_summary`
+- `fabricops_kit.governance_review.apply_governance_enrichment_action`
+- `fabricops_kit.governance_review.apply_governance_rule_action`
+- `fabricops_kit.governance_review.load_rule_review_history`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2596-L2615">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2596-L2615</a>
-- Start line: `2596`
-- End line: `2615`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2695-L2892">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2695-L2892</a>
+- Start line: `2695`
+- End line: `2892`
 - Signature:
 
 ```python
@@ -215,7 +228,7 @@ def widget_review_table_governance(
 
 ### Internal implementation summary
 
-- Internal helper count: 1
+- Internal helper count: 2
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
