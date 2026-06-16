@@ -25,16 +25,20 @@ _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
 }
 _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
-_ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "bypass_active_pending_review"}
-_BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
+_ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "active_pending_governance_review"}
+_BYPASS_POST_REVIEW_WARNING = "Rule is active pending governance review."
 
 
 def _rule_review_status(row: dict) -> str:
-    return _string_value(_catalogue_value(row, "review_status")).lower()
+    return _string_value(_catalogue_value(row, "review_state", "review_status")).lower()
 
 
 def _is_active_guardrail_rule(row: dict) -> bool:
-    if _catalogue_value(row, "is_active") is not True:
+    activation_state = _string_value(_catalogue_value(row, "activation_state")).lower()
+    if activation_state:
+        if activation_state != "active":
+            return False
+    elif _catalogue_value(row, "is_active") is not True:
         return False
     return _rule_review_status(row) in _ACTIVE_RULE_REVIEW_STATUSES
 
@@ -76,7 +80,7 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
 
 
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
-    if rule and _rule_review_status(rule) == "bypass_active_pending_review":
+    if rule and _rule_review_status(rule) == "active_pending_governance_review":
         reason = str(result.get("reason") or result.get("message") or "")
         message = _BYPASS_POST_REVIEW_WARNING if not reason else f"{reason} {_BYPASS_POST_REVIEW_WARNING}"
         result["reason"] = message

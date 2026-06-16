@@ -353,3 +353,54 @@ def test_enforce_dq_rules_returns_passed_when_no_approved_active_rules(monkeypat
     assert result["can_continue"] is True
     assert result["checks"] == []
     assert "_dq_check_status" in result["dataframe"].columns
+
+
+def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):
+    """Verify DQ loading only references lifecycle columns that exist."""
+
+    def row(**overrides):
+        base = {
+            "rule_key": overrides.get("rule_key", overrides.get("rule_id", "rule")),
+            "rule_id": overrides.get("rule_id", "rule"),
+            "environment_name": "dev",
+            "dataset_name": "sales",
+            "table_name": "orders",
+            "column_name": "order_id",
+            "rule_type": "not_null",
+            "rule_parameters_json": json.dumps({"columns": ["order_id"]}),
+            "severity": "error",
+            "description": "required",
+            "action_type": "created",
+            "approved_at": "2026-01-01T00:00:00Z",
+            "_committed_at": "2026-01-01T00:00:00Z",
+        }
+        base.update(overrides)
+        return base
+
+    both = spark_session.createDataFrame([
+        row(rule_key="both", rule_id="both", activation_state="active", review_state="governance_approved"),
+    ])
+    transitional = spark_session.createDataFrame([
+        row(rule_key="transitional", rule_id="transitional", activation_state="active", review_status="governance_approved"),
+    ])
+    legacy = spark_session.createDataFrame([
+        row(rule_key="legacy", rule_id="legacy", is_active=True, review_status="self_approved"),
+    ])
+    missing_review = spark_session.createDataFrame([
+        row(rule_key="missing_review", rule_id="missing_review", activation_state="active"),
+    ])
+    lifecycle_rows = [
+        row(rule_key="active_pending", rule_id="active_pending", activation_state="active", review_state="active_pending_governance_review"),
+        row(rule_key="draft", rule_id="draft", activation_state="inactive", review_state="draft"),
+        row(rule_key="pending", rule_id="pending", activation_state="pending", review_state="pending_governance_review"),
+        row(rule_key="rejected", rule_id="rejected", activation_state="inactive", review_state="rejected_by_governance"),
+        row(rule_key="inactive", rule_id="inactive", activation_state="inactive", review_state="inactive"),
+        row(rule_key="superseded", rule_id="superseded", activation_state="inactive", review_state="superseded"),
+    ]
+    lifecycle = spark_session.createDataFrame(lifecycle_rows)
+
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(both, "orders", env_name="dev", dataset_name="sales")] == ["both"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(transitional, "orders", env_name="dev", dataset_name="sales")] == ["transitional"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(legacy, "orders", env_name="dev", dataset_name="sales")] == ["legacy"]
+    assert governance._load_active_dq_rules(missing_review, "orders", env_name="dev", dataset_name="sales") == []
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(lifecycle, "orders", env_name="dev", dataset_name="sales")] == ["active_pending"]

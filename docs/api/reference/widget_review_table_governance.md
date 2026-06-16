@@ -1,13 +1,13 @@
-# widget_review_guardrail_governance
+# widget_review_table_governance
 
-Render interactive controls for reviewing proposed and bypassed guardrail rules.
+Render 03-only formal review controls for enrichment and guardrail records.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2894`
+`fabricops_kit/governance_review.py:2695`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2894-L2990">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2695-L2892">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -15,15 +15,15 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 **Use when:**
 
-- Use in 03_governance after selecting a guardrail target to perform human review of enrichment and guardrail rule intent.
+- Use only in 03_governance for formal governance review decisions.
 
 **Do not use when:**
 
-- Do not use for automatic pipeline enforcement or profile evidence generation; it is an interactive governance review widget.
+- Do not use in 02_pipeline or for runtime enforcement results; runtime results belong in METADATA_GUARDRAIL_RESULTS.
 
 **Additional context:**
 
-Renders governance review controls for reviewing proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or supersede actions.
+Renders the formal review workflow that reads and appends review history in METADATA_ENRICHMENT_RULES and METADATA_GUARDRAIL_RULES.
 
 </details>
 
@@ -32,11 +32,12 @@ Renders governance review controls for reviewing proposed or bypass-active enric
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_review_guardrail_governance(
+def widget_review_table_governance(
     state: Mapping[str, Any],
     config: Any=None,
     env: str | None=None,
     spark_session: Any=None,
+    source_notebook_type: str='03_governance',
 ) -> dict[str, Any]:
 ```
 
@@ -50,18 +51,19 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Handover state from :func:`widget_select_guardrail_target`. The state may include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``. |
-| `config` | `Any` | No | Runtime objects used for save actions. |
+| `state` | `Mapping[str, Any]` | Yes | Selected table state containing enrichment and guardrail rule history. |
+| `config` | `Any` | No | Runtime objects used to append formal review outcomes. |
 | `env` | `str \| None` | No | Not documented yet |
 | `spark_session` | `Any` | No | Not documented yet |
+| `source_notebook_type` | `str` | No | Notebook context. Formal review actions require ``03_governance``. |
 
 ## Returns
 
-Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
+Widget controls and action helpers for formal governance review.
 
 ### Return interpretation
 
-The widget returns controls, current rule history, and action helpers that write to enrichment or guardrail rule tables when invoked.
+The widget returns controls and action helpers that append formal review rows to the enrichment or guardrail rule history tables.
 
 ## Raises / Errors
 
@@ -69,9 +71,8 @@ Not documented yet
 
 ### Common failure causes
 
-- No target state is selected.
-- No proposed or bypassed rules are available for review.
-- Unsupported governance action is selected.
+- The notebook context is not 03_governance.
+- No reviewable records are available.
 - The metadata target cannot be written.
 
 ## Relationships
@@ -82,6 +83,8 @@ Not documented yet
 
 ### Calls
 
+- `fabricops_kit.governance_review._assert_governance_review_context`
+- `fabricops_kit.governance_review._dq_rule_parameters_summary`
 - `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
 - `fabricops_kit.governance_review.load_rule_review_history`
@@ -93,7 +96,7 @@ Not documented yet
 
 **Used in templates:**
 
-- `02_pipeline`
+- `03_governance`
 
 **Side effects:**
 
@@ -108,7 +111,9 @@ No additional callable notes are documented.
 ??? info "Call flow"
 
     ```text
-    widget_review_guardrail_governance(...)
+    widget_review_table_governance(...)
+    ├── _assert_governance_review_context(...)
+    ├── _dq_rule_parameters_summary(...)
     ├── apply_governance_enrichment_action(...)
     │   ├── _assert_governance_review_context(...)
     │   ├── _now_utc_iso(...)
@@ -134,14 +139,24 @@ No additional callable notes are documented.
     └── load_rule_review_history(...)
     ```
 
-??? info "Internal helpers used: 0"
+??? info "Internal helpers used: 2"
 
-    This callable uses 0 internal helpers; `widget_review_guardrail_governance` does not have package-local helper descendants in the generated call graph.
+    This callable uses 2 internal helpers for rule evaluation and other.
 
     <div class="reference-helper-groups">
-      <section class="reference-helper-group reference-helper-group-empty">
-        <h4>No internal helpers detected</h4>
-        <p>This callable does not have package-local helper descendants in the generated call graph.</p>
+      <section class="reference-helper-group">
+        <h4>Rule evaluation</h4>
+        <p>Convert configured rules into executable checks and evaluation results.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L788-L803"><code>_dq_rule_parameters_summary</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Other</h4>
+        <p>Support lower-level implementation details that do not fit the main helper areas.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L1723-L1726"><code>_assert_governance_review_context</code></a>
+        </div>
       </section>
     </div>
 
@@ -152,23 +167,23 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Function manifest
 
-- Fully qualified function name: `fabricops_kit.governance_review.widget_review_guardrail_governance`
-- Short name: `widget_review_guardrail_governance`
+- Fully qualified function name: `fabricops_kit.governance_review.widget_review_table_governance`
+- Short name: `widget_review_table_governance`
 - Module: `governance_review`
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2894`
+- Source line: `2695`
 - Inbound references count: 0
-- Outbound references count: 3
-- Used in templates: 02_pipeline
+- Outbound references count: 5
+- Used in templates: 03_governance
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
 ### AI implementation contract
 
-- **required_context:** Starter template: `03_governance`; segment: `Governance review`.
+- **required_context:** Starter template: `03_governance`; segment: `Review table governance`.
 - **inputs:** See the source docstring for the notebook runtime, Spark session, state, and record parameters accepted by this helper.
-- **output:** Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
+- **output:** Widget controls and action helpers for formal governance review.
 - **side_effects:** Not documented yet
 - **failure_modes:** Not documented yet
 - **verification:** Not documented yet
@@ -179,6 +194,8 @@ Not documented yet
 
 ### Outbound references
 
+- `fabricops_kit.governance_review._assert_governance_review_context`
+- `fabricops_kit.governance_review._dq_rule_parameters_summary`
 - `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
 - `fabricops_kit.governance_review.load_rule_review_history`
@@ -186,17 +203,18 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2894-L2990">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2894-L2990</a>
-- Start line: `2894`
-- End line: `2990`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2695-L2892">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2695-L2892</a>
+- Start line: `2695`
+- End line: `2892`
 - Signature:
 
 ```python
-def widget_review_guardrail_governance(
+def widget_review_table_governance(
     state: Mapping[str, Any],
     config: Any=None,
     env: str | None=None,
     spark_session: Any=None,
+    source_notebook_type: str='03_governance',
 ) -> dict[str, Any]:
 ```
 
@@ -204,12 +222,13 @@ def widget_review_guardrail_governance(
 
 ### Public related functions
 
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="../widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
+- <a href="../widget_select_guardrail_target/"><code>fabricops_kit.governance_review.widget_select_guardrail_target</code></a>
+- <a href="../widget_enrich_table_metadata/"><code>fabricops_kit.governance_review.widget_enrich_table_metadata</code></a>
+- <a href="../widget_author_guardrail_rules/"><code>fabricops_kit.governance_review.widget_author_guardrail_rules</code></a>
 
 ### Internal implementation summary
 
-- Internal helper count: 0
+- Internal helper count: 2
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

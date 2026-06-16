@@ -18,8 +18,8 @@ These links open the current development templates. Released documentation shoul
 | 2 | `01_agreement` | Governance | Capture the request, ownership, steward details, and agreement evidence. |
 | 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile source data before production delivery. |
 | 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record catalogue, lineage, DQ, and run evidence. |
-| 5 | `03_governance` | Governance | Select profiled catalogue targets, enrich metadata, and review guardrail governance state, approvals, rejections, supersession, and bypass or post-review decisions. |
-| 6 | `02_pipeline` | Engineering | Rerun the pipeline so governance-approved rules are enforced during delivery. |
+| 5 | `03_governance` | Governance | Select profiled catalogue targets, enrich metadata, and review guardrail governance state, approvals, rejections, replacements, deactivations, and active-pending-review decisions. |
+| 6 | `02_pipeline` | Engineering | Rerun the pipeline so active guardrail rules are enforced during delivery. |
 
 For detailed behavior, continue to [Pipeline Guardrails](pipeline-guardrails.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
 
@@ -30,7 +30,7 @@ Use these generated API references when you want implementation details for the 
 - `00_env_config`: central environment, target, and Lakehouse schema settings; [setup_notebook](../api/reference/setup_notebook/); plus an optional commented [setup_metadata_tables](../api/reference/setup_metadata_tables/) block. Uncomment and run metadata setup once per environment, then comment it back so downstream `%run 00_env_config` stays fast.
 - `01_agreement`: [widget_render_data_steward](../api/reference/widget_render_data_steward/), [widget_render_data_agreement](../api/reference/widget_render_data_agreement/), and [widget_render_agreement_evidence](../api/reference/widget_render_agreement_evidence/).
 - `02_pipeline`: starts by selecting an approved agreement with [widget_select_agreement](../api/reference/widget_select_agreement/) and reading it with [get_selected_agreement](../api/reference/get_selected_agreement/) so the active notebook can be registered before pipeline evidence is written. It then uses [prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/), [run_table_guardrails](../api/reference/run_table_guardrails/), [profile_dataframe](../api/reference/profile_dataframe/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/).
-- `03_governance`: [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/), [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/), and [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/). Governance reviewers use the current catalogue-based target selection, metadata enrichment, and guardrail governance review flow. The old separated business context/classification widgets are removed from the current template flow; DQ belongs with guardrail authoring/review, not enrichment.
+- `03_governance`: [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/), [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/), and [widget_review_table_governance](../api/reference/widget_review_table_governance/). Governance reviewers use the current catalogue-based target selection, metadata enrichment, and guardrail governance review flow. The old separated business context/classification widgets are removed from the current template flow; DQ belongs with guardrail authoring/review, not enrichment.
 
 ## Template notebooks
 
@@ -129,7 +129,7 @@ Governance, data stewards, or reviewers.
 
 **Key function**
 
-Uses `widget_select_guardrail_target`, `widget_enrich_table_metadata`, and `widget_review_guardrail_governance` to select catalogue-backed targets, save column context/classification enrichment, and review table governance state, approvals, rejections, supersession, and bypass or post-review decisions. It stores enrichment and governance decisions, but does not enforce rules. Enforcement happens when `02_pipeline` runs again using active governance-approved rules.
+Uses `widget_select_guardrail_target`, `widget_enrich_table_metadata`, `widget_author_guardrail_rules`, and `widget_review_table_governance` to select catalogue-backed targets, save column context/classification enrichment, and review table governance state, approvals, rejections, replacements, deactivations, and active-pending-review decisions. It stores enrichment and governance decisions, but does not enforce rules. Enforcement happens when `02_pipeline` runs again using active guardrail rules, including active pending governance review records where applicable.
 
 **Output**
 

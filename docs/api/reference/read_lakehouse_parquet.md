@@ -7,7 +7,7 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 
 `fabricops_kit/fabric_input_output.py:634`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/fabric_input_output.py#L634-L758">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/fabric_input_output.py#L634-L758">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -139,29 +139,29 @@ conversion paths (``/lakehouse/default/Files/...``).
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/fabric_input_output.py#L578-L631"><code>_convert_single_parquet_ns_to_us</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/fabric_input_output.py#L578-L631"><code>_convert_single_parquet_ns_to_us</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/fabric_input_output.py#L221-L231"><code>_lakehouse_file_path</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/fabric_input_output.py#L221-L231"><code>_lakehouse_file_path</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/fabric_input_output.py#L187-L218"><code>_get_spark</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/fabric_input_output.py#L187-L218"><code>_get_spark</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -208,7 +208,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/fabric_input_output.py#L634-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/fabric_input_output.py#L634-L758</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/fabric_input_output.py#L634-L758">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/fabric_input_output.py#L634-L758</a>
 - Start line: `634`
 - End line: `758`
 - Signature:
