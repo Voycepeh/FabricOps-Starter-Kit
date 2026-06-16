@@ -24,6 +24,59 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 
 ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
+The architecture image is a simplified logical view of how FabricOps metadata coordinates agreement, pipeline, governance, and runtime evidence. It is not a guarantee that every active metadata table is shown unless the image has been updated. Use the active metadata table map below as the source of truth for implemented table ownership. Relationships shown on this page are conceptual joins used by notebooks, helpers, dashboards, and reviews; they do not imply database-enforced primary-key or foreign-key constraints in Fabric Delta tables.
+
+Legend for the logical model:
+
+- Blue = agreement and registration metadata.
+- Green = pipeline-written evidence.
+- Purple = governance-reviewed metadata.
+- Orange = guardrail runtime results.
+- Red = offline or manually collected governance metadata.
+
+```mermaid
+flowchart LR
+    classDef agreement fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef pipeline fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef governance fill:#ede9fe,stroke:#7c3aed,color:#2e1065
+    classDef runtime fill:#fed7aa,stroke:#ea580c,color:#431407
+    classDef offline fill:#fee2e2,stroke:#dc2626,color:#450a0a
+
+    steward[METADATA_DATA_STEWARD]:::agreement
+    agreement[METADATA_DATA_AGREEMENT]:::agreement
+    evidence[METADATA_DATA_AGREEMENT_EVIDENCE]:::agreement
+    registry[METADATA_NOTEBOOK_REGISTRY]:::agreement
+
+    catalogue[METADATA_DATA_CATALOGUE]:::pipeline
+    lineage[METADATA_DATA_LINEAGE_TABLE]:::pipeline
+    runs[METADATA_PIPELINE_RUNS]:::pipeline
+
+    context[METADATA_COLUMN_CONTEXT]:::governance
+    classification[METADATA_COLUMN_CLASSIFICATION]:::governance
+    rules[METADATA_GUARDRAIL_RULES]:::governance
+    reviews[METADATA_GOVERNANCE_REVIEWS]:::governance
+
+    results[METADATA_GUARDRAIL_RESULTS]:::runtime
+    access[METADATA_DATA_ACCESS<br/>offline/manual]:::offline
+
+    steward --> agreement
+    agreement --> evidence
+    agreement --> registry
+    registry --> runs
+    agreement --> runs
+    runs --> catalogue
+    runs --> lineage
+    catalogue --> context
+    catalogue --> classification
+    catalogue --> rules
+    rules --> results
+    runs --> results
+    catalogue --> reviews
+    rules --> reviews
+    results --> reviews
+    access -- many access records for one catalogue entry --> catalogue
+```
+
 ## Active metadata table map
 
 | Metadata table | Main writer | Contains |
@@ -41,7 +94,17 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 | `METADATA_COLUMN_CLASSIFICATION` | `03_governance` | Reviewed sensitivity and personal-data classification. |
 | `METADATA_GOVERNANCE_REVIEWS` | `03_governance` | Final review outcomes, blockers, warnings, and evidence summaries. |
 
-For schema, freshness, profile behavior, and DQ evidence flow, see [Pipeline Guardrails](pipeline-guardrails.md).
+The active table map intentionally excludes planned, project-specific, or manually collected metadata that is not currently written by the standard notebooks. For schema, freshness, profile behavior, and DQ evidence flow, see [Pipeline Guardrails](pipeline-guardrails.md).
+
+## Offline and manually collected access metadata
+
+`METADATA_DATA_ACCESS` is planned/manual/offline governance metadata. It is not currently written by `01_agreement`, `02_pipeline`, or `03_governance`, and the starter kit does not enforce access decisions from this table yet.
+
+| Table name | Status | Description | Relationship |
+| --- | --- | --- | --- |
+| `METADATA_DATA_ACCESS` | Offline governance input; not currently written by `01_agreement`, `02_pipeline`, or `03_governance`. | Stores user, role, permission, access purpose, approval status, and access scope linked to governed catalogue entries. | `METADATA_DATA_CATALOGUE` 1 to many `METADATA_DATA_ACCESS`. |
+
+One catalogue entry can have many access records because access decisions may differ by user, group, role, purpose, or approval period. Treat the relationship as a logical governance relationship for collection and reporting, not as a Fabric-enforced database constraint.
 
 ## Writer ownership
 
@@ -167,7 +230,7 @@ Schema, freshness, profile-behavior pass/fail, stability, and DQ outcomes are ru
 
 ### Optional documented tables
 
-`METADATA_DATA_ACCESS` may be used by a future or project-specific access-capture workflow. It is documented for compatibility, but `setup_metadata_tables` does not create or validate it as part of the active metadata registry.
+`METADATA_DATA_ACCESS` is an offline/manual access governance table that may be used by a future or project-specific access-capture workflow. It stores user, role, permission, access purpose, approval status, and access scope linked to governed catalogue entries. `setup_metadata_tables` does not create or validate it as part of the active metadata registry, and the starter kit does not enforce it yet.
 
 ## Callable references
 
