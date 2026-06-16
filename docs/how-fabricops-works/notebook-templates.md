@@ -18,8 +18,8 @@ These links open the current development templates. Released documentation shoul
 | 2 | `01_agreement` | Governance | Capture the request, ownership, steward details, and agreement evidence. |
 | 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile source data before production delivery. |
 | 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record catalogue, lineage, DQ, and run evidence. |
-| 5 | `03_governance` | Governance | Select profiled catalogue targets, enrich metadata, and review guardrail governance state, approvals, rejections, supersession, and bypass or post-review decisions. |
-| 6 | `02_pipeline` | Engineering | Rerun the pipeline so governance-approved rules are enforced during delivery. |
+| 5 | `03_governance` | Governance | Select profiled catalogue targets, enrich metadata, and review guardrail governance state, approvals, rejections, replacements, deactivations, and active-pending-review decisions. |
+| 6 | `02_pipeline` | Engineering | Rerun the pipeline so active guardrail rules are enforced during delivery. |
 
 For detailed behavior, continue to [Pipeline Guardrails](pipeline-guardrails.md), [Governance Review](governance-review.md), and [Metadata Tables](metadata-tables.md).
 
@@ -129,7 +129,7 @@ Governance, data stewards, or reviewers.
 
 **Key function**
 
-Uses `widget_select_guardrail_target`, `widget_enrich_table_metadata`, `widget_author_guardrail_rules`, and `widget_review_table_governance` to select catalogue-backed targets, save column context/classification enrichment, and review table governance state, approvals, rejections, supersession, and bypass or post-review decisions. It stores enrichment and governance decisions, but does not enforce rules. Enforcement happens when `02_pipeline` runs again using active governance-approved rules.
+Uses `widget_select_guardrail_target`, `widget_enrich_table_metadata`, `widget_author_guardrail_rules`, and `widget_review_table_governance` to select catalogue-backed targets, save column context/classification enrichment, and review table governance state, approvals, rejections, replacements, deactivations, and active-pending-review decisions. It stores enrichment and governance decisions, but does not enforce rules. Enforcement happens when `02_pipeline` runs again using active guardrail rules, including active pending governance review records where applicable.
 
 **Output**
 

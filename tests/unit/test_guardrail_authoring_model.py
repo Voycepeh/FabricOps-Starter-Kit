@@ -257,12 +257,12 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
     assert result["checks"][0]["rule_id"] == "orders.order_id.not_null"
 
 
-def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
-    """Verify bypass-active rules are enforced with post-review warning metadata."""
+def test_active_pending_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
+    """Verify active-pending-review rules use standard runtime warning metadata."""
     from fabricops_kit import governance_review
     from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, _check_schema_rule_runtime
 
-    warning = "Rule is active through approval bypass and requires governance post-review."
+    warning = "Rule is active pending governance review."
     schema_df = spark_session.createDataFrame([(1,)], "order_id int")
     bypass_base = {"review_status": "active_pending_governance_review"}
 
@@ -316,12 +316,12 @@ def test_table_governance_policy_records_mark_governed_and_ungoverned():
     assert ungoverned["approval_policy"] == "no_approval_required"
 
 
-def test_governance_can_approve_or_reject_bypassed_active_rule():
-    """Verify 03 governance can approve or reject bypass-active rules."""
-    bypassed = {"rule_key": "rule", "review_status": "active_pending_governance_review", "activation_state": "active", "is_active": True, "requires_post_review": True}
+def test_governance_can_approve_or_reject_active_pending_rule():
+    """Verify 03 governance can approve or reject active-pending-review rules."""
+    active_pending = {"rule_key": "rule", "review_status": "active_pending_governance_review", "activation_state": "active", "is_active": True, "requires_post_review": True}
 
-    approved = governance_review.apply_governance_rule_action(bypassed, "approve", actor="steward@example.com")
-    rejected = governance_review.apply_governance_rule_action(bypassed, "reject", actor="steward@example.com")
+    approved = governance_review.apply_governance_rule_action(active_pending, "approve", actor="steward@example.com")
+    rejected = governance_review.apply_governance_rule_action(active_pending, "reject", actor="steward@example.com")
 
     assert approved["review_status"] == "governance_approved"
     assert approved["requires_post_review"] is False
