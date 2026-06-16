@@ -287,7 +287,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <li>
 <span class="reference-chip"><code>_is_active_guardrail_rule</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_rule_review_status</code></span>
+<span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_rule_review_status</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_is_missing_table_error</code></span>

@@ -42,12 +42,12 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",
         "widget_enrich_table_metadata",
-        "widget_review_guardrail_governance",
+        "widget_review_table_governance",
     ]:
         assert expected in production
     assert "widget_select_guardrail_target" in governance
     assert "widget_enrich_table_metadata" in governance
-    assert governance.index("widget_select_guardrail_target") < governance.index("widget_enrich_table_metadata") < governance.index("widget_review_guardrail_governance")
+    assert governance.index("widget_select_guardrail_target") < governance.index("widget_enrich_table_metadata") < governance.index("widget_review_table_governance")
     assert "widget_select_governance_" + "profile_target" not in governance
     assert "widget_review_" + "dq_rules" not in governance
 

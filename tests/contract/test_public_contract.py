@@ -46,6 +46,8 @@ APPROVED_V1_CALLABLES = {
     "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
+    "widget_author_guardrail_rules",
+    "widget_review_table_governance",
     "widget_review_guardrail_governance",
 }
 
@@ -55,7 +57,6 @@ REMOVED_LEGACY_ALIASES = {
     "monitor_data_changes",
     "display_schema_profile",
     "print_schema_guardrail_config",
-    "widget_review_table_governance",
     "widget_render_agreement_intake_app",
     "setup_governance_metadata_tables",
     "setup_notebook_registry_table",
@@ -121,7 +122,7 @@ def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES)
-    assert len(fabricops_kit.__all__) == 31
+    assert len(fabricops_kit.__all__) == 33
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
 

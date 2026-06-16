@@ -20,7 +20,11 @@ ENRICHMENT_RULES_TABLE = "METADATA_ENRICHMENT_RULES"
 GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
-GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "self_approved", "governance_approved", "bypass_active_pending_review", "rejected", "superseded"]
+ACTIVATION_STATES = ["active", "pending", "inactive"]
+REVIEW_STATES = ["draft", "pending_governance_review", "active_pending_governance_review", "governance_approved", "rejected_by_governance", "superseded", "inactive"]
+SOURCE_NOTEBOOK_TYPES = ["02_pipeline", "03_governance"]
+CREATED_BY_ROLES = ["engineering", "governance", "system"]
+GUARDRAIL_REVIEW_STATUSES = ["draft", "pending_governance_review", "active_pending_governance_review", "self_approved", "governance_approved", "rejected_by_governance", "superseded", "inactive"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
@@ -187,8 +191,8 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     ]
     return {
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
-        ENRICHMENT_RULES_TABLE: _schema(ENRICHMENT_RULES_TABLE, [("enrichment_rule_id", string), ("enrichment_rule_version", string), ("enrichment_rule_key", string), ("metadata_table_key", string), ("metadata_column_key", string), ("table_name", string), ("column_name", string), ("enrichment_scope", string), ("enrichment_type", string), ("enrichment_payload_json", string), ("business_name", string), ("business_description", string), ("business_meaning", string), ("column_description", string), ("classification", string), ("sensitivity_label", string), ("pii_flag", boolean), ("pii_type", string), ("data_domain", string), ("data_owner", string), ("data_steward", string), ("usage_notes", string), ("quality_notes", string), ("review_status", string), ("is_active", boolean), ("approval_policy", string), ("governance_mode", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("bypass_reason", string), ("requires_post_review", boolean), ("supersedes_enrichment_rule_id", string), ("effective_from", string), ("effective_to", string), ("created_at", string), ("created_by", string), ("updated_at", string), ("updated_by", string), ("run_id", string), ("notebook_id", string), ("notebook_registry_id", string), *audit]),
-        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("supersedes_rule_id", string), ("effective_from", string), ("effective_to", string), *audit]),
+        ENRICHMENT_RULES_TABLE: _schema(ENRICHMENT_RULES_TABLE, [("enrichment_rule_id", string), ("enrichment_rule_version", string), ("enrichment_rule_key", string), ("metadata_table_key", string), ("metadata_column_key", string), ("table_name", string), ("column_name", string), ("enrichment_scope", string), ("enrichment_type", string), ("enrichment_payload_json", string), ("business_name", string), ("business_description", string), ("business_meaning", string), ("column_description", string), ("classification", string), ("sensitivity_label", string), ("pii_flag", boolean), ("pii_type", string), ("data_domain", string), ("data_owner", string), ("data_steward", string), ("usage_notes", string), ("quality_notes", string), ("review_status", string), ("review_state", string), ("activation_state", string), ("is_active", boolean), ("created_by_role", string), ("source_notebook_type", string), ("source_notebook_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", string), ("requires_governance_review", boolean), ("approval_policy", string), ("governance_mode", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("bypass_reason", string), ("requires_post_review", boolean), ("supersedes_enrichment_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", string), ("effective_to", string), ("created_at", string), ("created_by", string), ("updated_at", string), ("updated_by", string), ("run_id", string), ("notebook_id", string), ("notebook_registry_id", string), *audit]),
+        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("activation_state", string), ("is_active", boolean), ("review_status", string), ("review_state", string), ("created_by_role", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_governance_review", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("supersedes_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", string), ("effective_to", string), *audit]),
         GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
         PIPELINE_RUNS_TABLE: _schema(PIPELINE_RUNS_TABLE, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
@@ -575,13 +579,22 @@ def build_enrichment_rule_records(
             "usage_notes": payload["usage_notes"],
             "quality_notes": payload["quality_notes"],
             "review_status": lifecycle["review_status"],
+            "review_state": lifecycle.get("review_state", lifecycle["review_status"]),
+            "activation_state": lifecycle.get("activation_state", "active" if lifecycle["is_active"] else "inactive"),
             "is_active": lifecycle["is_active"],
+            "created_by_role": lifecycle.get("created_by_role", "engineering"),
+            "source_notebook_type": lifecycle.get("source_notebook_type", "02_pipeline"),
+            "source_notebook_id": str(review.get("source_notebook_id") or (state or {}).get("notebook_id") or ""),
+            "activation_reason": lifecycle.get("activation_reason", ""),
+            "activated_by": lifecycle.get("activated_by", ""),
+            "activated_at": lifecycle.get("activated_at", ""),
+            "requires_governance_review": bool(lifecycle.get("requires_governance_review", False)),
             "approval_policy": lifecycle["approval_policy"],
             "governance_mode": lifecycle["governance_mode"],
             "submitted_by": resolved_actor,
             "submitted_at": now,
-            "reviewed_by": resolved_actor if lifecycle["review_status"] == "self_approved" else "",
-            "reviewed_at": now if lifecycle["review_status"] == "self_approved" else "",
+            "reviewed_by": resolved_actor if lifecycle["review_status"] in {"self_approved", "governance_approved"} else "",
+            "reviewed_at": now if lifecycle["review_status"] in {"self_approved", "governance_approved"} else "",
             "review_decision": lifecycle["review_status"],
             "review_comment": str(review.get("review_comment") or ""),
             "bypass_reason": str(lifecycle.get("bypass_reason") or ""),
@@ -1017,12 +1030,20 @@ def record_table_governance(
     reviewed_at = _now_utc_iso(config)
     for record in enrichment_records:
         record.update({
+            "activation_state": "active",
+            "review_state": "governance_approved",
             "review_status": "governance_approved",
             "is_active": True,
+            "requires_governance_review": False,
+            "requires_post_review": False,
             "reviewed_by": actor,
             "reviewed_at": reviewed_at,
             "review_decision": "approved",
+            "activated_by": record.get("activated_by") or actor,
+            "activated_at": record.get("activated_at") or reviewed_at,
             "effective_from": record.get("effective_from") or reviewed_at,
+            "source_notebook_type": "03_governance",
+            "created_by_role": record.get("created_by_role") or "governance",
             "updated_by": actor,
             "updated_at": reviewed_at,
         })
@@ -1216,12 +1237,15 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
     latest = _latest_dq_rule_versions(metadata_df, table_name, env_name=env_name, dataset_name=dataset_name)
     if "is_active" not in columns:
         return []
-    latest = latest.filter(F.col("is_active") == True)
+    if "activation_state" in columns:
+        latest = latest.filter(F.lower(F.coalesce(F.col("activation_state"), F.lit(""))) == "active")
+    else:
+        latest = latest.filter(F.col("is_active") == True)
     if "action_type" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
     if "review_status" not in columns:
         return []
-    latest = latest.filter(F.lower(F.col("review_status")).isin("self_approved", "governance_approved", "bypass_active_pending_review"))
+    latest = latest.filter(F.lower(F.coalesce(F.col("review_state"), F.col("review_status"))).isin("self_approved", "governance_approved", "active_pending_governance_review"))
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
@@ -1540,8 +1564,8 @@ def enforce_dq_rules(
     total_count = int(dataframe.count())
     failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
     result = _summarize_dq_guardrail(checks)
-    if any(str(rule.get("review_status") or "").lower() == "bypass_active_pending_review" for rule in rules):
-        warning = "Rule is active through approval bypass and requires governance post-review."
+    if any(str(rule.get("review_status") or "").lower() == "active_pending_governance_review" for rule in rules):
+        warning = "Rule is active pending governance review."
         result["reason"] = warning if not result.get("reason") else f"{result.get('reason')} {warning}"
         result["bypass_warning"] = warning
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
@@ -1641,110 +1665,197 @@ def resolve_table_governance_policy(governance_rows: Any, *, environment_name: s
     return {**default, **latest, "governance_mode": mode, "approval_policy": policy, "approval_bypass_allowed": bypass_allowed, "bypass_allowed": bypass_allowed}
 
 
-def guardrail_authoring_status(policy: Mapping[str, Any], *, bypass_reason: str = "", actor: str | None = None, config: Any = None) -> dict[str, Any]:
-    """Return rule lifecycle fields for engineering-authored guardrail rules.
+
+def _is_no_approval_required(policy: Mapping[str, Any]) -> bool:
+    """Return whether policy allows active records without formal review."""
+    return str(policy.get("governance_mode") or "ungoverned").lower() == "ungoverned" or str(policy.get("approval_policy") or "").lower() == "no_approval_required"
+
+
+def _assert_governance_review_context(source_notebook_type: str) -> None:
+    """Block formal review outside the ``03_governance`` notebook context."""
+    if source_notebook_type != "03_governance":
+        raise PermissionError("Formal governance review actions are only allowed from 03_governance.")
+
+
+def _lifecycle_fields(*, activation_state: str, review_state: str, actor: str, now: str, created_by_role: str = "engineering", source_notebook_type: str = "02_pipeline", activation_reason: str = "", requires_governance_review: bool = False, requires_post_review: bool = False) -> dict[str, Any]:
+    """Build standardized lifecycle fields for enrichment and guardrail rows."""
+    active = activation_state == "active"
+    fields = {
+        "activation_state": activation_state,
+        "is_active": active,
+        "review_state": review_state,
+        "review_status": review_state,
+        "created_by_role": created_by_role,
+        "source_notebook_type": source_notebook_type,
+        "activation_reason": activation_reason,
+        "requires_governance_review": requires_governance_review,
+        "requires_post_review": requires_post_review,
+    }
+    if active:
+        fields.update({"activated_by": actor, "activated_at": now, "effective_from": now})
+    return fields
+
+
+def _authoring_lifecycle(policy: Mapping[str, Any], *, action: str = "save", actor: str | None = None, bypass_reason: str = "", source_notebook_type: str = "02_pipeline", created_by_role: str = "engineering", config: Any = None) -> dict[str, Any]:
+    """Return lifecycle fields for authoring save, draft, submit, and apply-now actions."""
+    now = _now_utc_iso(config)
+    resolved = _resolve_action_by(actor)
+    if action == "draft":
+        return _lifecycle_fields(activation_state="inactive", review_state="draft", actor=resolved, now=now, created_by_role=created_by_role, source_notebook_type=source_notebook_type)
+    if _is_no_approval_required(policy):
+        return _lifecycle_fields(activation_state="active", review_state="self_approved", actor=resolved, now=now, created_by_role=created_by_role, source_notebook_type=source_notebook_type)
+    if action in {"apply_now", "bypass"} or bypass_reason:
+        fields = _lifecycle_fields(activation_state="active", review_state="active_pending_governance_review", actor=resolved, now=now, created_by_role=created_by_role, source_notebook_type=source_notebook_type, activation_reason="engineering_apply_now", requires_governance_review=True, requires_post_review=True)
+        fields.update({"bypass_reason": bypass_reason, "approval_bypassed": True, "bypassed_by": resolved, "bypassed_at": now})
+        return fields
+    return _lifecycle_fields(activation_state="pending", review_state="pending_governance_review", actor=resolved, now=now, created_by_role=created_by_role, source_notebook_type=source_notebook_type, requires_governance_review=True)
+
+def guardrail_authoring_status(policy: Mapping[str, Any], *, bypass_reason: str = "", actor: str | None = None, config: Any = None, action: str = "save", source_notebook_type: str = "02_pipeline", created_by_role: str = "engineering") -> dict[str, Any]:
+    """Return lifecycle fields for authored guardrail and enrichment records.
 
     Parameters
     ----------
     policy : mapping
         Effective table governance policy.
     bypass_reason : str, optional
-        User-entered justification when bypassing required approval.
+        Justification for immediate application when review is still required.
     actor : str, optional
         Current user identifier.
     config : Any, optional
         Runtime configuration used for timestamp formatting.
+    action : {"save", "draft", "submit", "apply_now"}, default="save"
+        Authoring action selected by the notebook user.
+    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+        Notebook type that created the record.
+    created_by_role : {"engineering", "governance", "system"}, default="engineering"
+        Role that created the record.
 
     Returns
     -------
     dict[str, Any]
-        Lifecycle fields for a ``METADATA_GUARDRAIL_RULES`` row.
+        Lifecycle fields for metadata rows.
 
     """
-    governed = str(policy.get("governance_mode") or "ungoverned").lower() == "governed"
-    if not governed:
-        return {"is_active": True, "review_status": "self_approved", "approval_required": False, "approval_bypassed": False, "requires_post_review": False, "author_role": "engineering", "governance_mode": "ungoverned", "approval_policy": "no_approval_required"}
-    if bypass_reason:
-        return {"is_active": True, "review_status": "bypass_active_pending_review", "approval_required": True, "approval_bypassed": True, "requires_post_review": True, "bypass_reason": bypass_reason, "bypassed_by": _resolve_action_by(actor), "bypassed_at": _now_utc_iso(config), "author_role": "engineering", "governance_mode": "governed", "approval_policy": str(policy.get("approval_policy") or "approval_required_with_bypass")}
-    return {"is_active": False, "review_status": "proposed", "approval_required": True, "approval_bypassed": False, "requires_post_review": False, "author_role": "engineering", "governance_mode": "governed", "approval_policy": str(policy.get("approval_policy") or "approval_required")}
+    lifecycle = _authoring_lifecycle(policy, action=action, actor=actor, bypass_reason=bypass_reason, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config)
+    lifecycle.setdefault("approval_required", bool(lifecycle.get("requires_governance_review")))
+    lifecycle.setdefault("approval_bypassed", bool(lifecycle.get("activation_reason") == "engineering_apply_now"))
+    lifecycle.setdefault("author_role", created_by_role)
+    lifecycle.setdefault("governance_mode", str(policy.get("governance_mode") or "ungoverned"))
+    lifecycle.setdefault("approval_policy", str(policy.get("approval_policy") or ("no_approval_required" if _is_no_approval_required(policy) else "approval_required")))
+    return lifecycle
+
+def _record_identity(row: Mapping[str, Any]) -> str:
+    """Return the stable lifecycle record identity for rule or enrichment rows."""
+    return str(row.get("enrichment_rule_id") or row.get("rule_id") or row.get("enrichment_rule_key") or row.get("rule_key") or "")
 
 
-def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor: str | None = None, superseded_by_rule_key: str = "", config: Any = None) -> dict[str, Any]:
-    """Return an append-only governance action row for a rule.
+def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor: str | None = None, superseded_by_rule_key: str = "", replacement: Mapping[str, Any] | None = None, source_notebook_type: str = "03_governance", config: Any = None) -> dict[str, Any] | list[dict[str, Any]]:
+    """Return append-only governance action row(s) for a guardrail rule.
 
     Parameters
     ----------
     rule : mapping
-        Existing rule row.
+        Existing rule row from ``METADATA_GUARDRAIL_RULES``.
     action : str
-        One of ``approve``, ``reject``, or ``supersede``.
+        One of ``approve``, ``approve_and_activate``, ``reject``, ``replace``,
+        ``deactivate``, or legacy ``supersede``.
     actor : str, optional
         Reviewer identity.
     superseded_by_rule_key : str, optional
-        Replacement rule key for supersede actions.
+        Replacement rule key for supersede/replace actions.
+    replacement : mapping, optional
+        Replacement rule values when action is ``replace``.
+    source_notebook_type : str, default="03_governance"
+        Must be ``03_governance`` for formal review decisions.
     config : Any, optional
         Runtime configuration used for timestamps.
 
     Returns
     -------
-    dict[str, Any]
-        Rule row with updated governance lifecycle fields.
+    dict or list of dict
+        One review row, or old/new rows for ``replace``.
 
     """
+    _assert_governance_review_context(source_notebook_type)
     row = dict(rule)
     now = _now_utc_iso(config)
     reviewer = _resolve_action_by(actor)
-    if action == "approve":
-        row.update({"is_active": True, "review_status": "governance_approved", "approved_by": reviewer, "approved_at": now, "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "approved", "requires_post_review": False, "effective_from": row.get("effective_from") or now})
+    legacy_supersede = action == "supersede"
+    action = "replace" if legacy_supersede else action
+    common = {"source_notebook_type": "03_governance", "created_by_role": "governance", "reviewed_by": reviewer, "reviewed_at": now, "review_comment": str(row.get("review_comment") or ""), "requires_governance_review": False, "requires_post_review": False}
+    if action in {"approve", "approve_and_activate"}:
+        row.update(common | {"activation_state": "active", "is_active": True, "review_state": "governance_approved", "review_status": "governance_approved", "approved_by": reviewer, "approved_at": now, "review_decision": "approved", "activated_by": row.get("activated_by") or reviewer, "activated_at": row.get("activated_at") or now, "effective_from": row.get("effective_from") or now})
     elif action == "reject":
-        row.update({"is_active": False, "review_status": "rejected", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "rejected"})
-    elif action == "supersede":
-        row.update({"is_active": False, "review_status": "superseded", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "superseded", "superseded_by_rule_key": superseded_by_rule_key, "supersedes_rule_id": superseded_by_rule_key, "effective_to": now})
+        row.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "rejected_by_governance", "review_status": "rejected_by_governance", "review_decision": "rejected", "effective_to": now})
+    elif action == "deactivate":
+        row.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "inactive", "review_status": "inactive", "review_decision": "deactivated", "effective_to": now})
+    elif action == "replace":
+        new = dict(row)
+        new.update(dict(replacement or {}))
+        new_id = str(new.get("rule_id") or superseded_by_rule_key or f"{_record_identity(row)}.replacement.{uuid.uuid4().hex[:8]}")
+        new_key = str(superseded_by_rule_key or (new.get("rule_key") if not legacy_supersede else "") or f"{row.get('rule_key') or _record_identity(row)}:{uuid.uuid4().hex[:8]}")
+        old = dict(row)
+        old.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "superseded", "review_status": "superseded", "review_decision": "superseded", "superseded_by_record_id": new_id, "superseded_by_rule_key": new_key, "effective_to": now})
+        new.update(common | {"rule_id": new_id, "rule_key": new_key, "activation_state": "active", "is_active": True, "review_state": "governance_approved", "review_status": "governance_approved", "approved_by": reviewer, "approved_at": now, "review_decision": "approved", "activated_by": reviewer, "activated_at": now, "effective_from": now, "effective_to": "", "supersedes_record_id": _record_identity(row), "supersedes_rule_id": str(row.get("rule_id") or "")})
+        return old if legacy_supersede else [old, new]
     else:
-        raise ValueError("action must be one of approve, reject, or supersede")
+        raise ValueError("action must be one of approve, approve_and_activate, reject, replace, deactivate, or supersede")
     return row
 
-
-
-def apply_governance_enrichment_action(record: Mapping[str, Any], action: str, *, actor: str | None = None, supersedes_enrichment_rule_id: str = "", config: Any = None) -> dict[str, Any]:
-    """Return an append-only governance action row for enrichment intent.
+def apply_governance_enrichment_action(record: Mapping[str, Any], action: str, *, actor: str | None = None, supersedes_enrichment_rule_id: str = "", replacement: Mapping[str, Any] | None = None, source_notebook_type: str = "03_governance", config: Any = None) -> dict[str, Any] | list[dict[str, Any]]:
+    """Return append-only governance action row(s) for enrichment intent.
 
     Parameters
     ----------
     record : mapping
-        Existing enrichment rule row.
+        Existing enrichment row from ``METADATA_ENRICHMENT_RULES``.
     action : str
-        One of ``approve``, ``reject``, ``supersede``, or ``clear_post_review``.
+        One of ``approve``, ``approve_and_activate``, ``reject``, ``replace``,
+        ``deactivate``, legacy ``supersede``, or ``clear_post_review``.
     actor : str, optional
         Reviewer identity.
     supersedes_enrichment_rule_id : str, optional
-        Prior enrichment rule identifier superseded by this decision.
+        Replacement identity for legacy callers.
+    replacement : mapping, optional
+        Replacement enrichment values when action is ``replace``.
+    source_notebook_type : str, default="03_governance"
+        Must be ``03_governance`` for formal review decisions.
     config : Any, optional
         Runtime configuration used for timestamps.
 
     Returns
     -------
-    dict[str, Any]
-        Enrichment rule row with updated shared governance lifecycle fields.
+    dict or list of dict
+        One review row, or old/new rows for ``replace``.
 
     """
+    _assert_governance_review_context(source_notebook_type)
     row = dict(record)
     now = _now_utc_iso(config)
     reviewer = _resolve_action_by(actor)
-    if action == "approve":
-        row.update({"is_active": True, "review_status": "governance_approved", "rule_status": "governance_approved", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "approved", "requires_post_review": False, "effective_from": row.get("effective_from") or now})
+    legacy_supersede = action == "supersede"
+    action = "replace" if legacy_supersede else action
+    common = {"source_notebook_type": "03_governance", "created_by_role": "governance", "reviewed_by": reviewer, "reviewed_at": now, "updated_by": reviewer, "updated_at": now, "requires_governance_review": False, "requires_post_review": False}
+    if action in {"approve", "approve_and_activate"}:
+        row.update(common | {"activation_state": "active", "is_active": True, "review_state": "governance_approved", "review_status": "governance_approved", "rule_status": "governance_approved", "review_decision": "approved", "activated_by": row.get("activated_by") or reviewer, "activated_at": row.get("activated_at") or now, "effective_from": row.get("effective_from") or now})
     elif action == "reject":
-        row.update({"is_active": False, "review_status": "rejected", "rule_status": "rejected", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "rejected", "requires_post_review": False})
-    elif action == "supersede":
-        row.update({"is_active": False, "review_status": "superseded", "rule_status": "superseded", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "superseded", "effective_to": now, "supersedes_enrichment_rule_id": supersedes_enrichment_rule_id})
+        row.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "rejected_by_governance", "review_status": "rejected_by_governance", "rule_status": "rejected_by_governance", "review_decision": "rejected", "effective_to": now})
+    elif action == "deactivate":
+        row.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "inactive", "review_status": "inactive", "rule_status": "inactive", "review_decision": "deactivated", "effective_to": now})
     elif action == "clear_post_review":
-        row.update({"reviewed_by": reviewer, "reviewed_at": now, "review_decision": "post_review_cleared", "requires_post_review": False})
+        row.update(common | {"review_decision": "post_review_cleared"})
+    elif action == "replace":
+        new = dict(row)
+        new.update(dict(replacement or {}))
+        old_id = _record_identity(row)
+        new_id = str(new.get("enrichment_rule_id") or supersedes_enrichment_rule_id or f"{old_id}.replacement.{uuid.uuid4().hex[:8]}")
+        old = dict(row)
+        old.update(common | {"activation_state": "inactive", "is_active": False, "review_state": "superseded", "review_status": "superseded", "rule_status": "superseded", "review_decision": "superseded", "superseded_by_record_id": new_id, "effective_to": now})
+        new.update(common | {"enrichment_rule_id": new_id, "activation_state": "active", "is_active": True, "review_state": "governance_approved", "review_status": "governance_approved", "rule_status": "governance_approved", "review_decision": "approved", "activated_by": reviewer, "activated_at": now, "effective_from": now, "effective_to": "", "supersedes_record_id": old_id, "supersedes_enrichment_rule_id": old_id})
+        return old if legacy_supersede else [old, new]
     else:
-        raise ValueError("action must be one of approve, reject, supersede, or clear_post_review")
-    row.update({"updated_at": now, "updated_by": reviewer})
+        raise ValueError("action must be one of approve, approve_and_activate, reject, replace, deactivate, supersede, or clear_post_review")
     return row
-
-
 
 def load_rule_review_history(rows: Iterable[Mapping[str, Any]], *, metadata_table_key: str = "", metadata_column_key: str = "", table_name: str = "", column_name: str = "") -> list[dict[str, Any]]:
     """Return approval history derived from append-only rule rows.
@@ -2453,6 +2564,56 @@ def mark_table_ungoverned(state: Mapping[str, Any], *, actor: str | None = None,
     return build_table_governance_policy_record(state, governance_mode="ungoverned", approval_policy="no_approval_required", actor=actor, reason=reason, config=config)
 
 
+
+def widget_author_guardrail_rules(
+    state: Mapping[str, Any],
+    *,
+    config: Any = None,
+    env: str | None = None,
+    spark_session: Any = None,
+) -> dict[str, Any]:
+    """Render schema/freshness/profile and DQ guardrail authoring widgets.
+
+    Parameters
+    ----------
+    state : mapping
+        Handover state from :func:`widget_select_guardrail_target`.
+    config, env, spark_session : Any, optional
+        Runtime objects used for saves.
+
+    Returns
+    -------
+    dict[str, Any]
+        Combined widget states for guardrail authoring.
+
+    """
+    return {
+        "schema_freshness_profile": widget_author_schema_freshness_profile_rules(state, config=config, env=env, spark_session=spark_session),
+        "dq": widget_author_dq_rules(state, config=config, env=env, spark_session=spark_session),
+    }
+
+
+def widget_review_table_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None, source_notebook_type: str = "03_governance") -> dict[str, Any]:
+    """Render the 03-only formal governance review widget for a selected table.
+
+    Parameters
+    ----------
+    state : mapping
+        Selected table state containing enrichment and guardrail rule history.
+    config, env, spark_session : Any, optional
+        Runtime objects used to append formal review outcomes.
+    source_notebook_type : str, default="03_governance"
+        Notebook context. Formal review actions require ``03_governance``.
+
+    Returns
+    -------
+    dict[str, Any]
+        Widget controls and action helpers.
+
+    """
+    _assert_governance_review_context(source_notebook_type)
+    return widget_review_guardrail_governance(state, config=config, env=env, spark_session=spark_session)
+
 def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None) -> dict[str, Any]:
     """Render interactive 03 governance policy and shared rule-review controls.
 
@@ -2478,7 +2639,7 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
     guardrail_rules = [dict(row, _record_kind="guardrail") for row in list(state.get("existing_rules") or [])]
     enrichment_rules = [dict(row, _record_kind="enrichment") for row in list(state.get("existing_enrichment_rules") or state.get("existing_enrichment") or [])]
     all_records = guardrail_rules + enrichment_rules
-    reviewable = [row for row in all_records if str(row.get("review_status") or "") in {"proposed", "bypass_active_pending_review", "self_approved", "governance_approved"}]
+    reviewable = [row for row in all_records if str(row.get("review_state") or row.get("review_status") or "") in {"pending_governance_review", "active_pending_governance_review", "self_approved", "governance_approved"}]
 
     def _label(row: Mapping[str, Any], idx: int) -> tuple[str, int]:
         kind = str(row.get("_record_kind") or "guardrail")
@@ -2520,12 +2681,14 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
                 row["requires_post_review"] = False
             target_table = GUARDRAIL_RULES_TABLE
             writer = _write_rule_records
-        row.pop("_record_kind", None)
+        rows_to_write = row if isinstance(row, list) else [row]
+        for review_row in rows_to_write:
+            review_row.pop("_record_kind", None)
         records_state["last_record"] = row
         if spark_session is None or config is None or env is None:
             message.value = "<b>Preview only:</b> config, env, and spark_session are required to save review action."
             return row
-        writer([row], config=config, env=env, spark_session=spark_session)
+        writer(rows_to_write, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {action} review event to {target_table}.</b>"
         return row
 

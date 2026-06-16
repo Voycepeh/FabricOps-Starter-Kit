@@ -122,7 +122,7 @@ def test_governance_review_builders_commit_only_human_approved_records():
     )
 
     assert [row["metadata_column_key"] for row in enrichment] == ["col-amount"]
-    assert enrichment[0]["review_status"] == "proposed"
+    assert enrichment[0]["review_status"] == "pending_governance_review"
     assert enrichment[0]["enrichment_payload_json"]
     assert dq[0]["rule_key"]
 

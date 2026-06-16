@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2456`
+`fabricops_kit/governance_review.py:2617`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/governance_review.py#L2456-L2551">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2617-L2714">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -78,7 +78,7 @@ Not documented yet
 
 ### Used by
 
-Not documented yet
+- <a href="../widget_review_table_governance/"><code>fabricops_kit.governance_review.widget_review_table_governance</code></a>
 
 ### Calls
 
@@ -111,19 +111,23 @@ No additional callable notes are documented.
     ```text
     widget_review_guardrail_governance(...)
     ├── apply_governance_enrichment_action(...)
+    │   ├── _assert_governance_review_context(...)
     │   ├── _now_utc_iso(...)
     │   │   └── _current_audit_timestamp(...)
     │   │       └── _get_audit_timezone(...)
     │   │           └── _validate_audit_timezone(...)
+    │   ├── _record_identity(...)
     │   └── _resolve_action_by(...)
     │       ├── _context_get(...)
     │       └── _runtime_context(...)
     │           └── _context_get(...)
     ├── apply_governance_rule_action(...)
+    │   ├── _assert_governance_review_context(...)
     │   ├── _now_utc_iso(...)
     │   │   └── _current_audit_timestamp(...)
     │   │       └── _get_audit_timezone(...)
     │   │           └── _validate_audit_timezone(...)
+    │   ├── _record_identity(...)
     │   └── _resolve_action_by(...)
     │       ├── _context_get(...)
     │       └── _runtime_context(...)
@@ -155,8 +159,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2456`
-- Inbound references count: 0
+- Source line: `2617`
+- Inbound references count: 1
 - Outbound references count: 3
 - Used in templates: 02_pipeline, 03_governance
 - Glossary terms: guardrail, metadata lakehouse, notebook template
@@ -172,7 +176,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Inbound references
 
-Not documented yet
+- <a href="../widget_review_table_governance/"><code>fabricops_kit.governance_review.widget_review_table_governance</code></a>
 
 ### Outbound references
 
@@ -183,9 +187,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/governance_review.py#L2456-L2551">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/governance_review.py#L2456-L2551</a>
-- Start line: `2456`
-- End line: `2551`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2617-L2714">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4ec556ede579d4b9c376214e9ed6fe762ce1867a/src/fabricops_kit/governance_review.py#L2617-L2714</a>
+- Start line: `2617`
+- End line: `2714`
 - Signature:
 
 ```python

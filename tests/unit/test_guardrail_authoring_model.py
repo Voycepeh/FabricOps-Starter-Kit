@@ -108,16 +108,16 @@ def test_authoring_status_matches_ungoverned_governed_and_bypass_paths():
     assert ungoverned["is_active"] is True
     assert ungoverned["review_status"] == "self_approved"
     assert governed["is_active"] is False
-    assert governed["review_status"] == "proposed"
+    assert governed["review_status"] == "pending_governance_review"
     assert bypassed["is_active"] is True
-    assert bypassed["review_status"] == "bypass_active_pending_review"
+    assert bypassed["review_status"] == "active_pending_governance_review"
     assert bypassed["requires_post_review"] is True
     assert bypassed["bypass_reason"] == "urgent fix"
 
 
 def test_governance_rule_actions_approve_reject_and_supersede():
     """Verify governance can approve, reject, and supersede append-only rule rows."""
-    rule = {"rule_key": "old", "review_status": "proposed", "is_active": False}
+    rule = {"rule_key": "old", "review_status": "pending_governance_review", "is_active": False}
     assert governance_review.apply_governance_rule_action(rule, "approve", actor="steward@example.com")["review_status"] == "governance_approved"
     assert governance_review.apply_governance_rule_action(rule, "reject")["is_active"] is False
     superseded = governance_review.apply_governance_rule_action(rule, "supersede", superseded_by_rule_key="new")
@@ -264,7 +264,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
 
     warning = "Rule is active through approval bypass and requires governance post-review."
     schema_df = spark_session.createDataFrame([(1,)], "order_id int")
-    bypass_base = {"review_status": "bypass_active_pending_review"}
+    bypass_base = {"review_status": "active_pending_governance_review"}
 
     schema = _check_schema_rule_runtime(
         schema_df,
@@ -318,14 +318,14 @@ def test_table_governance_policy_records_mark_governed_and_ungoverned():
 
 def test_governance_can_approve_or_reject_bypassed_active_rule():
     """Verify 03 governance can approve or reject bypass-active rules."""
-    bypassed = {"rule_key": "rule", "review_status": "bypass_active_pending_review", "is_active": True, "requires_post_review": True}
+    bypassed = {"rule_key": "rule", "review_status": "active_pending_governance_review", "activation_state": "active", "is_active": True, "requires_post_review": True}
 
     approved = governance_review.apply_governance_rule_action(bypassed, "approve", actor="steward@example.com")
     rejected = governance_review.apply_governance_rule_action(bypassed, "reject", actor="steward@example.com")
 
     assert approved["review_status"] == "governance_approved"
     assert approved["requires_post_review"] is False
-    assert rejected["review_status"] == "rejected"
+    assert rejected["review_status"] == "rejected_by_governance"
     assert rejected["is_active"] is False
 
 
@@ -377,7 +377,7 @@ def test_governed_bypass_widget_save_requires_reason(monkeypatch):
         raise AssertionError("bypass without reason should fail")
     widget["controls"]["bypass_reason"].value = "urgent production fix"
     records = widget["build_records"](use_bypass=True)
-    assert all(record["review_status"] == "bypass_active_pending_review" for record in records)
+    assert all(record["review_status"] == "active_pending_governance_review" for record in records)
     assert all(record["approval_bypassed"] is True for record in records)
 
 
@@ -408,14 +408,14 @@ def test_governance_review_widget_actions(monkeypatch):
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit.governance_review import widget_review_guardrail_governance
 
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="proposed", is_active=False)]}
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
     widget = widget_review_guardrail_governance(state)
     approved = widget["save_rule_action"]("approve")
     rejected = widget["save_rule_action"]("reject")
     superseded = widget["save_rule_action"]("supersede")
 
     assert approved["review_status"] == "governance_approved"
-    assert rejected["review_status"] == "rejected"
+    assert rejected["review_status"] == "rejected_by_governance"
     assert superseded["review_status"] == "superseded"
 
 
@@ -494,7 +494,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
             return records
 
     monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, config, env, target, table, **kwargs: writes.append(table))
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="proposed", is_active=False)]}
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
     widget = governance_review.widget_review_guardrail_governance(state, config=object(), env="dev", spark_session=Spark())
 
     widget["save_rule_action"]("approve")
@@ -511,7 +511,7 @@ def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
         dtypes = [("order_id", "int")]
         columns = ["order_id"]
 
-    active_statuses = {"self_approved", "governance_approved", "bypass_active_pending_review"}
+    active_statuses = {"self_approved", "governance_approved", "active_pending_governance_review"}
     for status in active_statuses:
         result = _check_schema_rule_runtime(
             Frame(),
@@ -540,7 +540,7 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     rows = [
         _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
         _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="bypass_active_pending_review", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="active_pending_governance_review", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
         _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
         _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
         _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
@@ -606,3 +606,86 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
     assert governance_review.GUARDRAIL_RULES_TABLE not in [table for table, _ in writes]
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in [table for table, _ in writes]
     assert governance_review.CATALOGUE_TABLE not in [table for table, _ in writes]
+
+
+
+def test_new_authoring_lifecycle_draft_submit_apply_now_and_ungoverned():
+    """Verify 02_pipeline authoring cannot create formal review decisions."""
+    ungoverned = governance_review.guardrail_authoring_status({"governance_mode": "ungoverned"})
+    draft = governance_review.guardrail_authoring_status({"governance_mode": "governed"}, action="draft")
+    submit = governance_review.guardrail_authoring_status({"governance_mode": "governed"}, action="submit")
+    apply_now = governance_review.guardrail_authoring_status({"governance_mode": "governed"}, action="apply_now")
+
+    assert ungoverned["activation_state"] == "active"
+    assert ungoverned["requires_governance_review"] is False
+    assert draft["activation_state"] == "inactive"
+    assert draft["review_state"] == "draft"
+    assert submit["activation_state"] == "pending"
+    assert submit["review_state"] == "pending_governance_review"
+    assert apply_now["activation_state"] == "active"
+    assert apply_now["review_state"] == "active_pending_governance_review"
+    assert apply_now["activation_reason"] == "engineering_apply_now"
+    assert "governance_approved" not in {draft["review_state"], submit["review_state"], apply_now["review_state"]}
+
+
+def test_formal_review_context_and_lifecycles():
+    """Verify formal review actions are 03-only and produce new lifecycle states."""
+    pending = {"rule_key": "r1", "rule_id": "r1", "activation_state": "pending", "review_state": "pending_governance_review", "is_active": False}
+    active_pending = {**pending, "activation_state": "active", "review_state": "active_pending_governance_review", "is_active": True}
+
+    try:
+        governance_review.apply_governance_rule_action(pending, "approve", source_notebook_type="02_pipeline")
+    except PermissionError as exc:
+        assert "03_governance" in str(exc)
+    else:
+        raise AssertionError("02_pipeline formal review was not blocked")
+
+    approved = governance_review.apply_governance_rule_action(pending, "approve_and_activate")
+    rejected = governance_review.apply_governance_rule_action(active_pending, "reject")
+    deactivated = governance_review.apply_governance_rule_action({**pending, "review_state": "governance_approved", "activation_state": "active", "is_active": True}, "deactivate")
+    replaced = governance_review.apply_governance_rule_action(active_pending, "replace", replacement={"rule_id": "r2", "rule_key": "r2"})
+
+    assert approved["activation_state"] == "active"
+    assert approved["review_state"] == "governance_approved"
+    assert rejected["activation_state"] == "inactive"
+    assert rejected["review_state"] == "rejected_by_governance"
+    assert deactivated["review_state"] == "inactive"
+    assert len(replaced) == 2
+    assert replaced[0]["review_state"] == "superseded"
+    assert replaced[0]["superseded_by_record_id"] == "r2"
+    assert replaced[1]["review_state"] == "governance_approved"
+    assert replaced[1]["supersedes_record_id"] == "r1"
+
+
+def test_enrichment_governance_approved_lifecycle_from_record_table(monkeypatch):
+    """Verify legacy approved enrichment writes full lifecycle fields."""
+    written = []
+
+    class Spark:
+        def createDataFrame(self, records):
+            return records
+
+    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, *args, **kwargs: written.append((args[3], frame)))
+    monkeypatch.setattr(governance_review, "_configured_lakehouse_schema", lambda *args, **kwargs: None)
+    profile_rows = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "metadata_table_key": "t", "metadata_column_key": "c"}]
+    result = governance_review.record_table_governance(
+        None,
+        "dev",
+        profile_rows,
+        spark_session=Spark(),
+        enrichment_reviews=[{"column_name": "status", "business_description": "Status", "commit": True}],
+        approved_by="steward@example.com",
+    )
+    record = result["enrichment_rules"][0]
+    assert record["activation_state"] == "active"
+    assert record["review_state"] == "governance_approved"
+    assert record["review_status"] == "governance_approved"
+    assert record["is_active"] is True
+    assert record["requires_governance_review"] is False
+    assert record["requires_post_review"] is False
+    assert record["reviewed_by"]
+    assert record["reviewed_at"]
+    assert record["review_decision"] == "approved"
+    assert record["activated_by"]
+    assert record["activated_at"]
+    assert record["effective_from"]
