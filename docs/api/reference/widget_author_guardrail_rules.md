@@ -5,9 +5,9 @@ Render combined guardrail authoring controls for the selected table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2661`
+`fabricops_kit/governance_review.py:2640`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2661-L2692">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L2640-L2671">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -137,32 +137,6 @@ No additional callable notes are documented.
     │   │           │   └── _resolve_action_by(...)
     │   │           │       └── …
     │   │           └── _is_no_approval_required(...)
-    │   ├── _draft_dq_rules(...)
-    │   │   ├── _canonical_dq_rule_type(...)
-    │   │   ├── _extract_assignment_payload(...)
-    │   │   │   ├── _coerce_rows(...)
-    │   │   │   └── _parse_ai_dict_response(...)
-    │   │   ├── _prepare_dq_profile_input_rows(...)
-    │   │   │   ├── _current_audit_timestamp(...)
-    │   │   │   │   └── _get_audit_timezone(...)
-    │   │   │   │       └── _validate_audit_timezone(...)
-    │   │   │   ├── _spark_sql_helpers(...)
-    │   │   │   └── profile_dataframe(...)
-    │   │   │       ├── _audit_timestamp_expr(...)
-    │   │   │       │   └── _get_audit_timezone(...)
-    │   │   │       │       └── …
-    │   │   │       ├── _build_distribution_summaries(...)
-    │   │   │       │   ├── _build_categorical_distribution(...)
-    │   │   │       │   ├── _build_numeric_distribution(...)
-    │   │   │       │   └── _numeric_bin_edges(...)
-    │   │   │       ├── _get_audit_timezone(...)
-    │   │   │       │   └── _validate_audit_timezone(...)
-    │   │   │       ├── _get_profiled_columns(...)
-    │   │   │       └── _is_min_max_supported_type(...)
-    │   │   ├── _run_fabric_ai_drafting(...)
-    │   │   └── _validate_dq_rules(...)
-    │   │       ├── _canonical_dq_rule_type(...)
-    │   │       └── _normalize_dq_severity(...)
     │   ├── _latest_rule(...)
     │   ├── _rule_params(...)
     │   └── _write_rule_records(...)
@@ -249,7 +223,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2661`
+- Source line: `2640`
 - Inbound references count: 0
 - Outbound references count: 2
 - Used in templates: 03_governance
@@ -276,9 +250,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2661-L2692">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8930882172094e39cfb721ef5cb83786c028580d/src/fabricops_kit/governance_review.py#L2661-L2692</a>
-- Start line: `2661`
-- End line: `2692`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L2640-L2671">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L2640-L2671</a>
+- Start line: `2640`
+- End line: `2671`
 - Signature:
 
 ```python

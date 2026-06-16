@@ -191,7 +191,6 @@
       "template_segment": "Profiling",
       "used_in_templates": [
         "02_pipeline",
-        "03_governance",
         "99_explore"
       ]
     },

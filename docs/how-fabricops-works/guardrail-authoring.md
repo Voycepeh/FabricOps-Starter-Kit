@@ -14,9 +14,11 @@ Tables default to `governance_mode="ungoverned"` and `approval_policy="no_approv
 
 ## 02 engineering authoring flow
 
-This PR implements a basic runnable Fabric notebook widget flow. `widget_select_guardrail_target` renders an interactive target selector, reads catalogue targets, current rule history, and the latest governance policy, then returns a handover state. `widget_author_schema_freshness_profile_rules` renders schema, freshness, and profile behavior controls with preview/save actions. `widget_author_dq_rules` renders manual and AI-assisted DQ authoring controls for `DQ_AUTHORING_MODE = "manual"` or `DQ_AUTHORING_MODE = "ai_suggest"`. Richer styling can come later; the current flow is intentionally small and composable.
+This PR implements a basic runnable Fabric notebook widget flow. `widget_select_guardrail_target` renders an interactive target selector, reads catalogue targets, current rule history, and the latest governance policy, then returns a handover state. `widget_author_schema_freshness_profile_rules` renders schema, freshness, and profile behavior controls with preview/save actions. `widget_author_dq_rules` renders manual DQ authoring controls. Richer styling can come later; the current flow is intentionally small and composable.
 
 For ungoverned tables, engineering-authored saves remain active and non-pending with `review_status="self_approved"`. For governed tables, authors can choose **Save draft** for inactive drafts, **Submit for governance review** for inactive pending records, or **Apply now** for active rules with `review_status="active_pending_governance_review"` and `requires_governance_review=true`.
+
+AI-assisted DQ rule suggestion is not part of the v1 public authoring widget. It may be added later as a separate assisted-drafting flow once the manual governance lifecycle is stable.
 
 ## 03 governance review flow
 

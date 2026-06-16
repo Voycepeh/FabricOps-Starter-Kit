@@ -9,6 +9,7 @@ SEARCH_ROOTS = [SRC, ROOT / "templates" / "notebooks", ROOT / "scripts", ROOT / 
 
 PRIVATE_HELPER_ALLOWLIST = {
     "_build_lineage_records": "Internal lineage row builder is intentionally tested directly as shared pipeline evidence logic.",
+    "_draft_dq_rules": "Reserved internal helper for a future separate AI-assisted DQ drafting flow.",
     "_load_package_version": "Package metadata fallback is invoked during module import rather than by a source-level call.",
 }
 
