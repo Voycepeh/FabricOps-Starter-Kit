@@ -22,24 +22,24 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 
 ## Architecture
 
-![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.svg){ .full-width }
+![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
 The architecture image shows the high-level metadata coordination pattern across agreement, pipeline, governance, and runtime evidence. The active metadata table map below lists the implemented table ownership used by the starter kit. Relationships described on this page are logical joins used by notebooks, helpers, dashboards, and reviews.
 
 ## Active metadata table map
 
-| Metadata table | Main writer | Contains |
-| --- | --- | --- |
-| `METADATA_DATA_STEWARD` | `01_agreement` | Steward identities and active periods. |
-| `METADATA_DATA_AGREEMENT` | `01_agreement` | Versioned agreements and approved usage context. |
-| `METADATA_DATA_AGREEMENT_EVIDENCE` | `01_agreement` | Supporting agreement evidence file references. |
-| `METADATA_NOTEBOOK_REGISTRY` | `02_pipeline`, optional `99_explore` | Notebook-to-agreement registrations. |
-| `METADATA_DATA_CATALOGUE` | `02_pipeline` | Observed table and column profile evidence plus table governance policy fields. |
-| `METADATA_DATA_LINEAGE_TABLE` | `02_pipeline` | Source-to-target lineage rows observed for a specific pipeline run. |
-| `METADATA_PIPELINE_RUNS` | `02_pipeline` | One runtime summary row per pipeline run. |
-| `METADATA_ENRICHMENT_RULES` | `02_pipeline` optional authoring, `03_governance` review | Reviewable enrichment intent for business context, classification, sensitivity, PII, ownership, and usage notes. |
-| `METADATA_GUARDRAIL_RULES` | `02_pipeline` optional authoring, `03_governance` review | Reviewable schema, freshness, profile-behaviour, and DQ rule intent. |
-| `METADATA_GUARDRAIL_RESULTS` | `02_pipeline` runtime enforcement | Runtime outcomes for executed guardrail checks. |
+| Metadata table | Main writer function/widget | Notebook | Contains |
+| --- | --- | --- | --- |
+| `METADATA_DATA_STEWARD` | `save_data_steward`, `widget_render_data_steward` | `01_agreement` | Steward identities and active periods. |
+| `METADATA_DATA_AGREEMENT` | `save_data_agreement`, `widget_render_data_agreement` | `01_agreement` | Versioned agreements and approved usage context. |
+| `METADATA_DATA_AGREEMENT_EVIDENCE` | `save_agreement_evidence`, `widget_render_agreement_evidence` | `01_agreement` | Supporting agreement evidence file references. |
+| `METADATA_NOTEBOOK_REGISTRY` | `_register_current_notebook`, `widget_select_agreement` | `02_pipeline`, optional `99_explore` | Notebook-to-agreement registrations. |
+| `METADATA_DATA_CATALOGUE` | `write_catalogue_evidence`, `run_table_guardrails` | `02_pipeline` | Observed table and column profile evidence plus table governance policy fields. |
+| `METADATA_DATA_LINEAGE_TABLE` | `write_pipeline_lineage` | `02_pipeline` | Source-to-target lineage rows observed for a specific pipeline run. |
+| `METADATA_PIPELINE_RUNS` | `write_pipeline_run_summary` | `02_pipeline` | One runtime summary row per pipeline run. |
+| `METADATA_ENRICHMENT_RULES` | `write_enrichment_records`, `widget_enrich_table_metadata`, governance review widgets | `02_pipeline` optional authoring, `03_governance` review | Reviewable enrichment intent for business context, classification, sensitivity, PII, ownership, and usage notes. |
+| `METADATA_GUARDRAIL_RULES` | `write_guardrail_rule_records`, `widget_author_schema_freshness_profile_rules`, `widget_author_dq_rules`, governance review widgets | `02_pipeline` optional authoring, `03_governance` review | Reviewable schema, freshness, profile-behaviour, and DQ rule intent. |
+| `METADATA_GUARDRAIL_RESULTS` | `enforce_table_guardrails`, `_write_guardrail_result_row`, `run_table_guardrails` | `02_pipeline` runtime enforcement | Runtime outcomes for executed guardrail checks. |
 
 The active table map intentionally excludes planned, project-specific, or manually collected metadata that is not currently written by the standard notebooks. For schema, freshness, profile behavior, and DQ evidence flow, see [Pipeline Guardrails](pipeline-guardrails.md).
 
@@ -59,7 +59,7 @@ FabricOps writers follow the same ownership rule in functions, notebooks, and wi
 
 - Catalogue writers write observed table and column evidence to `METADATA_DATA_CATALOGUE`.
 - Pipeline run writers write one run summary to `METADATA_PIPELINE_RUNS`.
-- Lineage writers write run-specific source-to-target lineage to `METADATA_DATA_LINEAGE_TABLE`. Lineage rows belong to a pipeline run through `run_id` and reference catalogue source/target identities through `source_table_key`, `target_table_key`, and optional column keys.
+- Lineage writers write run-specific source-to-target lineage to `METADATA_DATA_LINEAGE_TABLE`. Lineage rows belong to a pipeline run through `run_id` and reference catalogue source/target table identities through `source_table_key` and `target_table_key`.
 - Enrichment writers write reviewable enrichment intent to `METADATA_ENRICHMENT_RULES`.
 - Rule writers write reviewable guardrail intent to `METADATA_GUARDRAIL_RULES`.
 - Result writers write runtime guardrail outcomes to `METADATA_GUARDRAIL_RESULTS`.
@@ -145,24 +145,7 @@ Schema, freshness, profile-behavior pass/fail, stability, and DQ outcomes are ru
 
 `METADATA_DATA_LINEAGE_TABLE` fields:
 
-- `lineage_id`
-- `run_id`
-- `dataset_name`
-- `pipeline_name`
-- `source_table`
-- `source_column_name`
-- `source_table_key`
-- `source_column_key`
-- `target_table`
-- `target_column_name`
-- `target_table_key`
-- `target_column_key`
-- `transformation_type`
-- `transformation_steps_json`
-- `lineage_level`
-- `detected_at`
-- `notebook_id`
-- `created_at`
+- `lineage_id`, `dataset_name`, `run_id`, `source_table`, `target_table`, `source_table_key`, `target_table_key`, `transformation_steps_json`, `created_at`
 - Standard runtime audit columns
 
 Lineage is run-specific execution evidence. One pipeline run can write many lineage rows. The same pipeline may produce different lineage rows in a later run if source tables, target tables, or transformations change. Catalogue keys provide stable source and target references, but the owning event is the pipeline run.
@@ -172,8 +155,6 @@ Relationships:
 - `METADATA_PIPELINE_RUNS.run_id` 1 to many `METADATA_DATA_LINEAGE_TABLE.run_id`
 - `METADATA_DATA_LINEAGE_TABLE.source_table_key` references `METADATA_DATA_CATALOGUE.metadata_table_key`
 - `METADATA_DATA_LINEAGE_TABLE.target_table_key` references `METADATA_DATA_CATALOGUE.metadata_table_key`
-- `METADATA_DATA_LINEAGE_TABLE.source_column_key` optionally references `METADATA_DATA_CATALOGUE.metadata_column_key`
-- `METADATA_DATA_LINEAGE_TABLE.target_column_key` optionally references `METADATA_DATA_CATALOGUE.metadata_column_key`
 
 `METADATA_PIPELINE_RUNS` fields:
 
@@ -188,8 +169,6 @@ Relationships:
 - `enrichment_rule_key`
 - `metadata_table_key`
 - `metadata_column_key`
-- `environment_name`
-- `dataset_name`
 - `table_name`
 - `column_name`
 - `enrichment_scope`
@@ -234,44 +213,10 @@ Relationships:
 
 `METADATA_GUARDRAIL_RULES` fields:
 
-- `rule_id`
-- `rule_version`
-- `rule_key`
-- `metadata_table_key`
-- `metadata_column_key`
-- `environment_name`
-- `dataset_name`
-- `table_name`
-- `column_name`
-- `rule_name`
-- `rule_type`
-- `rule_category`
-- `expected_operator`
-- `expected_value_json`
-- `severity`
-- `evaluation_window_json`
-- `review_status`
-- `is_active`
-- `approval_policy`
-- `governance_mode`
-- `submitted_by`
-- `submitted_at`
-- `reviewed_by`
-- `reviewed_at`
-- `review_decision`
-- `review_comment`
-- `bypass_reason`
-- `requires_post_review`
-- `supersedes_rule_id`
-- `effective_from`
-- `effective_to`
-- `created_by`
-- `created_at`
-- `updated_by`
-- `updated_at`
-- `run_id`
-- `notebook_id`
-- `notebook_registry_id`
+- `rule_key`, `rule_id`, `metadata_column_key`, `metadata_table_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`
+- Rule definition: `guardrail_type`, `rule_type`, `rule_parameters_json`, `severity`, `description`
+- Lifecycle and provenance: `is_active`, `review_status`, `author_role`, `created_by`, `created_at`, `approved_by`, `approved_at`, `ai_suggestion_json`, `action_type`, `source_notebook_type`, `source_notebook_id`, `source_workspace_id`, `superseded_by_rule_key`, `notes`
+- Approval and bypass state: `approval_required`, `approval_bypassed`, `requires_post_review`, `bypass_reason`, `bypassed_by`, `bypassed_at`, `governance_mode`, `approval_policy`, `submitted_by`, `submitted_at`, `reviewed_by`, `reviewed_at`, `review_decision`, `review_comment`, `supersedes_rule_id`, `effective_from`, `effective_to`
 - Standard runtime audit columns
 
 ### Runtime enforcement evidence tables
@@ -281,17 +226,17 @@ Guardrail results are pipeline execution evidence. One pipeline run can produce 
 Relationships:
 
 - `METADATA_PIPELINE_RUNS.run_id` 1 to many `METADATA_GUARDRAIL_RESULTS.run_id`
-- `METADATA_GUARDRAIL_RULES.rule_id` 1 to many `METADATA_GUARDRAIL_RESULTS.rule_id`
-- `METADATA_DATA_CATALOGUE.metadata_table_key` 1 to many `METADATA_GUARDRAIL_RESULTS.metadata_table_key`
+- `METADATA_GUARDRAIL_RULES.rule_key` 1 to many `METADATA_GUARDRAIL_RESULTS.rule_key`
+- `METADATA_DATA_CATALOGUE` table/column identity fields provide the table and optional column context for `METADATA_GUARDRAIL_RESULTS`
 
 `METADATA_GUARDRAIL_RESULTS` fields:
 
-- `result_id`, `run_id`, `rule_id`, `rule_key`, `metadata_table_key`, `metadata_column_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, `expected_value_json`, `actual_value_json`, `result_payload_json`, `created_at`
+- `result_id`, `run_id`, `rule_key`, `environment_name`, `dataset_name`, `table_name`, `column_name`, `guardrail_type`, `rule_type`, `status`, `can_continue`, `severity`, `reason`, `expected_value_json`, `actual_value_json`, `result_payload_json`, `created_at`
 - Standard runtime audit columns
 
 ### Optional documented tables
 
-`METADATA_DATA_ACCESS` is separately collected governance metadata. It is not created by the standard active setup registry and is not currently written by the starter-kit notebooks. It stores user, role, permission, access purpose, approval status, and access scope linked to governed catalogue entries. The logical relationship is `METADATA_DATA_CATALOGUE` 1 to many `METADATA_DATA_ACCESS`.
+`METADATA_DATA_ACCESS` is separately collected governance metadata. It is not created by the standard active setup registry and is not currently written by the starter-kit notebooks. Its optional schema in code contains `user_principal`, `role_name`, `permission`, `access_purpose`, `approval_status`, `access_scope`, `table_id`, `metadata_table_key`, `metadata_column_key`, `granted_date`, `expires_at`, `approved_by`, `approved_at`, `notes`, and standard runtime audit columns. The logical relationship is `METADATA_DATA_CATALOGUE` 1 to many `METADATA_DATA_ACCESS`.
 
 ## Callable references
 
