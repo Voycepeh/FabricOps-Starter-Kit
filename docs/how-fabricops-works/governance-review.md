@@ -1,106 +1,102 @@
 # Governance Review
 
-Governance Review is the guardrail governance control point for FabricOps. `02_pipeline` runs first: it writes real data tables, profiles the actual columns that landed, and records catalogue/profile metadata. `03_governance` then runs separately so reviewers can decide table guardrail governance state, approvals, rejections, supersession, and bypass or post-review outcomes without editing pipeline code.
+`03_governance` is the metadata enrichment and guardrail governance review control point for FabricOps. It reviews profiled table metadata and guardrail rule intent; it does **not** enforce runtime guardrails. Runtime enforcement happens only in `02_pipeline`.
 
 ![FabricOps Governance Review operating model](../assets/fabricops-goverance-review.png)
 
-The page follows the flow in the diagram:
+The current flow is:
 
-1. `02_pipeline` writes real data tables and records catalogue/profile metadata for the tables and columns that actually exist.
-2. `03_governance` opens profiled catalogue targets as a control panel for guardrail governance decisions.
-3. Governance users approve, reject, supersede, or post-review bypassed guardrail rules and table governance state.
-4. Approved decisions are stored as governed metadata/configuration.
-5. Later `02_pipeline` runs read that metadata/configuration and apply the relevant guardrails, checks, and behaviours.
+1. `02_pipeline` runs profiling and guardrail steps for source tables and target DataFrames.
+2. Those steps write catalogue/profile evidence to `METADATA_DATA_CATALOGUE`.
+3. `03_governance` selects a profiled target from that catalogue evidence with [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/).
+4. Reviewers use [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) to enrich column metadata.
+5. Reviewers use [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) to review guardrail rule intent and table governance state.
+6. Later `02_pipeline` runs read approved active guardrail rules and write runtime outcomes to `METADATA_GUARDRAIL_RESULTS`.
+
+`03_governance` lets reviewers approve and records governance decisions for guardrail rules, catalogue evidence, and runtime enforcement readiness before `02_pipeline` applies approved controls.
 
 AI can help draft suggested metadata, but AI output is advisory only. A person must approve, edit, or reject suggestions before they become governed metadata.
 
 ## Operating model
 
-FabricOps keeps metadata configuration separate from runtime pipeline engineering:
+FabricOps keeps enrichment, guardrail intent, catalogue evidence, and runtime enforcement separate:
 
-- `02_pipeline` runs first and writes the real target tables.
-- `02_pipeline` profiles those tables and records catalogue/profile metadata for the real columns, row counts, data types, null counts, distinct counts, min/max values, and related run context.
-- `03_governance` runs separately as a metadata control panel over that profiled catalogue output.
-- Governance users review guardrail rules and table governance state for profiled catalogue targets.
-- Approved decisions are stored in metadata tables as append-only governed configuration.
-- Later pipeline runs consume reviewed metadata and apply relevant guardrails, checks, and behaviours.
-- AI suggestions stay advisory until a human reviewer commits them.
-
-Some governance metadata cannot be created safely before actual tables and columns exist. For example, reviewers need to see the real column names and profiling signals before approving column meaning, sensitivity, identifier classification, or DQ expectations. That is why `03_governance` works after `02_pipeline` has created and profiled the table.
+- `02_pipeline` keeps agreement selection and notebook registry linkage. It starts by selecting an agreement and can register the active pipeline notebook in `METADATA_NOTEBOOK_REGISTRY` before writing pipeline evidence.
+- `02_pipeline` profiles source tables and target DataFrames and records observed catalogue/profile evidence in `METADATA_DATA_CATALOGUE`.
+- `03_governance` uses catalogue-based guardrail target selection. New target tables can be selected before the physical target table exists, as long as the target DataFrame has been profiled and recorded in `METADATA_DATA_CATALOGUE`.
+- `03_governance` surfaces metadata enrichment and guardrail governance review; it does not run runtime enforcement.
+- Later `02_pipeline` runs consume reviewed guardrail metadata and apply runtime guardrails.
 
 ## Why `03_governance` is separate
 
-`03_governance` is separate so governance users can configure metadata without changing production pipeline code. The pipeline remains responsible for writing data and applying approved configuration. The governance notebook remains responsible for controlled guardrail governance review decisions.
+`03_governance` is separate so governance users can review metadata and guardrail intent without changing pipeline code. The pipeline remains responsible for data processing, profiling, runtime checks, and enforcement results. The governance notebook remains responsible for table selection, enrichment, and guardrail governance review.
 
 This separation keeps the handoff junior-friendly:
 
-- Pipeline engineers can focus on table creation, profiling, and guardrail execution.
-- Governance reviewers can focus on what the profiled columns mean and which metadata should govern later runs.
+- Pipeline engineers can focus on table creation, profiling, agreement linkage, lineage, and runtime guardrail execution.
+- Governance reviewers can focus on what the profiled columns mean, how columns should be classified, and which guardrail intent should govern later runs.
 - Approved metadata remains visible in metadata tables instead of being hidden inside notebook logic.
 - Later `02_pipeline` runs behave consistently because they read governed metadata/configuration instead of relying on ad hoc edits.
 
+## Current `03_governance` responsibilities
+
+| Responsibility | Widget | Writes |
+| --- | --- | --- |
+| Select a profiled source table or target DataFrame | `widget_select_guardrail_target` | Reads `METADATA_DATA_CATALOGUE`; does not write runtime outcomes. |
+| Metadata enrichment | `widget_enrich_table_metadata` | `METADATA_COLUMN_CONTEXT`, `METADATA_COLUMN_CLASSIFICATION` |
+| Guardrail governance review | `widget_review_guardrail_governance` | `METADATA_GUARDRAIL_RULES`, and `METADATA_GOVERNANCE_REVIEWS` when table governance policy is committed |
+
+The old separated business context, classification, and DQ review widget flow is removed from the current template. DQ belongs with guardrail authoring/review, not metadata enrichment.
+
+## Metadata table split
+
+| Evidence or intent | Metadata table | Main writer |
+| --- | --- | --- |
+| Catalogue/profile evidence | `METADATA_DATA_CATALOGUE` | `02_pipeline` profiling/guardrail steps |
+| Metadata enrichment | `METADATA_COLUMN_CONTEXT`, `METADATA_COLUMN_CLASSIFICATION` | `03_governance` enrichment widget |
+| Guardrail governance intent | `METADATA_GUARDRAIL_RULES` | Guardrail authoring/review widgets |
+| Table governance review policy | `METADATA_GOVERNANCE_REVIEWS` | Guardrail governance review widget, when applicable |
+| Runtime enforcement outcomes | `METADATA_GUARDRAIL_RESULTS` | `02_pipeline` runtime guardrail enforcement |
+
 ## What `02_pipeline` creates before governance
 
-`02_pipeline` creates the data and catalogue foundation that Governance Review uses. Typical outputs include:
+`02_pipeline` creates the catalogue foundation that Governance Review uses. Typical outputs include:
 
 | Pipeline output | How `03_governance` uses it |
 |---|---|
-| Real data tables | Reviewers make guardrail governance decisions for tables and columns that actually exist. |
+| Profiled source table evidence | Reviewers can select and enrich source-table metadata. |
+| Profiled target DataFrame evidence | Reviewers can select target DataFrames after profiling, even before or independently of physical target table existence. |
 | Profile and catalogue metadata | Reviewers see table identity, column names, data types, row counts, null counts, distinct counts, min/max values, and distribution signals where available. |
-| Guardrail and DQ evidence | Reviewers can understand what the pipeline observed when deciding which metadata or expectations to approve. |
+| Guardrail and DQ runtime evidence | Reviewers can understand what the pipeline observed; DQ expectations are governed through guardrail authoring/review rather than enrichment. |
 | Lineage and run metadata | Reviewers can see which environment, dataset, table, notebook, activity, and run context produced the profiled catalogue rows. |
 
-In this page, “evidence” means the profile/catalogue and run signals produced by `02_pipeline`. The main job of `03_governance` is guardrail governance review over that profiled catalogue, not to act as the runtime enforcement layer.
+## Human workflow
 
-Key metadata tables in this flow include `METADATA_DATA_CATALOGUE` for profiled table targets, `METADATA_GUARDRAIL_RULES` for governed rule decisions, and `METADATA_GUARDRAIL_RESULTS` for runtime enforcement outcomes written by `02_pipeline`.
+A typical current governance flow is:
 
-## What reviewers decide
-
-Governance Review captures append-only human-reviewed guardrail governance decisions:
-
-| Decision area | Metadata table | What reviewers decide |
-|---|---|---|
-| Table governance state | `METADATA_GOVERNANCE_REVIEWS` | Whether a profiled table is governed or ungoverned and which approval policy applies. |
-| Guardrail rule review | `METADATA_GUARDRAIL_RULES` | Whether proposed or bypassed schema, freshness, profile-behavior, and DQ guardrail rules are approved, rejected, or superseded. |
-| Bypass/post-review outcome | `METADATA_GUARDRAIL_RULES` | Whether a bypassed active rule remains acceptable after human review or should be rejected or superseded. |
-
-## Human metadata workflow
-
-A typical guardrail governance review flow is:
-
-1. `02_pipeline` writes and profiles a real table.
-2. A governance user opens `03_governance` from the governance workspace or governance notebook.
-3. The user selects a profile target with [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/), choosing the profiled guardrail target from metadata-backed catalogue evidence.
-4. The current guardrail governance widget displays existing rules and current governance state for the selected profiled target.
-5. The user reviews table governance state and proposed, bypassed, rejected, or superseded guardrail rule decisions.
-6. The user commits reviewed metadata through the current guardrail governance widget actions.
-7. Later `02_pipeline` runs read the reviewed metadata/configuration and apply the relevant behaviours.
+1. Run `02_pipeline` through the relevant source or target profiling/guardrail steps.
+2. Open `03_governance`.
+3. Select a catalogue-backed target with [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/).
+4. Use [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) to save column context and classification metadata.
+5. Use [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) to review table governance state and proposed, bypassed, rejected, or superseded guardrail rules.
+6. Rerun `02_pipeline` when runtime enforcement should consume approved active guardrail rules.
 
 The important control point is the commit. Nothing becomes governed metadata until a human reviewer explicitly commits it.
 
 ## Callable references
 
-Use these generated API references for the helpers behind the governance review flow:
+Use these generated API references for the helpers behind the current governance flow:
 
-- [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/) selects the profiled table under guardrail review.
-- [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) captures current table governance and guardrail rule review decisions.
-- The current guardrail governance widget writes reviewed governance metadata for later pipeline enforcement.
+- [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/) selects profiled targets from `METADATA_DATA_CATALOGUE`.
+- [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) writes column context and classification enrichment metadata.
+- [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) captures table governance and guardrail rule review decisions.
 - [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of governance-approved DQ rules.
-
-## DQ expectations in the control panel
-
-- `03_governance` lets reviewers approve, reject, supersede, or post-review bypassed guardrail rules for profiled tables.
-- Approved rules are stored as governed metadata/configuration in `METADATA_GUARDRAIL_RULES`.
-- Later `02_pipeline` runs load the newest active governance-approved rules for the table.
-- `enforce_dq_rules` enforces those governance-approved rules at runtime and records the outcome as guardrail evidence.
-
-FabricOps uses one canonical DQ rule vocabulary and does not require Great Expectations or dbt at runtime. For the full list of supported rule types, parameters, and examples, see the [DQ rule reference](../reference/dq-rules/index.md).
 
 ## How reviewed metadata controls later pipeline runs
 
 Approved metadata affects later runs only after it is written to metadata tables.
 
-- Approved business context and classification become metadata/configuration for downstream reporting, handover, governance review, and runtime decisions where relevant.
+- Approved business context and classification support downstream reporting, handover, review, and runtime decisions where relevant.
 - Approved sensitivity and personal-data classifications can influence later pipeline behaviours, handling expectations, and review decisions.
 - Active governance-approved DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`.
 - `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` from the configured metadata lakehouse target, resolves the newest version for each DQ rule, keeps only active governance-reviewed rows with `guardrail_type="dq"`, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
