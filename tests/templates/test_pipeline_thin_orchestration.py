@@ -219,9 +219,12 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert "write_pipeline_run_summary(" in code
     assert '"sources": ["orders", "customers"]' not in code
     assert '"targets": ["orders_enriched", "orders_summary"]' not in code
-    assert "source_guardrail_results" not in code
+    assert "source_profile_results" in code
+    assert "target_profile_results" in code
     assert "source_enforcement_results" in code
     assert "target_enforcement_results" in code
+    assert "source_guardrail_results=source_enforcement_results" in code
+    assert "target_guardrail_results=target_enforcement_results" in code
     assert "completed_at=_current_audit_timestamp(config=CONFIG)" in code
     assert "runtime summary" in markdown.lower()
 
