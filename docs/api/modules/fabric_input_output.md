@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 6</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 6</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>10</td>
+      <td>11</td>
     </tr>
     <tr>
       <td>Inbound module count</td>

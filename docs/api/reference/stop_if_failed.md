@@ -7,7 +7,7 @@ Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail
 
 `fabricops_kit/guardrails.py:917`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L917-L937">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/guardrails.py#L917-L937">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -81,7 +81,7 @@ Raises RuntimeError outside Fabric notebook exit handling when a failed guardrai
 
 ### Calls
 
-Not documented yet
+- `fabricops_kit.guardrails.SchemaDriftError`
 
 ## Implementation details
 
@@ -135,7 +135,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source file path: `src/fabricops_kit/guardrails.py`
 - Source line: `917`
 - Inbound references count: 1
-- Outbound references count: 0
+- Outbound references count: 1
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, can_continue
 
@@ -154,12 +154,12 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### Outbound references
 
-Not documented yet
+- `fabricops_kit.guardrails.SchemaDriftError`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L917-L937">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L917-L937</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/guardrails.py#L917-L937">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/guardrails.py#L917-L937</a>
 - Start line: `917`
 - End line: `937`
 - Signature:

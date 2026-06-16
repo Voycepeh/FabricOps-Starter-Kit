@@ -2080,8 +2080,8 @@ def main() -> None:
         dependency_meta = dependency_callables.get(qn, {})
         raw_calls = dependency_meta.get("calls", [])
         raw_used_by = dependency_meta.get("used_by", [])
-        calls = [item for item in raw_calls if _is_public_reference_qn(item, node_by_qn)] if node["exported"] else raw_calls
-        used_by = [item for item in raw_used_by if _is_public_reference_qn(item, node_by_qn)] if node["exported"] else raw_used_by
+        calls = [item for item in raw_calls if not _hide_from_public_relationships(item)] if node["exported"] else raw_calls
+        used_by = [item for item in raw_used_by if not _hide_from_public_relationships(item)] if node["exported"] else raw_used_by
         calls_count = len(calls)
         used_by_count = len(used_by)
         classification_label = _function_type_label(function_type)
@@ -2151,8 +2151,8 @@ def main() -> None:
         module_name = node["module_name"]
         raw_deps = sorted(set(calls_by_qn.get(qn, [])))
         raw_used_by = sorted(set(used_by_qn.get(qn, [])))
-        deps = [d for d in raw_deps if _is_public_reference_qn(d, node_by_qn)] if node["exported"] else raw_deps
-        used_by = [u for u in raw_used_by if _is_public_reference_qn(u, node_by_qn)] if node["exported"] else raw_used_by
+        deps = [d for d in raw_deps if not _hide_from_public_relationships(d)] if node["exported"] else raw_deps
+        used_by = [u for u in raw_used_by if not _hide_from_public_relationships(u)] if node["exported"] else raw_used_by
         metadata = docs_metadata.get(short_name, {})
         module_info = module_data[module_name]
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})

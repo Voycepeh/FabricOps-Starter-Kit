@@ -7,7 +7,7 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 `fabricops_kit/governance_review.py:2456`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/governance_review.py#L2456-L2551">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/governance_review.py#L2456-L2551">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -82,7 +82,9 @@ Not documented yet
 
 ### Calls
 
-Not documented yet
+- `fabricops_kit.governance_review.apply_governance_enrichment_action`
+- `fabricops_kit.governance_review.apply_governance_rule_action`
+- `fabricops_kit.governance_review.load_rule_review_history`
 
 ## Implementation details
 
@@ -155,7 +157,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source line: `2456`
 - Inbound references count: 0
-- Outbound references count: 0
+- Outbound references count: 3
 - Used in templates: 02_pipeline, 03_governance
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
@@ -174,12 +176,14 @@ Not documented yet
 
 ### Outbound references
 
-Not documented yet
+- `fabricops_kit.governance_review.apply_governance_enrichment_action`
+- `fabricops_kit.governance_review.apply_governance_rule_action`
+- `fabricops_kit.governance_review.load_rule_review_history`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/governance_review.py#L2456-L2551">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/governance_review.py#L2456-L2551</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/governance_review.py#L2456-L2551">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/governance_review.py#L2456-L2551</a>
 - Start line: `2456`
 - End line: `2551`
 - Signature:

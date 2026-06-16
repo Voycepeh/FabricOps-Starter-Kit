@@ -46,7 +46,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_rows_for_display</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li></ul></details>
 
   </div>
 </article>
@@ -56,7 +56,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>_dq_failed_row_count</code></li><li><code>_dq_summary</code></li><li><code>_dq_tagged_dataframe</code></li><li><code>_load_active_dq_rules</code></li><li><code>_read_guardrail_rule_metadata</code></li><li><code>_run_dq_guardrail_checks</code></li><li><code>_summarize_dq_guardrail</code></li><li><code>_write_guardrail_result_row</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -66,7 +66,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/guardrails/" title="Open guardrails module page" aria-label="Open guardrails module page">guardrails</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_coerce_date</code></li><li><code>_iso_date_value</code></li><li><code>_max_column_value</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>enforce_freshness_rule</code></li><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -76,7 +76,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>enforce_freshness</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_apply_bypass_post_review_warning</code></li><li><code>_catalogue_value</code></li><li><code>_parse_rule_parameters</code></li><li><code>_select_table_guardrail_rule</code></li><li><code>_string_value</code></li><li><code>enforce_freshness</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -86,7 +86,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/guardrails/" title="Open guardrails module page" aria-label="Open guardrails module page">guardrails</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>profile_dataframe</code></li><li><code>read_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 14</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>_accepted_profile_rows</code></li><li><code>_apply_bypass_post_review_warning</code></li><li><code>_catalogue_value</code></li><li><code>_guardrail_exclude_columns</code></li><li><code>_is_missing_table_error</code></li><li><code>_json_dumps_stable</code></li><li><code>_profile_hash</code></li><li><code>_profile_payload_from_profile</code></li><li><code>_select_profile_behavior_rule</code></li><li><code>_string_value</code></li><li><code>_write_guardrail_result_row</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -106,7 +106,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_add_audit_columns</code></li></ul></details>
 
   </div>
 </article>
@@ -116,8 +116,8 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_profiling/" title="Open data_profiling module page" aria-label="Open data_profiling module page">data_profiling</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>enforce_profile_behavior</code></li><li><code>run_table_guardrails</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_audit_timestamp_expr</code></li><li><code>_get_audit_timezone</code></li><li><code>_build_distribution_summaries</code></li><li><code>_get_profiled_columns</code></li><li><code>_is_min_max_supported_type</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li><li><code>enforce_profile_behavior</code></li><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-starter-path="00_env_config, 02_pipeline, 99_explore" data-function-type="callable" data-callable-purpose="Read a CSV file from a configured Fabric lakehouse Files path.">
@@ -126,7 +126,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config, 02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
 
   </div>
 </article>
@@ -136,7 +136,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
 
   </div>
 </article>
@@ -146,7 +146,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_convert_single_parquet_ns_to_us</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
 
   </div>
 </article>
@@ -156,8 +156,8 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>enforce_profile_behavior</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_read_guardrail_rule_metadata</code></li><li><code>_read_metadata_rows</code></li><li><code>_read_metadata_table_or_empty</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>enforce_profile_behavior</code></li><li><code>_load_notebook_registry</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="00_env_config, 02_pipeline, 99_explore" data-function-type="callable" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
@@ -166,7 +166,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config, 02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li></ul></details>
 
   </div>
 </article>
@@ -176,7 +176,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>profile_dataframe</code></li><li><code>enforce_dq_rules</code></li><li><code>enforce_freshness</code></li><li><code>enforce_freshness_rule</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 16</span></summary><ul><li><code>profile_dataframe</code></li><li><code>enforce_dq_rules</code></li><li><code>enforce_freshness</code></li><li><code>enforce_freshness_rule</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>_build_metadata_table_key</code></li><li><code>_write_guardrail_result_row</code></li><li><code>_build_guardrail_blocking_message_from_bundle</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
 
   </div>
 </article>
@@ -186,7 +186,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 10</span></summary><ul><li><code>_get_metadata_table_schema_registry</code></li><li><code>_metadata_schema_field_names</code></li><li><code>_metadata_tables_from_setup_results</code></li><li><code>_resolve_metadata_schema</code></li><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_framework_config</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_data_stewards</code></li><li><code>get</code></li><li><code>_get_governance_metadata_schemas</code></li></ul></details>
 
   </div>
 </article>
@@ -196,7 +196,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/config/" title="Open config module page" aria-label="Open config module page">config</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>NotebookSetupContext</code></li><li><code>_get_store</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_validate_framework_config</code></li></ul></details>
 
   </div>
 </article>
@@ -206,7 +206,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/guardrails/" title="Open guardrails module page" aria-label="Open guardrails module page">guardrails</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>SchemaDriftError</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -216,7 +216,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_dq_records_from_selection</code></li><li><code>_draft_dq_rules</code></li><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_write_rule_records</code></li></ul></details>
 
   </div>
 </article>
@@ -226,7 +226,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_schema_freshness_profile_records_from_selection</code></li><li><code>_write_rule_records</code></li></ul></details>
 
   </div>
 </article>
@@ -236,7 +236,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 03_governance</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_collect_enrichment_extra_fields</code></li><li><code>_enrichment_options</code></li><li><code>_render_enrichment_extra_fields</code></li><li><code>_selected_catalogue_rows_for_enrichment</code></li><li><code>_value</code></li><li><code>_write_table_metadata_enrichment_records</code></li><li><code>build_enrichment_rule_records</code></li></ul></details>
 
   </div>
 </article>
@@ -246,7 +246,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">01_agreement</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 01_agreement</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_agreement_evidence_widget</code></li></ul></details>
 
   </div>
 </article>
@@ -256,7 +256,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">01_agreement</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 01_agreement</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
 
   </div>
 </article>
@@ -266,7 +266,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">01_agreement</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 01_agreement</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_render_maintenance_widget</code></li></ul></details>
 
   </div>
 </article>
@@ -276,7 +276,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 03_governance</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>apply_governance_enrichment_action</code></li><li><code>apply_governance_rule_action</code></li><li><code>load_rule_review_history</code></li></ul></details>
 
   </div>
 </article>
@@ -286,7 +286,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
 
   </div>
 </article>
@@ -296,7 +296,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 03_governance</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_filter_table_rows</code></li><li><code>_read_metadata_table_or_empty</code></li><li><code>resolve_table_governance_policy</code></li><li><code>_build_metadata_table_key</code></li></ul></details>
 
   </div>
 </article>
@@ -306,7 +306,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_build_metadata_table_key</code></li><li><code>_canonical_catalogue_profile_df</code></li><li><code>_definition_name</code></li><li><code>_normalize_catalogue_evidence_types</code></li><li><code>_now_iso</code></li><li><code>_runtime_audit_fields</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -316,8 +316,8 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config, 01_agreement, 02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 01_agreement, 02_pipeline, 03_governance</p>
   <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_write_row</code></li><li><code>_write_rule_records</code></li><li><code>_write_table_metadata_enrichment_records</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_write_guardrail_result_row</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
   </div>
 </article>
 <article id="pipeline-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
@@ -326,7 +326,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_build_metadata_table_key</code></li><li><code>_definition_name</code></li><li><code>_now_iso</code></li><li><code>_runtime_audit_fields</code></li></ul></details>
 
   </div>
 </article>
@@ -336,7 +336,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>write_lakehouse_table</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_definition_name</code></li><li><code>_now_iso</code></li><li><code>_summary_status</code></li></ul></details>
 
   </div>
 </article>
@@ -346,7 +346,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">00_env_config, 02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_get_store</code></li></ul></details>
 
   </div>
 </article>

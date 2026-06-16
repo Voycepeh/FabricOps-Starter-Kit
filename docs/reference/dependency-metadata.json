@@ -1861,6 +1861,21 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.fabric_input_output._PandasProxy": {
+      "qualified_name": "fabricops_kit.fabric_input_output._PandasProxy",
+      "short_name": "_PandasProxy",
+      "module": "fabric_input_output",
+      "callable": "_PandasProxy",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.fabric_input_output._configured_lakehouse_schema": {
       "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
       "short_name": "_configured_lakehouse_schema",
@@ -5892,7 +5907,7 @@
     },
     "fabric_input_output": {
       "callable_count": 7,
-      "internal_count": 10,
+      "internal_count": 11,
       "outbound_modules": [
         "config"
       ],

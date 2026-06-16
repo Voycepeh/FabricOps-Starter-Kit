@@ -7,7 +7,7 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 `fabricops_kit/pipeline.py:368`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/pipeline.py#L368-L396">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/pipeline.py#L368-L396">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -80,7 +80,9 @@ Not documented yet
 
 ### Calls
 
-Not documented yet
+- `fabricops_kit.pipeline._rows_for_display`
+- `fabricops_kit.pipeline.build_guardrail_detail_rows`
+- `fabricops_kit.pipeline.build_guardrail_summary_rows`
 
 ## Implementation details
 
@@ -153,7 +155,7 @@ No additional callable notes are documented.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/pipeline.py#L361-L365"><code>_rows_for_display</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/pipeline.py#L361-L365"><code>_rows_for_display</code></a>
         </div>
       </section>
     </div>
@@ -173,7 +175,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source file path: `src/fabricops_kit/pipeline.py`
 - Source line: `368`
 - Inbound references count: 0
-- Outbound references count: 0
+- Outbound references count: 3
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, notebook template
 
@@ -192,12 +194,14 @@ Not documented yet
 
 ### Outbound references
 
-Not documented yet
+- `fabricops_kit.pipeline._rows_for_display`
+- `fabricops_kit.pipeline.build_guardrail_detail_rows`
+- `fabricops_kit.pipeline.build_guardrail_summary_rows`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/pipeline.py#L368-L396">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/pipeline.py#L368-L396</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/pipeline.py#L368-L396">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/pipeline.py#L368-L396</a>
 - Start line: `368`
 - End line: `396`
 - Signature:
