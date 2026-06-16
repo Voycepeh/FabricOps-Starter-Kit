@@ -10,7 +10,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true
     },
@@ -38,7 +38,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true
     },
@@ -100,23 +100,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "get_selected_agreement",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Agreement selection",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_agreement_evidence",
@@ -132,7 +116,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_data_agreement",
@@ -148,7 +132,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_data_steward",
@@ -159,23 +143,6 @@
       "template_segment": "Agreement intake",
       "used_in_templates": [
         "01_agreement"
-      ]
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement selection helpers used to anchor notebook workflows to approved business agreements. Standard notebooks create or check agreement metadata tables in `00_env_config`, render agreement intake in `01_agreement`, and bind downstream work with `widget_select_agreement(...)` and `get_selected_agreement()`.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_select_agreement",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Agreement selection",
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
       ]
     },
     {
@@ -192,7 +159,6 @@
       "template_segment": "Profiling",
       "used_in_templates": [
         "02_pipeline",
-        "03_governance",
         "99_explore"
       ]
     },
@@ -302,8 +268,7 @@
         "00_env_config",
         "01_agreement",
         "02_pipeline",
-        "03_governance",
-        "99_explore"
+        "03_governance"
       ]
     },
     {
@@ -326,39 +291,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "apply_governance_rule_action",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "build_table_governance_policy_record",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "enforce_dq_rules",
@@ -375,120 +308,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "get_selected_catalogue_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "guardrail_authoring_status",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail authoring",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "load_catalogue_profile_rows",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "mark_table_governed",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "mark_table_ungoverned",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "record_table_governance",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "resolve_table_governance_policy",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / 03_governance",
-      "template_segment": "Guardrail governance",
-      "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_author_dq_rules",
@@ -504,7 +324,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_author_schema_freshness_profile_rules",
@@ -520,55 +340,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_review_column_classification",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_review_column_context",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_review_dq_rules",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_review_guardrail_governance",
@@ -584,23 +356,7 @@
     {
       "module_name": "governance_review",
       "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_select_governance_profile_target",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns table-scoped 03_governance catalogue selection, business context review, DQ-rule review guidance, classification review, AI-assisted internal drafting helpers, and approved metadata commit through record_table_governance.",
+      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_select_guardrail_target",
@@ -674,38 +430,6 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Schema validation",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "build_guardrail_detail_rows",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail display",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "build_guardrail_summary_rows",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail display",
       "used_in_templates": [
         "02_pipeline"
       ]

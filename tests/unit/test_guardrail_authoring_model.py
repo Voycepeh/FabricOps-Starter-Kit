@@ -2,15 +2,13 @@
 
 import json
 
+import fabricops_kit.governance_review as governance_review
 from fabricops_kit.governance_review import (
     CATALOGUE_TABLE,
     GOVERNANCE_REVIEWS_TABLE,
     GUARDRAIL_RESULTS_TABLE,
     GUARDRAIL_RULES_TABLE,
     _get_governance_metadata_schemas,
-    apply_governance_rule_action,
-    guardrail_authoring_status,
-    resolve_table_governance_policy,
     widget_author_dq_rules,
     widget_author_schema_freshness_profile_rules,
 )
@@ -96,16 +94,16 @@ def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
 
 def test_table_policy_defaults_to_ungoverned_no_approval():
     """Verify missing policy rows make a table ungoverned by default."""
-    policy = resolve_table_governance_policy([], environment_name="dev", dataset_name="sales", table_name="orders")
+    policy = governance_review.resolve_table_governance_policy([], environment_name="dev", dataset_name="sales", table_name="orders")
     assert policy["governance_mode"] == "ungoverned"
     assert policy["approval_policy"] == "no_approval_required"
 
 
 def test_authoring_status_matches_ungoverned_governed_and_bypass_paths():
     """Verify authoring lifecycle fields for all table governance paths."""
-    ungoverned = guardrail_authoring_status({"governance_mode": "ungoverned"})
-    governed = guardrail_authoring_status({"governance_mode": "governed", "approval_policy": "approval_required"})
-    bypassed = guardrail_authoring_status({"governance_mode": "governed", "approval_policy": "approval_required_with_bypass"}, bypass_reason="urgent fix", actor="engineer@example.com")
+    ungoverned = governance_review.guardrail_authoring_status({"governance_mode": "ungoverned"})
+    governed = governance_review.guardrail_authoring_status({"governance_mode": "governed", "approval_policy": "approval_required"})
+    bypassed = governance_review.guardrail_authoring_status({"governance_mode": "governed", "approval_policy": "approval_required_with_bypass"}, bypass_reason="urgent fix", actor="engineer@example.com")
 
     assert ungoverned["is_active"] is True
     assert ungoverned["review_status"] == "self_approved"
@@ -120,9 +118,9 @@ def test_authoring_status_matches_ungoverned_governed_and_bypass_paths():
 def test_governance_rule_actions_approve_reject_and_supersede():
     """Verify governance can approve, reject, and supersede append-only rule rows."""
     rule = {"rule_key": "old", "review_status": "proposed", "is_active": False}
-    assert apply_governance_rule_action(rule, "approve", actor="steward@example.com")["review_status"] == "governance_approved"
-    assert apply_governance_rule_action(rule, "reject")["is_active"] is False
-    superseded = apply_governance_rule_action(rule, "supersede", superseded_by_rule_key="new")
+    assert governance_review.apply_governance_rule_action(rule, "approve", actor="steward@example.com")["review_status"] == "governance_approved"
+    assert governance_review.apply_governance_rule_action(rule, "reject")["is_active"] is False
+    superseded = governance_review.apply_governance_rule_action(rule, "supersede", superseded_by_rule_key="new")
     assert superseded["review_status"] == "superseded"
     assert superseded["superseded_by_rule_key"] == "new"
 
@@ -307,11 +305,9 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
 
 def test_table_governance_policy_records_mark_governed_and_ungoverned():
     """Verify 03 governance helper records can mark table policy state."""
-    from fabricops_kit.governance_review import mark_table_governed, mark_table_ungoverned
-
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key"}
-    governed = mark_table_governed(state, actor="steward@example.com", reason="critical table")
-    ungoverned = mark_table_ungoverned(state, actor="steward@example.com", reason="sandbox table")
+    governed = governance_review.mark_table_governed(state, actor="steward@example.com", reason="critical table")
+    ungoverned = governance_review.mark_table_ungoverned(state, actor="steward@example.com", reason="sandbox table")
 
     assert governed["governance_mode"] == "governed"
     assert governed["approval_policy"] == "approval_required_with_bypass"
@@ -324,8 +320,8 @@ def test_governance_can_approve_or_reject_bypassed_active_rule():
     """Verify 03 governance can approve or reject bypass-active rules."""
     bypassed = {"rule_key": "rule", "review_status": "bypass_active_pending_review", "is_active": True, "requires_post_review": True}
 
-    approved = apply_governance_rule_action(bypassed, "approve", actor="steward@example.com")
-    rejected = apply_governance_rule_action(bypassed, "reject", actor="steward@example.com")
+    approved = governance_review.apply_governance_rule_action(bypassed, "approve", actor="steward@example.com")
+    rejected = governance_review.apply_governance_rule_action(bypassed, "reject", actor="steward@example.com")
 
     assert approved["review_status"] == "governance_approved"
     assert approved["requires_post_review"] is False

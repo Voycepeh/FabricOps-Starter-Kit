@@ -7,7 +7,7 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 
 `fabricops_kit/data_profiling.py:226`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L226-L347">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L226-L347">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -116,7 +116,6 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 **Used in templates:**
 
 - `02_pipeline`
-- `03_governance`
 - `99_explore`
 
 **Side effects:**
@@ -157,39 +156,39 @@ complete datasets to the driver.
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/config.py#L79-L84"><code>_audit_timestamp_expr</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/config.py#L79-L84"><code>_audit_timestamp_expr</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Column handling</h4>
         <p>Select, exclude, and normalize column names used by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L59-L82"><code>_get_profiled_columns</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L59-L82"><code>_get_profiled_columns</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Result summary</h4>
         <p>Build final statuses, counts, and messages for the caller.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L153-L190"><code>_build_categorical_distribution</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L121-L150"><code>_build_numeric_distribution</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L108-L118"><code>_numeric_bin_edges</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L153-L190"><code>_build_categorical_distribution</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L121-L150"><code>_build_numeric_distribution</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L108-L118"><code>_numeric_bin_edges</code></a>
         </div>
       </section>
     </div>
@@ -210,7 +209,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Source line: `226`
 - Inbound references count: 3
 - Outbound references count: 5
-- Used in templates: 02_pipeline, 03_governance, 99_explore
+- Used in templates: 02_pipeline, 99_explore
 - Glossary terms: catalogue evidence, source table, target table
 
 ### AI implementation contract
@@ -239,7 +238,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L226-L347">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/data_profiling.py#L226-L347</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L226-L347">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/data_profiling.py#L226-L347</a>
 - Start line: `226`
 - End line: `347`
 - Signature:
@@ -264,7 +263,7 @@ def profile_dataframe(
 ### Public related functions
 
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
-- <a href="../record_table_governance/"><code>fabricops_kit.governance_review.record_table_governance</code></a>
+- <a href="../widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
 
 ### Internal implementation summary
 

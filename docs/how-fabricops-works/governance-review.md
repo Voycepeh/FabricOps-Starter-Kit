@@ -72,10 +72,10 @@ A typical metadata augmentation flow is:
 
 1. `02_pipeline` writes and profiles a real table.
 2. A governance user opens `03_governance` from the governance workspace or governance notebook.
-3. The user selects a profile target with [widget_select_governance_profile_target](../api/reference/widget_select_governance_profile_target/), choosing the physical asset first (asset/lakehouse or warehouse, schema/layer, table) and then the profile date/run.
+3. The user selects a profile target with [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/), choosing the profiled guardrail target from metadata-backed catalogue evidence.
 4. The notebook loads the profiled catalogue rows with `load_catalogue_profile_rows`.
 5. The user augments column business context, sensitivity/classification, personal-data or identifier classification, and DQ expectations.
-6. The user commits reviewed metadata with `record_table_governance` and related commit actions.
+6. The user commits reviewed metadata through the current guardrail governance widget actions.
 7. Optional governance outcome notes are stored when useful for handover.
 8. Later `02_pipeline` runs read the reviewed metadata/configuration and apply the relevant behaviours.
 
@@ -85,9 +85,9 @@ The important control point is the commit. Nothing becomes governed metadata unt
 
 Use these generated API references for the helpers behind the governance review flow:
 
-- [widget_select_governance_profile_target](../api/reference/widget_select_governance_profile_target/), [get_selected_catalogue_table](../api/reference/get_selected_catalogue_table/), and [load_catalogue_profile_rows](../api/reference/load_catalogue_profile_rows/) select the profiled table under review. The selector treats source/target `profile_stage` and pipeline/run metadata as supporting evidence for profile history, not as the physical table identity.
-- [widget_review_column_context](../api/reference/widget_review_column_context/), [widget_review_dq_rules](../api/reference/widget_review_dq_rules/), and [widget_review_column_classification](../api/reference/widget_review_column_classification/) capture reviewer decisions.
-- [record_table_governance](../api/reference/record_table_governance/) writes reviewed governance metadata for later pipeline enforcement.
+- [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/) selects the profiled table under guardrail review.
+- [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) captures current table governance and guardrail rule review decisions.
+- The current guardrail governance widget writes reviewed governance metadata for later pipeline enforcement.
 - [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of governance-approved DQ rules.
 
 ## DQ expectations in the control panel

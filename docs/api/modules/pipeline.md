@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 26</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 26</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>8</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -75,20 +75,6 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td><a href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Build per-guardrail diagnostic rows for runtime guardrail results.</td>
-      <td><code>_guardrail_reason</code> (internal), <code>_next_action</code> (internal), <code>_result_can_continue</code> (internal), <code>_result_status</code> (internal), <code>_table_keys</code> (internal), <code>_yes_no</code> (internal)</td>
-    </tr>
-    <tr>
-      <td><a href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Build compact one-row-per-table guardrail summary rows.</td>
-      <td><code>_guardrail_reason</code> (internal), <code>_next_action</code> (internal), <code>_result_can_continue</code> (internal), <code>_result_status</code> (internal), <code>_table_keys</code> (internal), <code>_yes_no</code> (internal)</td>
-    </tr>
     <tr>
       <td><a href="../../reference/display_guardrail_results/"><code>display_guardrail_results</code></a></td>
       <td>Callable</td>
@@ -162,19 +148,9 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_guardrail_reason</code></span>, <span class="reference-chip"><code>_next_action</code></span>, <span class="reference-chip"><code>_result_can_continue</code></span>, <span class="reference-chip"><code>_result_status</code></span>, <span class="reference-chip"><code>_table_keys</code></span>, <span class="reference-chip"><code>_yes_no</code></span>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_guardrail_reason</code></span>, <span class="reference-chip"><code>_next_action</code></span>, <span class="reference-chip"><code>_result_can_continue</code></span>, <span class="reference-chip"><code>_result_status</code></span>, <span class="reference-chip"><code>_table_keys</code></span>, <span class="reference-chip"><code>_yes_no</code></span>
-</li>
-<li>
 <a class="reference-chip" href="../../reference/display_guardrail_results/"><code>display_guardrail_results</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_rows_for_display</code></span>, <a class="reference-chip" href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a class="reference-chip" href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a>
+<span class="reference-chip"><code>_rows_for_display</code></span>, <span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/enforce_freshness_rule/"><code>enforce_freshness_rule</code></a>
@@ -189,7 +165,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_build_guardrail_blocking_message_from_bundle</code></span>, <span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_guardrail_can_continue</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <a class="reference-chip" href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a class="reference-chip" href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
+<span class="reference-chip"><code>_build_guardrail_blocking_message_from_bundle</code></span>, <span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_guardrail_can_continue</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/validate_schema_rule/"><code>validate_schema_rule</code></a>
@@ -270,11 +246,11 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td><code>_guardrail_reason</code></td>
-      <td><a href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_next_action</code></td>
-      <td><a href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_normalize_catalogue_evidence_types</code></td>
@@ -290,7 +266,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td><code>_result_can_continue</code></td>
-      <td><a href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_result_reason</code></td>
@@ -298,7 +274,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td><code>_result_status</code></td>
-      <td><a href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_rows_for_display</code></td>
@@ -322,7 +298,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td><code>_table_keys</code></td>
-      <td><a href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_table_name</code></td>
@@ -330,7 +306,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td><code>_yes_no</code></td>
-      <td><a href="../../reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a>, <a href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></td>
+      <td>—</td>
     </tr>
   </tbody>
 </table>
@@ -347,7 +323,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <li>
 <span class="reference-chip"><code>_build_guardrail_blocking_message_from_bundle</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_blocking_guardrail_message</code></span>, <a class="reference-chip" href="../../reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a>
+<span class="reference-chip"><code>_blocking_guardrail_message</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>
