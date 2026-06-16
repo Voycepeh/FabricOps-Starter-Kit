@@ -31,6 +31,8 @@ APPROVED_V1_CALLABLES = {
     "read_warehouse_table",
     "write_warehouse_table",
     "profile_dataframe",
+    "validate_schema",
+    "validate_schema_rule",
     "enforce_freshness",
     "enforce_freshness_rule",
     "enforce_profile_behavior",
@@ -53,8 +55,6 @@ REMOVED_LEGACY_ALIASES = {
     "monitor_data_changes",
     "display_schema_profile",
     "print_schema_guardrail_config",
-    "validate_schema",
-    "validate_schema_rule",
     "widget_review_table_governance",
     "widget_render_agreement_intake_app",
     "setup_governance_metadata_tables",
@@ -121,7 +121,7 @@ def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES)
-    assert len(fabricops_kit.__all__) == 31
+    assert len(fabricops_kit.__all__) == 33
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
 
@@ -152,8 +152,6 @@ def test_root_public_exports_match_approved_v1_list():
         "widget_review_dq_rules",
         "widget_select_governance_profile_target",
         "get_selected_catalogue_table",
-        "validate_schema",
-        "validate_schema_rule",
     }:
         assert removed not in fabricops_kit.__all__
 
