@@ -58,12 +58,14 @@ nav:
           - validate_schema: api/reference/validate_schema.md
           - validate_schema_rule: api/reference/validate_schema_rule.md
           - widget_author_dq_rules: api/reference/widget_author_dq_rules.md
+          - widget_author_guardrail_rules: api/reference/widget_author_guardrail_rules.md
           - widget_author_schema_freshness_profile_rules: api/reference/widget_author_schema_freshness_profile_rules.md
           - widget_enrich_table_metadata: api/reference/widget_enrich_table_metadata.md
           - widget_render_agreement_evidence: api/reference/widget_render_agreement_evidence.md
           - widget_render_data_agreement: api/reference/widget_render_data_agreement.md
           - widget_render_data_steward: api/reference/widget_render_data_steward.md
           - widget_review_guardrail_governance: api/reference/widget_review_guardrail_governance.md
+          - widget_review_table_governance: api/reference/widget_review_table_governance.md
           - widget_select_agreement: api/reference/widget_select_agreement.md
           - widget_select_guardrail_target: api/reference/widget_select_guardrail_target.md
           - write_catalogue_evidence: api/reference/write_catalogue_evidence.md

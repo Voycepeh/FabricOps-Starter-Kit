@@ -37,6 +37,8 @@ from .governance_review import (
     widget_enrich_table_metadata,
     widget_author_schema_freshness_profile_rules,
     widget_author_dq_rules,
+    widget_author_guardrail_rules,
+    widget_review_table_governance,
     widget_review_guardrail_governance,
 )
 
@@ -89,5 +91,7 @@ __all__ = [
     "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
+    "widget_author_guardrail_rules",
+    "widget_review_table_governance",
     "widget_review_guardrail_governance",
 ]

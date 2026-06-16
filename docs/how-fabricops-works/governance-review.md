@@ -10,12 +10,27 @@ The current flow is:
 2. Those steps write catalogue/profile evidence to `METADATA_DATA_CATALOGUE`.
 3. `03_governance` selects a profiled target from that catalogue evidence with [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/).
 4. Reviewers use [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) to enrich column metadata.
-5. Reviewers use [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) to review guardrail rule intent and table governance state.
+5. Reviewers use `widget_author_guardrail_rules` for guardrail authoring and `widget_review_table_governance` for formal approve/reject/replace/deactivate decisions.
 6. Later `02_pipeline` runs read approved active guardrail rules and write runtime outcomes to `METADATA_GUARDRAIL_RESULTS`.
 
 `03_governance` lets reviewers approve and records governance decisions for guardrail rules, catalogue evidence, and runtime enforcement readiness before `02_pipeline` applies approved controls.
 
 AI can help draft suggested metadata, but AI output is advisory only. A person must approve, edit, or reject suggestions before they become governed metadata.
+
+
+## Activation versus review state
+
+FabricOps separates operational activation from formal governance review.
+
+Engineering users can create enrichment and guardrail records from `02_pipeline`. They may save records as drafts, submit them for governance review, or apply them immediately when pipeline continuity requires it. Immediate application makes the record active, but marks it as active pending governance review.
+
+Formal review happens only in `03_governance`. Governance users can approve, reject, replace, deactivate, or supersede records. Replacing a record does not overwrite history; it creates a new version and marks the previous version as superseded.
+
+Runtime enforcement consumes active guardrail records. Governance review determines whether those records are approved, rejected, or superseded.
+
+`activation_state` controls whether a record affects runtime: `active`, `pending`, or `inactive`. `is_active` is derived from `activation_state == "active"` where possible. `review_state` controls lifecycle meaning: `draft`, `pending_governance_review`, `active_pending_governance_review`, `governance_approved`, `rejected_by_governance`, `superseded`, or `inactive`. Runtime consumers must not consume draft, pending, rejected, inactive, or superseded rows.
+
+`03_governance` is structured as a step by step review notebook. Each widget is placed in its own section and code cell so governance users can run target selection, enrichment authoring, guardrail authoring, and formal review independently.
 
 ## Operating model
 
@@ -44,7 +59,8 @@ This separation keeps the handoff junior-friendly:
 | --- | --- | --- |
 | Select a profiled source table or target DataFrame | `widget_select_guardrail_target` | Reads `METADATA_DATA_CATALOGUE`; does not write runtime outcomes. |
 | Metadata enrichment | `widget_enrich_table_metadata` | `METADATA_ENRICHMENT_RULES` |
-| Guardrail governance review | `widget_review_guardrail_governance` | `METADATA_GUARDRAIL_RULES` |
+| Guardrail authoring | `widget_author_guardrail_rules` | `METADATA_GUARDRAIL_RULES` |
+| Formal table governance review | `widget_review_table_governance` | `METADATA_ENRICHMENT_RULES`, `METADATA_GUARDRAIL_RULES` |
 
 The old separated business context, classification, and DQ review widget flow is removed from the current template. DQ belongs with guardrail authoring/review, not metadata enrichment.
 
@@ -77,7 +93,7 @@ A typical current governance flow is:
 2. Open `03_governance`.
 3. Select a catalogue-backed target with [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/).
 4. Use [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) to save enrichment intent and classification metadata.
-5. Use [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) to review table governance state and proposed, bypassed, rejected, or superseded guardrail rules.
+5. Use `widget_author_guardrail_rules` to author guardrail records, then use `widget_review_table_governance` to formally approve, approve and activate, reject, replace, deactivate, or view history for enrichment and guardrail records.
 6. Rerun `02_pipeline` when runtime enforcement should consume approved active guardrail rules.
 
 The important control point is the commit. Nothing becomes governed metadata until a human reviewer explicitly commits it.
@@ -88,7 +104,8 @@ Use these generated API references for the helpers behind the current governance
 
 - [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/) selects profiled targets from `METADATA_DATA_CATALOGUE`.
 - [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) writes enrichment intent and classification enrichment metadata.
-- [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) captures table governance and guardrail rule review decisions.
+- `widget_author_guardrail_rules` exposes clear guardrail authoring controls.
+- `widget_review_table_governance` captures formal 03-only review decisions for enrichment and guardrail records.
 - [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of governance-approved DQ rules.
 
 ## How reviewed metadata controls later pipeline runs
@@ -97,8 +114,8 @@ Approved metadata affects later runs only after it is written to metadata tables
 
 - Approved business context and classification support downstream reporting, handover, review, and runtime decisions where relevant.
 - Approved sensitivity and personal-data classifications can influence later pipeline behaviours, handling expectations, and review decisions.
-- Active governance-approved DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`.
-- `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` from the configured metadata lakehouse target, resolves the newest version for each DQ rule, keeps only active governance-reviewed rows with `guardrail_type="dq"`, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
+- Active DQ rules are read by `02_pipeline` when it calls `enforce_dq_rules`, including engineering-applied rows whose `review_state` is `active_pending_governance_review`.
+- `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` from the configured metadata lakehouse target, resolves the newest version for each DQ rule, keeps only active rows with `guardrail_type="dq"`, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
 
 Error-severity DQ failures return `status="failed"` and `can_continue=false`. Warning-severity DQ failures return `status="warning"` and `can_continue=true`.
 

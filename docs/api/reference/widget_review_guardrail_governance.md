@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2456`
+`fabricops_kit/governance_review.py:2765`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/governance_review.py#L2456-L2551">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L2765-L2772">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -50,8 +50,8 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Handover state from :func:`widget_select_guardrail_target`. The state may include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``. |
-| `config` | `Any` | No | Runtime objects used for save actions. |
+| `state` | `Mapping[str, Any]` | Yes | Not documented yet |
+| `config` | `Any` | No | Not documented yet |
 | `env` | `str \| None` | No | Not documented yet |
 | `spark_session` | `Any` | No | Not documented yet |
 
@@ -82,9 +82,7 @@ Not documented yet
 
 ### Calls
 
-- `fabricops_kit.governance_review.apply_governance_enrichment_action`
-- `fabricops_kit.governance_review.apply_governance_rule_action`
-- `fabricops_kit.governance_review.load_rule_review_history`
+- <a href="../widget_review_table_governance/"><code>fabricops_kit.governance_review.widget_review_table_governance</code></a>
 
 ## Implementation details
 
@@ -93,7 +91,7 @@ Not documented yet
 
 **Used in templates:**
 
-- `03_governance`
+None.
 
 **Side effects:**
 
@@ -109,25 +107,54 @@ No additional callable notes are documented.
 
     ```text
     widget_review_guardrail_governance(...)
-    ├── apply_governance_enrichment_action(...)
-    │   ├── _now_utc_iso(...)
-    │   │   └── _current_audit_timestamp(...)
-    │   │       └── _get_audit_timezone(...)
-    │   │           └── _validate_audit_timezone(...)
-    │   └── _resolve_action_by(...)
-    │       ├── _context_get(...)
-    │       └── _runtime_context(...)
-    │           └── _context_get(...)
-    ├── apply_governance_rule_action(...)
-    │   ├── _now_utc_iso(...)
-    │   │   └── _current_audit_timestamp(...)
-    │   │       └── _get_audit_timezone(...)
-    │   │           └── _validate_audit_timezone(...)
-    │   └── _resolve_action_by(...)
-    │       ├── _context_get(...)
-    │       └── _runtime_context(...)
-    │           └── _context_get(...)
-    └── load_rule_review_history(...)
+    └── widget_review_table_governance(...)
+        ├── _assert_governance_review_context(...)
+        ├── _governance_review_sections(...)
+        ├── apply_governance_enrichment_action(...)
+        │   ├── _activation_fields(...)
+        │   │   ├── _now_utc_iso(...)
+        │   │   │   └── _current_audit_timestamp(...)
+        │   │   │       └── _get_audit_timezone(...)
+        │   │   │           └── …
+        │   │   └── _resolve_action_by(...)
+        │   │       ├── _context_get(...)
+        │   │       └── _runtime_context(...)
+        │   │           └── _context_get(...)
+        │   ├── _assert_governance_review_context(...)
+        │   ├── _build_dq_rule_key(...)
+        │   │   └── _stable_metadata_key(...)
+        │   ├── _now_utc_iso(...)
+        │   │   └── _current_audit_timestamp(...)
+        │   │       └── _get_audit_timezone(...)
+        │   │           └── _validate_audit_timezone(...)
+        │   ├── _record_id(...)
+        │   └── _resolve_action_by(...)
+        │       ├── _context_get(...)
+        │       └── _runtime_context(...)
+        │           └── _context_get(...)
+        ├── apply_governance_rule_action(...)
+        │   ├── _activation_fields(...)
+        │   │   ├── _now_utc_iso(...)
+        │   │   │   └── _current_audit_timestamp(...)
+        │   │   │       └── _get_audit_timezone(...)
+        │   │   │           └── …
+        │   │   └── _resolve_action_by(...)
+        │   │       ├── _context_get(...)
+        │   │       └── _runtime_context(...)
+        │   │           └── _context_get(...)
+        │   ├── _assert_governance_review_context(...)
+        │   ├── _build_dq_rule_key(...)
+        │   │   └── _stable_metadata_key(...)
+        │   ├── _now_utc_iso(...)
+        │   │   └── _current_audit_timestamp(...)
+        │   │       └── _get_audit_timezone(...)
+        │   │           └── _validate_audit_timezone(...)
+        │   ├── _record_id(...)
+        │   └── _resolve_action_by(...)
+        │       ├── _context_get(...)
+        │       └── _runtime_context(...)
+        │           └── _context_get(...)
+        └── load_rule_review_history(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -154,10 +181,10 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2456`
+- Source line: `2765`
 - Inbound references count: 0
-- Outbound references count: 3
-- Used in templates: 03_governance
+- Outbound references count: 1
+- Used in templates: —
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
 ### AI implementation contract
@@ -175,16 +202,14 @@ Not documented yet
 
 ### Outbound references
 
-- `fabricops_kit.governance_review.apply_governance_enrichment_action`
-- `fabricops_kit.governance_review.apply_governance_rule_action`
-- `fabricops_kit.governance_review.load_rule_review_history`
+- <a href="../widget_review_table_governance/"><code>fabricops_kit.governance_review.widget_review_table_governance</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/governance_review.py#L2456-L2551">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/governance_review.py#L2456-L2551</a>
-- Start line: `2456`
-- End line: `2551`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L2765-L2772">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/12722d7550847cd70c6e1ef934f6b6269f02d2f7/src/fabricops_kit/governance_review.py#L2765-L2772</a>
+- Start line: `2765`
+- End line: `2772`
 - Signature:
 
 ```python
