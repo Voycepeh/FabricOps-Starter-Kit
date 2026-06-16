@@ -82,6 +82,12 @@ def _canonical_dq_rule_type(rule_type: Any) -> str:
     return str(rule_type or "").strip()
 
 
+def _normalize_dq_severity(severity: Any) -> str:
+    """Normalize guardrail/DQ severity labels for DQ validation."""
+    value = str(severity or "warning").strip().lower()
+    return "error" if value in {"blocking", "error"} else "warning"
+
+
 def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
     actor = _resolve_action_by(approved_by)
     audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
@@ -538,7 +544,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             "guardrail_type": str(rule.get("guardrail_type") or "dq"),
             "rule_type": draft["rule_type"],
             "rule_parameters_json": _json(params),
-            "severity": str(rule.get("severity") or "warning").lower(),
+            "severity": _normalize_dq_severity(draft.get("severity")),
             "description": str(rule.get("description") or ""),
             "is_active": is_active,
             "review_status": str(rule.get("target_review_status") or "governance_approved"),
@@ -1273,13 +1279,12 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
             raise ValueError(f"DQ rule at index {i} must be a dictionary.")
         rule.setdefault("rule_id", f"dq_rule_{i + 1}")
         rule.setdefault("severity", "warning")
+        rule["severity"] = _normalize_dq_severity(rule.get("severity"))
         rule.setdefault("description", "")
         rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
         rtype = rule["rule_type"]
         if rtype not in DQ_RULE_TYPES:
             raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
-        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
 
         if rtype in {"not_null", "non_empty_string", "required_when"}:
             require_columns(rule, minimum=1)
@@ -1376,7 +1381,7 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
                 "rule_id": str(row.get("rule_id") or ""),
                 "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
                 "columns": rule_columns,
-                "severity": str(row.get("severity") or "warning"),
+                "severity": _normalize_dq_severity(row.get("severity")),
                 "description": str(row.get("description") or ""),
                 "review_status": str(row.get("review_status") or ""),
                 **params,
@@ -1490,7 +1495,7 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
         failed_count = int(
             failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0
         )
-        severity = str(rule.get("severity", "warning")).strip().lower()
+        severity = _normalize_dq_severity(rule.get("severity"))
         columns = [str(column) for column in rule.get("columns", [])]
         check_status = _dq_check_status(severity, failed_count)
         check = {
@@ -1526,12 +1531,12 @@ def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
     error_failures = [
         F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
         for rule in sorted_rules
-        if str(rule.get("severity", "warning")).strip().lower() == "error"
+        if _normalize_dq_severity(rule.get("severity")) == "error"
     ]
     warning_failures = [
         F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
         for rule in sorted_rules
-        if str(rule.get("severity", "warning")).strip().lower() != "error"
+        if _normalize_dq_severity(rule.get("severity")) != "error"
     ]
     error_count = error_failures[0] if error_failures else F.lit(0)
     for failure in error_failures[1:]:

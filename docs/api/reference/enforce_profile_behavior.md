@@ -5,9 +5,9 @@ Enforce static, changing, or skipped profile behavior against accepted catalogue
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/guardrails.py:615`
+`fabricops_kit/guardrails.py:714`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L615-L838">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L714-L936">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -138,8 +138,8 @@ Raises Spark or metadata-read errors when baseline profile evidence cannot be lo
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - `fabricops_kit.guardrails._accepted_profile_rows`
+- `fabricops_kit.guardrails._apply_bypass_post_review_warning`
 - `fabricops_kit.guardrails._catalogue_value`
 - `fabricops_kit.guardrails._guardrail_exclude_columns`
 - `fabricops_kit.guardrails._is_missing_table_error`
@@ -148,6 +148,7 @@ Raises Spark or metadata-read errors when baseline profile evidence cannot be lo
 - `fabricops_kit.guardrails._profile_payload_from_profile`
 - `fabricops_kit.guardrails._select_profile_behavior_rule`
 - `fabricops_kit.guardrails._string_value`
+- `fabricops_kit.metadata._write_guardrail_result_row`
 
 ## Implementation details
 
@@ -183,6 +184,9 @@ relevant guardrail rule.
     │   ├── _catalogue_value(...)
     │   ├── _row_to_dict(...)
     │   └── _string_value(...)
+    ├── _apply_bypass_post_review_warning(...)
+    │   └── _rule_review_status(...)
+    │       └── …
     ├── _catalogue_value(...)
     ├── _configured_lakehouse_schema(...)
     │   ├── _get_store(...)
@@ -203,9 +207,20 @@ relevant guardrail rule.
     │   └── _string_value(...)
     ├── _select_profile_behavior_rule(...)
     │   ├── _catalogue_value(...)
+    │   ├── _is_active_guardrail_rule(...)
+    │   │   └── …
     │   ├── _row_to_dict(...)
     │   └── _string_value(...)
     ├── _string_value(...)
+    ├── _write_guardrail_result_row(...)
+    │   ├── _build_runtime_audit_fields(...)
+    │   │   └── …
+    │   ├── _configured_lakehouse_schema(...)
+    │   │   └── …
+    │   ├── _now_utc_iso(...)
+    │   │   └── …
+    │   └── write_lakehouse_table(...)
+    │       └── …
     ├── profile_dataframe(...)
     │   ├── _audit_timestamp_expr(...)
     │   │   └── …
@@ -215,14 +230,8 @@ relevant guardrail rule.
     │   │   └── …
     │   ├── _get_profiled_columns(...)
     │   └── _is_min_max_supported_type(...)
-    ├── read_lakehouse_table(...)
-    │   ├── _get_spark(...)
-    │   ├── _get_store(...)
-    │   │   └── …
-    │   ├── _normalize_table_name(...)
-    │   └── _resolve_lakehouse_table_path(...)
-    │       └── …
-    └── write_lakehouse_table(...)
+    └── read_lakehouse_table(...)
+        ├── _get_spark(...)
         ├── _get_store(...)
         │   └── …
         ├── _normalize_table_name(...)
@@ -230,61 +239,79 @@ relevant guardrail rule.
             └── …
     ```
 
-??? info "Internal helpers used: 16"
+??? info "Internal helpers used: 28"
 
-    This callable uses 16 internal helpers for metadata loading, rule parsing, profile comparison, column handling, rule evaluation, and other.
+    This callable uses 28 internal helpers for audit timestamp, metadata loading, rule parsing, profile comparison, column handling, rule evaluation, and other.
 
     <div class="reference-helper-groups">
+      <section class="reference-helper-group">
+        <h4>Audit timestamp</h4>
+        <p>Resolve and stamp audit time consistently.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L70-L76"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
+        </div>
+      </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L840-L843"><code>_is_missing_table_error</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L108-L109"><code>_json_dumps_stable</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L121-L142"><code>_profile_payload_from_profile</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L938-L941"><code>_is_missing_table_error</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L204-L205"><code>_json_dumps_stable</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L217-L238"><code>_profile_payload_from_profile</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L40-L86"><code>_normalize_datatype</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L298-L366"><code>_normalize_profile</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L136-L182"><code>_normalize_datatype</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L397-L465"><code>_normalize_profile</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Profile comparison</h4>
         <p>Compare current evidence with accepted profile values and behavior baselines.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L565-L576"><code>_catalogue_value</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L391-L403"><code>_profile_row_count</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L369-L376"><code>_row_to_dict</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L579-L580"><code>_string_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L664-L675"><code>_catalogue_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L490-L502"><code>_profile_row_count</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L468-L475"><code>_row_to_dict</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L678-L679"><code>_string_value</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Column handling</h4>
         <p>Select, exclude, and normalize column names used by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L379-L383"><code>_guardrail_exclude_columns</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L478-L482"><code>_guardrail_exclude_columns</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule evaluation</h4>
         <p>Convert configured rules into executable checks and evaluation results.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L146-L168"><code>_select_profile_behavior_rule</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L36-L39"><code>_is_active_guardrail_rule</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L32-L33"><code>_rule_review_status</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L242-L267"><code>_select_profile_behavior_rule</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L170-L199"><code>_accepted_profile_rows</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L89-L104"><code>_actual_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L112-L113"><code>_profile_hash</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L116-L118"><code>_schema_signature</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L269-L298"><code>_accepted_profile_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L185-L200"><code>_actual_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L78-L85"><code>_apply_bypass_post_review_warning</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L208-L209"><code>_profile_hash</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L212-L214"><code>_schema_signature</code></a>
         </div>
       </section>
     </div>
@@ -302,9 +329,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `615`
+- Source line: `714`
 - Inbound references count: 1
-- Outbound references count: 13
+- Outbound references count: 14
 - Used in templates: 02_pipeline
 - Glossary terms: profile behavior, accepted catalogue profile evidence, baseline profile, stage, profile behavior check, guardrail, can_continue, static_data, changing_data, skip, metadata lakehouse
 
@@ -336,8 +363,8 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - <a href="../read_lakehouse_table/"><code>fabricops_kit.fabric_input_output.read_lakehouse_table</code></a>
-- <a href="../write_lakehouse_table/"><code>fabricops_kit.fabric_input_output.write_lakehouse_table</code></a>
 - `fabricops_kit.guardrails._accepted_profile_rows`
+- `fabricops_kit.guardrails._apply_bypass_post_review_warning`
 - `fabricops_kit.guardrails._catalogue_value`
 - `fabricops_kit.guardrails._guardrail_exclude_columns`
 - `fabricops_kit.guardrails._is_missing_table_error`
@@ -346,13 +373,14 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - `fabricops_kit.guardrails._profile_payload_from_profile`
 - `fabricops_kit.guardrails._select_profile_behavior_rule`
 - `fabricops_kit.guardrails._string_value`
+- `fabricops_kit.metadata._write_guardrail_result_row`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L615-L838">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L615-L838</a>
-- Start line: `615`
-- End line: `838`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L714-L936">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L714-L936</a>
+- Start line: `714`
+- End line: `936`
 - Signature:
 
 ```python
@@ -391,7 +419,7 @@ def enforce_profile_behavior(
 
 ### Internal implementation summary
 
-- Internal helper count: 16
+- Internal helper count: 28
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

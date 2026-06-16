@@ -5,9 +5,9 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:284`
+`fabricops_kit/pipeline.py:566`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/pipeline.py#L284-L498">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L566-L792">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -105,14 +105,20 @@ Not documented yet
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 - <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_freshness_rule/"><code>fabricops_kit.guardrails.enforce_freshness_rule</code></a>
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
+- <a href="../validate_schema_rule/"><code>fabricops_kit.guardrails.validate_schema_rule</code></a>
+- `fabricops_kit.metadata._build_metadata_table_key`
 - `fabricops_kit.metadata._write_guardrail_result_row`
+- `fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle`
 - `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
 - `fabricops_kit.pipeline._guardrail_can_continue`
 - `fabricops_kit.pipeline._table_key`
 - `fabricops_kit.pipeline._table_name`
+- <a href="../build_guardrail_detail_rows/"><code>fabricops_kit.pipeline.build_guardrail_detail_rows</code></a>
+- <a href="../build_guardrail_summary_rows/"><code>fabricops_kit.pipeline.build_guardrail_summary_rows</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 ## Implementation details
@@ -146,9 +152,15 @@ are routed through the configured metadata target by the called helpers.
 
     ```text
     run_table_guardrails(...)
+    ├── _build_guardrail_blocking_message_from_bundle(...)
+    │   ├── _blocking_guardrail_message(...)
+    │   └── build_guardrail_summary_rows(...)
+    │       └── …
     ├── _build_guardrail_evidence_definitions(...)
     │   ├── _table_key(...)
     │   └── _table_name(...)
+    ├── _build_metadata_table_key(...)
+    │   └── _stable_metadata_key(...)
     ├── _guardrail_can_continue(...)
     ├── _table_key(...)
     ├── _table_name(...)
@@ -161,6 +173,22 @@ are routed through the configured metadata target by the called helpers.
     │   │   └── …
     │   └── write_lakehouse_table(...)
     │       └── …
+    ├── build_guardrail_detail_rows(...)
+    │   ├── _guardrail_reason(...)
+    │   │   └── …
+    │   ├── _next_action(...)
+    │   ├── _result_can_continue(...)
+    │   ├── _result_status(...)
+    │   ├── _table_keys(...)
+    │   └── _yes_no(...)
+    ├── build_guardrail_summary_rows(...)
+    │   ├── _guardrail_reason(...)
+    │   │   └── …
+    │   ├── _next_action(...)
+    │   ├── _result_can_continue(...)
+    │   ├── _result_status(...)
+    │   ├── _table_keys(...)
+    │   └── _yes_no(...)
     ├── enforce_dq_rules(...)
     │   ├── _dq_failed_row_count(...)
     │   │   └── …
@@ -182,8 +210,21 @@ are routed through the configured metadata target by the called helpers.
     │   ├── _iso_date_value(...)
     │   │   └── …
     │   └── _max_column_value(...)
+    ├── enforce_freshness_rule(...)
+    │   ├── _apply_bypass_post_review_warning(...)
+    │   │   └── …
+    │   ├── _catalogue_value(...)
+    │   ├── _parse_rule_parameters(...)
+    │   │   └── …
+    │   ├── _select_table_guardrail_rule(...)
+    │   │   └── …
+    │   ├── _string_value(...)
+    │   └── enforce_freshness(...)
+    │       └── …
     ├── enforce_profile_behavior(...)
     │   ├── _accepted_profile_rows(...)
+    │   │   └── …
+    │   ├── _apply_bypass_post_review_warning(...)
     │   │   └── …
     │   ├── _catalogue_value(...)
     │   ├── _configured_lakehouse_schema(...)
@@ -198,11 +239,11 @@ are routed through the configured metadata target by the called helpers.
     │   ├── _select_profile_behavior_rule(...)
     │   │   └── …
     │   ├── _string_value(...)
+    │   ├── _write_guardrail_result_row(...)
+    │   │   └── …
     │   ├── profile_dataframe(...)
     │   │   └── …
-    │   ├── read_lakehouse_table(...)
-    │   │   └── …
-    │   └── write_lakehouse_table(...)
+    │   └── read_lakehouse_table(...)
     │       └── …
     ├── profile_dataframe(...)
     │   ├── _audit_timestamp_expr(...)
@@ -219,6 +260,17 @@ are routed through the configured metadata target by the called helpers.
     │   ├── _actual_schema(...)
     │   │   └── …
     │   └── _normalize_datatype(...)
+    ├── validate_schema_rule(...)
+    │   ├── _apply_bypass_post_review_warning(...)
+    │   │   └── …
+    │   ├── _catalogue_value(...)
+    │   ├── _parse_rule_parameters(...)
+    │   │   └── …
+    │   ├── _select_table_guardrail_rule(...)
+    │   │   └── …
+    │   ├── _string_value(...)
+    │   └── validate_schema(...)
+    │       └── …
     └── write_catalogue_evidence(...)
         ├── _build_metadata_table_key(...)
         │   └── …
@@ -235,56 +287,66 @@ are routed through the configured metadata target by the called helpers.
             └── …
     ```
 
-??? info "Internal helpers used: 17"
+??? info "Internal helpers used: 21"
 
-    This callable uses 17 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
+    This callable uses 21 internal helpers for audit timestamp, metadata loading, rule parsing, result summary, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/config.py#L70-L76"><code>_current_audit_timestamp</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L70-L76"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L62-L67"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L27-L59"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/pipeline.py#L251-L281"><code>_build_guardrail_evidence_definitions</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/pipeline.py#L239-L240"><code>_table_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/pipeline.py#L243-L244"><code>_table_name</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L533-L563"><code>_build_guardrail_evidence_definitions</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L80-L81"><code>_build_metadata_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L75-L77"><code>_stable_metadata_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L521-L522"><code>_table_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L525-L526"><code>_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L645-L685"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Result summary</h4>
+        <p>Build final statuses, counts, and messages for the caller.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L356-L367"><code>_blocking_guardrail_message</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L370-L376"><code>_build_guardrail_blocking_message_from_bundle</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/config.py#L688-L727"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/config.py#L688-L727"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/pipeline.py#L247-L248"><code>_guardrail_can_continue</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L529-L530"><code>_guardrail_can_continue</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a>
         </div>
       </section>
     </div>
@@ -302,9 +364,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `284`
+- Source line: `566`
 - Inbound references count: 0
-- Outbound references count: 12
+- Outbound references count: 18
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, can_continue, source table, target table, catalogue evidence
 
@@ -326,22 +388,28 @@ Not documented yet
 - <a href="../profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
 - <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
+- <a href="../enforce_freshness_rule/"><code>fabricops_kit.guardrails.enforce_freshness_rule</code></a>
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../stop_if_failed/"><code>fabricops_kit.guardrails.stop_if_failed</code></a>
 - <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
+- <a href="../validate_schema_rule/"><code>fabricops_kit.guardrails.validate_schema_rule</code></a>
+- `fabricops_kit.metadata._build_metadata_table_key`
 - `fabricops_kit.metadata._write_guardrail_result_row`
+- `fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle`
 - `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
 - `fabricops_kit.pipeline._guardrail_can_continue`
 - `fabricops_kit.pipeline._table_key`
 - `fabricops_kit.pipeline._table_name`
+- <a href="../build_guardrail_detail_rows/"><code>fabricops_kit.pipeline.build_guardrail_detail_rows</code></a>
+- <a href="../build_guardrail_summary_rows/"><code>fabricops_kit.pipeline.build_guardrail_summary_rows</code></a>
 - <a href="../write_catalogue_evidence/"><code>fabricops_kit.pipeline.write_catalogue_evidence</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/pipeline.py#L284-L498">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/pipeline.py#L284-L498</a>
-- Start line: `284`
-- End line: `498`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L566-L792">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L566-L792</a>
+- Start line: `566`
+- End line: `792`
 - Signature:
 
 ```python
@@ -369,7 +437,7 @@ def run_table_guardrails(
 
 ### Internal implementation summary
 
-- Internal helper count: 17
+- Internal helper count: 21
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

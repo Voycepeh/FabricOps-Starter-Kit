@@ -5,9 +5,9 @@ Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/guardrails.py:846`
+`fabricops_kit/guardrails.py:944`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L846-L866">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L944-L964">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -133,7 +133,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `846`
+- Source line: `944`
 - Inbound references count: 1
 - Outbound references count: 1
 - Used in templates: 02_pipeline
@@ -159,9 +159,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L846-L866">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e4698def2c6568d6397a09f8202239faa01c2549/src/fabricops_kit/guardrails.py#L846-L866</a>
-- Start line: `846`
-- End line: `866`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L944-L964">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/guardrails.py#L944-L964</a>
+- Start line: `944`
+- End line: `964`
 - Signature:
 
 ```python

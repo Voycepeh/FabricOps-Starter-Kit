@@ -32,10 +32,15 @@ APPROVED_V1_CALLABLES = {
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
+    "validate_schema_rule",
     "enforce_freshness",
+    "enforce_freshness_rule",
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
+    "build_guardrail_detail_rows",
+    "build_guardrail_summary_rows",
+    "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
     "write_catalogue_evidence",
@@ -48,6 +53,16 @@ APPROVED_V1_CALLABLES = {
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "widget_select_guardrail_target",
+    "widget_author_schema_freshness_profile_rules",
+    "widget_author_dq_rules",
+    "resolve_table_governance_policy",
+    "guardrail_authoring_status",
+    "apply_governance_rule_action",
+    "build_table_governance_policy_record",
+    "mark_table_governed",
+    "mark_table_ungoverned",
+    "widget_review_guardrail_governance",
 }
 
 REMOVED_LEGACY_ALIASES = {
@@ -121,7 +136,7 @@ def _template_called_fabricops_functions() -> set[str]:
 def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 32
+    assert len(fabricops_kit.__all__) == 47
     assert len(fabricops_kit.__all__) < 71
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))

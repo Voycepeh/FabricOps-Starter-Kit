@@ -13,7 +13,7 @@ from .data_agreement import (
     widget_select_agreement,
 )
 from .data_profiling import profile_dataframe
-from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_failed, validate_schema
+from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, validate_schema, validate_schema_rule
 from .fabric_input_output import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -24,6 +24,9 @@ from .fabric_input_output import (
     write_warehouse_table,
 )
 from .pipeline import (
+    build_guardrail_detail_rows,
+    build_guardrail_summary_rows,
+    display_guardrail_results,
     prepare_pipeline_table_configs,
     run_table_guardrails,
     write_catalogue_evidence,
@@ -84,10 +87,15 @@ __all__ = [
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
+    "validate_schema_rule",
     "enforce_freshness",
+    "enforce_freshness_rule",
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
+    "build_guardrail_detail_rows",
+    "build_guardrail_summary_rows",
+    "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
     "write_catalogue_evidence",
