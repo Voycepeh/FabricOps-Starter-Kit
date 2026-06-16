@@ -374,6 +374,22 @@
       "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
+      "callable_name": "widget_enrich_table_metadata",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "03_governance",
+      "template_segment": "Guardrail governance review",
+      "used_in_templates": [
+        "03_governance"
+      ]
+    },
+    {
+      "module_name": "governance_review",
+      "visibility": "public",
+      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
       "callable_name": "widget_review_guardrail_governance",
       "callable_visibility": "public",
       "callable_type": "callable",

@@ -122,7 +122,7 @@ def test_governance_review_builders_commit_only_human_approved_records():
     )
     classification = _build_classification_records(
         profile_rows,
-        [{"column_name": "order_id", "sensitivity_label": "confidential", "personal_data_classification": "indirect_identifier", "review_status": "approved", "commit": True}],
+        [{"column_name": "order_id", "sensitivity_label": "classified", "pii_classification": "indirect PII", "review_status": "approved", "commit": True}],
     )
 
     assert [row["metadata_column_key"] for row in context] == ["col-amount"]

@@ -34,6 +34,7 @@ from .pipeline import (
 from .governance_review import (
     enforce_dq_rules,
     widget_select_guardrail_target,
+    widget_enrich_table_metadata,
     widget_author_schema_freshness_profile_rules,
     widget_author_dq_rules,
     widget_review_guardrail_governance,
@@ -85,6 +86,7 @@ __all__ = [
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
+    "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",

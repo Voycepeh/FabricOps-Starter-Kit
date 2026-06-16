@@ -55,6 +55,7 @@ def _install_fake_notebook_widgets(monkeypatch):
         BoundedIntText=Widget,
         ToggleButtons=Widget,
         Combobox=Widget,
+        Checkbox=Widget,
         Button=Widget,
         HTML=Widget,
         VBox=Box,
@@ -557,3 +558,57 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     loaded = _load_active_dq_rules(frame, table_name="orders", env_name="dev", dataset_name="sales")
 
     assert {rule["rule_id"] for rule in loaded} == {"self", "gov", "bypass"}
+
+
+def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enrichment(monkeypatch):
+    """Verify consolidated enrichment widgets build and persist only metadata enrichment rows."""
+    _install_fake_notebook_widgets(monkeypatch)
+    import types
+
+    class Spark:
+        def createDataFrame(self, rows):
+            return rows
+
+    writes = []
+    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df)))
+    config = types.SimpleNamespace(
+        governance_config=types.SimpleNamespace(
+            sensitivity_labels=["classified", "restricted", "public"],
+            pii_classifications=["direct PII", "indirect PII", "none"],
+            column_context_extra_fields=[{"name": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}],
+            column_classification_extra_fields=[{"name": "retention_class", "label": "Retention Class", "type": "dropdown", "options": ["standard", "long_term", "temporary"]}],
+        )
+    )
+    state = {
+        "environment_name": "dev",
+        "dataset_name": "sales",
+        "table_name": "orders_target",
+        "metadata_table_key": "dev:sales:orders_target",
+        "profile_run_id": "target-run-before-write",
+        "profile_stage": "target",
+        "catalogue_profile_rows": [
+            {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders_target", "column_name": "order_id", "data_type": "string", "profile_run_id": "target-run-before-write", "profile_stage": "target"},
+            {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders_target", "column_name": "amount", "data_type": "double", "profile_run_id": "target-run-before-write", "profile_stage": "target"},
+        ],
+    }
+
+    widget = governance_review.widget_enrich_table_metadata(state, config=config, env="dev", spark_session=Spark())
+
+    assert len(widget["rows"]) == 2
+    assert list(widget["rows"][0]["sensitivity_label"].options) == ["classified", "restricted", "public"]
+    assert list(widget["rows"][0]["pii_classification"].options) == ["direct PII", "indirect PII", "none"]
+    assert "business_owner_notes" in widget["rows"][0]["context_extra_fields"]
+    assert "retention_class" in widget["rows"][0]["classification_extra_fields"]
+
+    context_records = widget["build_context_records"]()
+    classification_records = widget["build_classification_records"]()
+    assert {record["column_name"] for record in context_records} == {"amount", "order_id"}
+    assert {record["column_name"] for record in classification_records} == {"amount", "order_id"}
+    assert all(record["custom_fields_json"] for record in context_records)
+    assert all(record["custom_fields_json"] for record in classification_records)
+
+    widget["save"]()
+    assert [table for table, _ in writes] == [governance_review.COLUMN_CONTEXT_TABLE, governance_review.COLUMN_CLASSIFICATION_TABLE]
+    assert governance_review.GUARDRAIL_RULES_TABLE not in [table for table, _ in writes]
+    assert governance_review.GUARDRAIL_RESULTS_TABLE not in [table for table, _ in writes]
+    assert governance_review.CATALOGUE_TABLE not in [table for table, _ in writes]

@@ -51,8 +51,8 @@ DQ_RULE_TYPES = [
     "value_when",
     "expression_true",
 ]
-SENSITIVITY_LABELS = ["public", "internal", "confidential", "restricted"]
-PERSONAL_DATA_CLASSIFICATIONS = ["not_personal_data", "direct_identifier", "indirect_identifier", "sensitive_personal_data", "unknown"]
+SENSITIVITY_LABELS = ["classified", "restricted", "public"]
+PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
 BUSINESS_CONTEXT_PROMPT = DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE
 PDPA_PERSONAL_IDENTIFIER_PROMPT = DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE
 DQ_RULE_SUGGESTION_PROMPT = DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
@@ -193,10 +193,10 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     ]
     return {
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
-        COLUMN_CONTEXT_TABLE: _schema(COLUMN_CONTEXT_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
+        COLUMN_CONTEXT_TABLE: _schema(COLUMN_CONTEXT_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("custom_fields_json", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), *audit]),
         GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
-        COLUMN_CLASSIFICATION_TABLE: _schema(COLUMN_CLASSIFICATION_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
+        COLUMN_CLASSIFICATION_TABLE: _schema(COLUMN_CLASSIFICATION_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("custom_fields_json", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
         PIPELINE_RUNS_TABLE: _schema(PIPELINE_RUNS_TABLE, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
         GOVERNANCE_REVIEWS_TABLE: _schema(GOVERNANCE_REVIEWS_TABLE, [("review_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("metadata_table_key", string), ("profile_run_id", string), ("profile_stage", string), ("pipeline_run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("outcome", string), ("blocker_count", long), ("warning_count", long), ("blockers_json", string), ("warnings_json", string), ("evidence_summary_json", string), ("reviewed_at", string), ("reviewed_by", string), ("governance_mode", string), ("approval_policy", string), ("governance_status", string), ("approval_bypass_allowed", boolean), ("requires_post_review", boolean), ("policy_reason", string), ("effective_from", string), ("effective_to", string), *audit]),
@@ -357,7 +357,8 @@ def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_r
         identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
         rows.append({
             **identity,
-            "business_context": str(review.get("business_context") or ""), "notes": str(review.get("notes") or ""), "review_status": "approved",
+            "business_context": str(review.get("business_context") or ""), "notes": str(review.get("notes") or ""),
+            "custom_fields_json": _json(review.get("custom_fields") or review.get("custom_fields_json")), "review_status": "approved",
             "approved_by": actor, "approved_at": now, "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
         })
     return rows
@@ -457,8 +458,8 @@ def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_r
     for review in reviewed_rows or []:
         if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
             continue
-        sensitivity = str(review.get("sensitivity_label") or "internal")
-        classification = str(review.get("personal_data_classification") or "unknown")
+        sensitivity = str(review.get("sensitivity_label") or SENSITIVITY_LABELS[0])
+        classification = str(review.get("pii_classification") or review.get("personal_data_classification") or PERSONAL_DATA_CLASSIFICATIONS[-1])
         if sensitivity not in SENSITIVITY_LABELS:
             raise ValueError(f"Unsupported sensitivity_label: {sensitivity}")
         if classification not in PERSONAL_DATA_CLASSIFICATIONS:
@@ -468,7 +469,7 @@ def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_r
             **identity,
             "sensitivity_label": sensitivity, "personal_data_classification": classification,
             "pii_identifier_type": str(review.get("pii_identifier_type") or ""), "handling_requirement": str(review.get("handling_requirement") or ""),
-            "reasoning": str(review.get("reasoning") or ""), "review_status": "approved", "approved_by": actor, "approved_at": now,
+            "reasoning": str(review.get("reasoning") or ""), "custom_fields_json": _json(review.get("custom_fields") or review.get("custom_fields_json")), "review_status": "approved", "approved_by": actor, "approved_at": now,
             "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
         })
     return rows
@@ -518,6 +519,203 @@ def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dic
         profile_rows,
         "Describe human-approved business meaning for each column. AI suggestions, if used, are advisory only.",
     )
+
+
+def _enrichment_options(config: Any) -> tuple[list[str], list[str], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Return configured column metadata enrichment controls."""
+    governance = getattr(config, "governance_config", None)
+    sensitivity = list(getattr(governance, "sensitivity_labels", None) or SENSITIVITY_LABELS)
+    pii = list(getattr(governance, "pii_classifications", None) or PERSONAL_DATA_CLASSIFICATIONS)
+    context_fields = list(getattr(governance, "column_context_extra_fields", None) or [])
+    classification_fields = list(getattr(governance, "column_classification_extra_fields", None) or [])
+    return sensitivity, pii, context_fields, classification_fields
+
+
+def _render_enrichment_extra_fields(widgets: Any, definitions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Render configured enrichment extra fields keyed by field name."""
+    controls: dict[str, Any] = {}
+    for definition in definitions:
+        name = str(definition.get("name") or definition.get("key") or "").strip()
+        if not name:
+            raise ValueError("Custom enrichment fields require a name.")
+        label = str(definition.get("label") or name.replace("_", " ").title())
+        field_type = str(definition.get("type") or "text").lower()
+        common = {"description": label, "layout": widgets.Layout(width="420px")}
+        if field_type == "textarea":
+            control = widgets.Textarea(value="", rows=int(definition.get("rows", 2)), **common)
+        elif field_type in {"dropdown", "select"}:
+            options = list(definition.get("options", []))
+            control = widgets.Dropdown(options=options, value=options[0] if options else None, **common)
+        else:
+            control = widgets.Text(value="", **common)
+        controls[name] = control
+    return controls
+
+
+def _collect_enrichment_extra_fields(controls: dict[str, Any]) -> dict[str, Any]:
+    """Collect configured enrichment extra-field values."""
+    return {name: control.value for name, control in controls.items()}
+
+
+def _selected_catalogue_rows_for_enrichment(guardrail_state: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Return selected column evidence from the guardrail target handover state."""
+    rows = [dict(row) for row in guardrail_state.get("catalogue_profile_rows", []) if row.get("column_name")]
+    profile_run_id = str(guardrail_state.get("profile_run_id") or "")
+    profile_stage = str(guardrail_state.get("profile_stage") or "")
+    if profile_run_id:
+        rows = [row for row in rows if str(_value(row, "profile_run_id")) == profile_run_id]
+    if profile_stage:
+        rows = [row for row in rows if str(_value(row, "profile_stage")) == profile_stage]
+    deduped: dict[str, dict[str, Any]] = {}
+    for row in sorted(rows, key=_profile_sort_key, reverse=True):
+        deduped.setdefault(str(_value(row, "column_name")), row)
+    return [deduped[name] for name in sorted(deduped)]
+
+
+def _write_table_metadata_enrichment_records(
+    context_records: list[dict[str, Any]],
+    classification_records: list[dict[str, Any]],
+    *,
+    config: Any,
+    env: str,
+    spark_session: Any,
+) -> None:
+    """Write descriptive table metadata enrichment records only."""
+    if context_records:
+        write_lakehouse_table(
+            spark_session.createDataFrame(context_records),
+            config,
+            env,
+            "metadata",
+            COLUMN_CONTEXT_TABLE,
+            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            mode="append",
+        )
+    if classification_records:
+        write_lakehouse_table(
+            spark_session.createDataFrame(classification_records),
+            config,
+            env,
+            "metadata",
+            COLUMN_CLASSIFICATION_TABLE,
+            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            mode="append",
+        )
+
+
+def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: Any, env: str, spark_session: Any) -> dict[str, Any]:
+    """Render one consolidated column metadata enrichment widget.
+
+    Parameters
+    ----------
+    guardrail_state : Mapping[str, Any]
+        Target handover state returned by :func:`widget_select_guardrail_target`.
+    config : Any
+        Runtime configuration from ``00_env_config`` containing metadata routing
+        and enrichment dropdown/custom-field settings.
+    env : str
+        Environment key used to route metadata writes to the configured
+        ``metadata`` target.
+    spark_session : Any
+        Spark session used to create write DataFrames.
+
+    Returns
+    -------
+    dict[str, Any]
+        Widget state with rendered row controls, record builders, and a save
+        callback. Save writes only ``METADATA_COLUMN_CONTEXT`` and
+        ``METADATA_COLUMN_CLASSIFICATION`` records.
+
+    Notes
+    -----
+    This widget enriches descriptive governance metadata for profiled catalogue
+    columns. It does not write DQ rules, guardrail results, or catalogue profile
+    evidence; runtime DQ remains part of guardrail authoring and review. Custom
+    enrichment fields are stored as ``custom_fields_json`` to match the
+    schema-safe ``01_agreement`` custom-field pattern without creating dynamic
+    physical metadata columns.
+
+    """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    profile_rows = _selected_catalogue_rows_for_enrichment(guardrail_state)
+    if not profile_rows:
+        raise ValueError("Selected guardrail target has no column rows in METADATA_DATA_CATALOGUE.")
+    sensitivity_options, pii_options, context_defs, classification_defs = _enrichment_options(config)
+    row_controls: list[dict[str, Any]] = []
+    row_widgets = []
+    status = widgets.HTML(value="")
+
+    for row in profile_rows:
+        column_name = str(_value(row, "column_name"))
+        data_type = str(_value(row, "data_type"))
+        context_extra = _render_enrichment_extra_fields(widgets, context_defs)
+        classification_extra = _render_enrichment_extra_fields(widgets, classification_defs)
+        controls = {
+            "column_name": column_name,
+            "data_type": data_type,
+            "business_context": widgets.Textarea(value="", description="Business context", rows=2, layout=widgets.Layout(width="520px")),
+            "sensitivity_label": widgets.Dropdown(options=sensitivity_options, value=sensitivity_options[0], description="Sensitivity", layout=widgets.Layout(width="320px")),
+            "pii_classification": widgets.Dropdown(options=pii_options, value=pii_options[-1], description="PII", layout=widgets.Layout(width="320px")),
+            "commit": widgets.Checkbox(value=True, description="Commit/save"),
+            "context_extra_fields": context_extra,
+            "classification_extra_fields": classification_extra,
+        }
+        row_controls.append(controls)
+        row_widgets.append(widgets.VBox([
+            widgets.HTML(f"<b>{column_name}</b> <code>{data_type}</code>"),
+            controls["business_context"],
+            widgets.HBox([controls["sensitivity_label"], controls["pii_classification"], controls["commit"]]),
+            *context_extra.values(),
+            *classification_extra.values(),
+        ]))
+
+    def build_context_records() -> list[dict[str, Any]]:
+        reviews = [{
+            "column_name": controls["column_name"],
+            "business_context": controls["business_context"].value,
+            "custom_fields": _collect_enrichment_extra_fields(controls["context_extra_fields"]),
+            "review_status": "approved",
+            "commit": bool(controls["commit"].value),
+        } for controls in row_controls]
+        return _build_column_context_records(profile_rows, reviews, config=config, env=env)
+
+    def build_classification_records() -> list[dict[str, Any]]:
+        reviews = [{
+            "column_name": controls["column_name"],
+            "sensitivity_label": controls["sensitivity_label"].value,
+            "pii_classification": controls["pii_classification"].value,
+            "custom_fields": _collect_enrichment_extra_fields(controls["classification_extra_fields"]),
+            "review_status": "approved",
+            "commit": bool(controls["commit"].value),
+        } for controls in row_controls]
+        return _build_classification_records(profile_rows, reviews, config=config, env=env)
+
+    def save(_: Any = None) -> dict[str, list[dict[str, Any]]]:
+        context_records = build_context_records()
+        classification_records = build_classification_records()
+        _write_table_metadata_enrichment_records(
+            context_records,
+            classification_records,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+        )
+        status.value = f"Saved {len(context_records)} context rows and {len(classification_records)} classification rows."
+        return {"column_context": context_records, "column_classification": classification_records}
+
+    save_button = widgets.Button(description="Save enrichment", button_style="success")
+    save_button.on_click(save)
+    ip.display(widgets.VBox([widgets.HTML("<h3>Enrich table metadata</h3>"), *row_widgets, save_button, status]))
+    return {
+        "rows": row_controls,
+        "build_context_records": build_context_records,
+        "build_classification_records": build_classification_records,
+        "save": save,
+        "save_button": save_button,
+        "status": status,
+    }
 
 
 def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str:
