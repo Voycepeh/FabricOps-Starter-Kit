@@ -22,7 +22,7 @@ The metadata model still has four simple groups: agreement and context, observed
 | `METADATA_ENRICHMENT_RULES` | Reviewed enrichment intent for business meaning, ownership, classification, sensitivity, and usage context. | `record_table_governance → build_enrichment_rule_records` | Governance review and handover |
 | `METADATA_GUARDRAIL_RULES` | Approved schema, freshness, profile behavior, and DQ rule intent for enforcement. | `record_table_governance → _build_dq_rule_records`; `widget_author_schema_freshness_profile_rules → _write_rule_records`; `widget_author_dq_rules → _write_rule_records` | Pipeline enforcement |
 | `METADATA_GUARDRAIL_RESULTS` | Runtime outcomes from executed guardrail/DQ checks. | `run_table_guardrails / enforce_dq_rules(write_results=True) → _write_guardrail_result_row` | Readiness checks and runtime evidence review |
-| `METADATA_DATA_LINEAGE_TABLE` | Run-specific source-to-target lineage evidence. | `write_pipeline_lineage` | Readiness checks and handover |
+| `METADATA_DATA_LINEAGE_TABLE` | Run-specific source-to-target lineage evidence. | [write_pipeline_lineage](../api/reference/write_pipeline_lineage/) | Readiness checks and handover |
 | `METADATA_PIPELINE_RUNS` | One-row runtime summary for a pipeline execution. | `write_pipeline_run_summary` | Governance readiness |
 | `METADATA_DATA_ACCESS` | Public-safe access context table included in setup; standard notebooks do not currently populate it. | No standard starter-kit writer found; setup_metadata_tables creates or validates the empty schema only | Manual/offline access review |
 
