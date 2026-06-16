@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 17</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 3</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 17</span><span class="reference-chip">Outbound: 2</span><span class="reference-chip">Inbound: 4</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>3</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>data_agreement</code>, <code>governance_review</code>, <code>pipeline</code></td>
+      <td><code>data_agreement</code>, <code>governance_review</code>, <code>guardrails</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -247,7 +247,10 @@ No public exports in this module.
 <a class="reference-chip" href="../data_agreement/#_create_or_update_data_agreement"><code>_create_or_update_data_agreement</code></a>, <a class="reference-chip" href="../data_agreement/#_create_or_update_data_steward"><code>_create_or_update_data_steward</code></a>, <a class="reference-chip" href="../data_agreement/#_save_agreement_evidence_records"><code>_save_agreement_evidence_records</code></a>, <a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../governance_review/#_approved_column_identity"><code>_approved_column_identity</code></a>, <a class="reference-chip" href="../governance_review/#_approved_review_context"><code>_approved_review_context</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_physical_identity"><code>_catalogue_physical_identity</code></a>, <a class="reference-chip" href="../governance_review/#_review_governance_evidence"><code>_review_governance_evidence</code></a>, <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
+<a class="reference-chip" href="../governance_review/#_approved_column_identity"><code>_approved_column_identity</code></a>, <a class="reference-chip" href="../governance_review/#_approved_review_context"><code>_approved_review_context</code></a>, <a class="reference-chip" href="../governance_review/#_base_guardrail_rule_record"><code>_base_guardrail_rule_record</code></a>, <a class="reference-chip" href="../governance_review/#_build_dq_rule_records"><code>_build_dq_rule_records</code></a>, <a class="reference-chip" href="../governance_review/#_catalogue_physical_identity"><code>_catalogue_physical_identity</code></a>, <a class="reference-chip" href="../governance_review/#_review_governance_evidence"><code>_review_governance_evidence</code></a>, <a class="reference-chip" href="../../reference/apply_governance_rule_action/"><code>apply_governance_rule_action</code></a>, <a class="reference-chip" href="../../reference/build_table_governance_policy_record/"><code>build_table_governance_policy_record</code></a>, <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>, <a class="reference-chip" href="../../reference/guardrail_authoring_status/"><code>guardrail_authoring_status</code></a>, <a class="reference-chip" href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
+
+**guardrails**
+<a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
 
 **pipeline**
 <a class="reference-chip" href="../pipeline/#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>, <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>

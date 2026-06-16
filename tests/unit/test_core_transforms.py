@@ -118,7 +118,7 @@ def test_governance_review_builders_commit_only_human_approved_records():
     )
     dq = _build_dq_rule_records(
         profile_rows,
-        [{"rule_id": "amount_positive", "columns": ["amount"], "rule_type": "greater_than", "value": 0, "review_status": "approved", "commit": True}],
+        [{"rule_id": "amount_positive", "columns": ["amount"], "rule_type": "greater_than", "value": 0, "review_status": "governance_approved", "commit": True}],
     )
     classification = _build_classification_records(
         profile_rows,

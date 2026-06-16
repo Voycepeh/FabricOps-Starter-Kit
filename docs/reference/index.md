@@ -40,6 +40,56 @@ Use the finder below to look up public callables from active v1 modules. For int
 ## Functions
 
 <div class="reference-catalogue-list">
+<article id="governance_review-apply_governance_rule_action" class="reference-catalogue-item" data-callable-row="true" data-callable-name="apply_governance_rule_action" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Apply approve, reject, or supersede actions to a guardrail rule record.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/apply_governance_rule_action/"><code>apply_governance_rule_action</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Apply approve, reject, or supersede actions to a guardrail rule record.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_now_utc_iso</code></li><li><code>_resolve_action_by</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_review_guardrail_governance</code></li></ul></details>
+  </div>
+</article>
+<article id="pipeline-build_guardrail_detail_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_guardrail_detail_rows" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Build per-guardrail diagnostic rows for runtime guardrail results.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_guardrail_detail_rows/"><code>build_guardrail_detail_rows</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build per-guardrail diagnostic rows for runtime guardrail results.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_guardrail_reason</code></li><li><code>_next_action</code></li><li><code>_result_can_continue</code></li><li><code>_result_status</code></li><li><code>_table_keys</code></li><li><code>_yes_no</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>display_guardrail_results</code></li><li><code>run_table_guardrails</code></li></ul></details>
+  </div>
+</article>
+<article id="pipeline-build_guardrail_summary_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_guardrail_summary_rows" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Build compact one-row-per-table guardrail summary rows.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_guardrail_summary_rows/"><code>build_guardrail_summary_rows</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build compact one-row-per-table guardrail summary rows.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_guardrail_reason</code></li><li><code>_next_action</code></li><li><code>_result_can_continue</code></li><li><code>_result_status</code></li><li><code>_table_keys</code></li><li><code>_yes_no</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_build_guardrail_blocking_message_from_bundle</code></li><li><code>display_guardrail_results</code></li><li><code>run_table_guardrails</code></li></ul></details>
+  </div>
+</article>
+<article id="governance_review-build_table_governance_policy_record" class="reference-catalogue-item" data-callable-row="true" data-callable-name="build_table_governance_policy_record" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Build a table-level governance policy row for metadata persistence.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/build_table_governance_policy_record/"><code>build_table_governance_policy_record</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Build a table-level governance policy row for metadata persistence.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_now_utc_iso</code></li><li><code>_resolve_action_by</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>mark_table_governed</code></li><li><code>mark_table_ungoverned</code></li></ul></details>
+  </div>
+</article>
+<article id="pipeline-display_guardrail_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="display_guardrail_results" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Return summary, detailed, or debug guardrail display output for Fabric notebooks.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return summary, detailed, or debug guardrail display output for Fabric notebooks.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_rows_for_display</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li></ul></details>
+
+  </div>
+</article>
 <article id="governance_review-enforce_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_dq_rules" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="callable" data-callable-purpose="Enforce approved active DQ rules as a target-write guardrail without filtering rows.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Enforce approved active DQ rules as a target-write guardrail without filtering rows.</p>
@@ -57,6 +107,16 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_coerce_date</code></li><li><code>_iso_date_value</code></li><li><code>_max_column_value</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>enforce_freshness_rule</code></li><li><code>run_table_guardrails</code></li></ul></details>
+  </div>
+</article>
+<article id="guardrails-enforce_freshness_rule" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_freshness_rule" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Evaluate freshness using an active metadata-backed freshness guardrail rule.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/enforce_freshness_rule/"><code>enforce_freshness_rule</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Evaluate freshness using an active metadata-backed freshness guardrail rule.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_apply_bypass_post_review_warning</code></li><li><code>_catalogue_value</code></li><li><code>_parse_rule_parameters</code></li><li><code>_select_table_guardrail_rule</code></li><li><code>_string_value</code></li><li><code>enforce_freshness</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -66,7 +126,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/guardrails/" title="Open guardrails module page" aria-label="Open guardrails module page">guardrails</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 13</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>write_lakehouse_table</code></li><li><code>_accepted_profile_rows</code></li><li><code>_catalogue_value</code></li><li><code>_guardrail_exclude_columns</code></li><li><code>_is_missing_table_error</code></li><li><code>_json_dumps_stable</code></li><li><code>_profile_hash</code></li><li><code>_profile_payload_from_profile</code></li><li><code>_select_profile_behavior_rule</code></li><li><code>_string_value</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 14</span></summary><ul><li><code>profile_dataframe</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>_accepted_profile_rows</code></li><li><code>_apply_bypass_post_review_warning</code></li><li><code>_catalogue_value</code></li><li><code>_guardrail_exclude_columns</code></li><li><code>_is_missing_table_error</code></li><li><code>_json_dumps_stable</code></li><li><code>_profile_hash</code></li><li><code>_profile_payload_from_profile</code></li><li><code>_select_profile_behavior_rule</code></li><li><code>_string_value</code></li><li><code>_write_guardrail_result_row</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
@@ -90,6 +150,16 @@ Use the finder below to look up public callables from active v1 modules. For int
 
   </div>
 </article>
+<article id="governance_review-guardrail_authoring_status" class="reference-catalogue-item" data-callable-row="true" data-callable-name="guardrail_authoring_status" data-callable-module="governance_review" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Return lifecycle fields for guardrail rules under the effective table policy.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/guardrail_authoring_status/"><code>guardrail_authoring_status</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return lifecycle fields for guardrail rules under the effective table policy.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_now_utc_iso</code></li><li><code>_resolve_action_by</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_base_guardrail_rule_record</code></li></ul></details>
+  </div>
+</article>
 <article id="governance_review-load_catalogue_profile_rows" class="reference-catalogue-item" data-callable-row="true" data-callable-name="load_catalogue_profile_rows" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Load column profile rows for the selected catalogue table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/load_catalogue_profile_rows/"><code>load_catalogue_profile_rows</code></a></h3>
   <p class="reference-catalogue-item-purpose">Load column profile rows for the selected catalogue table.</p>
@@ -98,6 +168,26 @@ Use the finder below to look up public callables from active v1 modules. For int
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_configured_lakehouse_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>_catalogue_physical_identity</code></li><li><code>_coerce_rows</code></li><li><code>_is_success</code></li><li><code>_value</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_review_governance_evidence</code></li></ul></details>
+  </div>
+</article>
+<article id="governance_review-mark_table_governed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="mark_table_governed" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Persist a governance policy row that marks a table as governed.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/mark_table_governed/"><code>mark_table_governed</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Persist a governance policy row that marks a table as governed.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>build_table_governance_policy_record</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_review_guardrail_governance</code></li></ul></details>
+  </div>
+</article>
+<article id="governance_review-mark_table_ungoverned" class="reference-catalogue-item" data-callable-row="true" data-callable-name="mark_table_ungoverned" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Persist a governance policy row that marks a table as ungoverned.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/mark_table_ungoverned/"><code>mark_table_ungoverned</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Persist a governance policy row that marks a table as ungoverned.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>build_table_governance_policy_record</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_review_guardrail_governance</code></li></ul></details>
   </div>
 </article>
 <article id="pipeline-prepare_pipeline_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_pipeline_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Prepare source or target table configs for 02_pipeline.">
@@ -157,7 +247,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_read_guardrail_rule_metadata</code></li><li><code>_read_metadata_rows</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_governance_profile_target</code></li><li><code>enforce_profile_behavior</code></li><li><code>_load_notebook_registry</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 11</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_read_guardrail_rule_metadata</code></li><li><code>_read_metadata_rows</code></li><li><code>_read_metadata_table_or_empty</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>widget_select_governance_profile_target</code></li><li><code>enforce_profile_behavior</code></li><li><code>_load_notebook_registry</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="00_env_config, 02_pipeline, 99_explore" data-function-type="callable" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
@@ -180,13 +270,23 @@ Use the finder below to look up public callables from active v1 modules. For int
 
   </div>
 </article>
+<article id="governance_review-resolve_table_governance_policy" class="reference-catalogue-item" data-callable-row="true" data-callable-name="resolve_table_governance_policy" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="callable" data-callable-purpose="Resolve the effective table-level guardrail governance policy.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/resolve_table_governance_policy/"><code>resolve_table_governance_policy</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Resolve the effective table-level guardrail governance policy.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 03_governance</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_coerce_rows</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_select_guardrail_target</code></li></ul></details>
+  </div>
+</article>
 <article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 12</span></summary><ul><li><code>profile_dataframe</code></li><li><code>enforce_dq_rules</code></li><li><code>enforce_freshness</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>validate_schema</code></li><li><code>_write_guardrail_result_row</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 18</span></summary><ul><li><code>profile_dataframe</code></li><li><code>enforce_dq_rules</code></li><li><code>enforce_freshness</code></li><li><code>enforce_freshness_rule</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>validate_schema</code></li><li><code>validate_schema_rule</code></li><li><code>_build_metadata_table_key</code></li><li><code>_write_guardrail_result_row</code></li><li><code>_build_guardrail_blocking_message_from_bundle</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
 
   </div>
 </article>
@@ -227,7 +327,37 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_actual_schema</code></li><li><code>_normalize_datatype</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>validate_schema_rule</code></li><li><code>run_table_guardrails</code></li></ul></details>
+  </div>
+</article>
+<article id="guardrails-validate_schema_rule" class="reference-catalogue-item" data-callable-row="true" data-callable-name="validate_schema_rule" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Validate a DataFrame schema using an active metadata-backed schema guardrail rule.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/validate_schema_rule/"><code>validate_schema_rule</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Validate a DataFrame schema using an active metadata-backed schema guardrail rule.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>_apply_bypass_post_review_warning</code></li><li><code>_catalogue_value</code></li><li><code>_parse_rule_parameters</code></li><li><code>_select_table_guardrail_rule</code></li><li><code>_string_value</code></li><li><code>validate_schema</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
+  </div>
+</article>
+<article id="governance_review-widget_author_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_author_dq_rules" data-callable-module="governance_review" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Render interactive manual or AI-assisted DQ guardrail authoring controls.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render interactive manual or AI-assisted DQ guardrail authoring controls.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_dq_records_from_selection</code></li><li><code>_draft_dq_rules</code></li><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_write_rule_records</code></li></ul></details>
+
+  </div>
+</article>
+<article id="governance_review-widget_author_schema_freshness_profile_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_author_schema_freshness_profile_rules" data-callable-module="governance_review" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Render interactive schema, freshness, and profile-behavior guardrail authoring controls.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render interactive schema, freshness, and profile-behavior guardrail authoring controls.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_schema_freshness_profile_records_from_selection</code></li><li><code>_write_rule_records</code></li></ul></details>
+
   </div>
 </article>
 <article id="data_agreement-widget_render_agreement_evidence" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_evidence" data-callable-module="data_agreement" data-callable-starter-path="01_agreement" data-function-type="callable" data-callable-purpose="Render the standalone agreement-evidence widget.">
@@ -290,6 +420,16 @@ Use the finder below to look up public callables from active v1 modules. For int
 
   </div>
 </article>
+<article id="governance_review-widget_review_guardrail_governance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_guardrail_governance" data-callable-module="governance_review" data-callable-starter-path="03_governance" data-function-type="callable" data-callable-purpose="Render interactive controls for reviewing proposed and bypassed guardrail rules.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render interactive controls for reviewing proposed and bypassed guardrail rules.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_write_governance_policy_record</code></li><li><code>_write_rule_records</code></li><li><code>apply_governance_rule_action</code></li><li><code>mark_table_governed</code></li><li><code>mark_table_ungoverned</code></li></ul></details>
+
+  </div>
+</article>
 <article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="callable" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
@@ -310,6 +450,16 @@ Use the finder below to look up public callables from active v1 modules. For int
 
   </div>
 </article>
+<article id="governance_review-widget_select_guardrail_target" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_guardrail_target" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="callable" data-callable-purpose="Render an interactive target selector for guardrail authoring and governance review.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render an interactive target selector for guardrail authoring and governance review.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 03_governance</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_filter_table_rows</code></li><li><code>_read_metadata_table_or_empty</code></li><li><code>resolve_table_governance_policy</code></li><li><code>_build_metadata_table_key</code></li></ul></details>
+
+  </div>
+</article>
 <article id="pipeline-write_catalogue_evidence" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_catalogue_evidence" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Enrich profile rows with guardrail context and write catalogue evidence.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></h3>
   <p class="reference-catalogue-item-purpose">Enrich profile rows with guardrail context and write catalogue evidence.</p>
@@ -327,7 +477,7 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config, 01_agreement, 02_pipeline, 03_governance, 99_explore</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_write_row</code></li><li><code>_review_governance_evidence</code></li><li><code>record_table_governance</code></li><li><code>enforce_profile_behavior</code></li><li><code>_register_current_notebook</code></li><li><code>_write_guardrail_result_row</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 11</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_write_row</code></li><li><code>_review_governance_evidence</code></li><li><code>_write_governance_policy_record</code></li><li><code>_write_rule_records</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_write_guardrail_result_row</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
   </div>
 </article>
 <article id="pipeline-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">

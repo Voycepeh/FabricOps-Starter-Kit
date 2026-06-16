@@ -41,10 +41,15 @@ EXPECTED_V1_CALLABLES = [
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
+    "validate_schema_rule",
     "enforce_freshness",
+    "enforce_freshness_rule",
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
+    "build_guardrail_detail_rows",
+    "build_guardrail_summary_rows",
+    "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
     "write_catalogue_evidence",
@@ -57,11 +62,21 @@ EXPECTED_V1_CALLABLES = [
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "widget_select_guardrail_target",
+    "widget_author_schema_freshness_profile_rules",
+    "widget_author_dq_rules",
+    "resolve_table_governance_policy",
+    "guardrail_authoring_status",
+    "apply_governance_rule_action",
+    "build_table_governance_policy_record",
+    "mark_table_governed",
+    "mark_table_ungoverned",
+    "widget_review_guardrail_governance",
 ]
 
 
-def test_public_v1_callable_list_remains_unchanged():
-    """Verify public v1 callable list remains unchanged."""
+def test_public_callable_list_includes_guardrail_authoring_widgets():
+    """Verify public callable list includes guardrail authoring widgets."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
 
 
@@ -216,20 +231,63 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "PROFILE_RUN_ID",
     }
     assert duplicate_legacy_fields.isdisjoint(catalogue_fields)
-    assert {
-        "table_name",
-        "column_name",
-        "row_count",
-        "null_count",
-        "agreement_id",
+    expected_catalogue_fields = {
+        "metadata_table_key",
+        "metadata_column_key",
         "environment_name",
         "dataset_name",
+        "table_name",
+        "column_name",
+        "layer",
+        "asset_kind",
         "pipeline_name",
         "profile_run_id",
-        "dq_status",
+        "profile_stage",
+        "profile_status",
+        "profiled_at",
+        "run_timestamp",
+        "evidence_role",
+        "data_type",
+        "row_count",
+        "null_count",
+        "null_percent",
+        "distinct_count",
+        "distinct_percent",
+        "min_value",
+        "max_value",
+        "distribution_type",
+        "distribution_json",
+        "profile_mode",
+        "watermark_column",
+        "watermark_value",
+        "profile_hash",
+        "profile_payload_json",
+        "agreement_id",
+        "contract_version",
+        "notebook_registry_id",
+        "notebook_id",
+        "_committed_at",
+        "_committed_by",
+        "_workspace_name",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
+    }
+    removed_catalogue_fields = {
+        "baseline_status",
         "source_schema_check",
         "target_schema_check",
-    } <= set(catalogue_fields)
+        "dq_status",
+        "dq_rule_count",
+        "dq_failed_rule_count",
+        "dq_failed_row_count",
+        "load_behavior",
+        "source_data_change_check",
+        "target_data_change_check",
+        "source_change_signal_json",
+    }
+    assert expected_catalogue_fields <= set(catalogue_fields)
+    assert removed_catalogue_fields.isdisjoint(catalogue_fields)
 
 
 def test_schema_field_validation_names_table_and_duplicate_logical_columns():

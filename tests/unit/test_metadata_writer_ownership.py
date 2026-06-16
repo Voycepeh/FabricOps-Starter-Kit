@@ -29,9 +29,10 @@ def test_catalogue_type_normalizer_keeps_only_profile_evidence_casts():
     """Verify catalogue type casts do not include retired result fields."""
     source = _function_source("pipeline.py", "_normalize_catalogue_evidence_types")
 
-    for profile_field in ("row_count", "null_count", "distinct_count", "null_percent", "distinct_percent", "dq_failed_row_percent", "run_timestamp"):
+    for profile_field in ("row_count", "null_count", "distinct_count", "null_percent", "distinct_percent", "run_timestamp"):
         assert profile_field in source
     for result_field in (
+        "dq_failed_row_percent",
         "dq_rule_count",
         "dq_failed_rule_count",
         "dq_warning_rule_count",
@@ -69,8 +70,8 @@ def test_profile_behavior_runtime_writer_targets_results_not_catalogue():
     """Verify profile behavior enforcement writes outcomes to results, not catalogue."""
     source = _function_source("guardrails.py", "enforce_profile_behavior")
 
-    assert '"METADATA_GUARDRAIL_RESULTS"' in source
-    assert 'write_lakehouse_table(spark.createDataFrame([result_row])' in source
+    assert "_write_guardrail_result_row" in source
+    assert "profile_evidence_rows" in source
     assert '"METADATA_DATA_CATALOGUE"' not in source
 
 
@@ -114,13 +115,17 @@ def test_guardrail_result_writer_has_single_shared_implementation():
 
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     """Verify widget functions do not directly write mixed metadata payloads."""
-    dq_widget_source = _function_source("governance_review.py", "widget_review_dq_rules")
-    catalogue_widget_source = _function_source("governance_review.py", "widget_select_governance_profile_target")
+    selector_source = _function_source("governance_review.py", "widget_select_guardrail_target")
+    schema_widget_source = _function_source("governance_review.py", "widget_author_schema_freshness_profile_rules")
+    dq_widget_source = _function_source("governance_review.py", "widget_author_dq_rules")
+    review_widget_source = _function_source("governance_review.py", "widget_review_guardrail_governance")
 
-    assert "METADATA_GUARDRAIL_RULES" in dq_widget_source
-    assert "METADATA_DATA_CATALOGUE" in catalogue_widget_source
-    assert "read_lakehouse_table" in catalogue_widget_source
-    assert "write_lakehouse_table" not in catalogue_widget_source
+    assert "CATALOGUE_TABLE" in selector_source
+    assert "_read_metadata_table_or_empty" in selector_source
+    assert "_write_rule_records" in schema_widget_source
+    assert "_write_rule_records" in dq_widget_source
+    assert "_write_rule_records" in review_widget_source
+    assert "_write_governance_policy_record" in review_widget_source
 
     for path in SRC.glob("*.py"):
         source = path.read_text(encoding="utf-8")
@@ -129,5 +134,9 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
             if isinstance(node, ast.FunctionDef) and node.name.startswith("widget_"):
                 function_source = ast.get_source_segment(source, node) or ""
                 assert "write_lakehouse_table" not in function_source, f"{path}:{node.name} writes metadata directly"
-                assert "METADATA_DATA_CATALOGUE" not in function_source or "read_lakehouse_table" in function_source
-                assert not ("METADATA_DATA_CATALOGUE" in function_source and "METADATA_GUARDRAIL_RESULTS" in function_source)
+                if node.name in {"widget_author_schema_freshness_profile_rules", "widget_author_dq_rules"}:
+                    assert "CATALOGUE_TABLE" not in function_source
+                    assert "GUARDRAIL_RESULTS_TABLE" not in function_source
+                if node.name == "widget_review_guardrail_governance":
+                    assert "CATALOGUE_TABLE" not in function_source
+                    assert "GUARDRAIL_RESULTS_TABLE" not in function_source

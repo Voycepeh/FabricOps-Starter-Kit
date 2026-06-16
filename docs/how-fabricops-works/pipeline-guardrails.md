@@ -12,16 +12,16 @@ FabricOps keeps the responsibility split clear:
 
 - **Data contract = expectation.** The contract describes what the data should look like, how fresh it should be, how it should behave over time, and which DQ expectations matter.
 - **Guardrail = runtime enforcement.** A guardrail turns an expectation into a runtime pass, warning, fail, or skipped result.
-- **`02_pipeline` = technical enforcement layer.** The pipeline validates schemas, freshness, profile behavior, and approved DQ rules before governed outputs are written.
+- **`02_pipeline` = technical enforcement layer.** The pipeline validates schemas, freshness, profile behavior, and governance-approved DQ rules before governed outputs are written.
 - **`03_governance` = governance and business definition layer.** Governance review defines and approves business context, classifications, and DQ metadata; it does not replace runtime enforcement.
 
 ## Guardrail flow in `02_pipeline`
 
 | Point in the run | What happens | Why it matters |
 | --- | --- | --- |
-| After source read | Validate source schema, freshness, profile behavior, and approved active source DQ rules. | Catch upstream structure, recency, behavior, and quality issues before transformation. |
+| After source read | Validate source schema, freshness, profile behavior, and active source DQ guardrail rules. | Catch upstream structure, recency, behavior, and quality issues before transformation. |
 | Transformation | Apply user-defined deterministic business logic. | Keep the output repeatable and explainable. |
-| Before target write | Validate target schema, freshness, profile behavior, and approved active target DQ rules. | Avoid publishing stale, unexpected, or DQ-failing governed outputs. |
+| Before target write | Validate target schema, freshness, profile behavior, and active target DQ guardrail rules. | Avoid publishing stale, unexpected, or DQ-failing governed outputs. |
 | After successful checks | Write the output, lineage, catalogue evidence, and run summary. | Keep governance review and support grounded in what actually ran. |
 
 ## Guardrail types
@@ -31,7 +31,7 @@ FabricOps keeps the responsibility split clear:
 | Schema guardrail | Checks expected columns and data types. |
 | Freshness guardrail | Checks whether `max(freshness_column)` is recent enough based on `freshness_max_lag_days`. |
 | Profile behavior guardrail | Checks whether the current profile follows `profile_mode`: `static_data`, `changing_data`, or `skip`. |
-| DQ guardrail | Checks approved active DQ rules from governance metadata. |
+| DQ guardrail | Checks active DQ guardrail rules from governance metadata. |
 
 Each guardrail returns run evidence that can be displayed in the notebook and used to decide whether the next critical step can continue. Warning-severity failures can continue with evidence; Error-severity failure blocks before the next critical step, as do blocking failures.
 
@@ -97,7 +97,7 @@ DQ rules are defined and approved in `03_governance`, then enforced in `02_pipel
 - schema checks validate structure;
 - freshness checks validate recency;
 - profile behavior checks validate whether profiled data should be `static_data`, `changing_data`, or `skip`;
-- DQ checks validate approved business and quality rules.
+- DQ checks validate governed business and quality rules.
 
 This separation keeps failures easier to explain and makes handover evidence clearer for junior engineers.
 
@@ -124,4 +124,14 @@ Use these settings independently so each guardrail has a clear purpose:
 - Use `skip` only when this profile behavior guardrail should be disabled.
 - Configure freshness separately using `freshness_*` fields.
 - Use `schema_preset` separately for schema strictness.
-- Keep DQ controlled by approved governance rules and `dq_preset`.
+- Keep DQ controlled by active guardrail rules and `dq_preset`.
+
+## Runtime display modes
+
+`02_pipeline` keeps the raw guardrail result bundle in `source_guardrail_results` and `target_guardrail_results`, but the notebook no longer displays the nested bundle by default. Set `GUARDRAIL_DISPLAY_MODE` near the runtime settings cell:
+
+- `summary` is the default compact pass/fail view for normal users. It shows one row per table with the failed guardrail, continuation decision, main reason, and next action.
+- `detailed` shows per-table, per-guardrail diagnostics for engineers troubleshooting failures. It includes status, severity, reason, expected value, actual value, and next action.
+- `debug` returns the raw nested summary object for framework developers and deeper inspection.
+
+Use `summary` during routine runs, switch to `detailed` when a row fails or warns, and use `debug` only when you need raw internals. Raw results remain available in `source_guardrail_results` and `target_guardrail_results` regardless of the display mode.

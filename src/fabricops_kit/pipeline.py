@@ -7,7 +7,7 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from .data_profiling import profile_dataframe
-from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_failed, validate_schema
+from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, validate_schema, validate_schema_rule
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
 from .config import _current_audit_timestamp, _get_audit_timezone
@@ -120,7 +120,6 @@ def _normalize_catalogue_evidence_types(evidence_df: Any):
         "distinct_count": "long",
         "null_percent": "double",
         "distinct_percent": "double",
-        "dq_failed_row_percent": "double",
         "run_timestamp": "timestamp",
     }
     normalized = evidence_df
@@ -130,6 +129,289 @@ def _normalize_catalogue_evidence_types(evidence_df: Any):
             normalized = normalized.withColumn(column_name, F.col(column_name).cast(data_type))
     return normalized
 
+
+
+def _yes_no(value: Any) -> str:
+    """Return notebook-friendly yes/no text."""
+    return "yes" if bool(value) else "no"
+
+
+def _result_status(result: Mapping[str, Any] | None) -> str:
+    """Return a normalized guardrail result status."""
+    return str((result or {}).get("status") or (result or {}).get("freshness_status") or (result or {}).get("stability_status") or "not_run").lower()
+
+
+def _result_can_continue(result: Mapping[str, Any] | None) -> bool:
+    """Return whether a guardrail result can continue."""
+    if not result:
+        return True
+    return bool(result.get("can_continue", result.get("freshness_can_continue", result.get("stability_can_continue", True))))
+
+
+def _result_reason(result: Mapping[str, Any] | None) -> str:
+    """Return the clearest human-readable reason from a result."""
+    if not result:
+        return ""
+    return str(result.get("reason") or result.get("message") or result.get("freshness_message") or result.get("stability_message") or "")
+
+
+def _next_action(guardrail: str, status: str) -> str:
+    """Return concise user action guidance for a guardrail result."""
+    if status in {"passed", "baseline_created", "skipped", "warning"}:
+        return "Continue." if status != "warning" else "Review detailed mode when convenient."
+    actions = {
+        "schema": "Fix source data or update expected_schema.",
+        "freshness": "Refresh source data or adjust freshness rule.",
+        "profile_behavior": "Review source change or approve reset in governance.",
+        "dq": "Review failed DQ rules and source data.",
+        "catalogue": "Check metadata lakehouse write configuration and permissions.",
+    }
+    return actions.get(guardrail, "Review detailed mode.")
+
+
+def _schema_reason(result: Mapping[str, Any]) -> str:
+    missing = result.get("missing_columns") or []
+    unexpected = result.get("unexpected_columns") or []
+    mismatches = result.get("datatype_mismatches") or []
+    parts = []
+    if missing:
+        parts.append("missing column " + ", ".join(map(str, missing)))
+    if unexpected:
+        parts.append("unexpected column " + ", ".join(map(str, unexpected)))
+    if mismatches:
+        parts.append(f"{len(mismatches)} datatype mismatch(es)")
+    return "Schema failed: " + "; ".join(parts) + "." if parts else "Schema failed."
+
+
+def _freshness_reason(result: Mapping[str, Any]) -> str:
+    column = result.get("freshness_column") or "freshness column"
+    if _result_status(result) == "failed":
+        return f"Freshness failed: latest {column} is older than allowed lag."
+    return _result_reason(result) or "Freshness check passed."
+
+
+def _profile_behavior_reason(result: Mapping[str, Any]) -> str:
+    status = _result_status(result)
+    if status == "baseline_created":
+        return "Profile behavior baseline created."
+    differences = result.get("differences") or []
+    if not differences and result.get("stability_difference_summary"):
+        try:
+            differences = json.loads(str(result.get("stability_difference_summary") or "[]"))
+        except json.JSONDecodeError:
+            differences = []
+    if status == "failed" or differences:
+        for diff in differences:
+            diff_type = str(diff.get("difference_type") or "")
+            watermark = str(diff.get("watermark_value") or "")
+            if diff_type == "missing_watermark_value":
+                return f"Profile behavior failed: previous watermark group {watermark} disappeared."
+            if diff_type == "profile_changed" and watermark and watermark != "__FULL_TABLE__":
+                return f"Profile behavior failed: previous watermark group {watermark} changed."
+            if diff_type == "profile_changed":
+                return "Profile behavior failed: static data changed from accepted baseline."
+        return "Profile behavior failed: static data changed from accepted baseline."
+    new_groups = result.get("new_watermark_values") or []
+    if new_groups:
+        return "Profile behavior passed: new watermark accepted."
+    return _result_reason(result) or "Profile behavior guardrail passed."
+
+
+def _dq_reason(result: Mapping[str, Any]) -> str:
+    checks = result.get("checks") or []
+    blocking = [check for check in checks if str(check.get("status") or "").lower() in {"failed", "error"} and str(check.get("severity") or "warning").lower() in {"error", "blocking"}]
+    warnings = [
+        check for check in checks
+        if str(check.get("status") or "").lower() in {"failed", "error", "warning"}
+        and str(check.get("severity") or "warning").lower() not in {"error", "blocking"}
+    ]
+    if blocking:
+        return f"DQ failed: {len(blocking)} blocking DQ rule(s) failed."
+    if warnings:
+        return f"DQ warning: {len(warnings)} warning DQ rule(s) failed."
+    return _result_reason(result) or "DQ guardrail passed."
+
+
+def _guardrail_reason(guardrail: str, result: Mapping[str, Any]) -> str:
+    """Return plain-language reason text for one guardrail."""
+    if guardrail == "schema":
+        return _schema_reason(result) if _result_status(result) == "failed" else (_result_reason(result) or "Schema validation passed.")
+    if guardrail == "freshness":
+        return _freshness_reason(result)
+    if guardrail == "profile_behavior":
+        return _profile_behavior_reason(result)
+    if guardrail == "dq":
+        return _dq_reason(result)
+    return _result_reason(result)
+
+
+def _table_keys(result_bundle: Mapping[str, Any]) -> list[str]:
+    """Return stable table keys present in a guardrail result bundle."""
+    keys: set[str] = set()
+    for name in ("schema_results", "freshness_results", "stability_results", "dq_results", "catalogue_status"):
+        value = result_bundle.get(name) or {}
+        if isinstance(value, Mapping):
+            keys.update(str(key) for key in value)
+    return sorted(keys)
+
+
+def build_guardrail_summary_rows(result_bundle: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Build compact one-row-per-table guardrail summary rows.
+
+    Parameters
+    ----------
+    result_bundle : mapping
+        Result bundle returned by :func:`run_table_guardrails`.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Rows with table, status, failed guardrail, continuation, reason, and
+        next action fields for notebook display.
+
+    """
+    rows = []
+    for table in _table_keys(result_bundle):
+        results = {
+            "schema": (result_bundle.get("schema_results") or {}).get(table, {}),
+            "freshness": (result_bundle.get("freshness_results") or {}).get(table, {}),
+            "profile_behavior": (result_bundle.get("stability_results") or {}).get(table, {}),
+            "dq": (result_bundle.get("dq_results") or {}).get(table, {}),
+        }
+        catalogue_value = (result_bundle.get("catalogue_status") or {}).get(table, "")
+        failed_guardrail = "none"
+        status = "passed"
+        main_reason = "All blocking guardrails passed."
+        for guardrail in ("schema", "freshness", "profile_behavior", "dq"):
+            result = results[guardrail]
+            if not _result_can_continue(result) or _result_status(result) == "failed":
+                failed_guardrail = guardrail
+                status = "failed"
+                main_reason = _guardrail_reason(guardrail, result)
+                break
+        else:
+            profile_status = _result_status(results["profile_behavior"])
+            warning_guardrail = next((name for name, result in results.items() if _result_status(result) == "warning"), "")
+            if str(catalogue_value).lower() not in {"", "written", "success", "succeeded"}:
+                failed_guardrail = "catalogue"
+                status = "failed"
+                main_reason = "Catalogue evidence failed to write."
+            elif profile_status == "baseline_created":
+                main_reason = "Profile behavior baseline created."
+            elif warning_guardrail:
+                status = "warning"
+                failed_guardrail = warning_guardrail
+                main_reason = _guardrail_reason(warning_guardrail, results[warning_guardrail])
+        can_continue = status != "failed"
+        rows.append(
+            {
+                "table": table,
+                "status": status,
+                "failed_guardrail": failed_guardrail,
+                "can_continue": _yes_no(can_continue),
+                "main_reason": main_reason,
+                "next_action": _next_action(failed_guardrail, status),
+                "schema": _result_status(results["schema"]),
+                "freshness": _result_status(results["freshness"]),
+                "profile_behavior": _result_status(results["profile_behavior"]),
+                "dq": _result_status(results["dq"]),
+                "catalogue": str(catalogue_value or ""),
+            }
+        )
+    return rows
+
+
+def build_guardrail_detail_rows(result_bundle: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Build per-table, per-guardrail diagnostic rows."""
+    rows = []
+    result_groups = {
+        "schema": result_bundle.get("schema_results") or {},
+        "freshness": result_bundle.get("freshness_results") or {},
+        "profile_behavior": result_bundle.get("stability_results") or {},
+        "dq": result_bundle.get("dq_results") or {},
+    }
+    for table in _table_keys(result_bundle):
+        for guardrail, group in result_groups.items():
+            result = group.get(table, {})
+            if not result:
+                continue
+            expected = result.get("expected") or result.get("expected_value_json") or result.get("required_min_value") or result.get("missing_columns") or ""
+            actual = result.get("actual") or result.get("actual_value_json") or result.get("latest_value") or result.get("unexpected_columns") or ""
+            rows.append(
+                {
+                    "table": table,
+                    "guardrail": guardrail,
+                    "status": _result_status(result),
+                    "severity": str(result.get("severity") or result.get("freshness_severity") or "blocking"),
+                    "can_continue": _yes_no(_result_can_continue(result)),
+                    "reason": _guardrail_reason(guardrail, result),
+                    "expected": json.dumps(expected, default=str, sort_keys=True) if isinstance(expected, (dict, list)) else str(expected),
+                    "actual": json.dumps(actual, default=str, sort_keys=True) if isinstance(actual, (dict, list)) else str(actual),
+                    "next_action": _next_action(guardrail, _result_status(result)),
+                }
+            )
+    return rows
+
+
+def _blocking_guardrail_message(summary_rows: list[dict[str, Any]], failed_tables: list[str]) -> str:
+    """Return concise blocking failure message for notebook exceptions."""
+    if len(failed_tables) == 1:
+        table = failed_tables[0]
+        row = next((item for item in summary_rows if item.get("table") == table), {})
+        guardrail = str(row.get("failed_guardrail") or "guardrail").replace("_", " ")
+        reason = str(row.get("main_reason") or "blocking guardrail failed").rstrip(".")
+        prefix = f"{guardrail.capitalize()} failed: "
+        if reason.lower().startswith(prefix.lower()):
+            reason = reason[len(prefix):]
+        return f"Blocking guardrail failure for {table} — {guardrail} failed: {reason}."
+    return f"Blocking guardrail failure for {len(failed_tables)} table(s). See guardrail summary table above for details."
+
+
+def _build_guardrail_blocking_message_from_bundle(result_bundle: Mapping[str, Any]) -> str:
+    """Build the concise blocking message for a guardrail result bundle."""
+    failed_tables = [str(table) for table in result_bundle.get("failed_tables") or []]
+    if not failed_tables:
+        return ""
+    summary_rows = list(result_bundle.get("summary_rows") or build_guardrail_summary_rows(result_bundle))
+    return _blocking_guardrail_message(summary_rows, failed_tables)
+
+
+def _rows_for_display(rows: list[dict[str, Any]], spark_session: Any | None):
+    """Return Spark DataFrame display rows when a Spark session is available."""
+    if spark_session is None or not rows:
+        return rows
+    return spark_session.createDataFrame(rows)
+
+
+def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None) -> Any:
+    """Return guardrail results prepared for summary, detailed, or debug display.
+
+    Parameters
+    ----------
+    result_bundle : mapping
+        Result bundle returned by :func:`run_table_guardrails`.
+    mode : {"summary", "detailed", "debug"}, default="summary"
+        Display mode for notebook output. ``summary`` is compact, ``detailed``
+        is per-guardrail diagnostics, and ``debug`` returns raw nested results.
+    spark_session : pyspark.sql.SparkSession, optional
+        Spark session used to convert summary or detailed rows to a
+        display-friendly DataFrame. When omitted, a list of dictionaries is
+        returned.
+
+    Returns
+    -------
+    Any
+        Summary rows, detail rows, or raw nested debug object.
+
+    """
+    normalized = str(mode or "summary").lower().strip()
+    if normalized == "summary":
+        return _rows_for_display(build_guardrail_summary_rows(result_bundle), spark_session)
+    if normalized == "detailed":
+        return _rows_for_display(build_guardrail_detail_rows(result_bundle), spark_session)
+    if normalized == "debug":
+        return result_bundle.get("summary", result_bundle)
+    raise ValueError("mode must be one of: summary, detailed, debug")
 
 
 def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any = None):
@@ -365,18 +647,27 @@ def run_table_guardrails(
             run_timestamp_timezone=table_config.get("run_timestamp_timezone"),
         )
 
-        schema_results[table_key] = validate_schema(
-            dataframe,
-            table_config["expected_schema"],
-            preset=table_config.get("schema_preset", "strict"),
-        )
+        guardrail_rules_df = table_config.get("guardrail_rules_df")
+        schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
+        freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
+        if schema_rules_df is not None:
+            schema_results[table_key] = validate_schema_rule(dataframe, schema_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
+        else:
+            schema_results[table_key] = validate_schema(
+                dataframe,
+                table_config["expected_schema"],
+                preset=table_config.get("schema_preset", "strict"),
+            )
 
-        freshness_results[table_key] = enforce_freshness(
-            dataframe,
-            table_config.get("freshness_column"),
-            table_config.get("freshness_max_lag_days"),
-            severity=table_config.get("freshness_severity", "blocking"),
-        )
+        if freshness_rules_df is not None:
+            freshness_results[table_key] = enforce_freshness_rule(dataframe, freshness_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
+        else:
+            freshness_results[table_key] = enforce_freshness(
+                dataframe,
+                table_config.get("freshness_column"),
+                table_config.get("freshness_max_lag_days"),
+                severity=table_config.get("freshness_severity", "blocking"),
+            )
 
         stability_results[table_key] = enforce_profile_behavior(
             spark_session,
@@ -397,10 +688,10 @@ def run_table_guardrails(
             current_profile=profiles[table_key],
             write_results=table_config.get("write_profile_behavior_results", True),
             rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL_RULES"),
-            rules_df=table_config.get("profile_behavior_rules_df"),
+            rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
         )
 
-        if table_config.get("dq_preset", "approved_rules") == "skip":
+        if table_config.get("dq_preset", "active_rules") == "skip":
             dq_results[table_key] = {
                 "status": "skipped",
                 "can_continue": True,
@@ -426,7 +717,7 @@ def run_table_guardrails(
             for guardrail_type, rule_type, guardrail_result in (
                 ("schema", table_config.get("schema_preset", "strict"), schema_results[table_key]),
                 ("freshness", table_config.get("freshness_column", "freshness"), freshness_results[table_key]),
-                ("dq", table_config.get("dq_preset", "approved_rules"), dq_results[table_key]),
+                ("dq", table_config.get("dq_preset", "active_rules"), dq_results[table_key]),
             ):
                 _write_guardrail_result_row(
                     spark_session=spark_session,
@@ -484,13 +775,16 @@ def run_table_guardrails(
         "can_continue": not failed_tables,
         "failed_tables": failed_tables,
     }
+    result["summary_rows"] = build_guardrail_summary_rows(result)
+    result["detail_rows"] = build_guardrail_detail_rows(result)
+    result["blocking_message"] = _build_guardrail_blocking_message_from_bundle(result)
 
     if stop_on_failure and failed_tables:
         stop_if_failed(
             {
                 "status": "failed",
                 "can_continue": False,
-                "message": "Blocking guardrail failure for table(s): " + ", ".join(failed_tables),
+                "message": result["blocking_message"],
                 "failed_tables": failed_tables,
             }
         )
@@ -532,8 +826,8 @@ def write_catalogue_evidence(
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context added to each catalogue row.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
-        Runtime guardrail results accepted for API compatibility but not written
-        to ``METADATA_DATA_CATALOGUE``.
+        Runtime guardrail results are accepted by this writer but are not
+        written to ``METADATA_DATA_CATALOGUE``.
     metadata_table : str, default="METADATA_DATA_CATALOGUE"
         Metadata table to append.
     mode : str, default="append"

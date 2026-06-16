@@ -13,7 +13,7 @@ from .data_agreement import (
     widget_select_agreement,
 )
 from .data_profiling import profile_dataframe
-from .guardrails import enforce_freshness, enforce_profile_behavior, stop_if_failed, validate_schema
+from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, validate_schema, validate_schema_rule
 from .fabric_input_output import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -24,6 +24,9 @@ from .fabric_input_output import (
     write_warehouse_table,
 )
 from .pipeline import (
+    build_guardrail_detail_rows,
+    build_guardrail_summary_rows,
+    display_guardrail_results,
     prepare_pipeline_table_configs,
     run_table_guardrails,
     write_catalogue_evidence,
@@ -39,6 +42,16 @@ from .governance_review import (
     widget_review_column_context,
     widget_review_dq_rules,
     widget_select_governance_profile_target,
+    widget_select_guardrail_target,
+    widget_author_schema_freshness_profile_rules,
+    widget_author_dq_rules,
+    resolve_table_governance_policy,
+    guardrail_authoring_status,
+    apply_governance_rule_action,
+    build_table_governance_policy_record,
+    mark_table_governed,
+    mark_table_ungoverned,
+    widget_review_guardrail_governance,
 )
 
 
@@ -74,10 +87,15 @@ __all__ = [
     "write_warehouse_table",
     "profile_dataframe",
     "validate_schema",
+    "validate_schema_rule",
     "enforce_freshness",
+    "enforce_freshness_rule",
     "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
+    "build_guardrail_detail_rows",
+    "build_guardrail_summary_rows",
+    "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
     "write_catalogue_evidence",
@@ -90,4 +108,14 @@ __all__ = [
     "widget_review_dq_rules",
     "widget_review_column_classification",
     "record_table_governance",
+    "widget_select_guardrail_target",
+    "widget_author_schema_freshness_profile_rules",
+    "widget_author_dq_rules",
+    "resolve_table_governance_policy",
+    "guardrail_authoring_status",
+    "apply_governance_rule_action",
+    "build_table_governance_policy_record",
+    "mark_table_governed",
+    "mark_table_ungoverned",
+    "widget_review_guardrail_governance",
 ]

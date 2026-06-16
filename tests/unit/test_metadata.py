@@ -209,8 +209,8 @@ def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
     assert offenders == []
 
 
-def test_public_v1_callable_list_unchanged_after_metadata_cleanup():
-    """Verify public v1 callable list unchanged after metadata cleanup."""
+def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadata_cleanup():
+    """Verify public callable list includes guardrail authoring helpers."""
     assert fabricops_kit.__all__ == [
         "setup_notebook",
         "setup_metadata_tables",
@@ -228,20 +228,35 @@ def test_public_v1_callable_list_unchanged_after_metadata_cleanup():
         "write_warehouse_table",
         "profile_dataframe",
         "validate_schema",
+        "validate_schema_rule",
         "enforce_freshness",
+        "enforce_freshness_rule",
         "enforce_profile_behavior",
         "stop_if_failed",
         "enforce_dq_rules",
-            "prepare_pipeline_table_configs",
+        "build_guardrail_detail_rows",
+        "build_guardrail_summary_rows",
+        "display_guardrail_results",
+        "prepare_pipeline_table_configs",
         "run_table_guardrails",
         "write_catalogue_evidence",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "widget_select_governance_profile_target",
-            "get_selected_catalogue_table",
+        "get_selected_catalogue_table",
         "load_catalogue_profile_rows",
         "widget_review_column_context",
         "widget_review_dq_rules",
         "widget_review_column_classification",
         "record_table_governance",
+        "widget_select_guardrail_target",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_author_dq_rules",
+        "resolve_table_governance_policy",
+        "guardrail_authoring_status",
+        "apply_governance_rule_action",
+        "build_table_governance_policy_record",
+        "mark_table_governed",
+        "mark_table_ungoverned",
+        "widget_review_guardrail_governance",
     ]

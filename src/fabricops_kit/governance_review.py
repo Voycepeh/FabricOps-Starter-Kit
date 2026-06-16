@@ -7,7 +7,7 @@ import importlib
 import json
 import re
 import uuid
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp, _get_audit_timezone
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
@@ -20,7 +20,7 @@ COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
 GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
-GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "engineer_approved", "governance_approved", "rejected", "superseded", "inactive"]
+GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "self_approved", "governance_approved", "bypass_active_pending_review", "rejected", "superseded"]
 COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -80,6 +80,12 @@ def _is_success(row: dict[str, Any]) -> bool:
 
 def _canonical_dq_rule_type(rule_type: Any) -> str:
     return str(rule_type or "").strip()
+
+
+def _normalize_dq_severity(severity: Any) -> str:
+    """Normalize guardrail/DQ severity labels for DQ validation."""
+    value = str(severity or "warning").strip().lower()
+    return "error" if value in {"blocking", "error"} else "warning"
 
 
 def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
@@ -177,24 +183,23 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     audit = [("_committed_at", string), ("_committed_by", string), ("_workspace_name", string), ("_notebook_name", string), ("_metadata_lakehouse_name", string), ("_activity_id", string)]
     catalogue = [
         ("metadata_table_key", string), ("metadata_column_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string),
-        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string), ("baseline_status", string),
+        ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string),
         ("profiled_at", string), ("run_timestamp", timestamp), ("evidence_role", string),
         ("data_type", string), ("row_count", long), ("null_count", long), ("null_percent", double), ("distinct_count", long), ("distinct_percent", double),
         ("min_value", string), ("max_value", string), ("distribution_type", string), ("distribution_json", string),
         ("profile_mode", string), ("watermark_column", string), ("watermark_value", string), ("profile_hash", string), ("profile_payload_json", string),
         ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string),
-        ("source_schema_check", string), ("target_schema_check", string), ("dq_status", string),
         *audit,
     ]
     return {
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
         COLUMN_CONTEXT_TABLE: _schema(COLUMN_CONTEXT_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
-        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), *audit]),
+        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), *audit]),
         GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
         COLUMN_CLASSIFICATION_TABLE: _schema(COLUMN_CLASSIFICATION_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
         PIPELINE_RUNS_TABLE: _schema(PIPELINE_RUNS_TABLE, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
-        GOVERNANCE_REVIEWS_TABLE: _schema(GOVERNANCE_REVIEWS_TABLE, [("review_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("metadata_table_key", string), ("profile_run_id", string), ("profile_stage", string), ("pipeline_run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("outcome", string), ("blocker_count", long), ("warning_count", long), ("blockers_json", string), ("warnings_json", string), ("evidence_summary_json", string), ("reviewed_at", string), ("reviewed_by", string), *audit]),
+        GOVERNANCE_REVIEWS_TABLE: _schema(GOVERNANCE_REVIEWS_TABLE, [("review_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("metadata_table_key", string), ("profile_run_id", string), ("profile_stage", string), ("pipeline_run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("outcome", string), ("blocker_count", long), ("warning_count", long), ("blockers_json", string), ("warnings_json", string), ("evidence_summary_json", string), ("reviewed_at", string), ("reviewed_by", string), ("governance_mode", string), ("approval_policy", string), ("governance_status", string), ("approval_bypass_allowed", boolean), ("requires_post_review", boolean), ("policy_reason", string), ("effective_from", string), ("effective_to", string), *audit]),
     }
 
 
@@ -498,24 +503,24 @@ def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict
 
 
 def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved DQ-rule records without enforcing them."""
+    """Build append-only governance-approved DQ-rule records without enforcing them."""
     profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
     rows = []
     for rule in reviewed_rules or []:
         if not rule.get("commit"):
             continue
-        review_status = str(rule.get("review_status", "approved")).lower()
+        review_status = str(rule.get("review_status", "governance_approved")).lower()
         action_type = str(rule.get("action_type") or ("created" if rule.get("is_active", True) else "deactivated")).lower()
         if action_type == "delete":
             action_type = "deactivated"
-        if action_type not in {"created", "updated", "deactivated", "reactivated", "approved"}:
+        if action_type not in {"created", "updated", "deactivated", "reactivated"}:
             raise ValueError(f"Unsupported DQ action_type: {action_type}")
         is_active = bool(rule.get("is_active", action_type != "deactivated"))
         if action_type == "deactivated":
             is_active = False
         if action_type == "reactivated":
             is_active = True
-        if review_status != "approved":
+        if review_status != "governance_approved":
             continue
         draft = dict(rule)
         draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
@@ -539,7 +544,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             "guardrail_type": str(rule.get("guardrail_type") or "dq"),
             "rule_type": draft["rule_type"],
             "rule_parameters_json": _json(params),
-            "severity": str(rule.get("severity") or "warning").lower(),
+            "severity": _normalize_dq_severity(draft.get("severity")),
             "description": str(rule.get("description") or ""),
             "is_active": is_active,
             "review_status": str(rule.get("target_review_status") or "governance_approved"),
@@ -785,7 +790,7 @@ def widget_review_dq_rules(
             "severity": severity.value,
             "description": description.value,
             "is_active": action_type != "deactivated",
-            "review_status": "approved",
+            "review_status": "self_approved",
             "action_type": action_type,
             "commit": True,
             **extra,
@@ -853,7 +858,7 @@ def widget_review_dq_rules(
     if hasattr(existing_select, "observe"):
         existing_select.observe(lambda change: load_existing(), names="value")
 
-    create_button = widgets.Button(description="Save approved active rule", button_style="success")
+    create_button = widgets.Button(description="Save active rule", button_style="success")
     update_button = widgets.Button(description="Update selected rule", button_style="info")
     delete_button = widgets.Button(description="Delete / deactivate", button_style="warning")
     reactivate_button = widgets.Button(description="Reactivate", button_style="success")
@@ -1103,8 +1108,10 @@ def record_table_governance(
     spark_session : pyspark.sql.SparkSession
         Spark session used to create DataFrames for metadata writes.
     context_reviews, dq_rule_reviews, classification_reviews : list of dict, optional
-        Human-approved rows from the governance review workflow. Only rows with
-        ``review_status="approved"`` and ``commit=True`` are written.
+        Human-reviewed rows from the governance review workflow. Business context
+        and classification rows use ``review_status="approved"``. DQ rule rows
+        use ``review_status="governance_approved"``. All rows must set
+        ``commit=True`` to be written.
     approved_by : str, optional
         Reviewer identity to stamp on records. When omitted, runtime defaults
         are used.
@@ -1272,13 +1279,12 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
             raise ValueError(f"DQ rule at index {i} must be a dictionary.")
         rule.setdefault("rule_id", f"dq_rule_{i + 1}")
         rule.setdefault("severity", "warning")
+        rule["severity"] = _normalize_dq_severity(rule.get("severity"))
         rule.setdefault("description", "")
         rule["rule_type"] = _canonical_dq_rule_type(rule.get("rule_type"))
         rtype = rule["rule_type"]
         if rtype not in DQ_RULE_TYPES:
             raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
-        if str(rule.get("severity", "warning")).lower() not in {"warning", "error"}:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' severity must be warning or error.")
 
         if rtype in {"not_null", "non_empty_string", "required_when"}:
             require_columns(rule, minimum=1)
@@ -1344,16 +1350,18 @@ def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None 
 
 
 def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
-    """Load active approved DQ rules from append-only metadata rows."""
+    """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, _ = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
     latest = _latest_dq_rule_versions(metadata_df, table_name, env_name=env_name, dataset_name=dataset_name)
-    if "is_active" in columns:
-        latest = latest.filter(F.col("is_active") == True)
+    if "is_active" not in columns:
+        return []
+    latest = latest.filter(F.col("is_active") == True)
     if "action_type" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
-    if "review_status" in columns:
-        latest = latest.filter(F.lower(F.coalesce(F.col("review_status"), F.lit("governance_approved"))).isin("approved", "engineer_approved", "governance_approved"))
+    if "review_status" not in columns:
+        return []
+    latest = latest.filter(F.lower(F.col("review_status")).isin("self_approved", "governance_approved", "bypass_active_pending_review"))
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
@@ -1373,8 +1381,9 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
                 "rule_id": str(row.get("rule_id") or ""),
                 "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
                 "columns": rule_columns,
-                "severity": str(row.get("severity") or "warning"),
+                "severity": _normalize_dq_severity(row.get("severity")),
                 "description": str(row.get("description") or ""),
+                "review_status": str(row.get("review_status") or ""),
                 **params,
             }
         )
@@ -1486,7 +1495,7 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
         failed_count = int(
             failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0
         )
-        severity = str(rule.get("severity", "warning")).strip().lower()
+        severity = _normalize_dq_severity(rule.get("severity"))
         columns = [str(column) for column in rule.get("columns", [])]
         check_status = _dq_check_status(severity, failed_count)
         check = {
@@ -1522,12 +1531,12 @@ def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
     error_failures = [
         F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
         for rule in sorted_rules
-        if str(rule.get("severity", "warning")).strip().lower() == "error"
+        if _normalize_dq_severity(rule.get("severity")) == "error"
     ]
     warning_failures = [
         F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
         for rule in sorted_rules
-        if str(rule.get("severity", "warning")).strip().lower() != "error"
+        if _normalize_dq_severity(rule.get("severity")) != "error"
     ]
     error_count = error_failures[0] if error_failures else F.lit(0)
     for failure in error_failures[1:]:
@@ -1589,11 +1598,11 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
         can_continue = True
     failed_checks = [check for check in checks if check.get("status") in {"warning", "failed"}]
     if not checks:
-        message = "No active approved DQ rules found."
+        message = "No active guardrail DQ rules found."
     elif failed_checks:
         message = f"DQ guardrail found {len(failed_checks)} rule failure(s): {status}."
     else:
-        message = f"DQ guardrail passed {len(checks)} active approved rule(s)."
+        message = f"DQ guardrail passed {len(checks)} active guardrail rule(s)."
     return {"status": status, "can_continue": can_continue, "checks": checks, "message": message}
 
 
@@ -1618,7 +1627,7 @@ def enforce_dq_rules(
     run_id: str = "",
     write_results: bool = False,
 ) -> dict:
-    """Enforce active approved DQ rules as a simple pipeline guardrail.
+    """Enforce active DQ guardrail rules as a simple pipeline guardrail.
 
     Parameters
     ----------
@@ -1632,10 +1641,10 @@ def enforce_dq_rules(
         Environment name used to read ``METADATA_GUARDRAIL_RULES`` from the
         configured metadata target.
     dataset_name : str
-        Dataset identifier used with ``table_name`` to scope approved DQ rules
+        Dataset identifier used with ``table_name`` to scope active DQ guardrail rules
         when those columns exist in the metadata table.
     table_name : str
-        Target table name whose approved active DQ rules should be enforced.
+        Target table name whose active DQ guardrail rules should be enforced.
     spark_session : pyspark.sql.SparkSession, optional
         Spark session used to read metadata when required by the configured
         storage helper.
@@ -1658,7 +1667,7 @@ def enforce_dq_rules(
 
     Notes
     -----
-    This v1 guardrail reads approved active DQ rules from
+    This v1 guardrail reads active DQ guardrail rules from
     ``METADATA_GUARDRAIL_RULES`` via the configured metadata route and writes the aggregate runtime
     outcome to ``METADATA_GUARDRAIL_RESULTS`` when result writing is enabled. It
     does not quarantine rows, write row-level failure metadata, filter invalid
@@ -1671,6 +1680,10 @@ def enforce_dq_rules(
     total_count = int(dataframe.count())
     failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
     result = _summarize_dq_guardrail(checks)
+    if any(str(rule.get("review_status") or "").lower() == "bypass_active_pending_review" for rule in rules):
+        warning = "Rule is active through approval bypass and requires governance post-review."
+        result["reason"] = warning if not result.get("reason") else f"{result.get('reason')} {warning}"
+        result["bypass_warning"] = warning
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
     result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
     if write_results:
@@ -1682,9 +1695,9 @@ def enforce_dq_rules(
             dataset_name=dataset_name,
             table_name=table_name,
             guardrail_type="dq",
-            rule_type="approved_rules",
+            rule_type="active_rules",
             result=result,
-            rule_key="dq_approved_rules",
+            rule_key="dq_active_rules",
         )
     return result
 
@@ -1725,3 +1738,863 @@ def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_conte
     rules = list(by_id.values())
     _validate_dq_rules(rules)
     return rules
+
+
+def resolve_table_governance_policy(governance_rows: Any, *, environment_name: str = "", dataset_name: str = "", table_name: str = "", metadata_table_key: str = "") -> dict[str, Any]:
+    """Return the latest active table-level governance policy.
+
+    Parameters
+    ----------
+    governance_rows : Any
+        Governance review rows or a DataFrame-like object containing rows from
+        ``METADATA_GOVERNANCE_REVIEWS``.
+    environment_name, dataset_name, table_name, metadata_table_key : str, optional
+        Table identity used to filter policy rows.
+
+    Returns
+    -------
+    dict[str, Any]
+        Effective policy. Tables default to ungoverned with no approval
+        required unless the latest active policy row marks them governed.
+
+    """
+    default = {"governance_mode": "ungoverned", "approval_policy": "no_approval_required", "governance_status": "active", "approval_bypass_allowed": False, "requires_post_review": False}
+    rows = []
+    for row in _coerce_rows(governance_rows):
+        if metadata_table_key and str(row.get("metadata_table_key") or "") not in {"", metadata_table_key}:
+            continue
+        if environment_name and str(row.get("environment_name") or "") not in {"", environment_name}:
+            continue
+        if dataset_name and str(row.get("dataset_name") or "") not in {"", dataset_name}:
+            continue
+        if table_name and str(row.get("table_name") or "") != table_name:
+            continue
+        if str(row.get("governance_status") or "active").lower() != "active":
+            continue
+        rows.append(row)
+    if not rows:
+        return default
+    rows.sort(key=lambda row: str(row.get("effective_from") or row.get("reviewed_at") or row.get("_committed_at") or ""), reverse=True)
+    latest = rows[0]
+    mode = str(latest.get("governance_mode") or "ungoverned").lower()
+    policy = str(latest.get("approval_policy") or ("approval_required" if mode == "governed" else "no_approval_required")).lower()
+    return {**default, **latest, "governance_mode": mode, "approval_policy": policy, "approval_bypass_allowed": bool(latest.get("approval_bypass_allowed", policy == "approval_required_with_bypass"))}
+
+
+def guardrail_authoring_status(policy: Mapping[str, Any], *, bypass_reason: str = "", actor: str | None = None, config: Any = None) -> dict[str, Any]:
+    """Return rule lifecycle fields for engineering-authored guardrail rules.
+
+    Parameters
+    ----------
+    policy : mapping
+        Effective table governance policy.
+    bypass_reason : str, optional
+        User-entered justification when bypassing required approval.
+    actor : str, optional
+        Current user identifier.
+    config : Any, optional
+        Runtime configuration used for timestamp formatting.
+
+    Returns
+    -------
+    dict[str, Any]
+        Lifecycle fields for a ``METADATA_GUARDRAIL_RULES`` row.
+
+    """
+    governed = str(policy.get("governance_mode") or "ungoverned").lower() == "governed"
+    if not governed:
+        return {"is_active": True, "review_status": "self_approved", "approval_required": False, "approval_bypassed": False, "requires_post_review": False, "author_role": "engineering", "governance_mode": "ungoverned", "approval_policy": "no_approval_required"}
+    if bypass_reason:
+        return {"is_active": True, "review_status": "bypass_active_pending_review", "approval_required": True, "approval_bypassed": True, "requires_post_review": True, "bypass_reason": bypass_reason, "bypassed_by": _resolve_action_by(actor), "bypassed_at": _now_utc_iso(config), "author_role": "engineering", "governance_mode": "governed", "approval_policy": str(policy.get("approval_policy") or "approval_required_with_bypass")}
+    return {"is_active": False, "review_status": "proposed", "approval_required": True, "approval_bypassed": False, "requires_post_review": False, "author_role": "engineering", "governance_mode": "governed", "approval_policy": str(policy.get("approval_policy") or "approval_required")}
+
+
+def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor: str | None = None, superseded_by_rule_key: str = "", config: Any = None) -> dict[str, Any]:
+    """Return an append-only governance action row for a rule.
+
+    Parameters
+    ----------
+    rule : mapping
+        Existing rule row.
+    action : str
+        One of ``approve``, ``reject``, or ``supersede``.
+    actor : str, optional
+        Reviewer identity.
+    superseded_by_rule_key : str, optional
+        Replacement rule key for supersede actions.
+    config : Any, optional
+        Runtime configuration used for timestamps.
+
+    Returns
+    -------
+    dict[str, Any]
+        Rule row with updated governance lifecycle fields.
+
+    """
+    row = dict(rule)
+    now = _now_utc_iso(config)
+    if action == "approve":
+        row.update({"is_active": True, "review_status": "governance_approved", "approved_by": _resolve_action_by(actor), "approved_at": now, "requires_post_review": False})
+    elif action == "reject":
+        row.update({"is_active": False, "review_status": "rejected"})
+    elif action == "supersede":
+        row.update({"is_active": False, "review_status": "superseded", "superseded_by_rule_key": superseded_by_rule_key})
+    else:
+        raise ValueError("action must be one of approve, reject, or supersede")
+    return row
+
+
+def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str, rule_type: str, column_name: str = "", parameters: Mapping[str, Any] | None = None, severity: str = "warning", description: str = "", policy: Mapping[str, Any] | None = None, bypass_reason: str = "", actor: str | None = None, source_notebook_type: str = "02_pipeline", config: Any = None) -> dict[str, Any]:
+    """Build one ``METADATA_GUARDRAIL_RULES`` record for widget save actions."""
+    env_name = str(state.get("environment_name") or "")
+    dataset = str(state.get("dataset_name") or "")
+    table = str(state.get("table_name") or "")
+    rule_id = f"{table}.{column_name or '_table'}.{guardrail_type}.{rule_type}"
+    lifecycle = guardrail_authoring_status(policy or state, bypass_reason=bypass_reason, actor=actor, config=config)
+    return {"rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env_name, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)), "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": _resolve_action_by(actor), "created_at": _now_utc_iso(config), "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
+
+
+def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
+    """Read a metadata table and return row dictionaries."""
+    try:
+        frame = read_lakehouse_table(
+            config,
+            env,
+            "metadata",
+            table_name,
+            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            spark_session=spark_session,
+        )
+    except Exception as exc:
+        if _is_table_not_found_error(exc):
+            return []
+        raise
+    return _coerce_rows(frame)
+
+
+def _filter_table_rows(rows: Iterable[Mapping[str, Any]], *, environment_name: str, dataset_name: str, table_name: str, metadata_table_key: str = "") -> list[dict[str, Any]]:
+    """Return rows matching a selected table identity."""
+    filtered = []
+    for row in rows:
+        item = dict(row)
+        if metadata_table_key and str(item.get("metadata_table_key") or "") not in {"", metadata_table_key}:
+            continue
+        if environment_name and str(item.get("environment_name") or "") not in {"", environment_name}:
+            continue
+        if dataset_name and str(item.get("dataset_name") or "") not in {"", dataset_name}:
+            continue
+        if table_name and str(item.get("table_name") or "") != table_name:
+            continue
+        filtered.append(item)
+    return filtered
+
+
+def _latest_rule(existing_rules: Iterable[Mapping[str, Any]], guardrail_type: str, rule_type: str | None = None, column_name: str | None = None) -> dict[str, Any]:
+    """Return the newest matching rule row for widget prepopulation."""
+    matches = []
+    for row in existing_rules or []:
+        item = dict(row)
+        if str(item.get("guardrail_type") or "") != guardrail_type:
+            continue
+        if rule_type is not None and str(item.get("rule_type") or "") != rule_type:
+            continue
+        if column_name is not None and str(item.get("column_name") or "") != column_name:
+            continue
+        matches.append(item)
+    matches.sort(key=lambda row: str(row.get("created_at") or row.get("approved_at") or row.get("_committed_at") or ""), reverse=True)
+    return matches[0] if matches else {}
+
+
+def _rule_params(rule: Mapping[str, Any]) -> dict[str, Any]:
+    """Return parsed rule parameters for widget prepopulation."""
+    raw = rule.get("rule_parameters_json") or "{}"
+    try:
+        return json.loads(raw) if isinstance(raw, str) else dict(raw or {})
+    except Exception:
+        return {}
+
+
+def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
+    """Append rule records to ``METADATA_GUARDRAIL_RULES``."""
+    if not records:
+        return
+    write_lakehouse_table(
+        spark_session.createDataFrame(records),
+        config,
+        env,
+        "metadata",
+        GUARDRAIL_RULES_TABLE,
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        mode="append",
+    )
+
+
+def _write_governance_policy_record(record: dict[str, Any], *, config: Any, env: str, spark_session: Any) -> None:
+    """Append a policy row to ``METADATA_GOVERNANCE_REVIEWS``."""
+    write_lakehouse_table(
+        spark_session.createDataFrame([record]),
+        config,
+        env,
+        "metadata",
+        GOVERNANCE_REVIEWS_TABLE,
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        mode="append",
+    )
+
+
+def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any) -> dict[str, Any]:
+    """Render an interactive guardrail target selector and return handover state.
+
+    Parameters
+    ----------
+    config : Any
+        Runtime configuration containing metadata lakehouse routing.
+    env : str
+        Environment name used to read metadata tables.
+    spark_session : Any
+        Spark session for metadata reads.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mutable handover state containing table identity, catalogue profile rows,
+        existing rules, and effective table governance policy. The returned
+        state updates when the user changes the selected target.
+
+    """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    catalogue = _read_metadata_table_or_empty(config, env, CATALOGUE_TABLE, spark_session=spark_session)
+    rules = _read_metadata_table_or_empty(config, env, GUARDRAIL_RULES_TABLE, spark_session=spark_session)
+    reviews = _read_metadata_table_or_empty(config, env, GOVERNANCE_REVIEWS_TABLE, spark_session=spark_session)
+    if not catalogue:
+        raise ValueError("METADATA_DATA_CATALOGUE has no guardrail targets.")
+
+    targets = {}
+    for row in catalogue:
+        environment_name = str(row.get("environment_name") or env)
+        dataset_name = str(row.get("dataset_name") or "")
+        table_name = str(row.get("table_name") or "")
+        if not table_name:
+            continue
+        metadata_table_key = str(row.get("metadata_table_key") or _build_metadata_table_key(environment_name, dataset_name, table_name))
+        key = (environment_name, dataset_name, table_name, metadata_table_key)
+        label = f"{environment_name} / {dataset_name or '(no dataset)'} / {table_name}"
+        targets.setdefault(label, key)
+    if not targets:
+        raise ValueError("METADATA_DATA_CATALOGUE has no table-level guardrail targets.")
+
+    target_dropdown = widgets.Dropdown(options=[(label, value) for label, value in sorted(targets.items())], description="Target", layout=widgets.Layout(width="760px"))
+    governance_badge = widgets.HTML()
+    profile_preview = widgets.HTML()
+    rules_preview = widgets.HTML()
+    state: dict[str, Any] = {}
+
+    def refresh(*_: Any) -> None:
+        environment_name, dataset_name, table_name, metadata_table_key = target_dropdown.value
+        table_rows = _filter_table_rows(catalogue, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        table_rules = _filter_table_rows(rules, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        policy = resolve_table_governance_policy(reviews, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        latest = sorted(table_rows, key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or row.get("profile_run_id") or ""), reverse=True)[0]
+        columns = sorted({str(row.get("column_name") or "") for row in table_rows if row.get("column_name")})
+        state.clear()
+        state.update(
+            {
+                "environment_name": environment_name,
+                "dataset_name": dataset_name,
+                "table_name": table_name,
+                "metadata_table_key": metadata_table_key,
+                "profile_run_id": str(latest.get("profile_run_id") or ""),
+                "profile_stage": str(latest.get("profile_stage") or ""),
+                "columns": columns,
+                "catalogue_profile_rows": table_rows,
+                "existing_rules": table_rules,
+                **policy,
+            }
+        )
+        governance_badge.value = f"<b>Governance:</b> {state['governance_mode']} · <b>Approval policy:</b> {state['approval_policy']} · <b>Bypass allowed:</b> {state['approval_bypass_allowed']}"
+        profile_preview.value = f"<b>Profile rows:</b> {len(table_rows)} · <b>Columns:</b> {', '.join(columns) if columns else '(none)'}"
+        rules_preview.value = f"<b>Existing guardrail rules:</b> {len(table_rules)}"
+
+    target_dropdown.observe(refresh, names="value")
+    refresh()
+    state["_controls"] = {"target": target_dropdown, "governance_badge": governance_badge, "profile_preview": profile_preview, "rules_preview": rules_preview}
+    ip.display(widgets.VBox([widgets.HTML("<h3>Select guardrail target</h3>"), target_dropdown, governance_badge, profile_preview, rules_preview]))
+    return state
+
+def _schema_freshness_profile_records_from_selection(
+    state: Mapping[str, Any],
+    *,
+    selected_columns: Iterable[str],
+    schema_mode: str,
+    freshness_mode: str,
+    freshness_column: str,
+    max_lag_days: int | str,
+    profile_mode: str,
+    watermark_column: str,
+    bypass_reason: str = "",
+    config: Any = None,
+) -> list[dict[str, Any]]:
+    """Build schema, freshness, and profile behavior rule rows from selections."""
+    if str(profile_mode) == "changing_data" and not str(watermark_column or "").strip():
+        raise ValueError("watermark_column is required when profile_mode is changing_data")
+    if str(freshness_mode) == "enforce":
+        try:
+            lag_days = int(max_lag_days)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("max_lag_days must be a non-negative integer") from exc
+        if lag_days < 0:
+            raise ValueError("max_lag_days must be a non-negative integer")
+    else:
+        lag_days = 0
+    columns = [str(column) for column in selected_columns]
+    data_types = {str(row.get("column_name") or ""): str(row.get("data_type") or "") for row in state.get("catalogue_profile_rows", [])}
+    return [
+        _base_guardrail_rule_record(
+            state,
+            guardrail_type="schema",
+            rule_type=str(schema_mode),
+            parameters={"columns": columns, "data_types": {column: data_types.get(column, "") for column in columns}},
+            description="Selected-table schema guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        ),
+        _base_guardrail_rule_record(
+            state,
+            guardrail_type="freshness",
+            rule_type="max_lag_days" if str(freshness_mode) == "enforce" else "skip",
+            parameters={"freshness_column": freshness_column if str(freshness_mode) == "enforce" else "", "max_lag_days": lag_days},
+            description="Freshness guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        ),
+        _base_guardrail_rule_record(
+            state,
+            guardrail_type="profile_behavior",
+            rule_type=str(profile_mode),
+            parameters={"watermark_column": watermark_column if str(profile_mode) == "changing_data" else ""},
+            description="Profile behavior guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        ),
+    ]
+
+
+def widget_author_schema_freshness_profile_rules(
+    state: Mapping[str, Any],
+    *,
+    config: Any = None,
+    env: str | None = None,
+    spark_session: Any = None,
+    bypass_reason: str = "",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Render interactive schema, freshness, and profile behavior authoring UI.
+
+    Parameters
+    ----------
+    state : mapping
+        Handover state from :func:`widget_select_guardrail_target`.
+    config, env, spark_session : Any, optional
+        Runtime objects used for save actions.
+    bypass_reason : str, optional
+        Initial approval-bypass reason.
+    commit : bool, default=False
+        Whether to save the initial generated records immediately.
+
+    Returns
+    -------
+    dict[str, Any]
+        Widget state containing controls, generated records, and callable
+        ``build_records``/``save`` helpers for tests and notebook automation.
+
+    """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    columns = list(state.get("columns") or [])
+    existing_rules = list(state.get("existing_rules") or [])
+    schema_rule = _latest_rule(existing_rules, "schema")
+    schema_params = _rule_params(schema_rule)
+    selected_schema_columns = tuple(column for column in (schema_params.get("columns") or columns) if column in columns)
+    freshness_rule = _latest_rule(existing_rules, "freshness")
+    freshness_params = _rule_params(freshness_rule)
+    profile_rule = _latest_rule(existing_rules, "profile_behavior")
+    profile_params = _rule_params(profile_rule)
+
+    schema_columns = widgets.SelectMultiple(options=columns, value=selected_schema_columns or tuple(columns), description="Columns", rows=min(max(len(columns), 4), 12), layout=widgets.Layout(width="420px"))
+    schema_mode = widgets.Dropdown(options=["strict", "relaxed", "skip"], value=str(schema_rule.get("rule_type") or "relaxed"), description="Schema mode")
+    freshness_mode = widgets.Dropdown(options=["enforce", "skip"], value="skip" if str(freshness_rule.get("rule_type") or "skip") == "skip" else "enforce", description="Freshness")
+    freshness_column = widgets.Dropdown(options=[""] + columns, value=str(freshness_params.get("freshness_column") or freshness_rule.get("column_name") or ""), description="Column")
+    max_lag = widgets.BoundedIntText(value=int(freshness_params.get("max_lag_days") or 0), min=0, description="Max lag days")
+    profile_mode = widgets.Dropdown(options=["static_data", "changing_data", "skip"], value=str(profile_rule.get("rule_type") or "static_data"), description="Profile mode")
+    watermark_column = widgets.Dropdown(options=[""] + columns, value=str(profile_params.get("watermark_column") or profile_rule.get("column_name") or ""), description="Watermark")
+    bypass_box = widgets.Textarea(value=bypass_reason, description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
+    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="220px"))
+    message = widgets.HTML()
+    records_state: dict[str, Any] = {"records": []}
+
+    governed = str(state.get("governance_mode") or "ungoverned") == "governed"
+    primary_label = "Submit for governance approval" if governed else "Save active rules"
+    save_button = widgets.Button(description=primary_label, button_style="success")
+    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
+    bypass_button.layout.display = "" if governed and bool(state.get("approval_bypass_allowed")) else "none"
+    cancel_button = widgets.Button(description="Cancel")
+
+    def build_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        return _schema_freshness_profile_records_from_selection(
+            state,
+            selected_columns=list(schema_columns.value),
+            schema_mode=schema_mode.value,
+            freshness_mode=freshness_mode.value,
+            freshness_column=freshness_column.value,
+            max_lag_days=max_lag.value,
+            profile_mode=profile_mode.value,
+            watermark_column=watermark_column.value,
+            bypass_reason=reason,
+            config=config,
+        )
+
+    def refresh_preview(*_: Any) -> None:
+        try:
+            records_state["records"] = build_records(use_bypass=False)
+            preview.value = json.dumps(records_state["records"], indent=2, default=str)
+            message.value = ""
+        except Exception as exc:
+            preview.value = ""
+            message.value = f"<b style='color:#b00020'>Validation error:</b> {exc}"
+
+    def save(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        records = build_records(use_bypass=use_bypass)
+        records_state["records"] = records
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save."
+            return records
+        _write_rule_records(records, config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {len(records)} guardrail rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
+        return records
+
+    def cancel(_: Any = None) -> None:
+        records_state["records"] = []
+        preview.value = ""
+        message.value = "<b>Cancelled.</b>"
+
+    for control in (schema_columns, schema_mode, freshness_mode, freshness_column, max_lag, profile_mode, watermark_column, bypass_box):
+        control.observe(lambda change: refresh_preview(), names="value")
+    save_button.on_click(lambda _: save(use_bypass=False))
+    bypass_button.on_click(lambda _: save(use_bypass=True))
+    cancel_button.on_click(cancel)
+    refresh_preview()
+    if commit:
+        save(use_bypass=bool(bypass_reason))
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>Author schema, freshness, and profile behavior rules</h3>"),
+        widgets.HTML(f"<b>Table:</b> {state.get('dataset_name', '')}.{state.get('table_name', '')} · <b>Governance:</b> {state.get('governance_mode', 'ungoverned')}"),
+        widgets.HTML("<h4>Schema guardrail</h4>"),
+        widgets.HBox([schema_mode, schema_columns]),
+        widgets.HTML("<h4>Freshness guardrail</h4>"),
+        widgets.HBox([freshness_mode, freshness_column, max_lag]),
+        widgets.HTML("<h4>Profile behavior guardrail</h4>"),
+        widgets.HBox([profile_mode, watermark_column]),
+        bypass_box,
+        preview,
+        widgets.HBox([save_button, bypass_button, cancel_button]),
+        message,
+    ])
+    ip.display(ui)
+    return {"records": records_state["records"], "controls": {"schema_columns": schema_columns, "schema_mode": schema_mode, "freshness_mode": freshness_mode, "freshness_column": freshness_column, "max_lag": max_lag, "profile_mode": profile_mode, "watermark_column": watermark_column, "bypass_reason": bypass_box}, "build_records": build_records, "save": save, "ui": ui}
+
+def _dq_records_from_selection(
+    state: Mapping[str, Any],
+    *,
+    rule_type: str,
+    selected_columns: Iterable[str],
+    parameters: Mapping[str, Any] | None = None,
+    severity: str = "warning",
+    bypass_reason: str = "",
+    action_type: str = "created",
+    config: Any = None,
+) -> list[dict[str, Any]]:
+    """Build DQ rule records from selected columns."""
+    records = []
+    for column in selected_columns:
+        record = _base_guardrail_rule_record(
+            state,
+            guardrail_type="dq",
+            rule_type=rule_type,
+            column_name=str(column),
+            parameters={"columns": [str(column)], **dict(parameters or {})},
+            severity=severity,
+            description=f"{rule_type} DQ guardrail",
+            bypass_reason=bypass_reason,
+            config=config,
+        )
+        record["action_type"] = action_type
+        if action_type in {"deactivated", "superseded"}:
+            record["is_active"] = False
+            record["review_status"] = "superseded" if action_type == "superseded" else "rejected"
+        records.append(record)
+    return records
+
+
+def widget_author_dq_rules(
+    state: Mapping[str, Any],
+    *,
+    dq_authoring_mode: str = "manual",
+    rule_type: str = "not_null",
+    selected_columns: Iterable[str] | None = None,
+    parameters: Mapping[str, Any] | None = None,
+    severity: str = "warning",
+    config: Any = None,
+    env: str | None = None,
+    spark_session: Any = None,
+    bypass_reason: str = "",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Render interactive manual or AI-assisted DQ rule authoring UI.
+
+    Parameters
+    ----------
+    state : mapping
+        Handover state from :func:`widget_select_guardrail_target`.
+    dq_authoring_mode : {"manual", "ai_suggest"}, default="manual"
+        Authoring mode selected before the notebook cell runs.
+    rule_type : str, default="not_null"
+        Initial DQ rule type for manual mode.
+    selected_columns : iterable of str, optional
+        Initial batch-selected columns. Defaults to all selected table columns.
+    parameters : mapping, optional
+        Initial JSON rule parameters.
+    severity : str, default="warning"
+        Initial rule severity.
+    config, env, spark_session : Any, optional
+        Runtime objects used for AI suggestions and saves.
+    bypass_reason : str, optional
+        Initial approval-bypass reason.
+    commit : bool, default=False
+        Whether to save the initial generated records immediately.
+
+    Returns
+    -------
+    dict[str, Any]
+        Widget state containing controls, generated records, suggestions, and
+        callable helpers for tests and notebook automation.
+
+    """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    columns = list(state.get("columns") or [])
+    initial_columns = tuple(column for column in (selected_columns or columns) if column in columns)
+    existing_rules = list(state.get("existing_rules") or [])
+    existing_dq = [row for row in existing_rules if str(row.get("guardrail_type") or "") == "dq"]
+    mode = str(dq_authoring_mode or "manual")
+
+    batch_rule_type = widgets.Dropdown(options=DQ_RULE_TYPES, value=rule_type if rule_type in DQ_RULE_TYPES else "not_null", description="Rule type")
+    batch_columns = widgets.SelectMultiple(options=columns, value=initial_columns or tuple(columns), description="Columns", rows=min(max(len(columns), 4), 12), layout=widgets.Layout(width="420px"))
+    batch_params = widgets.Textarea(value=json.dumps(parameters or {}, indent=2), description="Parameters", layout=widgets.Layout(width="760px", height="90px"))
+    batch_severity = widgets.ToggleButtons(options=["warning", "error"], value=severity if severity in {"warning", "error"} else "warning", description="Severity")
+
+    search_column = widgets.Combobox(options=columns, value=columns[0] if columns else "", description="Column")
+    individual_rule_type = widgets.Dropdown(options=DQ_RULE_TYPES, value=rule_type if rule_type in DQ_RULE_TYPES else "not_null", description="Rule")
+    individual_params = widgets.Textarea(value="{}", description="Parameters", layout=widgets.Layout(width="760px", height="90px"))
+    bypass_box = widgets.Textarea(value=bypass_reason, description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
+    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="220px"))
+    history = widgets.HTML("<pre>" + json.dumps(existing_dq, indent=2, default=str) + "</pre>")
+    suggestions_html = widgets.HTML()
+    message = widgets.HTML()
+    records_state: dict[str, Any] = {"records": [], "suggestions": []}
+
+    governed = str(state.get("governance_mode") or "ungoverned") == "governed"
+    primary_label = "Submit for governance approval" if governed else "Save active rules"
+    save_batch_button = widgets.Button(description=primary_label, button_style="success")
+    save_one_button = widgets.Button(description="Save/update selected rule", button_style="info")
+    clear_one_button = widgets.Button(description="Clear / supersede selected rule", button_style="warning")
+    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
+    bypass_button.layout.display = "" if governed and bool(state.get("approval_bypass_allowed")) else "none"
+    ai_button = widgets.Button(description="Generate AI suggestions")
+    ai_button.layout.display = "" if mode == "ai_suggest" else "none"
+    approve_ai_button = widgets.Button(description="Approve AI suggestions", button_style="success")
+    reject_ai_button = widgets.Button(description="Reject AI suggestions")
+
+    def _batch_parameters() -> dict[str, Any]:
+        try:
+            return json.loads(batch_params.value or "{}")
+        except json.JSONDecodeError as exc:
+            raise ValueError("Parameters must be valid JSON") from exc
+
+    def _individual_parameters() -> dict[str, Any]:
+        try:
+            return json.loads(individual_params.value or "{}")
+        except json.JSONDecodeError as exc:
+            raise ValueError("Individual parameters must be valid JSON") from exc
+
+    def load_existing_individual(*_: Any) -> None:
+        rule = _latest_rule(existing_dq, "dq", individual_rule_type.value, search_column.value)
+        params = _rule_params(rule)
+        params.pop("columns", None)
+        individual_params.value = json.dumps(params, indent=2, default=str)
+
+    def build_batch_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        return _dq_records_from_selection(state, rule_type=batch_rule_type.value, selected_columns=list(batch_columns.value), parameters=_batch_parameters(), severity=batch_severity.value, bypass_reason=reason, config=config)
+
+    def build_individual_record(*, action_type: str = "created", use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        return _dq_records_from_selection(state, rule_type=individual_rule_type.value, selected_columns=[search_column.value], parameters=_individual_parameters(), severity=batch_severity.value, bypass_reason=reason, action_type=action_type, config=config)
+
+    def refresh_preview(*_: Any) -> None:
+        try:
+            records_state["records"] = build_batch_records(use_bypass=False)
+            preview.value = json.dumps(records_state["records"], indent=2, default=str)
+            message.value = ""
+        except Exception as exc:
+            preview.value = ""
+            message.value = f"<b style='color:#b00020'>Validation error:</b> {exc}"
+
+    def save_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        records_state["records"] = records
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save."
+            return records
+        _write_rule_records(records, config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
+        return records
+
+    def save_batch(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        return save_records(build_batch_records(use_bypass=use_bypass))
+
+    def save_individual(*, action_type: str = "created", use_bypass: bool = False) -> list[dict[str, Any]]:
+        return save_records(build_individual_record(action_type=action_type, use_bypass=use_bypass))
+
+    def suggest_ai(_: Any = None) -> list[dict[str, Any]]:
+        profile_rows = list(state.get("catalogue_profile_rows") or [])
+        profile_df = spark_session.createDataFrame(profile_rows) if spark_session is not None else profile_rows
+        suggestions = _draft_dq_rules(profile_df=profile_df, table_name=str(state.get("table_name") or ""), config=config)
+        for suggestion in suggestions:
+            suggestion.update({"review_status": "draft", "is_active": False})
+        records_state["suggestions"].clear()
+        records_state["suggestions"].extend(suggestions)
+        suggestions_html.value = "<pre>" + json.dumps(suggestions, indent=2, default=str) + "</pre>"
+        message.value = f"<b>Loaded {len(suggestions)} AI draft suggestion(s). Edit and save approved suggestions.</b>"
+        return records_state["suggestions"]
+
+    def approve_ai(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        records = []
+        for suggestion in records_state["suggestions"]:
+            suggestion_columns = suggestion.get("columns") or [suggestion.get("column_name") or ""]
+            params = {key: value for key, value in suggestion.items() if key not in {"rule_id", "rule_type", "columns", "column_name", "review_status", "is_active"}}
+            records.extend(_dq_records_from_selection(state, rule_type=str(suggestion.get("rule_type") or "not_null"), selected_columns=suggestion_columns, parameters=params, severity=batch_severity.value, bypass_reason=reason, config=config))
+        return save_records(records)
+
+    def reject_ai(_: Any = None) -> None:
+        records_state["suggestions"].clear()
+        suggestions_html.value = "<i>AI suggestions rejected; no active rules were saved.</i>"
+        message.value = "<b>Rejected AI suggestions.</b>"
+
+    for control in (batch_rule_type, batch_columns, batch_params, batch_severity, bypass_box):
+        control.observe(lambda change: refresh_preview(), names="value")
+    for control in (search_column, individual_rule_type):
+        control.observe(lambda change: load_existing_individual(), names="value")
+    save_batch_button.on_click(lambda _: save_batch(use_bypass=False))
+    save_one_button.on_click(lambda _: save_individual(action_type="created", use_bypass=False))
+    clear_one_button.on_click(lambda _: save_individual(action_type="superseded", use_bypass=False))
+    bypass_button.on_click(lambda _: save_batch(use_bypass=True))
+    ai_button.on_click(suggest_ai)
+    approve_ai_button.on_click(lambda _: approve_ai(use_bypass=False))
+    reject_ai_button.on_click(reject_ai)
+    load_existing_individual()
+    refresh_preview()
+    if commit:
+        save_batch(use_bypass=bool(bypass_reason))
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>Author DQ rules</h3>"),
+        widgets.HTML(f"<b>Mode:</b> {mode} · <b>Table:</b> {state.get('dataset_name', '')}.{state.get('table_name', '')} · <b>Governance:</b> {state.get('governance_mode', 'ungoverned')}"),
+        widgets.HTML("<h4>Batch by rule type</h4>"),
+        widgets.HBox([batch_rule_type, batch_columns, batch_severity]),
+        batch_params,
+        widgets.HTML("<h4>Individual rule editing</h4>"),
+        widgets.HBox([search_column, individual_rule_type]),
+        individual_params,
+        widgets.HTML("<h4>Existing rule history</h4>"),
+        history,
+        ai_button,
+        suggestions_html,
+        widgets.HBox([approve_ai_button, reject_ai_button]),
+        bypass_box,
+        preview,
+        widgets.HBox([save_batch_button, save_one_button, clear_one_button, bypass_button]),
+        message,
+    ])
+    ip.display(ui)
+    return {"records": records_state["records"], "suggestions": records_state["suggestions"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "suggest_ai": suggest_ai, "approve_ai": approve_ai, "reject_ai": reject_ai, "ui": ui}
+
+def build_table_governance_policy_record(state: Mapping[str, Any], *, governance_mode: str, approval_policy: str | None = None, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
+    """Build a table-level governance policy row.
+
+    Parameters
+    ----------
+    state : mapping
+        Table identity state containing environment, dataset, table, and table key.
+    governance_mode : {"governed", "ungoverned"}
+        Desired table governance mode.
+    approval_policy : str, optional
+        Approval policy. Defaults to approval-required with bypass for governed
+        tables and no approval required for ungoverned tables.
+    actor : str, optional
+        Reviewer identity.
+    reason : str, optional
+        Human-readable policy reason.
+    config : Any, optional
+        Runtime configuration used for timestamps.
+
+    Returns
+    -------
+    dict[str, Any]
+        ``METADATA_GOVERNANCE_REVIEWS`` policy row.
+
+    """
+    mode = str(governance_mode or "ungoverned").lower()
+    if mode not in {"governed", "ungoverned"}:
+        raise ValueError("governance_mode must be governed or ungoverned")
+    policy = str(approval_policy or ("approval_required_with_bypass" if mode == "governed" else "no_approval_required"))
+    now = _now_utc_iso(config)
+    return {
+        "review_id": str(uuid.uuid4()),
+        "environment_name": str(state.get("environment_name") or ""),
+        "dataset_name": str(state.get("dataset_name") or ""),
+        "table_name": str(state.get("table_name") or ""),
+        "metadata_table_key": str(state.get("metadata_table_key") or ""),
+        "profile_run_id": str(state.get("profile_run_id") or ""),
+        "profile_stage": str(state.get("profile_stage") or ""),
+        "outcome": "policy_updated",
+        "blocker_count": 0,
+        "warning_count": 0,
+        "blockers_json": "[]",
+        "warnings_json": "[]",
+        "evidence_summary_json": json.dumps({"policy_reason": reason}, sort_keys=True),
+        "reviewed_at": now,
+        "reviewed_by": _resolve_action_by(actor),
+        "governance_mode": mode,
+        "approval_policy": policy,
+        "governance_status": "active",
+        "approval_bypass_allowed": policy == "approval_required_with_bypass",
+        "requires_post_review": False,
+        "policy_reason": reason,
+        "effective_from": now,
+        "effective_to": "",
+    }
+
+
+def mark_table_governed(state: Mapping[str, Any], *, actor: str | None = None, reason: str = "", approval_policy: str = "approval_required_with_bypass", config: Any = None) -> dict[str, Any]:
+    """Return an active governed table policy row."""
+    return build_table_governance_policy_record(state, governance_mode="governed", approval_policy=approval_policy, actor=actor, reason=reason, config=config)
+
+
+def mark_table_ungoverned(state: Mapping[str, Any], *, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
+    """Return an active ungoverned table policy row."""
+    return build_table_governance_policy_record(state, governance_mode="ungoverned", approval_policy="no_approval_required", actor=actor, reason=reason, config=config)
+
+
+def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None) -> dict[str, Any]:
+    """Render interactive 03 governance policy and rule-review controls.
+
+    Parameters
+    ----------
+    state : mapping
+        Handover state from :func:`widget_select_guardrail_target`.
+    config, env, spark_session : Any, optional
+        Runtime objects used for save actions.
+
+    Returns
+    -------
+    dict[str, Any]
+        Widget state with controls and callable action helpers.
+
+    """
+    widgets = importlib.import_module("ipywidgets")
+    from IPython import display as ip
+
+    rules = list(state.get("existing_rules") or [])
+    proposed_or_bypassed = [row for row in rules if str(row.get("review_status") or "") in {"proposed", "bypass_active_pending_review"}]
+    rule_options = [(f"{row.get('review_status')} · {row.get('guardrail_type')} · {row.get('rule_type')} · {row.get('column_name') or '_table'}", idx) for idx, row in enumerate(proposed_or_bypassed)]
+    selected_rule = widgets.Dropdown(options=rule_options or [("No proposed or bypassed rules", -1)], description="Rule", layout=widgets.Layout(width="760px"))
+    replacement_key = widgets.Text(description="New rule key", layout=widgets.Layout(width="520px"))
+    policy_reason = widgets.Textarea(description="Policy reason", layout=widgets.Layout(width="760px", height="70px"))
+    history = widgets.HTML("<pre>" + json.dumps(rules, indent=2, default=str) + "</pre>")
+    status = widgets.HTML(f"<b>Current governance:</b> {state.get('governance_mode', 'ungoverned')} · <b>Approval policy:</b> {state.get('approval_policy', 'no_approval_required')}")
+    message = widgets.HTML()
+    records_state: dict[str, Any] = {"last_record": None}
+
+    governed_button = widgets.Button(description="Mark table governed", button_style="warning")
+    ungoverned_button = widgets.Button(description="Mark table ungoverned", button_style="info")
+    approve_button = widgets.Button(description="Approve rule", button_style="success")
+    reject_button = widgets.Button(description="Reject rule", button_style="danger")
+    supersede_button = widgets.Button(description="Supersede rule", button_style="warning")
+
+    def _save_policy(record: dict[str, Any]) -> dict[str, Any]:
+        records_state["last_record"] = record
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save policy."
+            return record
+        _write_governance_policy_record(record, config=config, env=env, spark_session=spark_session)
+        message.value = "<b style='color:green'>Saved table policy row to METADATA_GOVERNANCE_REVIEWS.</b>"
+        return record
+
+    def mark_governed(_: Any = None) -> dict[str, Any]:
+        record = mark_table_governed(state, reason=policy_reason.value, config=config)
+        return _save_policy(record)
+
+    def mark_ungoverned(_: Any = None) -> dict[str, Any]:
+        record = mark_table_ungoverned(state, reason=policy_reason.value, config=config)
+        return _save_policy(record)
+
+    def _selected_rule_row() -> dict[str, Any]:
+        if selected_rule.value == -1:
+            raise ValueError("No proposed or bypassed rule is selected.")
+        return proposed_or_bypassed[int(selected_rule.value)]
+
+    def save_rule_action(action: str) -> dict[str, Any]:
+        row = apply_governance_rule_action(_selected_rule_row(), action, superseded_by_rule_key=replacement_key.value, config=config)
+        records_state["last_record"] = row
+        if spark_session is None or config is None or env is None:
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save rule action."
+            return row
+        _write_rule_records([row], config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {action} rule event to METADATA_GUARDRAIL_RULES.</b>"
+        return row
+
+    governed_button.on_click(mark_governed)
+    ungoverned_button.on_click(mark_ungoverned)
+    approve_button.on_click(lambda _: save_rule_action("approve"))
+    reject_button.on_click(lambda _: save_rule_action("reject"))
+    supersede_button.on_click(lambda _: save_rule_action("supersede"))
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>Governance policy and guardrail review</h3>"),
+        status,
+        policy_reason,
+        widgets.HBox([governed_button, ungoverned_button]),
+        widgets.HTML("<h4>Proposed and bypass-active rules requiring review</h4>"),
+        selected_rule,
+        replacement_key,
+        widgets.HBox([approve_button, reject_button, supersede_button]),
+        widgets.HTML("<h4>Rule history by table</h4>"),
+        history,
+        message,
+    ])
+    ip.display(ui)
+    return {"controls": {"selected_rule": selected_rule, "replacement_key": replacement_key, "policy_reason": policy_reason}, "mark_governed": mark_governed, "mark_ungoverned": mark_ungoverned, "save_rule_action": save_rule_action, "last_record": records_state, "ui": ui}
