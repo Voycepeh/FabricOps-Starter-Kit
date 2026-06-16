@@ -5,9 +5,9 @@ Enforce whether the latest data arrived within the configured freshness lag.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/guardrails.py:563`
+`fabricops_kit/guardrails.py:558`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/de90c79557ef917619c03dd5fb6b9d9c5db78f7a/src/fabricops_kit/guardrails.py#L563-L661">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/guardrails.py#L558-L656">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -135,9 +135,9 @@ skips profile behavior enforcement; freshness still runs when configured.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/de90c79557ef917619c03dd5fb6b9d9c5db78f7a/src/fabricops_kit/guardrails.py#L538-L555"><code>_coerce_date</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/de90c79557ef917619c03dd5fb6b9d9c5db78f7a/src/fabricops_kit/guardrails.py#L558-L560"><code>_iso_date_value</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/de90c79557ef917619c03dd5fb6b9d9c5db78f7a/src/fabricops_kit/guardrails.py#L505-L535"><code>_max_column_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/guardrails.py#L533-L550"><code>_coerce_date</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/guardrails.py#L553-L555"><code>_iso_date_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/guardrails.py#L500-L530"><code>_max_column_value</code></a>
         </div>
       </section>
     </div>
@@ -155,7 +155,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `563`
+- Source line: `558`
 - Inbound references count: 2
 - Outbound references count: 3
 - Used in templates: 02_pipeline
@@ -184,9 +184,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/de90c79557ef917619c03dd5fb6b9d9c5db78f7a/src/fabricops_kit/guardrails.py#L563-L661">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/de90c79557ef917619c03dd5fb6b9d9c5db78f7a/src/fabricops_kit/guardrails.py#L563-L661</a>
-- Start line: `563`
-- End line: `661`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/guardrails.py#L558-L656">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/guardrails.py#L558-L656</a>
+- Start line: `558`
+- End line: `656`
 - Signature:
 
 ```python

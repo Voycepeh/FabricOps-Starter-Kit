@@ -61,24 +61,6 @@ def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
         }
 
 
-def _dq_summary_fields(dq_result: Mapping[str, Any] | None) -> dict[str, Any]:
-    summary = dict((dq_result or {}).get("summary") or {})
-    checks = list((dq_result or {}).get("checks") or [])
-    failed = [check for check in checks if str(check.get("status", "")).lower() in {"failed", "fail"}]
-    warning = [check for check in failed if str(check.get("severity", "")).lower() == "warning"]
-    error = [check for check in failed if str(check.get("severity", "")).lower() != "warning"]
-    return {
-        "dq_status": str((dq_result or {}).get("status") or "not_run"),
-        "dq_rule_count": int(summary.get("rule_count", len(checks)) or 0),
-        "dq_failed_rule_count": int(summary.get("failed_rule_count", len(failed)) or 0),
-        "dq_warning_rule_count": int(summary.get("warning_rule_count", len(warning)) or 0),
-        "dq_error_rule_count": int(summary.get("error_rule_count", len(error)) or 0),
-        "dq_failed_row_count": int(summary.get("failed_row_count", 0) or 0),
-        "dq_failed_row_percent": float(summary.get("failed_row_percent", 0.0) or 0.0),
-        "dq_checked_at": str(summary.get("checked_at") or _now_iso()),
-    }
-
-
 def _canonical_catalogue_profile_df(profile_df: Any):
     """Return profile evidence using lowercase catalogue column names only."""
     from pyspark.sql import functions as F

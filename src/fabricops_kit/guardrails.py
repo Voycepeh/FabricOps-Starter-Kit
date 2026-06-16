@@ -482,11 +482,6 @@ def _guardrail_exclude_columns(exclude_columns: list[str] | set[str] | tuple[str
     return excluded
 
 
-def _is_guardrail_excluded_column(column: str, exclude_columns: set[str]) -> bool:
-    name = str(column)
-    return name in exclude_columns or any(name.startswith(prefix) for prefix in _DEFAULT_STABILITY_EXCLUDE_PREFIXES)
-
-
 def _profile_row_count(profile) -> int | None:
     normalized = _normalize_profile(profile) or {}
     value = normalized.get("row_count")
@@ -677,38 +672,6 @@ def _catalogue_value(row: dict, *names: str):
 
 def _string_value(value) -> str:
     return "" if value is None else str(value)
-
-
-def _comparable_value(value):
-    if value in (None, ""):
-        return None
-    if hasattr(value, "isoformat"):
-        return value.isoformat()
-    text = str(value)
-    try:
-        return Decimal(text)
-    except Exception:
-        return text
-
-
-def _is_less_than(left, right) -> bool:
-    left_value = _comparable_value(left)
-    right_value = _comparable_value(right)
-    if left_value is None or right_value is None:
-        return False
-    if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
-        return left_value < right_value
-    return str(left_value) < str(right_value)
-
-
-def _is_greater_than(left, right) -> bool:
-    left_value = _comparable_value(left)
-    right_value = _comparable_value(right)
-    if left_value is None or right_value is None:
-        return False
-    if isinstance(left_value, Decimal) and isinstance(right_value, Decimal):
-        return left_value > right_value
-    return str(left_value) > str(right_value)
 
 
 def enforce_profile_behavior(

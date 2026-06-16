@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 30</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 23</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>30</td>
+      <td>23</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -133,10 +133,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
   </thead>
   <tbody>
     <tr>
-      <td><code>_assert_valid_dataset_contract</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_audit_timestamp_expr</code></td>
       <td>—</td>
     </tr>
@@ -157,15 +153,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_default_schema_text</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_detect_nested_metadata_delta_folders</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_format_error_path</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -187,18 +175,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     <tr>
       <td><code>_get_store</code></td>
       <td><a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_load_and_validate_dataset_contract</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_load_dataset_contract</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_load_schema</code></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><code>_metadata_schema_field_names</code></td>
@@ -237,10 +213,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_validate_dataset_contract</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_validate_framework_config</code></td>
       <td><a href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
@@ -258,11 +230,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
-<li>
-<span class="reference-chip"><code>_assert_valid_dataset_contract</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_validate_dataset_contract</code></span>
-</li>
 <li>
 <span class="reference-chip"><code>_audit_timestamp_expr</code></span>
  <span class="callable-relationship-uses">uses:</span>
@@ -283,15 +250,9 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <span class="reference-chip"><code>_get_audit_timezone</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_default_schema_text</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_detect_nested_metadata_delta_folders</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_get_store</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_format_error_path</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_get_active_metadata_tables</code></span>
@@ -315,19 +276,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <span class="reference-chip"><code>_get_store</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_normalize_path_config</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_load_and_validate_dataset_contract</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_load_dataset_contract</code></span>, <span class="reference-chip"><code>_validate_dataset_contract</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_load_dataset_contract</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_load_schema</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_default_schema_text</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_metadata_schema_field_names</code></span>
@@ -363,11 +311,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <span class="reference-chip"><code>_validate_audit_timezone</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_validate_dataset_contract</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_format_error_path</code></span>, <span class="reference-chip"><code>_load_schema</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_validate_framework_config</code></span>

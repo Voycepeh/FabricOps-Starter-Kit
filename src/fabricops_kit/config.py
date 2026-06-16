@@ -1,4 +1,4 @@
-"""Configuration bootstrap and contract validation for FabricOps notebook pipelines.
+"""Configuration bootstrap for FabricOps notebook pipelines.
 
 This module is the workflow entrypoint for establishing the ``00_env_config``
 contract, standard environment path definitions, notebook prefix policies, AI
@@ -11,15 +11,11 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from importlib.resources import files
 from pathlib import Path
-import re
 from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-import yaml
-from jsonschema import Draft202012Validator
 
 DEFAULT_AUDIT_TIMEZONE = "UTC"
 
@@ -82,10 +78,6 @@ def _audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
 
     tz_name = _get_audit_timezone(config, timezone_name)
     return F.current_timestamp() if tz_name == "UTC" else F.from_utc_timestamp(F.current_timestamp(), tz_name)
-
-
-class DatasetContractValidationError(Exception):
-    """Raised when dataset-contract validation fails."""
 
 
 @dataclass(frozen=True)
@@ -1394,144 +1386,3 @@ def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, 
     except Exception:
         pass
     return metadata
-
-
-def _default_schema_text() -> str:
-    return files("fabricops_kit.schemas").joinpath("dataset_contract.schema.json").read_text(encoding="utf-8")
-
-
-# dataset-contract helpers unchanged
-
-
-def _format_error_path(error_path: list[object], message: str, validator: str) -> str:
-    parts = [str(part) for part in error_path]
-    base_path = ".".join(parts)
-    if validator == "required":
-        match = re.search(r"'([^']+)' is a required property", message)
-        if match:
-            missing_property = match.group(1)
-            return f"{base_path}.{missing_property}" if base_path else missing_property
-    return base_path or "$"
-
-
-def _load_dataset_contract(path: str | Path) -> dict:
-    """Load a dataset contract YAML file into a dictionary.
-
-    Parameters
-    ----------
-    path : str or Path
-        Path to a dataset-contract file, typically versioned beside pipeline
-        notebooks or in a shared config folder.
-
-    Returns
-    -------
-    dict
-        Parsed contract content. Empty files return ``{}``; non-mapping YAML
-        values are wrapped as ``{"value": <loaded_value>}`` for safer handling.
-
-    Examples
-    --------
-    >>> contract = _load_dataset_contract("configs/sales_contract.yml")
-    >>> isinstance(contract, dict)
-    True
-
-    """
-    contract_path = Path(path)
-    with contract_path.open("r", encoding="utf-8") as handle:
-        loaded = yaml.safe_load(handle)
-    if loaded is None:
-        return {}
-    if not isinstance(loaded, dict):
-        return {"value": loaded}
-    return loaded
-
-
-def _load_schema(schema_path: str | Path | None = None) -> dict:
-    if schema_path is None:
-        return yaml.safe_load(_default_schema_text())
-    with Path(schema_path).open("r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
-
-
-def _validate_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> list[str]:
-    """Validate a loaded dataset contract against the JSON schema.
-
-    Parameters
-    ----------
-    contract : dict
-        Dataset contract content produced by :func:`_load_dataset_contract`.
-    schema_path : str or Path or None, default=None
-        Optional custom schema location. When omitted, the packaged FabricOps
-        dataset-contract schema is used.
-
-    Returns
-    -------
-    list of str
-        Validation error messages using normalized property paths that are
-        suitable for notebook run summaries and review logs.
-
-    Notes
-    -----
-    This function does not raise by default, allowing notebook orchestration to
-    collect all schema issues before deciding whether to fail fast.
-
-    """
-    schema = _load_schema(schema_path=schema_path)
-    validator = Draft202012Validator(schema)
-    errors = sorted(validator.iter_errors(contract), key=lambda error: (list(error.path), error.message))
-    return [
-        f"{_format_error_path(list(error.path), error.message, error.validator)}: {error.message}" for error in errors
-    ]
-
-
-def _assert_valid_dataset_contract(contract: dict, schema_path: str | Path | None = None) -> None:
-    """Raise when a dataset contract violates the expected schema.
-
-    Parameters
-    ----------
-    contract : dict
-        Contract content to validate before executing ingestion, quality, and
-        metadata stages.
-    schema_path : str or Path or None, default=None
-        Optional custom schema location. The built-in schema is used when this
-        value is ``None``.
-
-    Raises
-    ------
-    DatasetContractValidationError
-        Raised when one or more validation issues are found.
-
-    """
-    errors = _validate_dataset_contract(contract, schema_path=schema_path)
-    if errors:
-        raise DatasetContractValidationError(
-            "Dataset contract validation failed:\n" + "\n".join(f"- {e}" for e in errors)
-        )
-
-
-def _load_and_validate_dataset_contract(
-    path: str | Path, schema_path: str | Path | None = None
-) -> tuple[dict, list[str]]:
-    """Load a dataset contract file and return schema validation findings.
-
-    Parameters
-    ----------
-    path : str or Path
-        Contract YAML path used by a Fabric notebook or pipeline run.
-    schema_path : str or Path or None, default=None
-        Optional schema override for custom contract extensions.
-
-    Returns
-    -------
-    tuple of (dict, list of str)
-        Loaded contract payload and a list of validation errors.
-
-    Examples
-    --------
-    >>> contract, errors = _load_and_validate_dataset_contract("configs/orders.yml")
-    >>> len(errors) >= 0
-    True
-
-    """
-    contract = _load_dataset_contract(path)
-    return contract, _validate_dataset_contract(contract, schema_path=schema_path)

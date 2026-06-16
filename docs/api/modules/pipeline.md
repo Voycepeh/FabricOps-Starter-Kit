@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 26</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 25</span><span class="reference-chip">Outbound: 6</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>26</td>
+      <td>25</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -233,10 +233,6 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_dq_summary_fields</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_freshness_reason</code></td>
       <td>—</td>
     </tr>
@@ -340,11 +336,6 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <span class="reference-chip"><code>_dq_reason</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_result_reason</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_dq_summary_fields</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_now_iso</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_freshness_reason</code></span>

@@ -153,12 +153,6 @@ def _schema(table_name: str, fields: list[tuple[str, Any]]):
     return StructType([StructField(name, data_type, True) for name, data_type in fields])
 
 
-def _schema_field_names(schema: Any) -> list[str]:
-    if hasattr(schema, "fieldNames"):
-        return list(schema.fieldNames())
-    return [field.name for field in getattr(schema, "fields", [])]
-
-
 def _get_governance_metadata_schemas() -> dict[str, Any]:
     """Return typed Spark schemas prepared by ``00_env_config`` for governance.
 
@@ -769,27 +763,6 @@ def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return rows
 
 
-def _dq_parameter_fields_for_rule_type(rule_type: str) -> list[str]:
-    """Return parameter names a reviewer should fill for a rule type."""
-    return {
-        "null_rate_below": ["max_null_percent"],
-        "accepted_values": ["allowed_values"],
-        "not_in_values": ["blocked_values"],
-        "between": ["min_value", "max_value"],
-        "date_between": ["min_value", "max_value"],
-        "greater_than": ["value"],
-        "greater_than_or_equal": ["value"],
-        "less_than": ["value"],
-        "less_than_or_equal": ["value"],
-        "regex_match": ["regex_pattern"],
-        "freshness": ["max_age_days"],
-        "max_age_days": ["max_age_days"],
-        "required_when": ["condition"],
-        "value_when": ["condition", "expected_value"],
-        "expression_true": ["expression"],
-    }.get(_canonical_dq_rule_type(rule_type), [])
-
-
 def _parse_dq_ai_suggestions(response_rows: Any, *, response_col: str = "response", table_name: str | None = None) -> list[dict[str, Any]]:
     """Parse and validate draft AI DQ suggestions without approving them."""
     suggestions = _extract_assignment_payload(response_rows, response_col=response_col, assignment_key="DQ_RULES", table_name=table_name)
@@ -1122,16 +1095,6 @@ def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str
     if ai is None or not hasattr(ai, "generate_response"):
         raise RuntimeError("AI drafting requires Fabric DataFrame.ai.generate_response.")
     return prepared_profile_df.ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
-
-
-def _draft_business_context(prepared_profile_df, prompt_template: str = BUSINESS_CONTEXT_PROMPT, output_col: str = "ai_business_context_response"):
-    """Draft column business-context suggestions with Fabric AI."""
-    return _run_fabric_ai_drafting(prepared_profile_df, prompt=prompt_template, output_col=output_col)
-
-
-def _draft_governance(prepared_profile_df, prompt: str | None = None, output_col: str = "ai_governance_response"):
-    """Draft sensitivity and PII classification suggestions with Fabric AI."""
-    return _run_fabric_ai_drafting(prepared_profile_df, prompt=prompt or PDPA_PERSONAL_IDENTIFIER_PROMPT, output_col=output_col)
 
 
 def _parse_ai_dict_response(text: str) -> dict[str, Any]:
