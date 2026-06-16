@@ -13,6 +13,8 @@ The current flow is:
 5. Reviewers use [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) to review guardrail rule intent and table governance state.
 6. Later `02_pipeline` runs read approved active guardrail rules and write runtime outcomes to `METADATA_GUARDRAIL_RESULTS`.
 
+`03_governance` lets reviewers approve and records governance decisions for guardrail rules, catalogue evidence, and runtime enforcement readiness before `02_pipeline` applies approved controls.
+
 AI can help draft suggested metadata, but AI output is advisory only. A person must approve, edit, or reject suggestions before they become governed metadata.
 
 ## Operating model
