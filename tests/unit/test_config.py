@@ -271,11 +271,11 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
     assert reads == [("dev", "metadata", "METADATA_DATA_STEWARD", spark), ("dev", "metadata", "METADATA_DATA_STEWARD", spark)]
 
 
-def test_active_metadata_tables_are_source_driven_and_exclude_manual_access_context():
-    """Verify active metadata tables exclude optional manual access context."""
+def test_active_metadata_tables_are_source_driven_and_include_access_context():
+    """Verify active metadata tables are source driven and include access context."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 10
+    assert len(tables) == 11
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_AGREEMENT_EVIDENCE" in tables
@@ -288,7 +288,7 @@ def test_active_metadata_tables_are_source_driven_and_exclude_manual_access_cont
     assert "METADATA_GUARDRAIL_RESULTS" in tables
     assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in tables
     assert "METADATA_GOVERNANCE_REVIEWS" not in tables
-    assert "METADATA_DATA_ACCESS" not in tables
+    assert "METADATA_DATA_ACCESS" in tables
 
 
 

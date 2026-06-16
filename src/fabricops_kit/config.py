@@ -969,7 +969,7 @@ def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> lis
     The active registry is intentionally source-driven: agreement tables come
     from ``DataAgreementConfig``, notebook registry from ``metadata.py``, and
     governance/pipeline tables from the governance schema registry.
-    ``METADATA_DATA_ACCESS`` is optional manual/offline governance metadata and is not created by the standard active setup registry. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
+    ``METADATA_DATA_ACCESS`` is part of the active setup registry for public-safe access context. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
     """
     normalized = _validate_framework_config(config)
     from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
@@ -982,7 +982,7 @@ def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> lis
         str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
         str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
         NOTEBOOK_REGISTRY_TABLE,
-        *(table for table in _get_governance_metadata_schemas().keys() if table != "METADATA_DATA_ACCESS"),
+        *_get_governance_metadata_schemas().keys(),
     ]
     out: list[str] = []
     for table in tables:
@@ -1086,7 +1086,7 @@ def _get_metadata_table_schema_registry(config: FrameworkConfig | dict[str, Any]
         ),
         NOTEBOOK_REGISTRY_TABLE: _string_metadata_schema(NOTEBOOK_REGISTRY_TABLE, NOTEBOOK_REGISTRY_FIELDS),
     }
-    registry.update({table: schema for table, schema in _get_governance_metadata_schemas().items() if table != "METADATA_DATA_ACCESS"})
+    registry.update(_get_governance_metadata_schemas())
     return registry
 
 
