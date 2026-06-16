@@ -55,8 +55,6 @@ nav:
           - setup_metadata_tables: api/reference/setup_metadata_tables.md
           - setup_notebook: api/reference/setup_notebook.md
           - stop_if_failed: api/reference/stop_if_failed.md
-          - validate_schema: api/reference/validate_schema.md
-          - validate_schema_rule: api/reference/validate_schema_rule.md
           - widget_author_dq_rules: api/reference/widget_author_dq_rules.md
           - widget_author_schema_freshness_profile_rules: api/reference/widget_author_schema_freshness_profile_rules.md
           - widget_enrich_table_metadata: api/reference/widget_enrich_table_metadata.md

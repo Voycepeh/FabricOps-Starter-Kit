@@ -5,9 +5,9 @@ Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/guardrails.py:907`
+`fabricops_kit/guardrails.py:917`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/guardrails.py#L907-L927">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/guardrails.py#L917-L937">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -42,8 +42,8 @@ def stop_if_failed(result) -> None
 <div class="reference-example-usage" markdown="1">
 
 ```python
-schema_result = validate_schema(df, expected_schema)
-stop_if_failed(schema_result)
+guardrail_result = run_table_guardrails(table_configs, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark)
+stop_if_failed(guardrail_result)
 ```
 
 </div>
@@ -133,7 +133,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `guardrails`
 - Source file path: `src/fabricops_kit/guardrails.py`
-- Source line: `907`
+- Source line: `917`
 - Inbound references count: 1
 - Outbound references count: 1
 - Used in templates: 02_pipeline
@@ -141,7 +141,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 ### AI implementation contract
 
-- **required_context:** Use in 02_pipeline after validate_schema, enforce_freshness, enforce_profile_behavior, or enforce_dq_rules and before write helpers.
+- **required_context:** Use in 02_pipeline after run_table_guardrails, enforce_freshness, enforce_profile_behavior, or enforce_dq_rules and before write helpers.
 - **inputs:** guardrail result dictionary and optional message/runtime controls.
 - **output:** None when execution may continue; otherwise raises or exits according to runtime behavior.
 - **side_effects:** May terminate notebook execution through Fabric notebook utilities or raise an exception.
@@ -159,9 +159,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/guardrails.py#L907-L927">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/guardrails.py#L907-L927</a>
-- Start line: `907`
-- End line: `927`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/guardrails.py#L917-L937">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/94d2abf3ed663ec5fddfe10d3c81eb695aae0124/src/fabricops_kit/guardrails.py#L917-L937</a>
+- Start line: `917`
+- End line: `937`
 - Signature:
 
 ```python
@@ -172,7 +172,6 @@ def stop_if_failed(result) -> None
 
 ### Public related functions
 
-- <a href="../validate_schema/"><code>fabricops_kit.guardrails.validate_schema</code></a>
 - <a href="../enforce_freshness/"><code>fabricops_kit.guardrails.enforce_freshness</code></a>
 - <a href="../enforce_profile_behavior/"><code>fabricops_kit.guardrails.enforce_profile_behavior</code></a>
 - <a href="../enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>

@@ -1,9 +1,9 @@
-"""Lightweight schema and profile behavior guardrails for pipeline notebooks.
+"""Lightweight profile, freshness, and runtime guardrails for pipeline notebooks.
 
-Use :func:`validate_schema`, :func:`enforce_freshness`,
-:func:`enforce_profile_behavior`, and :func:`stop_if_failed` in production
-pipeline notebooks. FabricOps enforces technical data-contract expectations
-with simple freshness and profile behavior choices.
+Use :func:`enforce_freshness`, :func:`enforce_profile_behavior`, and
+:func:`stop_if_failed` in production pipeline notebooks. Schema guardrail
+authoring is widget-led and runtime schema enforcement is orchestrated through
+``run_table_guardrails``.
 """
 
 from __future__ import annotations
@@ -85,18 +85,23 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     return result
 
 
-def validate_schema_rule(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
-    """Validate schema using the latest active schema rule row."""
+def _check_schema_rule_runtime(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
+    """Apply an internal runtime schema rule check for ``run_table_guardrails``.
+
+    This helper is not a notebook-facing callable. It translates the latest
+    active widget-authored schema guardrail rule into the runtime schema check
+    used by ``run_table_guardrails``.
+    """
     rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
-        return validate_schema(dataframe, {}, preset="monitor_only")
+        return _check_schema_runtime(dataframe, {}, preset="monitor_only")
     params = _parse_rule_parameters(rule)
     expected = params.get("data_types") or params.get("expected_data_types") or {}
     selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
     expected_schema = {column: expected.get(column, "") for column in selected_columns}
     rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
     preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
-    result = validate_schema(dataframe, expected_schema, preset=preset)
+    result = _check_schema_runtime(dataframe, expected_schema, preset=preset)
     result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
     return _apply_bypass_post_review_warning(result, rule)
 
@@ -301,8 +306,12 @@ def _accepted_profile_rows(catalogue_df, *, environment_name: str, dataset_name:
 _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 
 
-def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
-    """Validate a dataframe schema using an intent-based preset.
+def _check_schema_runtime(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
+    """Apply an internal runtime schema check for ``run_table_guardrails``.
+
+    This helper is not a notebook-facing callable. It preserves runtime schema
+    enforcement for widget-led guardrail flows without exposing a public schema
+    validation API.
 
     Parameters
     ----------
@@ -327,10 +336,11 @@ def validate_schema(dataframe, expected_schema: dict[str, str], *, preset: str =
     ValueError
         If ``preset`` is not one of the supported schema presets.
 
-    Examples
-    --------
-    >>> validate_schema(df, {"id": "int"}, preset="allow_new_columns")
-    {'status': 'passed', 'can_continue': True, ...}
+    Notes
+    -----
+    This private helper is called by ``run_table_guardrails`` only. Notebook
+    authors should use widget-authored rules and the guardrail gate instead of
+    calling schema validation helpers directly.
 
     """
     normalized_preset = str(preset).lower()

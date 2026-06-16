@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 23</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Internal helpers: 25</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>6</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>23</td>
+      <td>25</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -96,13 +96,6 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
       <td>Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.</td>
       <td>—</td>
     </tr>
-    <tr>
-      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Validate a DataFrame schema using strict, allow-new-columns, or monitor-only presets.</td>
-      <td><code>_actual_schema</code> (internal), <code>_normalize_datatype</code> (internal)</td>
-    </tr>
   </tbody>
 </table>
 </div>
@@ -134,11 +127,6 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
  <span class="callable-relationship-uses">uses:</span>
 <span>None.</span>
 </li>
-<li>
-<a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_actual_schema</code></span>, <span class="reference-chip"><code>_normalize_datatype</code></span>
-</li>
 </ul>
 </section>
 
@@ -162,7 +150,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_actual_schema</code></td>
-      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_apply_bypass_post_review_warning</code></td>
@@ -171,6 +159,14 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     <tr>
       <td><code>_catalogue_value</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_check_schema_rule_runtime</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_check_schema_runtime</code></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_coerce_date</code></td>
@@ -202,7 +198,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td><code>_normalize_datatype</code></td>
-      <td><a href="../../reference/validate_schema/"><code>validate_schema</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_normalize_profile</code></td>
@@ -271,6 +267,16 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 </li>
 <li>
 <span class="reference-chip"><code>_catalogue_value</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_check_schema_rule_runtime</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_apply_bypass_post_review_warning</code></span>, <span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_check_schema_runtime</code></span>, <span class="reference-chip"><code>_parse_rule_parameters</code></span>, <span class="reference-chip"><code>_select_table_guardrail_rule</code></span>, <span class="reference-chip"><code>_string_value</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_check_schema_runtime</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_actual_schema</code></span>, <span class="reference-chip"><code>_normalize_datatype</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_coerce_date</code></span>

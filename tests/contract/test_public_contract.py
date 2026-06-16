@@ -31,8 +31,6 @@ APPROVED_V1_CALLABLES = {
     "read_warehouse_table",
     "write_warehouse_table",
     "profile_dataframe",
-    "validate_schema",
-    "validate_schema_rule",
     "enforce_freshness",
     "enforce_freshness_rule",
     "enforce_profile_behavior",
@@ -52,6 +50,8 @@ APPROVED_V1_CALLABLES = {
 }
 
 REMOVED_LEGACY_ALIASES = {
+    "validate_schema",
+    "validate_schema_rule",
     "monitor_data_changes",
     "display_schema_profile",
     "print_schema_guardrail_config",
@@ -121,7 +121,7 @@ def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES)
-    assert len(fabricops_kit.__all__) == 33
+    assert len(fabricops_kit.__all__) == 31
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
 

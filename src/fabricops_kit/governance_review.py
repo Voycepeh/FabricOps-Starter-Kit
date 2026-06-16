@@ -117,7 +117,7 @@ def _spark_types():
     return BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType
 
 
-def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None:
+def _check_metadata_schema_field_names(table_name: str, fields: list[tuple[str, Any]]) -> None:
     """Validate that a metadata schema has no case-insensitive duplicates.
 
     Parameters
@@ -147,7 +147,7 @@ def _validate_schema_field_names(table_name: str, fields: list[tuple[str, Any]])
 
 
 def _schema(table_name: str, fields: list[tuple[str, Any]]):
-    _validate_schema_field_names(table_name, fields)
+    _check_metadata_schema_field_names(table_name, fields)
     _, _, _, _, StructField, StructType, _ = _spark_types()
     return StructType([StructField(name, data_type, True) for name, data_type in fields])
 

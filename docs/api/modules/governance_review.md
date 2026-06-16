@@ -209,6 +209,10 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_check_metadata_schema_field_names</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_coerce_rows</code></td>
       <td>—</td>
     </tr>
@@ -397,10 +401,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_validate_schema_field_names</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_value</code></td>
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
@@ -454,6 +454,9 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_catalogue_profile_target_model</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_catalogue_physical_identity</code></span>, <span class="reference-chip"><code>_is_success</code></span>, <span class="reference-chip"><code>_value</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_check_metadata_schema_field_names</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_coerce_rows</code></span>
@@ -616,7 +619,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <li>
 <span class="reference-chip"><code>_schema</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_spark_types</code></span>, <span class="reference-chip"><code>_validate_schema_field_names</code></span>
+<span class="reference-chip"><code>_check_metadata_schema_field_names</code></span>, <span class="reference-chip"><code>_spark_types</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_schema_freshness_profile_records_from_selection</code></span>
@@ -647,9 +650,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_validate_dq_rules</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_normalize_dq_severity</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_validate_schema_field_names</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_value</code></span>

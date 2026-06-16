@@ -80,6 +80,22 @@ INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     },
 }
 
+
+SCHEMA_RUNTIME_INTERNAL_HELPERS = {
+    f"{PACKAGE_NAME}.guardrails._check_schema_runtime",
+    f"{PACKAGE_NAME}.guardrails._check_schema_rule_runtime",
+}
+
+
+def _is_public_reference_qn(qn: str, node_by_qn: dict[str, dict[str, Any]]) -> bool:
+    """Return whether a qualified name should appear in public relationship lists."""
+    return bool(node_by_qn.get(qn, {}).get("exported"))
+
+
+def _hide_from_public_relationships(qn: str) -> bool:
+    """Return whether an internal helper should be hidden from public relationship chips."""
+    return qn in SCHEMA_RUNTIME_INTERNAL_HELPERS
+
 V1_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
@@ -96,8 +112,6 @@ V1_CALLABLES = {
     "read_warehouse_table",
     "write_warehouse_table",
     "profile_dataframe",
-    "validate_schema",
-    "validate_schema_rule",
     "enforce_freshness",
     "enforce_freshness_rule",
     "enforce_profile_behavior",
@@ -1646,8 +1660,8 @@ def main() -> None:
         ]
         module_edge_pairs = sorted(set(module_edges))
         inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
-        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module]
-        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module]
+        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module and not _hide_from_public_relationships(s)]
+        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module and not _hide_from_public_relationships(d)]
         if module_edge_pairs:
             lines.extend(["", "#### Inside this module", ""])
             lines.append('<section class="callable-relationship-card">')
@@ -2064,10 +2078,12 @@ def main() -> None:
             display_module = canonical_public_module(module_name)
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
-        calls = dependency_meta.get("calls", [])
-        used_by = dependency_meta.get("used_by", [])
-        calls_count = int(dependency_meta.get("calls_count", len(calls)))
-        used_by_count = int(dependency_meta.get("used_by_count", len(used_by)))
+        raw_calls = dependency_meta.get("calls", [])
+        raw_used_by = dependency_meta.get("used_by", [])
+        calls = [item for item in raw_calls if not _hide_from_public_relationships(item)] if node["exported"] else raw_calls
+        used_by = [item for item in raw_used_by if not _hide_from_public_relationships(item)] if node["exported"] else raw_used_by
+        calls_count = len(calls)
+        used_by_count = len(used_by)
         classification_label = _function_type_label(function_type)
         all_items.extend(
             [
@@ -2133,8 +2149,10 @@ def main() -> None:
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
         module_name = node["module_name"]
-        deps = sorted(set(calls_by_qn.get(qn, [])))
-        used_by = sorted(set(used_by_qn.get(qn, [])))
+        raw_deps = sorted(set(calls_by_qn.get(qn, [])))
+        raw_used_by = sorted(set(used_by_qn.get(qn, [])))
+        deps = [d for d in raw_deps if not _hide_from_public_relationships(d)] if node["exported"] else raw_deps
+        used_by = [u for u in raw_used_by if not _hide_from_public_relationships(u)] if node["exported"] else raw_used_by
         metadata = docs_metadata.get(short_name, {})
         module_info = module_data[module_name]
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})

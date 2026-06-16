@@ -40,8 +40,6 @@ EXPECTED_V1_CALLABLES = [
         "read_warehouse_table",
         "write_warehouse_table",
         "profile_dataframe",
-        "validate_schema",
-        "validate_schema_rule",
         "enforce_freshness",
         "enforce_freshness_rule",
         "enforce_profile_behavior",
@@ -242,7 +240,7 @@ def test_schema_field_validation_names_table_and_duplicate_logical_columns():
     string = governance._spark_types()[3]()
 
     with pytest.raises(ValueError, match="METADATA_DATA_CATALOGUE.*table_name.*table_name.*TABLE_NAME"):
-        governance._validate_schema_field_names(
+        governance._check_metadata_schema_field_names(
             governance.CATALOGUE_TABLE,
             [("table_name", string), ("TABLE_NAME", string)],
         )

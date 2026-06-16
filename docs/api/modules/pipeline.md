@@ -104,13 +104,6 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
       <td><code>_build_guardrail_blocking_message_from_bundle</code> (internal), <code>_build_guardrail_evidence_definitions</code> (internal), <code>_guardrail_can_continue</code> (internal), <code>_table_key</code> (internal), <code>_table_name</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/validate_schema_rule/"><code>validate_schema_rule</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Validate a DataFrame schema using an active metadata-backed schema guardrail rule.</td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a></td>
       <td>Callable</td>
       <td>function</td>
@@ -166,11 +159,6 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
 <a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_build_guardrail_blocking_message_from_bundle</code></span>, <span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_guardrail_can_continue</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>, <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
-</li>
-<li>
-<a class="reference-chip" href="../../reference/validate_schema_rule/"><code>validate_schema_rule</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/write_catalogue_evidence/"><code>write_catalogue_evidence</code></a>
@@ -420,7 +408,7 @@ None.
 <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
 
 **guardrails**
-<a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>, <a class="reference-chip" href="../../reference/enforce_freshness_rule/"><code>enforce_freshness_rule</code></a>, <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>, <a class="reference-chip" href="../../reference/validate_schema/"><code>validate_schema</code></a>, <a class="reference-chip" href="../../reference/validate_schema_rule/"><code>validate_schema_rule</code></a>
+<a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>, <a class="reference-chip" href="../../reference/enforce_freshness_rule/"><code>enforce_freshness_rule</code></a>, <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
 
 **metadata**
 <a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

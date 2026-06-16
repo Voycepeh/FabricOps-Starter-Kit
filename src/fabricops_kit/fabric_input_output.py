@@ -12,11 +12,20 @@ Fabric notebook workflow:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib import import_module
 from typing import Any
 import re
 import tempfile
 
-import pandas as pd
+
+class _PandasProxy:
+    """Lazily load pandas for Excel/Parquet helpers that need it."""
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(import_module("pandas"), name)
+
+
+pd = _PandasProxy()
 
 from .config import _get_store
 
