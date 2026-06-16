@@ -24,58 +24,7 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 
 ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
-The architecture image is a simplified logical view of how FabricOps metadata coordinates agreement, pipeline, governance, and runtime evidence. It is not a guarantee that every active metadata table is shown unless the image has been updated. Use the active metadata table map below as the source of truth for implemented table ownership. Relationships shown on this page are conceptual joins used by notebooks, helpers, dashboards, and reviews; they do not imply database-enforced primary-key or foreign-key constraints in Fabric Delta tables.
-
-Legend for the logical model:
-
-- Blue = agreement and registration metadata.
-- Green = pipeline-written evidence.
-- Purple = governance-reviewed metadata.
-- Orange = guardrail runtime results.
-- Red = offline or manually collected governance metadata.
-
-```mermaid
-flowchart LR
-    classDef agreement fill:#dbeafe,stroke:#2563eb,color:#172554
-    classDef pipeline fill:#dcfce7,stroke:#16a34a,color:#14532d
-    classDef governance fill:#ede9fe,stroke:#7c3aed,color:#2e1065
-    classDef runtime fill:#fed7aa,stroke:#ea580c,color:#431407
-    classDef offline fill:#fee2e2,stroke:#dc2626,color:#450a0a
-
-    steward[METADATA_DATA_STEWARD]:::agreement
-    agreement[METADATA_DATA_AGREEMENT]:::agreement
-    evidence[METADATA_DATA_AGREEMENT_EVIDENCE]:::agreement
-    registry[METADATA_NOTEBOOK_REGISTRY]:::agreement
-
-    catalogue[METADATA_DATA_CATALOGUE]:::pipeline
-    lineage[METADATA_DATA_LINEAGE_TABLE]:::pipeline
-    runs[METADATA_PIPELINE_RUNS]:::pipeline
-
-    context[METADATA_COLUMN_CONTEXT]:::governance
-    classification[METADATA_COLUMN_CLASSIFICATION]:::governance
-    rules[METADATA_GUARDRAIL_RULES]:::governance
-    reviews[METADATA_GOVERNANCE_REVIEWS]:::governance
-
-    results[METADATA_GUARDRAIL_RESULTS]:::runtime
-    access[METADATA_DATA_ACCESS<br/>offline/manual]:::offline
-
-    steward --> agreement
-    agreement --> evidence
-    agreement --> registry
-    registry --> runs
-    agreement --> runs
-    runs --> catalogue
-    runs --> lineage
-    catalogue --> context
-    catalogue --> classification
-    catalogue --> rules
-    rules --> results
-    runs --> results
-    catalogue --> reviews
-    rules --> reviews
-    results --> reviews
-    access -- many access records for one catalogue entry --> catalogue
-```
+The architecture image shows the high-level metadata coordination pattern across agreement, pipeline, governance, and runtime evidence. The active metadata table map below lists the implemented table ownership used by the starter kit. Relationships described on this page are logical joins used by notebooks, helpers, dashboards, and reviews.
 
 ## Active metadata table map
 
