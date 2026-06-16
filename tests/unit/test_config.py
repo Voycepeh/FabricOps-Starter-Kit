@@ -271,21 +271,24 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
     assert reads == [("dev", "metadata", "METADATA_DATA_STEWARD", spark), ("dev", "metadata", "METADATA_DATA_STEWARD", spark)]
 
 
-def test_active_metadata_tables_are_source_driven_and_explain_optional_access_table():
-    """Verify active metadata tables are source driven and explain optional access table."""
+def test_active_metadata_tables_are_source_driven_and_include_access_context():
+    """Verify active metadata tables are source driven and include access context."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 12
+    assert len(tables) == 11
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_AGREEMENT_EVIDENCE" in tables
     assert "METADATA_NOTEBOOK_REGISTRY" in tables
+    assert "METADATA_ENRICHMENT_RULES" in tables
+    assert "METADATA_COLUMN_CONTEXT" not in tables
+    assert "METADATA_COLUMN_CLASSIFICATION" not in tables
     assert "METADATA_GUARDRAIL_RULES" in tables
     assert "METADATA_GUARDRAIL_PROFILES" not in tables
     assert "METADATA_GUARDRAIL_RESULTS" in tables
     assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in tables
-    assert "METADATA_GOVERNANCE_REVIEWS" in tables
-    assert "METADATA_DATA_ACCESS" not in tables
+    assert "METADATA_GOVERNANCE_REVIEWS" not in tables
+    assert "METADATA_DATA_ACCESS" in tables
 
 
 
@@ -339,7 +342,7 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
     assert result["expected_table_count"] == 2
     assert result["registered_tables"] == ["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL_RULES"]
     assert result["show_tables_statement"] is None
-    assert result["optional_documented_tables"] == ["METADATA_DATA_ACCESS"]
+    assert result["optional_documented_tables"] == []
     assert calls == [
         ("dev", "metadata", "METADATA_DATA_STEWARD", None, spark),
         ("dev", "metadata", "METADATA_GUARDRAIL_RULES", None, spark),

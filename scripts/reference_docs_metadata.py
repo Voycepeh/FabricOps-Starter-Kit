@@ -1275,13 +1275,13 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'template_segment': 'Guardrail governance review',
   'use_when': 'Use in 03_governance after widget_select_guardrail_target to enrich selected catalogue columns with descriptive business context, sensitivity, PII, and configured custom metadata.',
   'parameters': 'See the source docstring for the selected guardrail state, configuration, environment, and Spark session parameters.',
-  'returns': 'Widget state containing editable row controls, record builders, and a save callback for column context and classification metadata.',
+  'returns': 'Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.',
   'related_functions': ['widget_select_guardrail_target', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profile evidence.',
   'when_to_use': 'Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.',
   'do_not_use_when': 'Do not use to author DQ rules or runtime enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.',
   'glossary_terms': ['catalogue evidence', 'metadata lakehouse', 'guardrail'],
-  'return_interpretation': 'The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_COLUMN_CONTEXT and METADATA_COLUMN_CLASSIFICATION.',
+  'return_interpretation': 'The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT_RULES.',
   'common_failure_causes': ['The selected guardrail target has no column-level catalogue evidence.',
                             'Configured custom fields omit a field name.',
                             'Metadata lakehouse writes cannot be routed through 00_env_config.']},
@@ -1388,16 +1388,16 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders governance review controls for marking table policy, reviewing '
-                      'proposed or bypass-active guardrail rules, and applying approve, reject, or '
+  'expanded_purpose': 'Renders governance review controls for reviewing '
+                      'proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or '
                       'supersede actions.',
   'when_to_use': 'Use in 03_governance after selecting a guardrail target to perform human review '
-                 'of rule intent and table policy state.',
+                 'of enrichment and guardrail rule intent.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or profile evidence '
                      'generation; it is an interactive governance review widget.',
   'glossary_terms': ['guardrail', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns controls, current rule history, and action helpers '
-                           'that write to guardrail rules or governance review tables when '
+                           'that write to enrichment or guardrail rule tables when '
                            'invoked.',
   'common_failure_causes': ['No target state is selected.',
                             'No proposed or bypassed rules are available for review.',
@@ -2004,13 +2004,13 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                       'requested.',
                                                       'The metadata target cannot be written.']},
  'widget_review_guardrail_governance': {'expanded_purpose': 'Renders governance review controls '
-                                                            'for marking table policy, reviewing '
-                                                            'proposed or bypass-active guardrail '
+                                                            'for reviewing '
+                                                            'proposed or bypass-active enrichment and guardrail '
                                                             'rules, and applying approve, reject, '
                                                             'or supersede actions.',
                                         'when_to_use': 'Use in 03_governance after selecting a '
                                                        'guardrail target to perform human review '
-                                                       'of rule intent and table policy state.',
+                                                       'of enrichment and guardrail rule intent.',
                                         'do_not_use_when': 'Do not use for automatic pipeline '
                                                            'enforcement or profile evidence '
                                                            'generation; it is an interactive '
@@ -2021,7 +2021,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                         'return_interpretation': 'The widget returns controls, '
                                                                  'current rule history, and action '
                                                                  'helpers that write to guardrail '
-                                                                 'rules or governance review '
+                                                                 'rules or guardrail rule '
                                                                  'tables when invoked.',
                                         'common_failure_causes': ['No target state is selected.',
                                                                   'No proposed or bypassed rules '

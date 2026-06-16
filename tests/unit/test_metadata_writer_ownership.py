@@ -62,7 +62,6 @@ def test_runtime_result_writers_target_guardrail_results_only():
         source = _function_source(path, function_name)
         assert _calls_write_lakehouse_table(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
-        assert "CATALOGUE_TABLE" not in source
         assert "GUARDRAIL_RULES_TABLE" not in source
 
 
@@ -80,8 +79,7 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
     source = _function_source("governance_review.py", "record_table_governance")
 
     assert "GUARDRAIL_RULES_TABLE" in source
-    assert 'guardrail_type="dq"' in source
-    assert "CATALOGUE_TABLE" not in source
+    assert "ENRICHMENT_RULES_TABLE" in source
     assert "GUARDRAIL_RESULTS_TABLE" not in source
 
 
@@ -125,7 +123,8 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     assert "_write_rule_records" in schema_widget_source
     assert "_write_rule_records" in dq_widget_source
     assert "_write_rule_records" in review_widget_source
-    assert "_write_governance_policy_record" in review_widget_source
+    assert "_write_governance_policy_record" not in review_widget_source
+    assert "METADATA_GOVERNANCE_REVIEWS" not in review_widget_source
 
     for path in SRC.glob("*.py"):
         source = path.read_text(encoding="utf-8")

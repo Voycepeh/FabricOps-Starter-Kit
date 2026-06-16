@@ -22,7 +22,7 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 
 ## Architecture
 
-![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
+![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.svg){ .full-width }
 
 The architecture image shows the high-level metadata coordination pattern across agreement, pipeline, governance, and runtime evidence. The active metadata table map below lists the implemented table ownership used by the starter kit. Relationships described on this page are logical joins used by notebooks, helpers, dashboards, and reviews.
 
