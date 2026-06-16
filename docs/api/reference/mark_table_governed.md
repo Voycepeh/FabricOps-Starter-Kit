@@ -7,9 +7,25 @@ Persist a governance policy row that marks a table as governed.
 
 `fabricops_kit/governance_review.py:2502`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/governance_review.py#L2502-L2504">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L2502-L2504">View on GitHub</a>
 </div>
 
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
+
+- Use in 03_governance when stewards decide that a table should require governance review for future guardrail rule changes.
+
+**Do not use when:**
+
+- Do not use for ungoverned policy registration, runtime enforcement, or rule approval actions.
+
+**Additional context:**
+
+Writes a governance policy row that marks the selected table as governed so new engineering guardrail rules require approval or approved bypass.
+
+</details>
 
 ## Signature
 
@@ -45,9 +61,20 @@ Example usage not documented yet.
 
 Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
 
+### Return interpretation
+
+A successful return indicates the governed policy row was built and, when runtime arguments are provided, appended to METADATA_GOVERNANCE_REVIEWS.
+
 ## Raises / Errors
 
 Not documented yet
+
+### Common failure causes
+
+- The selected table state is incomplete.
+- The metadata target cannot be written.
+- Approval policy is invalid.
+- Reviewer metadata is missing.
 
 ## Relationships
 
@@ -121,7 +148,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 1
 - Used in templates: 03_governance
-- Glossary terms: —
+- Glossary terms: guardrail, metadata lakehouse
 
 ### AI implementation contract
 
@@ -143,7 +170,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/governance_review.py#L2502-L2504">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/governance_review.py#L2502-L2504</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L2502-L2504">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L2502-L2504</a>
 - Start line: `2502`
 - End line: `2504`
 - Signature:
@@ -171,6 +198,13 @@ def mark_table_governed(
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 

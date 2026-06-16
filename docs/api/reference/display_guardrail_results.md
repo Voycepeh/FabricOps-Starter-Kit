@@ -7,9 +7,25 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 `fabricops_kit/pipeline.py:386`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L386-L414">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L386-L414">View on GitHub</a>
 </div>
 
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
+
+- Use in 02_pipeline immediately after run_table_guardrails and before stop_if_failed so users see guardrail outcomes before the notebook stops.
+
+**Do not use when:**
+
+- Do not use to mutate guardrail results or decide active rules; it is presentation-only.
+
+**Additional context:**
+
+Returns summary, detailed, or debug guardrail display output so Fabric notebooks show readable tables by default while preserving raw result bundles for developers.
+
+</details>
 
 ## Signature
 
@@ -41,9 +57,20 @@ Example usage not documented yet.
 
 Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
 
+### Return interpretation
+
+Summary and detailed modes return display-friendly rows or Spark DataFrames; debug mode returns the raw nested guardrail summary or bundle.
+
 ## Raises / Errors
 
 Not documented yet
+
+### Common failure causes
+
+- Mode is not summary, detailed, or debug.
+- The Spark session cannot create a DataFrame from display rows.
+- The result bundle is malformed.
+- The caller expects debug internals while using summary mode.
 
 ## Relationships
 
@@ -128,7 +155,7 @@ No additional callable notes are documented.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L379-L383"><code>_rows_for_display</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L379-L383"><code>_rows_for_display</code></a>
         </div>
       </section>
     </div>
@@ -150,7 +177,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: guardrail, notebook template
 
 ### AI implementation contract
 
@@ -174,7 +201,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L386-L414">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L386-L414</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L386-L414">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L386-L414</a>
 - Start line: `386`
 - End line: `414`
 - Signature:
@@ -200,6 +227,13 @@ def display_guardrail_results(
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 

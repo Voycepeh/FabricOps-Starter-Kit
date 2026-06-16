@@ -7,9 +7,25 @@ Build compact one-row-per-table guardrail summary rows.
 
 `fabricops_kit/pipeline.py:258`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L258-L321">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L258-L321">View on GitHub</a>
 </div>
 
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
+
+- Use as the default 02_pipeline display mode for normal operators before deciding whether the notebook should stop.
+
+**Do not use when:**
+
+- Do not use when raw nested internals are required for framework debugging; use debug display mode instead.
+
+**Additional context:**
+
+Builds compact one-row-per-table runtime guardrail summaries that show pass/fail status, the first failed guardrail, and the recommended next action.
+
+</details>
 
 ## Signature
 
@@ -37,9 +53,20 @@ Example usage not documented yet.
 
 Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
 
+### Return interpretation
+
+Rows with can_continue set to no identify the table and guardrail reason that should be fixed before continuing.
+
 ## Raises / Errors
 
 Not documented yet
+
+### Common failure causes
+
+- The result bundle omits table names.
+- Guardrail sections use unexpected result shapes.
+- No summary can be built for an empty result bundle.
+- The caller expects Spark DataFrame rendering but did not pass a Spark session to the display helper.
 
 ## Relationships
 
@@ -109,41 +136,41 @@ No additional callable notes are documented.
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L248-L255"><code>_table_keys</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L248-L255"><code>_table_keys</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L139-L141"><code>_result_status</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L139-L141"><code>_result_status</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule evaluation</h4>
         <p>Convert configured rules into executable checks and evaluation results.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L220-L232"><code>_dq_reason</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L220-L232"><code>_dq_reason</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Result summary</h4>
         <p>Build final statuses, counts, and messages for the caller.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L158-L169"><code>_next_action</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L144-L148"><code>_result_can_continue</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L151-L155"><code>_result_reason</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L158-L169"><code>_next_action</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L144-L148"><code>_result_can_continue</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L151-L155"><code>_result_reason</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L186-L190"><code>_freshness_reason</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L235-L245"><code>_guardrail_reason</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L193-L217"><code>_profile_behavior_reason</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L172-L183"><code>_schema_reason</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L134-L136"><code>_yes_no</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L186-L190"><code>_freshness_reason</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L235-L245"><code>_guardrail_reason</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L193-L217"><code>_profile_behavior_reason</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L172-L183"><code>_schema_reason</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L134-L136"><code>_yes_no</code></a>
         </div>
       </section>
     </div>
@@ -165,7 +192,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 3
 - Outbound references count: 6
 - Used in templates: 02_pipeline
-- Glossary terms: —
+- Glossary terms: guardrail, can_continue
 
 ### AI implementation contract
 
@@ -194,7 +221,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L258-L321">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/pipeline.py#L258-L321</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L258-L321">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/pipeline.py#L258-L321</a>
 - Start line: `258`
 - End line: `321`
 - Signature:
@@ -218,6 +245,13 @@ def build_guardrail_summary_rows(
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 

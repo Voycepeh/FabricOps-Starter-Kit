@@ -147,6 +147,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
             "columns": ["amount"],
             "severity": "error",
             "description": "Amount must be non-negative",
+            "review_status": "governance_approved",
             "value": 0,
         }
     ]
@@ -201,6 +202,7 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
             "columns": ["amount"],
             "severity": "error",
             "description": "Amount must be non-negative",
+            "review_status": "governance_approved",
             "value": 0,
         }
     ]

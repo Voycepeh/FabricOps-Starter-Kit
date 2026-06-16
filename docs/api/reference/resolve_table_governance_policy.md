@@ -7,9 +7,25 @@ Resolve the effective table-level guardrail governance policy.
 
 `fabricops_kit/governance_review.py:1743`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/governance_review.py#L1743-L1781">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L1743-L1781">View on GitHub</a>
 </div>
 
+<details class="reference-usage-details">
+<summary>Usage guidance</summary>
+
+**Use when:**
+
+- Use whenever 02_pipeline or 03_governance needs the effective governed or ungoverned state for a selected table.
+
+**Do not use when:**
+
+- Do not use to enforce a rule outcome or infer physical profile behavior; it only resolves policy state.
+
+**Additional context:**
+
+Resolves the latest active table-level governance policy so guardrail authoring can decide whether rules are self-approved, proposed, or bypass-active pending review.
+
+</details>
 
 ## Signature
 
@@ -45,9 +61,20 @@ Example usage not documented yet.
 
 Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
 
+### Return interpretation
+
+The returned policy dictionary defaults to ungoverned/no-approval-required unless an active governance review row marks the table governed.
+
 ## Raises / Errors
 
 Not documented yet
+
+### Common failure causes
+
+- Governance review rows are missing or stale.
+- Table identity fields do not match.
+- Policy values are malformed.
+- The metadata lakehouse cannot be read.
 
 ## Relationships
 
@@ -95,7 +122,7 @@ No additional callable notes are documented.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/governance_review.py#L65-L70"><code>_coerce_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L65-L70"><code>_coerce_rows</code></a>
         </div>
       </section>
     </div>
@@ -117,7 +144,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Inbound references count: 1
 - Outbound references count: 1
 - Used in templates: 02_pipeline, 03_governance
-- Glossary terms: —
+- Glossary terms: guardrail, metadata lakehouse
 
 ### AI implementation contract
 
@@ -139,7 +166,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/governance_review.py#L1743-L1781">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7bbc85a74147bcfc02f1948a8bca8a640c1e15b8/src/fabricops_kit/governance_review.py#L1743-L1781</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L1743-L1781">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8645ff20c03192521dcf46b2587df5fb13d8754/src/fabricops_kit/governance_review.py#L1743-L1781</a>
 - Start line: `1743`
 - End line: `1781`
 - Signature:
@@ -167,6 +194,13 @@ def resolve_table_governance_policy(
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
+
+## Glossary
+
+- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
