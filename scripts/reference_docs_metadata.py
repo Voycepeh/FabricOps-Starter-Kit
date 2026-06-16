@@ -71,7 +71,8 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
  {'module_name': 'data_agreement',
   'visibility': 'public',
   'module_summary': 'Owns agreement metadata capture, audited record building, metadata commit '
-                    'helpers, and agreement intake widgets used by 01_agreement.',
+                    'helpers, agreement intake widgets, and 02_pipeline agreement '
+                    'selection/registration helpers.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': True},
  {'module_name': 'data_profiling',
@@ -145,7 +146,9 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                    'configs, transform logic, target writes, lineage relationships, and pipeline '
                    'naming visible while package helpers handle reusable config enrichment, '
                    'guardrails, and evidence plumbing.',
-  'segments': [{'symbols': ['read_lakehouse_table',
+  'segments': [{'symbols': ['widget_select_agreement',
+                            'get_selected_agreement',
+                            'read_lakehouse_table',
                             'read_lakehouse_csv',
                             'read_lakehouse_parquet',
                             'read_lakehouse_excel',
@@ -340,6 +343,82 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'path': '../../how-fabricops-works/notebook-templates.md'},
                      {'title': 'Metadata Tables',
                       'path': '../../how-fabricops-works/metadata-tables.md'}]},
+ {'kind': 'function',
+  'module': 'data_agreement',
+  'function_type': 'callable',
+  'summary_override': 'Render an agreement selector and optionally register the active notebook.',
+  'symbol_name': 'widget_select_agreement',
+  'template_notebook': '02_pipeline',
+  'template_segment': 'Agreement selection',
+  'use_when': 'Use in 02_pipeline to select an approved data agreement and optionally register the '
+              'active notebook before pipeline evidence is written.',
+  'do_not_use_when': 'Do not use for guardrail target selection; use '
+                     'widget_select_guardrail_target for catalogue-backed guardrail authoring and '
+                     'review targets.',
+  'parameters': 'config, env, optional spark_session, and notebook registration options for '
+                'loading agreement choices from metadata.',
+  'returns': 'Interactive widget state; call get_selected_agreement to retrieve the selected '
+             'agreement record.',
+  'raises': 'Raises metadata read, widget dependency, or configuration errors when agreement '
+            'metadata cannot be loaded.',
+  'side_effects': 'Displays an IPython widget and may register the active notebook selection in '
+                  'metadata when requested.',
+  'fabric_context': 'Requires agreement metadata created through 01_agreement and metadata routing '
+                    'from 00_env_config.',
+  'ai_verification': 'Verify the user selected an agreement and call get_selected_agreement before '
+                     'generating pipeline code that depends on agreement context.',
+  'preferred_example': 'widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)\n'
+                       'agreement = get_selected_agreement()',
+  'related_functions': ['get_selected_agreement', 'setup_metadata_tables'],
+  'expanded_purpose': 'Displays an agreement selector and stores the chosen agreement so pipeline '
+                      'and exploration notebooks can bind work to approved business context.',
+  'when_to_use': 'Use near the start of 02_pipeline or 99_explore before reads, profiling, '
+                 'lineage, or governance evidence need an agreement id.',
+  'glossary_terms': ['notebook template'],
+  'return_interpretation': 'A visible selection widget does not mean an agreement is selected; '
+                           'call get_selected_agreement after the user chooses a row.',
+  'common_failure_causes': ['No agreement metadata rows are available.',
+                            'The user has not selected an agreement.',
+                            'Notebook registration metadata cannot be written.',
+                            'The configured metadata lakehouse cannot be read.'],
+  'related_guides': [{'title': 'Notebook Templates',
+                      'path': '../../how-fabricops-works/notebook-templates.md'}]},
+ {'kind': 'function',
+  'module': 'data_agreement',
+  'function_type': 'callable',
+  'summary_override': 'Return the agreement selected by widget_select_agreement.',
+  'symbol_name': 'get_selected_agreement',
+  'template_notebook': '02_pipeline',
+  'template_segment': 'Agreement selection',
+  'use_when': 'Use immediately after widget_select_agreement to retrieve the selected agreement '
+              'record for pipeline logic and evidence binding.',
+  'do_not_use_when': 'Do not use before rendering and completing widget_select_agreement, or as a '
+                     'substitute for querying all agreement metadata.',
+  'parameters': 'No required parameters; reads the current in-memory widget selection state.',
+  'returns': 'Selected agreement dictionary for the active notebook session.',
+  'raises': 'Raises an error when no agreement has been selected in the current session.',
+  'side_effects': 'Reads session/widget state only; it does not write metadata, tables, or files.',
+  'fabric_context': 'Depends on a prior widget_select_agreement call in the same notebook session '
+                    'and agreement metadata loaded via 00_env_config routing.',
+  'ai_verification': 'Verify the returned agreement has the expected dataset/table identifiers '
+                     'before using it to drive reads, writes, or governance evidence.',
+  'preferred_example': 'agreement = get_selected_agreement()\n'
+                       'dataset_name = agreement["dataset_name"]',
+  'related_functions': ['widget_select_agreement'],
+  'expanded_purpose': 'Returns the agreement chosen by widget_select_agreement so downstream cells '
+                      'can pass consistent agreement identifiers to pipeline helpers.',
+  'when_to_use': 'Use after rendering and completing widget_select_agreement when code needs the '
+                 'selected agreement values.',
+  'glossary_terms': ['notebook template'],
+  'return_interpretation': 'A returned dictionary contains the selected agreement fields. A '
+                           'missing value means the selector has not been completed in the current '
+                           'notebook state.',
+  'common_failure_causes': ['widget_select_agreement has not been run.',
+                            'The user has not selected an agreement.',
+                            'Notebook state was reset.',
+                            'The selected row is no longer present in metadata.'],
+  'related_guides': [{'title': 'Notebook Templates',
+                      'path': '../../how-fabricops-works/notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
@@ -1929,7 +2008,42 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                   'Unsupported governance action '
                                                                   'is selected.',
                                                                   'The metadata target cannot be '
-                                                                  'written.']}}
+                                                                  'written.']},
+ 'widget_select_agreement': {'expanded_purpose': 'Displays an agreement selector and stores the '
+                                                 'chosen agreement so pipeline and exploration '
+                                                 'notebooks can bind work to approved business '
+                                                 'context.',
+                             'when_to_use': 'Use near the start of 02_pipeline or 99_explore '
+                                            'before reads, profiling, lineage, or governance '
+                                            'evidence need an agreement id.',
+                             'glossary_terms': ['notebook template'],
+                             'return_interpretation': 'A visible selection widget does not mean an '
+                                                      'agreement is selected; call '
+                                                      'get_selected_agreement after the user '
+                                                      'chooses a row.',
+                             'common_failure_causes': ['No agreement metadata rows are available.',
+                                                       'The user has not selected an agreement.',
+                                                       'Notebook registration metadata cannot be '
+                                                       'written.',
+                                                       'The configured metadata lakehouse cannot '
+                                                       'be read.']},
+ 'get_selected_agreement': {'expanded_purpose': 'Returns the agreement chosen by '
+                                                'widget_select_agreement so downstream cells can '
+                                                'pass consistent agreement identifiers to pipeline '
+                                                'helpers.',
+                            'when_to_use': 'Use after rendering and completing '
+                                           'widget_select_agreement when code needs the selected '
+                                           'agreement values.',
+                            'glossary_terms': ['notebook template'],
+                            'return_interpretation': 'A returned dictionary contains the selected '
+                                                     'agreement fields. A missing value means the '
+                                                     'selector has not been completed in the '
+                                                     'current notebook state.',
+                            'common_failure_causes': ['widget_select_agreement has not been run.',
+                                                      'The user has not selected an agreement.',
+                                                      'Notebook state was reset.',
+                                                      'The selected row is no longer present in '
+                                                      'metadata.']}}
 
 RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Notebook Templates',
                      'path': '../../how-fabricops-works/notebook-templates.md'},
@@ -1998,7 +2112,11 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Notebook Templates',
  'write_pipeline_run_summary': [{'title': 'Pipeline Guardrails',
                                  'path': '../../how-fabricops-works/pipeline-guardrails.md'},
                                 {'title': 'Metadata Tables',
-                                 'path': '../../how-fabricops-works/metadata-tables.md'}]}
+                                 'path': '../../how-fabricops-works/metadata-tables.md'}],
+ 'widget_select_agreement': [{'title': 'Notebook Templates',
+                              'path': '../../how-fabricops-works/notebook-templates.md'}],
+ 'get_selected_agreement': [{'title': 'Notebook Templates',
+                             'path': '../../how-fabricops-works/notebook-templates.md'}]}
 
 
 

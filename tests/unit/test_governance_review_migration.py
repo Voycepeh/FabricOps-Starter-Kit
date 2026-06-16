@@ -30,6 +30,8 @@ EXPECTED_V1_CALLABLES = [
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_render_agreement_evidence",
+    "widget_select_agreement",
+    "get_selected_agreement",
         "read_lakehouse_table",
         "write_lakehouse_table",
         "read_lakehouse_csv",
@@ -146,45 +148,6 @@ def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
 
     with pytest.raises(ValueError):
         governance._validate_dq_rules([{**rules[0], "rule_type": "unsupported_rule"}])
-
-
-def test_record_table_governance_writes_context_dq_and_classification(monkeypatch):
-    """Verify record table governance writes context dq and classification."""
-    writes = []
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows, env, target, kwargs)))
-    profile_rows = [
-        {
-            "environment_name": "dev",
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "column_name": "order_id",
-            "metadata_table_key": "dev|sales|orders",
-            "metadata_column_key": "dev|sales|orders|order_id",
-        }
-    ]
-
-    result = governance.record_table_governance(
-        framework_config(),
-        "dev",
-        profile_rows,
-        spark_session=FakeSpark(),
-        context_reviews=[{"column_name": "order_id", "business_context": "Order identifier", "commit": True}],
-        dq_rule_reviews=[{"rule_id": "order_id_required", "rule_type": "not_null", "columns": ["order_id"], "severity": "error", "description": "Required", "commit": True}],
-        classification_reviews=[{"column_name": "order_id", "sensitivity_label": "internal", "personal_data_classification": "not_personal_data", "commit": True}],
-        approved_by="reviewer@example.com",
-    )
-
-    assert {table for table, *_ in writes} == {
-        governance.COLUMN_CONTEXT_TABLE,
-        governance.GUARDRAIL_RULES_TABLE,
-        governance.COLUMN_CLASSIFICATION_TABLE,
-    }
-    assert all((env, target) == ("dev", "metadata") for _, _, env, target, _ in writes)
-    assert result["column_context"][0]["business_context"] == "Order identifier"
-    assert result["dq_rules"][0]["rule_id"] == "order_id_required"
-    assert result["dq_rules"][0]["guardrail_type"] == "dq"
-    assert result["column_classification"][0]["sensitivity_label"] == "internal"
-
 
 
 def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns():

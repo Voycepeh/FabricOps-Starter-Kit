@@ -7,7 +7,7 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 `fabricops_kit/pipeline.py:386`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/pipeline.py#L386-L414">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8203be14da89d7078b315f4a4b18762161a02623/src/fabricops_kit/pipeline.py#L386-L414">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -155,7 +155,7 @@ No additional callable notes are documented.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/pipeline.py#L379-L383"><code>_rows_for_display</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8203be14da89d7078b315f4a4b18762161a02623/src/fabricops_kit/pipeline.py#L379-L383"><code>_rows_for_display</code></a>
         </div>
       </section>
     </div>
@@ -201,7 +201,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/pipeline.py#L386-L414">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8aef52ab641529925e4a6ac2ab3c49a02921570/src/fabricops_kit/pipeline.py#L386-L414</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8203be14da89d7078b315f4a4b18762161a02623/src/fabricops_kit/pipeline.py#L386-L414">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/8203be14da89d7078b315f4a4b18762161a02623/src/fabricops_kit/pipeline.py#L386-L414</a>
 - Start line: `386`
 - End line: `414`
 - Signature:

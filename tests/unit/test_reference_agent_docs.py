@@ -13,6 +13,8 @@ PLACEHOLDER = "Not documented yet"
 CORE_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
+    "widget_select_agreement",
+    "get_selected_agreement",
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_lakehouse_csv",

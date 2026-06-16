@@ -29,7 +29,7 @@ Use these generated API references when you want implementation details for the 
 
 - `00_env_config`: central environment, target, and Lakehouse schema settings; [setup_notebook](../api/reference/setup_notebook/); plus an optional commented [setup_metadata_tables](../api/reference/setup_metadata_tables/) block. Uncomment and run metadata setup once per environment, then comment it back so downstream `%run 00_env_config` stays fast.
 - `01_agreement`: [widget_render_data_steward](../api/reference/widget_render_data_steward/), [widget_render_data_agreement](../api/reference/widget_render_data_agreement/), and [widget_render_agreement_evidence](../api/reference/widget_render_agreement_evidence/).
-- `02_pipeline`: [prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/), [run_table_guardrails](../api/reference/run_table_guardrails/), [profile_dataframe](../api/reference/profile_dataframe/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/).
+- `02_pipeline`: starts by selecting an approved agreement with [widget_select_agreement](../api/reference/widget_select_agreement/) and reading it with [get_selected_agreement](../api/reference/get_selected_agreement/) so the active notebook can be registered before pipeline evidence is written. It then uses [prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/), [run_table_guardrails](../api/reference/run_table_guardrails/), [profile_dataframe](../api/reference/profile_dataframe/), [write_pipeline_lineage](../api/reference/write_pipeline_lineage/), and [write_pipeline_run_summary](../api/reference/write_pipeline_run_summary/).
 - `03_governance`: [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/) and [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/). Governance reviewers use the current guardrail review flow; old selection widgets are not preserved for compatibility.
 
 ## Template notebooks
@@ -177,3 +177,5 @@ These notebooks are release-specific validation aids. They are stored beside the
 | --- | --- |
 | `example_pipeline_smoke_test.ipynb` | Generates deterministic `smoke_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |
 | `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |
+
+Agreement selection is separate from guardrail target selection. The agreement selector anchors pipeline evidence to approved agreement metadata and notebook registry linkage; guardrail target selection uses `METADATA_DATA_CATALOGUE` profile evidence after profiling.

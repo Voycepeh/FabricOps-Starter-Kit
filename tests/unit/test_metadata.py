@@ -217,6 +217,8 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_render_agreement_evidence",
+    "widget_select_agreement",
+    "get_selected_agreement",
         "read_lakehouse_table",
         "write_lakehouse_table",
         "read_lakehouse_csv",

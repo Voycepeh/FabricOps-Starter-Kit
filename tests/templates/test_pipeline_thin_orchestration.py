@@ -60,15 +60,15 @@ def test_pipeline_notebook_uses_minimal_public_helpers_and_no_pr_only_wrappers()
     assert "through `run_table_guardrails`" in markdown
 
 
-def test_pipeline_uses_explicit_agreement_context():
-    """Verify pipeline uses explicit agreement context variables."""
+def test_pipeline_agreement_selector_registers_notebook_context():
+    """Verify pipeline agreement selector registers notebook context."""
     _markdown, code, _cells = _notebook_sources()
 
-    assert "widget_select_" + "agreement" not in code
-    assert "get_selected_agreement" not in code
-    assert 'AGREEMENT_ID = ""' in code
-    assert 'AGREEMENT_CONTRACT_VERSION = ""' in code
-    assert 'NOTEBOOK_REGISTRY_ID = ""' in code
+    selector_block = code[code.index("widget_select_agreement(") : code.index("AGREEMENT = get_selected_agreement()")]
+    assert "metadata_schema=METADATA_SCHEMA" in selector_block
+    assert "register_notebook=True" in selector_block
+    assert 'AGREEMENT_ID = AGREEMENT.get("agreement_id", "")' in code
+    assert 'NOTEBOOK_REGISTRY_ID = AGREEMENT.get("notebook_registry_id", AGREEMENT.get("registration_id", ""))' in code
 
 
 def test_pipeline_notebook_contains_final_thin_flow_sections():

@@ -10,7 +10,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true
     },
@@ -100,7 +100,23 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "get_selected_agreement",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Agreement selection",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "data_agreement",
+      "visibility": "public",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_agreement_evidence",
@@ -116,7 +132,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_data_agreement",
@@ -132,7 +148,7 @@
     {
       "module_name": "data_agreement",
       "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, and agreement intake widgets used by 01_agreement.",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
       "callable_name": "widget_render_data_steward",
@@ -143,6 +159,22 @@
       "template_segment": "Agreement intake",
       "used_in_templates": [
         "01_agreement"
+      ]
+    },
+    {
+      "module_name": "data_agreement",
+      "visibility": "public",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "widget_select_agreement",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Agreement selection",
+      "used_in_templates": [
+        "02_pipeline"
       ]
     },
     {

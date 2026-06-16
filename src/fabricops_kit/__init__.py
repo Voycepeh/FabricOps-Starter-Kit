@@ -6,9 +6,11 @@ from importlib.metadata import PackageNotFoundError, version
 
 from .config import setup_metadata_tables, setup_notebook
 from .data_agreement import (
+    get_selected_agreement,
     widget_render_agreement_evidence,
     widget_render_data_agreement,
     widget_render_data_steward,
+    widget_select_agreement,
 )
 from .data_profiling import profile_dataframe
 from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, validate_schema, validate_schema_rule
@@ -59,6 +61,8 @@ __all__ = [
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
+    "widget_select_agreement",
+    "get_selected_agreement",
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_lakehouse_csv",

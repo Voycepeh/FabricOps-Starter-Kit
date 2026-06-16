@@ -90,6 +90,16 @@ Use the finder below to look up public callables from active v1 modules. For int
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
+<article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the agreement selected by widget_select_agreement.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+
+
+  </div>
+</article>
 <article id="pipeline-prepare_pipeline_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_pipeline_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Prepare source or target table configs for 02_pipeline.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare source or target table configs for 02_pipeline.</p>
@@ -277,6 +287,16 @@ Use the finder below to look up public callables from active v1 modules. For int
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_write_governance_policy_record</code></li><li><code>_write_rule_records</code></li><li><code>apply_governance_rule_action</code></li><li><code>mark_table_governed</code></li><li><code>mark_table_ungoverned</code></li></ul></details>
+
+  </div>
+</article>
+<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
 
   </div>
 </article>

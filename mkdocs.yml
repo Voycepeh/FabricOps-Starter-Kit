@@ -43,6 +43,7 @@ nav:
           - enforce_freshness: api/reference/enforce_freshness.md
           - enforce_freshness_rule: api/reference/enforce_freshness_rule.md
           - enforce_profile_behavior: api/reference/enforce_profile_behavior.md
+          - get_selected_agreement: api/reference/get_selected_agreement.md
           - prepare_pipeline_table_configs: api/reference/prepare_pipeline_table_configs.md
           - profile_dataframe: api/reference/profile_dataframe.md
           - read_lakehouse_csv: api/reference/read_lakehouse_csv.md
@@ -62,6 +63,7 @@ nav:
           - widget_render_data_agreement: api/reference/widget_render_data_agreement.md
           - widget_render_data_steward: api/reference/widget_render_data_steward.md
           - widget_review_guardrail_governance: api/reference/widget_review_guardrail_governance.md
+          - widget_select_agreement: api/reference/widget_select_agreement.md
           - widget_select_guardrail_target: api/reference/widget_select_guardrail_target.md
           - write_catalogue_evidence: api/reference/write_catalogue_evidence.md
           - write_lakehouse_table: api/reference/write_lakehouse_table.md
