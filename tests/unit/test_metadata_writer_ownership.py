@@ -125,7 +125,8 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     assert "_write_rule_records" in schema_widget_source
     assert "_write_rule_records" in dq_widget_source
     assert "_write_rule_records" in review_widget_source
-    assert "_write_governance_policy_record" in review_widget_source
+    assert "_write_governance_policy_record" not in review_widget_source
+    assert "METADATA_GOVERNANCE_REVIEWS" not in review_widget_source
 
     for path in SRC.glob("*.py"):
         source = path.read_text(encoding="utf-8")

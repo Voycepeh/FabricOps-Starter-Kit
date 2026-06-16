@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2393`
+`fabricops_kit/governance_review.py:2569`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/governance_review.py#L2393-L2481">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a353e064668bed2af14df04c16b5401637ee2d1d/src/fabricops_kit/governance_review.py#L2569-L2664">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -15,7 +15,7 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 **Use when:**
 
-- Use in 03_governance after selecting a guardrail target to perform human review of rule intent and table policy state.
+- Use in 03_governance after selecting a guardrail target to perform human review of enrichment and guardrail rule intent.
 
 **Do not use when:**
 
@@ -23,7 +23,7 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 **Additional context:**
 
-Renders governance review controls for marking table policy, reviewing proposed or bypass-active guardrail rules, and applying approve, reject, or supersede actions.
+Renders governance review controls for reviewing proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or supersede actions.
 
 </details>
 
@@ -50,7 +50,7 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Handover state from :func:`widget_select_guardrail_target`. |
+| `state` | `Mapping[str, Any]` | Yes | Handover state from :func:`widget_select_guardrail_target`. The state may include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``. |
 | `config` | `Any` | No | Runtime objects used for save actions. |
 | `env` | `str \| None` | No | Not documented yet |
 | `spark_session` | `Any` | No | Not documented yet |
@@ -61,7 +61,7 @@ Notebook-facing state, records, display rows, or persisted metadata rows produce
 
 ### Return interpretation
 
-The widget returns controls, current rule history, and action helpers that write to guardrail rules or governance review tables when invoked.
+The widget returns controls, current rule history, and action helpers that write to enrichment or guardrail rule tables when invoked.
 
 ## Raises / Errors
 
@@ -82,11 +82,9 @@ Not documented yet
 
 ### Calls
 
-- `fabricops_kit.governance_review._write_governance_policy_record`
-- `fabricops_kit.governance_review._write_rule_records`
+- `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
-- `fabricops_kit.governance_review.mark_table_governed`
-- `fabricops_kit.governance_review.mark_table_ungoverned`
+- `fabricops_kit.governance_review.load_rule_review_history`
 
 ## Implementation details
 
@@ -111,36 +109,15 @@ No additional callable notes are documented.
 
     ```text
     widget_review_guardrail_governance(...)
-    ├── _write_governance_policy_record(...)
-    │   ├── _configured_lakehouse_schema(...)
-    │   │   ├── _get_store(...)
-    │   │   │   └── _normalize_path_config(...)
-    │   │   │       └── PathConfig(...)
-    │   │   └── _normalize_schema_name(...)
-    │   └── write_lakehouse_table(...)
-    │       ├── _get_store(...)
-    │       │   └── _normalize_path_config(...)
-    │       │       └── PathConfig(...)
-    │       ├── _normalize_table_name(...)
-    │       └── _resolve_lakehouse_table_path(...)
-    │           ├── _normalize_table_name(...)
-    │           └── _resolve_lakehouse_schema(...)
-    │               └── _normalize_schema_name(...)
-    ├── _write_rule_records(...)
-    │   ├── _configured_lakehouse_schema(...)
-    │   │   ├── _get_store(...)
-    │   │   │   └── _normalize_path_config(...)
-    │   │   │       └── PathConfig(...)
-    │   │   └── _normalize_schema_name(...)
-    │   └── write_lakehouse_table(...)
-    │       ├── _get_store(...)
-    │       │   └── _normalize_path_config(...)
-    │       │       └── PathConfig(...)
-    │       ├── _normalize_table_name(...)
-    │       └── _resolve_lakehouse_table_path(...)
-    │           ├── _normalize_table_name(...)
-    │           └── _resolve_lakehouse_schema(...)
-    │               └── _normalize_schema_name(...)
+    ├── apply_governance_enrichment_action(...)
+    │   ├── _now_utc_iso(...)
+    │   │   └── _current_audit_timestamp(...)
+    │   │       └── _get_audit_timezone(...)
+    │   │           └── _validate_audit_timezone(...)
+    │   └── _resolve_action_by(...)
+    │       ├── _context_get(...)
+    │       └── _runtime_context(...)
+    │           └── _context_get(...)
     ├── apply_governance_rule_action(...)
     │   ├── _now_utc_iso(...)
     │   │   └── _current_audit_timestamp(...)
@@ -150,56 +127,17 @@ No additional callable notes are documented.
     │       ├── _context_get(...)
     │       └── _runtime_context(...)
     │           └── _context_get(...)
-    ├── mark_table_governed(...)
-    │   └── build_table_governance_policy_record(...)
-    │       ├── _now_utc_iso(...)
-    │       │   └── _current_audit_timestamp(...)
-    │       │       └── _get_audit_timezone(...)
-    │       │           └── _validate_audit_timezone(...)
-    │       └── _resolve_action_by(...)
-    │           ├── _context_get(...)
-    │           └── _runtime_context(...)
-    │               └── _context_get(...)
-    └── mark_table_ungoverned(...)
-        └── build_table_governance_policy_record(...)
-            ├── _now_utc_iso(...)
-            │   └── _current_audit_timestamp(...)
-            │       └── _get_audit_timezone(...)
-            │           └── _validate_audit_timezone(...)
-            └── _resolve_action_by(...)
-                ├── _context_get(...)
-                └── _runtime_context(...)
-                    └── _context_get(...)
+    └── load_rule_review_history(...)
     ```
 
-??? info "Internal helpers used: 6"
+??? info "Internal helpers used: 0"
 
-    This callable uses 6 internal helpers for metadata loading, rule parsing, and fabric or spark access.
+    This callable uses 0 internal helpers; `widget_review_guardrail_governance` does not have package-local helper descendants in the generated call graph.
 
     <div class="reference-helper-groups">
-      <section class="reference-helper-group">
-        <h4>Metadata loading</h4>
-        <p>Load and identify the metadata or table context needed by the callable.</p>
-        <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L155-L168"><code>_configured_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/governance_review.py#L1813-L1823"><code>_write_governance_policy_record</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/governance_review.py#L1798-L1810"><code>_write_rule_records</code></a>
-        </div>
-      </section>
-      <section class="reference-helper-group">
-        <h4>Rule parsing</h4>
-        <p>Normalize stored or user-provided values before applying rules.</p>
-        <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/config.py#L653-L693"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
-        </div>
-      </section>
-      <section class="reference-helper-group">
-        <h4>Fabric or Spark access</h4>
-        <p>Access Fabric or Spark runtime services used by the implementation.</p>
-        <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/config.py#L696-L735"><code>_get_store</code></a>
-        </div>
+      <section class="reference-helper-group reference-helper-group-empty">
+        <h4>No internal helpers detected</h4>
+        <p>This callable does not have package-local helper descendants in the generated call graph.</p>
       </section>
     </div>
 
@@ -216,9 +154,9 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2393`
+- Source line: `2569`
 - Inbound references count: 0
-- Outbound references count: 5
+- Outbound references count: 3
 - Used in templates: 03_governance
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
@@ -237,18 +175,16 @@ Not documented yet
 
 ### Outbound references
 
-- `fabricops_kit.governance_review._write_governance_policy_record`
-- `fabricops_kit.governance_review._write_rule_records`
+- `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
-- `fabricops_kit.governance_review.mark_table_governed`
-- `fabricops_kit.governance_review.mark_table_ungoverned`
+- `fabricops_kit.governance_review.load_rule_review_history`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/governance_review.py#L2393-L2481">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/governance_review.py#L2393-L2481</a>
-- Start line: `2393`
-- End line: `2481`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a353e064668bed2af14df04c16b5401637ee2d1d/src/fabricops_kit/governance_review.py#L2569-L2664">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a353e064668bed2af14df04c16b5401637ee2d1d/src/fabricops_kit/governance_review.py#L2569-L2664</a>
+- Start line: `2569`
+- End line: `2664`
 - Signature:
 
 ```python
@@ -269,7 +205,7 @@ def widget_review_guardrail_governance(
 
 ### Internal implementation summary
 
-- Internal helper count: 6
+- Internal helper count: 0
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

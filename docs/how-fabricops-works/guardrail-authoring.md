@@ -2,14 +2,15 @@
 
 FabricOps separates metadata ownership so each table has one clear purpose:
 
-- `METADATA_DATA_CATALOGUE` stores observed physical and profile evidence only.
+- `METADATA_DATA_CATALOGUE` stores observed physical/profile evidence plus current table governance policy fields.
+- `METADATA_ENRICHMENT_RULES` stores reviewable enrichment intent and its review lifecycle.
 - `METADATA_GUARDRAIL_RULES` stores guardrail rule intent across draft, proposed, self-approved, governance-approved, bypassed, rejected, and superseded states.
 - `METADATA_GUARDRAIL_RESULTS` stores runtime enforcement outcomes only.
-- `METADATA_GOVERNANCE_REVIEWS` stores table-level governance review and policy state.
+- Approval logs are derived from append-only history in `METADATA_ENRICHMENT_RULES` and `METADATA_GUARDRAIL_RULES`.
 
 ## Table governance policy
 
-Tables default to `governance_mode="ungoverned"` and `approval_policy="no_approval_required"` until the latest active row in `METADATA_GOVERNANCE_REVIEWS` marks the table governed. Governed tables can require normal approval or allow an approval bypass that creates a post-review queue.
+Tables default to `governance_mode="ungoverned"` and `approval_policy="no_approval_required"` unless the selected catalogue context carries governed policy fields. Governed tables can require normal approval or allow an approval bypass that creates a post-review queue.
 
 ## 02 engineering authoring flow
 
@@ -19,7 +20,7 @@ For ungoverned tables, engineering-authored rules are saved active with `review_
 
 ## 03 governance review flow
 
-`03_governance` uses `widget_review_guardrail_governance` to mark a table governed or ungoverned, approve proposed rules, reject rules, supersede rules, and review bypassed active rules. Approval activates the rule as `governance_approved` and clears post-review requirements. Rejection and superseding deactivate the rule intent without deleting history.
+`03_governance` uses `widget_review_guardrail_governance` to review enrichment and guardrail rows from the rule tables, approve proposed rules, reject rules, supersede rules, and review bypassed active rules. Approval activates the rule as `governance_approved` and clears post-review requirements. Rejection and superseding deactivate the rule intent without deleting history.
 
 ## Runtime enforcement
 

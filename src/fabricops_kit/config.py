@@ -971,8 +971,7 @@ def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> lis
     The active registry is intentionally source-driven: agreement tables come
     from ``DataAgreementConfig``, notebook registry from ``metadata.py``, and
     governance/pipeline tables from the governance schema registry.
-    ``METADATA_DATA_ACCESS`` is documented as optional access-capture metadata
-    and is not part of the current active setup registry.
+    ``METADATA_DATA_ACCESS`` is part of the active setup registry for public-safe access context. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
     """
     normalized = _validate_framework_config(config)
     from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
@@ -1204,7 +1203,7 @@ def _validate_metadata_table_registration(
         "metadata_schema": resolved_metadata_schema,
         "fully_qualified_tables": [f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in expected],
         "show_tables_statement": None,
-        "optional_documented_tables": ["METADATA_DATA_ACCESS"],
+        "optional_documented_tables": [],
     }
 
 

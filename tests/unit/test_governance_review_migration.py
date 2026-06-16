@@ -254,9 +254,9 @@ def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tab
 
     assert governance.GUARDRAIL_RULES_TABLE in schemas
     assert governance.PIPELINE_RUNS_TABLE in schemas
-    assert governance.GOVERNANCE_REVIEWS_TABLE in schemas
+    assert governance.DATA_ACCESS_TABLE in schemas
+    assert governance.ENRICHMENT_RULES_TABLE in schemas
     assert "run_summary_json" in schemas[governance.PIPELINE_RUNS_TABLE].fieldNames()
-    assert "outcome" in schemas[governance.GOVERNANCE_REVIEWS_TABLE].fieldNames()
     assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)
 
 
@@ -290,9 +290,9 @@ def test_review_governance_evidence_reads_metadata_and_writes_approved_outcome(m
 
     assert result["outcome"] == "approved"
     assert result["blockers"] == []
-    assert writes[0][0] == governance.GOVERNANCE_REVIEWS_TABLE
-    assert writes[0][1][0]["pipeline_run_id"] == "run-002"
-    assert writes[0][1][0]["agreement_id"] == "agr-1"
+    assert writes == []
+    assert result["review"]["pipeline_run_id"] == "run-002"
+    assert result["review"]["agreement_id"] == "agr-1"
 
 
 def test_review_governance_evidence_blocks_missing_agreement_and_failed_dq(monkeypatch):
@@ -326,7 +326,8 @@ def test_review_governance_evidence_blocks_missing_agreement_and_failed_dq(monke
     assert {item["code"] for item in result["blockers"]} == {"missing_agreement_metadata", "dq_failed"}
     assert [item["code"] for item in result["blockers"]].count("dq_failed") == 1
     assert result["warnings"][0]["code"] == "target_guardrail_status_warning"
-    assert writes[0][1][0]["outcome"] == "rejected"
+    assert writes == []
+    assert result["review"]["outcome"] == "rejected"
 
 
 def _run_governance_review_for_pipeline_dq_status(monkeypatch, pipeline_dq_status: str, *, catalogue_dq_status: str = ""):
@@ -382,7 +383,8 @@ def test_review_governance_evidence_blocks_pipeline_failed_dq_status(monkeypatch
     assert result["outcome"] == "rejected"
     assert [item["code"] for item in result["blockers"]].count("dq_failed") == 1
     assert result["warnings"] == []
-    assert writes[0][1][0]["outcome"] == "rejected"
+    assert writes == []
+    assert result["review"]["outcome"] == "rejected"
 
 
 def test_review_governance_evidence_warns_on_pipeline_warning_dq_status(monkeypatch):
@@ -392,7 +394,8 @@ def test_review_governance_evidence_warns_on_pipeline_warning_dq_status(monkeypa
     assert result["outcome"] == "needs_remediation"
     assert result["blockers"] == []
     assert [item["code"] for item in result["warnings"]] == ["dq_warning"]
-    assert writes[0][1][0]["outcome"] == "needs_remediation"
+    assert writes == []
+    assert result["review"]["outcome"] == "needs_remediation"
 
 
 def test_review_governance_evidence_ignores_pipeline_passed_dq_status(monkeypatch):
@@ -402,4 +405,5 @@ def test_review_governance_evidence_ignores_pipeline_passed_dq_status(monkeypatc
     assert result["outcome"] == "approved"
     assert result["blockers"] == []
     assert result["warnings"] == []
-    assert writes[0][1][0]["outcome"] == "approved"
+    assert writes == []
+    assert result["review"]["outcome"] == "approved"

@@ -43,8 +43,8 @@ This separation keeps the handoff junior-friendly:
 | Responsibility | Widget | Writes |
 | --- | --- | --- |
 | Select a profiled source table or target DataFrame | `widget_select_guardrail_target` | Reads `METADATA_DATA_CATALOGUE`; does not write runtime outcomes. |
-| Metadata enrichment | `widget_enrich_table_metadata` | `METADATA_COLUMN_CONTEXT`, `METADATA_COLUMN_CLASSIFICATION` |
-| Guardrail governance review | `widget_review_guardrail_governance` | `METADATA_GUARDRAIL_RULES`, and `METADATA_GOVERNANCE_REVIEWS` when table governance policy is committed |
+| Metadata enrichment | `widget_enrich_table_metadata` | `METADATA_ENRICHMENT_RULES` |
+| Guardrail governance review | `widget_review_guardrail_governance` | `METADATA_GUARDRAIL_RULES` |
 
 The old separated business context, classification, and DQ review widget flow is removed from the current template. DQ belongs with guardrail authoring/review, not metadata enrichment.
 
@@ -52,10 +52,9 @@ The old separated business context, classification, and DQ review widget flow is
 
 | Evidence or intent | Metadata table | Main writer |
 | --- | --- | --- |
-| Catalogue/profile evidence | `METADATA_DATA_CATALOGUE` | `02_pipeline` profiling/guardrail steps |
-| Metadata enrichment | `METADATA_COLUMN_CONTEXT`, `METADATA_COLUMN_CLASSIFICATION` | `03_governance` enrichment widget |
+| Catalogue/profile evidence and table policy | `METADATA_DATA_CATALOGUE` | `02_pipeline` profiling/guardrail steps |
+| Metadata enrichment | `METADATA_ENRICHMENT_RULES` | `03_governance` enrichment widget |
 | Guardrail governance intent | `METADATA_GUARDRAIL_RULES` | Guardrail authoring/review widgets |
-| Table governance review policy | `METADATA_GOVERNANCE_REVIEWS` | Guardrail governance review widget, when applicable |
 | Runtime enforcement outcomes | `METADATA_GUARDRAIL_RESULTS` | `02_pipeline` runtime guardrail enforcement |
 
 ## What `02_pipeline` creates before governance
@@ -77,7 +76,7 @@ A typical current governance flow is:
 1. Run `02_pipeline` through the relevant source or target profiling/guardrail steps.
 2. Open `03_governance`.
 3. Select a catalogue-backed target with [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/).
-4. Use [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) to save column context and classification metadata.
+4. Use [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) to save enrichment intent and classification metadata.
 5. Use [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) to review table governance state and proposed, bypassed, rejected, or superseded guardrail rules.
 6. Rerun `02_pipeline` when runtime enforcement should consume approved active guardrail rules.
 
@@ -88,7 +87,7 @@ The important control point is the commit. Nothing becomes governed metadata unt
 Use these generated API references for the helpers behind the current governance flow:
 
 - [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/) selects profiled targets from `METADATA_DATA_CATALOGUE`.
-- [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) writes column context and classification enrichment metadata.
+- [widget_enrich_table_metadata](../api/reference/widget_enrich_table_metadata/) writes enrichment intent and classification enrichment metadata.
 - [widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/) captures table governance and guardrail rule review decisions.
 - [enforce_dq_rules](../api/reference/enforce_dq_rules/) is the pipeline-side runtime consumer of governance-approved DQ rules.
 
@@ -102,3 +101,5 @@ Approved metadata affects later runs only after it is written to metadata tables
 - `enforce_dq_rules` reads `METADATA_GUARDRAIL_RULES` from the configured metadata lakehouse target, resolves the newest version for each DQ rule, keeps only active governance-reviewed rows with `guardrail_type="dq"`, evaluates them, and returns a guardrail result with status, checks, a tagged DataFrame, and summary fields for evidence.
 
 Error-severity DQ failures return `status="failed"` and `can_continue=false`. Warning-severity DQ failures return `status="warning"` and `can_continue=true`.
+
+Approval logs are derived from append-only rows in `METADATA_ENRICHMENT_RULES` and `METADATA_GUARDRAIL_RULES`; there is no separate review log table.
