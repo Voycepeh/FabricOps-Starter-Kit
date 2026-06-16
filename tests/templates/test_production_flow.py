@@ -1,4 +1,4 @@
-"""Test FabricOps behavior and reference contracts."""
+"""Contract tests for production notebook template behavior."""
 
 from __future__ import annotations
 
@@ -31,13 +31,20 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     production = _code("02_pipeline.ipynb")
     governance = _code("03_governance.ipynb")
 
-    assert "run_table_guardrails" in production
-    assert "prepare_pipeline_table_configs" in production
-    assert "write_lakehouse_table" in production
-    assert "write_warehouse_table" in production
-    assert "write_pipeline_lineage" in production
-    assert "write_pipeline_run_summary" in production
-    assert "run_summary" in production
+    for expected in [
+        "run_table_guardrails",
+        "prepare_pipeline_table_configs",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary",
+        "runtime_summary_result",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_author_dq_rules",
+        "widget_enrich_table_metadata",
+        "widget_review_guardrail_governance",
+    ]:
+        assert expected in production
     assert "widget_select_guardrail_target" in governance
     assert "widget_enrich_table_metadata" in governance
     assert governance.index("widget_select_guardrail_target") < governance.index("widget_enrich_table_metadata") < governance.index("widget_review_guardrail_governance")
@@ -49,29 +56,28 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
     """Verify production template enforces guardrails before full dataset write."""
     production = _code("02_pipeline.ipynb")
 
-    source_guardrails = production.index("source_guardrail_results = run_table_guardrails")
-    source_stop_flag = production.index("stop_on_failure=False", source_guardrails)
-    source_display = production.index("display(source_guardrail_display)", source_stop_flag)
-    source_stop = production.index("stop_if_failed({", source_display)
-    transformation = production.index("df_orders_enriched = (", source_stop)
-    target_guardrails = production.index("target_guardrail_results = run_table_guardrails", transformation)
-    target_stop_flag = production.index("stop_on_failure=False", target_guardrails)
-    target_display = production.index("display(target_guardrail_display)", target_stop_flag)
-    target_stop = production.index("stop_if_failed({", target_display)
-    target_write = production.index("target_write_status = {}", target_stop)
+    source_profile = production.index("source_profile_results = run_table_guardrails")
+    transformation = production.index("df_orders_enriched = (", source_profile)
+    target_profile = production.index("target_profile_results = run_table_guardrails", transformation)
+    widget_curation = production.index("selected_guardrail_target = widget_select_guardrail_target", target_profile)
+    source_enforcement = production.index("source_enforcement_results = run_table_guardrails", widget_curation)
+    source_stop = production.index("stop_if_failed({", source_enforcement)
+    target_enforcement = production.index("target_enforcement_results = run_table_guardrails", source_stop)
+    target_stop = production.index("stop_if_failed({", target_enforcement)
+    write_settings = production.index("TARGET_WRITE_SETTINGS = {", target_stop)
+    target_write = production.index("target_write_status = {}", write_settings)
 
-    assert source_guardrails < source_stop_flag < source_display < source_stop < transformation
-    assert target_guardrails < target_stop_flag < target_display < target_stop < target_write
+    assert source_profile < transformation < target_profile < widget_curation < source_enforcement
+    assert source_enforcement < source_stop < target_enforcement < target_stop < write_settings < target_write
     assert "valid_rows" not in production
     assert "quarantine_rows" not in production
     assert "failure_rows" not in production
     assert "df_output.filter" not in production
     assert "df_output.where" not in production
-    assert "run_table_guardrails" in production
 
 
 def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
-    """Verify guardrail orchestration is imported and documents simple v1 behavior."""
+    """Verify guardrail orchestration uses package helpers and no local implementation."""
     production = _code("02_pipeline.ipynb")
 
     assert "def run_table_guardrails(" not in production
@@ -83,11 +89,8 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "read_lakehouse_parquet," in production
     assert "read_lakehouse_excel," in production
     assert "read_warehouse_table," in production
-    assert "source_guardrail_display = display_guardrail_results(" in production
-    assert "display(source_guardrail_display)" in production
-    assert "target_guardrail_display = display_guardrail_results(" in production
-    assert "display(target_guardrail_display)" in production
-    assert 'target_dq_results = target_guardrail_results["dq_results"]' in production
+    assert "display_guardrail_results(source_enforcement_results" in production
+    assert "display_guardrail_results(target_enforcement_results" in production
     assert "target_write_status = {}" in production
     assert "_load_source_dataframe" not in production
     assert "_read_source_dataframe" not in production
@@ -96,6 +99,7 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "Warning-severity failure" in guardrail_docs
     assert "Error-severity failure" in guardrail_docs
     assert "blocks before the next critical step" in guardrail_docs
+
 
 def test_notebook_template_docs_describe_optional_example_notebooks():
     """Verify notebook template docs describe optional example notebooks."""
@@ -266,9 +270,6 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
 
 def test_example_pipeline_smoke_test_uses_shared_lakehouse_write_helper_without_unidentified_paths():
     """Verify example pipeline smoke test uses shared lakehouse write helper without unidentified paths."""
-    import json
-    from pathlib import Path
-
     notebook = json.loads(Path("templates/notebooks/example_pipeline_smoke_test.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
