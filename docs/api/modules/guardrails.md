@@ -80,14 +80,14 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
       <td>Callable</td>
       <td>function</td>
       <td>Enforce whether the latest data arrived within the configured freshness lag.</td>
-      <td>—</td>
+      <td><code>_coerce_date</code> (internal), <code>_iso_date_value</code> (internal), <code>_max_column_value</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Enforce static, changing, or skipped profile behavior against accepted catalogue profile evidence.</td>
-      <td>—</td>
+      <td><code>_accepted_profile_rows</code> (internal), <code>_apply_bypass_post_review_warning</code> (internal), <code>_catalogue_value</code> (internal), <code>_guardrail_exclude_columns</code> (internal), <code>_is_missing_table_error</code> (internal), <code>_json_dumps_stable</code> (internal), <code>_profile_hash</code> (internal), <code>_profile_payload_from_profile</code> (internal), <code>_select_profile_behavior_rule</code> (internal), <code>_string_value</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a></td>
@@ -115,12 +115,12 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <li>
 <a class="reference-chip" href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_coerce_date</code></span>, <span class="reference-chip"><code>_iso_date_value</code></span>, <span class="reference-chip"><code>_max_column_value</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_accepted_profile_rows</code></span>, <span class="reference-chip"><code>_apply_bypass_post_review_warning</code></span>, <span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_guardrail_exclude_columns</code></span>, <span class="reference-chip"><code>_is_missing_table_error</code></span>, <span class="reference-chip"><code>_json_dumps_stable</code></span>, <span class="reference-chip"><code>_profile_hash</code></span>, <span class="reference-chip"><code>_profile_payload_from_profile</code></span>, <span class="reference-chip"><code>_select_profile_behavior_rule</code></span>, <span class="reference-chip"><code>_string_value</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/stop_if_failed/"><code>stop_if_failed</code></a>
@@ -159,6 +159,14 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     <tr>
       <td><code>_catalogue_value</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_check_schema_rule_runtime</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_check_schema_runtime</code></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_coerce_date</code></td>
@@ -259,6 +267,16 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 </li>
 <li>
 <span class="reference-chip"><code>_catalogue_value</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_check_schema_rule_runtime</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_apply_bypass_post_review_warning</code></span>, <span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_check_schema_runtime</code></span>, <span class="reference-chip"><code>_parse_rule_parameters</code></span>, <span class="reference-chip"><code>_select_table_guardrail_rule</code></span>, <span class="reference-chip"><code>_string_value</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_check_schema_runtime</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_actual_schema</code></span>, <span class="reference-chip"><code>_normalize_datatype</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_coerce_date</code></span>

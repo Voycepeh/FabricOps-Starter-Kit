@@ -87,28 +87,28 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone agreement-evidence widget.</td>
-      <td>—</td>
+      <td><code>_render_agreement_evidence_widget</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-agreement intake widget.</td>
-      <td>—</td>
+      <td><code>_render_maintenance_widget</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-steward intake widget.</td>
-      <td>—</td>
+      <td><code>_render_maintenance_widget</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
-      <td>—</td>
+      <td><code>_html_escape</code> (internal), <code>_latest_agreement_versions</code> (internal), <code>_list_data_agreements</code> (internal), <code>_render_searchable_selector</code> (internal), <code>_require_ipywidgets</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -134,22 +134,22 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="../../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_render_maintenance_widget</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_render_maintenance_widget</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>
 </li>
 </ul>
 </section>

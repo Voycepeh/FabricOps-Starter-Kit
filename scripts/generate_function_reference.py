@@ -1629,7 +1629,7 @@ def main() -> None:
             def _public_callable_rows(symbols: list[Symbol], tier: str) -> list[list[str]]:
                 rows: list[list[str]] = []
                 for symbol in symbols:
-                    related = []
+                    related = sorted([c for c in info["calls"].get(symbol.name, set()) if c in info["functions"] and c.startswith("_")])
                     callable_link = callable_docs_link(symbol.name, module, docs_metadata, source_module=actual_module)
                     rows.append([
                         f'<a href="{callable_link}"><code>{symbol.name}</code></a>',
@@ -1652,7 +1652,7 @@ def main() -> None:
 
         lines.extend(["", "## Module relationships", ""])
         lines.extend(["", "### Callable relationships", ""])
-        internal_fns = sorted([f for f in info["functions"] if f.startswith("_") and not _hide_from_public_relationships(f"{PACKAGE_NAME}.{actual_module}.{f}")])
+        internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
         module_edges = [
             (e["caller_qualified_name"], e["callee_qualified_name"])
             for e in edges
@@ -1660,14 +1660,14 @@ def main() -> None:
         ]
         module_edge_pairs = sorted(set(module_edges))
         inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
-        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module and (_is_public_reference_qn(s, node_lookup) or not _hide_from_public_relationships(s))]
-        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module and (_is_public_reference_qn(d, node_lookup) or not _hide_from_public_relationships(d))]
+        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module and not _hide_from_public_relationships(s)]
+        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module and not _hide_from_public_relationships(d)]
         if module_edge_pairs:
             lines.extend(["", "#### Inside this module", ""])
             lines.append('<section class="callable-relationship-card">')
             lines.append(f"<h5>{module}</h5>")
             public_names = sorted([p.name for p in public_in_module])
-            internal_names = sorted([f for f in info["functions"] if f.startswith("_") and not _hide_from_public_relationships(f"{PACKAGE_NAME}.{actual_module}.{f}")])
+            internal_names = sorted([f for f in info["functions"] if f.startswith("_")])
             for heading, names in [("Public callables", public_names)]:
                 lines.append(f"<h6>{heading}</h6>")
                 if not names:
@@ -1676,7 +1676,7 @@ def main() -> None:
                 lines.append('<ul class="callable-relationship-rows">')
                 for name in names:
                     src_qn = f"fabricops_kit.{actual_module}.{name}"
-                    callees = sorted([d for s, d in inside_rows if s == src_qn and _is_public_reference_qn(d, node_lookup)], key=lambda q: _label(q))
+                    callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
                     src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
                     lines.append("<li>")
                     lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
@@ -1868,11 +1868,9 @@ def main() -> None:
     dependency_callables: dict[str, dict[str, Any]] = {}
     for qn in sorted(node_by_qn):
         node = node_by_qn[qn]
-        raw_deps = sorted(set(calls_by_qn.get(qn, [])))
-        deps = [d for d in raw_deps if _is_public_reference_qn(d, node_by_qn)] if node["exported"] else raw_deps
-        internal_helpers = [d for d in raw_deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
-        raw_used_by = sorted(set(used_by_qn.get(qn, [])))
-        used_by = [u for u in raw_used_by if _is_public_reference_qn(u, node_by_qn)] if node["exported"] else raw_used_by
+        deps = sorted(set(calls_by_qn.get(qn, [])))
+        internal_helpers = [d for d in deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
+        used_by = sorted(set(used_by_qn.get(qn, [])))
         used_in_templates = template_usage_by_symbol.get(node["callable_name"], []) if node["exported"] else []
         dependency_callables[qn] = {
             "qualified_name": qn,
@@ -2080,10 +2078,12 @@ def main() -> None:
             display_module = canonical_public_module(module_name)
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
-        calls = dependency_meta.get("calls", [])
-        used_by = dependency_meta.get("used_by", [])
-        calls_count = int(dependency_meta.get("calls_count", len(calls)))
-        used_by_count = int(dependency_meta.get("used_by_count", len(used_by)))
+        raw_calls = dependency_meta.get("calls", [])
+        raw_used_by = dependency_meta.get("used_by", [])
+        calls = [item for item in raw_calls if _is_public_reference_qn(item, node_by_qn)] if node["exported"] else raw_calls
+        used_by = [item for item in raw_used_by if _is_public_reference_qn(item, node_by_qn)] if node["exported"] else raw_used_by
+        calls_count = len(calls)
+        used_by_count = len(used_by)
         classification_label = _function_type_label(function_type)
         all_items.extend(
             [

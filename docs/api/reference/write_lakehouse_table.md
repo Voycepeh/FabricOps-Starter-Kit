@@ -7,7 +7,7 @@ Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.
 
 `fabricops_kit/fabric_input_output.py:280`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L280-L389">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/fabric_input_output.py#L280-L389">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -154,24 +154,24 @@ Side effects:
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L96-L105"><code>_normalize_table_name</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L129-L135"><code>_resolve_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L138-L145"><code>_resolve_lakehouse_table_path</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/fabric_input_output.py#L96-L105"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/fabric_input_output.py#L129-L135"><code>_resolve_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/fabric_input_output.py#L138-L145"><code>_resolve_lakehouse_table_path</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -217,7 +217,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L280-L389">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/fabric_input_output.py#L280-L389</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/fabric_input_output.py#L280-L389">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/fabric_input_output.py#L280-L389</a>
 - Start line: `280`
 - End line: `389`
 - Signature:

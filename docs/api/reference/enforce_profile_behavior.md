@@ -7,7 +7,7 @@ Enforce static, changing, or skipped profile behavior against accepted catalogue
 
 `fabricops_kit/guardrails.py:687`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L687-L909">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L687-L909">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -236,70 +236,70 @@ relevant guardrail rule.
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L66-L72"><code>_current_audit_timestamp</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L58-L63"><code>_get_audit_timezone</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L23-L55"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/config.py#L66-L72"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/config.py#L58-L63"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/config.py#L23-L55"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L911-L914"><code>_is_missing_table_error</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L209-L210"><code>_json_dumps_stable</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L222-L243"><code>_profile_payload_from_profile</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L911-L914"><code>_is_missing_table_error</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L209-L210"><code>_json_dumps_stable</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L222-L243"><code>_profile_payload_from_profile</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L141-L187"><code>_normalize_datatype</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L407-L475"><code>_normalize_profile</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L141-L187"><code>_normalize_datatype</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L407-L475"><code>_normalize_profile</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Profile comparison</h4>
         <p>Compare current evidence with accepted profile values and behavior baselines.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L669-L680"><code>_catalogue_value</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L495-L507"><code>_profile_row_count</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L478-L485"><code>_row_to_dict</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L683-L684"><code>_string_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L669-L680"><code>_catalogue_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L495-L507"><code>_profile_row_count</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L478-L485"><code>_row_to_dict</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L683-L684"><code>_string_value</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Column handling</h4>
         <p>Select, exclude, and normalize column names used by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L488-L492"><code>_guardrail_exclude_columns</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L488-L492"><code>_guardrail_exclude_columns</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule evaluation</h4>
         <p>Convert configured rules into executable checks and evaluation results.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L36-L39"><code>_is_active_guardrail_rule</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L32-L33"><code>_rule_review_status</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L247-L272"><code>_select_profile_behavior_rule</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L36-L39"><code>_is_active_guardrail_rule</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L32-L33"><code>_rule_review_status</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L247-L272"><code>_select_profile_behavior_rule</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L274-L303"><code>_accepted_profile_rows</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L190-L205"><code>_actual_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L78-L85"><code>_apply_bypass_post_review_warning</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L213-L214"><code>_profile_hash</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L217-L219"><code>_schema_signature</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L274-L303"><code>_accepted_profile_rows</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L190-L205"><code>_actual_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L78-L85"><code>_apply_bypass_post_review_warning</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L213-L214"><code>_profile_hash</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L217-L219"><code>_schema_signature</code></a>
         </div>
       </section>
     </div>
@@ -354,7 +354,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/guardrails.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L687-L909">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bdb0b4d9d3c04f7f2dc4b803cc434e4f387f213f/src/fabricops_kit/guardrails.py#L687-L909</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L687-L909">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/715c366e83b29b2d0dd7b0ef41c48553ac52d602/src/fabricops_kit/guardrails.py#L687-L909</a>
 - Start line: `687`
 - End line: `909`
 - Signature:

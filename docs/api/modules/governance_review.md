@@ -80,28 +80,28 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>Callable</td>
       <td>function</td>
       <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
-      <td>—</td>
+      <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_read_guardrail_rule_metadata</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render interactive manual or AI-assisted DQ guardrail authoring controls.</td>
-      <td>—</td>
+      <td><code>_dq_records_from_selection</code> (internal), <code>_draft_dq_rules</code> (internal), <code>_latest_rule</code> (internal), <code>_rule_params</code> (internal), <code>_write_rule_records</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render interactive schema, freshness, and profile-behavior guardrail authoring controls.</td>
-      <td>—</td>
+      <td><code>_latest_rule</code> (internal), <code>_rule_params</code> (internal), <code>_schema_freshness_profile_records_from_selection</code> (internal), <code>_write_rule_records</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render a consolidated column metadata enrichment widget.</td>
-      <td>—</td>
+      <td><code>_collect_enrichment_extra_fields</code> (internal), <code>_enrichment_options</code> (internal), <code>_render_enrichment_extra_fields</code> (internal), <code>_selected_catalogue_rows_for_enrichment</code> (internal), <code>_value</code> (internal), <code>_write_table_metadata_enrichment_records</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
@@ -115,7 +115,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>Callable</td>
       <td>function</td>
       <td>Render an interactive target selector for guardrail authoring and governance review.</td>
-      <td>—</td>
+      <td><code>_filter_table_rows</code> (internal), <code>_read_metadata_table_or_empty</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -136,32 +136,32 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <li>
 <a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_dq_records_from_selection</code></span>, <span class="reference-chip"><code>_draft_dq_rules</code></span>, <span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_schema_freshness_profile_records_from_selection</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_collect_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_enrichment_options</code></span>, <span class="reference-chip"><code>_render_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_selected_catalogue_rows_for_enrichment</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>_write_table_metadata_enrichment_records</code></span>, <span class="reference-chip"><code>build_enrichment_rule_records</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>apply_governance_enrichment_action</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>load_rule_review_history</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
+<span class="reference-chip"><code>_filter_table_rows</code></span>, <span class="reference-chip"><code>_read_metadata_table_or_empty</code></span>, <span class="reference-chip"><code>resolve_table_governance_policy</code></span>
 </li>
 </ul>
 </section>
