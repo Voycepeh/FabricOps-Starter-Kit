@@ -86,8 +86,8 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Render interactive manual or AI-assisted DQ guardrail authoring controls.</td>
-      <td><code>_dq_records_from_selection</code> (internal), <code>_draft_dq_rules</code> (internal), <code>_latest_rule</code> (internal), <code>_rule_params</code> (internal), <code>_write_rule_records</code> (internal)</td>
+      <td>Render interactive manual DQ guardrail authoring controls.</td>
+      <td><code>_dq_records_from_selection</code> (internal), <code>_latest_rule</code> (internal), <code>_rule_params</code> (internal), <code>_write_rule_records</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a></td>
@@ -155,7 +155,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <li>
 <a class="reference-chip" href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_dq_records_from_selection</code></span>, <span class="reference-chip"><code>_draft_dq_rules</code></span>, <span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
+<span class="reference-chip"><code>_dq_records_from_selection</code></span>, <span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a>
@@ -290,7 +290,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_draft_dq_rules</code></td>
-      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_enrichment_options</code></td>

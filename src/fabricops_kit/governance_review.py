@@ -2410,14 +2410,15 @@ def widget_author_dq_rules(
     created_by_role: str = "engineering",
     commit: bool = False,
 ) -> dict[str, Any]:
-    """Render interactive manual or AI-assisted DQ rule authoring UI.
+    """Render interactive manual DQ rule authoring UI.
 
     Parameters
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
     dq_authoring_mode : {"manual", "ai_suggest"}, default="manual"
-        Authoring mode selected before the notebook cell runs.
+        Reserved for future assisted-drafting flows. The v1 public widget
+        always renders manual DQ authoring controls.
     rule_type : str, default="not_null"
         Initial DQ rule type for manual mode.
     selected_columns : iterable of str, optional
@@ -2427,7 +2428,7 @@ def widget_author_dq_rules(
     severity : str, default="warning"
         Initial rule severity.
     config, env, spark_session : Any, optional
-        Runtime objects used for AI suggestions and saves.
+        Runtime objects used for saves.
     bypass_reason : str, optional
         Initial approval-bypass reason.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
@@ -2440,8 +2441,8 @@ def widget_author_dq_rules(
     Returns
     -------
     dict[str, Any]
-        Widget state containing controls, generated records, suggestions, and
-        callable helpers for tests and notebook automation.
+        Widget state containing controls, generated records, and callable
+        helpers for tests and notebook automation.
 
     """
     widgets = importlib.import_module("ipywidgets")
@@ -2451,7 +2452,10 @@ def widget_author_dq_rules(
     initial_columns = tuple(column for column in (selected_columns or columns) if column in columns)
     existing_rules = list(state.get("existing_rules") or [])
     existing_dq = [row for row in existing_rules if str(row.get("guardrail_type") or "") == "dq"]
-    mode = str(dq_authoring_mode or "manual")
+    # AI-assisted DQ suggestion is deferred for a future separate assisted-drafting
+    # flow once the manual governance lifecycle is stable. Keep the parameter for
+    # now, but do not expose AI suggestion controls in the v1 public authoring UI.
+    mode = "manual"
 
     batch_rule_type = widgets.Dropdown(options=DQ_RULE_TYPES, value=rule_type if rule_type in DQ_RULE_TYPES else "not_null", description="Rule type")
     batch_columns = widgets.SelectMultiple(options=columns, value=initial_columns or tuple(columns), description="Columns", rows=min(max(len(columns), 4), 12), layout=widgets.Layout(width="420px"))
@@ -2464,19 +2468,15 @@ def widget_author_dq_rules(
     bypass_box = widgets.Textarea(value=bypass_reason, description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
     preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="220px"))
     history = widgets.HTML("<pre>" + json.dumps(existing_dq, indent=2, default=str) + "</pre>")
-    suggestions_html = widgets.HTML()
     message = widgets.HTML()
-    records_state: dict[str, Any] = {"records": [], "suggestions": []}
+    records_state: dict[str, Any] = {"records": []}
 
     save_draft_button = widgets.Button(description="Save draft", button_style="")
     submit_button = widgets.Button(description="Submit for governance review", button_style="success")
     apply_now_button = widgets.Button(description="Apply now", button_style="warning")
-    save_one_button = widgets.Button(description="Save/update selected rule", button_style="info")
-    clear_one_button = widgets.Button(description="Clear / supersede selected rule", button_style="warning")
-    ai_button = widgets.Button(description="Generate AI suggestions")
-    ai_button.layout.display = "" if mode == "ai_suggest" else "none"
-    approve_ai_button = widgets.Button(description="Approve AI suggestions", button_style="success")
-    reject_ai_button = widgets.Button(description="Reject AI suggestions")
+    save_one_draft_button = widgets.Button(description="Save selected rule as draft", button_style="")
+    submit_one_button = widgets.Button(description="Submit selected rule for governance review", button_style="success")
+    apply_one_button = widgets.Button(description="Apply selected rule now", button_style="warning")
 
     def _batch_parameters() -> dict[str, Any]:
         try:
@@ -2530,32 +2530,9 @@ def widget_author_dq_rules(
     def save_individual(*, action_type: str = "created", action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
         return save_records(build_individual_record(action_type=action_type, action="apply_now" if use_bypass else action))
 
-    def suggest_ai(_: Any = None) -> list[dict[str, Any]]:
-        profile_rows = list(state.get("catalogue_profile_rows") or [])
-        profile_df = spark_session.createDataFrame(profile_rows) if spark_session is not None else profile_rows
-        suggestions = _draft_dq_rules(profile_df=profile_df, table_name=str(state.get("table_name") or ""), config=config)
-        for suggestion in suggestions:
-            suggestion.update({"review_status": "draft", "is_active": False})
-        records_state["suggestions"].clear()
-        records_state["suggestions"].extend(suggestions)
-        suggestions_html.value = "<pre>" + json.dumps(suggestions, indent=2, default=str) + "</pre>"
-        message.value = f"<b>Loaded {len(suggestions)} AI draft suggestion(s). Edit and save approved suggestions.</b>"
-        return records_state["suggestions"]
-
-    def approve_ai(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
-        selected_action = "apply_now" if use_bypass else action
-        reason = bypass_box.value.strip() if selected_action == "apply_now" else ""
-        records = []
-        for suggestion in records_state["suggestions"]:
-            suggestion_columns = suggestion.get("columns") or [suggestion.get("column_name") or ""]
-            params = {key: value for key, value in suggestion.items() if key not in {"rule_id", "rule_type", "columns", "column_name", "review_status", "is_active"}}
-            records.extend(_dq_records_from_selection(state, rule_type=str(suggestion.get("rule_type") or "not_null"), selected_columns=suggestion_columns, parameters=params, severity=batch_severity.value, bypass_reason=reason, action=selected_action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config))
-        return save_records(records)
-
-    def reject_ai(_: Any = None) -> None:
-        records_state["suggestions"].clear()
-        suggestions_html.value = "<i>AI suggestions rejected; no active rules were saved.</i>"
-        message.value = "<b>Rejected AI suggestions.</b>"
+    # AI-assisted DQ suggestion helpers are intentionally not exposed through
+    # widget_author_dq_rules for v1. A separate assisted-drafting flow can reuse
+    # lower-level helpers such as _draft_dq_rules in a later release.
 
     for control in (batch_rule_type, batch_columns, batch_params, batch_severity, bypass_box):
         control.observe(lambda change: refresh_preview(), names="value")
@@ -2564,11 +2541,9 @@ def widget_author_dq_rules(
     save_draft_button.on_click(lambda _: save_batch(action="draft"))
     submit_button.on_click(lambda _: save_batch(action="submit"))
     apply_now_button.on_click(lambda _: save_batch(action="apply_now"))
-    save_one_button.on_click(lambda _: save_individual(action_type="created", action="submit"))
-    clear_one_button.on_click(lambda _: save_individual(action_type="superseded", action="submit"))
-    ai_button.on_click(suggest_ai)
-    approve_ai_button.on_click(lambda _: approve_ai(use_bypass=False))
-    reject_ai_button.on_click(reject_ai)
+    save_one_draft_button.on_click(lambda _: save_individual(action_type="created", action="draft"))
+    submit_one_button.on_click(lambda _: save_individual(action_type="created", action="submit"))
+    apply_one_button.on_click(lambda _: save_individual(action_type="created", action="apply_now"))
     load_existing_individual()
     refresh_preview()
     if commit:
@@ -2585,16 +2560,14 @@ def widget_author_dq_rules(
         individual_params,
         widgets.HTML("<h4>Existing rule history</h4>"),
         history,
-        ai_button,
-        suggestions_html,
-        widgets.HBox([approve_ai_button, reject_ai_button]),
         bypass_box,
         preview,
-        widgets.HBox([save_draft_button, submit_button, apply_now_button, save_one_button, clear_one_button]),
+        widgets.HBox([save_draft_button, submit_button, apply_now_button]),
+        widgets.HBox([save_one_draft_button, submit_one_button, apply_one_button]),
         message,
     ])
     ip.display(ui)
-    return {"records": records_state["records"], "suggestions": records_state["suggestions"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "apply_now_reason": bypass_box, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "save_draft_button": save_draft_button, "submit_button": submit_button, "apply_now_button": apply_now_button, "suggest_ai": suggest_ai, "approve_ai": approve_ai, "reject_ai": reject_ai, "ui": ui}
+    return {"records": records_state["records"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "apply_now_reason": bypass_box, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "save_draft_button": save_draft_button, "submit_button": submit_button, "apply_now_button": apply_now_button, "save_one_draft_button": save_one_draft_button, "submit_one_button": submit_one_button, "apply_one_button": apply_one_button, "ui": ui}
 
 def build_table_governance_policy_record(state: Mapping[str, Any], *, governance_mode: str, approval_policy: str | None = None, actor: str | None = None, reason: str = "", config: Any = None) -> dict[str, Any]:
     """Build a table-level governance policy row.

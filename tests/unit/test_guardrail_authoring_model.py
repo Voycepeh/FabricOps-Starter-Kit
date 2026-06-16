@@ -66,6 +66,17 @@ def _install_fake_notebook_widgets(monkeypatch):
     monkeypatch.setattr("importlib.import_module", lambda name: fake_widgets if name == "ipywidgets" else __import__(name))
 
 
+def _widget_descriptions(widget):
+    """Return all widget descriptions reachable from a fake widget tree."""
+    descriptions = []
+    description = getattr(widget, "description", "")
+    if description:
+        descriptions.append(description)
+    for child in getattr(widget, "children", []) or []:
+        descriptions.extend(_widget_descriptions(child))
+    return descriptions
+
+
 def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
     """Verify catalogue, rule, result, and governance policy fields stay separated."""
     schemas = _get_governance_metadata_schemas()
@@ -385,26 +396,56 @@ def test_governed_authoring_widget_actions_create_required_lifecycles(monkeypatc
     assert {record["requires_governance_review"] for record in applied} == {True}
 
 
-def test_dq_widget_manual_individual_clear_and_ai_drafts(monkeypatch):
-    """Verify DQ widget supports batch, individual, clear, and AI draft flows."""
+def test_dq_widget_batch_and_individual_actions_create_required_lifecycles(monkeypatch):
+    """Verify DQ authoring creates draft, submit, and apply-now lifecycle rows."""
     _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit import governance_review
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
+    widget = widget_author_dq_rules(state, selected_columns=["order_id"])
 
-    monkeypatch.setattr(governance_review, "_draft_dq_rules", lambda **kwargs: [{"rule_id": "ai", "rule_type": "not_null", "columns": ["order_id"]}])
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
+    batch_draft = widget["build_batch_records"](action="draft")
+    batch_submitted = widget["build_batch_records"](action="submit")
+    batch_applied = widget["build_batch_records"](action="apply_now")
+    individual_draft = widget["build_individual_record"](action="draft")
+    individual_submitted = widget["build_individual_record"](action="submit")
+    individual_applied = widget["build_individual_record"](action="apply_now")
+
+    for records in (batch_draft, individual_draft):
+        assert {record["activation_state"] for record in records} == {"inactive"}
+        assert {record["is_active"] for record in records} == {False}
+        assert {record["review_state"] for record in records} == {"draft"}
+        assert {record["review_status"] for record in records} == {"draft"}
+        assert {record["requires_governance_review"] for record in records} == {False}
+    for records in (batch_submitted, individual_submitted):
+        assert {record["activation_state"] for record in records} == {"pending"}
+        assert {record["is_active"] for record in records} == {False}
+        assert {record["review_state"] for record in records} == {"pending_governance_review"}
+        assert {record["review_status"] for record in records} == {"pending_governance_review"}
+        assert {record["requires_governance_review"] for record in records} == {True}
+    for records in (batch_applied, individual_applied):
+        assert {record["activation_state"] for record in records} == {"active"}
+        assert {record["is_active"] for record in records} == {True}
+        assert {record["review_state"] for record in records} == {"active_pending_governance_review"}
+        assert {record["review_status"] for record in records} == {"active_pending_governance_review"}
+        assert {record["requires_governance_review"] for record in records} == {True}
+        assert {record["activation_reason"] for record in records} == {"engineering_apply_now"}
+
+
+def test_dq_widget_exposes_only_manual_authoring_actions(monkeypatch):
+    """Verify DQ authoring hides AI and formal review controls in v1."""
+    _install_fake_notebook_widgets(monkeypatch)
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
     widget = widget_author_dq_rules(state, selected_columns=["order_id"], dq_authoring_mode="ai_suggest")
 
-    batch = widget["build_batch_records"]()
-    individual = widget["build_individual_record"]()
-    cleared = widget["build_individual_record"](action_type="superseded")
-    assert len(batch) == 1
-    assert individual[0]["column_name"] == "order_id"
-    assert cleared[0]["is_active"] is False
-    assert widget["suggest_ai"]() == [{"rule_id": "ai", "rule_type": "not_null", "columns": ["order_id"], "review_status": "draft", "is_active": False}]
-    approved = widget["approve_ai"]()
-    assert approved[0]["guardrail_type"] == "dq"
-    widget["reject_ai"]()
-    assert widget["suggestions"] == []
+    descriptions = set(_widget_descriptions(widget["ui"]))
+    assert "Generate AI suggestions" not in descriptions
+    assert "Approve AI suggestions" not in descriptions
+    assert "Reject AI suggestions" not in descriptions
+    assert "Clear / supersede selected rule" not in descriptions
+    assert "Save/update selected rule" not in descriptions
+    assert {"Save selected rule as draft", "Submit selected rule for governance review", "Apply selected rule now"}.issubset(descriptions)
+    assert not {"suggest_ai", "approve_ai", "reject_ai"} & set(widget)
+    formal_words = {"Approve", "Reject", "Replace", "Deactivate", "Supersede"}
+    assert not formal_words & descriptions
 
 
 def test_governance_review_widget_actions(monkeypatch):
