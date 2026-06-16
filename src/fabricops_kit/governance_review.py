@@ -1284,17 +1284,23 @@ def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = N
     _, F, _ = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
     latest = _latest_dq_rule_versions(metadata_df, table_name, env_name=env_name, dataset_name=dataset_name)
-    if "is_active" not in columns:
-        return []
     if "activation_state" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("activation_state"), F.lit(""))) == "active")
-    else:
+    elif "is_active" in columns:
         latest = latest.filter(F.col("is_active") == True)
+    else:
+        return []
     if "action_type" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("action_type"), F.lit("created"))) != "deactivated")
-    if "review_status" not in columns:
+    if "review_state" in columns and "review_status" in columns:
+        review_expr = F.coalesce(F.col("review_state"), F.col("review_status"))
+    elif "review_state" in columns:
+        review_expr = F.col("review_state")
+    elif "review_status" in columns:
+        review_expr = F.col("review_status")
+    else:
         return []
-    latest = latest.filter(F.lower(F.coalesce(F.col("review_state"), F.col("review_status"))).isin("self_approved", "governance_approved", "active_pending_governance_review"))
+    latest = latest.filter(F.lower(F.coalesce(review_expr, F.lit(""))).isin("self_approved", "governance_approved", "active_pending_governance_review"))
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
