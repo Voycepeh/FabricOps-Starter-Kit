@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 61</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 59</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>61</td>
+      <td>59</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -101,14 +101,14 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>Callable</td>
       <td>function</td>
       <td>Render a consolidated column metadata enrichment widget.</td>
-      <td><code>_build_classification_records</code> (internal), <code>_build_column_context_records</code> (internal), <code>_collect_enrichment_extra_fields</code> (internal), <code>_enrichment_options</code> (internal), <code>_render_enrichment_extra_fields</code> (internal), <code>_selected_catalogue_rows_for_enrichment</code> (internal), <code>_value</code> (internal), <code>_write_table_metadata_enrichment_records</code> (internal)</td>
+      <td><code>_collect_enrichment_extra_fields</code> (internal), <code>_enrichment_options</code> (internal), <code>_render_enrichment_extra_fields</code> (internal), <code>_selected_catalogue_rows_for_enrichment</code> (internal), <code>_value</code> (internal), <code>_write_table_metadata_enrichment_records</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render interactive controls for reviewing proposed and bypassed guardrail rules.</td>
-      <td><code>_write_governance_policy_record</code> (internal), <code>_write_rule_records</code> (internal)</td>
+      <td>—</td>
     </tr>
     <tr>
       <td><a href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
@@ -151,12 +151,12 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <li>
 <a class="reference-chip" href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_build_classification_records</code></span>, <span class="reference-chip"><code>_build_column_context_records</code></span>, <span class="reference-chip"><code>_collect_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_enrichment_options</code></span>, <span class="reference-chip"><code>_render_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_selected_catalogue_rows_for_enrichment</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>_write_table_metadata_enrichment_records</code></span>
+<span class="reference-chip"><code>_collect_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_enrichment_options</code></span>, <span class="reference-chip"><code>_render_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_selected_catalogue_rows_for_enrichment</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>_write_table_metadata_enrichment_records</code></span>, <span class="reference-chip"><code>build_enrichment_rule_records</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_write_governance_policy_record</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>mark_table_governed</code></span>, <span class="reference-chip"><code>mark_table_ungoverned</code></span>
+<span class="reference-chip"><code>apply_governance_enrichment_action</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>load_rule_review_history</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
@@ -193,14 +193,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_build_classification_records</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_build_column_context_records</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
-    </tr>
-    <tr>
       <td><code>_build_dq_rule_records</code></td>
       <td>—</td>
     </tr>
@@ -223,10 +215,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     <tr>
       <td><code>_collect_enrichment_extra_fields</code></td>
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_display_review_guidance</code></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><code>_dq_check_status</code></td>
@@ -271,6 +259,14 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     <tr>
       <td><code>_enrichment_options</code></td>
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_enrichment_payload_from_review</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_evaluate_governance_readiness</code></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_extract_assignment_payload</code></td>
@@ -353,10 +349,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
     <tr>
-      <td><code>_review_governance_evidence</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_rule_params</code></td>
       <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
     </tr>
@@ -413,12 +405,12 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
     <tr>
-      <td><code>_write_governance_policy_record</code></td>
-      <td><a href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
+      <td><code>_write_enrichment_records</code></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_write_rule_records</code></td>
-      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
+      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_write_table_metadata_enrichment_records</code></td>
@@ -446,16 +438,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>guardrail_authoring_status</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_build_classification_records</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_json</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_build_column_context_records</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_json</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_build_dq_rule_records</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_approved_column_identity</code></span>, <span class="reference-chip"><code>_approved_review_context</code></span>, <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_dq_rule_parameter_payload</code></span>, <span class="reference-chip"><code>_json</code></span>, <span class="reference-chip"><code>_normalize_dq_severity</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
@@ -478,11 +460,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 </li>
 <li>
 <span class="reference-chip"><code>_collect_enrichment_extra_fields</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_display_review_guidance</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_dq_check_status</code></span>
@@ -530,6 +507,14 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 </li>
 <li>
 <span class="reference-chip"><code>_enrichment_options</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_enrichment_payload_from_review</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_evaluate_governance_readiness</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_latest_row</code></span>, <span class="reference-chip"><code>_read_metadata_rows</code></span>, <span class="reference-chip"><code>_status_is_failed</code></span>, <span class="reference-chip"><code>_status_is_warning</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>load_catalogue_profile_rows</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_extract_assignment_payload</code></span>
@@ -618,11 +603,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_render_enrichment_extra_fields</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_review_governance_evidence</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_latest_row</code></span>, <span class="reference-chip"><code>_read_metadata_rows</code></span>, <span class="reference-chip"><code>_status_is_failed</code></span>, <span class="reference-chip"><code>_status_is_warning</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>load_catalogue_profile_rows</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_rule_params</code></span>
 </li>
 <li>
@@ -675,7 +655,9 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_write_governance_policy_record</code></span>
+<span class="reference-chip"><code>_write_enrichment_records</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_write_table_metadata_enrichment_records</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_write_rule_records</code></span>

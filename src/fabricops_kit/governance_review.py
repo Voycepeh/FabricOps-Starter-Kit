@@ -16,15 +16,14 @@ from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_k
 from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-COLUMN_CONTEXT_TABLE = "METADATA_COLUMN_CONTEXT"
+ENRICHMENT_RULES_TABLE = "METADATA_ENRICHMENT_RULES"
 GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 GUARDRAIL_REVIEW_STATUSES = ["draft", "proposed", "self_approved", "governance_approved", "bypass_active_pending_review", "rejected", "superseded"]
-COLUMN_CLASSIFICATION_TABLE = "METADATA_COLUMN_CLASSIFICATION"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
-GOVERNANCE_REVIEWS_TABLE = "METADATA_GOVERNANCE_REVIEWS"
+DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
 SUCCESS_STATUSES = {"success", "succeeded", "passed", "complete", "completed", "ok"}
 DQ_RULE_TYPES = [
     "not_null",
@@ -182,18 +181,18 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
         ("data_type", string), ("row_count", long), ("null_count", long), ("null_percent", double), ("distinct_count", long), ("distinct_percent", double),
         ("min_value", string), ("max_value", string), ("distribution_type", string), ("distribution_json", string),
         ("profile_mode", string), ("watermark_column", string), ("watermark_value", string), ("profile_hash", string), ("profile_payload_json", string),
+        ("governance_mode", string), ("approval_policy", string), ("bypass_allowed", boolean), ("policy_reason", string), ("policy_updated_by", string), ("policy_updated_at", string),
         ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string),
         *audit,
     ]
     return {
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
-        COLUMN_CONTEXT_TABLE: _schema(COLUMN_CONTEXT_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("business_context", string), ("notes", string), ("custom_fields_json", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
-        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), *audit]),
+        ENRICHMENT_RULES_TABLE: _schema(ENRICHMENT_RULES_TABLE, [("enrichment_rule_id", string), ("enrichment_rule_version", string), ("enrichment_rule_key", string), ("metadata_table_key", string), ("metadata_column_key", string), ("table_name", string), ("column_name", string), ("enrichment_scope", string), ("enrichment_type", string), ("enrichment_payload_json", string), ("business_name", string), ("business_description", string), ("business_meaning", string), ("column_description", string), ("classification", string), ("sensitivity_label", string), ("pii_flag", boolean), ("pii_type", string), ("data_domain", string), ("data_owner", string), ("data_steward", string), ("usage_notes", string), ("quality_notes", string), ("review_status", string), ("is_active", boolean), ("approval_policy", string), ("governance_mode", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("bypass_reason", string), ("requires_post_review", boolean), ("supersedes_enrichment_rule_id", string), ("effective_from", string), ("effective_to", string), ("created_at", string), ("created_by", string), ("updated_at", string), ("updated_by", string), ("run_id", string), ("notebook_id", string), ("notebook_registry_id", string), *audit]),
+        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("is_active", boolean), ("review_status", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("supersedes_rule_id", string), ("effective_from", string), ("effective_to", string), *audit]),
         GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
-        COLUMN_CLASSIFICATION_TABLE: _schema(COLUMN_CLASSIFICATION_TABLE, [("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("sensitivity_label", string), ("personal_data_classification", string), ("pii_identifier_type", string), ("handling_requirement", string), ("reasoning", string), ("custom_fields_json", string), ("review_status", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
         PIPELINE_RUNS_TABLE: _schema(PIPELINE_RUNS_TABLE, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
-        GOVERNANCE_REVIEWS_TABLE: _schema(GOVERNANCE_REVIEWS_TABLE, [("review_id", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("metadata_table_key", string), ("profile_run_id", string), ("profile_stage", string), ("pipeline_run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("outcome", string), ("blocker_count", long), ("warning_count", long), ("blockers_json", string), ("warnings_json", string), ("evidence_summary_json", string), ("reviewed_at", string), ("reviewed_by", string), ("governance_mode", string), ("approval_policy", string), ("governance_status", string), ("approval_bypass_allowed", boolean), ("requires_post_review", boolean), ("policy_reason", string), ("effective_from", string), ("effective_to", string), *audit]),
+        DATA_ACCESS_TABLE: _schema(DATA_ACCESS_TABLE, [("user_principal", string), ("role_name", string), ("permission", string), ("access_purpose", string), ("approval_status", string), ("access_scope", string), ("table_id", string), ("metadata_table_key", string), ("metadata_column_key", string), ("granted_date", string), ("expires_at", string), ("approved_by", string), ("approved_at", string), ("notes", string), *audit]),
     }
 
 
@@ -341,23 +340,6 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
     return filtered
 
 
-def _build_column_context_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved business-context records from explicit reviews."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for review in reviewed_rows or []:
-        if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
-            continue
-        identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
-        rows.append({
-            **identity,
-            "business_context": str(review.get("business_context") or ""), "notes": str(review.get("notes") or ""),
-            "custom_fields_json": _json(review.get("custom_fields") or review.get("custom_fields_json")), "review_status": "approved",
-            "approved_by": actor, "approved_at": now, "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
-        })
-    return rows
-
-
 def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict[str, Any]:
     """Return rule parameters stored inside ``rule_parameters_json``."""
     metadata_fields = {
@@ -445,29 +427,6 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
         })
     return rows
 
-def _build_classification_records(profile_rows: list[dict[str, Any]], reviewed_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> list[dict[str, Any]]:
-    """Build append-only approved sensitivity and PII classification records."""
-    profile, actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=approved_by)
-    rows = []
-    for review in reviewed_rows or []:
-        if str(review.get("review_status", "approved")).lower() != "approved" or not review.get("commit"):
-            continue
-        sensitivity = str(review.get("sensitivity_label") or SENSITIVITY_LABELS[0])
-        classification = str(review.get("pii_classification") or review.get("personal_data_classification") or PERSONAL_DATA_CLASSIFICATIONS[-1])
-        if sensitivity not in SENSITIVITY_LABELS:
-            raise ValueError(f"Unsupported sensitivity_label: {sensitivity}")
-        if classification not in PERSONAL_DATA_CLASSIFICATIONS:
-            raise ValueError(f"Unsupported personal_data_classification: {classification}")
-        identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
-        rows.append({
-            **identity,
-            "sensitivity_label": sensitivity, "personal_data_classification": classification,
-            "pii_identifier_type": str(review.get("pii_identifier_type") or ""), "handling_requirement": str(review.get("handling_requirement") or ""),
-            "reasoning": str(review.get("reasoning") or ""), "custom_fields_json": _json(review.get("custom_fields") or review.get("custom_fields_json")), "review_status": "approved", "approved_by": actor, "approved_at": now,
-            "ai_suggestion_json": _json(review.get("ai_suggestion_json") or review.get("ai_suggestion")), **audit,
-        })
-    return rows
-
 def _json(value: Any) -> str:
     if value in (None, ""):
         return ""
@@ -476,52 +435,13 @@ def _json(value: Any) -> str:
     return json.dumps(value, sort_keys=True)
 
 
-def _display_review_guidance(title: str, profile_rows: list[dict[str, Any]], instructions: str) -> list[dict[str, Any]]:
-    widgets = importlib.import_module("ipywidgets")
-    from IPython import display as ip
-
-    columns = [str(_value(row, "column_name")) for row in profile_rows]
-    html = widgets.HTML(
-        f"<h3>{title}</h3>"
-        f"<p>{instructions}</p>"
-        f"<p><b>Columns loaded:</b> {', '.join(columns)}</p>"
-        "<p>Return value is an editable list scaffold. Add reviewed dictionaries, set "
-        "<code>review_status='approved'</code> and <code>commit=True</code>, then pass the list to "
-        "<code>record_table_governance</code>.</p>"
-    )
-    ip.display(html)
-    return []
-
-
-def widget_review_column_context(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Render standalone business-context review guidance for ``03_governance``.
-
-    Parameters
-    ----------
-    profile_rows : list of dict
-        Selected column profile evidence from ``load_catalogue_profile_rows``.
-
-    Returns
-    -------
-    list[dict[str, Any]]
-        Empty editable review list. Add approved context rows before calling
-        ``record_table_governance``.
-
-    """
-    return _display_review_guidance(
-        "Business context review",
-        profile_rows,
-        "Describe human-approved business meaning for each column. AI suggestions, if used, are advisory only.",
-    )
-
-
 def _enrichment_options(config: Any) -> tuple[list[str], list[str], list[dict[str, Any]], list[dict[str, Any]]]:
     """Return configured column metadata enrichment controls."""
     governance = getattr(config, "governance_config", None)
     sensitivity = list(getattr(governance, "sensitivity_labels", None) or SENSITIVITY_LABELS)
     pii = list(getattr(governance, "pii_classifications", None) or PERSONAL_DATA_CLASSIFICATIONS)
-    context_fields = list(getattr(governance, "column_context_extra_fields", None) or [])
-    classification_fields = list(getattr(governance, "column_classification_extra_fields", None) or [])
+    context_fields = list(getattr(governance, "enrichment_context_extra_fields", None) or [])
+    classification_fields = list(getattr(governance, "enrichment_classification_extra_fields", None) or [])
     return sensitivity, pii, context_fields, classification_fields
 
 
@@ -566,39 +486,138 @@ def _selected_catalogue_rows_for_enrichment(guardrail_state: Mapping[str, Any]) 
     return [deduped[name] for name in sorted(deduped)]
 
 
-def _write_table_metadata_enrichment_records(
-    context_records: list[dict[str, Any]],
-    classification_records: list[dict[str, Any]],
+def _enrichment_payload_from_review(review: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the JSON enrichment payload carried by an enrichment rule."""
+    return {
+        "business_name": str(review.get("business_name") or ""),
+        "business_description": str(review.get("business_description") or review.get("business_context") or ""),
+        "business_meaning": str(review.get("business_meaning") or ""),
+        "column_description": str(review.get("column_description") or ""),
+        "classification": str(review.get("classification") or review.get("sensitivity_label") or ""),
+        "sensitivity_label": str(review.get("sensitivity_label") or ""),
+        "pii_flag": bool(review.get("pii_flag") or str(review.get("pii_classification") or review.get("personal_data_classification") or "").lower() not in {"", "none"}),
+        "pii_type": str(review.get("pii_type") or review.get("pii_identifier_type") or review.get("pii_classification") or ""),
+        "data_domain": str(review.get("data_domain") or ""),
+        "data_owner": str(review.get("data_owner") or ""),
+        "data_steward": str(review.get("data_steward") or ""),
+        "usage_notes": str(review.get("usage_notes") or review.get("notes") or ""),
+        "quality_notes": str(review.get("quality_notes") or review.get("reasoning") or ""),
+        "custom_fields": review.get("custom_fields") or review.get("custom_fields_json") or {},
+    }
+
+
+def build_enrichment_rule_records(
+    profile_rows: list[dict[str, Any]],
+    reviewed_rows: list[dict[str, Any]],
     *,
-    config: Any,
-    env: str,
-    spark_session: Any,
-) -> None:
-    """Write descriptive table metadata enrichment records only."""
-    if context_records:
+    state: Mapping[str, Any] | None = None,
+    config: Any = None,
+    env: str | None = None,
+    actor: str | None = None,
+    bypass_reason: str = "",
+) -> list[dict[str, Any]]:
+    """Build append-only ``METADATA_ENRICHMENT_RULES`` rows.
+
+    Parameters
+    ----------
+    profile_rows : list of dict
+        Selected ``METADATA_DATA_CATALOGUE`` column evidence.
+    reviewed_rows : list of dict
+        Enrichment payload rows to persist when ``commit`` is true.
+    state : Mapping[str, Any], optional
+        Selected table state carrying governance mode and approval policy.
+    config : Any, optional
+        Runtime configuration used for timestamps and audit fields.
+    env : str, optional
+        Environment name used in metadata keys and audit fields.
+    actor : str, optional
+        User responsible for authoring the enrichment records.
+    bypass_reason : str, optional
+        Required reason when bypassing approval for governed tables.
+
+    Returns
+    -------
+    list of dict
+        Rows ready to append to ``METADATA_ENRICHMENT_RULES``.
+
+    """
+    profile, resolved_actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=actor)
+    lifecycle = guardrail_authoring_status(state or {}, bypass_reason=bypass_reason, actor=resolved_actor, config=config)
+    rows = []
+    for review in reviewed_rows or []:
+        if not review.get("commit", True):
+            continue
+        identity = _approved_column_identity(profile.get(str(review.get("column_name")), {}), review, env=env)
+        payload = _enrichment_payload_from_review(review)
+        rule_id = str(review.get("enrichment_rule_id") or f"{identity['metadata_table_key']}.{identity['column_name'] or '_table'}.enrichment.{uuid.uuid4().hex[:12]}")
+        row = {
+            "enrichment_rule_id": rule_id,
+            "enrichment_rule_version": str(review.get("enrichment_rule_version") or now),
+            "enrichment_rule_key": str(review.get("enrichment_rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
+            "metadata_table_key": identity["metadata_table_key"],
+            "metadata_column_key": identity["metadata_column_key"],
+            "table_name": identity["table_name"],
+            "column_name": identity["column_name"],
+            "enrichment_scope": "column" if identity["column_name"] else "table",
+            "enrichment_type": str(review.get("enrichment_type") or "metadata_enrichment"),
+            "enrichment_payload_json": _json(payload),
+            "business_name": payload["business_name"],
+            "business_description": payload["business_description"],
+            "business_meaning": payload["business_meaning"],
+            "column_description": payload["column_description"],
+            "classification": payload["classification"],
+            "sensitivity_label": payload["sensitivity_label"],
+            "pii_flag": payload["pii_flag"],
+            "pii_type": payload["pii_type"],
+            "data_domain": payload["data_domain"],
+            "data_owner": payload["data_owner"],
+            "data_steward": payload["data_steward"],
+            "usage_notes": payload["usage_notes"],
+            "quality_notes": payload["quality_notes"],
+            "review_status": lifecycle["review_status"],
+            "is_active": lifecycle["is_active"],
+            "approval_policy": lifecycle["approval_policy"],
+            "governance_mode": lifecycle["governance_mode"],
+            "submitted_by": resolved_actor,
+            "submitted_at": now,
+            "reviewed_by": resolved_actor if lifecycle["review_status"] == "self_approved" else "",
+            "reviewed_at": now if lifecycle["review_status"] == "self_approved" else "",
+            "review_decision": lifecycle["review_status"],
+            "review_comment": str(review.get("review_comment") or ""),
+            "bypass_reason": str(lifecycle.get("bypass_reason") or ""),
+            "requires_post_review": bool(lifecycle["requires_post_review"]),
+            "supersedes_enrichment_rule_id": str(review.get("supersedes_enrichment_rule_id") or ""),
+            "effective_from": now if lifecycle["is_active"] else "",
+            "effective_to": "",
+            "created_at": now,
+            "created_by": resolved_actor,
+            "updated_at": now,
+            "updated_by": resolved_actor,
+            "run_id": str(review.get("run_id") or (state or {}).get("run_id") or ""),
+            "notebook_id": str(review.get("notebook_id") or (state or {}).get("notebook_id") or ""),
+            "notebook_registry_id": str(review.get("notebook_registry_id") or (state or {}).get("notebook_registry_id") or ""),
+            **audit,
+        }
+        rows.append(row)
+    return rows
+
+
+def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
+    """Append descriptive enrichment intent only to ``METADATA_ENRICHMENT_RULES``."""
+    if records:
         write_lakehouse_table(
-            spark_session.createDataFrame(context_records),
+            spark_session.createDataFrame(records),
             config,
             env,
             "metadata",
-            COLUMN_CONTEXT_TABLE,
-            schema=_configured_lakehouse_schema(config, env, "metadata"),
-            mode="append",
-        )
-    if classification_records:
-        write_lakehouse_table(
-            spark_session.createDataFrame(classification_records),
-            config,
-            env,
-            "metadata",
-            COLUMN_CLASSIFICATION_TABLE,
+            ENRICHMENT_RULES_TABLE,
             schema=_configured_lakehouse_schema(config, env, "metadata"),
             mode="append",
         )
 
 
 def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: Any, env: str, spark_session: Any) -> dict[str, Any]:
-    """Render one consolidated column metadata enrichment widget.
+    """Render one consolidated governed table metadata enrichment widget.
 
     Parameters
     ----------
@@ -616,18 +635,11 @@ def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: 
     Returns
     -------
     dict[str, Any]
-        Widget state with rendered row controls, record builders, and a save
-        callback. Save writes only ``METADATA_COLUMN_CONTEXT`` and
-        ``METADATA_COLUMN_CLASSIFICATION`` records.
-
-    Notes
-    -----
-    This widget enriches descriptive governance metadata for profiled catalogue
-    columns. It does not write DQ rules, guardrail results, or catalogue profile
-    evidence; runtime DQ remains part of guardrail authoring and review. Custom
-    enrichment fields are stored as ``custom_fields_json`` to match the
-    schema-safe ``01_agreement`` custom-field pattern without creating dynamic
-    physical metadata columns.
+        Widget state with rendered row controls, record builders, and save
+        callbacks. Saves write reviewable enrichment intent to
+        ``METADATA_ENRICHMENT_RULES``. The widget does not write to removed
+        split enrichment metadata tables and uses the same approval lifecycle as
+        guardrail rules.
 
     """
     widgets = importlib.import_module("ipywidgets")
@@ -640,6 +652,15 @@ def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: 
     row_controls: list[dict[str, Any]] = []
     row_widgets = []
     status = widgets.HTML(value="")
+    bypass_box = widgets.Textarea(value="", description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
+    governed = str(guardrail_state.get("governance_mode") or "ungoverned") == "governed"
+    bypass_allowed = bool(guardrail_state.get("approval_bypass_allowed"))
+    if not governed:
+        policy_text = "This table is ungoverned. Saving will activate enrichment as self-approved."
+    elif bypass_allowed:
+        policy_text = "This table allows approval bypass. Provide a reason to activate now and queue for post-review, or submit enrichment for approval."
+    else:
+        policy_text = "This table is governed. Saving will submit enrichment for approval."
 
     for row in profile_rows:
         column_name = str(_value(row, "column_name"))
@@ -650,6 +671,8 @@ def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: 
             "column_name": column_name,
             "data_type": data_type,
             "business_context": widgets.Textarea(value="", description="Business context", rows=2, layout=widgets.Layout(width="520px")),
+            "business_meaning": widgets.Textarea(value="", description="Meaning", rows=2, layout=widgets.Layout(width="520px")),
+            "column_description": widgets.Textarea(value="", description="Column description", rows=2, layout=widgets.Layout(width="520px")),
             "sensitivity_label": widgets.Dropdown(options=sensitivity_options, value=sensitivity_options[0], description="Sensitivity", layout=widgets.Layout(width="320px")),
             "pii_classification": widgets.Dropdown(options=pii_options, value=pii_options[-1], description="PII", layout=widgets.Layout(width="320px")),
             "commit": widgets.Checkbox(value=True, description="Commit/save"),
@@ -659,58 +682,46 @@ def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, config: 
         row_controls.append(controls)
         row_widgets.append(widgets.VBox([
             widgets.HTML(f"<b>{column_name}</b> <code>{data_type}</code>"),
-            controls["business_context"],
+            controls["business_context"], controls["business_meaning"], controls["column_description"],
             widgets.HBox([controls["sensitivity_label"], controls["pii_classification"], controls["commit"]]),
-            *context_extra.values(),
-            *classification_extra.values(),
+            *context_extra.values(), *classification_extra.values(),
         ]))
 
-    def build_context_records() -> list[dict[str, Any]]:
-        reviews = [{
+    def _review_rows() -> list[dict[str, Any]]:
+        return [{
             "column_name": controls["column_name"],
-            "business_context": controls["business_context"].value,
-            "custom_fields": _collect_enrichment_extra_fields(controls["context_extra_fields"]),
-            "review_status": "approved",
-            "commit": bool(controls["commit"].value),
-        } for controls in row_controls]
-        return _build_column_context_records(profile_rows, reviews, config=config, env=env)
-
-    def build_classification_records() -> list[dict[str, Any]]:
-        reviews = [{
-            "column_name": controls["column_name"],
+            "business_description": controls["business_context"].value,
+            "business_meaning": controls["business_meaning"].value,
+            "column_description": controls["column_description"].value,
             "sensitivity_label": controls["sensitivity_label"].value,
             "pii_classification": controls["pii_classification"].value,
-            "custom_fields": _collect_enrichment_extra_fields(controls["classification_extra_fields"]),
-            "review_status": "approved",
+            "custom_fields": {**_collect_enrichment_extra_fields(controls["context_extra_fields"]), **_collect_enrichment_extra_fields(controls["classification_extra_fields"])},
             "commit": bool(controls["commit"].value),
         } for controls in row_controls]
-        return _build_classification_records(profile_rows, reviews, config=config, env=env)
 
-    def save(_: Any = None) -> dict[str, list[dict[str, Any]]]:
-        context_records = build_context_records()
-        classification_records = build_classification_records()
-        _write_table_metadata_enrichment_records(
-            context_records,
-            classification_records,
-            config=config,
-            env=env,
-            spark_session=spark_session,
-        )
-        status.value = f"Saved {len(context_records)} context rows and {len(classification_records)} classification rows."
-        return {"column_context": context_records, "column_classification": classification_records}
+    def build_records(*, use_bypass: bool = False) -> list[dict[str, Any]]:
+        reason = bypass_box.value.strip() if use_bypass else ""
+        if use_bypass and not reason:
+            raise ValueError("Bypass reason is required to skip approval.")
+        return build_enrichment_rule_records(profile_rows, _review_rows(), state=guardrail_state, config=config, env=env, bypass_reason=reason)
 
-    save_button = widgets.Button(description="Save enrichment", button_style="success")
-    save_button.on_click(save)
-    ip.display(widgets.VBox([widgets.HTML("<h3>Enrich table metadata</h3>"), *row_widgets, save_button, status]))
-    return {
-        "rows": row_controls,
-        "build_context_records": build_context_records,
-        "build_classification_records": build_classification_records,
-        "save": save,
-        "save_button": save_button,
-        "status": status,
-    }
+    def save(*, use_bypass: bool = False) -> dict[str, list[dict[str, Any]]]:
+        records = build_records(use_bypass=use_bypass)
+        _write_table_metadata_enrichment_records(records, config=config, env=env, spark_session=spark_session)
+        status.value = f"Saved {len(records)} enrichment rule row(s) to METADATA_ENRICHMENT_RULES."
+        return {"enrichment_rules": records}
 
+    save_button = widgets.Button(description="Save as self-approved" if not governed else "Submit for approval", button_style="success")
+    bypass_button = widgets.Button(description="Skip approval and activate now", button_style="warning")
+    bypass_button.layout.display = "" if governed and bypass_allowed else "none"
+    save_button.on_click(lambda _: save(use_bypass=False))
+    bypass_button.on_click(lambda _: save(use_bypass=True))
+    ip.display(widgets.VBox([
+        widgets.HTML("<h3>Enrich table metadata</h3>"), widgets.HTML(f"<p>{policy_text}</p>"),
+        widgets.HTML("<p><b>Views:</b> View approval logs · View active enrichment · View pending enrichment requests · View rejected enrichment · View superseded enrichment · View bypassed active enrichment pending review · Requires post-review.</p>"),
+        *row_widgets, bypass_box, widgets.HBox([save_button, bypass_button]), status,
+    ]))
+    return {"rows": row_controls, "build_records": build_records, "save": save, "save_button": save_button, "bypass_button": bypass_button, "status": status, "controls": {"bypass_reason": bypass_box}}
 
 def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str:
     """Return compact display text for non-identity DQ parameters."""
@@ -780,29 +791,6 @@ def _parse_dq_ai_suggestions(response_rows: Any, *, response_col: str = "respons
     return drafts
 
 
-def widget_review_column_classification(profile_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Render standalone sensitivity and PII classification review guidance.
-
-    Parameters
-    ----------
-    profile_rows : list of dict
-        Selected column profile evidence from ``load_catalogue_profile_rows``.
-
-    Returns
-    -------
-    list[dict[str, Any]]
-        Empty editable review list. Add approved classification dictionaries
-        before calling ``record_table_governance``.
-
-    """
-    return _display_review_guidance(
-        "Sensitivity and PII classification review",
-        profile_rows,
-        "Review sensitivity labels, personal-data classifications, identifier types, and handling requirements.",
-    )
-
-
-
 def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
     """Return the latest row using lexicographic string timestamps/ids."""
     if not rows:
@@ -822,16 +810,15 @@ def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any
     return _coerce_rows(read_lakehouse_table(config, env, "metadata", table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
 
 
-def _review_governance_evidence(
+def _evaluate_governance_readiness(
     config: Any,
     env: str,
     selection: dict[str, Any],
     *,
     spark_session: Any,
     reviewed_by: str | None = None,
-    mode: str = "append",
 ) -> dict[str, Any]:
-    """Review persisted v1 evidence and write a governance outcome row.
+    """Evaluate persisted evidence readiness without writing a metadata table.
 
     Parameters
     ----------
@@ -842,22 +829,19 @@ def _review_governance_evidence(
     selection : dict[str, Any]
         Catalogue-table selection returned by ``get_selected_catalogue_table``.
     spark_session : pyspark.sql.SparkSession
-        Spark session used to read and write metadata tables.
+        Spark session used to read metadata tables.
     reviewed_by : str, optional
         Reviewer identity. Runtime user metadata is used when omitted.
-    mode : str, default="append"
-        Write mode for ``METADATA_GOVERNANCE_REVIEWS``.
 
     Returns
     -------
     dict[str, Any]
-        Governance review row plus blocker, warning, and evidence details.
+        Readiness summary row plus blocker, warning, and evidence details.
 
     Notes
     -----
     The function intentionally re-reads agreement, catalogue, pipeline-run, and
-    evidence metadata from the configured ``metadata`` target so ``03_governance``
-    can run in a separate session after ``02_pipeline``.
+    evidence metadata from the configured ``metadata`` target so review notebooks can run in a separate session after ``02_pipeline``.
 
     """
     profile_rows = load_catalogue_profile_rows(config, env, selection, spark_session=spark_session)
@@ -968,7 +952,6 @@ def _review_governance_evidence(
         "reviewed_by": actor,
         **audit,
     }
-    write_lakehouse_table(spark_session.createDataFrame([row]), config, env, "metadata", GOVERNANCE_REVIEWS_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
     return {"review": row, "outcome": outcome, "blockers": blockers, "warnings": warnings, "evidence_summary": evidence_summary}
 
 def record_table_governance(
@@ -977,15 +960,14 @@ def record_table_governance(
     profile_rows: list[dict[str, Any]],
     *,
     spark_session: Any,
-    context_reviews: list[dict[str, Any]] | None = None,
-    dq_rule_reviews: list[dict[str, Any]] | None = None,
-    classification_reviews: list[dict[str, Any]] | None = None,
+    enrichment_reviews: list[dict[str, Any]] | None = None,
+    guardrail_rule_reviews: list[dict[str, Any]] | None = None,
     approved_by: str | None = None,
-    governance_selection: dict[str, Any] | None = None,
-    write_governance_review: bool = False,
+    readiness_selection: dict[str, Any] | None = None,
+    evaluate_readiness: bool = False,
     mode: str = "append",
 ) -> dict[str, Any]:
-    """Persist approved table-governance review evidence.
+    """Persist governed enrichment and guardrail rule intent.
 
     Parameters
     ----------
@@ -998,87 +980,84 @@ def record_table_governance(
         Column-profile rows loaded for the selected catalogue table.
     spark_session : pyspark.sql.SparkSession
         Spark session used to create DataFrames for metadata writes.
-    context_reviews, dq_rule_reviews, classification_reviews : list of dict, optional
-        Human-reviewed rows from the governance review workflow. Business context
-        and classification rows use ``review_status="approved"``. DQ rule rows
-        use ``review_status="governance_approved"``. All rows must set
-        ``commit=True`` to be written.
+    enrichment_reviews : list of dict, optional
+        Human-reviewed enrichment payload rows. Committed rows are written only
+        to ``METADATA_ENRICHMENT_RULES``.
+    guardrail_rule_reviews : list of dict, optional
+        Human-reviewed guardrail rule rows. DQ rows use
+        ``review_status="governance_approved"`` and are written only to
+        ``METADATA_GUARDRAIL_RULES``.
     approved_by : str, optional
         Reviewer identity to stamp on records. When omitted, runtime defaults
         are used.
-    governance_selection : dict, optional
-        Catalogue selection used to re-read persisted evidence and write a final
-        governance outcome row.
-    write_governance_review : bool, default=False
-        Whether to append a ``METADATA_GOVERNANCE_REVIEWS`` outcome row after
-        checking agreement, pipeline, schema/profile, and DQ evidence.
+    readiness_selection : dict, optional
+        Catalogue selection used to evaluate non-persistent readiness evidence.
+    evaluate_readiness : bool, default=False
+        Whether to return a readiness summary after checking agreement,
+        pipeline, schema/profile, and DQ evidence. No metadata table is written.
     mode : str, default "append"
         Write mode for metadata table commits.
 
     Returns
     -------
     dict[str, Any]
-        Records written for ``column_context``, ``dq_rules``, and
-        ``column_classification`` plus an optional ``governance_review`` outcome.
-
-    Notes
-    -----
-    This is the v1 governance commit action for ``03_governance`` notebooks. It merges
-    the previous row-builder and per-table commit helpers into one explicit
-    human approval step while preserving configured metadata lakehouse routing.
+        Records written for ``enrichment_rules`` and ``guardrail_rules`` plus an
+        optional non-persistent ``readiness_summary``.
 
     """
-    context_records = _build_column_context_records(
+    enrichment_records = build_enrichment_rule_records(
         profile_rows,
-        context_reviews or [],
+        enrichment_reviews or [],
+        state={"governance_mode": "governed", "approval_policy": "approval_required"},
         config=config,
         env=env,
-        approved_by=approved_by,
+        actor=approved_by,
     )
-    dq_rule_records = _build_dq_rule_records(
+    actor = _resolve_action_by(approved_by)
+    reviewed_at = _now_utc_iso(config)
+    for record in enrichment_records:
+        record.update({
+            "review_status": "governance_approved",
+            "is_active": True,
+            "reviewed_by": actor,
+            "reviewed_at": reviewed_at,
+            "review_decision": "approved",
+            "effective_from": record.get("effective_from") or reviewed_at,
+            "updated_by": actor,
+            "updated_at": reviewed_at,
+        })
+    guardrail_records = _build_dq_rule_records(
         profile_rows,
-        dq_rule_reviews or [],
-        config=config,
-        env=env,
-        approved_by=approved_by,
-    )
-    classification_records = _build_classification_records(
-        profile_rows,
-        classification_reviews or [],
+        guardrail_rule_reviews or [],
         config=config,
         env=env,
         approved_by=approved_by,
     )
     writes = {
-        COLUMN_CONTEXT_TABLE: context_records,
-        GUARDRAIL_RULES_TABLE: [dict(record, guardrail_type="dq") for record in dq_rule_records],
-        COLUMN_CLASSIFICATION_TABLE: classification_records,
+        ENRICHMENT_RULES_TABLE: enrichment_records,
+        GUARDRAIL_RULES_TABLE: [dict(record, guardrail_type=record.get("guardrail_type") or "dq") for record in guardrail_records],
     }
     for table_name, records in writes.items():
         if records:
             write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", table_name, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
 
-    governance_review = None
-    if write_governance_review:
-        if governance_selection is None:
-            raise ValueError("governance_selection is required when write_governance_review=True.")
-        governance_review = _review_governance_evidence(
+    readiness_summary = None
+    if evaluate_readiness:
+        if readiness_selection is None:
+            raise ValueError("readiness_selection is required when evaluate_readiness=True.")
+        readiness_summary = _evaluate_governance_readiness(
             config,
             env,
-            governance_selection,
+            readiness_selection,
             spark_session=spark_session,
             reviewed_by=approved_by,
-            mode=mode,
         )
 
     return {
-        "column_context": context_records,
-        "dq_rules": dq_rule_records,
-        "column_classification": classification_records,
-        "governance_review": governance_review,
+        "enrichment_rules": enrichment_records,
+        "guardrail_rules": guardrail_records,
+        "readiness_summary": readiness_summary,
     }
-
-
 def _spark_sql_helpers():
     """Return Spark SQL helper modules lazily for DQ runtime helpers."""
     try:
@@ -1627,8 +1606,7 @@ def resolve_table_governance_policy(governance_rows: Any, *, environment_name: s
     Parameters
     ----------
     governance_rows : Any
-        Governance review rows or a DataFrame-like object containing rows from
-        ``METADATA_GOVERNANCE_REVIEWS``.
+        Catalogue rows or selected target state rows containing table governance policy fields.
     environment_name, dataset_name, table_name, metadata_table_key : str, optional
         Table identity used to filter policy rows.
 
@@ -1659,7 +1637,8 @@ def resolve_table_governance_policy(governance_rows: Any, *, environment_name: s
     latest = rows[0]
     mode = str(latest.get("governance_mode") or "ungoverned").lower()
     policy = str(latest.get("approval_policy") or ("approval_required" if mode == "governed" else "no_approval_required")).lower()
-    return {**default, **latest, "governance_mode": mode, "approval_policy": policy, "approval_bypass_allowed": bool(latest.get("approval_bypass_allowed", policy == "approval_required_with_bypass"))}
+    bypass_allowed = bool(latest.get("approval_bypass_allowed", latest.get("bypass_allowed", policy == "approval_required_with_bypass")))
+    return {**default, **latest, "governance_mode": mode, "approval_policy": policy, "approval_bypass_allowed": bypass_allowed, "bypass_allowed": bypass_allowed}
 
 
 def guardrail_authoring_status(policy: Mapping[str, Any], *, bypass_reason: str = "", actor: str | None = None, config: Any = None) -> dict[str, Any]:
@@ -1714,16 +1693,109 @@ def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor:
     """
     row = dict(rule)
     now = _now_utc_iso(config)
+    reviewer = _resolve_action_by(actor)
     if action == "approve":
-        row.update({"is_active": True, "review_status": "governance_approved", "approved_by": _resolve_action_by(actor), "approved_at": now, "requires_post_review": False})
+        row.update({"is_active": True, "review_status": "governance_approved", "approved_by": reviewer, "approved_at": now, "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "approved", "requires_post_review": False, "effective_from": row.get("effective_from") or now})
     elif action == "reject":
-        row.update({"is_active": False, "review_status": "rejected"})
+        row.update({"is_active": False, "review_status": "rejected", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "rejected"})
     elif action == "supersede":
-        row.update({"is_active": False, "review_status": "superseded", "superseded_by_rule_key": superseded_by_rule_key})
+        row.update({"is_active": False, "review_status": "superseded", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "superseded", "superseded_by_rule_key": superseded_by_rule_key, "supersedes_rule_id": superseded_by_rule_key, "effective_to": now})
     else:
         raise ValueError("action must be one of approve, reject, or supersede")
     return row
 
+
+
+def apply_governance_enrichment_action(record: Mapping[str, Any], action: str, *, actor: str | None = None, supersedes_enrichment_rule_id: str = "", config: Any = None) -> dict[str, Any]:
+    """Return an append-only governance action row for enrichment intent.
+
+    Parameters
+    ----------
+    record : mapping
+        Existing enrichment rule row.
+    action : str
+        One of ``approve``, ``reject``, ``supersede``, or ``clear_post_review``.
+    actor : str, optional
+        Reviewer identity.
+    supersedes_enrichment_rule_id : str, optional
+        Prior enrichment rule identifier superseded by this decision.
+    config : Any, optional
+        Runtime configuration used for timestamps.
+
+    Returns
+    -------
+    dict[str, Any]
+        Enrichment rule row with updated shared governance lifecycle fields.
+
+    """
+    row = dict(record)
+    now = _now_utc_iso(config)
+    reviewer = _resolve_action_by(actor)
+    if action == "approve":
+        row.update({"is_active": True, "review_status": "governance_approved", "rule_status": "governance_approved", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "approved", "requires_post_review": False, "effective_from": row.get("effective_from") or now})
+    elif action == "reject":
+        row.update({"is_active": False, "review_status": "rejected", "rule_status": "rejected", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "rejected", "requires_post_review": False})
+    elif action == "supersede":
+        row.update({"is_active": False, "review_status": "superseded", "rule_status": "superseded", "reviewed_by": reviewer, "reviewed_at": now, "review_decision": "superseded", "effective_to": now, "supersedes_enrichment_rule_id": supersedes_enrichment_rule_id})
+    elif action == "clear_post_review":
+        row.update({"reviewed_by": reviewer, "reviewed_at": now, "review_decision": "post_review_cleared", "requires_post_review": False})
+    else:
+        raise ValueError("action must be one of approve, reject, supersede, or clear_post_review")
+    row.update({"updated_at": now, "updated_by": reviewer})
+    return row
+
+
+
+def load_rule_review_history(rows: Iterable[Mapping[str, Any]], *, metadata_table_key: str = "", metadata_column_key: str = "", table_name: str = "", column_name: str = "") -> list[dict[str, Any]]:
+    """Return approval history derived from append-only rule rows.
+
+    Parameters
+    ----------
+    rows : iterable of mapping
+        Rows from ``METADATA_ENRICHMENT_RULES`` or ``METADATA_GUARDRAIL_RULES``.
+    metadata_table_key, metadata_column_key, table_name, column_name : str, optional
+        Optional filters for the selected table or column.
+
+    Returns
+    -------
+    list of dict
+        History rows ordered by submitted or created timestamp.
+
+    """
+    history: list[dict[str, Any]] = []
+    for raw in rows or []:
+        row = dict(raw)
+        if metadata_table_key and str(row.get("metadata_table_key") or row.get("table_key") or "") not in {"", metadata_table_key}:
+            continue
+        if metadata_column_key and str(row.get("metadata_column_key") or row.get("column_key") or "") not in {"", metadata_column_key}:
+            continue
+        if table_name and str(row.get("table_name") or "") != table_name:
+            continue
+        if column_name and str(row.get("column_name") or "") not in {"", column_name}:
+            continue
+        history.append({
+            "rule_id": str(row.get("enrichment_rule_id") or row.get("rule_id") or ""),
+            "rule_version": str(row.get("enrichment_rule_version") or row.get("rule_version") or row.get("created_at") or ""),
+            "record_type": "enrichment" if row.get("enrichment_rule_id") or row.get("enrichment_type") else "guardrail",
+            "rule_type": str(row.get("enrichment_type") or row.get("guardrail_type") or row.get("rule_type") or ""),
+            "review_status": str(row.get("review_status") or ""),
+            "is_active": bool(row.get("is_active")),
+            "submitted_by": str(row.get("submitted_by") or row.get("created_by") or ""),
+            "submitted_at": str(row.get("submitted_at") or row.get("created_at") or ""),
+            "reviewed_by": str(row.get("reviewed_by") or row.get("approved_by") or ""),
+            "reviewed_at": str(row.get("reviewed_at") or row.get("approved_at") or ""),
+            "decision": str(row.get("review_decision") or row.get("review_status") or ""),
+            "comment": str(row.get("review_comment") or row.get("notes") or ""),
+            "bypass_reason": str(row.get("bypass_reason") or ""),
+            "requires_post_review": bool(row.get("requires_post_review")),
+            "superseded_reference": str(row.get("supersedes_enrichment_rule_id") or row.get("supersedes_rule_id") or row.get("superseded_by_rule_key") or ""),
+        })
+    history.sort(key=lambda item: (item["submitted_at"], item["rule_id"]))
+    return history
+
+def _write_enrichment_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
+    """Append records to ``METADATA_ENRICHMENT_RULES``."""
+    _write_table_metadata_enrichment_records(records, config=config, env=env, spark_session=spark_session)
 
 def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str, rule_type: str, column_name: str = "", parameters: Mapping[str, Any] | None = None, severity: str = "warning", description: str = "", policy: Mapping[str, Any] | None = None, bypass_reason: str = "", actor: str | None = None, source_notebook_type: str = "02_pipeline", config: Any = None) -> dict[str, Any]:
     """Build one ``METADATA_GUARDRAIL_RULES`` record for widget save actions."""
@@ -1732,7 +1804,9 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     table = str(state.get("table_name") or "")
     rule_id = f"{table}.{column_name or '_table'}.{guardrail_type}.{rule_type}"
     lifecycle = guardrail_authoring_status(policy or state, bypass_reason=bypass_reason, actor=actor, config=config)
-    return {"rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env_name, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)), "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": _resolve_action_by(actor), "created_at": _now_utc_iso(config), "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
+    created_at = _now_utc_iso(config)
+    created_by = _resolve_action_by(actor)
+    return {"rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env_name, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)), "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": created_by, "created_at": created_at, "submitted_by": created_by, "submitted_at": created_at, "reviewed_by": created_by if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": created_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": created_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
 
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
@@ -1810,19 +1884,6 @@ def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str,
     )
 
 
-def _write_governance_policy_record(record: dict[str, Any], *, config: Any, env: str, spark_session: Any) -> None:
-    """Append a policy row to ``METADATA_GOVERNANCE_REVIEWS``."""
-    write_lakehouse_table(
-        spark_session.createDataFrame([record]),
-        config,
-        env,
-        "metadata",
-        GOVERNANCE_REVIEWS_TABLE,
-        schema=_configured_lakehouse_schema(config, env, "metadata"),
-        mode="append",
-    )
-
-
 def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any) -> dict[str, Any]:
     """Render an interactive guardrail target selector and return handover state.
 
@@ -1848,7 +1909,7 @@ def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any)
 
     catalogue = _read_metadata_table_or_empty(config, env, CATALOGUE_TABLE, spark_session=spark_session)
     rules = _read_metadata_table_or_empty(config, env, GUARDRAIL_RULES_TABLE, spark_session=spark_session)
-    reviews = _read_metadata_table_or_empty(config, env, GOVERNANCE_REVIEWS_TABLE, spark_session=spark_session)
+    enrichment_rules = _read_metadata_table_or_empty(config, env, ENRICHMENT_RULES_TABLE, spark_session=spark_session)
     if not catalogue:
         raise ValueError("METADATA_DATA_CATALOGUE has no guardrail targets.")
 
@@ -1876,7 +1937,8 @@ def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any)
         environment_name, dataset_name, table_name, metadata_table_key = target_dropdown.value
         table_rows = _filter_table_rows(catalogue, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
         table_rules = _filter_table_rows(rules, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
-        policy = resolve_table_governance_policy(reviews, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        table_enrichment_rules = _filter_table_rows(enrichment_rules, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
+        policy = resolve_table_governance_policy(table_rows, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
         latest = sorted(table_rows, key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or row.get("profile_run_id") or ""), reverse=True)[0]
         columns = sorted({str(row.get("column_name") or "") for row in table_rows if row.get("column_name")})
         state.clear()
@@ -1891,12 +1953,13 @@ def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any)
                 "columns": columns,
                 "catalogue_profile_rows": table_rows,
                 "existing_rules": table_rules,
+                "existing_enrichment_rules": table_enrichment_rules,
                 **policy,
             }
         )
         governance_badge.value = f"<b>Governance:</b> {state['governance_mode']} · <b>Approval policy:</b> {state['approval_policy']} · <b>Bypass allowed:</b> {state['approval_bypass_allowed']}"
         profile_preview.value = f"<b>Profile rows:</b> {len(table_rows)} · <b>Columns:</b> {', '.join(columns) if columns else '(none)'}"
-        rules_preview.value = f"<b>Existing guardrail rules:</b> {len(table_rules)}"
+        rules_preview.value = f"<b>Existing guardrail rules:</b> {len(table_rules)} · <b>Existing enrichment rows:</b> {len(table_enrichment_rules)}"
 
     target_dropdown.observe(refresh, names="value")
     refresh()
@@ -2345,7 +2408,7 @@ def build_table_governance_policy_record(state: Mapping[str, Any], *, governance
     Returns
     -------
     dict[str, Any]
-        ``METADATA_GOVERNANCE_REVIEWS`` policy row.
+        table governance policy dictionary for catalogue-backed selected state.
 
     """
     mode = str(governance_mode or "ungoverned").lower()
@@ -2391,91 +2454,98 @@ def mark_table_ungoverned(state: Mapping[str, Any], *, actor: str | None = None,
 
 
 def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None) -> dict[str, Any]:
-    """Render interactive 03 governance policy and rule-review controls.
+    """Render interactive 03 governance policy and shared rule-review controls.
 
     Parameters
     ----------
     state : mapping
-        Handover state from :func:`widget_select_guardrail_target`.
+        Handover state from :func:`widget_select_guardrail_target`. The state may
+        include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and
+        ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``.
     config, env, spark_session : Any, optional
         Runtime objects used for save actions.
 
     Returns
     -------
     dict[str, Any]
-        Widget state with controls and callable action helpers.
+        Widget state with controls and callable action helpers for guardrail and
+        enrichment lifecycle decisions.
 
     """
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
-    rules = list(state.get("existing_rules") or [])
-    proposed_or_bypassed = [row for row in rules if str(row.get("review_status") or "") in {"proposed", "bypass_active_pending_review"}]
-    rule_options = [(f"{row.get('review_status')} · {row.get('guardrail_type')} · {row.get('rule_type')} · {row.get('column_name') or '_table'}", idx) for idx, row in enumerate(proposed_or_bypassed)]
-    selected_rule = widgets.Dropdown(options=rule_options or [("No proposed or bypassed rules", -1)], description="Rule", layout=widgets.Layout(width="760px"))
-    replacement_key = widgets.Text(description="New rule key", layout=widgets.Layout(width="520px"))
-    policy_reason = widgets.Textarea(description="Policy reason", layout=widgets.Layout(width="760px", height="70px"))
-    history = widgets.HTML("<pre>" + json.dumps(rules, indent=2, default=str) + "</pre>")
+    guardrail_rules = [dict(row, _record_kind="guardrail") for row in list(state.get("existing_rules") or [])]
+    enrichment_rules = [dict(row, _record_kind="enrichment") for row in list(state.get("existing_enrichment_rules") or state.get("existing_enrichment") or [])]
+    all_records = guardrail_rules + enrichment_rules
+    reviewable = [row for row in all_records if str(row.get("review_status") or "") in {"proposed", "bypass_active_pending_review", "self_approved", "governance_approved"}]
+
+    def _label(row: Mapping[str, Any], idx: int) -> tuple[str, int]:
+        kind = str(row.get("_record_kind") or "guardrail")
+        if kind == "enrichment":
+            label = f"enrichment · {row.get('review_status')} · {row.get('enrichment_type') or 'metadata_enrichment'} · {row.get('column_name') or '_table'}"
+        else:
+            label = f"guardrail · {row.get('review_status')} · {row.get('guardrail_type')} · {row.get('rule_type')} · {row.get('column_name') or '_table'}"
+        return label, idx
+
+    record_options = [_label(row, idx) for idx, row in enumerate(reviewable)]
+    selected_record = widgets.Dropdown(options=record_options or [("No proposed, bypassed, or active records", -1)], description="Record", layout=widgets.Layout(width="820px"))
+    replacement_key = widgets.Text(description="Supersedes/replacement", layout=widgets.Layout(width="620px"))
+    history_rows = load_rule_review_history(all_records, metadata_table_key=str(state.get("metadata_table_key") or ""), table_name=str(state.get("table_name") or ""))
+    history = widgets.HTML("<pre>" + json.dumps(history_rows, indent=2, default=str) + "</pre>")
     status = widgets.HTML(f"<b>Current governance:</b> {state.get('governance_mode', 'ungoverned')} · <b>Approval policy:</b> {state.get('approval_policy', 'no_approval_required')}")
     message = widgets.HTML()
     records_state: dict[str, Any] = {"last_record": None}
 
-    governed_button = widgets.Button(description="Mark table governed", button_style="warning")
-    ungoverned_button = widgets.Button(description="Mark table ungoverned", button_style="info")
-    approve_button = widgets.Button(description="Approve rule", button_style="success")
-    reject_button = widgets.Button(description="Reject rule", button_style="danger")
-    supersede_button = widgets.Button(description="Supersede rule", button_style="warning")
+    approve_button = widgets.Button(description="Approve proposed record", button_style="success")
+    reject_button = widgets.Button(description="Reject proposed record", button_style="danger")
+    supersede_button = widgets.Button(description="Supersede active record", button_style="warning")
+    clear_post_review_button = widgets.Button(description="Clear post-review requirement", button_style="info")
 
-    def _save_policy(record: dict[str, Any]) -> dict[str, Any]:
-        records_state["last_record"] = record
-        if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save policy."
-            return record
-        _write_governance_policy_record(record, config=config, env=env, spark_session=spark_session)
-        message.value = "<b style='color:green'>Saved table policy row to METADATA_GOVERNANCE_REVIEWS.</b>"
-        return record
+    def _selected_record_row() -> dict[str, Any]:
+        if selected_record.value == -1:
+            raise ValueError("No reviewable record is selected.")
+        return reviewable[int(selected_record.value)]
 
-    def mark_governed(_: Any = None) -> dict[str, Any]:
-        record = mark_table_governed(state, reason=policy_reason.value, config=config)
-        return _save_policy(record)
-
-    def mark_ungoverned(_: Any = None) -> dict[str, Any]:
-        record = mark_table_ungoverned(state, reason=policy_reason.value, config=config)
-        return _save_policy(record)
-
-    def _selected_rule_row() -> dict[str, Any]:
-        if selected_rule.value == -1:
-            raise ValueError("No proposed or bypassed rule is selected.")
-        return proposed_or_bypassed[int(selected_rule.value)]
-
-    def save_rule_action(action: str) -> dict[str, Any]:
-        row = apply_governance_rule_action(_selected_rule_row(), action, superseded_by_rule_key=replacement_key.value, config=config)
+    def save_record_action(action: str) -> dict[str, Any]:
+        selected = _selected_record_row()
+        if selected.get("_record_kind") == "enrichment":
+            row = apply_governance_enrichment_action(selected, action, supersedes_enrichment_rule_id=replacement_key.value, config=config)
+            target_table = ENRICHMENT_RULES_TABLE
+            writer = _write_enrichment_records
+        else:
+            mapped_action = "approve" if action == "clear_post_review" else action
+            row = apply_governance_rule_action(selected, mapped_action, superseded_by_rule_key=replacement_key.value, config=config)
+            if action == "clear_post_review":
+                row["requires_post_review"] = False
+            target_table = GUARDRAIL_RULES_TABLE
+            writer = _write_rule_records
+        row.pop("_record_kind", None)
         records_state["last_record"] = row
         if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save rule action."
+            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save review action."
             return row
-        _write_rule_records([row], config=config, env=env, spark_session=spark_session)
-        message.value = f"<b style='color:green'>Saved {action} rule event to METADATA_GUARDRAIL_RULES.</b>"
+        writer([row], config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {action} review event to {target_table}.</b>"
         return row
 
-    governed_button.on_click(mark_governed)
-    ungoverned_button.on_click(mark_ungoverned)
-    approve_button.on_click(lambda _: save_rule_action("approve"))
-    reject_button.on_click(lambda _: save_rule_action("reject"))
-    supersede_button.on_click(lambda _: save_rule_action("supersede"))
+    approve_button.on_click(lambda _: save_record_action("approve"))
+    reject_button.on_click(lambda _: save_record_action("reject"))
+    supersede_button.on_click(lambda _: save_record_action("supersede"))
+    clear_post_review_button.on_click(lambda _: save_record_action("clear_post_review"))
 
     ui = widgets.VBox([
-        widgets.HTML("<h3>Governance policy and guardrail review</h3>"),
+        widgets.HTML("<h3>Governance policy, enrichment review, and guardrail review</h3>"),
+        widgets.HTML("<p>03_governance owns the standard governance review workflow. Review enrichment intent from METADATA_ENRICHMENT_RULES and guardrail rule intent from METADATA_GUARDRAIL_RULES with the same lifecycle controls.</p>"),
+        widgets.HTML("<p><b>Filters:</b> Enrichment requests · Guardrail requests · Bypass pending review · Active approved · Rejected · Superseded · View approval logs.</p>"),
         status,
-        policy_reason,
-        widgets.HBox([governed_button, ungoverned_button]),
-        widgets.HTML("<h4>Proposed and bypass-active rules requiring review</h4>"),
-        selected_rule,
+        widgets.HTML("<h4>Proposed, bypassed, and active records requiring governance decisions</h4>"),
+        selected_record,
         replacement_key,
-        widgets.HBox([approve_button, reject_button, supersede_button]),
-        widgets.HTML("<h4>Rule history by table</h4>"),
+        widgets.HBox([approve_button, reject_button, supersede_button, clear_post_review_button]),
+        widgets.HTML("<h4>Approval logs and record history by table</h4>"),
         history,
         message,
     ])
     ip.display(ui)
-    return {"controls": {"selected_rule": selected_rule, "replacement_key": replacement_key, "policy_reason": policy_reason}, "mark_governed": mark_governed, "mark_ungoverned": mark_ungoverned, "save_rule_action": save_rule_action, "last_record": records_state, "ui": ui}
+    return {"controls": {"selected_record": selected_record, "selected_rule": selected_record, "replacement_key": replacement_key}, "save_record_action": save_record_action, "save_rule_action": save_record_action, "last_record": records_state, "ui": ui}

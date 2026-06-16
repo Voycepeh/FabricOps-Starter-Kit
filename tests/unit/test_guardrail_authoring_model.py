@@ -5,7 +5,6 @@ import json
 import fabricops_kit.governance_review as governance_review
 from fabricops_kit.governance_review import (
     CATALOGUE_TABLE,
-    GOVERNANCE_REVIEWS_TABLE,
     GUARDRAIL_RESULTS_TABLE,
     GUARDRAIL_RULES_TABLE,
     _get_governance_metadata_schemas,
@@ -73,7 +72,6 @@ def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
     catalogue_fields = set(schemas[CATALOGUE_TABLE].fieldNames())
     rule_fields = set(schemas[GUARDRAIL_RULES_TABLE].fieldNames())
     result_fields = set(schemas[GUARDRAIL_RESULTS_TABLE].fieldNames())
-    review_fields = set(schemas[GOVERNANCE_REVIEWS_TABLE].fieldNames())
 
     removed_catalogue_fields = {
         "load_behavior",
@@ -90,7 +88,8 @@ def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
     assert not removed_catalogue_fields & catalogue_fields
     assert {"approval_required", "approval_bypassed", "requires_post_review", "governance_mode", "approval_policy"}.issubset(rule_fields)
     assert {"result_id", "result_payload_json", "actual_value_json"}.issubset(result_fields)
-    assert {"governance_mode", "approval_policy", "approval_bypass_allowed", "effective_from", "effective_to"}.issubset(review_fields)
+    assert {"governance_mode", "approval_policy", "bypass_allowed", "policy_reason", "policy_updated_by", "policy_updated_at"}.issubset(catalogue_fields)
+    assert governance_review.DATA_ACCESS_TABLE in schemas
 
 
 def test_table_policy_defaults_to_ungoverned_no_approval():
@@ -411,14 +410,10 @@ def test_governance_review_widget_actions(monkeypatch):
 
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="proposed", is_active=False)]}
     widget = widget_review_guardrail_governance(state)
-    governed = widget["mark_governed"]()
-    ungoverned = widget["mark_ungoverned"]()
     approved = widget["save_rule_action"]("approve")
     rejected = widget["save_rule_action"]("reject")
     superseded = widget["save_rule_action"]("supersede")
 
-    assert governed["governance_mode"] == "governed"
-    assert ungoverned["governance_mode"] == "ungoverned"
     assert approved["review_status"] == "governance_approved"
     assert rejected["review_status"] == "rejected"
     assert superseded["review_status"] == "superseded"
@@ -431,10 +426,11 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
 
     catalogue = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "profile-1", "profile_stage": "target", "column_name": "order_id", "data_type": "int"}]
     rules = [_rule(metadata_table_key="table-key")]
-    reviews = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "governance_status": "active", "approval_bypass_allowed": True, "effective_from": "2026-01-01T00:00:00Z"}]
+    catalogue[0].update({"governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "bypass_allowed": True, "policy_reason": "governed", "policy_updated_at": "2026-01-01T00:00:00Z"})
+    enrichment = []
 
     def fake_read(config, env, table_name, *, spark_session):
-        return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_RULES_TABLE: rules, governance_review.GOVERNANCE_REVIEWS_TABLE: reviews}[table_name]
+        return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_RULES_TABLE: rules, governance_review.ENRICHMENT_RULES_TABLE: enrichment}[table_name]
 
     monkeypatch.setattr(governance_review, "_read_metadata_table_or_empty", fake_read)
     state = governance_review.widget_select_guardrail_target(object(), "dev", spark_session=object())
@@ -486,8 +482,8 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
 
 
-def test_governance_policy_widget_writes_only_governance_reviews(monkeypatch):
-    """Verify governance policy widget saves only METADATA_GOVERNANCE_REVIEWS."""
+def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
+    """Verify review widget actions write rule rows, not a separate policy table."""
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit import governance_review
 
@@ -498,15 +494,14 @@ def test_governance_policy_widget_writes_only_governance_reviews(monkeypatch):
             return records
 
     monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, config, env, target, table, **kwargs: writes.append(table))
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": []}
+    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="proposed", is_active=False)]}
     widget = governance_review.widget_review_guardrail_governance(state, config=object(), env="dev", spark_session=Spark())
 
-    widget["mark_governed"]()
+    widget["save_rule_action"]("approve")
 
-    assert writes == [governance_review.GOVERNANCE_REVIEWS_TABLE]
+    assert writes == [governance_review.GUARDRAIL_RULES_TABLE]
     assert governance_review.CATALOGUE_TABLE not in writes
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
-
 
 def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
     """Verify only new active rule statuses are enforced for schema rules."""
@@ -575,8 +570,8 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
         governance_config=types.SimpleNamespace(
             sensitivity_labels=["classified", "restricted", "public"],
             pii_classifications=["direct PII", "indirect PII", "none"],
-            column_context_extra_fields=[{"name": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}],
-            column_classification_extra_fields=[{"name": "retention_class", "label": "Retention Class", "type": "dropdown", "options": ["standard", "long_term", "temporary"]}],
+            enrichment_context_extra_fields=[{"name": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}],
+            enrichment_classification_extra_fields=[{"name": "retention_class", "label": "Retention Class", "type": "dropdown", "options": ["standard", "long_term", "temporary"]}],
         )
     )
     state = {
@@ -600,15 +595,14 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
     assert "business_owner_notes" in widget["rows"][0]["context_extra_fields"]
     assert "retention_class" in widget["rows"][0]["classification_extra_fields"]
 
-    context_records = widget["build_context_records"]()
-    classification_records = widget["build_classification_records"]()
-    assert {record["column_name"] for record in context_records} == {"amount", "order_id"}
-    assert {record["column_name"] for record in classification_records} == {"amount", "order_id"}
-    assert all(record["custom_fields_json"] for record in context_records)
-    assert all(record["custom_fields_json"] for record in classification_records)
+    enrichment_records = widget["build_records"]()
+    assert {record["column_name"] for record in enrichment_records} == {"amount", "order_id"}
+    assert {record["review_status"] for record in enrichment_records} == {"self_approved"}
+    assert all(record["is_active"] for record in enrichment_records)
+    assert all(record["enrichment_payload_json"] for record in enrichment_records)
 
     widget["save"]()
-    assert [table for table, _ in writes] == [governance_review.COLUMN_CONTEXT_TABLE, governance_review.COLUMN_CLASSIFICATION_TABLE]
+    assert [table for table, _ in writes] == [governance_review.ENRICHMENT_RULES_TABLE]
     assert governance_review.GUARDRAIL_RULES_TABLE not in [table for table, _ in writes]
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in [table for table, _ in writes]
     assert governance_review.CATALOGUE_TABLE not in [table for table, _ in writes]

@@ -381,6 +381,7 @@
       "template_notebook": "03_governance",
       "template_segment": "Guardrail governance review",
       "used_in_templates": [
+        "02_pipeline",
         "03_governance"
       ]
     },

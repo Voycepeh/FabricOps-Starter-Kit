@@ -7,7 +7,7 @@ Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.
 
 `fabricops_kit/fabric_input_output.py:280`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L280-L389">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/fabric_input_output.py#L280-L389">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -100,8 +100,6 @@ Raises configuration, Spark, or write errors when the target cannot be resolved 
 
 - `fabricops_kit.config._setup_metadata_table_registry`
 - `fabricops_kit.data_agreement._write_row`
-- `fabricops_kit.governance_review._review_governance_evidence`
-- `fabricops_kit.governance_review._write_governance_policy_record`
 - `fabricops_kit.governance_review._write_rule_records`
 - `fabricops_kit.governance_review._write_table_metadata_enrichment_records`
 - `fabricops_kit.governance_review.record_table_governance`
@@ -165,24 +163,24 @@ Side effects:
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L96-L105"><code>_normalize_table_name</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L129-L135"><code>_resolve_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L138-L145"><code>_resolve_lakehouse_table_path</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/fabric_input_output.py#L96-L105"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/fabric_input_output.py#L129-L135"><code>_resolve_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/fabric_input_output.py#L138-L145"><code>_resolve_lakehouse_table_path</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/config.py#L653-L693"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/fabric_input_output.py#L108-L119"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/config.py#L696-L735"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -201,7 +199,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source line: `280`
-- Inbound references count: 12
+- Inbound references count: 10
 - Outbound references count: 3
 - Used in templates: 00_env_config, 01_agreement, 02_pipeline, 03_governance
 - Glossary terms: target table, guardrail, metadata lakehouse
@@ -219,8 +217,6 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 
 - `fabricops_kit.config._setup_metadata_table_registry`
 - `fabricops_kit.data_agreement._write_row`
-- `fabricops_kit.governance_review._review_governance_evidence`
-- `fabricops_kit.governance_review._write_governance_policy_record`
 - `fabricops_kit.governance_review._write_rule_records`
 - `fabricops_kit.governance_review._write_table_metadata_enrichment_records`
 - `fabricops_kit.governance_review.record_table_governance`
@@ -239,7 +235,7 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L280-L389">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b6f6908f896cb15a6dbf5d2f1019a02e0a4f3d4b/src/fabricops_kit/fabric_input_output.py#L280-L389</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/fabric_input_output.py#L280-L389">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/1464ebcaec453298d8336116e90310bdf827013d/src/fabricops_kit/fabric_input_output.py#L280-L389</a>
 - Start line: `280`
 - End line: `389`
 - Signature:

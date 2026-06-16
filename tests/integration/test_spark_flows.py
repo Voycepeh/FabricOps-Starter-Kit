@@ -176,7 +176,7 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
         "dev",
         profile_rows,
         spark_session=spark_session,
-        dq_rule_reviews=[
+        guardrail_rule_reviews=[
             {
                 "rule_id": "amount_positive",
                 "column_name": "amount",

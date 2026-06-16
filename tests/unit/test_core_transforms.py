@@ -6,13 +6,12 @@ import pytest
 
 import fabricops_kit.governance_review as gr
 from fabricops_kit.data_lineage import _build_lineage_records
-from tests.helpers import framework_config
+from tests.helpers import FakeSpark, framework_config
 
 from fabricops_kit.governance_review import (
-    _build_classification_records,
-    _build_column_context_records,
     _build_dq_rule_records,
     _catalogue_profile_target_model,
+    build_enrichment_rule_records,
 )
 
 pytestmark = pytest.mark.unit
@@ -106,34 +105,104 @@ def test_private_lineage_records_default_to_utc_without_config():
 
 
 def test_governance_review_builders_commit_only_human_approved_records():
-    """Verify governance review builders commit only human approved records."""
+    """Verify governed intent builders commit only human-approved records."""
     profile_rows = _profile_rows()
-    context = _build_column_context_records(
+    enrichment = build_enrichment_rule_records(
         profile_rows,
         [
-            {"column_name": "order_id", "business_context": "AI only", "review_status": "approved"},
-            {"column_name": "amount", "business_context": "Approved amount", "review_status": "approved", "commit": True},
+            {"column_name": "order_id", "business_description": "AI only", "commit": False},
+            {"column_name": "amount", "business_description": "Approved amount", "sensitivity_label": "restricted", "commit": True},
         ],
-        approved_by="reviewer",
+        state={"governance_mode": "governed", "approval_policy": "approval_required"},
+        actor="reviewer",
     )
     dq = _build_dq_rule_records(
         profile_rows,
         [{"rule_id": "amount_positive", "columns": ["amount"], "rule_type": "greater_than", "value": 0, "review_status": "governance_approved", "commit": True}],
     )
-    classification = _build_classification_records(
-        profile_rows,
-        [{"column_name": "order_id", "sensitivity_label": "classified", "pii_classification": "indirect PII", "review_status": "approved", "commit": True}],
+
+    assert [row["metadata_column_key"] for row in enrichment] == ["col-amount"]
+    assert enrichment[0]["review_status"] == "proposed"
+    assert enrichment[0]["enrichment_payload_json"]
+    assert dq[0]["rule_key"]
+
+
+def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
+    """Verify table governance persists only enrichment and guardrail rule rows."""
+    writes = []
+    monkeypatch.setattr(gr, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df)))
+
+    result = gr.record_table_governance(
+        framework_config(),
+        "dev",
+        _profile_rows(),
+        spark_session=FakeSpark(),
+        enrichment_reviews=[
+            {
+                "column_name": "amount",
+                "business_description": "Approved amount",
+                "classification": "financial",
+                "commit": True,
+            }
+        ],
+        guardrail_rule_reviews=[
+            {
+                "rule_id": "amount_positive",
+                "column_name": "amount",
+                "rule_type": "greater_than",
+                "columns": ["amount"],
+                "value": 0,
+                "severity": "error",
+                "commit": True,
+            }
+        ],
+        approved_by="reviewer",
     )
 
-    assert [row["metadata_column_key"] for row in context] == ["col-amount"]
-    assert dq[0]["rule_key"]
-    assert classification[0]["metadata_column_key"] == "col-order"
-    with pytest.raises(ValueError, match="Unsupported sensitivity"):
-        _build_classification_records(
-            profile_rows,
-            [{"column_name": "order_id", "sensitivity_label": "secret", "personal_data_classification": "unknown", "review_status": "approved", "commit": True}],
-        )
+    assert set(result) == {"enrichment_rules", "guardrail_rules", "readiness_summary"}
+    assert "column_context" not in result
+    assert "column_classification" not in result
+    assert "governance_review" not in result
+    assert [table for table, _ in writes] == [gr.ENRICHMENT_RULES_TABLE, gr.GUARDRAIL_RULES_TABLE]
 
+
+def test_load_rule_review_history_reads_enrichment_and_guardrail_rows():
+    """Verify approval history is derived from append-only rule rows."""
+    rows = [
+        {
+            "enrichment_rule_id": "enrich-1",
+            "enrichment_rule_version": "v1",
+            "metadata_table_key": "table-key",
+            "metadata_column_key": "col-amount",
+            "column_name": "amount",
+            "enrichment_type": "classification",
+            "review_status": "proposed",
+            "is_active": False,
+            "submitted_by": "engineer",
+            "submitted_at": "2026-01-01T00:00:00Z",
+            "created_at": "2026-01-01T00:00:00Z",
+        },
+        {
+            "rule_id": "guardrail-1",
+            "rule_version": "v2",
+            "metadata_table_key": "table-key",
+            "metadata_column_key": "col-amount",
+            "column_name": "amount",
+            "guardrail_type": "dq",
+            "review_status": "governance_approved",
+            "is_active": True,
+            "reviewed_by": "steward",
+            "reviewed_at": "2026-01-02T00:00:00Z",
+            "created_at": "2026-01-02T00:00:00Z",
+        },
+    ]
+
+    history = gr.load_rule_review_history(rows, metadata_column_key="col-amount")
+
+    assert [entry["rule_id"] for entry in history] == ["enrich-1", "guardrail-1"]
+    assert [entry["record_type"] for entry in history] == ["enrichment", "guardrail"]
+    assert history[0]["rule_version"] == "v1"
+    assert history[1]["rule_version"] == "v2"
 
 def test_governance_profile_target_groups_profiles_by_physical_table_not_stage_or_pipeline():
     """Verify governance profile target groups profiles by physical table not stage or pipeline."""

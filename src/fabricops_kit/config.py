@@ -339,8 +339,8 @@ class GovernanceConfig:
         Controlled labels rendered by column metadata enrichment widgets.
     pii_classifications : list[str]
         Controlled PII classifications rendered by column metadata enrichment widgets.
-    column_context_extra_fields, column_classification_extra_fields : list[dict[str, Any]]
-        Organization-specific column enrichment fields stored in ``custom_fields_json``.
+    enrichment_context_extra_fields, enrichment_classification_extra_fields : list[dict[str, Any]]
+        Organization-specific enrichment payload fields stored in ``enrichment_payload_json``.
 
     """
 
@@ -348,8 +348,8 @@ class GovernanceConfig:
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
     sensitivity_labels: list[str] = field(default_factory=lambda: ["classified", "restricted", "public"])
     pii_classifications: list[str] = field(default_factory=lambda: ["direct PII", "indirect PII", "none"])
-    column_context_extra_fields: list[dict[str, Any]] = field(default_factory=list)
-    column_classification_extra_fields: list[dict[str, Any]] = field(default_factory=list)
+    enrichment_context_extra_fields: list[dict[str, Any]] = field(default_factory=list)
+    enrichment_classification_extra_fields: list[dict[str, Any]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
@@ -359,8 +359,8 @@ class GovernanceConfig:
         pii = [str(option).strip() for option in (self.pii_classifications or []) if str(option).strip()]
         object.__setattr__(self, "sensitivity_labels", labels or ["classified", "restricted", "public"])
         object.__setattr__(self, "pii_classifications", pii or ["direct PII", "indirect PII", "none"])
-        object.__setattr__(self, "column_context_extra_fields", deepcopy(list(self.column_context_extra_fields or [])))
-        object.__setattr__(self, "column_classification_extra_fields", deepcopy(list(self.column_classification_extra_fields or [])))
+        object.__setattr__(self, "enrichment_context_extra_fields", deepcopy(list(self.enrichment_context_extra_fields or [])))
+        object.__setattr__(self, "enrichment_classification_extra_fields", deepcopy(list(self.enrichment_classification_extra_fields or [])))
 
 
 DEFAULT_STEWARD_ROLE_OPTIONS = [
@@ -439,7 +439,7 @@ class DataAgreementConfig:
 
 @dataclass(frozen=True)
 class ReviewWorkflowConfig:
-    """Notebook-table review settings for DQ and governance suggestion approval."""
+    """Notebook-local review settings for suggestion staging and approval."""
 
     business_context: str = ""
     approved_usage: str = ""
@@ -448,8 +448,6 @@ class ReviewWorkflowConfig:
     business_context_approved_table: str = "metadata.business_context_approved"
     dq_review_table: str = "metadata.dq_review"
     dq_approved_table: str = "metadata.dq_approved"
-    governance_review_table: str = "metadata.governance_review"
-    governance_approved_table: str = "metadata.governance_approved"
     default_approval_status: str = "pending"
 
 
@@ -971,8 +969,7 @@ def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> lis
     The active registry is intentionally source-driven: agreement tables come
     from ``DataAgreementConfig``, notebook registry from ``metadata.py``, and
     governance/pipeline tables from the governance schema registry.
-    ``METADATA_DATA_ACCESS`` is documented as optional access-capture metadata
-    and is not part of the current active setup registry.
+    ``METADATA_DATA_ACCESS`` is part of the active setup registry for public-safe access context. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
     """
     normalized = _validate_framework_config(config)
     from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
@@ -1204,7 +1201,7 @@ def _validate_metadata_table_registration(
         "metadata_schema": resolved_metadata_schema,
         "fully_qualified_tables": [f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in expected],
         "show_tables_statement": None,
-        "optional_documented_tables": ["METADATA_DATA_ACCESS"],
+        "optional_documented_tables": [],
     }
 
 
