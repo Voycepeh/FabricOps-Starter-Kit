@@ -39,7 +39,8 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     assert "write_pipeline_run_summary" in production
     assert "run_summary" in production
     assert "widget_select_guardrail_target" in governance
-    assert "widget_review_guardrail_governance" in governance
+    assert "widget_enrich_table_metadata" in governance
+    assert governance.index("widget_select_guardrail_target") < governance.index("widget_enrich_table_metadata") < governance.index("widget_review_guardrail_governance")
     assert "widget_select_governance_" + "profile_target" not in governance
     assert "widget_review_" + "dq_rules" not in governance
 
