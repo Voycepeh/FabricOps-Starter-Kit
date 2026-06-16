@@ -1,6 +1,6 @@
 # Metadata tables
 
-FabricOps metadata tables are governed evidence tables stored in the configured `metadata` target from `00_env_config`. The active metadata table registry is prepared by `setup_metadata_tables`, which calls `_get_metadata_table_schema_registry` and then creates or validates every registered table through the configured metadata route. Setup creates or validates empty schemas; it does not populate business rows.
+FabricOps metadata tables are governed evidence tables stored in the configured `metadata` target from `00_env_config`. The active metadata table registry is prepared by [setup_metadata_tables](../api/reference/setup_metadata_tables/), which calls `_get_metadata_table_schema_registry` and then creates or validates every registered table through the configured metadata route. Setup creates or validates empty schemas; it does not populate business rows.
 
 The setup registry combines agreement tables from `DataAgreementConfig`, notebook registration fields from `NOTEBOOK_REGISTRY_FIELDS`, and governance tables from `_get_governance_metadata_schemas`. Agreement and notebook registry tables are all `string` columns because `_string_metadata_schema` wraps every listed field in `StringType`; governance tables use the explicit Spark types declared by `_get_governance_metadata_schemas`.
 
