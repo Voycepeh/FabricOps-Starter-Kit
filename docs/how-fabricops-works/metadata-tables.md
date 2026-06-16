@@ -24,6 +24,8 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 
 ![Shared FabricOps metadata model connecting governance and engineering notebooks](../assets/fabricops-metadata-model.png){ .full-width }
 
+The architecture image shows the high-level metadata coordination pattern across agreement, pipeline, governance, and runtime evidence. The active metadata table map below lists the implemented table ownership used by the starter kit. Relationships described on this page are logical joins used by notebooks, helpers, dashboards, and reviews.
+
 ## Active metadata table map
 
 | Metadata table | Main writer | Contains |
@@ -41,7 +43,17 @@ write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode
 | `METADATA_COLUMN_CLASSIFICATION` | `03_governance` | Reviewed sensitivity and personal-data classification. |
 | `METADATA_GOVERNANCE_REVIEWS` | `03_governance` | Final review outcomes, blockers, warnings, and evidence summaries. |
 
-For schema, freshness, profile behavior, and DQ evidence flow, see [Pipeline Guardrails](pipeline-guardrails.md).
+The active table map intentionally excludes planned, project-specific, or manually collected metadata that is not currently written by the standard notebooks. For schema, freshness, profile behavior, and DQ evidence flow, see [Pipeline Guardrails](pipeline-guardrails.md).
+
+## Offline and manually collected access metadata
+
+`METADATA_DATA_ACCESS` is planned/manual/offline governance metadata. It is not currently written by `01_agreement`, `02_pipeline`, or `03_governance`, and the starter kit does not enforce access decisions from this table yet.
+
+| Table name | Status | Description | Relationship |
+| --- | --- | --- | --- |
+| `METADATA_DATA_ACCESS` | Offline governance input; not currently written by `01_agreement`, `02_pipeline`, or `03_governance`. | Stores user, role, permission, access purpose, approval status, and access scope linked to governed catalogue entries. | `METADATA_DATA_CATALOGUE` 1 to many `METADATA_DATA_ACCESS`. |
+
+One catalogue entry can have many access records because access decisions may differ by user, group, role, purpose, or approval period. Treat the relationship as a logical governance relationship for collection and reporting, not as a Fabric-enforced database constraint.
 
 ## Writer ownership
 
@@ -167,7 +179,7 @@ Schema, freshness, profile-behavior pass/fail, stability, and DQ outcomes are ru
 
 ### Optional documented tables
 
-`METADATA_DATA_ACCESS` may be used by a future or project-specific access-capture workflow. It is documented for compatibility, but `setup_metadata_tables` does not create or validate it as part of the active metadata registry.
+`METADATA_DATA_ACCESS` is an offline/manual access governance table that may be used by a future or project-specific access-capture workflow. It stores user, role, permission, access purpose, approval status, and access scope linked to governed catalogue entries. `setup_metadata_tables` does not create or validate it as part of the active metadata registry, and the starter kit does not enforce it yet.
 
 ## Callable references
 
