@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 27</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 23</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>27</td>
+      <td>23</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -177,27 +177,11 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
       <td><a href="../../reference/enforce_freshness/"><code>enforce_freshness</code></a></td>
     </tr>
     <tr>
-      <td><code>_comparable_value</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_guardrail_exclude_columns</code></td>
       <td><a href="../../reference/enforce_profile_behavior/"><code>enforce_profile_behavior</code></a></td>
     </tr>
     <tr>
       <td><code>_is_active_guardrail_rule</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_is_greater_than</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_is_guardrail_excluded_column</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_is_less_than</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -292,28 +276,12 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
 <span class="reference-chip"><code>_coerce_date</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_comparable_value</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_guardrail_exclude_columns</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_is_active_guardrail_rule</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_catalogue_value</code></span>, <span class="reference-chip"><code>_rule_review_status</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_is_greater_than</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_comparable_value</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_is_guardrail_excluded_column</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_is_less_than</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_comparable_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_is_missing_table_error</code></span>

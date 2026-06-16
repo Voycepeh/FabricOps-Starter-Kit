@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 7</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 2</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 0</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns source-to-target lineage and transformation evidence.
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>7</td>
+      <td>2</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -98,26 +98,6 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_enrich_lineage_steps_with_ai</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_flatten_chain</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_resolve_write_target</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_scan_notebook_cells</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_scan_notebook_lineage</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_validate_lineage_steps</code></td>
       <td>—</td>
     </tr>
@@ -131,25 +111,6 @@ No public exports in this module.
 <span class="reference-chip"><code>_build_lineage_records</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_validate_lineage_steps</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_enrich_lineage_steps_with_ai</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_flatten_chain</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_resolve_write_target</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_scan_notebook_cells</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_scan_notebook_lineage</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_scan_notebook_lineage</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_flatten_chain</code></span>, <span class="reference-chip"><code>_resolve_write_target</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_validate_lineage_steps</code></span>
