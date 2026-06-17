@@ -1,8 +1,8 @@
-# FabricOps Demo Programme
+# FabricOps Guided Demo
 
 <div class="demo-hero" markdown>
 
-Use this page as a course-style walkthrough for the FabricOps Starter Kit in Microsoft Fabric. It now lives under the **Get Started** navigation, and the primary flow is the end-to-end demo programme.
+Use this page as a course-style walkthrough for the FabricOps Starter Kit in Microsoft Fabric. It now lives under the **Get Started** navigation, and the primary flow is the end-to-end guided demo.
 
 ## Demo at a glance
 
@@ -88,8 +88,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 ![Fabric notebook Environment selection example](assets/fabric-example-set-notebook-environment.png)
 
-!!! note "Screenshot TODO"
-    Add a Fabric workspace screenshot showing copied demo notebooks: `00_env_config`, `01_agreement`, `example_pipeline_demo`, `02_pipeline`, `03_governance`, and `99_explore`.
+!!! note "Screenshot to add"
+    Capture: Fabric workspace showing copied demo notebooks: `00_env_config`, `01_agreement`, `example_pipeline_demo`, `02_pipeline`, `03_governance`, and `99_explore`.
+    Suggested filename: `docs/assets/demo/demo-00-copied-notebooks.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -128,8 +130,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 ![`00_env_config` path configuration example](assets/fabric-example-00_config_paths.png)
 
-!!! note "Screenshot TODO"
-    Add a successful `00_env_config` run screenshot showing the `CONFIG`/`ENV` summary and metadata target registration.
+!!! note "Screenshot to add"
+    Capture: Successful `00_env_config` run showing the `CONFIG`/`ENV` summary and metadata target registration.
+    Suggested filename: `docs/assets/demo/demo-01-env-config-summary.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -166,8 +170,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 </div>
 
-!!! note "Screenshot TODO"
-    Add a `01_agreement` screenshot showing rendered agreement evidence for the demo order/customer workflow.
+!!! note "Screenshot to add"
+    Capture: `01_agreement` rendered steward, agreement, and evidence widgets for the demo order/customer workflow.
+    Suggested filename: `docs/assets/demo/demo-02-agreement-widgets.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -203,8 +209,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 </div>
 
-!!! note "Screenshot TODO"
-    Add an `example_pipeline_demo` screenshot showing generated `demo_` source tables in `DemoTest` and seeded demo DQ rule metadata.
+!!! note "Screenshot to add"
+    Capture: `example_pipeline_demo` output showing generated `demo_` source tables in `DemoTest` and seeded demo DQ rule metadata.
+    Suggested filename: `docs/assets/demo/demo-03-demo-data-generator.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -244,8 +252,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 ![Role-based notebook workflow from environment configuration through governed review](assets/fabricops-role-workflow.png){ .full-width }
 
-!!! note "Screenshot TODO"
-    Add a `02_pipeline` happy path run summary screenshot showing successful writes for `demo_unified_orders_enriched` and `demo_unified_orders_summary`.
+!!! note "Screenshot to add"
+    Capture: `02_pipeline` happy path guardrail/run summary showing successful unified writes for `demo_unified_orders_enriched` and `demo_unified_orders_summary`.
+    Suggested filename: `docs/assets/demo/demo-04-pipeline-happy-path.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -282,8 +292,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 </div>
 
-!!! note "Screenshot TODO"
-    Add a `03_governance` review grid screenshot with approved demo schema, freshness, profile, DQ, or enrichment rows.
+!!! note "Screenshot to add"
+    Capture: `03_governance` selected profiled table and review grid with approved demo schema, freshness, profile, DQ, or enrichment rows.
+    Suggested filename: `docs/assets/demo/demo-05-governance-review.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -320,8 +332,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 </div>
 
-!!! note "Screenshot TODO"
-    Add a `02_pipeline` rerun screenshot showing active guardrail checks loaded from governance metadata.
+!!! note "Screenshot to add"
+    Capture: `02_pipeline` rerun showing active guardrail checks loaded from governance metadata.
+    Suggested filename: `docs/assets/demo/demo-06-active-guardrails-rerun.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -365,8 +379,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 </div>
 
-!!! note "Screenshot TODO"
-    Add a `02_pipeline` failure scenario screenshot showing a blocked write or warning evidence.
+!!! note "Screenshot to add"
+    Capture: `02_pipeline` failure scenario showing blocked write or warning output.
+    Suggested filename: `docs/assets/demo/demo-07-failure-scenario.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -402,8 +418,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 </div>
 
-!!! note "Screenshot TODO"
-    Add a `99_explore` screenshot profiling a `demo_` table for troubleshooting.
+!!! note "Screenshot to add"
+    Capture: `99_explore` profiling a `demo_` table for troubleshooting.
+    Suggested filename: `docs/assets/demo/demo-99-explore-profile.png`
+    Status: Not included in this PR.
 
 <div class="demo-next-step" markdown>
 
@@ -412,6 +430,22 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 </div>
 
 </div>
+
+## Screenshot inventory
+
+These planned screenshots are text-only references for a future PR. No image files are included here.
+
+| Milestone | Planned screenshot | Suggested filename | Status |
+| --------- | ------------------ | ------------------ | ------ |
+| Milestone 0 | Copied demo notebooks in Fabric workspace. | `docs/assets/demo/demo-00-copied-notebooks.png` | Not included in this PR. |
+| Milestone 1 | Successful `00_env_config` run / `CONFIG` summary. | `docs/assets/demo/demo-01-env-config-summary.png` | Not included in this PR. |
+| Milestone 2 | `01_agreement` steward/agreement/evidence widget. | `docs/assets/demo/demo-02-agreement-widgets.png` | Not included in this PR. |
+| Milestone 3 | `example_pipeline_demo` generated `demo_` source tables and seeded DQ rules. | `docs/assets/demo/demo-03-demo-data-generator.png` | Not included in this PR. |
+| Milestone 4 | `02_pipeline` happy path guardrail/run summary and successful unified writes. | `docs/assets/demo/demo-04-pipeline-happy-path.png` | Not included in this PR. |
+| Milestone 5 | `03_governance` selected profiled table and review grid. | `docs/assets/demo/demo-05-governance-review.png` | Not included in this PR. |
+| Milestone 6 | `02_pipeline` rerun with active guardrails loaded. | `docs/assets/demo/demo-06-active-guardrails-rerun.png` | Not included in this PR. |
+| Milestone 7 | `02_pipeline` failure scenario blocked/warning output. | `docs/assets/demo/demo-07-failure-scenario.png` | Not included in this PR. |
+| Bonus | `99_explore` profiling a `demo_` table. | `docs/assets/demo/demo-99-explore-profile.png` | Not included in this PR. |
 
 ## What success looks like
 

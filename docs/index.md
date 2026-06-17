@@ -44,7 +44,7 @@ Choose where to begin:
 
 <div class="home-cta" markdown="1">
 
-[Demo Programme](demo-programme.md){ .md-button .md-button--primary }
+[Guided Demo](guided-demo.md){ .md-button .md-button--primary }
 
 [How FabricOps Works](how-fabricops-works/index.md){ .md-button }
 
@@ -56,7 +56,7 @@ Choose where to begin:
 
 | Page | Use it for |
 | --- | --- |
-| [Demo Programme](demo-programme.md) | Install the helper wheel, copy the templates, and run a Fabric smoke test. |
+| [Guided Demo](guided-demo.md) | Install the helper wheel, copy the templates, and run a Fabric smoke test. |
 | [How FabricOps Works](how-fabricops-works/index.md) | Understand the target delivery workflow from Agreement to Pipeline to Review. |
 | [Notebook Templates](how-fabricops-works/notebook-templates.md) | See what each notebook template is for. |
 | [Metadata Tables](how-fabricops-works/metadata-tables.md) | See what metadata the notebooks write and read. |

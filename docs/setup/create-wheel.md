@@ -2,7 +2,7 @@
 
 This page explains: how to build a FabricOps Starter Kit wheel for Fabric installation.
 Use this when: you need packaging and versioning steps before runtime setup.
-Next read: [Setup / Run in Fabric](run-in-fabric.md), [Demo Programme](../demo-programme.md), [How FabricOps Works](../how-fabricops-works/).
+Next read: [Setup / Run in Fabric](run-in-fabric.md), [Guided Demo](../guided-demo.md), [How FabricOps Works](../how-fabricops-works/).
 
 ## Prerequisites
 

@@ -7,7 +7,7 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 <div align="center">
 
 [![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
-[![Demo Programme](https://img.shields.io/badge/Start-Use%20Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/demo-programme/)
+[![Guided Demo](https://img.shields.io/badge/Start-Use%20Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
 [![Install](https://img.shields.io/badge/Install-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
 
 </div>
@@ -16,7 +16,7 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 ## Documentation map
 
 - [Home](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
-- [Demo Programme](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/demo-programme/)
+- [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
 - [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/)
   - [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/notebook-templates/)
   - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/metadata-tables/)
@@ -32,8 +32,8 @@ FabricOps publishes a [documentation navigation map](https://voycepeh.github.io/
 
 Most documentation pages also have raw Markdown variants by adding `.md` to the page URL, for example:
 
-- [Demo Programme](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/demo-programme/)
-- [Demo Programme Markdown](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/demo-programme.md)
+- [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
+- [Guided Demo Markdown](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo.md)
 
 These files are published with the documentation build so agents can navigate FabricOps without scraping rendered HTML.
 
