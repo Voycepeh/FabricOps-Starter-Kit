@@ -469,6 +469,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 
 ### External callees
 
+**config**
+<a class="reference-chip" href="../config/#resolve_fabric_context"><code>resolve_fabric_context</code></a>
+
 **fabric_input_output**
 <a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>
 

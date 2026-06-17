@@ -7,7 +7,7 @@ Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook
 
 `fabricops_kit/fabric_input_output.py:235`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/fabric_input_output.py#L235-L320">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L235-L326">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -33,9 +33,9 @@ Provides a stable notebook-facing read orchestrator while format-specific Lakeho
 
 ```python
 def read_data(
-    config,
-    env,
-    target,
+    config=None,
+    env=None,
+    target='source',
     name=None,
     format='table',
     schema=None,
@@ -43,6 +43,7 @@ def read_data(
     relative_path=None,
     spark_session=None,
     options=None,
+    context=None,
     **kwargs,
 ):
 ```
@@ -63,9 +64,9 @@ df_orders = read_data(CONFIG, ENV_NAME, "source", "orders", schema=SOURCE_SCHEMA
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict` | Yes | FabricOps FrameworkConfig or compatible config object. |
-| `env` | `str` | Yes | Environment key such as ``"dev"``. |
-| `target` | `str` | Yes | Logical target name such as ``"source"`` or ``"warehouse"``. |
+| `config` | `FrameworkConfig \| dict` | No | FabricOps FrameworkConfig or compatible config object. |
+| `env` | `str` | No | Environment key such as ``"dev"``. |
+| `target` | `str` | No | Logical target name such as ``"source"`` or ``"warehouse"``. |
 | `name` | `str` | No | Table name for table reads or relative file path for file reads. |
 | `format` | `str, default="table"` | No | Read format. Supported values are ``"table"``, ``"delta"``, ``"csv"``, ``"parquet"``, ``"excel"``, and ``"warehouse"``. |
 | `schema` | `str` | No | Lakehouse or warehouse schema name. |
@@ -73,6 +74,7 @@ df_orders = read_data(CONFIG, ENV_NAME, "source", "orders", schema=SOURCE_SCHEMA
 | `relative_path` | `str` | No | Explicit lakehouse Files path. Overrides ``name`` for file reads. |
 | `spark_session` | `object` | No | Spark session to use. |
 | `options` | `dict` | No | Additional reader options passed to the format-specific implementation. **kwargs Additional reader options. |
+| `context` | `—` | No | Not documented yet |
 
 ## Returns
 
@@ -100,6 +102,7 @@ Not documented yet
 
 ### Calls
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output.read_lakehouse_csv`
 - `fabricops_kit.fabric_input_output.read_lakehouse_excel`
 - `fabricops_kit.fabric_input_output.read_lakehouse_parquet`
@@ -139,35 +142,47 @@ helpers for specific storage formats.
     │   ├── _get_store(...)
     │   │   └── _normalize_path_config(...)
     │   │       └── PathConfig(...)
-    │   └── _lakehouse_file_path(...)
+    │   ├── _lakehouse_file_path(...)
+    │   └── resolve_fabric_context(...)
+    │       └── get_default_fabric_context(...)
     ├── read_lakehouse_excel(...)
     │   ├── _get_spark(...)
     │   ├── _get_store(...)
     │   │   └── _normalize_path_config(...)
     │   │       └── PathConfig(...)
-    │   └── _lakehouse_file_path(...)
+    │   ├── _lakehouse_file_path(...)
+    │   └── resolve_fabric_context(...)
+    │       └── get_default_fabric_context(...)
     ├── read_lakehouse_parquet(...)
     │   ├── _convert_single_parquet_ns_to_us(...)
     │   ├── _get_spark(...)
     │   ├── _get_store(...)
     │   │   └── _normalize_path_config(...)
     │   │       └── PathConfig(...)
-    │   └── _lakehouse_file_path(...)
+    │   ├── _lakehouse_file_path(...)
+    │   └── resolve_fabric_context(...)
+    │       └── get_default_fabric_context(...)
     ├── read_lakehouse_table(...)
     │   ├── _get_spark(...)
     │   ├── _get_store(...)
     │   │   └── _normalize_path_config(...)
     │   │       └── PathConfig(...)
     │   ├── _normalize_table_name(...)
-    │   └── _resolve_lakehouse_table_path(...)
-    │       ├── _normalize_table_name(...)
-    │       └── _resolve_lakehouse_schema(...)
-    │           └── _normalize_schema_name(...)
-    └── read_warehouse_table(...)
-        ├── _get_spark(...)
-        └── _get_store(...)
-            └── _normalize_path_config(...)
-                └── PathConfig(...)
+    │   ├── _resolve_lakehouse_table_path(...)
+    │   │   ├── _normalize_table_name(...)
+    │   │   └── _resolve_lakehouse_schema(...)
+    │   │       └── _normalize_schema_name(...)
+    │   └── resolve_fabric_context(...)
+    │       └── get_default_fabric_context(...)
+    ├── read_warehouse_table(...)
+    │   ├── _get_spark(...)
+    │   ├── _get_store(...)
+    │   │   └── _normalize_path_config(...)
+    │   │       └── PathConfig(...)
+    │   └── resolve_fabric_context(...)
+    │       └── get_default_fabric_context(...)
+    └── resolve_fabric_context(...)
+        └── get_default_fabric_context(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -196,7 +211,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source line: `235`
 - Inbound references count: 0
-- Outbound references count: 5
+- Outbound references count: 6
 - Used in templates: 02_pipeline, 99_explore
 - Glossary terms: notebook template
 
@@ -215,6 +230,7 @@ Not documented yet
 
 ### Outbound references
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output.read_lakehouse_csv`
 - `fabricops_kit.fabric_input_output.read_lakehouse_excel`
 - `fabricops_kit.fabric_input_output.read_lakehouse_parquet`
@@ -224,16 +240,16 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/fabric_input_output.py#L235-L320">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/fabric_input_output.py#L235-L320</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L235-L326">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L235-L326</a>
 - Start line: `235`
-- End line: `320`
+- End line: `326`
 - Signature:
 
 ```python
 def read_data(
-    config,
-    env,
-    target,
+    config=None,
+    env=None,
+    target='source',
     name=None,
     format='table',
     schema=None,
@@ -241,6 +257,7 @@ def read_data(
     relative_path=None,
     spark_session=None,
     options=None,
+    context=None,
     **kwargs,
 ):
 ```

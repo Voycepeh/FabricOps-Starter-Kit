@@ -8,7 +8,7 @@ import re
 import uuid
 from typing import Any, Iterable, Mapping
 
-from .config import _current_audit_timestamp, _get_audit_timezone
+from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row
@@ -1981,7 +1981,7 @@ def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str,
     )
 
 
-def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any) -> dict[str, Any]:
+def widget_select_guardrail_target(config: Any = None, env: str | None = None, *, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render an interactive guardrail target selector and return handover state.
 
     Parameters
@@ -2001,6 +2001,7 @@ def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any)
         state updates when the user changes the selected target.
 
     """
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 

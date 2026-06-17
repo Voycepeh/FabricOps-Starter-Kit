@@ -27,7 +27,7 @@ class _PandasProxy:
 
 pd = _PandasProxy()
 
-from .config import _get_store
+from .config import _get_store, resolve_fabric_context
 
 
 @dataclass(frozen=True)
@@ -233,9 +233,9 @@ def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> st
 
 
 def read_data(
-    config,
-    env,
-    target,
+    config=None,
+    env=None,
+    target="source",
     name=None,
     *,
     format="table",
@@ -244,6 +244,7 @@ def read_data(
     relative_path=None,
     spark_session=None,
     options=None,
+    context=None,
     **kwargs,
 ):
     """Read data from a configured Fabric target.
@@ -291,6 +292,10 @@ def read_data(
     helpers for specific storage formats.
 
     """
+    if name is None and isinstance(config, str) and env is None:
+        name = config
+        config = None
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     normalized_format = str(format or "table").strip().lower()
     reader_options = {**(options or {}), **kwargs}
     if normalized_format in {"table", "delta", "lakehouse_table"}:
@@ -323,9 +328,9 @@ def read_data(
 
 def write_data(
     df,
-    config,
-    env,
-    target,
+    config=None,
+    env=None,
+    target="unified",
     name=None,
     *,
     format="table",
@@ -333,6 +338,7 @@ def write_data(
     table=None,
     mode="append",
     options=None,
+    context=None,
     **kwargs,
 ):
     """Write data to a configured Fabric target.
@@ -380,6 +386,10 @@ def write_data(
     details.
 
     """
+    if name is None and isinstance(config, str) and env is None:
+        name = config
+        config = None
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     normalized_format = str(format or "table").strip().lower()
     table_name = table or name
     if not table_name:
@@ -404,7 +414,7 @@ def write_data(
     raise ValueError("format must be one of table, delta, or warehouse.")
 
 
-def read_lakehouse_table(config, env, target, table, schema=None, spark_session=None):
+def read_lakehouse_table(config=None, env=None, target="source", table=None, schema=None, spark_session=None, *, context=None):
     """Read a Delta table from a Fabric lakehouse.
 
     This reads from the lakehouse `Tables/` area by loading the ABFSS path from
@@ -449,6 +459,14 @@ def read_lakehouse_table(config, env, target, table, schema=None, spark_session=
     >>> df = read_lakehouse_table(CONFIG, ENV, "source", "RAW_ORDERS", schema=SOURCE_SCHEMA)
 
     """
+    if table is None and isinstance(config, str) and env is None:
+        table = config
+        config = None
+        target = "source"
+    elif table is None:
+        table = target
+        target = "source"
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
@@ -461,16 +479,17 @@ def read_lakehouse_table(config, env, target, table, schema=None, spark_session=
 
 def write_lakehouse_table(
     df,
-    config,
-    env,
-    target,
-    table,
+    config=None,
+    env=None,
+    target="unified",
+    table=None,
     schema=None,
     mode="append",
     partition_by=None,
     repartition_by=None,
     options=None,
     verbose=True,
+    context=None,
 ):
     """Write a Spark DataFrame to a Fabric lakehouse Delta table.
 
@@ -532,6 +551,14 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(df, CONFIG, ENV, "unified", "CLEAN_ORDERS", schema=UNIFIED_SCHEMA)
 
     """
+    if table is None and isinstance(config, str) and env is None:
+        table = config
+        config = None
+        target = "unified"
+    elif table is None:
+        table = target
+        target = "unified"
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     store = _get_store(config, env, target)
     if store.kind != "lakehouse":
         raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
@@ -571,7 +598,7 @@ def write_lakehouse_table(
     writer.save(path)
 
 
-def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, header=True):
+def read_lakehouse_csv(config=None, env=None, target="source", relative_path=None, spark_session=None, header=True, *, context=None):
     """Read a CSV file from a Fabric lakehouse Files path.
 
     This reads from the lakehouse `Files/` area using the ABFSS root stored in
@@ -612,12 +639,16 @@ def read_lakehouse_csv(config, env, target, relative_path, spark_session=None, h
     >>> df = read_lakehouse_csv(CONFIG, ENV, "source", "raw/orders.csv")
 
     """
+    if relative_path is None and isinstance(config, str) and env is None:
+        relative_path = config
+        config = None
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     store = _get_store(config, env, target)
     spark_obj = _get_spark(spark_session)
     return spark_obj.read.option("header", header).csv(_lakehouse_file_path(store, env, target, relative_path))
 
 
-def read_warehouse_table(config, env, target, schema, table, spark_session=None):
+def read_warehouse_table(config=None, env=None, target="warehouse", schema=None, table=None, spark_session=None, *, context=None):
     """Read a table from a Microsoft Fabric warehouse.
 
     This uses Fabric Spark's `synapsesql` connector to read from a warehouse
@@ -660,6 +691,8 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
 
     """
     spark_obj = _get_spark(spark_session)
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     store = _get_store(config, env, target)
     if store.kind != "warehouse":
         raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
@@ -680,7 +713,7 @@ def read_warehouse_table(config, env, target, schema, table, spark_session=None)
     )
 
 
-def write_warehouse_table(df, config, env, target, schema, table, mode="append"):
+def write_warehouse_table(df, config=None, env=None, target="warehouse", schema=None, table=None, mode="append", *, context=None):
     """Write a Spark DataFrame to a Microsoft Fabric warehouse table.
 
     This uses Fabric Spark's `synapsesql` connector to write to a warehouse
@@ -804,7 +837,7 @@ def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True
         print(f"FAILED converting ns to us for file {local_in_path}: {exc}")
 
 
-def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spark_session=None):
+def read_lakehouse_parquet(config=None, env=None, target="source", relative_path=None, verbose=True, spark_session=None, *, context=None):
     """Read a Parquet file from a Fabric lakehouse Files path.
 
     This reads from the lakehouse `Files/` area using Spark. If Spark cannot
@@ -854,6 +887,10 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
     conversion paths (``/lakehouse/default/Files/...``).
 
     """
+    if relative_path is None and isinstance(config, str) and env is None:
+        relative_path = config
+        config = None
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     store = _get_store(config, env, target)
     spark_obj = _get_spark(spark_session)
     orig_spark_path = _lakehouse_file_path(store, env, target, relative_path)
@@ -931,7 +968,7 @@ def read_lakehouse_parquet(config, env, target, relative_path, verbose=True, spa
     raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
 
 
-def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark_session=None, **read_excel_kwargs):
+def read_lakehouse_excel(config=None, env=None, target="source", relative_path=None, sheet_name=0, spark_session=None, context=None, **read_excel_kwargs):
     """Read an Excel file from a Fabric lakehouse Files path.
 
     Spark does not natively read Excel files. This helper reads the Excel file
@@ -1000,6 +1037,10 @@ def read_lakehouse_excel(config, env, target, relative_path, sheet_name=0, spark
     - Materializes rows through pandas before creating a Spark DataFrame.
 
     """
+    if relative_path is None and isinstance(config, str) and env is None:
+        relative_path = config
+        config = None
+    config, env, _context = resolve_fabric_context(config=config, env=env, context=context)
     store = _get_store(config, env, target)
     spark_obj = _get_spark(spark_session)
     lakehouse_file_path = _lakehouse_file_path(store, env, target, relative_path)

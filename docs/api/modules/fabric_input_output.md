@@ -244,4 +244,4 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 ### External callees
 
 **config**
-<a class="reference-chip" href="../config/#_get_store"><code>_get_store</code></a>
+<a class="reference-chip" href="../config/#_get_store"><code>_get_store</code></a>, <a class="reference-chip" href="../config/#resolve_fabric_context"><code>resolve_fabric_context</code></a>

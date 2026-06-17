@@ -273,3 +273,40 @@ def test_read_write_data_are_public_orchestrators_and_low_level_io_is_module_onl
     assert calls[1][0] == "write_table"
     assert calls[1][1][:5] == ("df", "config", "dev", "unified", "orders")
     assert calls[1][2]["mode"] == "overwrite"
+
+
+def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
+    """Verify lakehouse reads can default to the active Fabric context."""
+    import builtins
+
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env_name": "dev"}, raising=False)
+    spark = _Spark()
+
+    io.read_lakehouse_table("orders", spark_session=spark)
+
+    expected_path = "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/orders"
+    assert ("load", expected_path) in spark.read.calls
+
+
+def test_write_lakehouse_table_defaults_to_active_context(monkeypatch):
+    """Verify lakehouse writes can default to the active Fabric context."""
+    import builtins
+
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env_name": "dev"}, raising=False)
+    frame = _Frame()
+
+    io.write_lakehouse_table(frame, "orders_clean", mode="overwrite", verbose=False)
+
+    expected_path = "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/orders_clean"
+    assert ("save", expected_path) in frame.write.calls
+
+
+def test_missing_active_context_has_clear_error(monkeypatch):
+    """Verify missing 00_env_config state raises a clear action message."""
+    import builtins
+    import pytest
+
+    monkeypatch.delattr(builtins, "FABRIC_CONTEXT", raising=False)
+
+    with pytest.raises(RuntimeError, match="Please run 00_env_config"):
+        io.read_lakehouse_table("orders", spark_session=_Spark())

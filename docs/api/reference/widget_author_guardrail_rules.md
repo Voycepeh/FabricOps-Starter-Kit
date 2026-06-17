@@ -5,9 +5,9 @@ Render combined guardrail authoring controls for the selected table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2555`
+`fabricops_kit/governance_review.py:2556`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/governance_review.py#L2555-L2586">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2556-L2587">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -152,10 +152,12 @@ No additional callable notes are documented.
     │           │   └── _normalize_path_config(...)
     │           │       └── PathConfig(...)
     │           ├── _normalize_table_name(...)
-    │           └── _resolve_lakehouse_table_path(...)
-    │               ├── _normalize_table_name(...)
-    │               └── _resolve_lakehouse_schema(...)
-    │                   └── _normalize_schema_name(...)
+    │           ├── _resolve_lakehouse_table_path(...)
+    │           │   ├── _normalize_table_name(...)
+    │           │   └── _resolve_lakehouse_schema(...)
+    │           │       └── _normalize_schema_name(...)
+    │           └── resolve_fabric_context(...)
+    │               └── get_default_fabric_context(...)
     └── widget_author_schema_freshness_profile_rules(...)
         ├── _latest_rule(...)
         ├── _rule_params(...)
@@ -195,10 +197,12 @@ No additional callable notes are documented.
                 │   └── _normalize_path_config(...)
                 │       └── PathConfig(...)
                 ├── _normalize_table_name(...)
-                └── _resolve_lakehouse_table_path(...)
-                    ├── _normalize_table_name(...)
-                    └── _resolve_lakehouse_schema(...)
-                        └── _normalize_schema_name(...)
+                ├── _resolve_lakehouse_table_path(...)
+                │   ├── _normalize_table_name(...)
+                │   └── _resolve_lakehouse_schema(...)
+                │       └── _normalize_schema_name(...)
+                └── resolve_fabric_context(...)
+                    └── get_default_fabric_context(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -225,7 +229,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2555`
+- Source line: `2556`
 - Inbound references count: 0
 - Outbound references count: 2
 - Used in templates: 03_governance
@@ -252,9 +256,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/governance_review.py#L2555-L2586">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/governance_review.py#L2555-L2586</a>
-- Start line: `2555`
-- End line: `2586`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2556-L2587">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2556-L2587</a>
+- Start line: `2556`
+- End line: `2587`
 - Signature:
 
 ```python

@@ -16,7 +16,7 @@ import re
 import sys
 from typing import Any
 
-from .config import DEFAULT_STEWARD_ROLE_OPTIONS
+from .config import DEFAULT_STEWARD_ROLE_OPTIONS, resolve_fabric_context
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
@@ -785,7 +785,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
     return rows
 
 
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
+def widget_select_agreement(agreement_rows_or_config: Any = None, env_name: str | None = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
     """Render a downstream agreement selector and retain the selected row.
 
     Parameters
@@ -821,6 +821,11 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
     from IPython import display as ip
 
     global _SELECTED_AGREEMENT
+    if agreement_rows_or_config is None:
+        agreement_rows_or_config, env_name, _context = resolve_fabric_context(context=context)
+    elif env_name is None and context is not None:
+        _config, env_name, _context = resolve_fabric_context(config=agreement_rows_or_config, context=context)
+
     if env_name is not None:
         try:
             rows = _list_data_agreements(agreement_rows_or_config, env_name, spark_session=spark_session, metadata_schema=metadata_schema)
@@ -1400,7 +1405,7 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     }
 
 
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_agreement_evidence(config: Any = None, env_name: str | None = None, *, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render standalone agreement evidence upload controls.
 
     Parameters
@@ -1430,6 +1435,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
     does not read or write binary file content.
 
     """
+    config, env_name, _context = resolve_fabric_context(config=config, env_name=env_name, context=context)
     return _render_agreement_evidence_widget(
         spark=spark,
         config=config,
@@ -1437,7 +1443,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
     )
 
 
-def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_steward(config: Any = None, env_name: str | None = None, *, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
 
     Parameters
@@ -1455,10 +1461,11 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
         Rendered widget controls keyed for notebook customization.
 
     """
+    config, env_name, _context = resolve_fabric_context(config=config, env_name=env_name, context=context)
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_steward_widget")
 
 
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_agreement(config: Any = None, env_name: str | None = None, *, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render append-only agreement create/update maintenance using active stewards.
 
     Parameters
@@ -1476,5 +1483,6 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
         Rendered controls, including read-only generated-identifier context.
 
     """
+    config, env_name, _context = resolve_fabric_context(config=config, env_name=env_name, context=context)
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
 
