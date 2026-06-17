@@ -65,18 +65,6 @@ nav:
           # AUTO-GENERATED-FUNCTIONS-END
       - Template Function Map: reference/template-function-map.md
       - Glossary: reference/glossary.md
-      - Functions by Modules:
-          # AUTO-GENERATED-MODULES-START
-          - config: api/modules/config.md
-          - data_agreement: api/modules/data_agreement.md
-          - governance_review: api/modules/governance_review.md
-          - data_profiling: api/modules/data_profiling.md
-          - fabric_input_output: api/modules/fabric_input_output.md
-          - data_lineage: api/modules/data_lineage.md
-          - guardrails: api/modules/guardrails.md
-          - pipeline: api/modules/pipeline.md
-          - metadata: api/modules/metadata.md
-      # AUTO-GENERATED-MODULES-END
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
           - not_null: reference/dq-rules/not-null.md
@@ -107,6 +95,18 @@ nav:
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
       - Documentation Versioning: development/docs-versioning.md
+      - Implementation Appendix:
+          # AUTO-GENERATED-MODULES-START
+          - config: api/modules/config.md
+          - data_agreement: api/modules/data_agreement.md
+          - governance_review: api/modules/governance_review.md
+          - data_profiling: api/modules/data_profiling.md
+          - fabric_input_output: api/modules/fabric_input_output.md
+          - data_lineage: api/modules/data_lineage.md
+          - guardrails: api/modules/guardrails.md
+          - pipeline: api/modules/pipeline.md
+          - metadata: api/modules/metadata.md
+      # AUTO-GENERATED-MODULES-END
 
 extra:
   version:

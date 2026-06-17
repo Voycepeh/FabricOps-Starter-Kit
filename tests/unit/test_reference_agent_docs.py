@@ -613,3 +613,14 @@ def test_template_called_callable_parameters_render_as_api_table() -> None:
 def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> None:
     """Verify internalized enforce_profile_behavior is not rendered as a public page."""
     assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
+
+
+def test_module_pages_are_demoted_to_maintainer_appendix() -> None:
+    """Verify module pages are not first-class Function Reference navigation."""
+    mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    reference_nav = mkdocs_text.split("  - Function & DQ Rules Reference:", 1)[1].split("\n  - Maintainer Guide:", 1)[0]
+    maintainer_nav = mkdocs_text.split("  - Maintainer Guide:", 1)[1]
+
+    assert "Functions by Modules" not in reference_nav
+    assert "Implementation Appendix" in maintainer_nav
+    assert "api/modules/config.md" in maintainer_nav

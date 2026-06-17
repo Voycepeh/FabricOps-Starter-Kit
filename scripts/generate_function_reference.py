@@ -1883,7 +1883,7 @@ def main() -> None:
         middle, after = rest.split(function_end_marker, 1)
         mkdocs_text = before + function_start_marker + "\n" + generated_functions + "\n" + function_end_marker + after
 
-    start_marker = "      # AUTO-GENERATED-MODULES-START"
+    start_marker = "          # AUTO-GENERATED-MODULES-START"
     end_marker = "      # AUTO-GENERATED-MODULES-END"
     if start_marker in mkdocs_text and end_marker in mkdocs_text:
         generated_lines = []
