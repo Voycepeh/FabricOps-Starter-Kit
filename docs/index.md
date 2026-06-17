@@ -30,7 +30,7 @@ Use it when you want Fabric notebooks to move data from source to target while k
 </div>
 
 <div class="fabricops-kpi-card" markdown="1">
-  <div class="fabricops-kpi-number">12+1</div>
+  <div class="fabricops-kpi-number">12</div>
   <div class="fabricops-kpi-label">metadata tables</div>
   <p><code>00_env_config</code> prepares the governed evidence tables used by agreement, notebook registry, catalogue, lineage, DQ, pipeline, and review workflows.</p>
   <a href="how-fabricops-works/metadata-tables/">View metadata tables</a>
