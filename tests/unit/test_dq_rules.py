@@ -100,7 +100,7 @@ def test_dq_metadata_actions_are_append_only_and_preserve_multicolumns(fake_note
     assert [r["action_type"] for r in rows] == ["created", "updated", "deactivated", "reactivated"]
     assert [r["is_active"] for r in rows] == [True, True, False, True]
     assert json.loads(rows[0]["rule_parameters_json"])["columns"] == ["student_id", "semester"]
-    for field in ["rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name", "table_name", "column_name", "rule_type", "rule_parameters_json", "severity", "description", "is_active", "review_status", "approved_by", "approved_at", "ai_suggestion_json", "action_type", "_committed_at", "_committed_by", "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]:
+    for field in ["rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name", "table_name", "column_name", "rule_type", "rule_parameters_json", "severity", "description", "is_active", "review_status", "approved_by", "approved_at", "suggestion_json", "action_type", "_committed_at", "_committed_by", "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]:
         assert field in rows[0]
 
 
@@ -165,17 +165,6 @@ def test_widget_display_rows_include_active_and_inactive_rules():
         {"rule_id": "r2", "rule_type": "unique", "column_name": "id", "is_active": False},
     ])
     assert [r["Status"] for r in rows] == ["active", "inactive"]
-
-
-def test_ai_suggestion_parser_rejects_unsupported_and_keeps_drafts():
-    """Verify ai suggestion parser rejects unsupported and keeps drafts."""
-    payload = {"DQ_RULES": {"orders": [{"rule_id": "r1", "rule_type": "not_null", "columns": ["id"], "severity": "warning", "description": "draft"}]}}
-    drafts = governance._parse_dq_ai_suggestions([{"response": json.dumps(payload)}], table_name="orders")
-    assert drafts[0]["review_status"] == "draft"
-    assert drafts[0]["is_active"] is False
-    bad = {"DQ_RULES": {"orders": [{"rule_id": "bad", "rule_type": "required_columns", "columns": ["id"], "severity": "warning", "description": "bad"}]}}
-    with pytest.raises(ValueError):
-        governance._parse_dq_ai_suggestions([{"response": json.dumps(bad)}], table_name="orders")
 
 
 def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_session):

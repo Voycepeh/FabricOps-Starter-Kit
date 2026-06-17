@@ -1,8 +1,8 @@
 # FabricOps Starter Kit
 
-> FabricOps Starter Kit helps teams build governed, quality-checked, AI-ready notebooks in Microsoft Fabric with reusable helpers, notebook templates, metadata-backed contracts, data quality checks, lineage, and handover evidence.
+> FabricOps Starter Kit helps teams build governed, quality-checked, Microsoft Fabric notebook workflows with reusable helpers, notebook templates, metadata-backed contracts, data quality checks, lineage, and handover evidence.
 
-Use this file as a concise navigation map for LLMs, coding agents, and documentation ingestion workflows. The human-readable documentation is also published with Markdown variants where possible; for example, `/quick-start/` is available as `/quick-start.md`.
+Use this file as a concise navigation map for documentation and automation workflows. The human-readable documentation is also published with Markdown variants where possible; for example, `/quick-start/` is available as `/quick-start.md`.
 
 ## Quick start
 
@@ -33,7 +33,7 @@ Use this file as a concise navigation map for LLMs, coding agents, and documenta
 
 - [Function Reference](reference.md): Public callable reference generated from source docstrings and metadata.
 - [Functions by Module](api/modules.md): Module-oriented callable index for package users and maintainers.
-- [Agent Manifest](reference/agent-manifest.json): Machine-readable helper metadata for AI coding agents.
+- [Automation Manifest](reference/automation-manifest.json): Machine-readable helper metadata for automation tools.
 - [Function Manifest](reference/function-manifest.json): Machine-readable function inventory and dependency metadata.
 
 ## Handover and maintenance
@@ -43,6 +43,6 @@ Use this file as a concise navigation map for LLMs, coding agents, and documenta
 - [Contributing](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/CONTRIBUTING.md): Contribution workflow and expectations.
 - [Repository README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md): Repository-level overview and navigation.
 
-## Reference proposal
+## Markdown navigation
 
-- [llms.txt proposal](https://llmstxt.org/): Reference proposal for publishing a concise Markdown navigation map and Markdown page variants for LLM access.
+- This static navigation file and Markdown page variants support deterministic documentation ingestion.

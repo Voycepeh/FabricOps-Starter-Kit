@@ -27,7 +27,7 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Keep all examples and guidance generic and public-safe.
 - Never include real data, secrets, tenant/workspace identifiers, internal URLs, or production screenshots.
 - Public brand name: **FabricOps Starter Kit**.
-- Preferred positioning: **governed, quality-checked, AI-ready notebooks in Microsoft Fabric**.
+- Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
 - Do not position this project as a full data product platform.
 
 ## Documentation and API reference rules

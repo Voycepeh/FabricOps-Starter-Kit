@@ -145,8 +145,8 @@ def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         item = dict(row)
         if isinstance(item.get("approved_at"), datetime):
             item["approved_at"] = item["approved_at"].isoformat()
-        if isinstance(item.get("ai_suggestion_json"), (dict, list)):
-            item["ai_suggestion_json"] = json.dumps(item["ai_suggestion_json"], sort_keys=True)
+        if isinstance(item.get("suggestion_json"), (dict, list)):
+            item["suggestion_json"] = json.dumps(item["suggestion_json"], sort_keys=True)
         out.append(item)
     return out
 

@@ -18,7 +18,7 @@ This PR implements a basic runnable Fabric notebook widget flow. `widget_select_
 
 For ungoverned tables, engineering-authored saves remain active and non-pending with `review_status="self_approved"`. For governed tables, authors can choose **Save draft** for inactive drafts, **Submit for governance review** for inactive pending records, or **Apply now** for active rules with `review_status="active_pending_governance_review"` and `requires_governance_review=true`.
 
-AI-assisted DQ rule suggestion is not part of the v1 public authoring widget. It may be added later as a separate assisted-drafting flow once the manual governance lifecycle is stable.
+DQ rule authoring is deterministic and reviewer-controlled in the public authoring widget.
 
 ## 03 governance review flow
 

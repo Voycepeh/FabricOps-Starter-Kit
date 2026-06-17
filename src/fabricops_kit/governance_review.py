@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import ast
 import importlib
 import json
 import re
 import uuid
 from typing import Any, Iterable, Mapping
 
-from .config import DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE, DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE, DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE, _current_audit_timestamp, _get_audit_timezone
+from .config import _current_audit_timestamp, _get_audit_timezone
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row
@@ -56,11 +55,6 @@ DQ_RULE_TYPES = [
 ]
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
 PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
-BUSINESS_CONTEXT_PROMPT = DEFAULT_BUSINESS_CONTEXT_PROMPT_TEMPLATE
-PDPA_PERSONAL_IDENTIFIER_PROMPT = DEFAULT_GOVERNANCE_PERSONAL_IDENTIFIER_PROMPT_TEMPLATE
-DQ_RULE_SUGGESTION_PROMPT = DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
-AI_SUGGESTABLE_DQ_RULE_TYPES = set(DQ_RULE_TYPES)
-
 
 _SELECTED_CATALOGUE_TABLE: dict[str, Any] | None = None
 
@@ -192,7 +186,7 @@ def _get_governance_metadata_schemas() -> dict[str, Any]:
     return {
         CATALOGUE_TABLE: _schema(CATALOGUE_TABLE, catalogue),
         ENRICHMENT_RULES_TABLE: _schema(ENRICHMENT_RULES_TABLE, [("enrichment_rule_id", string), ("enrichment_rule_version", string), ("enrichment_rule_key", string), ("metadata_table_key", string), ("metadata_column_key", string), ("table_name", string), ("column_name", string), ("enrichment_scope", string), ("enrichment_type", string), ("enrichment_payload_json", string), ("business_name", string), ("business_description", string), ("business_meaning", string), ("column_description", string), ("classification", string), ("sensitivity_label", string), ("pii_flag", boolean), ("pii_type", string), ("data_domain", string), ("data_owner", string), ("data_steward", string), ("usage_notes", string), ("quality_notes", string), ("review_status", string), ("review_state", string), ("activation_state", string), ("is_active", boolean), ("created_by_role", string), ("source_notebook_type", string), ("source_notebook_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", string), ("requires_governance_review", boolean), ("approval_policy", string), ("governance_mode", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("bypass_reason", string), ("requires_post_review", boolean), ("supersedes_enrichment_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", string), ("effective_to", string), ("created_at", string), ("created_by", string), ("updated_at", string), ("updated_by", string), ("run_id", string), ("notebook_id", string), ("notebook_registry_id", string), *audit]),
-        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("activation_state", string), ("is_active", boolean), ("review_status", string), ("review_state", string), ("created_by_role", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("ai_suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_governance_review", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("supersedes_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", string), ("effective_to", string), *audit]),
+        GUARDRAIL_RULES_TABLE: _schema(GUARDRAIL_RULES_TABLE, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("activation_state", string), ("is_active", boolean), ("review_status", string), ("review_state", string), ("created_by_role", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_governance_review", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("supersedes_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", string), ("effective_to", string), *audit]),
         GUARDRAIL_RESULTS_TABLE: _schema(GUARDRAIL_RESULTS_TABLE, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *audit]),
         LINEAGE_TABLE: _schema(LINEAGE_TABLE, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *audit]),
         PIPELINE_RUNS_TABLE: _schema(PIPELINE_RUNS_TABLE, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)]),
@@ -349,8 +343,8 @@ def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict
     metadata_fields = {
         "rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name",
         "table_name", "column_name", "rule_type", "rule_parameters", "rule_parameters_json", "severity",
-        "description", "is_active", "review_status", "approved_by", "approved_at", "ai_suggestion_json",
-        "ai_suggestion", "action_type", "commit", "_committed_at", "_committed_by", "_workspace_name",
+        "description", "is_active", "review_status", "approved_by", "approved_at", "suggestion_json",
+        "suggestion", "action_type", "commit", "_committed_at", "_committed_by", "_workspace_name",
         "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
     }
     payload: dict[str, Any] = {"columns": columns}
@@ -420,7 +414,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             "created_at": str(rule.get("created_at") or now),
             "approved_by": str(rule.get("approved_by") or actor),
             "approved_at": str(rule.get("approved_at") or now),
-            "ai_suggestion_json": _json(rule.get("ai_suggestion_json") or rule.get("ai_suggestion")),
+            "suggestion_json": _json(rule.get("suggestion_json") or rule.get("suggestion")),
             "action_type": action_type,
             "source_notebook_type": str(rule.get("source_notebook_type") or "03_governance"),
             "source_notebook_id": str(rule.get("source_notebook_id") or ""),
@@ -836,23 +830,6 @@ def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return rows
 
 
-def _parse_dq_ai_suggestions(response_rows: Any, *, response_col: str = "response", table_name: str | None = None) -> list[dict[str, Any]]:
-    """Parse and validate draft AI DQ suggestions without approving them."""
-    suggestions = _extract_assignment_payload(response_rows, response_col=response_col, assignment_key="DQ_RULES", table_name=table_name)
-    drafts = []
-    for index, suggestion in enumerate(suggestions):
-        draft = dict(suggestion)
-        draft.setdefault("rule_id", f"ai_dq_rule_{index + 1}")
-        draft.setdefault("severity", "warning")
-        draft.setdefault("description", "AI suggested draft; review before approval.")
-        draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
-        _validate_dq_rules([draft])
-        draft["review_status"] = "draft"
-        draft["is_active"] = False
-        drafts.append(draft)
-    return drafts
-
-
 def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
     """Return the latest row using lexicographic string timestamps/ids."""
     if not rows:
@@ -1136,49 +1113,6 @@ def _spark_sql_helpers():
     except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
         raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
     return SparkSession, F, Window
-
-
-def _run_fabric_ai_drafting(prepared_profile_df, *, prompt: str, output_col: str):
-    """Run Fabric AI prompt drafting against prepared profile rows."""
-    ai = getattr(prepared_profile_df, "ai", None)
-    if ai is None or not hasattr(ai, "generate_response"):
-        raise RuntimeError("AI drafting requires Fabric DataFrame.ai.generate_response.")
-    return prepared_profile_df.ai.generate_response(prompt=prompt, is_prompt_template=True, output_col=output_col)
-
-
-def _parse_ai_dict_response(text: str) -> dict[str, Any]:
-    """Parse JSON/Python-dict AI response text into a dictionary."""
-    cleaned = str(text or "").strip()
-    match = re.search(r"^[A-Z_]+\s*=\s*(\{.*\})\s*$", cleaned, flags=re.DOTALL)
-    if match:
-        cleaned = match.group(1)
-    if not cleaned:
-        return {}
-    for loader in (json.loads, ast.literal_eval):
-        try:
-            obj = loader(cleaned)
-        except Exception:
-            continue
-        if isinstance(obj, dict):
-            return obj
-    return {}
-
-
-def _extract_assignment_payload(response_rows, *, response_col: str, assignment_key: str | None = None, table_name: str | None = None) -> list[dict[str, Any]]:
-    """Extract dictionary payloads from AI response rows with optional table-key narrowing."""
-    out: list[dict[str, Any]] = []
-    for row in _coerce_rows(response_rows):
-        parsed = _parse_ai_dict_response(row.get(response_col) or row.get("response") or row.get("ai_response") or "")
-        if not parsed:
-            continue
-        payload = parsed.get(assignment_key, parsed) if assignment_key else parsed
-        if table_name is not None:
-            payload = payload.get(table_name, []) if isinstance(payload, dict) else []
-        if isinstance(payload, list):
-            out.extend(dict(item) for item in payload if isinstance(item, dict))
-        elif isinstance(payload, dict):
-            out.append(payload)
-    return out
 
 
 def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1642,7 +1576,7 @@ def enforce_dq_rules(
 
 
 def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str, business_context: str = "", config: Any = None):
-    """Prepare DQ prompt profile rows from a profile DataFrame or raw DataFrame."""
+    """Prepare DQ profile rows from a profile DataFrame or raw DataFrame."""
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
@@ -1666,17 +1600,6 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
         F.lit(business_context).alias("business_context"),
         F.lit(_current_audit_timestamp(config=config, drop_microseconds=False)).alias("profile_timestamp"),
     )
-
-
-def _draft_dq_rules(*, profile_df=None, df=None, table_name: str, business_context: str = "", prompt_template: str | None = None, output_col: str = "response", config: Any = None) -> list[dict[str, Any]]:
-    """Draft candidate DQ rules from metadata profiles or a raw DataFrame fallback."""
-    prepared = _prepare_dq_profile_input_rows(profile_df=profile_df, df=df, table_name=table_name, business_context=business_context, config=config)
-    responses = _run_fabric_ai_drafting(prepared, prompt=prompt_template or DQ_RULE_SUGGESTION_PROMPT, output_col=output_col)
-    candidates = _extract_assignment_payload(responses, response_col=output_col, assignment_key="DQ_RULES", table_name=table_name)
-    by_id = {r.get("rule_id"): {**r, "rule_type": _canonical_dq_rule_type(r.get("rule_type"))} for r in candidates if r.get("rule_id")}
-    rules = list(by_id.values())
-    _validate_dq_rules(rules)
-    return rules
 
 
 def resolve_table_governance_policy(governance_rows: Any, *, environment_name: str = "", dataset_name: str = "", table_name: str = "", metadata_table_key: str = "") -> dict[str, Any]:
@@ -2416,9 +2339,8 @@ def widget_author_dq_rules(
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
-    dq_authoring_mode : {"manual", "ai_suggest"}, default="manual"
-        Reserved for future assisted-drafting flows. The v1 public widget
-        always renders manual DQ authoring controls.
+    dq_authoring_mode : {"manual"}, default="manual"
+        Manual DQ authoring mode.
     rule_type : str, default="not_null"
         Initial DQ rule type for manual mode.
     selected_columns : iterable of str, optional
@@ -2452,9 +2374,6 @@ def widget_author_dq_rules(
     initial_columns = tuple(column for column in (selected_columns or columns) if column in columns)
     existing_rules = list(state.get("existing_rules") or [])
     existing_dq = [row for row in existing_rules if str(row.get("guardrail_type") or "") == "dq"]
-    # AI-assisted DQ suggestion is deferred for a future separate assisted-drafting
-    # flow once the manual governance lifecycle is stable. Keep the parameter for
-    # now, but do not expose AI suggestion controls in the v1 public authoring UI.
     mode = "manual"
 
     batch_rule_type = widgets.Dropdown(options=DQ_RULE_TYPES, value=rule_type if rule_type in DQ_RULE_TYPES else "not_null", description="Rule type")
@@ -2529,10 +2448,6 @@ def widget_author_dq_rules(
 
     def save_individual(*, action_type: str = "created", action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
         return save_records(build_individual_record(action_type=action_type, action="apply_now" if use_bypass else action))
-
-    # AI-assisted DQ suggestion helpers are intentionally not exposed through
-    # widget_author_dq_rules for v1. A separate assisted-drafting flow can reuse
-    # lower-level helpers such as _draft_dq_rules in a later release.
 
     for control in (batch_rule_type, batch_columns, batch_params, batch_severity, bypass_box):
         control.observe(lambda change: refresh_preview(), names="value")

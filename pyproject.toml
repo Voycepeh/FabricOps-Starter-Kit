@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fabricops-kit"
 version = "0.1.0"
-description = "A practical starter kit for building governed, quality-checked, AI-ready notebooks in Microsoft Fabric."
+description = "A practical starter kit for building governed, quality-checked Microsoft Fabric notebook workflows."
 requires-python = ">=3.11"
 dependencies = [
   "PyYAML~=6.0",

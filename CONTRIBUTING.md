@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for contributing to **FabricOps Starter Kit**. This guide is for human contributors and AI agents.
+Thank you for contributing to **FabricOps Starter Kit**. This guide is for human contributors and automation tooling.
 
 ## 1) Contribution philosophy
 

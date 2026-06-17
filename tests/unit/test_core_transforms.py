@@ -110,7 +110,7 @@ def test_governance_review_builders_commit_only_human_approved_records():
     enrichment = build_enrichment_rule_records(
         profile_rows,
         [
-            {"column_name": "order_id", "business_description": "AI only", "commit": False},
+            {"column_name": "order_id", "business_description": "reviewed only", "commit": False},
             {"column_name": "amount", "business_description": "Approved amount", "sensitivity_label": "restricted", "commit": True},
         ],
         state={"governance_mode": "governed", "approval_policy": "approval_required"},

@@ -7,7 +7,6 @@ from types import SimpleNamespace
 from typing import Any
 
 from fabricops_kit.config import (
-    AIPromptConfig,
     DataAgreementConfig,
     FrameworkConfig,
     NotebookRuntimeConfig,
@@ -42,7 +41,6 @@ def framework_config() -> FrameworkConfig:
             }
         ),
         notebook_runtime_config=NotebookRuntimeConfig(),
-        ai_prompt_config=AIPromptConfig(),
         data_agreement_config=DataAgreementConfig(),
     )
 

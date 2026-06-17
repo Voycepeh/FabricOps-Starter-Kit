@@ -1,4 +1,4 @@
-"""Smoke tests for AI-friendly documentation build artifacts."""
+"""Smoke tests for documentation build artifacts."""
 
 from __future__ import annotations
 

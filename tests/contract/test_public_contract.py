@@ -230,16 +230,17 @@ def test_generated_module_docs_surface_only_active_v1_modules():
     assert module_docs == expected_modules
 
 
-def test_required_v1_imports_and_prompt_constants_remain_available():
-    """Verify required v1 imports and prompt constants remain available."""
+def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exported():
+    """Verify required v1 imports remain and prompt helpers are not exported."""
     from fabricops_kit import read_lakehouse_excel, setup_metadata_tables, setup_notebook
-    from fabricops_kit.governance_review import BUSINESS_CONTEXT_PROMPT, PDPA_PERSONAL_IDENTIFIER_PROMPT
 
     assert callable(setup_notebook)
     assert callable(setup_metadata_tables)
     assert callable(read_lakehouse_excel)
-    assert BUSINESS_CONTEXT_PROMPT
-    assert PDPA_PERSONAL_IDENTIFIER_PROMPT
+    forbidden = {"AIPromptConfig", "draft_dq_rules", "BUSINESS_CONTEXT_PROMPT", "PDPA_PERSONAL_IDENTIFIER_PROMPT", "DQ_RULE_SUGGESTION_PROMPT"}
+    assert forbidden.isdisjoint(set(fabricops_kit.__all__))
+    for name in forbidden:
+        assert not hasattr(fabricops_kit, name)
 
 
 def test_reference_generation_script_succeeds_for_template_map_and_module_docs():

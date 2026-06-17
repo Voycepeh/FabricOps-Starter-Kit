@@ -117,7 +117,7 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'sidebar_include': True},
  {'module_name': 'ai',
   'visibility': 'internal',
-  'module_summary': 'Internal AI utility surface used by workflow-facing public functions.',
+  'module_summary': 'Internal utility surface used by workflow-facing public functions.',
   'sidebar_group': 'Internal',
   'sidebar_include': False},
  {'module_name': 'schemas',
@@ -1289,18 +1289,18 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders manual and AI-assisted DQ authoring controls that produce editable '
+  'expanded_purpose': 'Renders manual DQ authoring controls that produce editable '
                       'guardrail rule intent rows under the selected table governance policy.',
   'when_to_use': 'Use in 02_pipeline after target selection when engineering needs to '
                  'batch-create, edit, clear, or draft DQ guardrail rules.',
   'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling; use '
                      'enforce_dq_rules for execution and profile helpers for observed evidence.',
   'glossary_terms': ['guardrail', 'catalogue evidence', 'metadata lakehouse', 'notebook template'],
-  'return_interpretation': 'The widget returns mutable preview records and AI draft suggestions; '
+  'return_interpretation': 'The widget returns mutable preview records; '
                            'approved saves write guardrail rule intent to '
                            'METADATA_GUARDRAIL_RULES.',
   'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
-                            'AI suggestions cannot be parsed.',
+                            'Rule suggestions cannot be parsed.',
                             'Bypass reason is missing when bypass is requested.',
                             'The metadata target cannot be written.']},
  {'kind': 'function',
@@ -1903,7 +1903,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                             'invalid.',
                                                                             'The metadata target '
                                                                             'cannot be written.']},
- 'widget_author_dq_rules': {'expanded_purpose': 'Renders manual and AI-assisted DQ authoring '
+ 'widget_author_dq_rules': {'expanded_purpose': 'Renders manual DQ authoring '
                                                 'controls that produce editable guardrail rule '
                                                 'intent rows under the selected table governance '
                                                 'policy.',
@@ -1918,12 +1918,12 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                'metadata lakehouse',
                                                'notebook template'],
                             'return_interpretation': 'The widget returns mutable preview records '
-                                                     'and AI draft suggestions; approved saves '
+                                                     'and draft suggestions; approved saves '
                                                      'write guardrail rule intent to '
                                                      'METADATA_GUARDRAIL_RULES.',
                             'common_failure_causes': ['Rule parameters are invalid for the '
                                                       'selected DQ type.',
-                                                      'AI suggestions cannot be parsed.',
+                                                      'Rule suggestions cannot be parsed.',
                                                       'Bypass reason is missing when bypass is '
                                                       'requested.',
                                                       'The metadata target cannot be written.']},

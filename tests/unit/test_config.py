@@ -9,8 +9,6 @@ from pathlib import Path
 import pytest
 
 from fabricops_kit.config import (
-    AIPromptConfig,
-    DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE,
     DataAgreementConfig,
     FrameworkConfig,
     GovernanceConfig,
@@ -32,54 +30,13 @@ from tests.helpers import framework_config, store
 pytestmark = pytest.mark.unit
 
 
-def test_dq_ai_suggestion_prompt_guidance_stays_in_package_defaults():
-    """Verify dq ai suggestion prompt guidance stays in package defaults."""
-    from fabricops_kit.governance_review import DQ_RULE_TYPES
-
-    prompt = DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
-    required_strings = [
-        "23",
-        "FabricOps-native DQ rule types",
-        "unique_combination",
-        "accepted_values",
-        "regex_match",
-        "value_when",
-        "expression_true",
-        "Custom expression",
-        "Rule selection principles",
-        "Data type / constraint-shape guidance",
-        "required parameters for all 23 rule types",
-        "Priority guide",
-        "Evidence guidance",
-        "Do not invent rule types",
-        "Do not invent columns",
-        "Return valid JSON only",
-        "Schema guardrails and profile behavior guardrails are separate FabricOps layers",
-    ]
-
-    for required in required_strings:
-        assert required in prompt, f"package DQ prompt missing {required!r}"
-    for rule_type in DQ_RULE_TYPES:
-        assert rule_type in prompt, f"package DQ prompt missing rule_type {rule_type!r}"
-
-
-def test_ai_prompt_config_uses_only_implemented_prompt_defaults():
-    """Verify ai prompt config uses only implemented prompt defaults."""
-    prompts = AIPromptConfig()
-
-    assert prompts.business_context_prompt_template.strip()
-    assert prompts.dq_rule_suggestion_prompt_template == DEFAULT_DQ_RULE_SUGGESTION_PROMPT_TEMPLATE
-    assert prompts.governance_personal_identifier_prompt_template.strip()
-    assert not hasattr(prompts, "governance_candidate_prompt_template")
-    assert not hasattr(prompts, "governance_review_prompt_template")
-
-
 def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
     """Verify env config template does not expose prompt boilerplate or unused defaults."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
-    assert "AI_PROMPTS = AIPromptConfig()" in source
+    assert "AIPromptConfig" not in source
+    assert "ai_prompt_config" not in source
     assert "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE =" not in source
     assert "GOVERNANCE_CANDIDATE_PROMPT_TEMPLATE" not in source
     assert "GOVERNANCE_REVIEW_PROMPT_TEMPLATE" not in source
@@ -94,7 +51,6 @@ def test_framework_config_defaults_framework_only_sections_when_omitted():
     config = FrameworkConfig(
         path_config=PathConfig(paths={"dev": {"source": store()}}),
         notebook_runtime_config=NotebookRuntimeConfig(),
-        ai_prompt_config=AIPromptConfig(),
     )
 
     assert isinstance(config.quality_config, QualityConfig)
@@ -108,7 +64,6 @@ def test_dict_framework_config_defaults_framework_only_sections_when_omitted():
     config = setup_notebook.__globals__["_validate_framework_config"]({
         "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
         "notebook_runtime_config": NotebookRuntimeConfig(),
-        "ai_prompt_config": AIPromptConfig(),
     })
 
     assert isinstance(config.quality_config, QualityConfig)
@@ -123,8 +78,7 @@ def test_framework_config_keeps_type_validation_for_present_defaulted_sections()
         setup_notebook.__globals__["_validate_framework_config"]({
             "path_config": PathConfig(paths={"dev": {"source": store()}}),
             "notebook_runtime_config": NotebookRuntimeConfig(),
-            "ai_prompt_config": AIPromptConfig(),
-            "quality_config": object(),
+                "quality_config": object(),
         })
 
 
@@ -505,11 +459,3 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
     pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
     assert "PIPELINE_STARTED_AT = _current_audit_timestamp(config=CONFIG)" in pipeline_source
     assert "completed_at=_current_audit_timestamp(config=CONFIG)" in pipeline_source
-
-
-def test_governance_review_imports_current_prompt_constants():
-    """Verify governance review imports current prompt constants."""
-    import fabricops_kit.governance_review as governance_review
-
-    assert governance_review.BUSINESS_CONTEXT_PROMPT.strip()
-    assert governance_review.PDPA_PERSONAL_IDENTIFIER_PROMPT.strip()
