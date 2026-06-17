@@ -1,5 +1,7 @@
 # FabricOps Demo Programme
 
+<div class="demo-hero" markdown>
+
 Use this page as a course-style walkthrough for the FabricOps Starter Kit in Microsoft Fabric. It now lives under the **Get Started** navigation, and the primary flow is the end-to-end demo programme.
 
 ## Demo at a glance
@@ -9,6 +11,10 @@ This demo builds a governed, quality-checked Microsoft Fabric notebook workflow 
 It is for data engineers, analytics engineers, data stewards, governance reviewers, and junior team members who need a practical handover path through FabricOps. Plan for a focused half-day the first time if you are also setting up Fabric workspaces and wheel installation; the notebook flow itself is shorter once your Fabric workspace, lakehouses, warehouse, and Environment are ready.
 
 By the end, you should understand how FabricOps uses Fabric workspaces, lakehouses, notebooks, and metadata tables to make delivery traceable from data agreement through governed pipeline review. For the full operating model, read [How FabricOps Works](how-fabricops-works/index.md).
+
+</div>
+
+<div class="demo-learning-outcomes" markdown>
 
 ## By the end of this demo, you will learn how to
 
@@ -23,6 +29,10 @@ By the end, you should understand how FabricOps uses Fabric workspaces, lakehous
 - Rerun `02_pipeline` to enforce active guardrails.
 - Inspect metadata evidence and final outputs.
 
+</div>
+
+<div class="demo-defaults" markdown>
+
 ## Demo defaults
 
 Keep these defaults for your first pass so the screenshots, notebooks, and expected metadata evidence line up.
@@ -34,6 +44,10 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 | Happy path source tables | `demo_src_orders_happy` and `demo_src_customers_happy` |
 | Default unified outputs | `demo_unified_orders_enriched` and `demo_unified_orders_summary` |
 | Demo generator behavior | `example_pipeline_demo.ipynb` is safe to rerun and overwrites demo tables only. |
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 0: Prepare Fabric workspace and wheel
 
@@ -54,9 +68,17 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 3. Build or download the FabricOps wheel, upload it to a Microsoft Fabric Environment, and attach that Environment to the copied demo notebooks.
 4. Copy notebook templates from the GitHub `templates` folder into Fabric: `00_env_config`, `01_agreement`, `02_pipeline`, `03_governance`, `example_pipeline_demo`, and `99_explore` if you want the bonus discovery notebook.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** Fabric notebooks attached to the Environment can import `fabricops_kit`, and editable template copies exist in your Fabric workspace.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** No FabricOps metadata is required yet. This milestone prepares the runtime and workspace items that later milestones use.
+
+</div>
 
 **Install screenshots:**
 
@@ -69,7 +91,15 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 !!! note "Screenshot TODO"
     Add a Fabric workspace screenshot showing copied demo notebooks: `00_env_config`, `01_agreement`, `example_pipeline_demo`, `02_pipeline`, `03_governance`, and `99_explore`.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Continue to [Milestone 1](#milestone-1-configure-00_env_config). For template responsibilities, see [Notebook Templates](how-fabricops-works/notebook-templates.md).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 1: Configure `00_env_config`
 
@@ -84,16 +114,32 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 3. Run the notebook cells that build `CONFIG`, set `ENV`, and register metadata tables.
 4. Confirm downstream notebooks can reuse the same `CONFIG` and `ENV` values.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** `CONFIG`, `ENV`, metadata lakehouse routes, source lakehouse routes, unified lakehouse routes, warehouse routes, and audit timestamp settings are available to downstream notebooks.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Metadata table setup/registration is available in `metadata_lakehouse`, including the shared `METADATA_*` tables described in [Metadata Tables](how-fabricops-works/metadata-tables.md).
+
+</div>
 
 ![`00_env_config` path configuration example](assets/fabric-example-00_config_paths.png)
 
 !!! note "Screenshot TODO"
     Add a successful `00_env_config` run screenshot showing the `CONFIG`/`ENV` summary and metadata target registration.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Continue to [Milestone 2](#milestone-2-create-agreement-in-01_agreement).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 2: Create agreement in `01_agreement`
 
@@ -108,14 +154,30 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 3. Define the data agreement for the demo order/customer workflow.
 4. Save or render the agreement evidence using the notebook widgets and helper cells.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** The agreement notebook shows the selected steward/agreement context and renders agreement evidence that downstream notebooks can reference.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Steward, agreement, and agreement evidence rows are written to the configured metadata target. These rows become the governance context for `02_pipeline` and `03_governance`.
+
+</div>
 
 !!! note "Screenshot TODO"
     Add a `01_agreement` screenshot showing rendered agreement evidence for the demo order/customer workflow.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Continue to [Milestone 3](#milestone-3-generate-demo-data-with-example_pipeline_demo).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 3: Generate demo data with `example_pipeline_demo`
 
@@ -129,14 +191,30 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 2. Confirm the unified target prefix remains `demo_unified_orders` for the first pass.
 3. Run the full notebook to overwrite and recreate the demo source tables.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** The configured source lakehouse contains deterministic demo source tables, including `demo_src_orders_happy` and `demo_src_customers_happy` for the happy path. The notebook also seeds demo-scoped DQ rules so the later governance and enforcement milestones have rules to review and apply.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Demo source tables are written under the `DemoTest` schema with the `demo_` prefix, and demo-scoped DQ rule rows are seeded into `METADATA_GUARDRAIL_RULES`. The generator is safe to rerun because it overwrites demo tables only.
+
+</div>
 
 !!! note "Screenshot TODO"
     Add an `example_pipeline_demo` screenshot showing generated `demo_` source tables in `DemoTest` and seeded demo DQ rule metadata.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Continue to [Milestone 4](#milestone-4-run-02_pipeline-happy-path).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 4: Run `02_pipeline` happy path
 
@@ -152,16 +230,32 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 4. Use the optional governance curation section only when you want to author or review rule suggestions from inside the pipeline notebook; formal review still happens in `03_governance`.
 5. Review the source profile, target profile, schema checks, freshness checks, DQ checks, lineage capture, and output write summary.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** `02_pipeline` successfully reads demo sources, produces enriched and summary outputs, writes governed unified tables, and displays run evidence.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Pipeline run summaries, schema/profile evidence, catalogue evidence, lineage evidence, and output metadata are written through the configured metadata target where supported by the template flow. Final output tables are written to the configured unified lakehouse.
+
+</div>
 
 ![Role-based notebook workflow from environment configuration through governed review](assets/fabricops-role-workflow.png){ .full-width }
 
 !!! note "Screenshot TODO"
     Add a `02_pipeline` happy path run summary screenshot showing successful writes for `demo_unified_orders_enriched` and `demo_unified_orders_summary`.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Continue to [Milestone 5](#milestone-5-review-governance-in-03_governance).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 5: Review governance in `03_governance`
 
@@ -176,14 +270,30 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 3. Approve, reject, replace, deactivate, or mark active-pending-review items according to your demo script.
 4. Save the governance decisions.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** The governance notebook records formal review decisions that downstream pipeline runs can load as active guardrails.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Reviewed guardrail intent is written to `METADATA_GUARDRAIL_RULES`; observed catalogue/profile evidence remains separate from approved guardrail intent, and runtime outcomes remain separate in guardrail results. See [Metadata Tables](how-fabricops-works/metadata-tables.md) for the table responsibilities.
+
+</div>
 
 !!! note "Screenshot TODO"
     Add a `03_governance` review grid screenshot with approved demo schema, freshness, profile, DQ, or enrichment rows.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Continue to [Milestone 6](#milestone-6-rerun-02_pipeline-with-active-guardrails).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 6: Rerun `02_pipeline` with active guardrails
 
@@ -198,14 +308,30 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 3. Confirm it loads active guardrail rows from the configured metadata target.
 4. Confirm warning-level DQ rules do not block publication, while error-level DQ rules block before the target write when they fail.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** The happy path still publishes governed unified outputs, and the run summary shows which active guardrails were evaluated.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Runtime outcomes are written as guardrail/run evidence, with active approved rule intent remaining in `METADATA_GUARDRAIL_RULES` and observed outcomes kept as runtime evidence.
+
+</div>
 
 !!! note "Screenshot TODO"
     Add a `02_pipeline` rerun screenshot showing active guardrail checks loaded from governance metadata.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Continue to [Milestone 7](#milestone-7-try-failure-scenarios).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Milestone 7: Try failure scenarios
 
@@ -227,14 +353,30 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 | Freshness guardrail | `demo_src_orders_stale` | Stale source data is detected. |
 | Profile behavior | `demo_src_orders_reload_a` / `demo_src_orders_reload_b` | Static versus changing profile modes are visible. |
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** Failure scenarios either stop before governed target writes or record warning/runtime evidence, depending on the active rule type and severity.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Guardrail outcomes, run summaries, profile evidence, and lineage/output evidence show what was evaluated and what happened. The final unified outputs remain the governed outputs from successful runs.
+
+</div>
 
 !!! note "Screenshot TODO"
     Add a `02_pipeline` failure scenario screenshot showing a blocked write or warning evidence.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Use the [Bonus](#bonus-use-99_explore-for-discovery-or-troubleshooting) notebook for discovery or troubleshooting, or move to [What success looks like](#what-success-looks-like).
+
+</div>
+
+</div>
+
+<div class="demo-milestone-card" markdown>
 
 ## Bonus: Use `99_explore` for discovery or troubleshooting
 
@@ -248,14 +390,28 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 2. Profile, inspect, or troubleshoot the data.
 3. Capture notes or evidence that help with support and review.
 
+<div class="demo-expected-output" markdown>
+
 **Expected output:** Analysts can investigate source or output data without changing the required Agreement → Pipeline → Governance Review flow.
 
+</div>
+
+<div class="demo-evidence" markdown>
+
 **Metadata or table evidence produced:** Any exploration evidence should remain support/discovery context. Formal approved guardrail intent still belongs in `03_governance`, and runtime outcomes still belong to `02_pipeline` runs.
+
+</div>
 
 !!! note "Screenshot TODO"
     Add a `99_explore` screenshot profiling a `demo_` table for troubleshooting.
 
+<div class="demo-next-step" markdown>
+
 **Next:** Review [Metadata Tables](how-fabricops-works/metadata-tables.md) and the [Function Reference](reference/index.md) when you need to trace which helpers produced each evidence row.
+
+</div>
+
+</div>
 
 ## What success looks like
 

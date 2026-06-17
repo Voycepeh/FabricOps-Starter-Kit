@@ -119,3 +119,89 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Demo programme page components. */
+.md-typeset .demo-hero,
+.md-typeset .demo-learning-outcomes,
+.md-typeset .demo-defaults,
+.md-typeset .demo-milestone-card,
+.md-typeset .demo-expected-output,
+.md-typeset .demo-evidence,
+.md-typeset .demo-next-step {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.35rem;
+  padding: 1rem;
+}
+
+.md-typeset .demo-hero {
+  background: linear-gradient(135deg, rgba(15, 143, 131, 0.12), rgba(71, 215, 172, 0.08));
+  border-color: rgba(15, 143, 131, 0.35);
+  margin: 0.5rem 0 1.25rem;
+}
+
+.md-typeset .demo-hero h2,
+.md-typeset .demo-learning-outcomes h2,
+.md-typeset .demo-defaults h2,
+.md-typeset .demo-milestone-card h2 {
+  margin-top: 0;
+}
+
+.md-typeset .demo-learning-outcomes {
+  background-color: rgba(71, 215, 172, 0.08);
+  margin: 1rem 0;
+}
+
+.md-typeset .demo-learning-outcomes ul {
+  columns: 2 16rem;
+}
+
+.md-typeset .demo-defaults {
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.15rem 0.6rem rgba(0, 0, 0, 0.06);
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .demo-defaults table:not([class]) {
+  display: table;
+  width: 100%;
+}
+
+.md-typeset .demo-milestone-card {
+  border-left: 0.28rem solid var(--md-primary-fg-color);
+  margin: 1.2rem 0;
+}
+
+.md-typeset .demo-expected-output,
+.md-typeset .demo-evidence,
+.md-typeset .demo-next-step {
+  margin: 0.9rem 0;
+  padding: 0.75rem 0.9rem;
+}
+
+.md-typeset .demo-expected-output {
+  background-color: rgba(15, 143, 131, 0.08);
+  border-color: rgba(15, 143, 131, 0.24);
+}
+
+.md-typeset .demo-evidence {
+  background-color: rgba(71, 215, 172, 0.08);
+  border-color: rgba(71, 215, 172, 0.28);
+}
+
+.md-typeset .demo-next-step {
+  background-color: var(--md-accent-fg-color--transparent);
+  border-color: var(--md-accent-fg-color);
+  font-weight: 600;
+}
+
+.md-typeset .demo-expected-output > :last-child,
+.md-typeset .demo-evidence > :last-child,
+.md-typeset .demo-next-step > :last-child {
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .demo-learning-outcomes ul {
+    columns: 1;
+  }
+}
