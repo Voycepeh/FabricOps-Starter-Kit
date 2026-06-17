@@ -93,7 +93,7 @@ def test_homepage_template_called_function_kpi_matches_reference_count() -> None
     """Verify homepage template-called function KPI matches the reference count."""
     homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
-    assert f'<div class="fabricops-kpi-number">{len(_direct_template_call_set())}</div>' in homepage
+    assert f'<div class="fabricops-kpi-number">{len(_core_template_called_public())}</div>' in homepage
     assert '<div class="fabricops-kpi-label">template-called functions</div>' in homepage
     assert "without counting import-only or lower-level helpers" in homepage
 
@@ -114,8 +114,20 @@ def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:
     assert 'data-callable-name="validate_schema_rule"' not in page
 
 
+def _audit_rows() -> list[dict[str, object]]:
+    """Return generated callable surface audit rows."""
+    import json
+
+    return json.loads((ROOT / "docs" / "reference" / "callable-surface-audit.json").read_text(encoding="utf-8"))
+
+
+def _core_template_called_public() -> set[str]:
+    """Return exported functions classified as core template-called public functions."""
+    return {str(row["function"]) for row in _audit_rows() if row["decision"] == "template_called_public"}
+
+
 def _direct_template_call_set() -> set[str]:
-    """Return public function names directly called by starter template code cells."""
+    """Return public function names directly called by all template code cells."""
     from scripts.generate_function_reference import (
         _direct_public_template_symbols,
         parse_public_exports,
@@ -150,7 +162,7 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
 
 def test_reference_catalogue_rows_match_direct_template_calls() -> None:
     """Verify catalogue rows exactly match direct starter template calls."""
-    assert _catalogue_row_names() == _direct_template_call_set()
+    assert _catalogue_row_names() == _core_template_called_public()
 
 
 def test_every_counted_function_has_standalone_page() -> None:
@@ -161,12 +173,15 @@ def test_every_counted_function_has_standalone_page() -> None:
         assert (api_reference_dir / f"{name}.md").exists(), name
 
 
-def test_no_uncalled_function_has_standalone_page() -> None:
-    """Verify uncalled public helpers do not have standalone function pages."""
+def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
+    """Verify audited advanced public helpers keep standalone function pages."""
     api_reference_dir = ROOT / "docs" / "api" / "reference"
     page_names = {path.stem for path in api_reference_dir.glob("*.md")}
+    exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
 
-    assert page_names == _direct_template_call_set()
+    assert page_names == exported_names
+    assert "read_lakehouse_csv" in page_names
+    assert "write_warehouse_table" in page_names
 
 
 def test_functions_with_blank_starter_path_are_not_counted() -> None:
@@ -174,3 +189,32 @@ def test_functions_with_blank_starter_path_are_not_counted() -> None:
     page = _reference_index()
 
     assert 'data-callable-starter-path="—"' not in page
+
+
+def test_root_exports_match_callable_surface_audit() -> None:
+    """Verify root exports match callable surface audit rows."""
+    import fabricops_kit
+
+    audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+    assert set(fabricops_kit.__all__) == audit_names
+
+
+def test_convert_to_internal_audit_rows_are_not_root_exports() -> None:
+    """Verify convert-to-internal audit decisions are not root exports."""
+    import fabricops_kit
+
+    internal_names = {str(row["function"]) for row in _audit_rows() if row["decision"] == "convert_to_internal"}
+    assert internal_names.isdisjoint(set(fabricops_kit.__all__))
+
+
+def test_example_only_helpers_do_not_inflate_core_count() -> None:
+    """Verify example-only helpers are tracked outside the core count."""
+    example_only = {
+        str(row["function"])
+        for row in _audit_rows()
+        if row["directly_called_in_example_templates"] and not row["directly_called_in_core_templates"]
+    }
+
+    assert "enforce_dq_rules" in example_only
+    assert example_only.isdisjoint(_core_template_called_public())
+    assert example_only.isdisjoint(_catalogue_row_names())

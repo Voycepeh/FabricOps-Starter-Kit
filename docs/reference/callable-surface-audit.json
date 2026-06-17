@@ -1,0 +1,412 @@
+[
+  {
+    "function": "display_guardrail_results",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "enforce_dq_rules",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [
+      "example_dq_rule_smoke_test"
+    ],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "run_table_guardrails"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "enforce_freshness",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "enforce_freshness_rule",
+      "run_table_guardrails"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "enforce_freshness_rule",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "run_table_guardrails"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "enforce_profile_behavior",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "run_table_guardrails"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "get_selected_agreement",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "prepare_pipeline_table_configs",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "profile_dataframe",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "99_explore"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "enforce_profile_behavior",
+      "run_table_guardrails"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "read_lakehouse_csv",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": true,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "read_lakehouse_excel",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": true,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "read_lakehouse_parquet",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": true,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "read_lakehouse_table",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline",
+      "99_explore"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": true,
+    "called_only_internally_by_public_helper": [
+      "enforce_profile_behavior"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "read_warehouse_table",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": true,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "run_table_guardrails",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "setup_metadata_tables",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "00_env_config"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "setup_notebook",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "00_env_config"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "stop_if_failed",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "run_table_guardrails"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_author_dq_rules",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "widget_author_guardrail_rules"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_author_guardrail_rules",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "03_governance"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_author_schema_freshness_profile_rules",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "widget_author_guardrail_rules"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_enrich_table_metadata",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline",
+      "03_governance"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_render_agreement_evidence",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "01_agreement"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_render_data_agreement",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "01_agreement"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_render_data_steward",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "01_agreement"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_review_guardrail_governance",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_review_table_governance",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "03_governance"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_select_agreement",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "widget_select_guardrail_target",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline",
+      "03_governance"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "write_catalogue_evidence",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [
+      "run_table_guardrails"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  },
+  {
+    "function": "write_lakehouse_table",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [
+      "example_pipeline_demo",
+      "example_dq_rule_smoke_test"
+    ],
+    "imported_only_in_templates": true,
+    "called_only_internally_by_public_helper": [
+      "write_catalogue_evidence",
+      "write_pipeline_lineage",
+      "write_pipeline_run_summary"
+    ],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "write_pipeline_lineage",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "write_pipeline_run_summary",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "template_called_public"
+  },
+  {
+    "function": "write_warehouse_table",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": true,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
+  }
+]

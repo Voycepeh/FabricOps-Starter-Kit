@@ -208,7 +208,7 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
     for callable_name in manifest_callables:
         canonical_page = root / "docs" / "api" / "reference" / f"{callable_name}.md"
         legacy_page = root / "docs" / "reference" / "callables" / f"{callable_name}.md"
-        assert canonical_page.exists() == (callable_name in called)
+        assert canonical_page.exists()
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
 
 

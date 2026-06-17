@@ -29,11 +29,13 @@ MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
+CALLABLE_SURFACE_AUDIT_PATH = ROOT / "docs" / "reference" / "callable-surface-audit.json"
 GLOSSARY_SOURCE_PATH = ROOT / "docs" / "reference" / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
+CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
 
 
 
@@ -808,6 +810,38 @@ def _derive_template_usage(
     }
 
 
+def _derive_template_usage_by_kind(
+    template_flow_docs: list[dict[str, Any]],
+    symbol_map: dict[str, Symbol],
+) -> tuple[dict[str, list[str]], dict[str, list[str]], dict[str, bool]]:
+    """Return direct core calls, example calls, and import-only template usage."""
+    template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
+    core_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
+    example_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
+    imported_symbols: dict[str, bool] = {name: False for name in symbol_map}
+    public_symbols = set(symbol_map)
+
+    for flow in template_flow_docs:
+        notebook_key = flow["notebook_key"]
+        template_path = flow.get("template_path", "")
+        direct_symbols = set(_direct_public_template_symbols(template_path, public_symbols))
+        source_text = _read_template_source(template_path)
+        for symbol in public_symbols:
+            if re.search(rf"\b{re.escape(symbol)}\b", source_text) and symbol not in direct_symbols:
+                imported_symbols[symbol] = True
+        target = core_usage if notebook_key in CORE_TEMPLATE_KEYS else example_usage
+        for symbol in direct_symbols:
+            target.setdefault(symbol, set()).add(notebook_key)
+
+    def _sorted_usage(usage: dict[str, set[str]]) -> dict[str, list[str]]:
+        return {
+            symbol: sorted(notebooks, key=lambda notebook: (template_order.get(notebook, len(template_order)), notebook))
+            for symbol, notebooks in usage.items()
+        }
+
+    return _sorted_usage(core_usage), _sorted_usage(example_usage), imported_symbols
+
+
 def generate_internal_reference_pages() -> bool:
     """Return whether standalone internal helper pages should be generated."""
     return os.environ.get(GENERATE_INTERNAL_REFERENCE_PAGES_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
@@ -1549,8 +1583,17 @@ def main() -> None:
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
     nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_lookup = {n["qualified_name"]: n for n in nodes}
-    template_usage_by_symbol = _derive_template_usage(template_flow_docs, symbol_map, node_by_qn={}, calls_by_qn={})
-    template_called_function_names = {name for name, usage in template_usage_by_symbol.items() if usage}
+    core_template_usage_by_symbol, example_template_usage_by_symbol, imported_only_by_symbol = _derive_template_usage_by_kind(template_flow_docs, symbol_map)
+    template_usage_by_symbol = {
+        name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
+        for name in symbol_map
+    }
+    template_called_function_names = {name for name, usage in core_template_usage_by_symbol.items() if usage}
+    example_only_function_names = {
+        name
+        for name, usage in example_template_usage_by_symbol.items()
+        if usage and not core_template_usage_by_symbol.get(name)
+    }
 
     def _is_callable_edge(edge: dict[str, Any]) -> bool:
         callee = edge.get("callee_qualified_name")
@@ -1844,7 +1887,7 @@ def main() -> None:
     if function_start_marker in mkdocs_text and function_end_marker in mkdocs_text:
         generated_function_lines = [
             f"          - {name}: api/reference/{name}.md"
-            for name in sorted(template_called_function_names, key=str.lower)
+            for name in sorted(public, key=str.lower)
         ]
         generated_functions = "\n".join(generated_function_lines)
         before, rest = mkdocs_text.split(function_start_marker, 1)
@@ -1967,6 +2010,33 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
+    public_qn_by_name = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
+    audit_rows = []
+    for name in sorted(public, key=str.lower):
+        qn = public_qn_by_name[name]
+        internal_public_callers = sorted({
+            node_by_qn[caller]["callable_name"]
+            for caller in used_by_qn.get(qn, [])
+            if node_by_qn.get(caller, {}).get("exported")
+        })
+        if core_template_usage_by_symbol.get(name):
+            decision = "template_called_public"
+        elif example_template_usage_by_symbol.get(name):
+            decision = "advanced_public_helper"
+        else:
+            decision = "advanced_public_helper"
+        audit_rows.append({
+            "function": name,
+            "in_root_exports": True,
+            "directly_called_in_core_templates": core_template_usage_by_symbol.get(name, []),
+            "directly_called_in_example_templates": example_template_usage_by_symbol.get(name, []),
+            "imported_only_in_templates": bool(imported_only_by_symbol.get(name)),
+            "called_only_internally_by_public_helper": internal_public_callers,
+            "has_standalone_reference_page": True,
+            "decision": decision,
+        })
+    CALLABLE_SURFACE_AUDIT_PATH.write_text(json.dumps(audit_rows, indent=2) + "\n", encoding="utf-8")
+
     dependency_callables_sorted = {k: dependency_callables[k] for k in sorted(dependency_callables)}
     dependency_modules_sorted = {k: dependency_modules[k] for k in sorted(dependency_modules)}
     DEPENDENCY_METADATA_PATH.write_text(
@@ -2207,6 +2277,15 @@ def main() -> None:
             ]
         )
     ref.extend(['<div class="reference-catalogue-list">', *all_items, "</div>"])
+    if example_only_function_names:
+        ref.extend(["", "## Example-only helpers", "", "These public helpers are directly called only by example notebooks and are not included in the core template-called count.", ""])
+        for name in sorted(example_only_function_names, key=str.lower):
+            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))})")
+    advanced_names = sorted(set(function_symbol_map) - template_called_function_names - example_only_function_names, key=str.lower)
+    if advanced_names:
+        ref.extend(["", "## Advanced public helpers", "", "These exported helpers remain public and documented, but they are not directly called by core starter template code cells and are not included in the core template-called count.", ""])
+        for name in advanced_names:
+            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))})")
 
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -2236,7 +2315,7 @@ def main() -> None:
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})
         signature = module_info.get("signatures", {}).get(short_name, "")
         summary = metadata.get("summary_override") or ""
-        docs_path = f"api/reference/{short_name}.md" if node["exported"] and short_name in template_called_function_names else (
+        docs_path = f"api/reference/{short_name}.md" if node["exported"] else (
             f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
         )
         source_path = f"src/fabricops_kit/{module_name}.py"
@@ -2245,7 +2324,7 @@ def main() -> None:
         source_end_line = source_location.get("end_line")
         source_ref = github_source_url(source_path, source_start_line, source_end_line)
         parameter_rows = module_info.get("parameters", {}).get(short_name, [])
-        classification = "Callable" if node.get("role") == "callable" and short_name in template_called_function_names else "Internal"
+        classification = "Callable" if node.get("role") == "callable" else "Internal"
         purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
         rel_module = canonical_public_module(module_name)
         metadata_related = list(metadata.get("related_functions", []))
@@ -2280,7 +2359,7 @@ def main() -> None:
                 n = node_by_qn.get(item, {})
                 if not n:
                     continue
-                if n.get("exported") and n["callable_name"] in template_called_function_names:
+                if n.get("exported"):
                     href = f"../{n['callable_name']}/"
                     out.append(f'- <a href="{href}"><code>{item}</code></a>')
                 elif generate_internal_reference_pages():
@@ -2290,14 +2369,10 @@ def main() -> None:
                     out.append(f"- `{item}`")
             return out
 
-        if node["exported"] and short_name in template_called_function_names:
+        if node["exported"]:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
-            related_public = [
-                item
-                for item in related_for_page
-                if node_by_qn.get(item, {}).get("callable_name") in template_called_function_names
-            ]
+            related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             helper_qns = [
                 helper_qn
@@ -2584,7 +2659,7 @@ def main() -> None:
             if not used_by and not deps:
                 lines.extend(["", "_No inbound or outbound references detected._"])
 
-        if node["exported"] and short_name in template_called_function_names:
+        if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
             (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -2596,7 +2671,7 @@ def main() -> None:
             "name": short_name,
             "qualified_name": qn,
             "module": module_name,
-            "type": "callable" if node["exported"] and short_name in template_called_function_names else "internal",
+            "type": "callable" if node["exported"] else "internal",
             "role": node.get("role", "internal"),
             "inbound": used_by,
             "outbound": deps,

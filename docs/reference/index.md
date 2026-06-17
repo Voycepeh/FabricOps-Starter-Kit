@@ -50,16 +50,6 @@ Use the finder below to look up template-called public functions from active v1 
 
   </div>
 </article>
-<article id="governance_review-enforce_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_dq_rules" data-callable-module="governance_review" data-callable-starter-path="example_dq_rule_smoke_test" data-function-type="callable" data-callable-purpose="Enforce approved active DQ rules as a target-write guardrail without filtering rows.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Enforce approved active DQ rules as a target-write guardrail without filtering rows.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">example_dq_rule_smoke_test</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> example_dq_rule_smoke_test</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>_dq_failed_row_count</code></li><li><code>_dq_summary</code></li><li><code>_dq_tagged_dataframe</code></li><li><code>_load_active_dq_rules</code></li><li><code>_read_guardrail_rule_metadata</code></li><li><code>_run_dq_guardrail_checks</code></li><li><code>_summarize_dq_guardrail</code></li><li><code>_write_guardrail_result_row</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
-  </div>
-</article>
 <article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return the agreement selected by widget_select_agreement.</p>
@@ -281,4 +271,24 @@ Use the finder below to look up template-called public functions from active v1 
   </div>
 </article>
 </div>
+
+## Example-only helpers
+
+These public helpers are directly called only by example notebooks and are not included in the core template-called count.
+
+- [`enforce_dq_rules`](../api/reference/enforce_dq_rules/)
+
+## Advanced public helpers
+
+These exported helpers remain public and documented, but they are not directly called by core starter template code cells and are not included in the core template-called count.
+
+- [`enforce_freshness`](../api/reference/enforce_freshness/)
+- [`enforce_freshness_rule`](../api/reference/enforce_freshness_rule/)
+- [`enforce_profile_behavior`](../api/reference/enforce_profile_behavior/)
+- [`read_lakehouse_csv`](../api/reference/read_lakehouse_csv/)
+- [`read_lakehouse_excel`](../api/reference/read_lakehouse_excel/)
+- [`read_lakehouse_parquet`](../api/reference/read_lakehouse_parquet/)
+- [`read_warehouse_table`](../api/reference/read_warehouse_table/)
+- [`write_catalogue_evidence`](../api/reference/write_catalogue_evidence/)
+- [`write_warehouse_table`](../api/reference/write_warehouse_table/)
 
