@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from pathlib import Path
@@ -581,6 +582,50 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
         detail_text = (API_REFERENCE_DIR / f"{callable_name}.md").read_text(encoding="utf-8")
         assert "**Used in templates:**" in detail_text
         assert detail_text.count("`02_pipeline`") == 1
+
+
+def test_template_function_map_matches_direct_public_notebook_calls() -> None:
+    """Verify template function map matches direct public notebook calls."""
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    public_names = {entry["name"] for entry in function_manifest if entry.get("classification") == "Callable"}
+    template_map = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
+
+    mapped_sections = {}
+    for section in template_map.split('<section class="template-function-group">')[1:]:
+        notebook_key = re.search(r"<h2><code>([^<]+)</code></h2>", section)
+        assert notebook_key is not None
+        mapped_sections[notebook_key.group(1)] = set(re.findall(r"<code>([^<]+)</code></a>", section))
+
+    template_paths = sorted((ROOT / "templates" / "notebooks").glob("*.ipynb"))
+    assert set(mapped_sections) == {path.stem for path in template_paths}
+
+    for path in template_paths:
+        notebook = json.loads(path.read_text(encoding="utf-8"))
+        code = "\n".join(
+            "".join(cell.get("source", ""))
+            for cell in notebook.get("cells", [])
+            if cell.get("cell_type") == "code"
+        )
+        parseable_code = "\n".join(
+            f"# {line}" if line.lstrip().startswith(("%", "!")) else line
+            for line in code.splitlines()
+        )
+        tree = ast.parse(parseable_code)
+        imported_public_names = {
+            alias.asname or alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("fabricops_kit")
+            for alias in node.names
+            if (alias.asname or alias.name) in public_names
+        }
+        direct_public_calls = {
+            node.func.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id in imported_public_names
+        }
+        assert mapped_sections[path.stem] == direct_public_calls
 
 
 def test_callable_parameters_render_as_api_table() -> None:

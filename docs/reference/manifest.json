@@ -263,7 +263,9 @@
         "01_agreement",
         "02_pipeline",
         "03_governance",
-        "99_explore"
+        "99_explore",
+        "example_pipeline_smoke_test",
+        "example_dq_rule_smoke_test"
       ]
     },
     {
@@ -300,7 +302,9 @@
         "00_env_config",
         "01_agreement",
         "02_pipeline",
-        "03_governance"
+        "03_governance",
+        "example_pipeline_smoke_test",
+        "example_dq_rule_smoke_test"
       ]
     },
     {
@@ -333,7 +337,8 @@
       "template_notebook": "02_pipeline",
       "template_segment": "DQ guardrails",
       "used_in_templates": [
-        "02_pipeline"
+        "02_pipeline",
+        "example_dq_rule_smoke_test"
       ]
     },
     {

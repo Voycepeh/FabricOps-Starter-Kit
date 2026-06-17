@@ -2197,7 +2197,9 @@
         "01_agreement",
         "02_pipeline",
         "03_governance",
-        "99_explore"
+        "99_explore",
+        "example_pipeline_smoke_test",
+        "example_dq_rule_smoke_test"
       ],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark",
@@ -2260,7 +2262,9 @@
         "00_env_config",
         "01_agreement",
         "02_pipeline",
-        "03_governance"
+        "03_governance",
+        "example_pipeline_smoke_test",
+        "example_dq_rule_smoke_test"
       ],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._normalize_table_name",
@@ -3681,7 +3685,8 @@
       ],
       "used_by_count": 1,
       "used_in_templates": [
-        "02_pipeline"
+        "02_pipeline",
+        "example_dq_rule_smoke_test"
       ],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._dq_failed_row_count",
