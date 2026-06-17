@@ -13,7 +13,7 @@ NOTEBOOK_PREFIXES = ("00_env_config", "01_agreement", "02_pipeline", "03_governa
 RUNTIME_CONFIG = NotebookRuntimeConfig(NOTEBOOK_PREFIXES)
 ```
 
-`NotebookRuntimeConfig` is used by `setup_notebook` when it checks notebook naming during startup. Keep the starter prefixes unless your project intentionally uses a different notebook naming convention. If you change them, keep the values explicit and readable because downstream users see validation messages from this policy.
+The starter defines `NOTEBOOK_PREFIXES` and passes them into `NotebookRuntimeConfig` so the intended notebook families stay visible in one place. In the current implementation, however, `setup_notebook` naming validation still uses the built-in FabricOps notebook name patterns (`00_env_config`, `01_agreement`, `02_pipeline`, `03_governance`, and `99_explore`) rather than reading custom prefixes from `NotebookRuntimeConfig`. Treat `NOTEBOOK_PREFIXES` as configuration documentation for now unless the implementation is changed to make custom prefixes enforceable.
 
 The same section also defines:
 
@@ -51,6 +51,8 @@ Set `LAKEHOUSE_SCHEMAS_ENABLED = False` for classic/non-schema Lakehouses and se
 
 For schema-enabled Lakehouses, each Lakehouse `FabricStore` must have a simple schema name. The implementation rejects schema values with paths, dots, invalid characters, or names that start with a number. Schema routing should be configured through the `schema` field on each `FabricStore` or through the `metadata_schema` argument to metadata setup, not by embedding the schema in table names.
 
+Lakehouse helpers use the `FabricStore` schema for schema-enabled Lakehouses. Warehouse read/write helpers still receive the warehouse schema as an explicit function argument, even if the starter `product` target also carries a `schema` value for configuration readability.
+
 ## Metadata schema
 
 `METADATA_SCHEMA` controls where metadata tables are created and validated when the metadata Lakehouse is schema-enabled.
@@ -78,7 +80,7 @@ Current strict checks in `00_env_config` raise when:
 - agreement metadata setup is not ready, for example no active steward rows exist and strict mode is enabled;
 - metadata table registration validation is not `ready` or `skipped`.
 
-`setup_notebook` also returns `RUN_CONTEXT.readiness_status`; failures in required target resolution or notebook naming make the context `not_ready`.
+`setup_notebook` also returns `RUN_CONTEXT.readiness_status` after startup completes. Missing required environments or targets can raise during `setup_notebook` before `RUN_CONTEXT` is returned, so do not expect every path-resolution problem to produce a context object. When setup does return a context, completed smoke checks can produce readiness values such as `ready` or `not_ready`; for example, notebook naming failures are reflected in the returned readiness status.
 
 ## Path Config
 
