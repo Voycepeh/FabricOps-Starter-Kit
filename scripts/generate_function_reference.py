@@ -755,12 +755,13 @@ def _direct_public_template_symbols(template_path: str, public_symbols: set[str]
     except SyntaxError as exc:
         raise RuntimeError(f"Could not parse template for function map validation: {template_path}") from exc
 
-    imported_names: set[str] = set()
+    imported_symbol_by_name: dict[str, str] = {}
     package_aliases: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith(PACKAGE_NAME):
             for alias in node.names:
-                imported_names.add(alias.asname or alias.name)
+                if alias.name in public_symbols:
+                    imported_symbol_by_name[alias.asname or alias.name] = alias.name
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name == PACKAGE_NAME:
@@ -771,8 +772,8 @@ def _direct_public_template_symbols(template_path: str, public_symbols: set[str]
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        if isinstance(func, ast.Name) and func.id in public_symbols and func.id in imported_names:
-            direct_symbols.add(func.id)
+        if isinstance(func, ast.Name) and func.id in imported_symbol_by_name:
+            direct_symbols.add(imported_symbol_by_name[func.id])
         elif (
             isinstance(func, ast.Attribute)
             and func.attr in public_symbols
@@ -798,15 +799,7 @@ def _derive_template_usage(
 
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
-        source_text = _read_template_source(flow.get("template_path", ""))
-        direct_symbols: set[str] = set()
-        if source_text:
-            for symbol_name in symbol_map:
-                if re.search(rf"(?<![A-Za-z0-9_]){re.escape(symbol_name)}(?![A-Za-z0-9_])", source_text):
-                    direct_symbols.add(symbol_name)
-        else:
-            for segment in flow.get("segments", []):
-                direct_symbols.update(segment.get("symbols", []))
+        direct_symbols = set(_direct_public_template_symbols(flow.get("template_path", ""), set(symbol_map)))
 
         queue = [symbol_to_qn[name] for name in sorted(direct_symbols) if name in symbol_to_qn]
         seen: set[str] = set()

@@ -2102,11 +2102,7 @@
       "calls_count": 3,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [
-        "00_env_config",
-        "02_pipeline",
-        "99_explore"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark",
         "fabricops_kit.fabric_input_output._lakehouse_file_path"
@@ -2128,10 +2124,7 @@
       "calls_count": 3,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark",
         "fabricops_kit.fabric_input_output._lakehouse_file_path"
@@ -2154,10 +2147,7 @@
       "calls_count": 4,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
         "fabricops_kit.fabric_input_output._get_spark",
@@ -2198,7 +2188,6 @@
         "02_pipeline",
         "03_governance",
         "99_explore",
-        "example_pipeline_smoke_test",
         "example_dq_rule_smoke_test"
       ],
       "internal_helpers_used": [
@@ -2222,11 +2211,7 @@
       "calls_count": 2,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [
-        "00_env_config",
-        "02_pipeline",
-        "99_explore"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark"
       ],
@@ -2285,10 +2270,7 @@
       "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [
-        "00_env_config",
-        "02_pipeline"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
