@@ -844,6 +844,8 @@ def public_reference_link(
         return f"../../reference/{symbol}/"
     if context == "reference":
         return f"../api/reference/{symbol}/"
+    if context == "template_map":
+        return f"../../api/reference/{symbol}/"
     if context == "notebook":
         return f"../api/reference/{symbol}/"
     raise RuntimeError(f"Unknown link context: {context}")
@@ -2029,7 +2031,10 @@ def main() -> None:
             unique_symbols = sorted(set(segment["symbols"]), key=segment["symbols"].index)
             if not unique_symbols:
                 continue
-            chips = [function_chip(symbol_name, f"../api/reference/{symbol_name}/") for symbol_name in unique_symbols]
+            chips = [
+                function_chip(symbol_name, public_reference_link(symbol_name, docs_metadata, context="template_map"))
+                for symbol_name in unique_symbols
+            ]
             template_function_map.extend([
                 '<div class="template-function-row">',
                 f'<span class="template-function-segment">{html_escape(segment["title"])}</span>',
