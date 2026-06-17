@@ -2,11 +2,11 @@
 
 FabricOps separates operational activation from formal governance review.
 
-Engineering users can create enrichment and guardrail records from 02_pipeline. They may save records as drafts, submit them for governance review, or apply them immediately when pipeline continuity requires it. Immediate application makes the record active, but marks it as active pending governance review.
+Engineering users can create <span class="glossary-term" title="Reviewed descriptive metadata such as business meaning, ownership, sensitivity, classification, and usage context.">enrichment</span> and <span class="glossary-term" title="A check that evaluates schema, freshness, profile behavior, or data quality during a pipeline run.">guardrail</span> records from 02_pipeline. They may save records as drafts, submit them for governance review, or apply them immediately when pipeline continuity requires it. Immediate application makes the record active, but marks it as active pending governance review.
 
 Formal review happens only in 03_governance. Governance users can approve, reject, replace, deactivate, or supersede records; this notebook records governance decisions for table governance history. Replacing a record does not overwrite history; it creates a new version and marks the previous version as superseded.
 
-Runtime enforcement in 02_pipeline consumes active guardrail records. Governance review determines whether those records are approved, rejected, or superseded.
+Enforcement in 02_pipeline consumes active guardrail records. Governance review determines whether those records are approved, rejected, or superseded.
 
 ## Lifecycle fields
 
@@ -32,7 +32,7 @@ Runtime enforcement in 02_pipeline consumes active guardrail records. Governance
 
 `02_pipeline` reads profiling evidence from `METADATA_DATA_CATALOGUE` and is for engineering authoring. It can create draft, pending governance review, or active pending governance review records, but it cannot formally approve or reject enrichment or guardrail records.
 
-`03_governance` is the formal review notebook. It reads review history from `METADATA_ENRICHMENT_RULES` and `METADATA_GUARDRAIL_RULES`, and appends formal review outcomes back to those same history tables. It does not write runtime enforcement results; 02_pipeline runtime outcomes remain owned by `METADATA_GUARDRAIL_RESULTS`.
+`03_governance` is the formal review notebook. It reads review history from `METADATA_ENRICHMENT_RULES` and `METADATA_GUARDRAIL_RULES`, and appends formal review outcomes back to those same history tables. It does not write enforcement results; 02_pipeline runtime outcomes remain owned by `METADATA_GUARDRAIL_RESULTS`.
 
 03_governance is structured as a step by step review notebook. Each widget is placed in its own section and code cell so governance users can run target selection, enrichment authoring, guardrail authoring, and formal review independently.
 
@@ -53,7 +53,7 @@ Replace is append-only: FabricOps appends a superseded row for the previous reco
 
 ## Runtime filtering
 
-Runtime enforcement consumes active guardrail records based on `activation_state` or `is_active`. This includes active engineering-applied records with `review_state = active_pending_governance_review` because those records are operationally active by design.
+Enforcement consumes active guardrail records based on `activation_state` or `is_active`. This includes active engineering-applied records with `review_state = active_pending_governance_review` because those records are operationally active by design.
 
 Draft, pending, rejected, inactive, and superseded records are excluded from runtime consumption.
 

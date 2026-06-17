@@ -78,14 +78,14 @@ def test_pipeline_notebook_contains_widget_led_flow_sections():
         "## 3. Select agreement and capture run context",
         "## 4. USER EDIT SECTION — read source DataFrames",
         "## 5. USER EDIT SECTION — register source DataFrames only",
-        "## 6. Profile source DataFrames and write catalogue evidence",
-        "## 7. USER EDIT SECTION — transform source DataFrames into target DataFrames",
-        "## 8. USER EDIT SECTION — register target DataFrames only",
-        "## 9. Profile target DataFrames and write catalogue evidence",
-        "## 10. Optional governance curation and metadata enrichment widgets",
+        "## 6. Profile source data",
+        "## 7. USER EDIT SECTION — transform source DataFrames into pipeline outputs",
+        "## 8. USER EDIT SECTION — register pipeline outputs only",
+        "## 9. Profile pipeline outputs",
+        "## 10. Optional enrichment and guardrail widgets",
         "## 11. Guardrail enforcement gate",
-        "## 12. USER EDIT SECTION — configure target write settings",
-        "## 13. Write target Lakehouse tables",
+        "## 12. USER EDIT SECTION — configure output write settings",
+        "## 13. Write pipeline output Lakehouse tables",
         "## 14. Optional warehouse write example",
         "## 15. USER EDIT SECTION — lineage relationships",
         "## 16. Write lineage metadata",
@@ -95,7 +95,7 @@ def test_pipeline_notebook_contains_widget_led_flow_sections():
         assert section in markdown
 
     assert "Do not define schema, freshness, profile behaviour, DQ" in markdown
-    assert "If any blocking source or target guardrail fails" in markdown
+    assert "If any blocking source or pipeline output guardrail fails" in markdown
     assert "Write settings belong after the guardrail gate" in markdown
 
 

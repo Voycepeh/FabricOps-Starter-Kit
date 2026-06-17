@@ -25,13 +25,13 @@ def test_governance_review_page_frames_metadata_control_panel():
     ):
         assert required_term in text
 
-    assert "runtime enforcement" in normalized
-    assert "02_pipeline" in text[text.find("runtime enforcement") if "runtime enforcement" in text else 0 :]
+    assert "enforcement" in normalized
+    assert "02_pipeline" in text[text.find("enforcement") if "enforcement" in text else 0 :]
     assert any(
         phrase in normalized
         for phrase in (
             "03_governance` lets reviewers",
-            "guardrail governance decisions",
+            "guardrail decisions",
             "records governance decisions",
             "reviews table governance",
             "reviewers approve",

@@ -5,7 +5,7 @@ FabricOps separates metadata ownership so each table has one clear purpose:
 - `METADATA_DATA_CATALOGUE` stores observed physical/profile evidence plus current table governance policy fields.
 - `METADATA_ENRICHMENT_RULES` stores reviewable enrichment intent and its review lifecycle.
 - `METADATA_GUARDRAIL_RULES` stores guardrail rule intent across draft, pending governance review, active pending governance review, self-approved, governance-approved, rejected, inactive, and superseded states.
-- `METADATA_GUARDRAIL_RESULTS` stores runtime enforcement outcomes only.
+- `METADATA_GUARDRAIL_RESULTS` stores enforcement outcomes only.
 - Approval logs are derived from append-only history in `METADATA_ENRICHMENT_RULES` and `METADATA_GUARDRAIL_RULES`.
 
 ## Table governance policy
@@ -24,6 +24,6 @@ DQ rule authoring is deterministic and reviewer-controlled in the public authori
 
 `03_governance` uses `widget_review_table_governance` to review enrichment and guardrail rows from the rule tables, approve pending records, reject records, replace records, deactivate approved records, and view history. Approval activates or confirms the record as `governance_approved`. Rejection, replacement, and deactivation preserve append-only history instead of deleting prior intent.
 
-## Runtime enforcement
+## Enforcement
 
 Pipeline enforcement loads active rules only when their status is `self_approved`, `governance_approved`, or `active_pending_governance_review`. Draft, pending, rejected, inactive, and superseded rules are not enforced. Active pending review rules carry the runtime warning `Rule is active pending governance review.` so reviewers can identify rules that still need formal governance review.

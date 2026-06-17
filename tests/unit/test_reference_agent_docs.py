@@ -367,21 +367,20 @@ def test_glossary_page_exists_and_includes_required_terms() -> None:
     glossary_page = REFERENCE_DIR / "glossary.md"
     glossary_source = REFERENCE_DIR / "glossary.json"
     required_terms = {
-        "profile behavior",
-        "accepted catalogue profile evidence",
-        "baseline profile",
-        "stage",
-        "profile behavior check",
-        "guardrail",
-        "can_continue",
-        "append",
-        "overwrite",
-        "skip",
+        "profile",
+        "enrichment",
+        "guardrails",
+        "enforcement",
         "metadata lakehouse",
-        "catalogue evidence",
-        "source table",
+        "source data",
+        "pipeline output",
+        "target DataFrame",
         "target table",
-        "notebook template",
+        "profile mode",
+        "static_data",
+        "changing_data",
+        "skip",
+        "can_continue",
     }
 
     assert glossary_page.exists()
@@ -392,8 +391,8 @@ def test_glossary_page_exists_and_includes_required_terms() -> None:
 
     glossary_text = glossary_page.read_text(encoding="utf-8")
     for term in required_terms:
-        assert f"## {term}" in glossary_text
-    assert "**Plain language:**" in glossary_text
+        assert f"## {term}".lower() in glossary_text.lower()
+    assert "Concise FabricOps terms" in glossary_text
 
 
 

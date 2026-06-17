@@ -1,173 +1,59 @@
-# FabricOps glossary
+# Glossary
 
-Simple definitions for repeated FabricOps terms used across generated callable references and workflow documentation.
+Concise FabricOps terms used across the docs and notebook templates.
 
-## accepted catalogue profile evidence
+## Profile
 
-**Plain language:** The approved profile record that FabricOps treats as the trusted baseline for a table.
+Measure source data or pipeline outputs for schema, row counts, nulls, distinct values, and other reusable facts.
 
-**Technical:** Reviewed catalogue profile metadata stored in the configured metadata target and used by guardrails to compare current runtime behavior with accepted evidence.
+## Enrichment
 
-**Example:** A governance reviewer accepts a target table profile, and later pipeline runs compare new profiles against that accepted record.
+Reviewed descriptive metadata such as business meaning, ownership, sensitivity, classification, and usage context.
 
-**Related terms:** `baseline profile`, `catalogue evidence`, `metadata lakehouse`
+## Guardrails
 
-## append
+Approved checks that evaluate schema, freshness, profile behavior, or data quality expectations during a pipeline run.
 
-**Plain language:** Add new rows to an existing target without replacing existing rows.
+## Enforcement
 
-**Technical:** A physical Spark write mode, not a FabricOps profile behavior mode.
+Running active guardrails and deciding whether the pipeline can continue, continue with warnings, or stop.
 
-**Example:** Use append as a write mode when new pipeline output should be added to the target table.
+## Metadata lakehouse
 
-**Related terms:** `overwrite`, `profile behavior`
+The configured `metadata` target from `00_env_config` where FabricOps stores agreements, profiles, enrichment records, guardrail rules, guardrail results, lineage, and run summaries.
 
-## baseline profile
+## Source data
 
-**Plain language:** The previous approved profile used as the comparison point.
+Data read from configured upstream Lakehouse or Warehouse targets before transformation.
 
-**Technical:** The accepted profile row selected for the same dataset, table, and stage before evaluating current pipeline behavior.
+## Pipeline output
 
-**Example:** The target table profile accepted last week becomes the baseline for today's target guardrail check.
+A DataFrame or table produced by `02_pipeline` after transformation and checked before publishing.
 
-**Related terms:** `accepted catalogue profile evidence`, `profile behavior check`
+## Target DataFrame
 
-## can_continue
+The in-memory Spark DataFrame produced by the pipeline before it is written as an output table.
 
-**Plain language:** A returned true/false value that tells downstream code whether the pipeline should keep running.
+## Target table
 
-**Technical:** Boolean field in guardrail result dictionaries that is false when blocking checks should stop downstream work.
+The physical Lakehouse or Warehouse table written from a target DataFrame after blocking guardrails pass.
 
-**Example:** If can_continue is false, call stop_if_failed before writing the table.
+## Profile mode
 
-**Related terms:** `guardrail`
-
-## catalogue evidence
-
-**Plain language:** Reviewed metadata that explains what FabricOps knows about a dataset or table.
-
-**Technical:** Governed records such as profile, column context, classification, DQ rule, or lineage evidence stored for review and enforcement workflows.
-
-**Example:** A governance review records catalogue evidence that later pipeline guardrails can read.
-
-**Related terms:** `accepted catalogue profile evidence`, `metadata lakehouse`
-
-## changing_data
-
-**Plain language:** New groups may arrive, but previously seen groups should not change or disappear.
-
-**Technical:** Profile behavior mode that groups current data by watermark_column and compares each previous watermark value with accepted catalogue evidence.
-
-**Example:** A table partitioned by business date uses changing_data to allow new dates while protecting prior dates.
-
-**Related terms:** `profile behavior`, `static_data`, `skip`
-
-## guardrail
-
-**Plain language:** A check that tells the notebook whether it is safe to continue.
-
-**Technical:** A validation result with status and continuation fields used before downstream writes or metadata recording.
-
-**Example:** A freshness guardrail can stop a pipeline before stale data is written.
-
-**Related terms:** `can_continue`, `profile behavior check`
-
-## metadata lakehouse
-
-**Plain language:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
-
-**Technical:** The metadata target resolved from 00_env_config and used for FabricOps metadata tables instead of relying on a default attached lakehouse.
-
-**Example:** Profile evidence and DQ approvals are read from the metadata lakehouse configured for the selected environment.
-
-**Related terms:** `accepted catalogue profile evidence`, `catalogue evidence`
-
-## notebook template
-
-**Plain language:** A starter notebook that shows where and how FabricOps helpers are used.
-
-**Technical:** A reusable Fabric notebook under templates/notebooks that demonstrates environment setup, agreement, pipeline, governance, or exploration workflows.
-
-**Example:** 02_pipeline is the notebook template for production-style guardrails, lineage, and writes.
-
-**Related terms:** `guardrail`, `stage`
-
-## overwrite
-
-**Plain language:** Replace existing target data during a physical write.
-
-**Technical:** A physical Spark write mode, not a FabricOps profile behavior mode.
-
-**Example:** Use overwrite as a write mode when the target table should be replaced by the latest output.
-
-**Related terms:** `append`, `profile behavior`
-
-## profile behavior
-
-**Plain language:** The expected way a table profile should behave over time.
-
-**Technical:** The approved profile mode used by guardrail checks: static_data, changing_data, or skip.
-
-**Example:** A changing-data table may add a new business-date group while previous groups remain unchanged.
-
-**Related terms:** `static_data`, `changing_data`, `skip`, `profile behavior check`
-
-## profile behavior check
-
-**Plain language:** A check that confirms the current table load pattern still matches the approved pattern.
-
-**Technical:** A guardrail comparison between current profile_mode evidence and accepted catalogue profile evidence.
-
-**Example:** A changing_data table fails if a previously accepted watermark group changes or disappears.
-
-**Related terms:** `profile behavior`, `guardrail`, `can_continue`
-
-## skip
-
-**Plain language:** Do not run that behavior check or write step for the table.
-
-**Technical:** A configured behavior value that tells FabricOps to bypass a specific profile behavior enforcement path.
-
-**Example:** A table can be marked skip while it is being onboarded and is not ready for enforcement.
-
-**Related terms:** `profile behavior`, `static_data`, `changing_data`
-
-## source table
-
-**Plain language:** An input table or file read by the pipeline.
-
-**Technical:** A configured upstream dataset entry processed before transformation and target writes.
-
-**Example:** The pipeline reads source tables before applying transformation logic.
-
-**Related terms:** `stage`, `target table`
-
-## stage
-
-**Plain language:** The part of the pipeline being checked, such as source or target.
-
-**Technical:** A table-processing phase recorded with profile or guardrail evidence so FabricOps compares like-for-like evidence.
-
-**Example:** Source guardrails run before transformation, while target guardrails run before writes.
-
-**Related terms:** `source table`, `target table`
+The configured profile behavior mode used by profile guardrails: `static_data`, `changing_data`, or `skip`.
 
 ## static_data
 
-**Plain language:** The full table should keep the same profile unless governance accepts a change.
+Profile mode for data that should remain stable compared with the accepted baseline.
 
-**Technical:** Profile behavior mode that compares one full-table profile group with watermark_value=__FULL_TABLE__.
+## changing_data
 
-**Example:** A reference table uses static_data when row count, schema, and profile hash should remain stable.
+Profile mode for data that changes by watermark value and should be compared by watermark group.
 
-**Related terms:** `profile behavior`, `changing_data`, `skip`
+## skip
 
-## target table
+Profile mode that records the profile without enforcing profile behavior.
 
-**Plain language:** An output table written by the pipeline.
+## can_continue
 
-**Technical:** A configured downstream dataset entry validated before write helpers persist the transformed output.
-
-**Example:** Target guardrails run before the target table is written.
-
-**Related terms:** `stage`, `source table`
+Boolean outcome that tells a notebook whether the next critical step may run after guardrail evaluation.

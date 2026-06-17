@@ -1,19 +1,19 @@
 # Pipeline Guardrails
 
-Pipeline guardrails are the runtime checks in `02_pipeline` that decide whether a run can continue, continue with warnings, or stop before writing governed outputs. They turn contract expectations into executable checks for schema, freshness, profile behavior, and data quality (DQ).
+<span class="glossary-term" title="Approved checks that evaluate schema, freshness, profile behavior, or data quality expectations during a pipeline run.">Pipeline guardrails</span> are the runtime checks in `02_pipeline` that decide whether a run can continue, continue with warnings, or stop before writing <span class="glossary-term" title="DataFrames or tables produced by the pipeline after transformation.">pipeline outputs</span>. They turn contract expectations into executable checks for schema, freshness, profile behavior, and data quality (DQ).
 
 Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` workflow. This page focuses on the guardrails enforced by `02_pipeline`.
 
 ![Schema, freshness, profile behavior, and DQ guardrails showing source, transform, and target validation flow](../assets/fabricops-pipeline-guardrails.png){ .full-width }
 
-## Contract expectation versus runtime enforcement
+## Contract expectation versus <span class="glossary-term" title="Running active guardrails and deciding whether the pipeline can continue, warn, or stop.">enforcement</span>
 
 FabricOps keeps the responsibility split clear:
 
 - **Data contract = expectation.** The contract describes what the data should look like, how fresh it should be, how it should behave over time, and which DQ expectations matter.
-- **Guardrail = runtime enforcement.** A guardrail turns an expectation into a runtime pass, warning, fail, or skipped result.
-- **`02_pipeline` = technical enforcement layer.** The pipeline validates schemas, freshness, profile behavior, and governance-approved DQ rules before governed outputs are written.
-- **`03_governance` = guardrail governance review layer.** Governance review approves, rejects, replaces, deactivates, and reviews active-pending guardrail rules and table governance state; it does not replace runtime enforcement.
+- **Guardrail = enforcement.** A guardrail turns an expectation into a runtime pass, warning, fail, or skipped result.
+- **`02_pipeline` = technical enforcement layer.** The pipeline validates schemas, freshness, profile behavior, and governance-approved DQ rules before pipeline outputs are written.
+- **`03_governance` = guardrail review layer.** Governance review approves, rejects, replaces, deactivates, and reviews active-pending guardrail rules and table governance state; it does not replace enforcement.
 
 ## Guardrail flow in `02_pipeline`
 
@@ -21,8 +21,8 @@ FabricOps keeps the responsibility split clear:
 | --- | --- | --- |
 | After source read | Validate source schema, freshness, profile behavior, and active source DQ guardrail rules. | Catch upstream structure, recency, behavior, and quality issues before transformation. |
 | Transformation | Apply user-defined deterministic business logic. | Keep the output repeatable and explainable. |
-| Before target write | Validate target schema, freshness, profile behavior, and active target DQ guardrail rules. | Avoid publishing stale, unexpected, or DQ-failing governed outputs. |
-| After successful checks | Write the output, lineage, catalogue evidence, and run summary. | Keep governance review and support grounded in what actually ran. |
+| Before target write | Validate target schema, freshness, profile behavior, and active target DQ guardrail rules. | Avoid publishing stale, unexpected, or DQ-failing pipeline outputs. |
+| After successful checks | Write the output, lineage, profile, and run summary. | Keep governance review and support grounded in what actually ran. |
 
 ## Guardrail types
 
@@ -42,11 +42,11 @@ Use these generated API references for the runtime helpers behind this guardrail
 - [run_table_guardrails](../api/reference/run_table_guardrails/) coordinates the table-level guardrail checks.
 - [run_table_guardrails](../api/reference/run_table_guardrails/) orchestrates widget-authored schema, freshness, profile behavior, and DQ enforcement before writes. [enforce_freshness](../api/reference/enforce_freshness/), [enforce_profile_behavior](../api/reference/enforce_profile_behavior/), and [enforce_dq_rules](../api/reference/enforce_dq_rules/) remain the runtime check helpers used by the governed flow.
 - [stop_if_failed](../api/reference/stop_if_failed/) is the compact notebook stop helper for failed guardrail results.
-- [profile_dataframe](../api/reference/profile_dataframe/) and [write_catalogue_evidence](../api/reference/write_catalogue_evidence/) create the profile evidence that later checks and governance review use.
+- [profile_dataframe](../api/reference/profile_dataframe/) and [write_catalogue_evidence](../api/reference/write_catalogue_evidence/) create the profiles that later checks and governance review use.
 
 ## Schema guardrails
 
-Schema guardrails check whether a source or target table still matches the expected columns and data types. Use `schema_preset` separately from freshness, profile behavior, and DQ settings so structure checks stay easy to reason about.
+Schema guardrails check whether a source or pipeline output still matches the expected columns and data types. Use `schema_preset` separately from freshness, profile behavior, and DQ settings so structure checks stay easy to reason about.
 
 ![Schema guardrails](../assets/fabricops-schema-guardrails.png){ .full-width }
 
@@ -78,7 +78,7 @@ For each configured table, `02_pipeline` checks whether `max(freshness_column)` 
 
 Profile behavior guardrails use `METADATA_DATA_CATALOGUE` as the profile history and baseline source. `METADATA_GUARDRAIL_RULES` stores what should be checked (`guardrail_type="profile_behavior"`), and `METADATA_GUARDRAIL_RESULTS` stores what happened during the run. The guardrail detects silent data behavior changes in profiled data; it does not inspect or enforce Spark write mode.
 
-The three profile modes are `static_data`, `changing_data`, and `skip`. `append` and `overwrite` are physical write modes only; they are not profile behavior concepts. The two enforcing modes follow the same pattern: profile the current data, write current profile evidence to `METADATA_DATA_CATALOGUE`, compare against previous accepted or passed catalogue evidence, and write the runtime outcome to `METADATA_GUARDRAIL_RESULTS`. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed and approved in governance or handled by superseding/resetting the relevant rule.
+The three profile modes are `static_data`, `changing_data`, and `skip`. `append` and `overwrite` are physical write modes only; they are not profile behavior concepts. The two enforcing modes follow the same pattern: profile the current data, write the current profile to `METADATA_DATA_CATALOGUE`, compare against previous accepted or passed profile, and write the runtime outcome to `METADATA_GUARDRAIL_RESULTS`. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed and approved in governance or handled by superseding/resetting the relevant rule.
 
 ![Load behaviour guardrails](../assets/fabricops-load-behaviour-guardrails.png){ .full-width }
 
@@ -113,7 +113,7 @@ After guardrails run, FabricOps writes metadata evidence that describes what was
 | `METADATA_GUARDRAIL_RULES` | What should be checked. DQ rows use `guardrail_type="dq"`. |
 | `METADATA_GUARDRAIL_RESULTS` | Runtime pass/warn/fail outcomes and continuation decisions from guardrail checks. |
 | `METADATA_PIPELINE_RUNS` | Run-level summary showing the pipeline result and key execution details. |
-| `METADATA_DATA_LINEAGE_TABLE` | Source-to-target lineage for the governed output. |
+| `METADATA_DATA_LINEAGE_TABLE` | Source-to-target lineage for the pipeline output. |
 
 ## How to choose settings
 
