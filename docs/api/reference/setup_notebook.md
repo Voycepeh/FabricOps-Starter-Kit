@@ -5,9 +5,9 @@ Shared environment setup and runtime validation for notebook templates.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config.py:853`
+`fabricops_kit/config.py:674`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L853-L963">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L674-L784">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -149,38 +149,38 @@ not provision Fabric resources or persist metadata.
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L23-L55"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L23-L55"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L1346-L1385"><code>_get_fabric_runtime_metadata</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L1167-L1206"><code>_get_fabric_runtime_metadata</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Validation</h4>
         <p>Validate inputs and guard conditions before the workflow continues.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L1338-L1343"><code>_check_spark_session</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L750-L850"><code>_run_config_smoke_tests</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L574-L648"><code>_validate_framework_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L736-L747"><code>_validate_notebook_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L1159-L1164"><code>_check_spark_session</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L571-L671"><code>_run_config_smoke_tests</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L398-L469"><code>_validate_framework_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L557-L568"><code>_validate_notebook_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L472-L512"><code>_normalize_path_config</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L515-L554"><code>_get_store</code></a>
         </div>
       </section>
     </div>
@@ -188,7 +188,7 @@ not provision Fabric resources or persist metadata.
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
 
-These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+These generated fields are for automation, automation tools, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
 ### Function manifest
 
@@ -198,13 +198,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
-- Source line: `853`
+- Source line: `674`
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 00_env_config
 - Glossary terms: notebook template, metadata lakehouse
 
-### AI implementation contract
+### Implementation contract
 
 - **required_context:** Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.
 - **inputs:** config, env, optional required_targets, notebook_name, run_id_prefix, and local_fallback_name that define the runtime setup context.
@@ -227,9 +227,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/config.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L853-L963">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L853-L963</a>
-- Start line: `853`
-- End line: `963`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L674-L784">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L674-L784</a>
+- Start line: `674`
+- End line: `784`
 - Signature:
 
 ```python

@@ -61,18 +61,18 @@ def _subsection_text(page_text: str, subsection: str) -> str:
 
 def test_reference_ai_manifest_files_exist_and_are_valid_json() -> None:
     """Verify reference ai manifest files exist and are valid json."""
-    agent_manifest = REFERENCE_DIR / "agent-manifest.json"
+    automation_manifest = REFERENCE_DIR / "automation-manifest.json"
     function_manifest = REFERENCE_DIR / "function-manifest.json"
 
-    assert agent_manifest.exists()
+    assert automation_manifest.exists()
     assert function_manifest.exists()
-    assert json.loads(agent_manifest.read_text(encoding="utf-8"))
+    assert json.loads(automation_manifest.read_text(encoding="utf-8"))
     assert json.loads(function_manifest.read_text(encoding="utf-8"))
 
 
 def test_fabricops_skill_file_exists() -> None:
     """Verify fabricops skill file exists."""
-    assert (ROOT / ".agents" / "skills" / "fabricops" / "SKILL.md").exists()
+    assert (ROOT / ".automation tools" / "skills" / "fabricops" / "SKILL.md").exists()
 
 
 def test_every_callable_page_has_ai_reference_sections() -> None:
@@ -139,9 +139,9 @@ setup_metadata_tables(
 )
 ```""" in example
 
-def test_core_agent_manifest_entries_have_non_placeholder_ai_fields() -> None:
-    """Verify core agent manifest entries have non placeholder ai fields."""
-    manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+def test_core_automation_manifest_entries_have_non_placeholder_ai_fields() -> None:
+    """Verify core automation manifest entries have non placeholder ai fields."""
+    manifest = json.loads((REFERENCE_DIR / "automation-manifest.json").read_text(encoding="utf-8"))
     by_name = {entry["name"]: entry for entry in manifest if entry.get("type") == "callable"}
 
     assert CORE_CALLABLES <= set(by_name)
@@ -324,14 +324,14 @@ def test_callable_pages_include_one_top_source_card_and_github_source_link() -> 
 
 
 def test_callable_pages_collapse_ai_machine_metadata() -> None:
-    """Verify callable pages collapse ai machine metadata."""
+    """Verify callable pages collapse machine metadata."""
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         assert "\n## Function manifest" not in text, page
-        assert "\n## AI implementation contract" not in text, page
+        assert "\n## Implementation contract" not in text, page
         assert "\n## Inbound references" not in text, page
         assert "\n## Outbound references" not in text, page
         assert "<details" in text, page
@@ -341,7 +341,7 @@ def test_callable_pages_collapse_ai_machine_metadata() -> None:
         metadata_end = text.index("</details>", metadata_start)
         metadata = text[metadata_start:metadata_end]
         assert "### Function manifest" in metadata, page
-        assert "### AI implementation contract" in metadata, page
+        assert "### Implementation contract" in metadata, page
         assert "### Inbound references" in metadata, page
         assert "### Outbound references" in metadata, page
         assert "### Raw source metadata" in metadata, page
@@ -392,7 +392,7 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
 def test_generated_manifests_point_public_callables_to_canonical_api_reference() -> None:
     """Verify generated manifests point public callables to canonical api reference."""
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
-    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    automation_manifest = json.loads((REFERENCE_DIR / "automation-manifest.json").read_text(encoding="utf-8"))
 
     for entry in function_manifest:
         if entry.get("classification") == "Callable":
@@ -400,7 +400,7 @@ def test_generated_manifests_point_public_callables_to_canonical_api_reference()
         elif entry.get("docs_path") is not None:
             assert entry["docs_path"].startswith("reference/internal/")
 
-    for entry in agent_manifest:
+    for entry in automation_manifest:
         if entry.get("type") == "callable":
             assert entry["docs_path"] == f"api/reference/{entry['name']}.md"
         elif entry.get("docs_path") is not None:
@@ -520,15 +520,15 @@ def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
 def test_related_guides_metadata_renders_before_template_and_call_graph_sections() -> None:
     """Verify related guides metadata renders before template and call graph sections."""
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
-    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    automation_manifest = json.loads((REFERENCE_DIR / "automation-manifest.json").read_text(encoding="utf-8"))
     function_by_name = {entry["name"]: entry for entry in function_manifest if entry.get("classification") == "Callable"}
-    agent_by_name = {entry["name"]: entry for entry in agent_manifest if entry.get("type") == "callable"}
+    automation_by_name = {entry["name"]: entry for entry in automation_manifest if entry.get("type") == "callable"}
 
     related_guides = function_by_name["run_table_guardrails"]["related_guides"]
     assert related_guides == [
         {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/pipeline-guardrails.md"}
     ]
-    assert agent_by_name["run_table_guardrails"]["related_guides"] == related_guides
+    assert automation_by_name["run_table_guardrails"]["related_guides"] == related_guides
 
     text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
     assert "## See also" in text
@@ -558,17 +558,17 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
 def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
     """Verify template usage metadata renders from structured reference model."""
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
-    agent_manifest = json.loads((REFERENCE_DIR / "agent-manifest.json").read_text(encoding="utf-8"))
+    automation_manifest = json.loads((REFERENCE_DIR / "automation-manifest.json").read_text(encoding="utf-8"))
     dependency_metadata = json.loads((REFERENCE_DIR / "dependency-metadata.json").read_text(encoding="utf-8"))
     reference_index = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
 
     function_by_name = {entry["name"]: entry for entry in function_manifest}
-    agent_by_name = {entry["name"]: entry for entry in agent_manifest if entry.get("type") == "callable"}
+    automation_by_name = {entry["name"]: entry for entry in automation_manifest if entry.get("type") == "callable"}
     dependency_by_name = {entry["callable"]: entry for entry in dependency_metadata["callables"].values()}
 
     for callable_name in ("enforce_freshness", "enforce_profile_behavior"):
         assert function_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
-        assert agent_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
+        assert automation_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
         assert dependency_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
 
         article_start = reference_index.index(f'data-callable-name="{callable_name}"')

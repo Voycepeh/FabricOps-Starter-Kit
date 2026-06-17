@@ -5,9 +5,9 @@ Render a consolidated column metadata enrichment widget.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:649`
+`fabricops_kit/governance_review.py:643`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L649-L786">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L643-L780">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -194,34 +194,34 @@ No additional callable notes are documented.
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L442-L449"><code>_enrichment_options</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L635-L646"><code>_write_table_metadata_enrichment_records</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L436-L443"><code>_enrichment_options</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L629-L640"><code>_write_table_metadata_enrichment_records</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L651-L691"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L452-L470"><code>_render_enrichment_extra_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L472-L512"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L446-L464"><code>_render_enrichment_extra_fields</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/config.py#L694-L733"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/config.py#L515-L554"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L473-L475"><code>_collect_enrichment_extra_fields</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L478-L490"><code>_selected_catalogue_rows_for_enrichment</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L76-L77"><code>_value</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L467-L469"><code>_collect_enrichment_extra_fields</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L472-L484"><code>_selected_catalogue_rows_for_enrichment</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>
         </div>
       </section>
     </div>
@@ -229,7 +229,7 @@ No additional callable notes are documented.
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
 
-These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.
+These generated fields are for automation, automation tools, maintainers, and doc tooling. Skip this block when reading the docs normally.
 
 ### Function manifest
 
@@ -239,13 +239,13 @@ These generated fields are for automation, AI agents, maintainers, and doc tooli
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `649`
+- Source line: `643`
 - Inbound references count: 0
 - Outbound references count: 7
 - Used in templates: 02_pipeline, 03_governance
 - Glossary terms: catalogue evidence, metadata lakehouse, guardrail
 
-### AI implementation contract
+### Implementation contract
 
 - **required_context:** Starter template: `03_governance`; segment: `Guardrail governance review`.
 - **inputs:** See the source docstring for the selected guardrail state, configuration, environment, and Spark session parameters.
@@ -271,9 +271,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L649-L786">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/7d80bb152e3db177367d3a7558b219e35a4d7cbd/src/fabricops_kit/governance_review.py#L649-L786</a>
-- Start line: `649`
-- End line: `786`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L643-L780">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L643-L780</a>
+- Start line: `643`
+- End line: `780`
 - Signature:
 
 ```python

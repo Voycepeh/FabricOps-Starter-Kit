@@ -431,15 +431,15 @@ def test_dq_widget_batch_and_individual_actions_create_required_lifecycles(monke
 
 
 def test_dq_widget_exposes_only_manual_authoring_actions(monkeypatch):
-    """Verify DQ authoring hides AI and formal review controls in v1."""
+    """Verify DQ authoring hides assisted and formal review controls in v1."""
     _install_fake_notebook_widgets(monkeypatch)
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
     widget = widget_author_dq_rules(state, selected_columns=["order_id"], dq_authoring_mode="ai_suggest")
 
     descriptions = set(_widget_descriptions(widget["ui"]))
-    assert "Generate AI suggestions" not in descriptions
-    assert "Approve AI suggestions" not in descriptions
-    assert "Reject AI suggestions" not in descriptions
+    assert "Generate suggestions" not in descriptions
+    assert "Approve suggestions" not in descriptions
+    assert "Reject suggestions" not in descriptions
     assert "Clear / supersede selected rule" not in descriptions
     assert "Save/update selected rule" not in descriptions
     assert {"Save selected rule as draft", "Submit selected rule for governance review", "Apply selected rule now"}.issubset(descriptions)

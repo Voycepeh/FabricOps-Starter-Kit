@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 64</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 59</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>64</td>
+      <td>59</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -289,10 +289,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
-      <td><code>_draft_dq_rules</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_enrichment_options</code></td>
       <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
@@ -302,10 +298,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_evaluate_governance_readiness</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_extract_assignment_payload</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -361,14 +353,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_parse_ai_dict_response</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_parse_dq_ai_suggestions</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_prepare_dq_profile_input_rows</code></td>
       <td>—</td>
     </tr>
@@ -403,10 +387,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     <tr>
       <td><code>_run_dq_guardrail_checks</code></td>
       <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
-    </tr>
-    <tr>
-      <td><code>_run_fabric_ai_drafting</code></td>
-      <td>—</td>
     </tr>
     <tr>
       <td><code>_schema</code></td>
@@ -556,11 +536,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_dq_failed_expression</code></span>, <span class="reference-chip"><code>_normalize_dq_severity</code></span>, <span class="reference-chip"><code>_spark_sql_helpers</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_draft_dq_rules</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_extract_assignment_payload</code></span>, <span class="reference-chip"><code>_prepare_dq_profile_input_rows</code></span>, <span class="reference-chip"><code>_run_fabric_ai_drafting</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_enrichment_options</code></span>
 </li>
 <li>
@@ -570,11 +545,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_evaluate_governance_readiness</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_latest_row</code></span>, <span class="reference-chip"><code>_read_metadata_rows</code></span>, <span class="reference-chip"><code>_status_is_failed</code></span>, <span class="reference-chip"><code>_status_is_warning</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>load_catalogue_profile_rows</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_extract_assignment_payload</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_coerce_rows</code></span>, <span class="reference-chip"><code>_parse_ai_dict_response</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_filter_table_rows</code></span>
@@ -628,14 +598,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_normalize_dq_severity</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_parse_ai_dict_response</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_parse_dq_ai_suggestions</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_extract_assignment_payload</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_prepare_dq_profile_input_rows</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_spark_sql_helpers</code></span>
@@ -673,9 +635,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_dq_check_status</code></span>, <span class="reference-chip"><code>_dq_failed_expression</code></span>, <span class="reference-chip"><code>_normalize_dq_severity</code></span>, <span class="reference-chip"><code>_spark_sql_helpers</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_run_fabric_ai_drafting</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_schema</code></span>

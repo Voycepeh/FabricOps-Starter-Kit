@@ -2,7 +2,7 @@
 
 This module focuses on producing a stable, metadata-compatible metadata profile from a
 Spark DataFrame. The profile can be written to metadata tables and reused as
-AI-ready context for deterministic data quality rule hinting.
+profile evidence for deterministic data quality rule review.
 """
 
 from __future__ import annotations

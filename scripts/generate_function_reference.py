@@ -26,7 +26,7 @@ CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
 LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
-AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "agent-manifest.json"
+AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
 GLOSSARY_SOURCE_PATH = ROOT / "docs" / "reference" / "glossary.json"
@@ -1039,7 +1039,7 @@ def _ai_contract_block(
     failure_modes: str,
     verification: str,
 ) -> str:
-    """Render a compact structured AI implementation contract."""
+    """Render a compact structured implementation contract."""
     return "\n".join(
         [
             f"- **required_context:** {required_context}",
@@ -2023,9 +2023,9 @@ def main() -> None:
         "- **Internal helpers** are maintainer implementation details embedded inside the public callable pages that use them.",
         "- **Implementation modules** show source ownership, module-level dependencies, and helper relationships for maintainers.",
         "- **Function manifests** (`manifest.json` and `function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
-        "- **Agent manifest** (`agent-manifest.json`) adds AI-oriented execution fields for planning, side-effect checks, and verification.",
-        "- **AI implementation contracts** on callable pages summarize expectations agents must satisfy before using or changing a function.",
-        "- **Skill file** (`.agents/skills/fabricops/SKILL.md`) gives agents repo-specific rules and points them to these generated references.",
+        "- **Automation manifest** (`automation-manifest.json`) adds automation-oriented execution fields for planning, side-effect checks, and verification.",
+        "- **Implementation contracts** on callable pages summarize expectations maintainers must satisfy before using or changing a function.",
+        "- **Skill file** (`.agents/skills/fabricops/SKILL.md`) gives contributors repo-specific rules and points them to these generated references.",
         "",
     ]
 
@@ -2344,13 +2344,13 @@ def main() -> None:
                 ),
             ]
             machine_metadata_lines = [
-                "These generated fields are for automation, AI agents, maintainers, and doc tooling. Skip this block when reading the docs normally.",
+                "These generated fields are for automation, automation tools, maintainers, and doc tooling. Skip this block when reading the docs normally.",
                 "",
                 "### Function manifest",
                 "",
                 *function_manifest_lines,
                 "",
-                "### AI implementation contract",
+                "### Implementation contract",
                 "",
                 rendered_ai_contract,
                 "",
@@ -2477,7 +2477,7 @@ def main() -> None:
                 "",
                 "Maintain this helper through the owning implementation module and keep generated references in sync.",
                 "",
-                "## AI implementation contract",
+                "## Implementation contract",
                 "",
                 _documented_text(metadata.get("ai_verification"), "Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks."),
                 "",

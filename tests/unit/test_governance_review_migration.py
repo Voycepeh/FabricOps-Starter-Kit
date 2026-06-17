@@ -93,53 +93,6 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
     assert offenders == []
 
 
-def test_business_context_ai_parsing_and_suggestion_extraction():
-    """Verify business context ai parsing and suggestion extraction."""
-    parsed = governance._parse_ai_dict_response("BUSINESS_CONTEXT = {'column_name': 'customer_id', 'business_context': 'Customer identifier'}")
-    assert parsed["column_name"] == "customer_id"
-
-    suggestions = governance._extract_assignment_payload(
-        [{"ai_business_context_response": json.dumps({"column_name": "amount", "business_context": "Order value"})}],
-        response_col="ai_business_context_response",
-    )
-    assert suggestions == [{"column_name": "amount", "business_context": "Order value"}]
-
-
-def test_governance_sensitivity_and_pii_suggestion_extraction():
-    """Verify governance sensitivity and pii suggestion extraction."""
-    rows = [
-        {
-            "ai_governance_response": json.dumps(
-                {
-                    "column_name": "email",
-                    "ai_suggested_personal_identifier_classification": "direct_identifier",
-                    "confidentiality_label": "restricted",
-                }
-            )
-        }
-    ]
-    assert governance._extract_assignment_payload(rows, response_col="ai_governance_response") == [
-        {
-            "column_name": "email",
-            "ai_suggested_personal_identifier_classification": "direct_identifier",
-            "confidentiality_label": "restricted",
-        }
-    ]
-
-
-def test_dq_ai_response_parsing_and_candidate_rule_extraction():
-    """Verify dq ai response parsing and candidate rule extraction."""
-    payload = "DQ_RULES = {'orders': [{'rule_id': 'id_required', 'rule_type': 'not_null', 'columns': ['order_id'], 'severity': 'error', 'description': 'Required'}]}"
-    parsed = governance._parse_ai_dict_response(payload)
-    assert parsed["orders"][0]["rule_id"] == "id_required"
-    assert governance._extract_assignment_payload(
-        [{"ai_dq_response": payload}],
-        response_col="ai_dq_response",
-        assignment_key="DQ_RULES",
-        table_name="orders",
-    ) == parsed["orders"]
-
-
 def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
     """Verify dq rule validation rejects unsupported runtime rule types."""
     rules = [{"rule_id": "id_required", "rule_type": "not_null", "columns": ["id"], "severity": "error", "description": "Required"}]
