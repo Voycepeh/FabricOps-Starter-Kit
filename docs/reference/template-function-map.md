@@ -25,7 +25,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Thin production orchestration that keeps source reads, beginner-editable configs, transform logic, target writes, lineage relationships, and pipeline naming visible while package helpers handle reusable config enrichment, guardrails, and evidence plumbing.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Pipeline run</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a><a class="function-chip" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a><a class="function-chip" href="../api/reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a><a class="function-chip" href="../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a><a class="function-chip" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><a class="function-chip" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a><a class="function-chip" href="../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a><a class="function-chip" href="../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a><a class="function-chip" href="../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a><a class="function-chip" href="../api/reference/stop_if_failed/"><code>stop_if_failed</code></a><a class="function-chip" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a><a class="function-chip" href="../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a><a class="function-chip" href="../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a><a class="function-chip" href="../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a><a class="function-chip" href="../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a><a class="function-chip" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a><a class="function-chip" href="../api/reference/read_data/"><code>read_data</code></a><a class="function-chip" href="../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a><a class="function-chip" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><a class="function-chip" href="../api/reference/write_data/"><code>write_data</code></a><a class="function-chip" href="../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a><a class="function-chip" href="../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a><a class="function-chip" href="../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a><a class="function-chip" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a><a class="function-chip" href="../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a><a class="function-chip" href="../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a><a class="function-chip" href="../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a><a class="function-chip" href="../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></span>
 </div>
 </section>
 
@@ -43,7 +43,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis support.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Exploration</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a><a class="function-chip" href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/read_data/"><code>read_data</code></a><a class="function-chip" href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></span>
 </div>
 </section>
 
@@ -52,7 +52,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Demo data seeding for the real pipeline template.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Pipeline demo setup</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/write_data/"><code>write_data</code></a></span>
 </div>
 </section>
 
@@ -61,7 +61,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Isolated DQ rule smoke-test checks for notebook authors.</p>
 <div class="template-function-row">
 <span class="template-function-segment">DQ smoke checks</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a><a class="function-chip" href="../api/reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/write_data/"><code>write_data</code></a><a class="function-chip" href="../api/reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></span>
 </div>
 </section>
 

@@ -106,23 +106,13 @@ V1_CALLABLES = {
     "widget_render_agreement_evidence",
     "widget_select_agreement",
     "get_selected_agreement",
-    "read_lakehouse_table",
-    "write_lakehouse_table",
-    "read_lakehouse_csv",
-    "read_lakehouse_parquet",
-    "read_lakehouse_excel",
-    "read_warehouse_table",
-    "write_warehouse_table",
+    "read_data",
+    "write_data",
     "profile_dataframe",
-    "enforce_freshness",
-    "enforce_freshness_rule",
-    "enforce_profile_behavior",
-    "stop_if_failed",
     "enforce_dq_rules",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -1534,9 +1524,8 @@ def main() -> None:
     if unknown_glossary_terms:
         raise RuntimeError("PUBLIC_SYMBOL_DOCS references unknown glossary terms: " + ", ".join(unknown_glossary_terms))
 
-    unknown_metadata = sorted(name for name in docs_metadata if name not in public)
-    if unknown_metadata:
-        raise RuntimeError("PUBLIC_SYMBOL_DOCS contains symbols not exported in __all__: " + ", ".join(unknown_metadata))
+    # PUBLIC_SYMBOL_DOCS may retain metadata for internalized helpers so generated
+    # implementation relationship details remain useful on public parent pages.
 
     symbol_map: dict[str, Symbol] = {}
     function_symbol_map: dict[str, Symbol] = {}
@@ -2011,28 +2000,53 @@ def main() -> None:
             "inbound_count": len(in_mods),
         }
     public_qn_by_name = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
+    internalized_public_helpers = {
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+        "stop_if_failed",
+        "enforce_freshness",
+        "enforce_freshness_rule",
+        "enforce_profile_behavior",
+        "write_catalogue_evidence",
+    }
+    audit_names = set(docs_metadata) | set(public) | internalized_public_helpers
     audit_rows = []
-    for name in sorted(public, key=str.lower):
-        qn = public_qn_by_name[name]
+    for name in sorted(audit_names, key=str.lower):
+        symbol = symbol_map.get(name)
+        if symbol is not None:
+            qn = public_qn_by_name[name]
+        else:
+            module_name = str(docs_metadata.get(name, {}).get("module", ""))
+            qn = f"{PACKAGE_NAME}.{resolve_preferred_actual_module(module_name)}.{name}" if module_name else ""
         internal_public_callers = sorted({
             node_by_qn[caller]["callable_name"]
             for caller in used_by_qn.get(qn, [])
             if node_by_qn.get(caller, {}).get("exported")
-        })
+        }) if qn else []
+        in_root_exports = name in public
         if core_template_usage_by_symbol.get(name):
             decision = "template_called_public"
-        elif example_template_usage_by_symbol.get(name):
+        elif in_root_exports and example_template_usage_by_symbol.get(name):
             decision = "advanced_public_helper"
+        elif in_root_exports:
+            decision = "advanced_public_helper"
+        elif name in internalized_public_helpers:
+            decision = "convert_to_internal"
         else:
-            decision = "advanced_public_helper"
+            decision = "remove_export"
         audit_rows.append({
             "function": name,
-            "in_root_exports": True,
+            "in_root_exports": in_root_exports,
             "directly_called_in_core_templates": core_template_usage_by_symbol.get(name, []),
             "directly_called_in_example_templates": example_template_usage_by_symbol.get(name, []),
             "imported_only_in_templates": bool(imported_only_by_symbol.get(name)),
             "called_only_internally_by_public_helper": internal_public_callers,
-            "has_standalone_reference_page": True,
+            "has_standalone_reference_page": in_root_exports,
             "decision": decision,
         })
     CALLABLE_SURFACE_AUDIT_PATH.write_text(json.dumps(audit_rows, indent=2) + "\n", encoding="utf-8")

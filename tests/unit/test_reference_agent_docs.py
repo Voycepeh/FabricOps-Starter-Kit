@@ -16,10 +16,9 @@ CORE_CALLABLES = {
     "setup_metadata_tables",
     "widget_select_agreement",
     "get_selected_agreement",
-    "read_lakehouse_table",
-    "write_lakehouse_table",
+    "read_data",
+    "write_data",
     "profile_dataframe",
-    "stop_if_failed",
     "enforce_dq_rules",
 }
 CORE_PAGE_SECTIONS = (
@@ -200,9 +199,9 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
 
 
 
-def test_advanced_enforce_profile_behavior_keeps_standalone_page() -> None:
-    """Verify advanced enforce_profile_behavior keeps a standalone page after audit."""
-    assert (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
+def test_internalized_enforce_profile_behavior_has_no_standalone_page() -> None:
+    """Verify internalized enforce_profile_behavior has no standalone page after audit."""
+    assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
 
 
 def test_indent_markdown_indents_multiline_items_and_blank_lines() -> None:
@@ -426,14 +425,14 @@ def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
             label = term if "_" in term else term.capitalize()
             assert f"**{label}:** {glossary[term]}" in key_terms, entry["name"]
 
-def test_advanced_enforce_profile_behavior_keeps_manifest_page_metadata() -> None:
-    """Verify advanced enforce_profile_behavior remains public with a standalone page."""
+def test_internalized_enforce_profile_behavior_keeps_manifest_metadata_without_page() -> None:
+    """Verify internalized enforce_profile_behavior remains metadata-only."""
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
     entry = next(item for item in function_manifest if item["name"] == "enforce_profile_behavior")
-    assert entry["classification"] == "Callable"
+    assert entry["classification"] == "Internal"
     assert entry["used_in_templates"] == []
-    assert entry["docs_path"] == "api/reference/enforce_profile_behavior.md"
-    assert (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
+    assert entry["docs_path"] is None
+    assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
 
 
 def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
@@ -611,6 +610,6 @@ def test_template_called_callable_parameters_render_as_api_table() -> None:
     assert "| `table_name` |" in parameters
 
 
-def test_advanced_enforce_profile_behavior_preserves_page_contract() -> None:
-    """Verify advanced enforce_profile_behavior is rendered as a public page."""
-    assert (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
+def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> None:
+    """Verify internalized enforce_profile_behavior is not rendered as a public page."""
+    assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()

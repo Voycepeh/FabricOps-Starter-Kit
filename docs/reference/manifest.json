@@ -199,53 +199,11 @@
       "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
-      "callable_name": "read_lakehouse_csv",
+      "callable_name": "read_data",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_lakehouse_excel",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_lakehouse_parquet",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_lakehouse_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
+      "template_notebook": "02_pipeline / 99_explore",
       "template_segment": "Fabric IO",
       "used_in_templates": [
         "02_pipeline",
@@ -258,21 +216,7 @@
       "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
-      "callable_name": "read_warehouse_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "write_lakehouse_table",
+      "callable_name": "write_data",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
@@ -283,20 +227,6 @@
         "example_pipeline_demo",
         "example_dq_rule_smoke_test"
       ]
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "write_warehouse_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
     },
     {
       "module_name": "governance_review",
@@ -429,50 +359,6 @@
       ]
     },
     {
-      "module_name": "guardrails",
-      "visibility": "public",
-      "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during runtime enforcement.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "enforce_freshness",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Freshness enforcement",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "guardrails",
-      "visibility": "public",
-      "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during runtime enforcement.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "enforce_profile_behavior",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Profile behavior enforcement",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "guardrails",
-      "visibility": "public",
-      "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during runtime enforcement.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "stop_if_failed",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail enforcement",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
       "module_name": "pipeline",
       "visibility": "public",
       "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
@@ -487,20 +373,6 @@
       "used_in_templates": [
         "02_pipeline"
       ]
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "enforce_freshness_rule",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail enforcement",
-      "used_in_templates": []
     },
     {
       "module_name": "pipeline",
@@ -533,20 +405,6 @@
       "used_in_templates": [
         "02_pipeline"
       ]
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "write_catalogue_evidence",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Catalogue evidence",
-      "used_in_templates": []
     },
     {
       "module_name": "pipeline",

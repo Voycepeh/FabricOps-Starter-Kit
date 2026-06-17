@@ -231,6 +231,177 @@ def _lakehouse_file_path(store, env: str, target: str, relative_path: str) -> st
     return f"{store.root.rstrip('/')}/Files/{normalized_relative_path}"
 
 
+
+def read_data(
+    config,
+    env,
+    target,
+    name=None,
+    *,
+    format="table",
+    schema=None,
+    table=None,
+    relative_path=None,
+    spark_session=None,
+    options=None,
+    **kwargs,
+):
+    """Read data from a configured Fabric target.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict
+        FabricOps FrameworkConfig or compatible config object.
+    env : str
+        Environment key such as ``"dev"``.
+    target : str
+        Logical target name such as ``"source"`` or ``"warehouse"``.
+    name : str, optional
+        Table name for table reads or relative file path for file reads.
+    format : str, default="table"
+        Read format. Supported values are ``"table"``, ``"delta"``,
+        ``"csv"``, ``"parquet"``, ``"excel"``, and ``"warehouse"``.
+    schema : str, optional
+        Lakehouse or warehouse schema name.
+    table : str, optional
+        Explicit table name. Overrides ``name`` for table and warehouse reads.
+    relative_path : str, optional
+        Explicit lakehouse Files path. Overrides ``name`` for file reads.
+    spark_session : object, optional
+        Spark session to use.
+    options : dict, optional
+        Additional reader options passed to the format-specific implementation.
+    **kwargs
+        Additional reader options.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame loaded from the configured Fabric target.
+
+    Raises
+    ------
+    ValueError
+        If the requested format is unsupported or required fields are missing.
+
+    Notes
+    -----
+    This is the notebook-facing IO orchestrator. It routes through the
+    configured FabricOps environment target and delegates to implementation
+    helpers for specific storage formats.
+    """
+    normalized_format = str(format or "table").strip().lower()
+    reader_options = {**(options or {}), **kwargs}
+    if normalized_format in {"table", "delta", "lakehouse_table"}:
+        table_name = table or name
+        if not table_name:
+            raise ValueError("table or name is required for Lakehouse table reads.")
+        return read_lakehouse_table(config, env, target, table_name, schema=schema, spark_session=spark_session)
+    if normalized_format == "csv":
+        path = relative_path or name
+        if not path:
+            raise ValueError("relative_path or name is required for CSV reads.")
+        return read_lakehouse_csv(config, env, target, path, spark_session=spark_session, **reader_options)
+    if normalized_format == "parquet":
+        path = relative_path or name
+        if not path:
+            raise ValueError("relative_path or name is required for Parquet reads.")
+        return read_lakehouse_parquet(config, env, target, path, spark_session=spark_session, **reader_options)
+    if normalized_format == "excel":
+        path = relative_path or name
+        if not path:
+            raise ValueError("relative_path or name is required for Excel reads.")
+        return read_lakehouse_excel(config, env, target, path, spark_session=spark_session, **reader_options)
+    if normalized_format == "warehouse":
+        table_name = table or name
+        if not schema or not table_name:
+            raise ValueError("schema and table/name are required for warehouse reads.")
+        return read_warehouse_table(config, env, target, schema, table_name, spark_session=spark_session)
+    raise ValueError("format must be one of table, delta, csv, parquet, excel, or warehouse.")
+
+
+def write_data(
+    df,
+    config,
+    env,
+    target,
+    name=None,
+    *,
+    format="table",
+    schema=None,
+    table=None,
+    mode="append",
+    options=None,
+    **kwargs,
+):
+    """Write data to a configured Fabric target.
+
+    Parameters
+    ----------
+    df : pyspark.sql.DataFrame
+        DataFrame to write.
+    config : FrameworkConfig | dict
+        FabricOps FrameworkConfig or compatible config object.
+    env : str
+        Environment key such as ``"dev"``.
+    target : str
+        Logical target name such as ``"unified"`` or ``"warehouse"``.
+    name : str, optional
+        Target table name.
+    format : str, default="table"
+        Write format. Supported values are ``"table"``, ``"delta"``, and
+        ``"warehouse"``.
+    schema : str, optional
+        Lakehouse or warehouse schema name.
+    table : str, optional
+        Explicit table name. Overrides ``name``.
+    mode : str, default="append"
+        Write mode.
+    options : dict, optional
+        Additional writer options for Lakehouse Delta writes.
+    **kwargs
+        Additional writer options for Lakehouse Delta writes.
+
+    Returns
+    -------
+    None
+        The DataFrame is written to the configured Fabric target.
+
+    Raises
+    ------
+    ValueError
+        If the requested format is unsupported or required fields are missing.
+
+    Notes
+    -----
+    This is the notebook-facing IO orchestrator. It keeps starter notebooks on
+    a stable public API while format-specific helpers remain implementation
+    details.
+    """
+    normalized_format = str(format or "table").strip().lower()
+    table_name = table or name
+    if not table_name:
+        raise ValueError("table or name is required for writes.")
+    writer_options = {**(options or {}), **kwargs.pop("options", {})}
+    if normalized_format in {"table", "delta", "lakehouse_table"}:
+        return write_lakehouse_table(
+            df,
+            config,
+            env,
+            target,
+            table_name,
+            schema=schema,
+            mode=mode,
+            options=writer_options or None,
+            **kwargs,
+        )
+    if normalized_format == "warehouse":
+        if not schema:
+            raise ValueError("schema is required for warehouse writes.")
+        return write_warehouse_table(df, config, env, target, schema, table_name, mode=mode)
+    raise ValueError("format must be one of table, delta, or warehouse.")
+
+
 def read_lakehouse_table(config, env, target, table, schema=None, spark_session=None):
     """Read a Delta table from a Fabric lakehouse.
 

@@ -150,7 +150,7 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     """Verify starter template code-cell calls drive the reference surface."""
     called = _direct_template_call_set()
 
-    assert len(called) == 24
+    assert len(called) == 23
     assert "setup_notebook" in called
     assert "write_pipeline_run_summary" in called
     assert "validate_schema" not in called
@@ -180,8 +180,10 @@ def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
     exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
 
     assert page_names == exported_names
-    assert "read_lakehouse_csv" in page_names
-    assert "write_warehouse_table" in page_names
+    assert "read_data" in page_names
+    assert "write_data" in page_names
+    assert "read_lakehouse_csv" not in page_names
+    assert "write_warehouse_table" not in page_names
 
 
 def test_functions_with_blank_starter_path_are_not_counted() -> None:
@@ -218,3 +220,22 @@ def test_example_only_helpers_do_not_inflate_core_count() -> None:
     assert "enforce_dq_rules" in example_only
     assert example_only.isdisjoint(_core_template_called_public())
     assert example_only.isdisjoint(_catalogue_row_names())
+
+
+def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> None:
+    """Verify low-level IO and internal guardrail helpers are absent from root exports."""
+    import fabricops_kit
+
+    root_exports = set(fabricops_kit.__all__)
+    assert {"read_data", "write_data"} <= root_exports
+    assert {
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+        "stop_if_failed",
+        "write_catalogue_evidence",
+    }.isdisjoint(root_exports)

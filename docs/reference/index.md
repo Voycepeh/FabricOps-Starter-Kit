@@ -80,14 +80,14 @@ Use the finder below to look up template-called public functions from active v1 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li><li><code>enforce_profile_behavior</code></li><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-read_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="callable" data-callable-purpose="Read a Delta table from a configured Fabric lakehouse target by ABFSS path.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Read a Delta table from a configured Fabric lakehouse target by ABFSS path.</p>
+<article id="fabric_input_output-read_data" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_data" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="callable" data-callable-purpose="Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook-facing IO function.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_data/"><code>read_data</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook-facing IO function.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>_get_spark</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>_read_guardrail_rule_metadata</code></li><li><code>_read_metadata_rows</code></li><li><code>_read_metadata_table_or_empty</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>enforce_profile_behavior</code></li><li><code>_load_notebook_registry</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li></ul></details>
+
   </div>
 </article>
 <article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
@@ -118,16 +118,6 @@ Use the finder below to look up template-called public functions from active v1 
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>NotebookSetupContext</code></li><li><code>_get_store</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_validate_framework_config</code></li></ul></details>
 
-  </div>
-</article>
-<article id="guardrails-stop_if_failed" class="reference-catalogue-item" data-callable-row="true" data-callable-name="stop_if_failed" data-callable-module="guardrails" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/stop_if_failed/"><code>stop_if_failed</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/guardrails/" title="Open guardrails module page" aria-label="Open guardrails module page">guardrails</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>SchemaDriftError</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-widget_author_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_author_dq_rules" data-callable-module="governance_review" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Render interactive manual DQ guardrail authoring controls.">
@@ -240,14 +230,14 @@ Use the finder below to look up template-called public functions from active v1 
 
   </div>
 </article>
-<article id="fabric_input_output-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test" data-function-type="callable" data-callable-purpose="Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.</p>
+<article id="fabric_input_output-write_data" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_data" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test" data-function-type="callable" data-callable-purpose="Write Lakehouse or Warehouse targets through one notebook-facing IO function.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_data/"><code>write_data</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Write Lakehouse or Warehouse targets through one notebook-facing IO function.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 10</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_write_row</code></li><li><code>_write_rule_records</code></li><li><code>_write_table_metadata_enrichment_records</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_write_guardrail_result_row</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>write_lakehouse_table</code></li><li><code>write_warehouse_table</code></li></ul></details>
+
   </div>
 </article>
 <article id="pipeline-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="callable" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
@@ -277,18 +267,4 @@ Use the finder below to look up template-called public functions from active v1 
 These public helpers are directly called only by example notebooks and are not included in the core template-called count.
 
 - [`enforce_dq_rules`](../api/reference/enforce_dq_rules/)
-
-## Advanced public helpers
-
-These exported helpers remain public and documented, but they are not directly called by core starter template code cells and are not included in the core template-called count.
-
-- [`enforce_freshness`](../api/reference/enforce_freshness/)
-- [`enforce_freshness_rule`](../api/reference/enforce_freshness_rule/)
-- [`enforce_profile_behavior`](../api/reference/enforce_profile_behavior/)
-- [`read_lakehouse_csv`](../api/reference/read_lakehouse_csv/)
-- [`read_lakehouse_excel`](../api/reference/read_lakehouse_excel/)
-- [`read_lakehouse_parquet`](../api/reference/read_lakehouse_parquet/)
-- [`read_warehouse_table`](../api/reference/read_warehouse_table/)
-- [`write_catalogue_evidence`](../api/reference/write_catalogue_evidence/)
-- [`write_warehouse_table`](../api/reference/write_warehouse_table/)
 
