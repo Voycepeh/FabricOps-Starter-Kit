@@ -17,7 +17,7 @@ Use it when you want Fabric notebooks to move data from source to target while k
 
 <div class="fabricops-kpi-card" markdown="1">
   <div class="fabricops-kpi-number">22</div>
-  <div class="fabricops-kpi-label">template-called functions</div>
+  <div class="fabricops-kpi-label">starter-kit-functions</div>
   <p>Functions actively called by core starter template notebook code cells keep repeated setup, IO, profiling, guardrails, lineage, and review steps consistent without counting import-only or lower-level helpers.</p>
   <a href="reference/">View function reference</a>
 </div>
