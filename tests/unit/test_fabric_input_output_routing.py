@@ -14,7 +14,7 @@ import fabricops_kit.fabric_input_output as io
 from tests.integration.test_storage_io import _Frame, _Spark
 
 
-PUBLIC_IO_CALLABLES = {
+LOW_LEVEL_IO_HELPERS = {
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_lakehouse_csv",
@@ -168,15 +168,20 @@ def test_deleted_internal_helpers_are_absent_and_unreferenced():
     assert DELETED_INTERNAL_HELPERS.isdisjoint(referenced_names)
 
 
-def test_public_v1_io_callable_list_remains_unchanged():
-    """Verify public v1 io callable list remains unchanged."""
-    public_functions = {
-        name
-        for name, value in vars(io).items()
-        if inspect.isfunction(value) and value.__module__ == io.__name__ and not name.startswith("_")
-    }
+def test_io_orchestrators_are_root_exports_and_low_level_helpers_are_module_only():
+    """Verify IO orchestrators are public while low-level helpers stay module scoped."""
+    import fabricops_kit
 
-    assert public_functions == PUBLIC_IO_CALLABLES
+    assert "read_data" in fabricops_kit.__all__
+    assert "write_data" in fabricops_kit.__all__
+    assert callable(fabricops_kit.read_data)
+    assert callable(fabricops_kit.write_data)
+
+    for helper_name in LOW_LEVEL_IO_HELPERS:
+        helper = getattr(io, helper_name)
+        assert callable(helper)
+        assert helper_name not in fabricops_kit.__all__
+        assert not hasattr(fabricops_kit, helper_name)
 
 
 def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
