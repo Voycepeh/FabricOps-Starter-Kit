@@ -259,3 +259,33 @@ def test_default_target_config_has_matching_write_settings():
         assert f'"{target_key}": {{' in write_settings_block
         assert "target_name" in write_settings_block
         assert "write_mode" in write_settings_block
+
+
+def test_run_table_guardrails_calls_match_keyword_only_signature():
+    """Verify run_table_guardrails calls use supported keyword-only arguments."""
+    _markdown, _code, cells = _notebook_sources()
+    calls = []
+    for cell in cells:
+        tree = ast.parse("\n".join(line for line in cell.splitlines() if not line.lstrip().startswith("%")))
+        calls.extend(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "run_table_guardrails"
+        )
+
+    assert len(calls) == 4
+    unsupported = {"metadata_schema", "table_role"}
+    for call in calls:
+        assert len(call.args) == 1
+        keyword_names = {keyword.arg for keyword in call.keywords}
+        assert {"config", "env", "run_id", "spark_session"} <= keyword_names
+        assert unsupported.isdisjoint(keyword_names)
+
+    stop_values = [
+        keyword.value
+        for call in calls
+        for keyword in call.keywords
+        if keyword.arg == "stop_on_failure"
+    ]
+    assert len(stop_values) == 2
+    assert all(isinstance(value, ast.Constant) and value.value is True for value in stop_values)

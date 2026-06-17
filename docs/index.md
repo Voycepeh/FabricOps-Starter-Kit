@@ -23,7 +23,7 @@ Use it when you want Fabric notebooks to move data from source to target while k
 </div>
 
 <div class="fabricops-kpi-card" markdown="1">
-  <div class="fabricops-kpi-number">22</div>
+  <div class="fabricops-kpi-number">23</div>
   <div class="fabricops-kpi-label">native DQ rules</div>
   <p>Built-in data quality rule types support approved metadata-driven checks during later pipeline runs.</p>
   <a href="reference/dq-rules/">View DQ rules</a>
