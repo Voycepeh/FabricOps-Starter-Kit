@@ -7,7 +7,7 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 `fabricops_kit/pipeline.py:368`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/20538b666f8496652d413fb1d644dc6f198dcc61/src/fabricops_kit/pipeline.py#L368-L396">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c1c895823cd4d994c43226c7afd17443f0969ad/src/fabricops_kit/pipeline.py#L368-L396">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -91,6 +91,8 @@ Not documented yet
 
 **Used in templates:**
 
+Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
+
 - `02_pipeline`
 
 **Side effects:**
@@ -155,7 +157,7 @@ No additional callable notes are documented.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/20538b666f8496652d413fb1d644dc6f198dcc61/src/fabricops_kit/pipeline.py#L361-L365"><code>_rows_for_display</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c1c895823cd4d994c43226c7afd17443f0969ad/src/fabricops_kit/pipeline.py#L361-L365"><code>_rows_for_display</code></a>
         </div>
       </section>
     </div>
@@ -201,7 +203,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/20538b666f8496652d413fb1d644dc6f198dcc61/src/fabricops_kit/pipeline.py#L368-L396">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/20538b666f8496652d413fb1d644dc6f198dcc61/src/fabricops_kit/pipeline.py#L368-L396</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c1c895823cd4d994c43226c7afd17443f0969ad/src/fabricops_kit/pipeline.py#L368-L396">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c1c895823cd4d994c43226c7afd17443f0969ad/src/fabricops_kit/pipeline.py#L368-L396</a>
 - Start line: `368`
 - End line: `396`
 - Signature:

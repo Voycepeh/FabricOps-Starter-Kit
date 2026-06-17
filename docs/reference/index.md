@@ -1,8 +1,8 @@
 # Function Reference
 
-Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are used in starter templates; Implementation Modules show the active source modules that maintainers debug and extend.
+Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are actively called in starter notebook code cells; Implementation Modules show the active source modules that maintainers debug and extend.
 
-- Use [Template Function Map](template-function-map.md) to see what notebook users call from the starter notebook templates.
+- Use [Template Function Map](template-function-map.md) to see what starter notebooks actively call in code cells. A callable is not counted as used when it is only imported, mentioned in markdown, present in generated metadata, or called internally by another helper.
 - Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.
 - Use the Function catalogue below to browse public v1 callables. Internal helper details are embedded inside callable pages instead of normal catalogue entries.
 - Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.
@@ -19,7 +19,7 @@ Use this page as a function lookup after you understand the notebook flow. The d
 
 ## Find a function
 
-Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand the Internal implementation summary.
+Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search functions</label>

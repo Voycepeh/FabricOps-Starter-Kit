@@ -87,3 +87,28 @@ def test_finder_filters_by_function_type_and_searches_all_catalogue_fields() -> 
     assert "entry.functionType.includes(query)" in script
     assert "entry.starterPath.includes(query)" in script
     assert "queryMatchesEntry(queryTokens, entry.tokens)" in script
+
+
+def test_homepage_public_callable_kpi_stays_at_approved_count() -> None:
+    """Verify homepage public callable KPI does not drift from approved docs count."""
+    homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
+
+    assert '<div class="fabricops-kpi-number">31</div>' in homepage
+    assert '<div class="fabricops-kpi-label">public callables</div>' in homepage
+    assert "without counting internal helpers or removed legacy aliases" in homepage
+
+
+def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:
+    """Verify reference usage wording excludes imports, markdown, metadata, and internals."""
+    page = _reference_index()
+
+    assert "“Used in” means direct starter notebook code-cell invocation" in page
+    assert "not import-only, markdown-only, generated metadata, or internal helper usage" in page
+
+
+def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:
+    """Verify removed schema helpers are not public reference catalogue entries."""
+    page = _reference_index()
+
+    assert 'data-callable-name="validate_schema"' not in page
+    assert 'data-callable-name="validate_schema_rule"' not in page
