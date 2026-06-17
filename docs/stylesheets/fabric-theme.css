@@ -205,3 +205,13 @@
     columns: 1;
   }
 }
+/* Lightweight glossary tooltips for narrative docs. */
+.glossary-term {
+  border-bottom: 1px dotted var(--md-default-fg-color--lighter);
+  cursor: help;
+  text-decoration: none;
+}
+
+.glossary-term:hover {
+  border-bottom-color: var(--md-accent-fg-color);
+}

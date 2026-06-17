@@ -8,7 +8,7 @@ The setup registry combines agreement tables from `DataAgreementConfig`, noteboo
 
 ## Conceptual overview
 
-The metadata model still has four simple groups: agreement and context, observed catalogue/profile evidence, governance rules, and runtime execution evidence. This page is primarily the physical table dictionary for the active setup registry, so each section below lists the columns that setup creates or validates.
+The metadata model has four groups: agreement and context, observed physical/profile evidence, guardrail and enrichment rules, and runtime execution evidence. This page is primarily the physical table dictionary for the active setup registry, so each section below lists the columns that setup creates or validates.
 
 ## Architecture
 

@@ -1,178 +1,149 @@
 [
   {
-    "term": "profile behavior",
-    "plain_language_definition": "The expected way a table profile should behave over time.",
-    "technical_definition": "The approved profile mode used by guardrail checks: static_data, changing_data, or skip.",
-    "example": "A changing-data table may add a new business-date group while previous groups remain unchanged.",
-    "related_terms": [
-      "static_data",
-      "changing_data",
-      "skip",
-      "profile behavior check"
-    ]
+    "term": "profile",
+    "plain_language_definition": "Measure source data or pipeline outputs for schema, row counts, nulls, distinct values, and other reusable facts.",
+    "technical_definition": "Measure source data or pipeline outputs for schema, row counts, nulls, distinct values, and other reusable facts.",
+    "example": "",
+    "related_terms": []
   },
   {
-    "term": "accepted catalogue profile evidence",
-    "plain_language_definition": "The approved profile record that FabricOps treats as the trusted baseline for a table.",
-    "technical_definition": "Reviewed catalogue profile metadata stored in the configured metadata target and used by guardrails to compare current runtime behavior with accepted evidence.",
-    "example": "A governance reviewer accepts a target table profile, and later pipeline runs compare new profiles against that accepted record.",
-    "related_terms": [
-      "baseline profile",
-      "catalogue evidence",
-      "metadata lakehouse"
-    ]
+    "term": "enrichment",
+    "plain_language_definition": "Reviewed descriptive metadata such as business meaning, ownership, sensitivity, classification, and usage context.",
+    "technical_definition": "Reviewed descriptive metadata such as business meaning, ownership, sensitivity, classification, and usage context.",
+    "example": "",
+    "related_terms": []
   },
   {
-    "term": "baseline profile",
-    "plain_language_definition": "The previous approved profile used as the comparison point.",
-    "technical_definition": "The accepted profile row selected for the same dataset, table, and stage before evaluating current pipeline behavior.",
-    "example": "The target table profile accepted last week becomes the baseline for today's target guardrail check.",
-    "related_terms": [
-      "accepted catalogue profile evidence",
-      "profile behavior check"
-    ]
+    "term": "guardrails",
+    "plain_language_definition": "Approved checks that evaluate schema, freshness, profile behavior, or data quality expectations during a pipeline run.",
+    "technical_definition": "Approved checks that evaluate schema, freshness, profile behavior, or data quality expectations during a pipeline run.",
+    "example": "",
+    "related_terms": []
   },
   {
-    "term": "stage",
-    "plain_language_definition": "The part of the pipeline being checked, such as source or target.",
-    "technical_definition": "A table-processing phase recorded with profile or guardrail evidence so FabricOps compares like-for-like evidence.",
-    "example": "Source guardrails run before transformation, while target guardrails run before writes.",
-    "related_terms": [
-      "source table",
-      "target table"
-    ]
-  },
-  {
-    "term": "profile behavior check",
-    "plain_language_definition": "A check that confirms the current table load pattern still matches the approved pattern.",
-    "technical_definition": "A guardrail comparison between current profile_mode evidence and accepted catalogue profile evidence.",
-    "example": "A changing_data table fails if a previously accepted watermark group changes or disappears.",
-    "related_terms": [
-      "profile behavior",
-      "guardrail",
-      "can_continue"
-    ]
-  },
-  {
-    "term": "guardrail",
-    "plain_language_definition": "A check that tells the notebook whether it is safe to continue.",
-    "technical_definition": "A validation result with status and continuation fields used before downstream writes or metadata recording.",
-    "example": "A freshness guardrail can stop a pipeline before stale data is written.",
-    "related_terms": [
-      "can_continue",
-      "profile behavior check"
-    ]
-  },
-  {
-    "term": "can_continue",
-    "plain_language_definition": "A returned true/false value that tells downstream code whether the pipeline should keep running.",
-    "technical_definition": "Boolean field in guardrail result dictionaries that is false when blocking checks should stop downstream work.",
-    "example": "If can_continue is false, call stop_if_failed before writing the table.",
-    "related_terms": [
-      "guardrail"
-    ]
-  },
-  {
-    "term": "static_data",
-    "plain_language_definition": "The full table should keep the same profile unless governance accepts a change.",
-    "technical_definition": "Profile behavior mode that compares one full-table profile group with watermark_value=__FULL_TABLE__.",
-    "example": "A reference table uses static_data when row count, schema, and profile hash should remain stable.",
-    "related_terms": [
-      "profile behavior",
-      "changing_data",
-      "skip"
-    ]
-  },
-  {
-    "term": "changing_data",
-    "plain_language_definition": "New groups may arrive, but previously seen groups should not change or disappear.",
-    "technical_definition": "Profile behavior mode that groups current data by watermark_column and compares each previous watermark value with accepted catalogue evidence.",
-    "example": "A table partitioned by business date uses changing_data to allow new dates while protecting prior dates.",
-    "related_terms": [
-      "profile behavior",
-      "static_data",
-      "skip"
-    ]
-  },
-  {
-    "term": "skip",
-    "plain_language_definition": "Do not run that behavior check or write step for the table.",
-    "technical_definition": "A configured behavior value that tells FabricOps to bypass a specific profile behavior enforcement path.",
-    "example": "A table can be marked skip while it is being onboarded and is not ready for enforcement.",
-    "related_terms": [
-      "profile behavior",
-      "static_data",
-      "changing_data"
-    ]
+    "term": "enforcement",
+    "plain_language_definition": "Running active guardrails and deciding whether the pipeline can continue, continue with warnings, or stop.",
+    "technical_definition": "Running active guardrails and deciding whether the pipeline can continue, continue with warnings, or stop.",
+    "example": "",
+    "related_terms": []
   },
   {
     "term": "metadata lakehouse",
     "plain_language_definition": "The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.",
-    "technical_definition": "The metadata target resolved from 00_env_config and used for FabricOps metadata tables instead of relying on a default attached lakehouse.",
-    "example": "Profile evidence and DQ approvals are read from the metadata lakehouse configured for the selected environment.",
-    "related_terms": [
-      "accepted catalogue profile evidence",
-      "catalogue evidence"
-    ]
+    "technical_definition": "The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.",
+    "example": "",
+    "related_terms": []
   },
   {
-    "term": "catalogue evidence",
-    "plain_language_definition": "Reviewed metadata that explains what FabricOps knows about a dataset or table.",
-    "technical_definition": "Governed records such as profile, column context, classification, DQ rule, or lineage evidence stored for review and enforcement workflows.",
-    "example": "A governance review records catalogue evidence that later pipeline guardrails can read.",
-    "related_terms": [
-      "accepted catalogue profile evidence",
-      "metadata lakehouse"
-    ]
+    "term": "source data",
+    "plain_language_definition": "Data read from configured upstream Lakehouse or Warehouse targets before transformation.",
+    "technical_definition": "Data read from configured upstream Lakehouse or Warehouse targets before transformation.",
+    "example": "",
+    "related_terms": []
   },
   {
-    "term": "source table",
-    "plain_language_definition": "An input table or file read by the pipeline.",
-    "technical_definition": "A configured upstream dataset entry processed before transformation and target writes.",
-    "example": "The pipeline reads source tables before applying transformation logic.",
-    "related_terms": [
-      "stage",
-      "target table"
-    ]
+    "term": "pipeline output",
+    "plain_language_definition": "A DataFrame or table produced by 02_pipeline after transformation and checked before publishing.",
+    "technical_definition": "A DataFrame or table produced by 02_pipeline after transformation and checked before publishing.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "target DataFrame",
+    "plain_language_definition": "The in-memory Spark DataFrame produced by the pipeline before it is written as an output table.",
+    "technical_definition": "The in-memory Spark DataFrame produced by the pipeline before it is written as an output table.",
+    "example": "",
+    "related_terms": []
   },
   {
     "term": "target table",
     "plain_language_definition": "An output table written by the pipeline.",
-    "technical_definition": "A configured downstream dataset entry validated before write helpers persist the transformed output.",
-    "example": "Target guardrails run before the target table is written.",
-    "related_terms": [
-      "stage",
-      "source table"
-    ]
+    "technical_definition": "An output table written by the pipeline.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "profile mode",
+    "plain_language_definition": "The configured profile behavior mode used by profile guardrails: static_data, changing_data, or skip.",
+    "technical_definition": "The configured profile behavior mode used by profile guardrails: static_data, changing_data, or skip.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "static_data",
+    "plain_language_definition": "Profile mode for data that should remain stable compared with the accepted baseline.",
+    "technical_definition": "Profile mode for data that should remain stable compared with the accepted baseline.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "changing_data",
+    "plain_language_definition": "Profile mode for data that changes by watermark value and should be compared by watermark group.",
+    "technical_definition": "Profile mode for data that changes by watermark value and should be compared by watermark group.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "skip",
+    "plain_language_definition": "Profile mode that records the profile without enforcing profile behavior.",
+    "technical_definition": "Profile mode that records the profile without enforcing profile behavior.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "can_continue",
+    "plain_language_definition": "A returned true/false value that tells downstream code whether the pipeline should keep running.",
+    "technical_definition": "A returned true/false value that tells downstream code whether the pipeline should keep running.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "catalogue evidence",
+    "plain_language_definition": "Reviewed metadata that explains what FabricOps knows about a dataset or table.",
+    "technical_definition": "Reviewed metadata that explains what FabricOps knows about a dataset or table.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "accepted catalogue profile evidence",
+    "plain_language_definition": "Technical baseline term for accepted profile rows used by profile behavior checks.",
+    "technical_definition": "Technical baseline term for accepted profile rows used by profile behavior checks.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "source table",
+    "plain_language_definition": "An input table or file read by the pipeline.",
+    "technical_definition": "An input table or file read by the pipeline.",
+    "example": "",
+    "related_terms": []
+  },
+  {
+    "term": "guardrail",
+    "plain_language_definition": "A check that tells the notebook whether it is safe to continue.",
+    "technical_definition": "A check that tells the notebook whether it is safe to continue.",
+    "example": "",
+    "related_terms": []
   },
   {
     "term": "notebook template",
     "plain_language_definition": "A starter notebook that shows where and how FabricOps helpers are used.",
-    "technical_definition": "A reusable Fabric notebook under templates/notebooks that demonstrates environment setup, agreement, pipeline, governance, or exploration workflows.",
-    "example": "02_pipeline is the notebook template for production-style guardrails, lineage, and writes.",
-    "related_terms": [
-      "guardrail",
-      "stage"
-    ]
+    "technical_definition": "A starter notebook that shows where and how FabricOps helpers are used.",
+    "example": "",
+    "related_terms": []
   },
   {
-    "term": "append",
-    "plain_language_definition": "Add new rows to an existing target without replacing existing rows.",
-    "technical_definition": "A physical Spark write mode, not a FabricOps profile behavior mode.",
-    "example": "Use append as a write mode when new pipeline output should be added to the target table.",
-    "related_terms": [
-      "overwrite",
-      "profile behavior"
-    ]
+    "term": "stage",
+    "plain_language_definition": "The part of the pipeline being checked, such as source or target.",
+    "technical_definition": "The part of the pipeline being checked, such as source or target.",
+    "example": "",
+    "related_terms": []
   },
   {
-    "term": "overwrite",
-    "plain_language_definition": "Replace existing target data during a physical write.",
-    "technical_definition": "A physical Spark write mode, not a FabricOps profile behavior mode.",
-    "example": "Use overwrite as a write mode when the target table should be replaced by the latest output.",
-    "related_terms": [
-      "append",
-      "profile behavior"
-    ]
+    "term": "profile behavior",
+    "plain_language_definition": "The expected way a table profile should behave over time.",
+    "technical_definition": "The expected way a table profile should behave over time.",
+    "example": "",
+    "related_terms": []
   }
 ]

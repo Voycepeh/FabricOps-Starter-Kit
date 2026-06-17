@@ -10,7 +10,7 @@ Today, the notebooks create metadata that can already support review and operati
 
 - `01_agreement` captures agreement, steward, and supporting evidence.
 - `02_pipeline` writes profiles, lineage, guardrail results, output context, and run metadata evidence.
-- `03_governance` saves guardrail governance review decisions for profiled tables.
+- `03_governance` saves guardrail review decisions for profiled tables.
 
 ## Planned visibility layer
 
@@ -22,7 +22,7 @@ A future dashboard should make collected metadata easier to browse. It should no
 | --- | --- |
 | Agreement overview | Show agreement status, owner, steward, and evidence coverage. |
 | Pipeline evidence | Show recent `02_pipeline` profiles, lineage, guardrail results, and run context. |
-| Governance review | Show guardrail governance review decisions from `03_governance`. |
+| Governance review | Show guardrail review decisions from `03_governance`. |
 | Support readiness | Show whether enough evidence exists for support and review. |
 
 ## Design principle
