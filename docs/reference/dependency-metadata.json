@@ -2197,7 +2197,8 @@
         "01_agreement",
         "02_pipeline",
         "03_governance",
-        "99_explore"
+        "99_explore",
+        "example_pipeline_demo"
       ],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark",
@@ -2260,7 +2261,8 @@
         "00_env_config",
         "01_agreement",
         "02_pipeline",
-        "03_governance"
+        "03_governance",
+        "example_pipeline_demo"
       ],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._normalize_table_name",

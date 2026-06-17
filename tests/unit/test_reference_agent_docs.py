@@ -72,7 +72,7 @@ def test_reference_ai_manifest_files_exist_and_are_valid_json() -> None:
 
 def test_fabricops_skill_file_exists() -> None:
     """Verify fabricops skill file exists."""
-    assert (ROOT / ".automation tools" / "skills" / "fabricops" / "SKILL.md").exists()
+    assert (ROOT / ".agents" / "skills" / "fabricops" / "SKILL.md").exists()
 
 
 def test_every_callable_page_has_ai_reference_sections() -> None:

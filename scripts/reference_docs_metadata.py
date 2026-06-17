@@ -183,7 +183,14 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'read_warehouse_table',
                             'profile_dataframe'],
                 'title': 'Exploration'}],
-  'template_path': 'templates/notebooks/99_explore.ipynb'}]
+  'template_path': 'templates/notebooks/99_explore.ipynb'},
+ {'notebook_key': 'example_pipeline_demo',
+  'notebook_label': '`example_pipeline_demo`',
+  'segment_intro': 'Optional demo generator that prepares deterministic demo source/target '
+                   'tables plus metadata for the widget-driven pipeline and governance flow.',
+  'segments': [{'symbols': ['write_lakehouse_table', 'read_lakehouse_table'],
+                'title': 'Demo generator'}],
+  'template_path': 'templates/notebooks/example_pipeline_demo.ipynb'}]
 
 PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'module': 'config',

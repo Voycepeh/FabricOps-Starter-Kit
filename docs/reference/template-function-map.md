@@ -47,3 +47,12 @@ Compact template-first lookup for the public helper functions used by each noteb
 </div>
 </section>
 
+<section class="template-function-group">
+<h2><code>example_pipeline_demo</code></h2>
+<p class="template-function-purpose">Optional demo generator that prepares deterministic demo source/target tables plus metadata for the widget-driven pipeline and governance flow.</p>
+<div class="template-function-row">
+<span class="template-function-segment">Demo generator</span>
+<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a><a class="function-chip" href="../api/reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></span>
+</div>
+</section>
+

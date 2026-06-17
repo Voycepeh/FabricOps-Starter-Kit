@@ -263,7 +263,8 @@
         "01_agreement",
         "02_pipeline",
         "03_governance",
-        "99_explore"
+        "99_explore",
+        "example_pipeline_demo"
       ]
     },
     {
@@ -300,7 +301,8 @@
         "00_env_config",
         "01_agreement",
         "02_pipeline",
-        "03_governance"
+        "03_governance",
+        "example_pipeline_demo"
       ]
     },
     {
