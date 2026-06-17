@@ -2248,7 +2248,7 @@
         "01_agreement",
         "02_pipeline",
         "03_governance",
-        "example_pipeline_smoke_test",
+        "example_pipeline_demo",
         "example_dq_rule_smoke_test"
       ],
       "internal_helpers_used": [
