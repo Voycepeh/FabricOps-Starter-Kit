@@ -7,7 +7,7 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 `fabricops_kit/governance_review.py:2788`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L2788-L2884">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d4632c404d019dbf03e021ab3e5cd977f99b9e39/src/fabricops_kit/governance_review.py#L2788-L2884">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -148,7 +148,7 @@ No additional callable notes are documented.
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
 
-These generated fields are for automation, automation tools, maintainers, and doc tooling. Skip this block when reading the docs normally.
+These generated fields are for automation tooling, maintainers, and documentation tooling. Skip this block when reading the docs normally.
 
 ### Function manifest
 
@@ -186,7 +186,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L2788-L2884">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/governance_review.py#L2788-L2884</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d4632c404d019dbf03e021ab3e5cd977f99b9e39/src/fabricops_kit/governance_review.py#L2788-L2884">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d4632c404d019dbf03e021ab3e5cd977f99b9e39/src/fabricops_kit/governance_review.py#L2788-L2884</a>
 - Start line: `2788`
 - End line: `2884`
 - Signature:

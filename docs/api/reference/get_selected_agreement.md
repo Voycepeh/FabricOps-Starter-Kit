@@ -7,7 +7,7 @@ Return the agreement selected by widget_select_agreement.
 
 `fabricops_kit/data_agreement.py:1023`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/data_agreement.py#L1023-L1039">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d4632c404d019dbf03e021ab3e5cd977f99b9e39/src/fabricops_kit/data_agreement.py#L1023-L1039">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -120,7 +120,7 @@ No additional callable notes are documented.
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
 
-These generated fields are for automation, automation tools, maintainers, and doc tooling. Skip this block when reading the docs normally.
+These generated fields are for automation tooling, maintainers, and documentation tooling. Skip this block when reading the docs normally.
 
 ### Function manifest
 
@@ -156,7 +156,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/data_agreement.py#L1023-L1039">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/be9dba3ee8f9e46b2ed7ced8ed423e0756bc24a7/src/fabricops_kit/data_agreement.py#L1023-L1039</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d4632c404d019dbf03e021ab3e5cd977f99b9e39/src/fabricops_kit/data_agreement.py#L1023-L1039">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d4632c404d019dbf03e021ab3e5cd977f99b9e39/src/fabricops_kit/data_agreement.py#L1023-L1039</a>
 - Start line: `1023`
 - End line: `1039`
 - Signature:

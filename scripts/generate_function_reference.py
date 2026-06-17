@@ -2344,7 +2344,7 @@ def main() -> None:
                 ),
             ]
             machine_metadata_lines = [
-                "These generated fields are for automation, automation tools, maintainers, and doc tooling. Skip this block when reading the docs normally.",
+                "These generated fields are for automation tooling, maintainers, and documentation tooling. Skip this block when reading the docs normally.",
                 "",
                 "### Function manifest",
                 "",
