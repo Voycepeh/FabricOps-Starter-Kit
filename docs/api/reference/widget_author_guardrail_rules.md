@@ -7,7 +7,7 @@ Render combined guardrail authoring controls for the selected table.
 
 `fabricops_kit/governance_review.py:2555`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c1c895823cd4d994c43226c7afd17443f0969ad/src/fabricops_kit/governance_review.py#L2555-L2586">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a0b67578fad069b6660de79d394bb71883a8d7e4/src/fabricops_kit/governance_review.py#L2555-L2586">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -252,7 +252,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c1c895823cd4d994c43226c7afd17443f0969ad/src/fabricops_kit/governance_review.py#L2555-L2586">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/4c1c895823cd4d994c43226c7afd17443f0969ad/src/fabricops_kit/governance_review.py#L2555-L2586</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a0b67578fad069b6660de79d394bb71883a8d7e4/src/fabricops_kit/governance_review.py#L2555-L2586">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/a0b67578fad069b6660de79d394bb71883a8d7e4/src/fabricops_kit/governance_review.py#L2555-L2586</a>
 - Start line: `2555`
 - End line: `2586`
 - Signature:
@@ -272,9 +272,7 @@ def widget_author_guardrail_rules(
 
 ### Public related functions
 
-- <a href="../widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
-- <a href="../widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
-- <a href="../widget_review_table_governance/"><code>fabricops_kit.governance_review.widget_review_table_governance</code></a>
+Not documented yet
 
 ### Internal implementation summary
 

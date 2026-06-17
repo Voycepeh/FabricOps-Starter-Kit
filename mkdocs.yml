@@ -41,17 +41,10 @@ nav:
           # AUTO-GENERATED-FUNCTIONS-START
           - display_guardrail_results: api/reference/display_guardrail_results.md
           - enforce_dq_rules: api/reference/enforce_dq_rules.md
-          - enforce_freshness: api/reference/enforce_freshness.md
-          - enforce_freshness_rule: api/reference/enforce_freshness_rule.md
-          - enforce_profile_behavior: api/reference/enforce_profile_behavior.md
           - get_selected_agreement: api/reference/get_selected_agreement.md
           - prepare_pipeline_table_configs: api/reference/prepare_pipeline_table_configs.md
           - profile_dataframe: api/reference/profile_dataframe.md
-          - read_lakehouse_csv: api/reference/read_lakehouse_csv.md
-          - read_lakehouse_excel: api/reference/read_lakehouse_excel.md
-          - read_lakehouse_parquet: api/reference/read_lakehouse_parquet.md
           - read_lakehouse_table: api/reference/read_lakehouse_table.md
-          - read_warehouse_table: api/reference/read_warehouse_table.md
           - run_table_guardrails: api/reference/run_table_guardrails.md
           - setup_metadata_tables: api/reference/setup_metadata_tables.md
           - setup_notebook: api/reference/setup_notebook.md
@@ -67,11 +60,9 @@ nav:
           - widget_review_table_governance: api/reference/widget_review_table_governance.md
           - widget_select_agreement: api/reference/widget_select_agreement.md
           - widget_select_guardrail_target: api/reference/widget_select_guardrail_target.md
-          - write_catalogue_evidence: api/reference/write_catalogue_evidence.md
           - write_lakehouse_table: api/reference/write_lakehouse_table.md
           - write_pipeline_lineage: api/reference/write_pipeline_lineage.md
           - write_pipeline_run_summary: api/reference/write_pipeline_run_summary.md
-          - write_warehouse_table: api/reference/write_warehouse_table.md
           # AUTO-GENERATED-FUNCTIONS-END
       - Template Function Map: reference/template-function-map.md
       - Glossary: reference/glossary.md

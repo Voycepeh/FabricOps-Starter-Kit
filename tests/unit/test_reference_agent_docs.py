@@ -18,14 +18,7 @@ CORE_CALLABLES = {
     "get_selected_agreement",
     "read_lakehouse_table",
     "write_lakehouse_table",
-    "read_lakehouse_csv",
-    "read_lakehouse_parquet",
-    "read_lakehouse_excel",
-    "read_warehouse_table",
-    "write_warehouse_table",
     "profile_dataframe",
-    "enforce_freshness",
-    "enforce_profile_behavior",
     "stop_if_failed",
     "enforce_dq_rules",
 }
@@ -207,48 +200,9 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
 
 
 
-def test_enforce_profile_behavior_reference_uses_distinct_blocks_and_responsive_helpers() -> None:
-    """Verify enforce profile behavior reference uses distinct blocks and responsive helpers."""
-    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
-
-    assert 'class="reference-api-definition"' in _section_text(text, "Signature")
-    example = _section_text(text, "Example usage")
-    assert 'class="reference-example-usage"' in example
-    assert "dataframe=df" in example
-    assert 'dataset_name="sales_orders"' in example
-    assert 'table_name="orders_raw"' in example
-    assert 'profile_mode="changing_data"' in example
-    assert '<table class="reference-function-table">' not in _section_text(text, "Implementation details")
-    for area in (
-        "Metadata loading",
-        "Rule parsing",
-        "Profile comparison",
-        "Column handling",
-    ):
-        assert f"<h4>{area}</h4>" in text
-    for helper_name in (
-        "_is_missing_table_error",
-        "_normalize_profile",
-        "_catalogue_value",
-        "_guardrail_exclude_columns",
-    ):
-        assert 'class="reference-helper-chip"' in text
-        assert f"<code>{helper_name}</code>" in text
-        assert re.search(
-            rf'<a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/[^"]+#L\d+(?:-L\d+)?"><code>{helper_name}</code></a>',
-            text,
-        )
-
-def test_enforce_dq_rules_large_helper_set_is_grouped_by_area() -> None:
-    """Verify enforce dq rules large helper set is grouped by area."""
-    text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
-
-    assert '<table class="reference-function-table">' not in _section_text(text, "Implementation details")
-    assert "enforce_dq_rules(...)" in text
-    assert "Expanded internal helper tree is available in Implementation details." in text
-    assert text.index('<div class="reference-source-card" markdown="1">') < text.index("## Signature")
-    assert text.index("## Implementation details") < text.index('??? info "Call flow"')
-    assert '??? example "View helper source by area"' not in text
+def test_uncalled_enforce_profile_behavior_has_no_standalone_page() -> None:
+    """Verify uncalled enforce_profile_behavior does not have a standalone page."""
+    assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
 
 
 def test_indent_markdown_indents_multiline_items_and_blank_lines() -> None:
@@ -472,23 +426,14 @@ def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
             label = term if "_" in term else term.capitalize()
             assert f"**{label}:** {glossary[term]}" in key_terms, entry["name"]
 
-def test_enforce_profile_behavior_renders_glossary_backed_api_guidance() -> None:
-    """Verify enforce profile behavior renders glossary backed api guidance."""
+def test_uncalled_enforce_profile_behavior_keeps_manifest_metadata_without_page() -> None:
+    """Verify uncalled enforce_profile_behavior remains metadata-only."""
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
     entry = next(item for item in function_manifest if item["name"] == "enforce_profile_behavior")
-    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
-
-    assert "profile behavior" in entry["glossary_terms"]
-    assert "can_continue" in entry["glossary_terms"]
-    assert "## Glossary" in text
-    assert "<summary>Glossary terms</summary>" in text
-    assert "**Profile behavior:** The expected way a table profile should behave over time." in text
-    assert "**can_continue:** A returned true/false value that tells downstream code whether the pipeline should keep running." in text
-    assert "See the [full glossary](../../../reference/glossary/)" in text
-    assert "full-table static data changes unexpectedly" in text
-    assert "previous watermark group changes or disappears" in text
-    assert "If can_continue is false, review whether the behavior change is intentional before writing the table." in text
-    assert "The part of the pipeline being checked, such as source or target." in text
+    assert entry["classification"] == "Internal"
+    assert entry["used_in_templates"] == []
+    assert entry["docs_path"] is None
+    assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
 
 
 def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
@@ -557,31 +502,22 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
 
 
 def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
-    """Verify template usage metadata renders from structured reference model."""
+    """Verify template usage metadata renders from direct template calls only."""
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
     automation_manifest = json.loads((REFERENCE_DIR / "automation-manifest.json").read_text(encoding="utf-8"))
-    dependency_metadata = json.loads((REFERENCE_DIR / "dependency-metadata.json").read_text(encoding="utf-8"))
     reference_index = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
 
     function_by_name = {entry["name"]: entry for entry in function_manifest}
     automation_by_name = {entry["name"]: entry for entry in automation_manifest if entry.get("type") == "callable"}
-    dependency_by_name = {entry["callable"]: entry for entry in dependency_metadata["callables"].values()}
+
+    for callable_name in ("run_table_guardrails", "profile_dataframe"):
+        assert function_by_name[callable_name]["used_in_templates"]
+        assert automation_by_name[callable_name]["used_in_templates"]
+        assert f'data-callable-name="{callable_name}"' in reference_index
 
     for callable_name in ("enforce_freshness", "enforce_profile_behavior"):
-        assert function_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
-        assert automation_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
-        assert dependency_by_name[callable_name]["used_in_templates"] == ["02_pipeline"]
-
-        article_start = reference_index.index(f'data-callable-name="{callable_name}"')
-        article_end = reference_index.index("</article>", article_start)
-        article = reference_index[article_start:article_end]
-        assert '<p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>' in article
-        assert article.count("Used in:") == 1
-        assert "Outbound" in article or "Inbound" in article
-
-        detail_text = (API_REFERENCE_DIR / f"{callable_name}.md").read_text(encoding="utf-8")
-        assert "**Used in templates:**" in detail_text
-        assert detail_text.count("`02_pipeline`") == 1
+        assert function_by_name[callable_name]["used_in_templates"] == []
+        assert f'data-callable-name="{callable_name}"' not in reference_index
 
 
 def test_template_function_map_matches_direct_public_notebook_calls() -> None:
@@ -646,114 +582,35 @@ def _direct_public_notebook_calls(path: Path, public_names: set[str]) -> set[str
     return direct_public_calls
 
 
-def test_used_in_templates_metadata_matches_transitive_ast_notebook_usage() -> None:
-    """Verify used-in-template metadata derives from AST-backed notebook usage."""
+def test_used_in_templates_metadata_matches_direct_ast_notebook_usage() -> None:
+    """Verify used-in-template metadata derives from direct AST notebook calls."""
     function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
-    dependency_metadata = json.loads((REFERENCE_DIR / "dependency-metadata.json").read_text(encoding="utf-8"))
     public_names = {entry["name"] for entry in function_manifest if entry.get("classification") == "Callable"}
-    qn_by_name = {
-        entry["callable"]: qualified_name
-        for qualified_name, entry in dependency_metadata["callables"].items()
-        if entry.get("classification") == "callable"
-    }
-    name_by_qn = {qualified_name: name for name, qualified_name in qn_by_name.items()}
     expected_by_name = {name: set() for name in public_names}
 
     for path in sorted((ROOT / "templates" / "notebooks").glob("*.ipynb")):
-        queue = [qn_by_name[name] for name in sorted(_direct_public_notebook_calls(path, public_names)) if name in qn_by_name]
-        seen = set()
-        while queue:
-            qualified_name = queue.pop(0)
-            if qualified_name in seen:
-                continue
-            seen.add(qualified_name)
-            public_name = name_by_qn.get(qualified_name)
-            if public_name:
+        for public_name in _direct_public_notebook_calls(path, public_names):
+            if public_name in expected_by_name:
                 expected_by_name[public_name].add(path.stem)
-            for callee in dependency_metadata["callables"].get(qualified_name, {}).get("calls", []):
-                if callee in dependency_metadata["callables"] and callee not in seen:
-                    queue.append(callee)
 
-    template_map = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
-    expected_order = re.findall(r"<h2><code>([^<]+)</code></h2>", template_map)
-    order = {notebook: index for index, notebook in enumerate(expected_order)}
+    order = {"00_env_config": 0, "01_agreement": 1, "02_pipeline": 2, "03_governance": 3, "99_explore": 4, "example_pipeline_demo": 5, "example_dq_rule_smoke_test": 6}
     for entry in function_manifest:
         if entry.get("classification") != "Callable":
             continue
-        expected = sorted(expected_by_name[entry["name"]], key=lambda notebook: (order[notebook], notebook))
+        expected = sorted(expected_by_name[entry["name"]], key=lambda notebook: (order.get(notebook, len(order)), notebook))
         assert entry["used_in_templates"] == expected
 
 
-def test_callable_parameters_render_as_api_table() -> None:
-    """Verify callable parameters render as api table."""
-    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
+def test_template_called_callable_parameters_render_as_api_table() -> None:
+    """Verify template-called callable parameters render as api table."""
+    text = (API_REFERENCE_DIR / "profile_dataframe.md").read_text(encoding="utf-8")
     parameters = _section_text(text, "Parameters")
 
     assert "| Parameter | Type | Required | Description |" in parameters
-    assert "| `dataset_name` | `str` | Yes | Dataset name used to find matching catalogue evidence. |" in parameters
-    assert "| `stage` | `str` | Yes | The part of the pipeline being checked, such as source or target. |" in parameters
-    assert r"| `exclude_run_id` | `str \| None` | No |" in parameters
+    assert "| `df` |" in parameters
+    assert "| `table_name` |" in parameters
 
 
-def test_enforce_profile_behavior_preserves_relationship_sections_after_readability_changes() -> None:
-    """Verify enforce profile behavior preserves relationship sections after readability changes."""
-    text = (API_REFERENCE_DIR / "enforce_profile_behavior.md").read_text(encoding="utf-8")
-
-    used_by = _section_text(text, "Used by")
-    calls = _section_text(text, "Calls")
-    assert "fabricops_kit.pipeline.run_table_guardrails" in used_by
-    assert "fabricops_kit.data_profiling.profile_dataframe" in calls
-    assert "fabricops_kit.fabric_input_output.read_lakehouse_table" in calls
-
-
-def test_mkdocs_nav_registers_callable_pages_under_function_list() -> None:
-    """Verify mkdocs nav registers callable pages under function list."""
-    mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
-    public_names = sorted(entry["name"] for entry in function_manifest if entry.get("classification") == "Callable")
-
-    assert "      - List of functions:\n          - Overview: reference/index.md" in mkdocs_text
-    assert "          # AUTO-GENERATED-FUNCTIONS-START" in mkdocs_text
-    assert "          # AUTO-GENERATED-FUNCTIONS-END" in mkdocs_text
-    for name in public_names:
-        assert f"          - {name}: api/reference/{name}.md" in mkdocs_text
-
-
-def test_generated_public_callable_links_use_canonical_route() -> None:
-    """Verify generated public callable links use canonical route."""
-    generated_markdown = [
-        REFERENCE_DIR / "index.md",
-        REFERENCE_DIR / "template-function-map.md",
-        *sorted((ROOT / "docs" / "api" / "modules").glob("*.md")),
-        *sorted(API_REFERENCE_DIR.glob("*.md")),
-    ]
-    combined = "\n".join(path.read_text(encoding="utf-8") for path in generated_markdown if path.exists())
-
-    assert "/reference/callables/" not in combined
-    assert "../callables/" not in combined
-    combined_without_glossary_links = combined.replace("../../../reference/glossary/", "")
-    assert "api/reference/" in combined_without_glossary_links
-    assert "../api/reference/enforce_dq_rules/" in combined
-    assert "../../reference/enforce_dq_rules/" in combined
-    assert "api/modules/reference/" not in combined
-    assert 'href="../reference/enforce_dq_rules/"' not in combined
-
-
-def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() -> None:
-    """Verify enforce dq rules canonical page section order and no old helper dump."""
-    text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
-    ordered_markers = [
-        "## Signature",
-        "## Example usage",
-        "## Parameters",
-        "## Returns",
-        "## Raises / Errors",
-        "## Relationships",
-        "### Used by",
-        "### Calls",
-        "## Implementation details",
-        '<summary>Machine-readable metadata / metadata details',
-        "## See also",
-    ]
-    assert [text.index(marker) for marker in ordered_markers] == sorted(text.index(marker) for marker in ordered_markers)
-    assert "Internal helpers used by this callable" not in text
+def test_uncalled_enforce_profile_behavior_preserves_no_page_contract() -> None:
+    """Verify uncalled enforce_profile_behavior is not rendered as a page."""
+    assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()

@@ -791,29 +791,16 @@ def _derive_template_usage(
     node_by_qn: dict[str, dict[str, Any]],
     calls_by_qn: dict[str, list[str]],
 ) -> dict[str, list[str]]:
-    """Map public callable names to starter templates that directly or indirectly use them."""
-    symbol_to_qn = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
-    qn_to_symbol = {qn: name for name, qn in symbol_to_qn.items()}
+    """Map public callable names to starter templates that directly call them."""
+    del node_by_qn, calls_by_qn
     template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
     usage: dict[str, set[str]] = {name: set() for name in symbol_map}
 
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
         direct_symbols = set(_direct_public_template_symbols(flow.get("template_path", ""), set(symbol_map)))
-
-        queue = [symbol_to_qn[name] for name in sorted(direct_symbols) if name in symbol_to_qn]
-        seen: set[str] = set()
-        while queue:
-            qn = queue.pop(0)
-            if qn in seen:
-                continue
-            seen.add(qn)
-            public_symbol = qn_to_symbol.get(qn)
-            if public_symbol:
-                usage.setdefault(public_symbol, set()).add(notebook_key)
-            for callee_qn in calls_by_qn.get(qn, []):
-                if callee_qn in node_by_qn and callee_qn not in seen:
-                    queue.append(callee_qn)
+        for symbol in direct_symbols:
+            usage.setdefault(symbol, set()).add(notebook_key)
 
     return {
         symbol: sorted(notebooks, key=lambda notebook: (template_order.get(notebook, len(template_order)), notebook))
@@ -1562,6 +1549,8 @@ def main() -> None:
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
     nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_lookup = {n["qualified_name"]: n for n in nodes}
+    template_usage_by_symbol = _derive_template_usage(template_flow_docs, symbol_map, node_by_qn={}, calls_by_qn={})
+    template_called_function_names = {name for name, usage in template_usage_by_symbol.items() if usage}
 
     def _is_callable_edge(edge: dict[str, Any]) -> bool:
         callee = edge.get("callee_qualified_name")
@@ -1855,7 +1844,7 @@ def main() -> None:
     if function_start_marker in mkdocs_text and function_end_marker in mkdocs_text:
         generated_function_lines = [
             f"          - {name}: api/reference/{name}.md"
-            for name in sorted(public, key=str.lower)
+            for name in sorted(template_called_function_names, key=str.lower)
         ]
         generated_functions = "\n".join(generated_function_lines)
         before, rest = mkdocs_text.split(function_start_marker, 1)
@@ -1887,7 +1876,6 @@ def main() -> None:
             continue
         calls_by_qn.setdefault(caller, []).append(callee)
         used_by_qn.setdefault(callee, []).append(caller)
-    template_usage_by_symbol = _derive_template_usage(template_flow_docs, symbol_map, node_by_qn, calls_by_qn)
     manifest_rows = []
     known_modules = set(discovered_doc_modules)
     for s in sorted(function_symbol_map.values(), key=lambda x: x.name.lower()):
@@ -2092,11 +2080,11 @@ def main() -> None:
     ref = [
         "# Function Reference",
         "",
-        "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are actively called in starter notebook code cells; Implementation Modules show the active source modules that maintainers debug and extend.",
+        "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows template-called public functions that starter notebooks actively call in code cells; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what starter notebooks actively call in code cells. A callable is not counted as used when it is only imported, mentioned in markdown, present in generated metadata, or called internally by another helper.",
         "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
-        "- Use the Function catalogue below to browse public v1 callables. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
+        "- Use the Function catalogue below to browse template-called public functions. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
         "## How to use this reference",
@@ -2115,7 +2103,7 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.",
+            "Use the finder below to look up template-called public functions from active v1 modules. For internal helper behavior, open the public function page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
@@ -2126,7 +2114,7 @@ def main() -> None:
             '  <fieldset class="callable-type-filters">',
             '    <legend>Function type filters</legend>',
             '    <label><input type="checkbox" data-function-type-filter="callable" checked> Callable</label>',
-            '    <p class="callable-type-note"><strong>Callable</strong>: Public functions intended for notebook authors.</p>',
+            '    <p class="callable-type-note"><strong>Callable</strong>: Template-called public functions used by starter notebook code cells.</p>',
             '  </fieldset>',
             '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
             "</div>",
@@ -2142,7 +2130,13 @@ def main() -> None:
         return "Callable" if function_type == "callable" else "Internal"
 
     catalogue_nodes = sorted(
-        [n for n in node_by_qn.values() if n["exported"] and n["callable_name"] in module_data[n["module_name"]]["functions"]],
+        [
+            n
+            for n in node_by_qn.values()
+            if n["exported"]
+            and n["callable_name"] in template_called_function_names
+            and n["callable_name"] in module_data[n["module_name"]]["functions"]
+        ],
         key=lambda n: (n["callable_name"].lower(), n["module_name"]),
     )
     for node in catalogue_nodes:
@@ -2242,7 +2236,7 @@ def main() -> None:
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})
         signature = module_info.get("signatures", {}).get(short_name, "")
         summary = metadata.get("summary_override") or ""
-        docs_path = f"api/reference/{short_name}.md" if node["exported"] else (
+        docs_path = f"api/reference/{short_name}.md" if node["exported"] and short_name in template_called_function_names else (
             f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
         )
         source_path = f"src/fabricops_kit/{module_name}.py"
@@ -2251,7 +2245,7 @@ def main() -> None:
         source_end_line = source_location.get("end_line")
         source_ref = github_source_url(source_path, source_start_line, source_end_line)
         parameter_rows = module_info.get("parameters", {}).get(short_name, [])
-        classification = "Callable" if node.get("role") == "callable" else "Internal"
+        classification = "Callable" if node.get("role") == "callable" and short_name in template_called_function_names else "Internal"
         purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
         rel_module = canonical_public_module(module_name)
         metadata_related = list(metadata.get("related_functions", []))
@@ -2286,7 +2280,7 @@ def main() -> None:
                 n = node_by_qn.get(item, {})
                 if not n:
                     continue
-                if n.get("exported"):
+                if n.get("exported") and n["callable_name"] in template_called_function_names:
                     href = f"../{n['callable_name']}/"
                     out.append(f'- <a href="{href}"><code>{item}</code></a>')
                 elif generate_internal_reference_pages():
@@ -2296,10 +2290,14 @@ def main() -> None:
                     out.append(f"- `{item}`")
             return out
 
-        if node["exported"]:
+        if node["exported"] and short_name in template_called_function_names:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
-            related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
+            related_public = [
+                item
+                for item in related_for_page
+                if node_by_qn.get(item, {}).get("callable_name") in template_called_function_names
+            ]
             related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             helper_qns = [
                 helper_qn
@@ -2586,7 +2584,7 @@ def main() -> None:
             if not used_by and not deps:
                 lines.extend(["", "_No inbound or outbound references detected._"])
 
-        if node["exported"]:
+        if node["exported"] and short_name in template_called_function_names:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
             (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -2598,7 +2596,7 @@ def main() -> None:
             "name": short_name,
             "qualified_name": qn,
             "module": module_name,
-            "type": "callable" if node["exported"] else "internal",
+            "type": "callable" if node["exported"] and short_name in template_called_function_names else "internal",
             "role": node.get("role", "internal"),
             "inbound": used_by,
             "outbound": deps,

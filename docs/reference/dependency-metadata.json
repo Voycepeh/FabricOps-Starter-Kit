@@ -1821,7 +1821,6 @@
       ],
       "used_by_count": 3,
       "used_in_templates": [
-        "02_pipeline",
         "99_explore"
       ],
       "internal_helpers_used": [
@@ -2183,12 +2182,8 @@
       ],
       "used_by_count": 10,
       "used_in_templates": [
-        "00_env_config",
-        "01_agreement",
         "02_pipeline",
-        "03_governance",
-        "99_explore",
-        "example_dq_rule_smoke_test"
+        "99_explore"
       ],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark",
@@ -2244,10 +2239,7 @@
       ],
       "used_by_count": 10,
       "used_in_templates": [
-        "00_env_config",
-        "01_agreement",
         "02_pipeline",
-        "03_governance",
         "example_pipeline_demo",
         "example_dq_rule_smoke_test"
       ],
@@ -3667,7 +3659,6 @@
       ],
       "used_by_count": 1,
       "used_in_templates": [
-        "02_pipeline",
         "example_dq_rule_smoke_test"
       ],
       "internal_helpers_used": [
@@ -3852,8 +3843,7 @@
       ],
       "used_by_count": 1,
       "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
+        "02_pipeline"
       ],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._dq_records_from_selection",
@@ -3902,8 +3892,7 @@
       ],
       "used_by_count": 1,
       "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
+        "02_pipeline"
       ],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._latest_rule",
@@ -4614,9 +4603,7 @@
         "fabricops_kit.pipeline.run_table_guardrails"
       ],
       "used_by_count": 2,
-      "used_in_templates": [
-        "02_pipeline"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.guardrails._coerce_date",
         "fabricops_kit.guardrails._iso_date_value",
@@ -4644,9 +4631,7 @@
         "fabricops_kit.pipeline.run_table_guardrails"
       ],
       "used_by_count": 1,
-      "used_in_templates": [
-        "02_pipeline"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.guardrails._apply_bypass_post_review_warning",
         "fabricops_kit.guardrails._catalogue_value",
@@ -4684,9 +4669,7 @@
         "fabricops_kit.pipeline.run_table_guardrails"
       ],
       "used_by_count": 1,
-      "used_in_templates": [
-        "02_pipeline"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.guardrails._accepted_profile_rows",
         "fabricops_kit.guardrails._apply_bypass_post_review_warning",
@@ -5799,9 +5782,7 @@
         "fabricops_kit.pipeline.run_table_guardrails"
       ],
       "used_by_count": 1,
-      "used_in_templates": [
-        "02_pipeline"
-      ],
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.pipeline._canonical_catalogue_profile_df",
         "fabricops_kit.pipeline._definition_name",
