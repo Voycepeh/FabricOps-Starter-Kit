@@ -66,7 +66,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 ![Fabric notebook Environment selection example](assets/fabric-example-set-notebook-environment.png)
 
-<!-- TODO screenshot: Fabric workspace showing copied demo notebooks: 00_env_config, 01_agreement, example_pipeline_demo, 02_pipeline, 03_governance, and 99_explore. -->
+!!! note "Screenshot TODO"
+    Add a Fabric workspace screenshot showing copied demo notebooks: `00_env_config`, `01_agreement`, `example_pipeline_demo`, `02_pipeline`, `03_governance`, and `99_explore`.
 
 **Next:** Continue to [Milestone 1](#milestone-1-configure-00_env_config). For template responsibilities, see [Notebook Templates](how-fabricops-works/notebook-templates.md).
 
@@ -89,7 +90,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 ![`00_env_config` path configuration example](assets/fabric-example-00_config_paths.png)
 
-<!-- TODO screenshot: Successful 00_env_config run showing CONFIG/ENV summary and metadata target registration. -->
+!!! note "Screenshot TODO"
+    Add a successful `00_env_config` run screenshot showing the `CONFIG`/`ENV` summary and metadata target registration.
 
 **Next:** Continue to [Milestone 2](#milestone-2-create-agreement-in-01_agreement).
 
@@ -110,7 +112,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Metadata or table evidence produced:** Steward, agreement, and agreement evidence rows are written to the configured metadata target. These rows become the governance context for `02_pipeline` and `03_governance`.
 
-<!-- TODO screenshot: 01_agreement rendered agreement evidence for the demo order/customer workflow. -->
+!!! note "Screenshot TODO"
+    Add a `01_agreement` screenshot showing rendered agreement evidence for the demo order/customer workflow.
 
 **Next:** Continue to [Milestone 3](#milestone-3-generate-demo-data-with-example_pipeline_demo).
 
@@ -126,11 +129,12 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 2. Confirm the unified target prefix remains `demo_unified_orders` for the first pass.
 3. Run the full notebook to overwrite and recreate the demo source tables.
 
-**Expected output:** The configured source lakehouse contains deterministic demo source tables, including `demo_src_orders_happy` and `demo_src_customers_happy` for the happy path.
+**Expected output:** The configured source lakehouse contains deterministic demo source tables, including `demo_src_orders_happy` and `demo_src_customers_happy` for the happy path. The notebook also seeds demo-scoped DQ rules so the later governance and enforcement milestones have rules to review and apply.
 
-**Metadata or table evidence produced:** Demo source tables are written under the `DemoTest` schema with the `demo_` prefix. The generator is safe to rerun because it overwrites demo tables only.
+**Metadata or table evidence produced:** Demo source tables are written under the `DemoTest` schema with the `demo_` prefix, and demo-scoped DQ rule rows are seeded into `METADATA_GUARDRAIL_RULES`. The generator is safe to rerun because it overwrites demo tables only.
 
-<!-- TODO screenshot: example_pipeline_demo output showing generated demo_ source tables in DemoTest. -->
+!!! note "Screenshot TODO"
+    Add an `example_pipeline_demo` screenshot showing generated `demo_` source tables in `DemoTest` and seeded demo DQ rule metadata.
 
 **Next:** Continue to [Milestone 4](#milestone-4-run-02_pipeline-happy-path).
 
@@ -144,8 +148,9 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 1. Keep the default source reads pointed at `DemoTest.demo_src_orders_happy` and `DemoTest.demo_src_customers_happy`.
 2. Keep the default outputs set to `DemoTest.demo_unified_orders_enriched` and `DemoTest.demo_unified_orders_summary`.
-3. Run the notebook from top to bottom.
-4. Review the source profile, target profile, schema checks, freshness checks, DQ checks, lineage capture, and output write summary.
+3. Run the main pipeline cells that read, transform, validate, profile, and write the demo tables.
+4. Use the optional governance curation section only when you want to author or review rule suggestions from inside the pipeline notebook; formal review still happens in `03_governance`.
+5. Review the source profile, target profile, schema checks, freshness checks, DQ checks, lineage capture, and output write summary.
 
 **Expected output:** `02_pipeline` successfully reads demo sources, produces enriched and summary outputs, writes governed unified tables, and displays run evidence.
 
@@ -153,7 +158,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 ![Role-based notebook workflow from environment configuration through governed review](assets/fabricops-role-workflow.png){ .full-width }
 
-<!-- TODO screenshot: 02_pipeline happy path run summary showing successful writes for demo_unified_orders_enriched and demo_unified_orders_summary. -->
+!!! note "Screenshot TODO"
+    Add a `02_pipeline` happy path run summary screenshot showing successful writes for `demo_unified_orders_enriched` and `demo_unified_orders_summary`.
 
 **Next:** Continue to [Milestone 5](#milestone-5-review-governance-in-03_governance).
 
@@ -165,8 +171,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Run or edit:**
 
-1. Select the demo agreement or profiled demo tables.
-2. Review schema, freshness, profile, DQ, and enrichment metadata.
+1. Select a profiled demo source or target table from `METADATA_DATA_CATALOGUE`.
+2. Review schema, freshness, profile, DQ, and enrichment metadata for that profiled table.
 3. Approve, reject, replace, deactivate, or mark active-pending-review items according to your demo script.
 4. Save the governance decisions.
 
@@ -174,7 +180,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Metadata or table evidence produced:** Reviewed guardrail intent is written to `METADATA_GUARDRAIL_RULES`; observed catalogue/profile evidence remains separate from approved guardrail intent, and runtime outcomes remain separate in guardrail results. See [Metadata Tables](how-fabricops-works/metadata-tables.md) for the table responsibilities.
 
-<!-- TODO screenshot: 03_governance review grid with approved demo schema, freshness, profile, DQ, or enrichment rows. -->
+!!! note "Screenshot TODO"
+    Add a `03_governance` review grid screenshot with approved demo schema, freshness, profile, DQ, or enrichment rows.
 
 **Next:** Continue to [Milestone 6](#milestone-6-rerun-02_pipeline-with-active-guardrails).
 
@@ -195,7 +202,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Metadata or table evidence produced:** Runtime outcomes are written as guardrail/run evidence, with active approved rule intent remaining in `METADATA_GUARDRAIL_RULES` and observed outcomes kept as runtime evidence.
 
-<!-- TODO screenshot: 02_pipeline rerun showing active guardrail checks loaded from governance metadata. -->
+!!! note "Screenshot TODO"
+    Add a `02_pipeline` rerun screenshot showing active guardrail checks loaded from governance metadata.
 
 **Next:** Continue to [Milestone 7](#milestone-7-try-failure-scenarios).
 
@@ -223,7 +231,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Metadata or table evidence produced:** Guardrail outcomes, run summaries, profile evidence, and lineage/output evidence show what was evaluated and what happened. The final unified outputs remain the governed outputs from successful runs.
 
-<!-- TODO screenshot: 02_pipeline failure scenario showing a blocked write or warning evidence. -->
+!!! note "Screenshot TODO"
+    Add a `02_pipeline` failure scenario screenshot showing a blocked write or warning evidence.
 
 **Next:** Use the [Bonus](#bonus-use-99_explore-for-discovery-or-troubleshooting) notebook for discovery or troubleshooting, or move to [What success looks like](#what-success-looks-like).
 
@@ -243,7 +252,8 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Metadata or table evidence produced:** Any exploration evidence should remain support/discovery context. Formal approved guardrail intent still belongs in `03_governance`, and runtime outcomes still belong to `02_pipeline` runs.
 
-<!-- TODO screenshot: 99_explore profiling a demo_ table for troubleshooting. -->
+!!! note "Screenshot TODO"
+    Add a `99_explore` screenshot profiling a `demo_` table for troubleshooting.
 
 **Next:** Review [Metadata Tables](how-fabricops-works/metadata-tables.md) and the [Function Reference](reference/index.md) when you need to trace which helpers produced each evidence row.
 
