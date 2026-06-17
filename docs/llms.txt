@@ -2,11 +2,11 @@
 
 > FabricOps Starter Kit helps teams build governed, quality-checked, Microsoft Fabric notebook workflows with reusable helpers, notebook templates, metadata-backed contracts, data quality checks, lineage, and handover evidence.
 
-Use this file as a concise navigation map for documentation and automation workflows. The human-readable documentation is also published with Markdown variants where possible; for example, `/quick-start/` is available as `/quick-start.md`.
+Use this file as a concise navigation map for documentation and automation workflows. The human-readable documentation is also published with Markdown variants where possible; for example, `/demo-programme/` is available as `/demo-programme.md`.
 
-## Quick start
+## Get Started
 
-- [Quick Start](quick-start.md): First path through the starter workflow and key concepts.
+- [Demo Programme](demo-programme.md): First path through the starter workflow and key concepts.
 - [Install](install.md): Package installation options and runtime setup notes.
 - [Create Wheel](setup/create-wheel.md): Build a wheel for Microsoft Fabric upload.
 - [Run in Fabric](setup/run-in-fabric.md): Configure a Fabric workspace, lakehouse targets, and notebook environment.

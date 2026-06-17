@@ -1,6 +1,6 @@
 # FabricOps Demo Programme
 
-Use this page as a course-style walkthrough for the FabricOps Starter Kit in Microsoft Fabric. It stays under the existing **Quick Start** navigation for now, but the primary flow is the end-to-end demo programme.
+Use this page as a course-style walkthrough for the FabricOps Starter Kit in Microsoft Fabric. It now lives under the **Get Started** navigation, and the primary flow is the end-to-end demo programme.
 
 ## Demo at a glance
 
