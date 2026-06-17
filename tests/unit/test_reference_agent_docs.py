@@ -739,6 +739,23 @@ def test_generated_public_callable_links_use_canonical_route() -> None:
     assert 'href="../reference/enforce_dq_rules/"' not in combined
 
 
+def test_template_function_map_chips_link_to_callable_pages_from_nested_route() -> None:
+    """Verify template function map chips use the correct nested relative route."""
+    text = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
+
+    assert 'href="../api/reference/' not in text
+    assert 'href="../../api/reference/setup_notebook/"' in text
+    assert 'href="../../api/reference/widget_render_data_steward/"' in text
+
+
+def test_reference_index_catalogue_links_keep_existing_relative_route() -> None:
+    """Verify reference index catalogue links keep the one-level route."""
+    text = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
+
+    assert 'href="../api/reference/setup_notebook/"' in text
+    assert 'href="../api/reference/widget_render_data_steward/"' in text
+
+
 def test_enforce_dq_rules_canonical_page_section_order_and_no_old_helper_dump() -> None:
     """Verify enforce dq rules canonical page section order and no old helper dump."""
     text = (API_REFERENCE_DIR / "enforce_dq_rules.md").read_text(encoding="utf-8")
