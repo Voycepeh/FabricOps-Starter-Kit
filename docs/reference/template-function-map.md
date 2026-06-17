@@ -48,10 +48,10 @@ Compact template-first lookup for the public helper functions used by each noteb
 </section>
 
 <section class="template-function-group">
-<h2><code>example_pipeline_smoke_test</code></h2>
-<p class="template-function-purpose">Smoke-test data seeding for the real pipeline template.</p>
+<h2><code>example_pipeline_demo</code></h2>
+<p class="template-function-purpose">Demo data seeding for the real pipeline template.</p>
 <div class="template-function-row">
-<span class="template-function-segment">Pipeline smoke setup</span>
+<span class="template-function-segment">Pipeline demo setup</span>
 <span class="function-chip-wrap"><a class="function-chip" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></span>
 </div>
 </section>
