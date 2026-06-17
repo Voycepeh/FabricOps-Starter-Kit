@@ -5,9 +5,9 @@ Write one pipeline runtime summary row to metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:973`
+`fabricops_kit/pipeline.py:971`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/pipeline.py#L973-L1086">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/pipeline.py#L971-L1083">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -30,9 +30,8 @@ Writes a compact run-level summary that ties pipeline name, agreement context, g
 ```python
 def write_pipeline_run_summary(
     spark: Any,
-    config: Any,
-    env: str,
     run_id: str,
+    context: dict[str, Any] | None=None,
     agreement_id: str='',
     agreement_contract_version: str='',
     notebook_registry_id: str='',
@@ -71,9 +70,8 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `spark` | `Any` | Yes | Spark session used to create the one-row summary DataFrame. |
-| `config` | `Any` | Yes | Metadata route from ``00_env_config``. |
-| `env` | `str` | Yes | Not documented yet |
 | `run_id` | `str` | Yes | Pipeline run identifier. |
+| `context` | `dict[str, Any] \| None` | No | Not documented yet |
 | `agreement_id` | `str` | No | Agreement and notebook registry context. |
 | `agreement_contract_version` | `str` | No | Not documented yet |
 | `notebook_registry_id` | `str` | No | Not documented yet |
@@ -192,46 +190,46 @@ relies on a default attached lakehouse.
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/config.py#L191-L197"><code>_current_audit_timestamp</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/config.py#L183-L188"><code>_get_audit_timezone</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/config.py#L148-L180"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/config.py#L191-L197"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/config.py#L183-L188"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/config.py#L148-L180"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Metadata loading</h4>
         <p>Load and identify the metadata or table context needed by the callable.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/pipeline.py#L24-L25"><code>_definition_name</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/config.py#L597-L637"><code>_normalize_path_config</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/pipeline.py#L24-L25"><code>_definition_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/config.py#L597-L637"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Result summary</h4>
         <p>Build final statuses, counts, and messages for the caller.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/pipeline.py#L28-L47"><code>_summary_status</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/pipeline.py#L28-L47"><code>_summary_status</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/config.py#L640-L679"><code>_get_store</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/config.py#L640-L679"><code>_get_store</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/pipeline.py#L20-L21"><code>_now_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/pipeline.py#L20-L21"><code>_now_iso</code></a>
         </div>
       </section>
     </div>
@@ -249,7 +247,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `973`
+- Source line: `971`
 - Inbound references count: 0
 - Outbound references count: 5
 - Used in templates: 02_pipeline
@@ -279,17 +277,16 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/pipeline.py#L973-L1086">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/pipeline.py#L973-L1086</a>
-- Start line: `973`
-- End line: `1086`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/pipeline.py#L971-L1083">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/pipeline.py#L971-L1083</a>
+- Start line: `971`
+- End line: `1083`
 - Signature:
 
 ```python
 def write_pipeline_run_summary(
     spark: Any,
-    config: Any,
-    env: str,
     run_id: str,
+    context: dict[str, Any] | None=None,
     agreement_id: str='',
     agreement_contract_version: str='',
     notebook_registry_id: str='',

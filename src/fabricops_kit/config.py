@@ -1082,18 +1082,18 @@ def _setup_metadata_table_registry(
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(config, env, "metadata", table_name, **read_kwargs)
+            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
         except Exception as exc:
             if not _is_table_not_found_error(exc):
                 raise RuntimeError(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc
             empty_df = _create_empty_metadata_dataframe(spark, schema)
-            write_lakehouse_table(empty_df, config, env, "metadata", table_name, schema=metadata_schema, mode="overwrite", options={"overwriteSchema": "true"})
+            write_lakehouse_table(empty_df, table_name, target="metadata", schema=metadata_schema, context={"config": config, "env_name": env}, mode="overwrite", options={"overwriteSchema": "true"})
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(config, env, "metadata", table_name, **read_kwargs)
+            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
             created.append(table_name)
 
         missing = [field for field in _metadata_schema_field_names(schema) if field not in _metadata_table_columns(table)]
@@ -1123,7 +1123,7 @@ def _validate_metadata_table_registration(
             read_kwargs = {"spark_session": spark}
             if resolved_metadata_schema is not None:
                 read_kwargs["schema"] = resolved_metadata_schema
-            read_lakehouse_table(normalized, env, "metadata", table, **read_kwargs)
+            read_lakehouse_table(table, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
         except Exception:
             missing.append(table)
     nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)

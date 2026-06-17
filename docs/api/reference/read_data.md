@@ -7,7 +7,7 @@ Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook
 
 `fabricops_kit/fabric_input_output.py:235`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L235-L326">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L235-L308">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -33,17 +33,15 @@ Provides a stable notebook-facing read orchestrator while format-specific Lakeho
 
 ```python
 def read_data(
-    config=None,
-    env=None,
-    target='source',
-    name=None,
-    format='table',
-    schema=None,
-    table=None,
-    relative_path=None,
+    source: str,
+    target: str='source',
+    format: str='table',
+    schema: str | None=None,
+    table: str | None=None,
+    relative_path: str | None=None,
     spark_session=None,
-    options=None,
-    context=None,
+    options: dict | None=None,
+    context: dict[str, Any] | None=None,
     **kwargs,
 ):
 ```
@@ -55,7 +53,7 @@ def read_data(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df_orders = read_data(CONFIG, ENV_NAME, "source", "orders", schema=SOURCE_SCHEMA, spark_session=spark)
+df_orders = read_data("orders", target="source", schema=SOURCE_SCHEMA, spark_session=spark)
 ```
 
 </div>
@@ -64,17 +62,15 @@ df_orders = read_data(CONFIG, ENV_NAME, "source", "orders", schema=SOURCE_SCHEMA
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict` | No | FabricOps FrameworkConfig or compatible config object. |
-| `env` | `str` | No | Environment key such as ``"dev"``. |
-| `target` | `str` | No | Logical target name such as ``"source"`` or ``"warehouse"``. |
-| `name` | `str` | No | Table name for table reads or relative file path for file reads. |
-| `format` | `str, default="table"` | No | Read format. Supported values are ``"table"``, ``"delta"``, ``"csv"``, ``"parquet"``, ``"excel"``, and ``"warehouse"``. |
-| `schema` | `str` | No | Lakehouse or warehouse schema name. |
-| `table` | `str` | No | Explicit table name. Overrides ``name`` for table and warehouse reads. |
-| `relative_path` | `str` | No | Explicit lakehouse Files path. Overrides ``name`` for file reads. |
+| `source` | `str` | Yes | Table name for table reads or relative file path for file reads. |
+| `target` | `str` | No | Logical target name in ``FABRIC_CONTEXT["config"]``. |
+| `format` | `str` | No | Read format. Supported values are ``"table"``, ``"delta"``, ``"csv"``, ``"parquet"``, ``"excel"``, and ``"warehouse"``. |
+| `schema` | `str \| None` | No | Lakehouse or warehouse schema name. |
+| `table` | `str \| None` | No | Explicit table name. Overrides ``source`` for table and warehouse reads. |
+| `relative_path` | `str \| None` | No | Explicit lakehouse Files path. Overrides ``source`` for file reads. |
 | `spark_session` | `object` | No | Spark session to use. |
-| `options` | `dict` | No | Additional reader options passed to the format-specific implementation. **kwargs Additional reader options. |
-| `context` | `—` | No | Not documented yet |
+| `options` | `dict \| None` | No | Additional reader options passed to the format-specific implementation. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override context. Defaults to the active ``FABRIC_CONTEXT`` initialized by ``00_env_config``. **kwargs Additional reader options. |
 
 ## Returns
 
@@ -127,9 +123,7 @@ Reads data only; it does not write metadata, files, or tables.
 
 **Notes:**
 
-This is the notebook-facing IO orchestrator. It routes through the
-configured FabricOps environment target and delegates to implementation
-helpers for specific storage formats.
+No additional callable notes are documented.
 
 </details>
 
@@ -222,7 +216,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **output:** Spark DataFrame loaded from the configured Fabric target.
 - **side_effects:** Reads data only; it does not write metadata, files, or tables.
 - **failure_modes:** Raises ValueError for unsupported formats or missing table/path/schema inputs.
-- **verification:** Verify target, format, schema, and table/path values come from CONFIG or notebook parameters before generating calls.
+- **verification:** Verify target, format, schema, and table/path values are business inputs or come from the active FABRIC_CONTEXT before generating calls.
 
 ### Inbound references
 
@@ -240,24 +234,22 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L235-L326">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L235-L326</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L235-L308">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L235-L308</a>
 - Start line: `235`
-- End line: `326`
+- End line: `308`
 - Signature:
 
 ```python
 def read_data(
-    config=None,
-    env=None,
-    target='source',
-    name=None,
-    format='table',
-    schema=None,
-    table=None,
-    relative_path=None,
+    source: str,
+    target: str='source',
+    format: str='table',
+    schema: str | None=None,
+    table: str | None=None,
+    relative_path: str | None=None,
     spark_session=None,
-    options=None,
-    context=None,
+    options: dict | None=None,
+    context: dict[str, Any] | None=None,
     **kwargs,
 ):
 ```

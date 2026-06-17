@@ -5,9 +5,9 @@ Render combined guardrail authoring controls for the selected table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2556`
+`fabricops_kit/governance_review.py:2552`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2556-L2587">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/governance_review.py#L2552-L2583">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -34,9 +34,8 @@ Renders the existing guardrail authoring widgets together so guardrail creation 
 ```python
 def widget_author_guardrail_rules(
     state: Mapping[str, Any],
-    config: Any=None,
-    env: str | None=None,
     spark_session: Any=None,
+    context: dict[str, Any] | None=None,
     source_notebook_type: str='03_governance',
     created_by_role: str='governance',
 ) -> dict[str, Any]:
@@ -53,9 +52,8 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `state` | `Mapping[str, Any]` | Yes | Handover state from :func:`widget_select_guardrail_target`. |
-| `config` | `Any` | No | Runtime objects used for saves. |
-| `env` | `str \| None` | No | Not documented yet |
 | `spark_session` | `Any` | No | Not documented yet |
+| `context` | `dict[str, Any] \| None` | No | Not documented yet |
 | `source_notebook_type` | `str` | No | Notebook type stamped on authored records. |
 | `created_by_role` | `str` | No | Role stamped on authored records. |
 
@@ -85,6 +83,7 @@ Not documented yet
 
 ### Calls
 
+- `fabricops_kit.config.resolve_fabric_context`
 - <a href="../widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
 - <a href="../widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
 
@@ -113,6 +112,8 @@ No additional callable notes are documented.
 
     ```text
     widget_author_guardrail_rules(...)
+    ├── resolve_fabric_context(...)
+    │   └── get_default_fabric_context(...)
     ├── widget_author_dq_rules(...)
     │   ├── _dq_records_from_selection(...)
     │   │   └── _base_guardrail_rule_record(...)
@@ -141,23 +142,25 @@ No additional callable notes are documented.
     │   │           └── _is_no_approval_required(...)
     │   ├── _latest_rule(...)
     │   ├── _rule_params(...)
-    │   └── _write_rule_records(...)
-    │       ├── _configured_lakehouse_schema(...)
-    │       │   ├── _get_store(...)
-    │       │   │   └── _normalize_path_config(...)
-    │       │   │       └── PathConfig(...)
-    │       │   └── _normalize_schema_name(...)
-    │       └── write_lakehouse_table(...)
-    │           ├── _get_store(...)
-    │           │   └── _normalize_path_config(...)
-    │           │       └── PathConfig(...)
-    │           ├── _normalize_table_name(...)
-    │           ├── _resolve_lakehouse_table_path(...)
-    │           │   ├── _normalize_table_name(...)
-    │           │   └── _resolve_lakehouse_schema(...)
-    │           │       └── _normalize_schema_name(...)
-    │           └── resolve_fabric_context(...)
-    │               └── get_default_fabric_context(...)
+    │   ├── _write_rule_records(...)
+    │   │   ├── _configured_lakehouse_schema(...)
+    │   │   │   ├── _get_store(...)
+    │   │   │   │   └── _normalize_path_config(...)
+    │   │   │   │       └── PathConfig(...)
+    │   │   │   └── _normalize_schema_name(...)
+    │   │   └── write_lakehouse_table(...)
+    │   │       ├── _get_store(...)
+    │   │       │   └── _normalize_path_config(...)
+    │   │       │       └── PathConfig(...)
+    │   │       ├── _normalize_table_name(...)
+    │   │       ├── _resolve_lakehouse_table_path(...)
+    │   │       │   ├── _normalize_table_name(...)
+    │   │       │   └── _resolve_lakehouse_schema(...)
+    │   │       │       └── _normalize_schema_name(...)
+    │   │       └── resolve_fabric_context(...)
+    │   │           └── get_default_fabric_context(...)
+    │   └── resolve_fabric_context(...)
+    │       └── get_default_fabric_context(...)
     └── widget_author_schema_freshness_profile_rules(...)
         ├── _latest_rule(...)
         ├── _rule_params(...)
@@ -186,23 +189,25 @@ No additional callable notes are documented.
         │           │   └── _resolve_action_by(...)
         │           │       └── …
         │           └── _is_no_approval_required(...)
-        └── _write_rule_records(...)
-            ├── _configured_lakehouse_schema(...)
-            │   ├── _get_store(...)
-            │   │   └── _normalize_path_config(...)
-            │   │       └── PathConfig(...)
-            │   └── _normalize_schema_name(...)
-            └── write_lakehouse_table(...)
-                ├── _get_store(...)
-                │   └── _normalize_path_config(...)
-                │       └── PathConfig(...)
-                ├── _normalize_table_name(...)
-                ├── _resolve_lakehouse_table_path(...)
-                │   ├── _normalize_table_name(...)
-                │   └── _resolve_lakehouse_schema(...)
-                │       └── _normalize_schema_name(...)
-                └── resolve_fabric_context(...)
-                    └── get_default_fabric_context(...)
+        ├── _write_rule_records(...)
+        │   ├── _configured_lakehouse_schema(...)
+        │   │   ├── _get_store(...)
+        │   │   │   └── _normalize_path_config(...)
+        │   │   │       └── PathConfig(...)
+        │   │   └── _normalize_schema_name(...)
+        │   └── write_lakehouse_table(...)
+        │       ├── _get_store(...)
+        │       │   └── _normalize_path_config(...)
+        │       │       └── PathConfig(...)
+        │       ├── _normalize_table_name(...)
+        │       ├── _resolve_lakehouse_table_path(...)
+        │       │   ├── _normalize_table_name(...)
+        │       │   └── _resolve_lakehouse_schema(...)
+        │       │       └── _normalize_schema_name(...)
+        │       └── resolve_fabric_context(...)
+        │           └── get_default_fabric_context(...)
+        └── resolve_fabric_context(...)
+            └── get_default_fabric_context(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -229,9 +234,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2556`
+- Source line: `2552`
 - Inbound references count: 0
-- Outbound references count: 2
+- Outbound references count: 3
 - Used in templates: 03_governance
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
@@ -250,23 +255,23 @@ Not documented yet
 
 ### Outbound references
 
+- `fabricops_kit.config.resolve_fabric_context`
 - <a href="../widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
 - <a href="../widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2556-L2587">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2556-L2587</a>
-- Start line: `2556`
-- End line: `2587`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/governance_review.py#L2552-L2583">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/governance_review.py#L2552-L2583</a>
+- Start line: `2552`
+- End line: `2583`
 - Signature:
 
 ```python
 def widget_author_guardrail_rules(
     state: Mapping[str, Any],
-    config: Any=None,
-    env: str | None=None,
     spark_session: Any=None,
+    context: dict[str, Any] | None=None,
     source_notebook_type: str='03_governance',
     created_by_role: str='governance',
 ) -> dict[str, Any]:

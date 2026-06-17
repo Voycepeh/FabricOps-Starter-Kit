@@ -126,7 +126,7 @@ Use the finder below to look up template-called public functions from active v1 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_dq_records_from_selection</code></li><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_write_rule_records</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_dq_records_from_selection</code></li><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_write_rule_records</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_author_guardrail_rules</code></li></ul></details>
   </div>
 </article>
@@ -136,7 +136,7 @@ Use the finder below to look up template-called public functions from active v1 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>widget_author_dq_rules</code></li><li><code>widget_author_schema_freshness_profile_rules</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>widget_author_dq_rules</code></li><li><code>widget_author_schema_freshness_profile_rules</code></li></ul></details>
 
   </div>
 </article>
@@ -146,7 +146,7 @@ Use the finder below to look up template-called public functions from active v1 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_schema_freshness_profile_records_from_selection</code></li><li><code>_write_rule_records</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_latest_rule</code></li><li><code>_rule_params</code></li><li><code>_schema_freshness_profile_records_from_selection</code></li><li><code>_write_rule_records</code></li></ul></details>
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_author_guardrail_rules</code></li></ul></details>
   </div>
 </article>
@@ -156,7 +156,7 @@ Use the finder below to look up template-called public functions from active v1 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 03_governance</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>_collect_enrichment_extra_fields</code></li><li><code>_enrichment_options</code></li><li><code>_render_enrichment_extra_fields</code></li><li><code>_selected_catalogue_rows_for_enrichment</code></li><li><code>_value</code></li><li><code>_write_table_metadata_enrichment_records</code></li><li><code>build_enrichment_rule_records</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_collect_enrichment_extra_fields</code></li><li><code>_enrichment_options</code></li><li><code>_render_enrichment_extra_fields</code></li><li><code>_selected_catalogue_rows_for_enrichment</code></li><li><code>_value</code></li><li><code>_write_table_metadata_enrichment_records</code></li><li><code>build_enrichment_rule_records</code></li></ul></details>
 
   </div>
 </article>
@@ -206,7 +206,7 @@ Use the finder below to look up template-called public functions from active v1 
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-callable">Callable</span><span class="reference-chip">03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 03_governance</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_assert_governance_review_context</code></li><li><code>_dq_rule_parameters_summary</code></li><li><code>apply_governance_enrichment_action</code></li><li><code>apply_governance_rule_action</code></li><li><code>load_rule_review_history</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_assert_governance_review_context</code></li><li><code>_dq_rule_parameters_summary</code></li><li><code>apply_governance_enrichment_action</code></li><li><code>apply_governance_rule_action</code></li><li><code>load_rule_review_history</code></li></ul></details>
 
   </div>
 </article>

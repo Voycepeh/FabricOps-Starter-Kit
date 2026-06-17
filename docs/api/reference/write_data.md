@@ -5,9 +5,9 @@ Write Lakehouse or Warehouse targets through one notebook-facing IO function.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:329`
+`fabricops_kit/fabric_input_output.py:311`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L329-L414">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L311-L377">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -34,16 +34,14 @@ Provides a stable notebook-facing write orchestrator while format-specific Lakeh
 ```python
 def write_data(
     df,
-    config=None,
-    env=None,
-    target='unified',
-    name=None,
-    format='table',
-    schema=None,
-    table=None,
-    mode='append',
-    options=None,
-    context=None,
+    name: str,
+    target: str='unified',
+    format: str='table',
+    schema: str | None=None,
+    table: str | None=None,
+    mode: str='append',
+    options: dict | None=None,
+    context: dict[str, Any] | None=None,
     **kwargs,
 ):
 ```
@@ -55,7 +53,7 @@ def write_data(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-write_data(df_orders, CONFIG, ENV_NAME, "unified", "orders_clean", schema=UNIFIED_SCHEMA, mode="overwrite")
+write_data(df_orders, "orders_clean", target="unified", schema=UNIFIED_SCHEMA, mode="overwrite")
 ```
 
 </div>
@@ -65,16 +63,14 @@ write_data(df_orders, CONFIG, ENV_NAME, "unified", "orders_clean", schema=UNIFIE
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | DataFrame to write. |
-| `config` | `FrameworkConfig \| dict` | No | FabricOps FrameworkConfig or compatible config object. |
-| `env` | `str` | No | Environment key such as ``"dev"``. |
-| `target` | `str` | No | Logical target name such as ``"unified"`` or ``"warehouse"``. |
-| `name` | `str` | No | Target table name. |
-| `format` | `str, default="table"` | No | Write format. Supported values are ``"table"``, ``"delta"``, and ``"warehouse"``. |
-| `schema` | `str` | No | Lakehouse or warehouse schema name. |
-| `table` | `str` | No | Explicit table name. Overrides ``name``. |
-| `mode` | `str, default="append"` | No | Write mode. |
-| `options` | `dict` | No | Additional writer options for Lakehouse Delta writes. **kwargs Additional writer options for Lakehouse Delta writes. |
-| `context` | `—` | No | Not documented yet |
+| `name` | `str` | Yes | Target table name. |
+| `target` | `str` | No | Logical target name in ``FABRIC_CONTEXT["config"]``. |
+| `format` | `str` | No | Write format. Supported values are ``"table"``, ``"delta"``, and ``"warehouse"``. |
+| `schema` | `str \| None` | No | Lakehouse or warehouse schema name. |
+| `table` | `str \| None` | No | Explicit table name. Overrides ``name``. |
+| `mode` | `str` | No | Write mode. |
+| `options` | `dict \| None` | No | Additional writer options for Lakehouse Delta writes. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override context. Defaults to the active ``FABRIC_CONTEXT`` initialized by ``00_env_config``. **kwargs Additional writer options for Lakehouse Delta writes. |
 
 ## Returns
 
@@ -125,9 +121,7 @@ Writes data to the configured Fabric target.
 
 **Notes:**
 
-This is the notebook-facing IO orchestrator. It keeps starter notebooks on
-a stable public API while format-specific helpers remain implementation
-details.
+No additional callable notes are documented.
 
 </details>
 
@@ -149,9 +143,11 @@ details.
     │   └── resolve_fabric_context(...)
     │       └── get_default_fabric_context(...)
     └── write_warehouse_table(...)
-        └── _get_store(...)
-            └── _normalize_path_config(...)
-                └── PathConfig(...)
+        ├── _get_store(...)
+        │   └── _normalize_path_config(...)
+        │       └── PathConfig(...)
+        └── resolve_fabric_context(...)
+            └── get_default_fabric_context(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -178,7 +174,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `329`
+- Source line: `311`
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test
@@ -206,24 +202,22 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L329-L414">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/fabric_input_output.py#L329-L414</a>
-- Start line: `329`
-- End line: `414`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L311-L377">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/fabric_input_output.py#L311-L377</a>
+- Start line: `311`
+- End line: `377`
 - Signature:
 
 ```python
 def write_data(
     df,
-    config=None,
-    env=None,
-    target='unified',
-    name=None,
-    format='table',
-    schema=None,
-    table=None,
-    mode='append',
-    options=None,
-    context=None,
+    name: str,
+    target: str='unified',
+    format: str='table',
+    schema: str | None=None,
+    table: str | None=None,
+    mode: str='append',
+    options: dict | None=None,
+    context: dict[str, Any] | None=None,
     **kwargs,
 ):
 ```

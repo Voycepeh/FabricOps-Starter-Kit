@@ -230,7 +230,7 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert "target_enforcement_results" in code
     assert "source_guardrail_results=source_enforcement_results" in code
     assert "target_guardrail_results=target_enforcement_results" in code
-    assert "completed_at=_current_audit_timestamp(config=CONFIG)" in code
+    assert "completed_at=_current_audit_timestamp()" in code
     assert "runtime summary" in markdown.lower()
 
 
@@ -278,7 +278,9 @@ def test_run_table_guardrails_calls_match_keyword_only_signature():
     for call in calls:
         assert len(call.args) == 1
         keyword_names = {keyword.arg for keyword in call.keywords}
-        assert {"config", "env", "run_id", "spark_session"} <= keyword_names
+        assert {"run_id", "spark_session"} <= keyword_names
+        assert "config" not in keyword_names
+        assert "env" not in keyword_names
         assert unsupported.isdisjoint(keyword_names)
 
     stop_values = [
@@ -289,3 +291,24 @@ def test_run_table_guardrails_calls_match_keyword_only_signature():
     ]
     assert len(stop_values) == 2
     assert all(isinstance(value, ast.Constant) and value.value is True for value in stop_values)
+
+
+def test_template_examples_use_default_context_not_framework_plumbing():
+    """Verify common template examples do not expose repeated framework plumbing."""
+    _markdown, code, _cells = _notebook_sources()
+    forbidden = [
+        "config=CONFIG",
+        "env_name=ENV",
+        "env_name=ENV_NAME",
+        "workspace_id=",
+        "lakehouse_id=",
+        "read_data(CONFIG",
+        "write_data(\n        CONFIG",
+    ]
+    top_block = code[: code.index("df_orders = read_data(")]
+    assert all(item not in top_block for item in forbidden)
+    assert "context=custom_context" in top_block
+    assert 'format="csv"' in top_block
+    assert 'format="excel"' in top_block
+    assert 'format="parquet"' in top_block
+    assert "run_parallel(" in top_block

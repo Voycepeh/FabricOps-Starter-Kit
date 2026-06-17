@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2789`
+`fabricops_kit/governance_review.py:2786`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2789-L2885">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/governance_review.py#L2786-L2882">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -34,9 +34,8 @@ Renders governance review controls for reviewing proposed or bypass-active enric
 ```python
 def widget_review_guardrail_governance(
     state: Mapping[str, Any],
-    config: Any=None,
-    env: str | None=None,
     spark_session: Any=None,
+    context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -51,9 +50,8 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `state` | `Mapping[str, Any]` | Yes | Handover state from :func:`widget_select_guardrail_target`. The state may include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``. |
-| `config` | `Any` | No | Runtime objects used for save actions. |
-| `env` | `str \| None` | No | Not documented yet |
 | `spark_session` | `Any` | No | Not documented yet |
+| `context` | `dict[str, Any] \| None` | No | Not documented yet |
 
 ## Returns
 
@@ -160,7 +158,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2789`
+- Source line: `2786`
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 02_pipeline
@@ -188,17 +186,16 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2789-L2885">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/e8fa331e352aa534d4c341adaf3c1f6635a2051b/src/fabricops_kit/governance_review.py#L2789-L2885</a>
-- Start line: `2789`
-- End line: `2885`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/governance_review.py#L2786-L2882">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/825d9f450dd2c4fe45c2c5313a9b785525963ffb/src/fabricops_kit/governance_review.py#L2786-L2882</a>
+- Start line: `2786`
+- End line: `2882`
 - Signature:
 
 ```python
 def widget_review_guardrail_governance(
     state: Mapping[str, Any],
-    config: Any=None,
-    env: str | None=None,
     spark_session: Any=None,
+    context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
 

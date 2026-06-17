@@ -720,9 +720,15 @@
         "fabricops_kit.fabric_input_output.read_warehouse_table",
         "fabricops_kit.fabric_input_output.write_data",
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
+        "fabricops_kit.fabric_input_output.write_warehouse_table",
+        "fabricops_kit.governance_review.widget_author_dq_rules",
+        "fabricops_kit.governance_review.widget_author_guardrail_rules",
+        "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+        "fabricops_kit.governance_review.widget_enrich_table_metadata",
+        "fabricops_kit.governance_review.widget_review_table_governance",
         "fabricops_kit.governance_review.widget_select_guardrail_target"
       ],
-      "used_by_count": 13,
+      "used_by_count": 19,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -2384,9 +2390,10 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
-        "fabricops_kit.config._get_store"
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config.resolve_fabric_context"
       ],
-      "calls_count": 1,
+      "calls_count": 2,
       "used_by": [
         "fabricops_kit.fabric_input_output.write_data"
       ],
@@ -3961,12 +3968,13 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/widget_author_dq_rules/",
       "classification": "callable",
       "calls": [
+        "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.governance_review._dq_records_from_selection",
         "fabricops_kit.governance_review._latest_rule",
         "fabricops_kit.governance_review._rule_params",
         "fabricops_kit.governance_review._write_rule_records"
       ],
-      "calls_count": 4,
+      "calls_count": 5,
       "used_by": [
         "fabricops_kit.governance_review.widget_author_guardrail_rules"
       ],
@@ -3990,10 +3998,11 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/widget_author_guardrail_rules/",
       "classification": "callable",
       "calls": [
+        "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.governance_review.widget_author_dq_rules",
         "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
       ],
-      "calls_count": 2,
+      "calls_count": 3,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [
@@ -4010,12 +4019,13 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/widget_author_schema_freshness_profile_rules/",
       "classification": "callable",
       "calls": [
+        "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.governance_review._latest_rule",
         "fabricops_kit.governance_review._rule_params",
         "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
         "fabricops_kit.governance_review._write_rule_records"
       ],
-      "calls_count": 4,
+      "calls_count": 5,
       "used_by": [
         "fabricops_kit.governance_review.widget_author_guardrail_rules"
       ],
@@ -4039,6 +4049,7 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/widget_enrich_table_metadata/",
       "classification": "callable",
       "calls": [
+        "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.governance_review._collect_enrichment_extra_fields",
         "fabricops_kit.governance_review._enrichment_options",
         "fabricops_kit.governance_review._render_enrichment_extra_fields",
@@ -4047,7 +4058,7 @@
         "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
         "fabricops_kit.governance_review.build_enrichment_rule_records"
       ],
-      "calls_count": 7,
+      "calls_count": 8,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [
@@ -4093,13 +4104,14 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/widget_review_table_governance/",
       "classification": "callable",
       "calls": [
+        "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.governance_review._assert_governance_review_context",
         "fabricops_kit.governance_review._dq_rule_parameters_summary",
         "fabricops_kit.governance_review.apply_governance_enrichment_action",
         "fabricops_kit.governance_review.apply_governance_rule_action",
         "fabricops_kit.governance_review.load_rule_review_history"
       ],
-      "calls_count": 5,
+      "calls_count": 6,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [

@@ -131,7 +131,7 @@ def _write_guardrail_result_row(
         env,
         "metadata",
         results_table,
-        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env},
         mode="append",
     )
 
@@ -303,7 +303,7 @@ def _register_current_notebook(
     config : FrameworkConfig or dict, optional
         Recommended metadata route configuration from ``00_env_config``. When
         paired with ``env``, the row is written through
-        ``write_lakehouse_table(df, config, env, "metadata", metadata_table, schema=<configured_metadata_schema>)``.
+        ``write_lakehouse_table(df, metadata_table, schema=<configured_metadata_schema>)``.
     env : str, optional
         Environment key paired with ``config`` for metadata lakehouse routing.
     agreement_id : str
@@ -391,7 +391,7 @@ def _register_current_notebook(
     row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
     df = spark.createDataFrame(_rows_for_spark([row]))
-    write_lakehouse_table(df, config, env, "metadata", metadata_table, schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), mode="append")
+    write_lakehouse_table(df, metadata_table, target="metadata", schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, mode="append")
     return row
 
 
@@ -414,7 +414,7 @@ def _load_notebook_registry(
     if config is None or env is None:
         raise ValueError("config and env are required to read notebook registry metadata without an attached default lakehouse.")
     try:
-        table = read_lakehouse_table(config, env, "metadata", metadata_table, schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), spark_session=spark)
+        table = read_lakehouse_table(metadata_table, target="metadata", schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, spark_session=spark)
         rows = _coerce_row_dicts(table)
     except Exception:
         if missing_ok:

@@ -376,7 +376,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                     'from 00_env_config.',
   'ai_verification': 'Verify the user selected an agreement and call get_selected_agreement before '
                      'generating pipeline code that depends on agreement context.',
-  'preferred_example': 'widget_select_agreement(CONFIG, env="Sandbox", spark_session=spark)\n'
+  'preferred_example': 'widget_select_agreement(spark_session=spark)\n'
                        'agreement = get_selected_agreement()',
   'related_functions': ['get_selected_agreement', 'setup_metadata_tables'],
   'expanded_purpose': 'Displays an agreement selector and stores the chosen agreement so pipeline '
@@ -442,8 +442,8 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'raises': 'Raises ValueError for unsupported formats or missing table/path/schema inputs.',
   'side_effects': 'Reads data only; it does not write metadata, files, or tables.',
   'fabric_context': 'Routes reads through configured FabricOps environment targets instead of an attached/default lakehouse.',
-  'ai_verification': 'Verify target, format, schema, and table/path values come from CONFIG or notebook parameters before generating calls.',
-  'preferred_example': 'df_orders = read_data(CONFIG, ENV_NAME, "source", "orders", schema=SOURCE_SCHEMA, spark_session=spark)',
+  'ai_verification': 'Verify target, format, schema, and table/path values are business inputs or come from the active FABRIC_CONTEXT before generating calls.',
+  'preferred_example': 'df_orders = read_data("orders", target="source", schema=SOURCE_SCHEMA, spark_session=spark)',
   'related_functions': ['write_data', 'profile_dataframe'],
   'expanded_purpose': 'Provides a stable notebook-facing read orchestrator while format-specific Lakehouse and Warehouse helpers remain implementation details.',
   'when_to_use': 'Use whenever a starter notebook needs to load data from a configured Fabric target.',
@@ -466,7 +466,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'side_effects': 'Writes data to the configured Fabric target.',
   'fabric_context': 'Routes writes through configured FabricOps environment targets instead of an attached/default lakehouse.',
   'ai_verification': 'Verify target, format, schema, table, and mode values before generating calls.',
-  'preferred_example': 'write_data(df_orders, CONFIG, ENV_NAME, "unified", "orders_clean", schema=UNIFIED_SCHEMA, mode="overwrite")',
+  'preferred_example': 'write_data(df_orders, "orders_clean", target="unified", schema=UNIFIED_SCHEMA, mode="overwrite")',
   'related_functions': ['read_data', 'run_table_guardrails'],
   'expanded_purpose': 'Provides a stable notebook-facing write orchestrator while format-specific Lakehouse and Warehouse helpers remain implementation details.',
   'when_to_use': 'Use whenever a starter notebook needs to publish data to a configured Fabric target.',
@@ -494,7 +494,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify relative_path points under Files, then check row count and schema '
                      'after reading.',
-  'preferred_example': 'df = read_lakehouse_csv(CONFIG, env="Sandbox", target="Source", '
+  'preferred_example': 'df = read_lakehouse_csv('
                        'relative_path="raw/orders/orders.csv", header=True, spark_session=spark)',
   'related_functions': ['read_data', 'read_lakehouse_parquet', 'read_lakehouse_excel'],
   'expanded_purpose': 'Reads a CSV file from the Files area of a configured Fabric lakehouse and '
@@ -532,7 +532,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify the file path is a lakehouse Files Parquet path and check row '
                      'count/schema after reading.',
-  'preferred_example': 'df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", '
+  'preferred_example': 'df = read_lakehouse_parquet('
                        'relative_path="raw/orders/orders.parquet", spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_excel', 'read_data'],
   'expanded_purpose': 'Reads a Parquet file or folder from the Files area of a configured Fabric '
@@ -571,7 +571,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                     'lakehouse Files path.',
   'ai_verification': 'Verify the DataFrame row count and schema after reading, and confirm the '
                      'Excel file is appropriate for a small reference-style input.',
-  'preferred_example': 'mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", '
+  'preferred_example': 'mapping_df = read_lakehouse_excel('
                        'relative_path="reference/faculty_mapping.xlsx", sheet_name=0, '
                        'spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_data'],
@@ -608,7 +608,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify the warehouse target/schema/table are configured and inspect the '
                      'resulting DataFrame schema before downstream use.',
-  'preferred_example': 'df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", '
+  'preferred_example': 'df = read_warehouse_table('
                        'schema="dbo", table="orders", spark_session=spark)',
   'related_functions': ['write_warehouse_table', 'read_data'],
   'expanded_purpose': 'Reads data from a configured Fabric Warehouse table or query target into a '
@@ -643,7 +643,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify guardrails passed, confirm schema/table routing from CONFIG, and '
                      'check the intended write mode before calling.',
-  'preferred_example': 'write_warehouse_table(serving_df, CONFIG, env="Sandbox", '
+  'preferred_example': 'write_warehouse_table(serving_df, '
                        'target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
   'related_functions': ['read_warehouse_table', 'write_data', 'stop_if_failed'],
   'expanded_purpose': 'Writes a DataFrame to a configured Fabric Warehouse destination for '
