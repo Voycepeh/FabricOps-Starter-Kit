@@ -217,6 +217,8 @@ def test_demo_example_notebook_exists_and_generates_pipeline_scenarios():
         "accepted_values",
         "between",
         "max_age_days",
+        "required_when",
+        "cancellation_reason",
         "governance_approved",
     ]:
         assert current_schema_reference in demo
@@ -229,6 +231,13 @@ def test_demo_example_notebook_exists_and_generates_pipeline_scenarios():
 
     assert "DEMO_GUARDRAIL_RULE_DEFINITIONS" not in demo
     assert "profile_behavior" not in demo
+    assert "unified_lakehouse" in demo_text
+    assert "does **not** run the pipeline guardrails itself" in demo_text
+    assert "does **not** run the pipeline guardrails or write unified targets itself" not in demo_text
+    assert "use the widgets to review, edit, approve, replace, or deactivate" in demo_text
+    assert "SOURCE_TABLES" not in demo_text
+    assert "editing source or target table dictionaries" not in demo_text
+    assert "duplicate order_id" not in demo_text
 
 
 def test_demo_generator_rule_ids_and_configs_match_implemented_dq_registry():
@@ -250,7 +259,7 @@ def test_demo_generator_rule_ids_and_configs_match_implemented_dq_registry():
     assert 3 <= len(definitions) <= 5
 
     selected_rule_types = {rule["rule_type"] for rule in definitions}
-    assert selected_rule_types == {"not_null", "accepted_values", "between", "max_age_days"}
+    assert selected_rule_types == {"not_null", "accepted_values", "between", "max_age_days", "required_when"}
     assert selected_rule_types <= set(governance_review.DQ_RULE_TYPES)
 
     validated = governance_review._validate_dq_rules([dict(rule, rule_id=f"demo_{rule['rule_type']}") for rule in definitions])
@@ -263,6 +272,9 @@ def test_demo_generator_rule_ids_and_configs_match_implemented_dq_registry():
     ]
     assert next(rule for rule in definitions if rule["rule_type"] == "between")["min_value"] == 0
     assert next(rule for rule in definitions if rule["rule_type"] == "max_age_days")["max_age_days"] == 7
+    conditional_rule = next(rule for rule in definitions if rule["rule_type"] == "required_when")
+    assert conditional_rule["columns"] == ["cancellation_reason"]
+    assert conditional_rule["condition"] == "status = 'cancelled'"
 
     for orchestration_concern in [
         "SOURCE_TABLES",
