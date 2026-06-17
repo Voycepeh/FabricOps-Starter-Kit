@@ -30,7 +30,7 @@ Enforcement in 02_pipeline consumes active guardrail records. Governance review 
 
 ## Notebook ownership
 
-`02_pipeline` reads profiling evidence from `METADATA_DATA_CATALOGUE` and is for engineering authoring. It can create draft, pending governance review, or active pending governance review records, but it cannot formally approve or reject enrichment or guardrail records.
+`02_pipeline` reads profiles from `METADATA_DATA_CATALOGUE` and is for engineering authoring. It can create draft, pending governance review, or active pending governance review records, but it cannot formally approve or reject enrichment or guardrail records.
 
 `03_governance` is the formal review notebook. It reads review history from `METADATA_ENRICHMENT_RULES` and `METADATA_GUARDRAIL_RULES`, and appends formal review outcomes back to those same history tables. It does not write enforcement results; 02_pipeline runtime outcomes remain owned by `METADATA_GUARDRAIL_RESULTS`.
 

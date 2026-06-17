@@ -17,7 +17,7 @@ These links open the current development templates. Released documentation shoul
 | 1 | `00_env_config` | Engineering | Configure paths, Fabric targets, metadata tables, and reusable widgets. |
 | 2 | `01_agreement` | Governance | Capture the request, ownership, steward details, and agreement evidence. |
 | 3 | `99_explore` | Analyst or engineering | Optionally inspect and profile <span class="glossary-term" title="Data read from configured upstream Lakehouse or Warehouse targets before transformation.">source data</span> before production delivery. |
-| 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record profile, lineage, DQ, and run evidence. |
+| 4 | `02_pipeline` | Engineering | Build the data product, write outputs, and record profiles, lineage, guardrail results, and run summaries. |
 | 5 | `03_governance` | Governance | Select profiled data, <span class="glossary-term" title="Add reviewed descriptive metadata such as meaning, ownership, classification, sensitivity, and usage context.">enrich metadata</span>, and review guardrail state, approvals, rejections, replacements, deactivations, and active-pending-review decisions. |
 | 6 | `02_pipeline` | Engineering | Rerun the pipeline so active guardrail rules are enforced during delivery. |
 
@@ -103,7 +103,7 @@ Engineering.
 
 **Key function**
 
-Reads source data, registers source and pipeline outputs, applies schema checks, applies freshness and profile behavior checks, runs active governance-approved DQ rules, writes configured outputs, and records runtime evidence. It also writes profile, lineage, DQ, and pipeline run metadata so governance can review what was produced.
+Reads source data, registers source and pipeline outputs, applies schema checks, applies freshness and profile behavior checks, runs active governance-approved DQ rules, writes configured outputs, and records runtime evidence. It also writes profiles, lineage, guardrail results, and run summaries so governance can review what was produced.
 
 **Output**
 
