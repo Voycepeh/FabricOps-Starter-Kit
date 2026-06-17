@@ -21,7 +21,7 @@ nav:
   - Home: index.md
 
   - Get Started:
-      - Demo Programme: demo-programme.md
+      - Guided Demo: guided-demo.md
       - Install: install.md
       - Create Wheel: setup/create-wheel.md
       - Run in Fabric: setup/run-in-fabric.md

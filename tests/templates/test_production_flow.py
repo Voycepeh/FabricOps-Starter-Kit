@@ -114,12 +114,12 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
     assert "| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |" in notebook_docs
 
 
-def test_demo_programme_links_pipeline_guardrail_demo():
-    """Verify demo programme links pipeline guardrail milestones."""
-    demo_programme = (ROOT / "docs" / "demo-programme.md").read_text(encoding="utf-8")
+def test_guided_demo_links_pipeline_guardrail_demo():
+    """Verify guided demo links pipeline guardrail milestones."""
+    guided_demo = (ROOT / "docs" / "guided-demo.md").read_text(encoding="utf-8")
 
     for expected in [
-        "# FabricOps Demo Programme",
+        "# FabricOps Guided Demo",
         "## Milestone 3: Generate demo data with `example_pipeline_demo`",
         "## Milestone 4: Run `02_pipeline` happy path",
         "## Milestone 5: Review governance in `03_governance`",
@@ -129,7 +129,7 @@ def test_demo_programme_links_pipeline_guardrail_demo():
         "unified_lakehouse",
         "METADATA_GUARDRAIL_RULES",
     ]:
-        assert expected in demo_programme
+        assert expected in guided_demo
 
     for scenario_table in [
         "demo_src_orders_happy",
@@ -139,7 +139,7 @@ def test_demo_programme_links_pipeline_guardrail_demo():
         "demo_src_orders_reload_a",
         "demo_src_orders_reload_b",
     ]:
-        assert scenario_table in demo_programme
+        assert scenario_table in guided_demo
 
     assert (TEMPLATES / "example_pipeline_demo.ipynb").exists()
     assert (TEMPLATES / "example_dq_rule_smoke_test.ipynb").exists()
@@ -246,7 +246,7 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
         ROOT / "docs" / "how-fabricops-works" / "governance-review.md",
         ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md",
         ROOT / "docs" / "how-fabricops-works" / "metadata-tables.md",
-        ROOT / "docs" / "demo-programme.md",
+        ROOT / "docs" / "guided-demo.md",
         ROOT / "templates" / "notebooks" / "02_pipeline.ipynb",
         ROOT / "templates" / "notebooks" / "03_governance.ipynb",
         ROOT / "templates" / "notebooks" / "example_pipeline_demo.ipynb",

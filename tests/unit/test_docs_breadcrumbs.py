@@ -45,14 +45,14 @@ def test_breadcrumbs_follow_configured_nav_hierarchy() -> None:
 
 def test_breadcrumbs_keep_current_page_non_clickable() -> None:
     """Verify breadcrumbs keep current page non clickable."""
-    current = _page("Demo Programme", "demo-programme/")
+    current = _page("Guided Demo", "guided-demo/")
     nav = SimpleNamespace(items=[_page("Home", ""), _section("Get Started", [current])])
     context: dict[str, object] = {}
 
     on_page_context(context, current, {}, nav)
 
-    assert context["fabricops_breadcrumbs"][-1] == {"title": "Demo Programme", "url": None}
-    assert context["fabricops_breadcrumbs"][1] == {"title": "Get Started", "url": "demo-programme/"}
+    assert context["fabricops_breadcrumbs"][-1] == {"title": "Guided Demo", "url": None}
+    assert context["fabricops_breadcrumbs"][1] == {"title": "Get Started", "url": "guided-demo/"}
 
 
 def test_breadcrumbs_fall_back_for_pages_outside_nav() -> None:

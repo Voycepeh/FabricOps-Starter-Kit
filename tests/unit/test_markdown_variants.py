@@ -28,7 +28,7 @@ def test_markdown_variant_hook_publishes_agent_friendly_entrypoints(tmp_path: Pa
 
     expected_paths = [
         site_dir / "llms.txt",
-        site_dir / "demo-programme.md",
+        site_dir / "guided-demo.md",
         site_dir / "how-fabricops-works.md",
         site_dir / "reference.md",
         site_dir / "reference" / "dq-rules.md",
@@ -47,7 +47,7 @@ def test_markdown_variant_hook_publishes_versioned_agent_friendly_entrypoints(tm
 
     expected_paths = [
         versioned_site_dir / "llms.txt",
-        versioned_site_dir / "demo-programme.md",
+        versioned_site_dir / "guided-demo.md",
         versioned_site_dir / "reference.md",
     ]
     missing_paths = [str(path.relative_to(versioned_site_dir)) for path in expected_paths if not path.exists()]
