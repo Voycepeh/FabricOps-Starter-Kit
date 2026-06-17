@@ -132,9 +132,6 @@ In Microsoft Fabric:
 7. Restart the notebook session if Fabric prompts you, or if the session was
    already running before the Environment was attached.
 
-For first-run runtime checks after the wheel is installed, see
-[Setup: Run in Fabric](setup/run-in-fabric.md).
-
 ## 7. Verify in a Fabric notebook
 
 After the Environment is published and attached, open a Fabric notebook that uses
@@ -155,7 +152,36 @@ If the import fails, the most common cause is that the Environment was uploaded
 but not published, not attached to the notebook, or the notebook session has not
 been restarted since the attachment changed.
 
-## 8. Common issues
+## 8. First-run Fabric verification
+
+After the wheel imports successfully, run a small Fabric runtime verification
+before you use the starter kit for regular work. These checks confirm the
+notebooks are using the intended Fabric targets and metadata routing.
+
+1. Open `00_env_config` and configure the required runtime values for the
+   selected environment.
+2. Confirm the configured Lakehouse and warehouse targets resolve in that
+   environment.
+3. Confirm the metadata target is configured for `metadata` routing. Metadata
+   reads and writes should use the configured metadata lakehouse target rather
+   than relying on an attached or default lakehouse.
+4. Confirm `FABRICOPS_AUDIT_TIMEZONE` is `UTC` or another valid IANA timezone,
+   such as `Asia/Singapore`.
+5. Run `00_env_config` and confirm metadata table validation passes. Metadata
+   setup writes any missing metadata tables to the configured `metadata`
+   lakehouse target and does not require a default lakehouse attachment.
+6. If schema validation reports missing columns, recreate or manually migrate
+   the affected metadata table. Setup can create missing tables, but it does
+   not automatically migrate older or malformed schemas.
+7. Run a minimal `01_agreement` → `02_pipeline` → `03_governance` smoke test to
+   confirm end-to-end metadata writes, pipeline validation, and governance
+   evidence work in the configured runtime. Use `99_explore` only for optional
+   discovery or troubleshooting.
+
+If you inspect metadata tables manually, check the configured metadata lakehouse
+target from `00_env_config` rather than the notebook default lakehouse.
+
+## 9. Common issues
 
 ### I do not see a `dist/` folder
 

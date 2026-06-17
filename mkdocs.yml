@@ -24,7 +24,6 @@ nav:
       - Guided Demo: guided-demo.md
       - Install: install.md
       - Create Wheel: setup/create-wheel.md
-      - Run in Fabric: setup/run-in-fabric.md
 
   - How FabricOps Works:
       - Overview: how-fabricops-works/index.md

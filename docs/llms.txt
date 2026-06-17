@@ -7,9 +7,8 @@ Use this file as a concise navigation map for documentation and automation workf
 ## Get Started
 
 - [Guided Demo](guided-demo.md): First path through the starter workflow and key concepts.
-- [Install](install.md): Package installation options and runtime setup notes.
+- [Install](install.md): Package installation, Fabric runtime setup notes, and first-run verification checks.
 - [Create Wheel](setup/create-wheel.md): Build a wheel for Microsoft Fabric upload.
-- [Run in Fabric](setup/run-in-fabric.md): Configure a Fabric workspace, lakehouse targets, and notebook environment.
 
 ## Architecture
 

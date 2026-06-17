@@ -2,7 +2,7 @@
 
 This page explains: how to build a FabricOps Starter Kit wheel for Fabric installation.
 Use this when: you need packaging and versioning steps before runtime setup.
-Next read: [Setup / Run in Fabric](run-in-fabric.md), [Guided Demo](../guided-demo.md), [How FabricOps Works](../how-fabricops-works/).
+Next read: [Install](../install.md), [Guided Demo](../guided-demo.md), [How FabricOps Works](../how-fabricops-works/).
 
 ## Prerequisites
 
@@ -169,7 +169,7 @@ Git-tag-based automated versioning can be considered later.
 
 ## Next step
 
-[Run in Fabric →](run-in-fabric.md)
+[Install →](../install.md)
 
 
 ## Release checklist (merged)

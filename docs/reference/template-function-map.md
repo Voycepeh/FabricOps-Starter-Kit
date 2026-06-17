@@ -7,7 +7,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Shared environment bootstrap and metadata table setup.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Environment setup</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a><a class="function-chip" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a><a class="function-chip" href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></span>
 </div>
 </section>
 
@@ -16,7 +16,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Standalone steward, agreement, and evidence widgets for Fabric stability.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Agreement intake</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a><a class="function-chip" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a><a class="function-chip" href="../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a><a class="function-chip" href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a><a class="function-chip" href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></span>
 </div>
 </section>
 
@@ -34,7 +34,7 @@ Compact template-first lookup for the public helper functions used by each noteb
 <p class="template-function-purpose">Guardrail governance review using the current supported review widget flow.</p>
 <div class="template-function-row">
 <span class="template-function-segment">Guardrail governance review</span>
-<span class="function-chip-wrap"><a class="function-chip" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a><a class="function-chip" href="../api/reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a><a class="function-chip" href="../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a><a class="function-chip" href="../api/reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></span>
+<span class="function-chip-wrap"><a class="function-chip" href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a><a class="function-chip" href="../../api/reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a><a class="function-chip" href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a><a class="function-chip" href="../../api/reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></span>
 </div>
 </section>
 
