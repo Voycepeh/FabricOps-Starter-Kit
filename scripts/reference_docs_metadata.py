@@ -148,14 +148,13 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                    'guardrails, and evidence plumbing.',
   'segments': [{'symbols': ['widget_select_agreement',
                             'get_selected_agreement',
-                            'read_lakehouse_table',
+                            'read_data',
                             'prepare_pipeline_table_configs',
                             'run_table_guardrails',
-                            'write_lakehouse_table',
+                            'write_data',
                             'write_pipeline_lineage',
                             'write_pipeline_run_summary',
                             'display_guardrail_results',
-                            'stop_if_failed',
                             'widget_select_guardrail_target',
                             'widget_author_schema_freshness_profile_rules',
                             'widget_author_dq_rules',
@@ -176,20 +175,20 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'notebook_label': '`99_explore`',
   'segment_intro': 'Optional discovery, profiling, troubleshooting, investigation, and ad hoc '
                    'analysis support.',
-  'segments': [{'symbols': ['read_lakehouse_table',
+  'segments': [{'symbols': ['read_data',
                             'profile_dataframe'],
                 'title': 'Exploration'}],
   'template_path': 'templates/notebooks/99_explore.ipynb'},
  {'notebook_key': 'example_pipeline_demo',
   'notebook_label': '`example_pipeline_demo`',
   'segment_intro': 'Demo data seeding for the real pipeline template.',
-  'segments': [{'symbols': ['write_lakehouse_table'],
+  'segments': [{'symbols': ['write_data'],
                 'title': 'Pipeline demo setup'}],
   'template_path': 'templates/notebooks/example_pipeline_demo.ipynb'},
  {'notebook_key': 'example_dq_rule_smoke_test',
   'notebook_label': '`example_dq_rule_smoke_test`',
   'segment_intro': 'Isolated DQ rule smoke-test checks for notebook authors.',
-  'segments': [{'symbols': ['write_lakehouse_table', 'enforce_dq_rules'],
+  'segments': [{'symbols': ['write_data', 'enforce_dq_rules'],
                 'title': 'DQ smoke checks'}],
   'template_path': 'templates/notebooks/example_dq_rule_smoke_test.ipynb'}]
 
@@ -252,7 +251,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
               'metadata tables required by agreement, profiling, lineage, stability, and '
               'governance workflows.',
   'do_not_use_when': 'Do not use for writing business data or pipeline target tables; use '
-                     'write_lakehouse_table or write_warehouse_table for data outputs.',
+                     'write_data or write_warehouse_table for data outputs.',
   'parameters': 'spark, config, env, and optional require_active_steward controls used to prepare '
                 'metadata storage through configured metadata routing.',
   'returns': 'Setup result describing metadata table creation or validation status.',
@@ -432,95 +431,49 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
-  'summary_override': 'Read a Delta table from a configured Fabric lakehouse target by ABFSS path.',
-  'symbol_name': 'read_lakehouse_table',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'summary_override': 'Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook-facing IO function.',
+  'symbol_name': 'read_data',
+  'template_notebook': '02_pipeline / 99_explore',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when reading a Delta table from a configured Fabric lakehouse target by ABFSS '
-              'Tables path without an attached default lakehouse.',
-  'do_not_use_when': 'Do not use for lakehouse Files CSV, Parquet, or Excel paths, or for '
-                     'warehouse SQL tables.',
-  'parameters': 'config, env, target, table, optional schema, and spark_session.',
-  'returns': 'Spark DataFrame loaded from the configured lakehouse table.',
-  'raises': 'Raises configuration, Spark, or table-read errors when the target or table cannot be '
-            'resolved/read.',
-  'side_effects': 'Reads from a lakehouse table; it does not write metadata, tables, or files.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; loads {store.root}/Tables/{table} for classic targets or '
-                    '{store.root}/Tables/{schema}/{table} when the configured lakehouse target has '
-                    'schemas enabled.',
-  'ai_verification': 'Verify the target/table name comes from CONFIG and check the returned '
-                     'DataFrame schema or row count before downstream transformations.',
-  'preferred_example': 'df = read_lakehouse_table(CONFIG, env="Sandbox", target="Source", '
-                       'table="orders", schema=SOURCE_SCHEMA, spark_session=spark)',
-  'related_functions': ['write_lakehouse_table',
-                        'read_lakehouse_csv',
-                        'read_lakehouse_parquet',
-                        'read_lakehouse_excel'],
-  'expanded_purpose': 'Reads a Delta table from the configured Fabric lakehouse target, resolving '
-                      'to {store.root}/Tables/{table} for classic targets or '
-                      '{store.root}/Tables/{schema}/{table} for schema-enabled targets.',
-  'when_to_use': 'Use when notebook code needs a managed lakehouse Delta table by ABFSS path '
-                 'rather than a file path, registered Spark table name, or warehouse SQL query.',
-  'glossary_terms': ['source table', 'metadata lakehouse'],
-  'return_interpretation': 'The returned DataFrame represents the resolved lakehouse table; '
-                           'validate row counts and schema before relying on it for guardrails or '
-                           'writes.',
-  'common_failure_causes': ['The target or table name is misspelled.',
-                            'The selected environment does not define the requested lakehouse '
-                            'target.',
-                            'Spark cannot access the table.',
-                            'The caller lacks permission to read the lakehouse.'],
-  'related_guides': [{'title': 'Notebook Templates',
-                      'path': '../../how-fabricops-works/notebook-templates.md'}]},
+  'use_when': 'Use in starter notebooks when reading configured Fabric data without choosing a low-level storage helper.',
+  'do_not_use_when': 'Do not use inside package internals that intentionally need a specific storage implementation helper.',
+  'parameters': 'config, env, target, optional name, format, schema, table, relative_path, spark_session, options, and reader kwargs.',
+  'returns': 'Spark DataFrame loaded from the configured Fabric target.',
+  'raises': 'Raises ValueError for unsupported formats or missing table/path/schema inputs.',
+  'side_effects': 'Reads data only; it does not write metadata, files, or tables.',
+  'fabric_context': 'Routes reads through configured FabricOps environment targets instead of an attached/default lakehouse.',
+  'ai_verification': 'Verify target, format, schema, and table/path values come from CONFIG or notebook parameters before generating calls.',
+  'preferred_example': 'df_orders = read_data(CONFIG, ENV_NAME, "source", "orders", schema=SOURCE_SCHEMA, spark_session=spark)',
+  'related_functions': ['write_data', 'profile_dataframe'],
+  'expanded_purpose': 'Provides a stable notebook-facing read orchestrator while format-specific Lakehouse and Warehouse helpers remain implementation details.',
+  'when_to_use': 'Use whenever a starter notebook needs to load data from a configured Fabric target.',
+  'glossary_terms': ['notebook template'],
+  'return_interpretation': 'The returned DataFrame is the input for profiling, transformations, guardrails, or exploration.',
+  'common_failure_causes': ['Unsupported format value.', 'Missing table, relative_path, or schema for the selected format.', 'Target kind does not match the selected format.'],
+  'related_guides': [{'title': 'Notebook Templates', 'path': '../../how-fabricops-works/notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
-  'summary_override': 'Write a DataFrame to a configured Fabric lakehouse target by ABFSS path.',
-  'symbol_name': 'write_lakehouse_table',
+  'summary_override': 'Write Lakehouse or Warehouse targets through one notebook-facing IO function.',
+  'symbol_name': 'write_data',
   'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric lakehouse Delta table '
-              'by ABFSS Tables path without an attached default lakehouse.',
-  'do_not_use_when': 'Do not use for warehouse tables; metadata evidence tables are supported '
-                     'through the configured metadata lakehouse target.',
-  'parameters': 'df, config, env, target, table, optional schema, mode, partitioning, writer '
-                'options, and verbose flag.',
-  'returns': 'None; the DataFrame is written to the configured lakehouse table.',
-  'raises': 'Raises configuration, Spark, or write errors when the target cannot be resolved or '
-            'the write fails.',
-  'side_effects': 'Writes data to a Fabric lakehouse Delta table by saving to '
-                  '{store.root}/Tables/{table} for classic targets or '
-                  '{store.root}/Tables/{schema}/{table} when the configured lakehouse target has '
-                  'schemas enabled.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; saves {store.root}/Tables/{table} for classic targets or '
-                    '{store.root}/Tables/{schema}/{table} when the configured lakehouse target has '
-                    'schemas enabled.',
-  'ai_verification': 'Verify upstream guardrails passed, confirm target routing from CONFIG, and '
-                     'check the intended write mode before generating code that calls this helper.',
-  'preferred_example': 'write_lakehouse_table(curated_df, CONFIG, env="Sandbox", target="Unified", '
-                       'table="orders_curated", schema=UNIFIED_SCHEMA, mode="overwrite", '
-                       'options={"overwriteSchema": "true"})',
-  'related_functions': ['read_lakehouse_table', 'write_warehouse_table', 'stop_if_failed'],
-  'expanded_purpose': 'Writes a DataFrame to the configured Fabric lakehouse target, resolving to '
-                      '{store.root}/Tables/{table} for classic targets or '
-                      '{store.root}/Tables/{schema}/{table} for schema-enabled targets.',
-  'when_to_use': 'Use for lakehouse or metadata table writes after guardrails have passed when the '
-                 'destination should be saved by ABFSS Delta path, not saveAsTable or a Spark '
-                 'namespace.',
-  'glossary_terms': ['target table', 'guardrail', 'metadata lakehouse'],
-  'return_interpretation': 'The helper returns the write operation result from the underlying '
-                           'DataFrame writer when available; verify downstream table state for '
-                           'business validation.',
-  'common_failure_causes': ['Guardrails were skipped before a target write.',
-                            'The target lakehouse is not configured for the environment.',
-                            'The write mode is unsupported for the destination.',
-                            'The caller lacks write permission or Spark cannot create the table.'],
-  'related_guides': [{'title': 'Notebook Templates',
-                      'path': '../../how-fabricops-works/notebook-templates.md'},
-                     {'title': 'Metadata Tables',
-                      'path': '../../how-fabricops-works/metadata-tables.md'}]},
+  'use_when': 'Use in starter notebooks when writing configured Fabric data without choosing a low-level storage helper.',
+  'do_not_use_when': 'Do not use inside package metadata persistence helpers that already use configured metadata routing.',
+  'parameters': 'df, config, env, target, optional name, format, schema, table, mode, options, and writer kwargs.',
+  'returns': 'None; the DataFrame is written to the configured Fabric target.',
+  'raises': 'Raises ValueError for unsupported formats or missing table/schema inputs.',
+  'side_effects': 'Writes data to the configured Fabric target.',
+  'fabric_context': 'Routes writes through configured FabricOps environment targets instead of an attached/default lakehouse.',
+  'ai_verification': 'Verify target, format, schema, table, and mode values before generating calls.',
+  'preferred_example': 'write_data(df_orders, CONFIG, ENV_NAME, "unified", "orders_clean", schema=UNIFIED_SCHEMA, mode="overwrite")',
+  'related_functions': ['read_data', 'run_table_guardrails'],
+  'expanded_purpose': 'Provides a stable notebook-facing write orchestrator while format-specific Lakehouse and Warehouse helpers remain implementation details.',
+  'when_to_use': 'Use whenever a starter notebook needs to publish data to a configured Fabric target.',
+  'glossary_terms': ['notebook template'],
+  'return_interpretation': 'No value is returned; successful completion means the configured target write completed.',
+  'common_failure_causes': ['Unsupported format value.', 'Missing table or schema for the selected format.', 'Target kind does not match the selected format.'],
+  'related_guides': [{'title': 'Notebook Templates', 'path': '../../how-fabricops-works/notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
@@ -543,7 +496,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                      'after reading.',
   'preferred_example': 'df = read_lakehouse_csv(CONFIG, env="Sandbox", target="Source", '
                        'relative_path="raw/orders/orders.csv", header=True, spark_session=spark)',
-  'related_functions': ['read_lakehouse_table', 'read_lakehouse_parquet', 'read_lakehouse_excel'],
+  'related_functions': ['read_data', 'read_lakehouse_parquet', 'read_lakehouse_excel'],
   'expanded_purpose': 'Reads a CSV file from the Files area of a configured Fabric lakehouse and '
                       'returns it as a Spark DataFrame.',
   'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be '
@@ -581,7 +534,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                      'count/schema after reading.',
   'preferred_example': 'df = read_lakehouse_parquet(CONFIG, env="Sandbox", target="Source", '
                        'relative_path="raw/orders/orders.parquet", spark_session=spark)',
-  'related_functions': ['read_lakehouse_csv', 'read_lakehouse_excel', 'read_lakehouse_table'],
+  'related_functions': ['read_lakehouse_csv', 'read_lakehouse_excel', 'read_data'],
   'expanded_purpose': 'Reads a Parquet file or folder from the Files area of a configured Fabric '
                       'lakehouse into a Spark DataFrame.',
   'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a '
@@ -621,7 +574,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'preferred_example': 'mapping_df = read_lakehouse_excel(CONFIG, env="Sandbox", target="Source", '
                        'relative_path="reference/faculty_mapping.xlsx", sheet_name=0, '
                        'spark_session=spark)',
-  'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_lakehouse_table'],
+  'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_data'],
   'expanded_purpose': 'Reads an Excel file from a configured lakehouse Files path and converts it '
                       'into a Spark DataFrame for notebook processing.',
   'when_to_use': 'Use when source data arrives as an Excel workbook and should still follow '
@@ -657,7 +610,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                      'resulting DataFrame schema before downstream use.',
   'preferred_example': 'df = read_warehouse_table(CONFIG, env="Sandbox", target="Warehouse", '
                        'schema="dbo", table="orders", spark_session=spark)',
-  'related_functions': ['write_warehouse_table', 'read_lakehouse_table'],
+  'related_functions': ['write_warehouse_table', 'read_data'],
   'expanded_purpose': 'Reads data from a configured Fabric Warehouse table or query target into a '
                       'Spark DataFrame.',
   'when_to_use': 'Use when source data lives in a Fabric Warehouse rather than a lakehouse file or '
@@ -692,7 +645,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                      'check the intended write mode before calling.',
   'preferred_example': 'write_warehouse_table(serving_df, CONFIG, env="Sandbox", '
                        'target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
-  'related_functions': ['read_warehouse_table', 'write_lakehouse_table', 'stop_if_failed'],
+  'related_functions': ['read_warehouse_table', 'write_data', 'stop_if_failed'],
   'expanded_purpose': 'Writes a DataFrame to a configured Fabric Warehouse destination for '
                       'pipeline outputs that belong in warehouse storage.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
@@ -991,7 +944,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                      'run_table_guardrails before transformation or writes.',
   'preferred_example': 'SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = '
                        'prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role="source")',
-  'related_functions': ['run_table_guardrails', 'read_lakehouse_table'],
+  'related_functions': ['run_table_guardrails', 'read_data'],
   'expanded_purpose': 'Normalizes source and target table configuration dictionaries so pipeline '
                       'guardrail, write, lineage, and evidence helpers receive consistent fields.',
   'when_to_use': 'Use before running table guardrails or writes when notebook-editable table '
@@ -1066,7 +1019,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'returns': 'Dictionary of write statuses keyed by dataset alias.',
   'side_effects': 'Writes METADATA_DATA_CATALOGUE through the configured metadata lakehouse '
                   'target.',
-  'related_functions': ['profile_dataframe', 'write_lakehouse_table'],
+  'related_functions': ['profile_dataframe', 'write_data'],
   'expanded_purpose': 'Writes runtime catalogue evidence rows generated by pipeline guardrails to '
                       'the configured metadata target.',
   'when_to_use': 'Use after guardrail evidence is built and before governance or handover '
@@ -1129,7 +1082,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'side_effects': 'Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.',
   'related_functions': ['write_catalogue_evidence',
                         'write_pipeline_lineage',
-                        'write_lakehouse_table'],
+                        'write_data'],
   'expanded_purpose': 'Writes a compact run-level summary that ties pipeline name, agreement '
                       'context, guardrail results, lineage, and write outcomes together.',
   'when_to_use': 'Use at the end of 02_pipeline when downstream operators need one metadata record '
@@ -1469,7 +1422,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                 'saving.',
                                                                 'The configured metadata target is '
                                                                 'not writable.']},
- 'read_lakehouse_table': {'expanded_purpose': 'Reads a Delta table from the configured Fabric '
+ 'read_data': {'expanded_purpose': 'Reads a Delta table from the configured Fabric '
                                               'lakehouse target, resolving to '
                                               '{store.root}/Tables/{table} for classic targets or '
                                               '{store.root}/Tables/{schema}/{table} for '
@@ -1488,7 +1441,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                     'Spark cannot access the table.',
                                                     'The caller lacks permission to read the '
                                                     'lakehouse.']},
- 'write_lakehouse_table': {'expanded_purpose': 'Writes a DataFrame to the configured Fabric '
+ 'write_data': {'expanded_purpose': 'Writes a DataFrame to the configured Fabric '
                                                'lakehouse target, resolving to '
                                                '{store.root}/Tables/{table} for classic targets or '
                                                '{store.root}/Tables/{schema}/{table} for '
@@ -2026,9 +1979,9 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Notebook Templates',
                                        'path': '../../how-fabricops-works/notebook-templates.md'},
                                       {'title': 'Metadata Tables',
                                        'path': '../../how-fabricops-works/metadata-tables.md'}],
- 'read_lakehouse_table': [{'title': 'Notebook Templates',
+ 'read_data': [{'title': 'Notebook Templates',
                            'path': '../../how-fabricops-works/notebook-templates.md'}],
- 'write_lakehouse_table': [{'title': 'Notebook Templates',
+ 'write_data': [{'title': 'Notebook Templates',
                             'path': '../../how-fabricops-works/notebook-templates.md'},
                            {'title': 'Metadata Tables',
                             'path': '../../how-fabricops-works/metadata-tables.md'}],

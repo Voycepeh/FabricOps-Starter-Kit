@@ -32,7 +32,7 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     """Verify public pipeline helpers are exported without wrapper bloat."""
     assert "prepare_pipeline_table_configs" in fabricops_kit.__all__
     assert "run_table_guardrails" in fabricops_kit.__all__
-    assert "write_catalogue_evidence" in fabricops_kit.__all__
+    assert "write_catalogue_evidence" not in fabricops_kit.__all__
     assert "write_pipeline_lineage" in fabricops_kit.__all__
     assert "write_pipeline_run_summary" in fabricops_kit.__all__
     for removed_name in {

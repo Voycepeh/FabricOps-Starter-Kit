@@ -40,21 +40,13 @@ nav:
           # AUTO-GENERATED-FUNCTIONS-START
           - display_guardrail_results: api/reference/display_guardrail_results.md
           - enforce_dq_rules: api/reference/enforce_dq_rules.md
-          - enforce_freshness: api/reference/enforce_freshness.md
-          - enforce_freshness_rule: api/reference/enforce_freshness_rule.md
-          - enforce_profile_behavior: api/reference/enforce_profile_behavior.md
           - get_selected_agreement: api/reference/get_selected_agreement.md
           - prepare_pipeline_table_configs: api/reference/prepare_pipeline_table_configs.md
           - profile_dataframe: api/reference/profile_dataframe.md
-          - read_lakehouse_csv: api/reference/read_lakehouse_csv.md
-          - read_lakehouse_excel: api/reference/read_lakehouse_excel.md
-          - read_lakehouse_parquet: api/reference/read_lakehouse_parquet.md
-          - read_lakehouse_table: api/reference/read_lakehouse_table.md
-          - read_warehouse_table: api/reference/read_warehouse_table.md
+          - read_data: api/reference/read_data.md
           - run_table_guardrails: api/reference/run_table_guardrails.md
           - setup_metadata_tables: api/reference/setup_metadata_tables.md
           - setup_notebook: api/reference/setup_notebook.md
-          - stop_if_failed: api/reference/stop_if_failed.md
           - widget_author_dq_rules: api/reference/widget_author_dq_rules.md
           - widget_author_guardrail_rules: api/reference/widget_author_guardrail_rules.md
           - widget_author_schema_freshness_profile_rules: api/reference/widget_author_schema_freshness_profile_rules.md
@@ -66,26 +58,12 @@ nav:
           - widget_review_table_governance: api/reference/widget_review_table_governance.md
           - widget_select_agreement: api/reference/widget_select_agreement.md
           - widget_select_guardrail_target: api/reference/widget_select_guardrail_target.md
-          - write_catalogue_evidence: api/reference/write_catalogue_evidence.md
-          - write_lakehouse_table: api/reference/write_lakehouse_table.md
+          - write_data: api/reference/write_data.md
           - write_pipeline_lineage: api/reference/write_pipeline_lineage.md
           - write_pipeline_run_summary: api/reference/write_pipeline_run_summary.md
-          - write_warehouse_table: api/reference/write_warehouse_table.md
           # AUTO-GENERATED-FUNCTIONS-END
       - Template Function Map: reference/template-function-map.md
       - Glossary: reference/glossary.md
-      - Functions by Modules:
-          # AUTO-GENERATED-MODULES-START
-          - config: api/modules/config.md
-          - data_agreement: api/modules/data_agreement.md
-          - governance_review: api/modules/governance_review.md
-          - data_profiling: api/modules/data_profiling.md
-          - fabric_input_output: api/modules/fabric_input_output.md
-          - data_lineage: api/modules/data_lineage.md
-          - guardrails: api/modules/guardrails.md
-          - pipeline: api/modules/pipeline.md
-          - metadata: api/modules/metadata.md
-      # AUTO-GENERATED-MODULES-END
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
           - not_null: reference/dq-rules/not-null.md
@@ -116,6 +94,18 @@ nav:
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
       - Documentation Versioning: development/docs-versioning.md
+      - Implementation Appendix:
+          # AUTO-GENERATED-MODULES-START
+          - config: api/modules/config.md
+          - data_agreement: api/modules/data_agreement.md
+          - governance_review: api/modules/governance_review.md
+          - data_profiling: api/modules/data_profiling.md
+          - fabric_input_output: api/modules/fabric_input_output.md
+          - data_lineage: api/modules/data_lineage.md
+          - guardrails: api/modules/guardrails.md
+          - pipeline: api/modules/pipeline.md
+          - metadata: api/modules/metadata.md
+      # AUTO-GENERATED-MODULES-END
 
 extra:
   version:

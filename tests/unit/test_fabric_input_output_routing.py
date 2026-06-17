@@ -242,3 +242,29 @@ def test_lakehouse_table_validation_rejects_unsafe_names(table):
     """Verify lakehouse table validation rejects unsafe names."""
     with pytest.raises(ValueError):
         io.read_lakehouse_table(_io_config(), "dev", "metadata", table, schema=None, spark_session=_Spark())
+
+
+def test_read_write_data_are_public_orchestrators_and_low_level_io_is_module_only(monkeypatch):
+    """Verify public IO orchestrators delegate while format helpers stay off root exports."""
+    import fabricops_kit
+
+    assert "read_data" in fabricops_kit.__all__
+    assert "write_data" in fabricops_kit.__all__
+    assert "read_lakehouse_table" not in fabricops_kit.__all__
+    assert "write_lakehouse_table" not in fabricops_kit.__all__
+    assert "read_warehouse_table" not in fabricops_kit.__all__
+    assert "write_warehouse_table" not in fabricops_kit.__all__
+
+    calls = []
+    monkeypatch.setattr(io, "read_lakehouse_table", lambda *args, **kwargs: calls.append(("read_table", args, kwargs)) or "read")
+    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: calls.append(("write_table", args, kwargs)))
+
+    assert io.read_data("config", "dev", "source", "orders", schema="dbo") == "read"
+    io.write_data("df", "config", "dev", "unified", "orders", schema="dbo", mode="overwrite")
+
+    assert calls[0][0] == "read_table"
+    assert calls[0][1][:4] == ("config", "dev", "source", "orders")
+    assert calls[0][2]["schema"] == "dbo"
+    assert calls[1][0] == "write_table"
+    assert calls[1][1][:5] == ("df", "config", "dev", "unified", "orders")
+    assert calls[1][2]["mode"] == "overwrite"

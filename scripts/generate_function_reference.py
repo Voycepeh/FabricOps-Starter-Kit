@@ -29,11 +29,13 @@ MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
 AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
+CALLABLE_SURFACE_AUDIT_PATH = ROOT / "docs" / "reference" / "callable-surface-audit.json"
 GLOSSARY_SOURCE_PATH = ROOT / "docs" / "reference" / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
+CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
 
 
 
@@ -104,23 +106,13 @@ V1_CALLABLES = {
     "widget_render_agreement_evidence",
     "widget_select_agreement",
     "get_selected_agreement",
-    "read_lakehouse_table",
-    "write_lakehouse_table",
-    "read_lakehouse_csv",
-    "read_lakehouse_parquet",
-    "read_lakehouse_excel",
-    "read_warehouse_table",
-    "write_warehouse_table",
+    "read_data",
+    "write_data",
     "profile_dataframe",
-    "enforce_freshness",
-    "enforce_freshness_rule",
-    "enforce_profile_behavior",
-    "stop_if_failed",
     "enforce_dq_rules",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -791,34 +783,53 @@ def _derive_template_usage(
     node_by_qn: dict[str, dict[str, Any]],
     calls_by_qn: dict[str, list[str]],
 ) -> dict[str, list[str]]:
-    """Map public callable names to starter templates that directly or indirectly use them."""
-    symbol_to_qn = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
-    qn_to_symbol = {qn: name for name, qn in symbol_to_qn.items()}
+    """Map public callable names to starter templates that directly call them."""
+    del node_by_qn, calls_by_qn
     template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
     usage: dict[str, set[str]] = {name: set() for name in symbol_map}
 
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
         direct_symbols = set(_direct_public_template_symbols(flow.get("template_path", ""), set(symbol_map)))
-
-        queue = [symbol_to_qn[name] for name in sorted(direct_symbols) if name in symbol_to_qn]
-        seen: set[str] = set()
-        while queue:
-            qn = queue.pop(0)
-            if qn in seen:
-                continue
-            seen.add(qn)
-            public_symbol = qn_to_symbol.get(qn)
-            if public_symbol:
-                usage.setdefault(public_symbol, set()).add(notebook_key)
-            for callee_qn in calls_by_qn.get(qn, []):
-                if callee_qn in node_by_qn and callee_qn not in seen:
-                    queue.append(callee_qn)
+        for symbol in direct_symbols:
+            usage.setdefault(symbol, set()).add(notebook_key)
 
     return {
         symbol: sorted(notebooks, key=lambda notebook: (template_order.get(notebook, len(template_order)), notebook))
         for symbol, notebooks in usage.items()
     }
+
+
+def _derive_template_usage_by_kind(
+    template_flow_docs: list[dict[str, Any]],
+    symbol_map: dict[str, Symbol],
+) -> tuple[dict[str, list[str]], dict[str, list[str]], dict[str, bool]]:
+    """Return direct core calls, example calls, and import-only template usage."""
+    template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
+    core_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
+    example_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
+    imported_symbols: dict[str, bool] = {name: False for name in symbol_map}
+    public_symbols = set(symbol_map)
+
+    for flow in template_flow_docs:
+        notebook_key = flow["notebook_key"]
+        template_path = flow.get("template_path", "")
+        direct_symbols = set(_direct_public_template_symbols(template_path, public_symbols))
+        source_text = _read_template_source(template_path)
+        for symbol in public_symbols:
+            if re.search(rf"\b{re.escape(symbol)}\b", source_text) and symbol not in direct_symbols:
+                imported_symbols[symbol] = True
+        target = core_usage if notebook_key in CORE_TEMPLATE_KEYS else example_usage
+        for symbol in direct_symbols:
+            target.setdefault(symbol, set()).add(notebook_key)
+
+    def _sorted_usage(usage: dict[str, set[str]]) -> dict[str, list[str]]:
+        return {
+            symbol: sorted(notebooks, key=lambda notebook: (template_order.get(notebook, len(template_order)), notebook))
+            for symbol, notebooks in usage.items()
+        }
+
+    return _sorted_usage(core_usage), _sorted_usage(example_usage), imported_symbols
 
 
 def generate_internal_reference_pages() -> bool:
@@ -1515,9 +1526,8 @@ def main() -> None:
     if unknown_glossary_terms:
         raise RuntimeError("PUBLIC_SYMBOL_DOCS references unknown glossary terms: " + ", ".join(unknown_glossary_terms))
 
-    unknown_metadata = sorted(name for name in docs_metadata if name not in public)
-    if unknown_metadata:
-        raise RuntimeError("PUBLIC_SYMBOL_DOCS contains symbols not exported in __all__: " + ", ".join(unknown_metadata))
+    # PUBLIC_SYMBOL_DOCS may retain metadata for internalized helpers so generated
+    # implementation relationship details remain useful on public parent pages.
 
     symbol_map: dict[str, Symbol] = {}
     function_symbol_map: dict[str, Symbol] = {}
@@ -1564,6 +1574,17 @@ def main() -> None:
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
     nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_lookup = {n["qualified_name"]: n for n in nodes}
+    core_template_usage_by_symbol, example_template_usage_by_symbol, imported_only_by_symbol = _derive_template_usage_by_kind(template_flow_docs, symbol_map)
+    template_usage_by_symbol = {
+        name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
+        for name in symbol_map
+    }
+    template_called_function_names = {name for name, usage in core_template_usage_by_symbol.items() if usage}
+    example_only_function_names = {
+        name
+        for name, usage in example_template_usage_by_symbol.items()
+        if usage and not core_template_usage_by_symbol.get(name)
+    }
 
     def _is_callable_edge(edge: dict[str, Any]) -> bool:
         callee = edge.get("callee_qualified_name")
@@ -1864,7 +1885,7 @@ def main() -> None:
         middle, after = rest.split(function_end_marker, 1)
         mkdocs_text = before + function_start_marker + "\n" + generated_functions + "\n" + function_end_marker + after
 
-    start_marker = "      # AUTO-GENERATED-MODULES-START"
+    start_marker = "          # AUTO-GENERATED-MODULES-START"
     end_marker = "      # AUTO-GENERATED-MODULES-END"
     if start_marker in mkdocs_text and end_marker in mkdocs_text:
         generated_lines = []
@@ -1889,7 +1910,6 @@ def main() -> None:
             continue
         calls_by_qn.setdefault(caller, []).append(callee)
         used_by_qn.setdefault(callee, []).append(caller)
-    template_usage_by_symbol = _derive_template_usage(template_flow_docs, symbol_map, node_by_qn, calls_by_qn)
     manifest_rows = []
     known_modules = set(discovered_doc_modules)
     for s in sorted(function_symbol_map.values(), key=lambda x: x.name.lower()):
@@ -1981,6 +2001,58 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
+    public_qn_by_name = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
+    internalized_public_helpers = {
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+        "stop_if_failed",
+        "enforce_freshness",
+        "enforce_freshness_rule",
+        "enforce_profile_behavior",
+        "write_catalogue_evidence",
+    }
+    audit_names = set(docs_metadata) | set(public) | internalized_public_helpers
+    audit_rows = []
+    for name in sorted(audit_names, key=str.lower):
+        symbol = symbol_map.get(name)
+        if symbol is not None:
+            qn = public_qn_by_name[name]
+        else:
+            module_name = str(docs_metadata.get(name, {}).get("module", ""))
+            qn = f"{PACKAGE_NAME}.{resolve_preferred_actual_module(module_name)}.{name}" if module_name else ""
+        internal_public_callers = sorted({
+            node_by_qn[caller]["callable_name"]
+            for caller in used_by_qn.get(qn, [])
+            if node_by_qn.get(caller, {}).get("exported")
+        }) if qn else []
+        in_root_exports = name in public
+        if core_template_usage_by_symbol.get(name):
+            decision = "template_called_public"
+        elif in_root_exports and example_template_usage_by_symbol.get(name):
+            decision = "advanced_public_helper"
+        elif in_root_exports:
+            decision = "advanced_public_helper"
+        elif name in internalized_public_helpers:
+            decision = "convert_to_internal"
+        else:
+            decision = "remove_export"
+        audit_rows.append({
+            "function": name,
+            "in_root_exports": in_root_exports,
+            "directly_called_in_core_templates": core_template_usage_by_symbol.get(name, []),
+            "directly_called_in_example_templates": example_template_usage_by_symbol.get(name, []),
+            "imported_only_in_templates": bool(imported_only_by_symbol.get(name)),
+            "called_only_internally_by_public_helper": internal_public_callers,
+            "has_standalone_reference_page": in_root_exports,
+            "decision": decision,
+        })
+    CALLABLE_SURFACE_AUDIT_PATH.write_text(json.dumps(audit_rows, indent=2) + "\n", encoding="utf-8")
+
     dependency_callables_sorted = {k: dependency_callables[k] for k in sorted(dependency_callables)}
     dependency_modules_sorted = {k: dependency_modules[k] for k in sorted(dependency_modules)}
     DEPENDENCY_METADATA_PATH.write_text(
@@ -2097,11 +2169,11 @@ def main() -> None:
     ref = [
         "# Function Reference",
         "",
-        "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows public v1 callables that notebook authors can import from the package root; the Template Function Map shows where those callables are actively called in starter notebook code cells; Implementation Modules show the active source modules that maintainers debug and extend.",
+        "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows template-called public functions that starter notebooks actively call in code cells; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what starter notebooks actively call in code cells. A callable is not counted as used when it is only imported, mentioned in markdown, present in generated metadata, or called internally by another helper.",
         "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
-        "- Use the Function catalogue below to browse public v1 callables. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
+        "- Use the Function catalogue below to browse template-called public functions. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
         "## How to use this reference",
@@ -2120,7 +2192,7 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up public callables from active v1 modules. For internal helper behavior, open the public callable page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.",
+            "Use the finder below to look up template-called public functions from active v1 modules. For internal helper behavior, open the public function page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
@@ -2131,7 +2203,7 @@ def main() -> None:
             '  <fieldset class="callable-type-filters">',
             '    <legend>Function type filters</legend>',
             '    <label><input type="checkbox" data-function-type-filter="callable" checked> Callable</label>',
-            '    <p class="callable-type-note"><strong>Callable</strong>: Public functions intended for notebook authors.</p>',
+            '    <p class="callable-type-note"><strong>Callable</strong>: Template-called public functions used by starter notebook code cells.</p>',
             '  </fieldset>',
             '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
             "</div>",
@@ -2147,7 +2219,13 @@ def main() -> None:
         return "Callable" if function_type == "callable" else "Internal"
 
     catalogue_nodes = sorted(
-        [n for n in node_by_qn.values() if n["exported"] and n["callable_name"] in module_data[n["module_name"]]["functions"]],
+        [
+            n
+            for n in node_by_qn.values()
+            if n["exported"]
+            and n["callable_name"] in template_called_function_names
+            and n["callable_name"] in module_data[n["module_name"]]["functions"]
+        ],
         key=lambda n: (n["callable_name"].lower(), n["module_name"]),
     )
     for node in catalogue_nodes:
@@ -2218,6 +2296,15 @@ def main() -> None:
             ]
         )
     ref.extend(['<div class="reference-catalogue-list">', *all_items, "</div>"])
+    if example_only_function_names:
+        ref.extend(["", "## Example-only helpers", "", "These public helpers are directly called only by example notebooks and are not included in the core template-called count.", ""])
+        for name in sorted(example_only_function_names, key=str.lower):
+            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))})")
+    advanced_names = sorted(set(function_symbol_map) - template_called_function_names - example_only_function_names, key=str.lower)
+    if advanced_names:
+        ref.extend(["", "## Advanced public helpers", "", "These exported helpers remain public and documented, but they are not directly called by core starter template code cells and are not included in the core template-called count.", ""])
+        for name in advanced_names:
+            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))})")
 
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)

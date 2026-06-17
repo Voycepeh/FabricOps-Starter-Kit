@@ -337,7 +337,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
+<a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
 
 **governance_review**
 <a class="reference-chip" href="../governance_review/#_dq_summary"><code>_dq_summary</code></a>, <a class="reference-chip" href="../governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>
@@ -354,7 +354,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="../data_agreement/#_list_data_stewards"><code>_list_data_stewards</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="../fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>
 
 **governance_review**
 <a class="reference-chip" href="../governance_review/#_get_governance_metadata_schemas"><code>_get_governance_metadata_schemas</code></a>, <a class="reference-chip" href="../governance_review/#_is_table_not_found_error"><code>_is_table_not_found_error</code></a>

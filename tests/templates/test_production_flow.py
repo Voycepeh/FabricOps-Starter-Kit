@@ -34,8 +34,7 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     for expected in [
         "run_table_guardrails",
         "prepare_pipeline_table_configs",
-        "write_lakehouse_table",
-        "write_warehouse_table",
+        "write_data",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "runtime_summary_result",
@@ -61,14 +60,12 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
     target_profile = production.index("target_profile_results = run_table_guardrails", transformation)
     widget_curation = production.index("selected_guardrail_target = widget_select_guardrail_target", target_profile)
     source_enforcement = production.index("source_enforcement_results = run_table_guardrails", widget_curation)
-    source_stop = production.index("stop_if_failed({", source_enforcement)
-    target_enforcement = production.index("target_enforcement_results = run_table_guardrails", source_stop)
-    target_stop = production.index("stop_if_failed({", target_enforcement)
-    write_settings = production.index("TARGET_WRITE_SETTINGS = {", target_stop)
+    target_enforcement = production.index("target_enforcement_results = run_table_guardrails", source_enforcement)
+    write_settings = production.index("TARGET_WRITE_SETTINGS = {", target_enforcement)
     target_write = production.index("target_write_status = {}", write_settings)
 
     assert source_profile < transformation < target_profile < widget_curation < source_enforcement
-    assert source_enforcement < source_stop < target_enforcement < target_stop < write_settings < target_write
+    assert source_enforcement < target_enforcement < write_settings < target_write
     assert "valid_rows" not in production
     assert "quarantine_rows" not in production
     assert "failure_rows" not in production
@@ -84,11 +81,12 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "def _table_key(" not in production
     assert "run_table_guardrails," in production
     assert "prepare_pipeline_table_configs," in production
-    assert "read_lakehouse_table," in production
-    assert "read_lakehouse_csv," in production
-    assert "read_lakehouse_parquet," in production
-    assert "read_lakehouse_excel," in production
-    assert "read_warehouse_table," in production
+    assert "read_data," in production
+    assert "read_lakehouse_table," not in production
+    assert "read_lakehouse_csv," not in production
+    assert "read_lakehouse_parquet," not in production
+    assert "read_lakehouse_excel," not in production
+    assert "read_warehouse_table," not in production
     assert "display_guardrail_results(source_enforcement_results" in production
     assert "display_guardrail_results(target_enforcement_results" in production
     assert "target_write_status = {}" in production
@@ -180,7 +178,7 @@ def test_pipeline_demo_example_notebook_exists_and_generates_pipeline_scenarios(
         assert scenario_table in demo
 
     assert "spark.createDataFrame" in demo
-    assert "write_lakehouse_table" in demo
+    assert "write_data" in demo
     assert '"source",' in demo
     assert "METADATA_GUARDRAIL_RULES" in demo
     for implemented_rule in ["not_null", "accepted_values", "between", "max_age_days", "required_when"]:
@@ -281,7 +279,7 @@ def test_example_pipeline_demo_uses_shared_lakehouse_write_helper_without_uniden
     notebook = json.loads(Path("templates/notebooks/example_pipeline_demo.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
-    assert "write_lakehouse_table(" in code
+    assert "write_data(" in code
     assert "Unidentified" not in code
     assert "/Tables/" not in code
     assert 'schema="dbo"' not in code

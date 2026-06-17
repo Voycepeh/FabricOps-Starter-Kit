@@ -23,23 +23,13 @@ APPROVED_V1_CALLABLES = {
     "widget_render_agreement_evidence",
     "widget_select_agreement",
     "get_selected_agreement",
-    "read_lakehouse_table",
-    "write_lakehouse_table",
-    "read_lakehouse_csv",
-    "read_lakehouse_parquet",
-    "read_lakehouse_excel",
-    "read_warehouse_table",
-    "write_warehouse_table",
+    "read_data",
+    "write_data",
     "profile_dataframe",
-    "enforce_freshness",
-    "enforce_freshness_rule",
-    "enforce_profile_behavior",
-    "stop_if_failed",
     "enforce_dq_rules",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "write_catalogue_evidence",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -50,7 +40,6 @@ APPROVED_V1_CALLABLES = {
     "widget_review_table_governance",
     "widget_review_guardrail_governance",
 }
-
 REMOVED_LEGACY_ALIASES = {
     "validate_schema",
     "validate_schema_rule",
@@ -232,11 +221,11 @@ def test_generated_module_docs_surface_only_active_v1_modules():
 
 def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exported():
     """Verify required v1 imports remain and prompt helpers are not exported."""
-    from fabricops_kit import read_lakehouse_excel, setup_metadata_tables, setup_notebook
+    from fabricops_kit import read_data, setup_metadata_tables, setup_notebook
 
     assert callable(setup_notebook)
     assert callable(setup_metadata_tables)
-    assert callable(read_lakehouse_excel)
+    assert callable(read_data)
     forbidden = {"AIPromptConfig", "draft_dq_rules", "BUSINESS_CONTEXT_PROMPT", "PDPA_PERSONAL_IDENTIFIER_PROMPT", "DQ_RULE_SUGGESTION_PROMPT"}
     assert forbidden.isdisjoint(set(fabricops_kit.__all__))
     for name in forbidden:

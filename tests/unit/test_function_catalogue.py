@@ -18,19 +18,19 @@ def _finder_js() -> str:
     return CALLABLE_FINDER_JS.read_text(encoding="utf-8")
 
 
-def test_function_catalogue_uses_public_callable_filter() -> None:
-    """Verify function catalogue uses public callable filter."""
+def test_function_catalogue_uses_template_called_filter() -> None:
+    """Verify function catalogue uses template-called function filter."""
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to look up public callables from active v1 modules." in page
+    assert "Use the finder below to look up template-called public functions from active v1 modules." in page
     assert "Search functions" in page
     assert 'placeholder="Search functions"' in page
     assert "Function type filters" in page
     assert 'data-function-type-filter="callable" checked' in page
     assert 'data-function-type-filter="internal"> Internal' not in page
-    assert "Public functions intended for notebook authors." in page
-    assert "For internal helper behavior, open the public callable page and expand the Internal implementation summary." in page
+    assert "Template-called public functions used by starter notebook code cells." in page
+    assert "For internal helper behavior, open the public function page and expand the Internal implementation summary." in page
 
 
 def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
@@ -89,13 +89,13 @@ def test_finder_filters_by_function_type_and_searches_all_catalogue_fields() -> 
     assert "queryMatchesEntry(queryTokens, entry.tokens)" in script
 
 
-def test_homepage_public_callable_kpi_stays_at_approved_count() -> None:
-    """Verify homepage public callable KPI does not drift from approved docs count."""
+def test_homepage_template_called_function_kpi_matches_reference_count() -> None:
+    """Verify homepage template-called function KPI matches the reference count."""
     homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
-    assert '<div class="fabricops-kpi-number">31</div>' in homepage
-    assert '<div class="fabricops-kpi-label">public callables</div>' in homepage
-    assert "without counting internal helpers or removed legacy aliases" in homepage
+    assert f'<div class="fabricops-kpi-number">{len(_core_template_called_public())}</div>' in homepage
+    assert '<div class="fabricops-kpi-label">template-called functions</div>' in homepage
+    assert "without counting import-only or lower-level helpers" in homepage
 
 
 def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:
@@ -112,3 +112,130 @@ def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:
 
     assert 'data-callable-name="validate_schema"' not in page
     assert 'data-callable-name="validate_schema_rule"' not in page
+
+
+def _audit_rows() -> list[dict[str, object]]:
+    """Return generated callable surface audit rows."""
+    import json
+
+    return json.loads((ROOT / "docs" / "reference" / "callable-surface-audit.json").read_text(encoding="utf-8"))
+
+
+def _core_template_called_public() -> set[str]:
+    """Return exported functions classified as core template-called public functions."""
+    return {str(row["function"]) for row in _audit_rows() if row["decision"] == "template_called_public"}
+
+
+def _direct_template_call_set() -> set[str]:
+    """Return public function names directly called by all template code cells."""
+    from scripts.generate_function_reference import (
+        _direct_public_template_symbols,
+        parse_public_exports,
+        parse_template_flow_docs,
+    )
+
+    public_symbols = set(parse_public_exports())
+    called: set[str] = set()
+    for flow in parse_template_flow_docs():
+        called.update(_direct_public_template_symbols(flow.get("template_path", ""), public_symbols))
+    return called
+
+
+def _catalogue_row_names() -> set[str]:
+    """Return function names rendered as Function Reference catalogue rows."""
+    return set(re.findall(r'data-callable-name="([^"]+)"', _reference_index()))
+
+
+def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> None:
+    """Verify starter template code-cell calls drive the reference surface."""
+    called = _direct_template_call_set()
+
+    assert len(called) == 23
+    assert "setup_notebook" in called
+    assert "write_pipeline_run_summary" in called
+    assert "validate_schema" not in called
+    assert "validate_schema_rule" not in called
+    assert "read_lakehouse_csv" not in called
+    assert "read_warehouse_table" not in called
+    assert "write_warehouse_table" not in called
+
+
+def test_reference_catalogue_rows_match_direct_template_calls() -> None:
+    """Verify catalogue rows exactly match direct starter template calls."""
+    assert _catalogue_row_names() == _core_template_called_public()
+
+
+def test_every_counted_function_has_standalone_page() -> None:
+    """Verify every counted template-called function has a standalone page."""
+    api_reference_dir = ROOT / "docs" / "api" / "reference"
+
+    for name in sorted(_catalogue_row_names()):
+        assert (api_reference_dir / f"{name}.md").exists(), name
+
+
+def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
+    """Verify audited advanced public helpers keep standalone function pages."""
+    api_reference_dir = ROOT / "docs" / "api" / "reference"
+    page_names = {path.stem for path in api_reference_dir.glob("*.md")}
+    exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+
+    assert page_names == exported_names
+    assert "read_data" in page_names
+    assert "write_data" in page_names
+    assert "read_lakehouse_csv" not in page_names
+    assert "write_warehouse_table" not in page_names
+
+
+def test_functions_with_blank_starter_path_are_not_counted() -> None:
+    """Verify catalogue excludes functions with no direct starter path."""
+    page = _reference_index()
+
+    assert 'data-callable-starter-path="—"' not in page
+
+
+def test_root_exports_match_callable_surface_audit() -> None:
+    """Verify root exports match callable surface audit rows."""
+    import fabricops_kit
+
+    audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+    assert set(fabricops_kit.__all__) == audit_names
+
+
+def test_convert_to_internal_audit_rows_are_not_root_exports() -> None:
+    """Verify convert-to-internal audit decisions are not root exports."""
+    import fabricops_kit
+
+    internal_names = {str(row["function"]) for row in _audit_rows() if row["decision"] == "convert_to_internal"}
+    assert internal_names.isdisjoint(set(fabricops_kit.__all__))
+
+
+def test_example_only_helpers_do_not_inflate_core_count() -> None:
+    """Verify example-only helpers are tracked outside the core count."""
+    example_only = {
+        str(row["function"])
+        for row in _audit_rows()
+        if row["directly_called_in_example_templates"] and not row["directly_called_in_core_templates"]
+    }
+
+    assert "enforce_dq_rules" in example_only
+    assert example_only.isdisjoint(_core_template_called_public())
+    assert example_only.isdisjoint(_catalogue_row_names())
+
+
+def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> None:
+    """Verify low-level IO and internal guardrail helpers are absent from root exports."""
+    import fabricops_kit
+
+    root_exports = set(fabricops_kit.__all__)
+    assert {"read_data", "write_data"} <= root_exports
+    assert {
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+        "stop_if_failed",
+        "write_catalogue_evidence",
+    }.isdisjoint(root_exports)
