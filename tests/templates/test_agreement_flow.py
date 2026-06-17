@@ -48,7 +48,7 @@ def test_template_notebook_filenames_follow_v1_delivery_order():
         "03_governance.ipynb",
         "99_explore.ipynb",
         "example_dq_rule_smoke_test.ipynb",
-        "example_pipeline_smoke_test.ipynb",
+        "example_pipeline_demo.ipynb",
     ]
 
     assert sorted(path.name for path in TEMPLATES.glob("*.ipynb")) == expected

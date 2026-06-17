@@ -115,10 +115,10 @@ def test_source_loading_uses_existing_read_helpers_directly():
     ]:
         assert helper in load_block
     assert '"source"' in load_block
-    assert '"smoke_src_orders_happy"' in load_block
-    assert '"smoke_src_customers_happy"' in load_block
+    assert '"demo_src_orders_happy"' in load_block
+    assert '"demo_src_customers_happy"' in load_block
     assert "spark_session=spark" in load_block
-    assert 'schema="SmokeTest"' in load_block
+    assert 'schema="Demo"' in load_block
 
 
 def test_source_and_target_registration_are_key_and_dataframe_only():
@@ -166,7 +166,7 @@ def test_transform_and_target_write_settings_are_separate_from_registration():
     target_write = code.index("target_write_status = {}", write_settings)
 
     assert transform < target_register < target_profile < widget_step < enforcement_gate < write_settings < target_write
-    assert '"target_name": "smoke_unified_orders_enriched"' in code[write_settings:target_write]
+    assert '"target_name": "demo_unified_orders_enriched"' in code[write_settings:target_write]
     assert '"write_mode": "overwrite"' in code[write_settings:target_write]
     assert '"options": {"overwriteSchema": "true"}' in code[write_settings:target_write]
 
