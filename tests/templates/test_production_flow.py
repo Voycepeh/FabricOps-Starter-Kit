@@ -110,7 +110,7 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
     assert "## Optional example notebooks" in notebook_docs
     assert "These notebooks are release-specific validation aids." in notebook_docs
     assert "They are not production workflow templates." in notebook_docs
-    assert "| `example_pipeline_smoke_test.ipynb` | Generates deterministic `smoke_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |" in notebook_docs
+    assert "| `example_pipeline_demo.ipynb` | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |" in notebook_docs
     assert "| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |" in notebook_docs
 
 
@@ -121,67 +121,67 @@ def test_quick_start_links_optional_pipeline_guardrail_demo():
     for expected in [
         "## Optional: run the pipeline guardrail demo",
         "not part of the mandatory first-run setup",
-        "example_pipeline_smoke_test.ipynb",
+        "example_pipeline_demo.ipynb",
         "source_lakehouse",
         "02_pipeline",
         "unified_lakehouse",
-        "example_pipeline_smoke_test.ipynb` only generates scenario data",
+        "example_pipeline_demo.ipynb` only generates scenario data",
         "example_dq_rule_smoke_test.ipynb",
     ]:
         assert expected in quick_start
 
     for scenario_table in [
-        "smoke_src_orders_happy",
-        "smoke_src_orders_schema_drift",
-        "smoke_src_orders_dq_issue",
-        "smoke_src_orders_stale",
-        "smoke_src_orders_reload_a",
-        "smoke_src_orders_reload_b",
+        "demo_src_orders_happy",
+        "demo_src_orders_schema_drift",
+        "demo_src_orders_dq_issue",
+        "demo_src_orders_stale",
+        "demo_src_orders_reload_a",
+        "demo_src_orders_reload_b",
     ]:
         assert scenario_table in quick_start
 
-    assert (TEMPLATES / "example_pipeline_smoke_test.ipynb").exists()
+    assert (TEMPLATES / "example_pipeline_demo.ipynb").exists()
     assert (TEMPLATES / "example_dq_rule_smoke_test.ipynb").exists()
     assert not (ROOT / "examples" / "notebooks" / "98_pipeline_smoke_test.ipynb").exists()
     assert not (ROOT / "examples" / "notebooks" / "98_dq_rule_smoke_test.ipynb").exists()
 
 
-def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
-    """Verify smoke test example notebook exists and generates pipeline scenarios."""
-    smoke_notebook = TEMPLATES / "example_pipeline_smoke_test.ipynb"
+def test_demo_example_notebook_exists_and_generates_pipeline_scenarios():
+    """Verify demo example notebook exists and generates pipeline scenarios."""
+    demo_notebook = TEMPLATES / "example_pipeline_demo.ipynb"
 
-    assert smoke_notebook.exists()
-    smoke_text = smoke_notebook.read_text(encoding="utf-8")
-    smoke = _code_from_notebook(smoke_notebook)
+    assert demo_notebook.exists()
+    demo_text = demo_notebook.read_text(encoding="utf-8")
+    demo = _code_from_notebook(demo_notebook)
 
     for expected_text in [
-        "source scenario generator",
+        "demo scenario generator",
         "02_pipeline",
-        "smoke_src_orders_happy",
-        "smoke_src_customers_happy",
-        "smoke_src_orders_schema_drift",
-        "smoke_src_orders_dq_issue",
-        "smoke_src_orders_stale",
-        "smoke_src_orders_reload_a",
-        "smoke_src_orders_reload_b",
+        "demo_src_orders_happy",
+        "demo_src_customers_happy",
+        "demo_src_orders_schema_drift",
+        "demo_src_orders_dq_issue",
+        "demo_src_orders_stale",
+        "demo_src_orders_reload_a",
+        "demo_src_orders_reload_b",
     ]:
-        assert expected_text in smoke_text
+        assert expected_text in demo_text
 
     for scenario_table in [
-        "smoke_src_orders_happy",
-        "smoke_src_customers_happy",
-        "smoke_src_orders_schema_drift",
-        "smoke_src_orders_dq_issue",
-        "smoke_src_orders_stale",
-        "smoke_src_orders_reload_a",
-        "smoke_src_orders_reload_b",
+        "demo_src_orders_happy",
+        "demo_src_customers_happy",
+        "demo_src_orders_schema_drift",
+        "demo_src_orders_dq_issue",
+        "demo_src_orders_stale",
+        "demo_src_orders_reload_a",
+        "demo_src_orders_reload_b",
     ]:
-        assert scenario_table in smoke
+        assert scenario_table in demo
 
-    assert "spark.createDataFrame" in smoke
-    assert "write_lakehouse_table" in smoke
-    assert '"source",' in smoke
-    assert "METADATA_GUARDRAIL_RULES" in smoke
+    assert "spark.createDataFrame" in demo
+    assert "write_lakehouse_table" in demo
+    assert '"source",' in demo
+    assert "METADATA_GUARDRAIL_RULES" in demo
     for guardrail_field in [
         "guardrail_type",
         "author_role",
@@ -193,9 +193,35 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
         "superseded_by_rule_key",
         "notes",
     ]:
-        assert guardrail_field in smoke
-    assert "scenario_catalogue_df" in smoke
-    assert "Refusing to write non-smoke table" in smoke
+        assert guardrail_field in demo
+    assert "scenario_catalogue_df" in demo
+    assert "Refusing to write non-demo table" in demo
+    for metadata_table in [
+        "METADATA_DATA_CATALOGUE",
+        "METADATA_GUARDRAIL_RULES",
+        "METADATA_GUARDRAIL_RESULTS",
+    ]:
+        assert metadata_table in demo
+    for current_schema_reference in [
+        "_get_governance_metadata_schemas",
+        "metadata_schemas[\"METADATA_GUARDRAIL_RULES\"]",
+        "metadata_schemas[\"METADATA_DATA_CATALOGUE\"]",
+        "metadata_schemas[\"METADATA_GUARDRAIL_RESULTS\"]",
+        "complete_row(\"METADATA_GUARDRAIL_RULES\"",
+        "complete_row(\"METADATA_DATA_CATALOGUE\"",
+        "complete_row(\"METADATA_GUARDRAIL_RESULTS\"",
+        '"guardrail_type"',
+        "freshness",
+        "profile_behavior",
+        "governance_approved",
+    ]:
+        assert current_schema_reference in demo
+    for stale_metadata_table in [
+        "METADATA_COLUMN_CONTEXT",
+        "METADATA_COLUMN_CLASSIFICATION",
+        "METADATA_GOVERNANCE_REVIEWS",
+    ]:
+        assert stale_metadata_table not in demo
 
     for orchestration_concern in [
         "SOURCE_TABLES",
@@ -205,13 +231,13 @@ def test_smoke_test_example_notebook_exists_and_generates_pipeline_scenarios():
         "write_warehouse_table",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
-        "PASS: FabricOps pipeline smoke test completed.",
+        "PASS: FabricOps pipeline demo completed.",
         "def run_table_guardrails(",
         "prepare_source_table_configs",
         "prepare_target_table_configs",
         "write_target_tables",
     ]:
-        assert orchestration_concern not in smoke
+        assert orchestration_concern not in demo
 
     dq_smoke = _code_from_notebook(TEMPLATES / "example_dq_rule_smoke_test.ipynb")
     assert "METADATA_GUARDRAIL_RULES" in dq_smoke
@@ -241,7 +267,7 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
         ROOT / "docs" / "quick-start.md",
         ROOT / "templates" / "notebooks" / "02_pipeline.ipynb",
         ROOT / "templates" / "notebooks" / "03_governance.ipynb",
-        ROOT / "templates" / "notebooks" / "example_pipeline_smoke_test.ipynb",
+        ROOT / "templates" / "notebooks" / "example_pipeline_demo.ipynb",
         ROOT / "templates" / "notebooks" / "example_dq_rule_smoke_test.ipynb",
     ]
     forbidden = [
@@ -268,9 +294,9 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
     assert offenders == []
 
 
-def test_example_pipeline_smoke_test_uses_shared_lakehouse_write_helper_without_unidentified_paths():
-    """Verify example pipeline smoke test uses shared lakehouse write helper without unidentified paths."""
-    notebook = json.loads(Path("templates/notebooks/example_pipeline_smoke_test.ipynb").read_text(encoding="utf-8"))
+def test_example_pipeline_demo_uses_shared_lakehouse_write_helper_without_unidentified_paths():
+    """Verify example pipeline demo uses shared lakehouse write helper without unidentified paths."""
+    notebook = json.loads(Path("templates/notebooks/example_pipeline_demo.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
     assert "write_lakehouse_table(" in code

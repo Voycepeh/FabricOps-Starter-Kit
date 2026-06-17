@@ -77,20 +77,20 @@ Run the required delivery templates in this order:
 This demo is optional and is not part of the mandatory first-run setup. Use it when you want to see the real `02_pipeline` template exercise guardrails against deterministic demo data before adapting the template for your own sources.
 
 1. Run `00_env_config` first so `CONFIG`, `ENV`, and the configured lakehouse routes are available.
-2. Run [`example_pipeline_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_smoke_test.ipynb) to create simulated `smoke_` source tables in the configured `source_lakehouse`.
-3. Open `02_pipeline.ipynb` and point it at one of the generated smoke source tables.
+2. Run [`example_pipeline_demo.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb) to create simulated `demo_` source tables in the configured `source_lakehouse`.
+3. Open `02_pipeline.ipynb` and point it at one of the generated demo source tables.
 4. Run `02_pipeline` to see the real template read from `source_lakehouse`, apply guardrails, write successful outputs to `unified_lakehouse`, and record metadata evidence where supported.
-5. Use different smoke source tables to demonstrate the happy path, schema guardrail, DQ guardrail, freshness guardrail, and load behaviour guardrail.
+5. Use different demo source tables to demonstrate the happy path, schema guardrail, DQ guardrail, freshness guardrail, and load behaviour guardrail.
 
 | Scenario | Source table | What it demonstrates |
 | -------- | ------------ | -------------------- |
-| Happy path | `smoke_src_orders_happy` | Valid source reads and writes successfully. |
-| Schema guardrail | `smoke_src_orders_schema_drift` | Missing, extra, or changed columns are detected. |
-| DQ guardrail | `smoke_src_orders_dq_issue` | Invalid records trigger DQ warning or failure. |
-| Freshness guardrail | `smoke_src_orders_stale` | Stale source data is detected. |
-| Profile behavior | `smoke_src_orders_reload_a` / `smoke_src_orders_reload_b` | Static versus changing profile modes are visible. |
+| Happy path | `demo_src_orders_happy` | Valid source reads and writes successfully. |
+| Schema guardrail | `demo_src_orders_schema_drift` | Missing, extra, or changed columns are detected. |
+| DQ guardrail | `demo_src_orders_dq_issue` | Invalid records trigger DQ warning or failure. |
+| Freshness guardrail | `demo_src_orders_stale` | Stale source data is detected. |
+| Profile behavior | `demo_src_orders_reload_a` / `demo_src_orders_reload_b` | Static versus changing profile modes are visible. |
 
-All generated demo assets are prefixed with `smoke_`, and the scenario generator is safe to rerun. `example_pipeline_smoke_test.ipynb` only generates scenario data; the actual pipeline behaviour is demonstrated by `02_pipeline.ipynb`. For isolated DQ rule checks, use [`example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb).
+All generated demo assets are prefixed with `demo_`, and the scenario generator is safe to rerun. `example_pipeline_demo.ipynb` only generates scenario data; the actual pipeline behaviour is demonstrated by `02_pipeline.ipynb`. For isolated DQ rule checks, use [`example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb).
 
 Optional support:
 
