@@ -2025,7 +2025,7 @@ def main() -> None:
         "- **Function manifests** (`manifest.json` and `function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
         "- **Automation manifest** (`automation-manifest.json`) adds automation-oriented execution fields for planning, side-effect checks, and verification.",
         "- **Implementation contracts** on callable pages summarize expectations maintainers must satisfy before using or changing a function.",
-        "- **Skill file** (`.agents/skills/fabricops/SKILL.md`) gives contributors repo-specific rules and points them to these generated references.",
+        "- **Skill file** (`.automation tools/skills/fabricops/SKILL.md`) gives contributors repo-specific rules and points them to these generated references.",
         "",
     ]
 
