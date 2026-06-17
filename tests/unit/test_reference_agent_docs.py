@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from pathlib import Path
@@ -581,6 +582,106 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
         detail_text = (API_REFERENCE_DIR / f"{callable_name}.md").read_text(encoding="utf-8")
         assert "**Used in templates:**" in detail_text
         assert detail_text.count("`02_pipeline`") == 1
+
+
+def test_template_function_map_matches_direct_public_notebook_calls() -> None:
+    """Verify template function map matches direct public notebook calls."""
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    public_names = {entry["name"] for entry in function_manifest if entry.get("classification") == "Callable"}
+    template_map = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
+
+    mapped_sections = {}
+    for section in template_map.split('<section class="template-function-group">')[1:]:
+        notebook_key = re.search(r"<h2><code>([^<]+)</code></h2>", section)
+        assert notebook_key is not None
+        mapped_sections[notebook_key.group(1)] = set(re.findall(r"<code>([^<]+)</code></a>", section))
+
+    template_paths = sorted((ROOT / "templates" / "notebooks").glob("*.ipynb"))
+    assert set(mapped_sections) == {path.stem for path in template_paths}
+
+    for path in template_paths:
+        assert mapped_sections[path.stem] == _direct_public_notebook_calls(path, public_names)
+
+
+def _direct_public_notebook_calls(path: Path, public_names: set[str]) -> set[str]:
+    """Return direct public FabricOps calls from a notebook's code cells."""
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    code = "\n".join(
+        "".join(cell.get("source", ""))
+        for cell in notebook.get("cells", [])
+        if cell.get("cell_type") == "code"
+    )
+    parseable_code = "\n".join(
+        f"# {line}" if line.lstrip().startswith(("%", "!")) else line
+        for line in code.splitlines()
+    )
+    tree = ast.parse(parseable_code)
+    imported_public_by_name = {
+        alias.asname or alias.name: alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("fabricops_kit")
+        for alias in node.names
+        if alias.name in public_names
+    }
+    package_aliases = {
+        alias.asname or alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+        if alias.name == "fabricops_kit"
+    }
+    direct_public_calls = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if isinstance(node.func, ast.Name) and node.func.id in imported_public_by_name:
+            direct_public_calls.add(imported_public_by_name[node.func.id])
+        elif (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr in public_names
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id in package_aliases
+        ):
+            direct_public_calls.add(node.func.attr)
+    return direct_public_calls
+
+
+def test_used_in_templates_metadata_matches_transitive_ast_notebook_usage() -> None:
+    """Verify used-in-template metadata derives from AST-backed notebook usage."""
+    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
+    dependency_metadata = json.loads((REFERENCE_DIR / "dependency-metadata.json").read_text(encoding="utf-8"))
+    public_names = {entry["name"] for entry in function_manifest if entry.get("classification") == "Callable"}
+    qn_by_name = {
+        entry["callable"]: qualified_name
+        for qualified_name, entry in dependency_metadata["callables"].items()
+        if entry.get("classification") == "callable"
+    }
+    name_by_qn = {qualified_name: name for name, qualified_name in qn_by_name.items()}
+    expected_by_name = {name: set() for name in public_names}
+
+    for path in sorted((ROOT / "templates" / "notebooks").glob("*.ipynb")):
+        queue = [qn_by_name[name] for name in sorted(_direct_public_notebook_calls(path, public_names)) if name in qn_by_name]
+        seen = set()
+        while queue:
+            qualified_name = queue.pop(0)
+            if qualified_name in seen:
+                continue
+            seen.add(qualified_name)
+            public_name = name_by_qn.get(qualified_name)
+            if public_name:
+                expected_by_name[public_name].add(path.stem)
+            for callee in dependency_metadata["callables"].get(qualified_name, {}).get("calls", []):
+                if callee in dependency_metadata["callables"] and callee not in seen:
+                    queue.append(callee)
+
+    template_map = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
+    expected_order = re.findall(r"<h2><code>([^<]+)</code></h2>", template_map)
+    order = {notebook: index for index, notebook in enumerate(expected_order)}
+    for entry in function_manifest:
+        if entry.get("classification") != "Callable":
+            continue
+        expected = sorted(expected_by_name[entry["name"]], key=lambda notebook: (order[notebook], notebook))
+        assert entry["used_in_templates"] == expected
 
 
 def test_callable_parameters_render_as_api_table() -> None:

@@ -719,6 +719,72 @@ def _read_template_source(template_path: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _python_source_for_template_analysis(source_text: str) -> str:
+    """Return parseable Python source for notebook call analysis."""
+    lines: list[str] = []
+    for line in source_text.splitlines():
+        if line.lstrip().startswith(("%", "!")):
+            lines.append(f"# {line}")
+        else:
+            lines.append(line)
+    return "\n".join(lines)
+
+
+def _direct_public_template_symbols(template_path: str, public_symbols: set[str]) -> list[str]:
+    """Return public package callables directly called by a notebook template."""
+    path = ROOT / template_path
+    if not path.exists():
+        return []
+    source_text = _read_template_source(template_path)
+    if path.suffix == ".ipynb":
+        try:
+            notebook = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            notebook = {"cells": []}
+        code_chunks: list[str] = []
+        for cell in notebook.get("cells", []):
+            if cell.get("cell_type") != "code":
+                continue
+            source = cell.get("source", "")
+            code_chunks.append("".join(source) if isinstance(source, list) else str(source))
+        source_text = "\n".join(code_chunks)
+    if not source_text:
+        return []
+    try:
+        tree = ast.parse(_python_source_for_template_analysis(source_text))
+    except SyntaxError as exc:
+        raise RuntimeError(f"Could not parse template for function map validation: {template_path}") from exc
+
+    imported_symbol_by_name: dict[str, str] = {}
+    package_aliases: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith(PACKAGE_NAME):
+            for alias in node.names:
+                if alias.name in public_symbols:
+                    imported_symbol_by_name[alias.asname or alias.name] = alias.name
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == PACKAGE_NAME:
+                    package_aliases.add(alias.asname or alias.name)
+
+    direct_symbols: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id in imported_symbol_by_name:
+            direct_symbols.add(imported_symbol_by_name[func.id])
+        elif (
+            isinstance(func, ast.Attribute)
+            and func.attr in public_symbols
+            and isinstance(func.value, ast.Name)
+            and func.value.id in package_aliases
+        ):
+            direct_symbols.add(func.attr)
+
+    return sorted(direct_symbols)
+
+
 def _derive_template_usage(
     template_flow_docs: list[dict[str, Any]],
     symbol_map: dict[str, Symbol],
@@ -733,15 +799,7 @@ def _derive_template_usage(
 
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
-        source_text = _read_template_source(flow.get("template_path", ""))
-        direct_symbols: set[str] = set()
-        if source_text:
-            for symbol_name in symbol_map:
-                if re.search(rf"(?<![A-Za-z0-9_]){re.escape(symbol_name)}(?![A-Za-z0-9_])", source_text):
-                    direct_symbols.add(symbol_name)
-        else:
-            for segment in flow.get("segments", []):
-                direct_symbols.update(segment.get("symbols", []))
+        direct_symbols = set(_direct_public_template_symbols(flow.get("template_path", ""), set(symbol_map)))
 
         queue = [symbol_to_qn[name] for name in sorted(direct_symbols) if name in symbol_to_qn]
         seen: set[str] = set()
@@ -1934,7 +1992,31 @@ def main() -> None:
         "Compact template-first lookup for the public helper functions used by each notebook template. Use the linked function names for detailed API reference pages.",
         "",
     ]
+    template_paths_in_metadata = {flow.get("template_path") for flow in template_flow_docs}
+    missing_template_paths = sorted(
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "templates" / "notebooks").glob("*.ipynb")
+        if str(path.relative_to(ROOT)) not in template_paths_in_metadata
+    )
+    if missing_template_paths:
+        missing = ", ".join(missing_template_paths)
+        raise RuntimeError(f"TEMPLATE_FLOW_DOCS is missing notebook templates: {missing}")
+
+    public_symbol_names = set(symbol_map)
     for flow in template_flow_docs:
+        expected_symbols = [
+            symbol
+            for segment in flow["segments"]
+            for symbol in segment["symbols"]
+        ]
+        actual_symbols = _direct_public_template_symbols(flow.get("template_path", ""), public_symbol_names)
+        if set(expected_symbols) != set(actual_symbols):
+            expected = ", ".join(sorted(expected_symbols)) or "(none)"
+            actual = ", ".join(actual_symbols) or "(none)"
+            raise RuntimeError(
+                "TEMPLATE_FLOW_DOCS symbols must match direct public callable usage in "
+                f"{flow.get('template_path')}: expected metadata [{expected}], actual notebook calls [{actual}]"
+            )
         template_function_map.extend([
             '<section class="template-function-group">',
             f'<h2><code>{html_escape(flow["notebook_key"])}</code></h2>',

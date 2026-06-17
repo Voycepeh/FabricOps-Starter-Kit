@@ -206,11 +206,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "00_env_config",
-        "02_pipeline",
-        "99_explore"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "fabric_input_output",
@@ -224,10 +220,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "fabric_input_output",
@@ -241,10 +234,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "fabric_input_output",
@@ -263,7 +253,8 @@
         "01_agreement",
         "02_pipeline",
         "03_governance",
-        "99_explore"
+        "99_explore",
+        "example_dq_rule_smoke_test"
       ]
     },
     {
@@ -278,11 +269,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "00_env_config",
-        "02_pipeline",
-        "99_explore"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "fabric_input_output",
@@ -300,7 +287,9 @@
         "00_env_config",
         "01_agreement",
         "02_pipeline",
-        "03_governance"
+        "03_governance",
+        "example_pipeline_smoke_test",
+        "example_dq_rule_smoke_test"
       ]
     },
     {
@@ -315,10 +304,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "00_env_config",
-        "02_pipeline"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "governance_review",
@@ -333,7 +319,8 @@
       "template_notebook": "02_pipeline",
       "template_segment": "DQ guardrails",
       "used_in_templates": [
-        "02_pipeline"
+        "02_pipeline",
+        "example_dq_rule_smoke_test"
       ]
     },
     {
