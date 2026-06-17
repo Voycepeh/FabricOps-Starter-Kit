@@ -268,12 +268,12 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
     assert result["checks"][0]["rule_id"] == "orders.order_id.not_null"
 
 
-def test_active_pending_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
+def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
     """Verify active-pending-review rules use standard runtime warning metadata."""
     from fabricops_kit import governance_review
     from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, _check_schema_rule_runtime
 
-    warning = "Rule is active pending governance review."
+    warning = "Rule is active through approval bypass and requires governance post-review."
     schema_df = spark_session.createDataFrame([(1,)], "order_id int")
     bypass_base = {"review_status": "active_pending_governance_review"}
 

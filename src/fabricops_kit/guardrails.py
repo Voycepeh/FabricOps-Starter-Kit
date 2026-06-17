@@ -26,7 +26,7 @@ _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
 _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
 _ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "active_pending_governance_review"}
-_BYPASS_POST_REVIEW_WARNING = "Rule is active pending governance review."
+_BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
 
 def _rule_review_status(row: dict) -> str:

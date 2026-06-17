@@ -1554,7 +1554,7 @@ def enforce_dq_rules(
     failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
     result = _summarize_dq_guardrail(checks)
     if any(str(rule.get("review_status") or "").lower() == "active_pending_governance_review" for rule in rules):
-        warning = "Rule is active pending governance review."
+        warning = "Rule is active through approval bypass and requires governance post-review."
         result["reason"] = warning if not result.get("reason") else f"{result.get('reason')} {warning}"
         result["bypass_warning"] = warning
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
