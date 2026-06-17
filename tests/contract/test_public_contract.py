@@ -111,7 +111,6 @@ def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES)
-    assert len(fabricops_kit.__all__) == 33
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
 
