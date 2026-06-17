@@ -289,6 +289,7 @@ def read_data(
     This is the notebook-facing IO orchestrator. It routes through the
     configured FabricOps environment target and delegates to implementation
     helpers for specific storage formats.
+
     """
     normalized_format = str(format or "table").strip().lower()
     reader_options = {**(options or {}), **kwargs}
@@ -377,6 +378,7 @@ def write_data(
     This is the notebook-facing IO orchestrator. It keeps starter notebooks on
     a stable public API while format-specific helpers remain implementation
     details.
+
     """
     normalized_format = str(format or "table").strip().lower()
     table_name = table or name
