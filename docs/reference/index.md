@@ -2,7 +2,6 @@
 
 Use this page as a function lookup after you understand the notebook flow. The catalogue shows every exported public callable page, with chips distinguishing template-called, example-only, and advanced public helpers; Implementation Modules show the active source modules that maintainers debug and extend.
 
-- Use [Template Function Map](template-function-map.md) to see what starter notebooks actively call in code cells. A callable is not counted as used when it is only imported, mentioned in markdown, present in generated metadata, or called internally by another helper.
 - Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.
 - Use the Function catalogue below to browse exported public functions without losing standalone reference pages for advanced helpers. Internal helper details are embedded inside callable pages instead of normal catalogue entries.
 - Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.

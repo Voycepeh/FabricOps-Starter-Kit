@@ -541,16 +541,13 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
         assert f'data-callable-name="{callable_name}"' not in reference_index
 
 
-def test_template_function_map_points_to_notebook_aligned_user_guide() -> None:
-    """Verify template function map delegates to the notebook-aligned guide."""
-    template_map = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
+def test_template_function_map_page_stays_removed() -> None:
+    """Verify the intentionally deleted template function map page stays removed."""
+    reference_index = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
 
-    assert "now embedded into the notebook-aligned user guide pages" in template_map
-    assert "../how-fabricops-works/environment-config.md" in template_map
-    assert "../how-fabricops-works/agreement-setup.md" in template_map
-    assert "../how-fabricops-works/pipeline-execution.md" in template_map
-    assert "../how-fabricops-works/governance-review.md" in template_map
-    assert '<section class="template-function-group">' not in template_map
+    assert not (REFERENCE_DIR / "template-function-map.md").exists()
+    assert "template-function-map.md" not in reference_index
+    assert '<section class="template-function-group">' not in reference_index
 
 
 def _direct_public_notebook_calls(path: Path, public_names: set[str]) -> set[str]:

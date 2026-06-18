@@ -231,8 +231,8 @@ def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exporte
         assert not hasattr(fabricops_kit, name)
 
 
-def test_reference_generation_script_succeeds_for_template_map_and_module_docs():
-    """Verify reference generation script succeeds for template map and module docs."""
+def test_reference_generation_script_succeeds_for_reference_and_module_docs():
+    """Verify reference generation script succeeds without restoring removed pages."""
     root = Path(__file__).parents[2]
     env = {**os.environ, "PYTHONPATH": str(root / "src")}
     result = subprocess.run(
@@ -244,5 +244,5 @@ def test_reference_generation_script_succeeds_for_template_map_and_module_docs()
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert (root / "docs" / "reference" / "template-function-map.md").exists()
+    assert not (root / "docs" / "reference" / "template-function-map.md").exists()
     assert (root / "docs" / "api" / "modules" / "config.md").exists()
