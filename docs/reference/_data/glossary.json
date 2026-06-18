@@ -131,14 +131,25 @@
   },
   {
     "term": "notebook registry",
-    "aliases": [
-      "notebook template"
-    ],
+    "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Metadata inventory of notebooks and responsibilities used for handover and operating context.",
     "long_definition": "Metadata inventory of notebooks and responsibilities used for handover and operating context.",
     "preferred_usage": "Use notebook registry for the inventory.",
     "avoid_usage": "notebook catalogue"
+  },
+  {
+    "term": "notebook template",
+    "aliases": [
+      "notebook templates",
+      "starter notebook",
+      "starter notebooks"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "Reusable starter notebook workflow that shows how to run a FabricOps phase.",
+    "long_definition": "Reusable starter notebook workflow that shows where and how FabricOps helpers are used for a FabricOps phase such as environment setup, agreement selection, pipeline execution, governance review, or exploration.",
+    "preferred_usage": "Use notebook template for reusable starter notebook workflows.",
+    "avoid_usage": "notebook registry when the reusable notebook file is meant"
   },
   {
     "term": "agreement selection",

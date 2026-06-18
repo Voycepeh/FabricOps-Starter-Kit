@@ -7,7 +7,7 @@ Render combined guardrail authoring controls for the selected table.
 
 `fabricops_kit/governance_review.py:2555`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2555-L2589">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/governance_review.py#L2555-L2589">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -260,7 +260,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2555-L2589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2555-L2589</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/governance_review.py#L2555-L2589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/governance_review.py#L2555-L2589</a>
 - Start line: `2555`
 - End line: `2589`
 - Signature:
@@ -294,7 +294,7 @@ def widget_author_guardrail_rules(
 
 - <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
 - <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
-- <details class="glossary-chip"><summary>Notebook registry</summary>Metadata inventory of notebooks and responsibilities used for handover and operating context.</details>
+- <details class="glossary-chip"><summary>Notebook template</summary>Reusable starter notebook workflow that shows how to run a FabricOps phase.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

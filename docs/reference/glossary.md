@@ -504,11 +504,19 @@ FabricOps tables that store profiles, guardrail intent, runtime outcomes, agreem
 
 Metadata inventory of notebooks and responsibilities used for handover and operating context.
 
-**Aliases:** `notebook template`
-
 **Preferred usage:** Use notebook registry for the inventory.
 
 **Avoid usage:** notebook catalogue
+
+### notebook template
+
+Reusable starter notebook workflow that shows where and how FabricOps helpers are used for a FabricOps phase such as environment setup, agreement selection, pipeline execution, governance review, or exploration.
+
+**Aliases:** `notebook templates`, `starter notebook`, `starter notebooks`
+
+**Preferred usage:** Use notebook template for reusable starter notebook workflows.
+
+**Avoid usage:** notebook registry when the reusable notebook file is meant
 
 ### pipeline output
 

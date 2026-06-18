@@ -105,8 +105,8 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'sidebar_include': True},
  {'module_name': 'pipeline',
   'visibility': 'public',
-  'module_summary': 'Owns thin 02_pipeline metadata evidence helpers for evidence '
-                    'internals, lineage persistence, and runtime summaries.',
+  'module_summary': 'Owns thin 02_pipeline helpers for profiles, lineage relationships, '
+                    'guardrail results, and run summaries.',
   'sidebar_group': '3. Data engineer',
   'sidebar_include': True},
  {'module_name': 'governance_review',
@@ -803,7 +803,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                            'or pipeline configuration.',
   'raises': 'Raises Spark or metadata-read errors when baseline profiles cannot be loaded '
             'or compared.',
-  'common_failure_causes': ['Accepted profiles has not been created or approved yet.',
+  'common_failure_causes': ['No accepted profile exists yet.',
                             'The current profile behavior does not match the accepted baseline.',
                             'The configured dataset or table name does not match catalogue '
                             'evidence.',
@@ -1603,8 +1603,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                        'or supersede the relevant guardrail rule '
                                                        'in governance. If not intentional, fix the '
                                                        'source data or pipeline configuration.',
-                              'common_failure_causes': ['Accepted profiles has not been '
-                                                        'created or approved yet.',
+                              'common_failure_causes': ['No accepted profile exists yet.',
                                                         'The current profile behavior does not '
                                                         'match the accepted baseline.',
                                                         'The configured dataset or table name does '

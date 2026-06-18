@@ -2,7 +2,7 @@
 
 FabricOps separates metadata ownership so each table has one clear purpose:
 
-- `METADATA_DATA_CATALOGUE` stores observed physical/profiles plus current table governance policy fields.
+- `METADATA_DATA_CATALOGUE` stores observed table and column profiles plus current table governance policy fields.
 - `METADATA_ENRICHMENT_RULES` stores reviewable enrichment intent and its review lifecycle.
 - `METADATA_GUARDRAIL_RULES` stores guardrail rule intent across draft, pending governance review, active pending governance review, self-approved, governance-approved, rejected, inactive, and superseded states.
 - `METADATA_GUARDRAIL_RESULTS` stores enforcement outcomes only.

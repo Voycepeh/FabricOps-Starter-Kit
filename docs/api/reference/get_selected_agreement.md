@@ -7,7 +7,7 @@ Return the agreement selected by widget_select_agreement.
 
 `fabricops_kit/data_agreement.py:1027`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/data_agreement.py#L1027-L1043">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/data_agreement.py#L1027-L1043">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -156,7 +156,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/data_agreement.py#L1027-L1043">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/data_agreement.py#L1027-L1043</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/data_agreement.py#L1027-L1043">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/data_agreement.py#L1027-L1043</a>
 - Start line: `1027`
 - End line: `1043`
 - Signature:
@@ -180,7 +180,7 @@ def get_selected_agreement() -> dict[str, Any]
 
 ## Glossary
 
-- <details class="glossary-chip"><summary>Notebook registry</summary>Metadata inventory of notebooks and responsibilities used for handover and operating context.</details>
+- <details class="glossary-chip"><summary>Notebook template</summary>Reusable starter notebook workflow that shows how to run a FabricOps phase.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

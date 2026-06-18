@@ -18,8 +18,7 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
   When a PR intentionally replaces a model, remove old metadata fields and
   docs language too; do not preserve old names as compatibility columns unless
   explicitly requested.
-- Keep metadata responsibilities separated: `METADATA_DATA_CATALOGUE` is
-  observed physical/profiles, `METADATA_GUARDRAIL_RULES` is approved
+- Keep metadata responsibilities separated: `METADATA_DATA_CATALOGUE` stores observed table and column profiles, `METADATA_GUARDRAIL_RULES` is approved
   guardrail intent, and `METADATA_GUARDRAIL_RESULTS` is runtime outcomes.
 
 ## Public safety and positioning

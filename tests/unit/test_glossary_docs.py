@@ -28,7 +28,7 @@ REQUIRED_CATEGORIES = {
 REQUIRED_TERMS = {
     "FabricOps Starter Kit", "profile", "source data", "pipeline output", "target DataFrame", "target table",
     "enrichment", "guardrails", "enforcement", "can_continue", "metadata lakehouse", "metadata tables",
-    "notebook registry", "agreement selection", "guardrail target selection", "profile mode", "static_data",
+    "notebook registry", "notebook template", "agreement selection", "guardrail target selection", "profile mode", "static_data",
     "changing_data", "skip", "active pending governance review", "self-approved", "governance-approved",
     "superseded", "activation_state", "review_state", "run summary", "guardrail result", "lineage relationship",
     "data contract", "data agreement", "data steward", "agreement evidence", "ownership", "business meaning",
@@ -74,6 +74,16 @@ def test_glossary_has_no_duplicate_singular_plural_guardrail_entries() -> None:
 
     assert "guardrail" not in terms
     assert "guardrail" in guardrails["aliases"]
+
+
+def test_notebook_template_is_not_alias_for_notebook_registry() -> None:
+    """Verify notebook templates and the notebook registry are separate concepts."""
+    entries = _glossary()
+    terms = {str(entry["term"]) for entry in entries}
+    registry = next(entry for entry in entries if entry["term"] == "notebook registry")
+
+    assert "notebook template" in terms
+    assert "notebook template" not in registry["aliases"]
 
 
 def test_reference_usage_guidance_is_plain_readable_text() -> None:
