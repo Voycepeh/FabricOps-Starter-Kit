@@ -63,7 +63,6 @@ nav:
           - write_pipeline_lineage: api/reference/write_pipeline_lineage.md
           - write_pipeline_run_summary: api/reference/write_pipeline_run_summary.md
           # AUTO-GENERATED-FUNCTIONS-END
-      - Template Function Map: reference/template-function-map.md
       - Glossary: reference/glossary.md
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
