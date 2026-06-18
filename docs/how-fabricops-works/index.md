@@ -1,58 +1,26 @@
 # How FabricOps Works
 
-FabricOps helps teams <span class="glossary-term" title="Measure schema, counts, nulls, distinct values, and other reusable facts about data.">profile</span> <span class="glossary-term" title="Data read from configured upstream Lakehouse or Warehouse targets before transformation.">source data</span> and <span class="glossary-term" title="DataFrames or tables produced by the pipeline after transformation.">pipeline outputs</span>, enrich metadata, define guardrails, and enforce those guardrails during pipeline runs.
+FabricOps Starter Kit is a practical notebook handshake for governed, quality-checked Microsoft Fabric workflows. The notebooks pass context, evidence, and review state through shared metadata tables instead of relying on notebook memory or informal handover notes.
 
-FabricOps Starter Kit is a lightweight, notebook-centric starter kit for governed, quality-checked Microsoft Fabric notebook workflows.
+## The notebook handshake
 
-## Standard flow
-
-1. Select source data and pipeline outputs.
-2. Profile data.
-3. Enrich metadata.
-4. Review guardrails.
-5. Enforce guardrails.
-6. Write results to the metadata lakehouse.
-
-## Workspace model
-
-FabricOps works best when shared metadata is kept separate from the data being processed.
-
-![FabricOps Starter Kit operating model with Governance, Engineering Dev, and Engineering Prod workspaces](../assets/fabricops-operating-model-overview.png)
-
-| Workspace | Typical items | Purpose |
+| Step | What it does | What the next step receives |
 | --- | --- | --- |
-| Governance workspace | `metadata_lakehouse` | Stores agreements, metadata, guardrails, and review records. |
-| Engineering Dev workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Develops and tests `02_pipeline` notebooks before production. |
-| Engineering Prod workspace | `source_lakehouse`, `unified_lakehouse`, `product_warehouse` | Runs approved production `02_pipeline` notebooks and publishes pipeline outputs. |
+| [00 Environment Configuration](environment-config.md) | Defines where the workflow runs and validates workspace, Lakehouse, Warehouse, schema, and metadata routing. | A configured `CONFIG`, environment name, and metadata tables that later notebooks can use. |
+| [01 Agreement Setup](agreement-setup.md) | Defines what is allowed, who owns it, and which agreement evidence applies. | Agreement and steward metadata that pipeline notebooks can select. |
+| [02 Pipeline Execution](pipeline-execution.md) | Reads source data, prepares table configs, executes guardrails, writes outputs, and records run evidence. | Runtime evidence in catalogue, guardrail results, lineage, and pipeline run metadata. |
+| [03 Governance Review](governance-review.md) | Reviews governed rules and enrichment records, and manages formal rule lifecycle. | Approved, rejected, superseded, active, or pending rule and enrichment state. |
+| [Metadata Tables](metadata-tables.md) | Act as the shared memory for agreements, catalogue evidence, rules, results, lineage, runs, and review state. | A durable view of what was configured, checked, written, and reviewed. |
+| [Metadata Dashboard](metadata-dashboard.md) | Exposes the current governed state for users who need visibility without reading every metadata row. | Operational insight into agreements, rules, results, runs, lineage, and review status. |
 
-Run the notebooks in this order for the standard path: `01_agreement`, `02_pipeline`, then `03_governance`. See [Notebook Templates](notebook-templates.md) for the handoff between notebooks.
+## What FabricOps is trying to do
 
-## Where metadata lives
+FabricOps keeps notebook delivery explainable for teams that need junior-friendly handover and governance evidence:
 
-`00_env_config` defines the <span class="glossary-term" title="Configured metadata target where FabricOps stores agreements, profiles, guardrail rules, guardrail results, lineage, and run summaries.">metadata lakehouse</span>. The notebooks use that metadata target to coordinate the workflow:
+- **Make setup explicit.** `00_env_config` owns the runtime and metadata target instead of assuming an attached/default Lakehouse.
+- **Make intent selectable.** `01_agreement` records the steward and agreement context that `02_pipeline` can select later.
+- **Make checks executable.** `02_pipeline` applies active guardrail rules and writes guardrail result evidence.
+- **Make review append-only.** `03_governance` manages rule and enrichment lifecycle without overwriting history.
+- **Make evidence reusable.** Metadata tables connect notebook actions to the dashboard and reference docs.
 
-- `00_env_config` creates and validates the active metadata tables.
-- `01_agreement` writes agreement, steward, and agreement evidence records.
-- `02_pipeline` profiles data, writes lineage, enforces guardrails, and records run summaries.
-- `03_governance` lets reviewers enrich metadata and approve, reject, replace, or deactivate guardrail records for profiled data.
-
-## Promotion and production use
-
-Keep production promotion lightweight:
-
-1. Build and test the production-ready `02_pipeline` in Engineering Dev.
-2. Promote the notebook to Engineering Prod.
-3. Run it with the production `00_env_config`.
-4. Store the `.py` or `.ipynb` files in Git or a configured metadata location for version history.
-
-Do not copy development outputs into production. Production pipelines should read production configuration and approved production metadata.
-
-## Which page should I read next?
-
-| Page | Use it when you want to... |
-| --- | --- |
-| [Notebook Templates](notebook-templates.md) | Choose the right notebook and understand the handoff between notebooks. |
-| [Metadata Tables](metadata-tables.md) | See the metadata tables and what each table is for. |
-| [Pipeline Guardrails](pipeline-guardrails.md) | Understand the checks that `02_pipeline` can run before writing pipeline outputs. |
-| [Governance Review](governance-review.md) | Understand what `03_governance` adds and who approves reviewed metadata. |
-| [Metadata Dashboard](metadata-dashboard.md) | Understand the planned visibility layer. |
+Use the pages in this section as the user guide for running and adapting the starter notebooks. Use the generated [Function Reference](../reference/) only when you need callable-level details.
