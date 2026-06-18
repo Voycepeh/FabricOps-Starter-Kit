@@ -307,12 +307,15 @@ def test_template_examples_use_default_context_not_framework_plumbing():
         "read_data(CONFIG",
         "write_data(\n        CONFIG",
     ]
-    top_block = code[: code.index("df_orders = read_data(")]
+    bootstrap_block = code[: code.index("source_table = ")]
+    read_config_block = code[code.index("source_table = ") : code.index("df_orders = read_data(")]
     load_block = code[code.index("df_orders = read_data(") : code.index("SOURCE_TABLES = [")]
 
     assert all(item not in code for item in forbidden)
-    assert "source_table" not in top_block
-    assert "customer_table" not in top_block
+    assert "source_table" not in bootstrap_block
+    assert "customer_table" not in bootstrap_block
+    assert "source_table" in read_config_block
+    assert "customer_table" in read_config_block
     assert "target_table" not in code
     assert "primary_key" not in code
     assert 'format="csv"' in load_block
