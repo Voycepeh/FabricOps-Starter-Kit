@@ -393,7 +393,7 @@ def test_glossary_page_exists_and_includes_required_terms() -> None:
     glossary_text = glossary_page.read_text(encoding="utf-8")
     for term in required_terms:
         assert f"## {term}".lower() in glossary_text.lower()
-    assert "Concise FabricOps terms" in glossary_text
+    assert "Searchable source of truth" in glossary_text
 
 
 
@@ -414,7 +414,10 @@ def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
     """Verify callable pages with glossary terms render shared key terms."""
     function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
     glossary_entries = json.loads((REFERENCE_DIR / "_data" / "glossary.json").read_text(encoding="utf-8"))
-    glossary = {entry["term"]: entry["plain_language_definition"] for entry in glossary_entries}
+    glossary = {entry["term"]: entry["short_definition"] for entry in glossary_entries}
+    for item in glossary_entries:
+        for alias in item.get("aliases", []):
+            glossary[alias] = item["short_definition"]
 
     for entry in function_manifest:
         if entry.get("classification") != "Callable" or not entry.get("glossary_terms"):
@@ -422,8 +425,8 @@ def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
         text = (API_REFERENCE_DIR / f"{entry['name']}.md").read_text(encoding="utf-8")
         key_terms = _section_text(text, "Glossary")
         for term in entry["glossary_terms"]:
-            label = term if "_" in term else term.capitalize()
-            assert f"**{label}:** {glossary[term]}" in key_terms, entry["name"]
+            assert 'class="glossary-chip"' in key_terms, entry["name"]
+            assert glossary[term] in key_terms, entry["name"]
 
 def test_internalized_enforce_profile_behavior_keeps_manifest_metadata_without_page() -> None:
     """Verify internalized enforce_profile_behavior remains metadata-only."""

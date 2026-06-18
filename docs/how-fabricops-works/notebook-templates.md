@@ -68,11 +68,11 @@ The core sequence is governed by shared metadata rather than notebook memory. `9
 
     **What you do**
 
-    Select agreement context, read configured sources, profile data, apply checks, write target outputs, capture lineage, and publish run evidence.
+    Select agreement context, read configured sources, profile data, apply checks, write pipeline outputs, capture lineage, and publish run evidence.
 
     **What it creates**
 
-    Catalogue/profile evidence, guardrail results, lineage, target output records, and pipeline run status.
+    Profiles, guardrail results, lineage, pipeline output records, and pipeline run status.
 
     **What the next notebook receives**
 

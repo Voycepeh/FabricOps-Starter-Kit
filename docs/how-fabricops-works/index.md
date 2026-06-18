@@ -39,7 +39,7 @@ The role workflow keeps implementation and review responsibilities clear without
 
 ## How metadata moves between notebooks
 
-FabricOps notebooks do not depend on notebook memory or informal handover notes. Each notebook reads and writes shared metadata so configuration, agreement context, catalogue evidence, guardrail results, lineage, run status, and review decisions remain visible across the workflow.
+FabricOps notebooks do not depend on notebook memory or informal handover notes. Each notebook reads and writes shared metadata so configuration, agreement context, evidence, guardrail results, lineage, run status, and review decisions remain visible across the workflow.
 
 <div class="grid cards" markdown="1">
 
@@ -53,7 +53,7 @@ FabricOps notebooks do not depend on notebook memory or informal handover notes.
 
 -   **`02_pipeline`**
 
-    Uses agreement context, executes data movement, writes catalogue evidence, guardrail results, lineage, and run status.
+    Uses agreement context, executes data movement, writes evidence, guardrail results, lineage, and run status.
 
 -   **`03_governance`**
 

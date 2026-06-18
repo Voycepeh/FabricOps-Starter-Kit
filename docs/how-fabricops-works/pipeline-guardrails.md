@@ -109,7 +109,7 @@ After guardrails run, FabricOps writes metadata evidence that describes what was
 
 | Metadata table | Evidence written |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | Profile evidence/history: table and column observations, including profile snapshots used for guardrail comparison and baseline derivation. |
+| `METADATA_DATA_CATALOGUE` | Profiles/history: table and column observations, including profile snapshots used for guardrail comparison and baseline derivation. |
 | `METADATA_GUARDRAIL_RULES` | What should be checked. DQ rows use `guardrail_type="dq"`. |
 | `METADATA_GUARDRAIL_RESULTS` | Runtime pass/warn/fail outcomes and continuation decisions from guardrail checks. |
 | `METADATA_PIPELINE_RUNS` | Run-level summary showing the pipeline result and key execution details. |

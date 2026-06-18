@@ -11,7 +11,7 @@ The metadata dashboard is the visibility layer over the FabricOps metadata hands
 A dashboard over the FabricOps metadata tables should expose:
 
 - **Agreements** — steward, agreement, contract, and evidence context created from `01_agreement`.
-- **Catalogue and profile evidence** — observed table and column evidence from `METADATA_DATA_CATALOGUE`.
+- **Catalogue and profiles** — observed table and column evidence from `METADATA_DATA_CATALOGUE`.
 - **Guardrail rules** — active, pending, draft, rejected, inactive, and superseded guardrail intent from `METADATA_GUARDRAIL_RULES`.
 - **Guardrail results** — runtime pass, warning, fail, skipped, and continuation outcomes from `METADATA_GUARDRAIL_RESULTS`.
 - **Pipeline run status** — run summaries from `METADATA_PIPELINE_RUNS`.
@@ -23,7 +23,7 @@ A dashboard over the FabricOps metadata tables should expose:
 Use the dashboard as a user-facing check on the notebook handshake:
 
 1. Confirm `01_agreement` created the expected agreement and steward context.
-2. Confirm `02_pipeline` wrote catalogue evidence, guardrail results, lineage, and run summaries.
+2. Confirm `02_pipeline` wrote evidence, guardrail results, lineage, and run summaries.
 3. Confirm `03_governance` review decisions are visible and distinguish active rules from pending or superseded history.
 4. Use warning or failed guardrail results to decide which notebook and table target needs attention.
 

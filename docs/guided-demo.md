@@ -246,7 +246,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 <div class="demo-evidence" markdown>
 
-**Metadata or table evidence produced:** Pipeline run summaries, schema/profile evidence, catalogue evidence, lineage evidence, and output metadata are written through the configured metadata target where supported by the template flow. Final output tables are written to the configured unified lakehouse.
+**Metadata or table evidence produced:** Pipeline run summaries, schema/profiles, evidence, lineage evidence, and output metadata are written through the configured metadata target where supported by the template flow. Final output tables are written to the configured unified lakehouse.
 
 </div>
 
@@ -288,7 +288,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 <div class="demo-evidence" markdown>
 
-**Metadata or table evidence produced:** Reviewed guardrail intent is written to `METADATA_GUARDRAIL_RULES`; observed catalogue/profile evidence remains separate from approved guardrail intent, and runtime outcomes remain separate in guardrail results. See [Metadata Tables](how-fabricops-works/metadata-tables.md) for the table responsibilities.
+**Metadata or table evidence produced:** Reviewed guardrail intent is written to `METADATA_GUARDRAIL_RULES`; observed profiles remains separate from approved guardrail intent, and runtime outcomes remain separate in guardrail results. See [Metadata Tables](how-fabricops-works/metadata-tables.md) for the table responsibilities.
 
 </div>
 
@@ -375,7 +375,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 <div class="demo-evidence" markdown>
 
-**Metadata or table evidence produced:** Guardrail outcomes, run summaries, profile evidence, and lineage/output evidence show what was evaluated and what happened. The final unified outputs remain the governed outputs from successful runs.
+**Metadata or table evidence produced:** Guardrail outcomes, run summaries, profiles, and lineage/output evidence show what was evaluated and what happened. The final unified outputs remain the pipeline outputs from successful runs.
 
 </div>
 
@@ -454,7 +454,7 @@ After the full demo, the flow should replace tribal knowledge with metadata-back
 | Question | Where the answer should come from |
 | -------- | --------------------------------- |
 | Who owns the data and what is it used for? | Agreement and steward metadata captured in `01_agreement`. |
-| What source and target data was profiled? | Source and target profile evidence captured by `02_pipeline`, plus `99_explore` notes when used. |
+| What source and target data was profiled? | Source and target profiles captured by `02_pipeline`, plus `99_explore` notes when used. |
 | What transformations created the output? | Pipeline registration, lineage, and output metadata captured in `02_pipeline`. |
 | Which schema, freshness, profile, DQ, or enrichment expectations were reviewed? | Governance metadata from `03_governance`, especially active rows in `METADATA_GUARDRAIL_RULES`. |
 | Which production guardrails ran? | Runtime evidence from `02_pipeline` guardrail checks, DQ enforcement, output writes, lineage, and run summaries. |

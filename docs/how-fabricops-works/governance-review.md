@@ -6,7 +6,7 @@
 
 ## Selecting a guardrail target
 
-Use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to select a table target from `METADATA_DATA_CATALOGUE`. The selector uses successful table profile evidence so review starts from observed catalogue evidence rather than free-text table names.
+Use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to select a table target from `METADATA_DATA_CATALOGUE`. The selector uses successful table profiles so review starts from observed evidence rather than free-text table names.
 
 ## Authoring combined guardrail rules
 
@@ -19,9 +19,9 @@ Guardrail records are appended to `METADATA_GUARDRAIL_RULES`. Schema, freshness,
 
 `METADATA_GUARDRAIL_RULES` contains authored rule intent and lifecycle state. `METADATA_GUARDRAIL_RESULTS` contains runtime outcomes written by pipeline execution. Review users can inspect runtime evidence from `METADATA_GUARDRAIL_RESULTS` alongside `METADATA_GUARDRAIL_RULES` and `METADATA_ENRICHMENT_RULES`; [`widget_review_table_governance`](../api/reference/widget_review_table_governance.md) can show runtime result context for guardrail records where matching results exist.
 
-## Metadata enrichment
+## Enrichment
 
-Use [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive table and column enrichment. Enrichment intent is appended to `METADATA_ENRICHMENT_RULES`; it is separate from observed catalogue evidence in `METADATA_DATA_CATALOGUE` and separate from guardrail intent in `METADATA_GUARDRAIL_RULES`.
+Use [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive table and column enrichment. Enrichment intent is appended to `METADATA_ENRICHMENT_RULES`; it is separate from observed evidence in `METADATA_DATA_CATALOGUE` and separate from guardrail intent in `METADATA_GUARDRAIL_RULES`.
 
 ## Formal review
 
@@ -53,7 +53,7 @@ Governance review should not rewrite runtime outcome evidence in `METADATA_GUARD
 
 ### Implementation guidance
 
-- Start from [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) so review is anchored to profiled catalogue evidence.
+- Start from [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) so review is anchored to profiled evidence.
 - Use [`widget_review_table_governance`](../api/reference/widget_review_table_governance.md) for formal approve/reject/replace/deactivate/history workflows.
-- Keep enrichment separate from executable checks: enrichment describes business context; guardrail rules drive runtime enforcement.
+- Keep enrichment separate from executable checks: enrichment describes business context; guardrail rules drive enforcement.
 - Use runtime result context to explain why a rule needs review, but write decisions to rule/enrichment metadata, not result rows.

@@ -14,7 +14,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module purpose
 
-Owns schema, freshness, and profile behavior checks as pipeline guardrails during runtime enforcement.
+Owns schema, freshness, and profile behavior checks as pipeline guardrails during enforcement.
 
 ## Module manifest
 
@@ -32,7 +32,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns schema, freshness, and profile behavior checks as pipeline guardrails during runtime enforcement.</td>
+      <td>Owns schema, freshness, and profile behavior checks as pipeline guardrails during enforcement.</td>
     </tr>
     <tr>
       <td>Public callable count</td>
