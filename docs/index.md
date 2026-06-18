@@ -17,8 +17,8 @@ Use it when analysts, data scientists, engineers, and governance users need to w
 
 <div class="fabricops-kpi-card" markdown="1">
   <div class="fabricops-kpi-number">22</div>
-  <div class="fabricops-kpi-label">starter kit functions</div>
-  <p>Shared helper functions keep IO, profiling, guardrails, lineage, metadata capture, and review steps consistent across notebooks.</p>
+  <div class="fabricops-kpi-label">starter-kit-functions</div>
+  <p>Shared helper functions keep IO, profiling, guardrails, lineage, metadata capture, and review steps consistent across notebooks without counting import-only or lower-level helpers.</p>
   <a href="reference/">View function reference</a>
 </div>
 
