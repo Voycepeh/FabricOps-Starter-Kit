@@ -569,7 +569,7 @@ def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
     lines = [
         "# FabricOps glossary",
         "",
-        "Simple definitions for repeated FabricOps terms used across generated callable references and workflow documentation.",
+        "Concise FabricOps terms used across generated callable references and workflow documentation.",
         "",
     ]
     for entry in sorted(glossary.values(), key=lambda row: row["term"].lower()):

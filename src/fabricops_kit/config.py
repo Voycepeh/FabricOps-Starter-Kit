@@ -20,6 +20,133 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 DEFAULT_AUDIT_TIMEZONE = "UTC"
 
 
+_DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
+
+
+def get_default_fabric_context() -> dict[str, Any]:
+    """Return the active Fabric context created by ``00_env_config``.
+
+    Returns
+    -------
+    dict[str, Any]
+        Active FabricOps runtime context containing at least ``config`` and
+        ``env_name``.
+
+    Raises
+    ------
+    RuntimeError
+        If ``00_env_config`` has not initialized ``FABRIC_CONTEXT`` in the
+        active notebook session.
+
+    Notes
+    -----
+    The helper first checks the IPython notebook namespace, then ``builtins``.
+    This keeps common notebooks simple while still allowing tests and advanced
+    workflows to inject an explicit context.
+
+    """
+    context = None
+    try:
+        from IPython import get_ipython  # type: ignore
+
+        shell = get_ipython()
+        if shell is not None:
+            context = shell.user_ns.get("FABRIC_CONTEXT")
+    except Exception:
+        context = None
+
+    if context is None:
+        try:
+            import builtins
+
+            context = getattr(builtins, "FABRIC_CONTEXT", None)
+        except Exception:
+            context = None
+
+    if not isinstance(context, dict) or not context.get("config") or not context.get("env_name"):
+        raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
+    return context
+
+
+def get_fabric_context(
+    *,
+    env_name: str | None = None,
+    config: Any = None,
+    workspace_id: str | None = None,
+    lakehouse_id: str | None = None,
+    workspace_name: str | None = None,
+    lakehouse_name: str | None = None,
+    **values: Any,
+) -> dict[str, Any]:
+    """Build a Fabric context from explicit values or the active default.
+
+    Parameters
+    ----------
+    env_name : str, optional
+        Environment key to use. Defaults to the active ``00_env_config`` value.
+    config : Any, optional
+        FrameworkConfig or compatible config object. Defaults to the active
+        ``00_env_config`` value.
+    workspace_id : str, optional
+        Workspace ID override for advanced cross-workspace usage.
+    lakehouse_id : str, optional
+        Lakehouse item ID override for advanced usage.
+    workspace_name : str, optional
+        Workspace name override.
+    lakehouse_name : str, optional
+        Lakehouse name override.
+    **values
+        Additional context values to merge into the returned dictionary.
+
+    Returns
+    -------
+    dict[str, Any]
+        Fabric context dictionary suitable for helper ``context=`` overrides.
+
+    """
+    base: dict[str, Any] = {} if config is not None and env_name is not None else dict(get_default_fabric_context())
+    if config is not None:
+        base["config"] = config
+    if env_name is not None:
+        base["env_name"] = env_name
+    for key, value in {
+        "workspace_id": workspace_id,
+        "lakehouse_id": lakehouse_id,
+        "workspace_name": workspace_name,
+        "lakehouse_name": lakehouse_name,
+    }.items():
+        if value is not None:
+            base[key] = value
+    base.update(values)
+    if not base.get("config") or not base.get("env_name"):
+        raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
+    return base
+
+
+def resolve_fabric_context(
+    *,
+    config: Any = None,
+    env_name: str | None = None,
+    env: str | None = None,
+    context: dict[str, Any] | None = None,
+) -> tuple[Any, str, dict[str, Any]]:
+    """Resolve explicit or default FabricOps config and environment values."""
+    resolved = dict(context or {})
+    if config is None:
+        config = resolved.get("config")
+    resolved_env = env_name or env or resolved.get("env_name") or resolved.get("env")
+    if config is None or resolved_env is None:
+        active = get_default_fabric_context()
+        if config is None:
+            config = active["config"]
+        if resolved_env is None:
+            resolved_env = active["env_name"]
+        resolved = {**active, **resolved}
+    resolved["config"] = config
+    resolved["env_name"] = str(resolved_env)
+    return config, str(resolved_env), resolved
+
+
 def _validate_audit_timezone(timezone_name: str | None) -> str:
     """Return a valid IANA audit timezone name.
 
@@ -957,18 +1084,18 @@ def _setup_metadata_table_registry(
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(config, env, "metadata", table_name, **read_kwargs)
+            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
         except Exception as exc:
             if not _is_table_not_found_error(exc):
                 raise RuntimeError(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc
             empty_df = _create_empty_metadata_dataframe(spark, schema)
-            write_lakehouse_table(empty_df, config, env, "metadata", table_name, schema=metadata_schema, mode="overwrite", options={"overwriteSchema": "true"})
+            write_lakehouse_table(empty_df, table_name, target="metadata", schema=metadata_schema, context={"config": config, "env_name": env}, mode="overwrite", options={"overwriteSchema": "true"})
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(config, env, "metadata", table_name, **read_kwargs)
+            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
             created.append(table_name)
 
         missing = [field for field in _metadata_schema_field_names(schema) if field not in _metadata_table_columns(table)]
@@ -998,7 +1125,7 @@ def _validate_metadata_table_registration(
             read_kwargs = {"spark_session": spark}
             if resolved_metadata_schema is not None:
                 read_kwargs["schema"] = resolved_metadata_schema
-            read_lakehouse_table(normalized, env, "metadata", table, **read_kwargs)
+            read_lakehouse_table(table, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
         except Exception:
             missing.append(table)
     nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)

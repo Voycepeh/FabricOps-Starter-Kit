@@ -5,9 +5,9 @@ Write Lakehouse or Warehouse targets through one notebook-facing IO function.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/fabric_input_output.py:323`
+`fabricops_kit/fabric_input_output.py:312`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/fabric_input_output.py#L323-L402">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -34,15 +34,14 @@ Provides a stable notebook-facing write orchestrator while format-specific Lakeh
 ```python
 def write_data(
     df,
-    config,
-    env,
-    target,
-    name=None,
-    format='table',
-    schema=None,
-    table=None,
-    mode='append',
-    options=None,
+    name: str,
+    target: str='unified',
+    format: str='table',
+    schema: str | None=None,
+    table: str | None=None,
+    mode: str='append',
+    options: dict | None=None,
+    context: dict[str, Any] | None=None,
     **kwargs,
 ):
 ```
@@ -54,7 +53,7 @@ def write_data(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-write_data(df_orders, CONFIG, ENV_NAME, "unified", "orders_clean", schema=UNIFIED_SCHEMA, mode="overwrite")
+write_data(df_orders, "orders_clean", target="unified", schema=UNIFIED_SCHEMA, mode="overwrite")
 ```
 
 </div>
@@ -64,15 +63,14 @@ write_data(df_orders, CONFIG, ENV_NAME, "unified", "orders_clean", schema=UNIFIE
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | DataFrame to write. |
-| `config` | `FrameworkConfig \| dict` | Yes | FabricOps FrameworkConfig or compatible config object. |
-| `env` | `str` | Yes | Environment key such as ``"dev"``. |
-| `target` | `str` | Yes | Logical target name such as ``"unified"`` or ``"warehouse"``. |
-| `name` | `str` | No | Target table name. |
-| `format` | `str, default="table"` | No | Write format. Supported values are ``"table"``, ``"delta"``, and ``"warehouse"``. |
-| `schema` | `str` | No | Lakehouse or warehouse schema name. |
-| `table` | `str` | No | Explicit table name. Overrides ``name``. |
-| `mode` | `str, default="append"` | No | Write mode. |
-| `options` | `dict` | No | Additional writer options for Lakehouse Delta writes. **kwargs Additional writer options for Lakehouse Delta writes. |
+| `name` | `str` | Yes | Target table name. |
+| `target` | `str` | No | Logical target name in ``FABRIC_CONTEXT["config"]``. |
+| `format` | `str` | No | Write format. Supported values are ``"table"``, ``"delta"``, and ``"warehouse"``. |
+| `schema` | `str \| None` | No | Lakehouse or warehouse schema name. |
+| `table` | `str \| None` | No | Explicit table name. Overrides ``name``. |
+| `mode` | `str` | No | Write mode. |
+| `options` | `dict \| None` | No | Additional writer options for Lakehouse Delta writes. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override context. Defaults to the active ``FABRIC_CONTEXT`` initialized by ``00_env_config``. **kwargs Additional writer options for Lakehouse Delta writes. |
 
 ## Returns
 
@@ -100,6 +98,7 @@ Not documented yet
 
 ### Calls
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output.write_lakehouse_table`
 - `fabricops_kit.fabric_input_output.write_warehouse_table`
 
@@ -122,9 +121,7 @@ Writes data to the configured Fabric target.
 
 **Notes:**
 
-This is the notebook-facing IO orchestrator. It keeps starter notebooks on
-a stable public API while format-specific helpers remain implementation
-details.
+No additional callable notes are documented.
 
 </details>
 
@@ -132,19 +129,25 @@ details.
 
     ```text
     write_data(...)
+    ├── resolve_fabric_context(...)
+    │   └── get_default_fabric_context(...)
     ├── write_lakehouse_table(...)
     │   ├── _get_store(...)
     │   │   └── _normalize_path_config(...)
     │   │       └── PathConfig(...)
     │   ├── _normalize_table_name(...)
-    │   └── _resolve_lakehouse_table_path(...)
-    │       ├── _normalize_table_name(...)
-    │       └── _resolve_lakehouse_schema(...)
-    │           └── _normalize_schema_name(...)
+    │   ├── _resolve_lakehouse_table_path(...)
+    │   │   ├── _normalize_table_name(...)
+    │   │   └── _resolve_lakehouse_schema(...)
+    │   │       └── _normalize_schema_name(...)
+    │   └── resolve_fabric_context(...)
+    │       └── get_default_fabric_context(...)
     └── write_warehouse_table(...)
-        └── _get_store(...)
-            └── _normalize_path_config(...)
-                └── PathConfig(...)
+        ├── _get_store(...)
+        │   └── _normalize_path_config(...)
+        │       └── PathConfig(...)
+        └── resolve_fabric_context(...)
+            └── get_default_fabric_context(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -171,9 +174,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- Source line: `323`
+- Source line: `312`
 - Inbound references count: 0
-- Outbound references count: 2
+- Outbound references count: 3
 - Used in templates: 02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test
 - Glossary terms: notebook template
 
@@ -192,29 +195,29 @@ Not documented yet
 
 ### Outbound references
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output.write_lakehouse_table`
 - `fabricops_kit.fabric_input_output.write_warehouse_table`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/fabric_input_output.py#L323-L402">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/fabric_input_output.py#L323-L402</a>
-- Start line: `323`
-- End line: `402`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379</a>
+- Start line: `312`
+- End line: `379`
 - Signature:
 
 ```python
 def write_data(
     df,
-    config,
-    env,
-    target,
-    name=None,
-    format='table',
-    schema=None,
-    table=None,
-    mode='append',
-    options=None,
+    name: str,
+    target: str='unified',
+    format: str='table',
+    schema: str | None=None,
+    table: str | None=None,
+    mode: str='append',
+    options: dict | None=None,
+    context: dict[str, Any] | None=None,
     **kwargs,
 ):
 ```

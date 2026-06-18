@@ -99,11 +99,12 @@ class _Frame:
 def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     """Verify lakehouse read and write helpers route to configured paths."""
     config = framework_config()
+    context = {"config": config, "env_name": "dev"}
     spark = _Spark()
     frame = _Frame()
 
-    io.read_lakehouse_csv(config, "dev", "source", "Files/raw/orders.csv", spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "unified", "orders_clean", schema=None, mode="overwrite", partition_by=["status"], options={"overwriteSchema": "true"}, verbose=False)
+    io.read_lakehouse_csv("Files/raw/orders.csv", target="source", spark_session=spark, context=context)
+    io.write_lakehouse_table(frame, "orders_clean", target="unified", schema=None, mode="overwrite", partition_by=["status"], options={"overwriteSchema": "true"}, verbose=False, context=context)
 
     csv_call = next(call for call in spark.read.calls if call[0] == "csv")
     save_call = next(call for call in frame.write.calls if call[0] == "save")
@@ -116,11 +117,12 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
 def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tables():
     """Verify metadata lakehouse table helpers use abfss paths without registered tables."""
     config = framework_config()
+    context = {"config": config, "env_name": "dev"}
     spark = _Spark()
     frame = _Frame()
 
-    read_result = io.read_lakehouse_table(config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema=None, spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema=None, mode="ignore", verbose=False)
+    read_result = io.read_lakehouse_table("METADATA_GUARDRAIL_RULES", target="metadata", schema=None, spark_session=spark, context=context)
+    io.write_lakehouse_table(frame, "METADATA_GUARDRAIL_RULES", target="metadata", schema=None, mode="ignore", verbose=False, context=context)
 
     expected_path = "abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/METADATA_GUARDRAIL_RULES"
     assert read_result.count() == 1
@@ -134,25 +136,28 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
 def test_lakehouse_table_helpers_reject_nested_table_paths():
     """Verify lakehouse table helpers reject nested table paths."""
     config = framework_config()
+    context = {"config": config, "env_name": "dev"}
 
     with pytest.raises(ValueError, match="simple table name"):
-        io.write_lakehouse_table(_Frame(), config, "dev", "metadata", "METADATA_GUARDRAIL_RULES/Unidentified", schema=None, mode="ignore", verbose=False)
+        io.write_lakehouse_table(_Frame(), "METADATA_GUARDRAIL_RULES/Unidentified", target="metadata", schema=None, mode="ignore", verbose=False, context=context)
 
 
 def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeypatch):
     """Verify file readers validate source paths and excel uses pandas kwargs."""
+    from types import SimpleNamespace
+
     config = framework_config()
     spark = _Spark()
     captured = {}
 
-    monkeypatch.setattr(io.pd, "read_excel", lambda path, sheet_name=0, **kwargs: captured.setdefault("kwargs", kwargs) or [{"a": 1}])
+    monkeypatch.setattr(io, "pd", SimpleNamespace(read_excel=lambda path, sheet_name=0, **kwargs: captured.setdefault("kwargs", kwargs) or [{"a": 1}]))
 
     with pytest.raises(ValueError, match="relative_path"):
-        io.read_lakehouse_csv(config, "dev", "source", "", spark_session=spark)
+        io.read_lakehouse_csv("", target="source", spark_session=spark, context={"config": config, "env_name": "dev"})
     with pytest.raises(ValueError, match="folder/file.parquet"):
-        io.read_lakehouse_parquet(config, "dev", "source", "orders.parquet", spark_session=spark, verbose=False)
+        io.read_lakehouse_parquet("orders.parquet", target="source", spark_session=spark, verbose=False, context={"config": config, "env_name": "dev"})
 
-    io.read_lakehouse_excel(config, "dev", "source", "Files/reference/map.xlsx", sheet_name="Sheet1", spark_session=spark, skiprows=1)
+    io.read_lakehouse_excel("Files/reference/map.xlsx", target="source", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env_name": "dev"}, skiprows=1)
     assert captured["kwargs"] == {"skiprows": 1}
 
 
@@ -161,6 +166,6 @@ def test_warehouse_helpers_fail_clearly_outside_fabric_runtime():
     config = framework_config()
 
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
-        io.read_warehouse_table(config, "dev", "warehouse", "dbo", "orders", spark_session=_Spark())
+        io.read_warehouse_table("dbo", "orders", target="warehouse", spark_session=_Spark(), context={"config": config, "env_name": "dev"})
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
-        io.write_warehouse_table(_Frame(), config, "dev", "warehouse", "dbo", "orders")
+        io.write_warehouse_table(_Frame(), "dbo", "orders", target="warehouse", context={"config": config, "env_name": "dev"})

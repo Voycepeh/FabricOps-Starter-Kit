@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2788`
+`fabricops_kit/governance_review.py:2795`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/governance_review.py#L2788-L2884">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/governance_review.py#L2795-L2895">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -34,9 +34,8 @@ Renders governance review controls for reviewing proposed or bypass-active enric
 ```python
 def widget_review_guardrail_governance(
     state: Mapping[str, Any],
-    config: Any=None,
-    env: str | None=None,
     spark_session: Any=None,
+    context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -51,9 +50,8 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `state` | `Mapping[str, Any]` | Yes | Handover state from :func:`widget_select_guardrail_target`. The state may include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``. |
-| `config` | `Any` | No | Runtime objects used for save actions. |
-| `env` | `str \| None` | No | Not documented yet |
-| `spark_session` | `Any` | No | Not documented yet |
+| `spark_session` | `Any` | No | Spark session used for save actions. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
 
 ## Returns
 
@@ -82,6 +80,7 @@ Not documented yet
 
 ### Calls
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
 - `fabricops_kit.governance_review.load_rule_review_history`
@@ -133,7 +132,9 @@ No additional callable notes are documented.
     │       ├── _context_get(...)
     │       └── _runtime_context(...)
     │           └── _context_get(...)
-    └── load_rule_review_history(...)
+    ├── load_rule_review_history(...)
+    └── resolve_fabric_context(...)
+        └── get_default_fabric_context(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -160,9 +161,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2788`
+- Source line: `2795`
 - Inbound references count: 0
-- Outbound references count: 3
+- Outbound references count: 4
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
@@ -181,6 +182,7 @@ Not documented yet
 
 ### Outbound references
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
 - `fabricops_kit.governance_review.load_rule_review_history`
@@ -188,17 +190,16 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/governance_review.py#L2788-L2884">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/governance_review.py#L2788-L2884</a>
-- Start line: `2788`
-- End line: `2884`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/governance_review.py#L2795-L2895">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/governance_review.py#L2795-L2895</a>
+- Start line: `2795`
+- End line: `2895`
 - Signature:
 
 ```python
 def widget_review_guardrail_governance(
     state: Mapping[str, Any],
-    config: Any=None,
-    env: str | None=None,
     spark_session: Any=None,
+    context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
 

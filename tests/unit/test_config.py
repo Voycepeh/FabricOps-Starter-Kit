@@ -156,7 +156,10 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     reads = {table: 0 for table in schemas}
     writes = []
 
-    def read_table(config, env, target, table, schema=None, spark_session=None):
+    def read_table(table, *, target, context, schema=None, spark_session=None):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        assert schema is None
         reads[table] += 1
         if reads[table] == 1:
             raise RuntimeError("table does not exist")
@@ -165,7 +168,12 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
     monkeypatch.setattr(io, "read_lakehouse_table", read_table)
-    monkeypatch.setattr(io, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((env, target, table, kwargs)))
+    def write_table(df, table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        writes.append((context["env_name"], target, table, kwargs))
+
+    monkeypatch.setattr(io, "write_lakehouse_table", write_table)
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
 
     spark = Spark()
@@ -205,8 +213,10 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
     schemas = {"METADATA_DATA_STEWARD": Schema(["steward_id", "is_active"])}
     reads = []
 
-    def read_table(config, env, target, table, spark_session=None):
-        reads.append((env, target, table, spark_session))
+    def read_table(table, *, target, context, spark_session=None, **kwargs):
+        assert context["env_name"] == "dev"
+        assert target == "metadata"
+        reads.append((context["env_name"], target, table, spark_session))
         return Table(schemas[table].fieldNames())
 
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
@@ -274,8 +284,10 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
 
     calls = []
 
-    def read_table(config, env, target, table, schema=None, spark_session=None):
-        calls.append((env, target, table, schema, spark_session))
+    def read_table(table, *, target, context, schema=None, spark_session=None):
+        assert context["env_name"] == "dev"
+        assert target == "metadata"
+        calls.append((context["env_name"], target, table, schema, spark_session))
         return object()
 
     class Spark:
@@ -307,7 +319,9 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
     """Verify metadata registration validation warns for missing configured tables."""
     import fabricops_kit.fabric_input_output as io
 
-    def read_table(config, env, target, table, schema=None, spark_session=None):
+    def read_table(table, *, target, context, schema=None, spark_session=None):
+        assert context["env_name"] == "dev"
+        assert target == "metadata"
         raise RuntimeError("table does not exist")
 
     monkeypatch.setattr(io, "read_lakehouse_table", read_table)
@@ -345,7 +359,9 @@ def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch)
     reads = []
     writes = []
 
-    def read_table(config, env, target, table, schema=None, spark_session=None):
+    def read_table(table, *, target, context, schema=None, spark_session=None):
+        assert context["env_name"] == "dev"
+        assert target == "metadata"
         reads.append((table, schema))
         return Table()
 
@@ -457,5 +473,5 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
         assert "datetime.utcnow" not in source
 
     pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
-    assert "PIPELINE_STARTED_AT = _current_audit_timestamp(config=CONFIG)" in pipeline_source
-    assert "completed_at=_current_audit_timestamp(config=CONFIG)" in pipeline_source
+    assert "PIPELINE_STARTED_AT = _current_audit_timestamp()" in pipeline_source
+    assert "completed_at=_current_audit_timestamp()" in pipeline_source

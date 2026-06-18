@@ -16,7 +16,7 @@ import re
 import sys
 from typing import Any
 
-from .config import DEFAULT_STEWARD_ROLE_OPTIONS
+from .config import DEFAULT_STEWARD_ROLE_OPTIONS, resolve_fabric_context
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
@@ -481,7 +481,7 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
     """
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), schema=metadata_schema, spark_session=spark_session)
+        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env_name": env_name})
     except Exception:
         if missing_ok:
             return []
@@ -491,7 +491,7 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
 
 
 def _write_row(*, spark: Any, config: Any, env_name: str, table: str, row: dict[str, Any]) -> None:
-    write_lakehouse_table(spark.createDataFrame([row]), config, env_name, "metadata", table, schema=_configured_lakehouse_schema(config, env_name, "metadata"), mode="append")
+    write_lakehouse_table(spark.createDataFrame([row]), table, target="metadata", schema=_configured_lakehouse_schema(config, env_name, "metadata"), context={"config": config, "env_name": env_name}, mode="append")
 
 
 def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> str:
@@ -605,7 +605,7 @@ def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: 
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(config, env_name, "metadata", str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), schema=metadata_schema or _configured_lakehouse_schema(config, env_name, "metadata"), spark_session=spark_session)
+        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_schema or _configured_lakehouse_schema(config, env_name, "metadata"), context={"config": config, "env_name": env_name}, spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
@@ -785,16 +785,16 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
     return rows
 
 
-def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None = None, *, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
+def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
     """Render a downstream agreement selector and retain the selected row.
 
     Parameters
     ----------
-    agreement_rows_or_config : FrameworkConfig or iterable
-        Pass ``CONFIG`` in normal notebooks, or provide preloaded agreement
-        rows when the caller already has them available.
-    env_name : str, optional
-        Environment key used to load agreements when ``CONFIG`` is supplied.
+    agreement_rows : iterable, optional
+        Preloaded agreement rows. When omitted, agreements are loaded from the
+        active ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
+    context : dict, optional
+        Advanced override context. Defaults to the active ``FABRIC_CONTEXT``.
     spark_session : pyspark.sql.SparkSession, optional
         Fabric Spark session used for configured metadata-table reads.
     metadata_schema : str, optional
@@ -821,13 +821,18 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
     from IPython import display as ip
 
     global _SELECTED_AGREEMENT
-    if env_name is not None:
+    config = None
+    env_name = None
+    if agreement_rows is None:
+        config, env_name, _context = resolve_fabric_context(context=context)
         try:
-            rows = _list_data_agreements(agreement_rows_or_config, env_name, spark_session=spark_session, metadata_schema=metadata_schema)
+            rows = _list_data_agreements(config, env_name, spark_session=spark_session, metadata_schema=metadata_schema)
         except Exception as exc:
             raise RuntimeError("No agreements found. Run 01_agreement first.") from exc
     else:
-        rows = agreement_rows_or_config
+        rows = agreement_rows
+        if register_notebook:
+            config, env_name, _context = resolve_fabric_context(context=context)
     latest_rows = _latest_agreement_versions(rows)
     if not latest_rows:
         raise ValueError("No agreements found. Save a data agreement in notebook 01_agreement first.")
@@ -898,9 +903,8 @@ def widget_select_agreement(agreement_rows_or_config: Any, env_name: str | None 
         registration_status.value = _html_escape(_status_message())
 
     if register_notebook:
-        if env_name is None or spark_session is None:
-            raise ValueError("widget_select_agreement(..., register_notebook=True) requires CONFIG, env_name, and spark_session.")
-        config = agreement_rows_or_config
+        if config is None or env_name is None or spark_session is None:
+            raise ValueError("widget_select_agreement(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
         active_rows = _current_notebook_active_registrations(
             spark_session,
             config=config,
@@ -1400,19 +1404,17 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     }
 
 
-def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render standalone agreement evidence upload controls.
 
     Parameters
     ----------
-    config : FrameworkConfig or dict
-        Configuration containing agreement metadata routing and evidence table
-        settings.
-    env_name : str
-        Environment key configured by ``00_env_config``.
     spark : pyspark.sql.SparkSession
         Fabric Spark session used for metadata reads, file writes, and
         append-only evidence metadata writes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -1430,6 +1432,7 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
     does not read or write binary file content.
 
     """
+    config, env_name, _context = resolve_fabric_context(context=context)
     return _render_agreement_evidence_widget(
         spark=spark,
         config=config,
@@ -1437,17 +1440,16 @@ def widget_render_agreement_evidence(config: Any, env_name: str, *, spark: Any) 
     )
 
 
-def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
 
     Parameters
     ----------
-    config : FrameworkConfig or dict
-        Configuration containing steward widget fields and metadata routing.
-    env_name : str
-        Environment key configured by ``00_env_config``.
     spark : pyspark.sql.SparkSession
         Fabric Spark session used for metadata reads and append-only writes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -1455,20 +1457,20 @@ def widget_render_data_steward(config: Any, env_name: str, *, spark: Any) -> dic
         Rendered widget controls keyed for notebook customization.
 
     """
+    config, env_name, _context = resolve_fabric_context(context=context)
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_steward_widget")
 
 
-def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> dict[str, Any]:
+def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render append-only agreement create/update maintenance using active stewards.
 
     Parameters
     ----------
-    config : FrameworkConfig or dict
-        Configuration containing agreement widget fields and metadata routing.
-    env_name : str
-        Environment key configured by ``00_env_config``.
     spark : pyspark.sql.SparkSession
         Fabric Spark session used for metadata reads and append-only writes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -1476,5 +1478,5 @@ def widget_render_data_agreement(config: Any, env_name: str, *, spark: Any) -> d
         Rendered controls, including read-only generated-identifier context.
 
     """
+    config, env_name, _context = resolve_fabric_context(context=context)
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
-

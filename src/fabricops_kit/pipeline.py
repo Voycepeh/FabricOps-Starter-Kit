@@ -10,7 +10,7 @@ from .data_profiling import profile_dataframe
 from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, _check_schema_runtime, _check_schema_rule_runtime
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
-from .config import _current_audit_timestamp, _get_audit_timezone
+from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -548,9 +548,8 @@ def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]
 def run_table_guardrails(
     table_configs: list[dict[str, Any]],
     *,
-    config: Any,
-    env: str,
     run_id: str,
+    context: dict[str, Any] | None = None,
     spark_session: Any,
     agreement_id: str = "",
     agreement_contract_version: str = "",
@@ -570,14 +569,13 @@ def run_table_guardrails(
         ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``,
         ``distribution_columns``, and ``exclude_columns`` control the guardrail
         behavior.
-    config : Any
-        FabricOps framework configuration from ``00_env_config``.
-    env : str
-        Environment key used for configured metadata routing.
     run_id : str
         Current pipeline run identifier.
     spark_session : Any
         Spark session used by profile behavior and DQ helpers.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context written with catalogue evidence.
     stop_on_failure : bool, default False
@@ -602,6 +600,7 @@ def run_table_guardrails(
     are routed through the configured metadata target by the called helpers.
 
     """
+    config, env, resolved_context = resolve_fabric_context(context=context)
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
     freshness_results: dict[str, Mapping[str, Any]] = {}
@@ -878,16 +877,15 @@ def write_catalogue_evidence(
                 evidence = evidence.withColumn(column, F.lit(value))
             evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
             evidence = _normalize_catalogue_evidence_types(evidence)
-            write_lakehouse_table(evidence, config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
+            write_lakehouse_table(evidence, metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, mode=mode)
         statuses[name] = "written"
     return statuses
 
 def write_pipeline_lineage(
     *,
     spark: Any,
-    config: Any,
-    env: str,
     run_id: str,
+    context: dict[str, Any] | None = None,
     source_definitions: Mapping[str, Mapping[str, Any]],
     target_definitions: Mapping[str, Mapping[str, Any]],
     relationships: list[Mapping[str, Any]] | None = None,
@@ -906,8 +904,9 @@ def write_pipeline_lineage(
     ----------
     spark : pyspark.sql.SparkSession
         Spark session used to create lineage rows.
-    config, env : object, str
-        Metadata route from ``00_env_config``.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     run_id : str
         Pipeline run identifier.
     source_definitions, target_definitions : mapping
@@ -929,6 +928,7 @@ def write_pipeline_lineage(
         Status, row count, and written rows.
 
     """
+    config, env, resolved_context = resolve_fabric_context(context=context)
     audit = _runtime_audit_fields(config, env)
     created_at = _now_iso(config)
     if relationships is None:
@@ -966,16 +966,15 @@ def write_pipeline_lineage(
                     **audit,
                 })
     if rows:
-        write_lakehouse_table(spark.createDataFrame(rows), config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
+        write_lakehouse_table(spark.createDataFrame(rows), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context=resolved_context, mode=mode)
     return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
 
 
 def write_pipeline_run_summary(
     *,
     spark: Any,
-    config: Any,
-    env: str,
     run_id: str,
+    context: dict[str, Any] | None = None,
     agreement_id: str = "",
     agreement_contract_version: str = "",
     notebook_registry_id: str = "",
@@ -1007,8 +1006,9 @@ def write_pipeline_run_summary(
     ----------
     spark : pyspark.sql.SparkSession
         Spark session used to create the one-row summary DataFrame.
-    config, env : object, str
-        Metadata route from ``00_env_config``.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     run_id : str
         Pipeline run identifier.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional
@@ -1035,11 +1035,12 @@ def write_pipeline_run_summary(
 
     Notes
     -----
-    The row is written via ``write_lakehouse_table(..., config, env,
-    "metadata", metadata_table, mode="append")`` so runtime evidence never
-    relies on a default attached lakehouse.
+    The row is written via ``write_lakehouse_table(..., metadata_table,
+    target="metadata", context=resolved_context, mode="append")`` so runtime
+    evidence never relies on a default attached lakehouse.
 
     """
+    config, env, resolved_context = resolve_fabric_context(context=context)
     completed = completed_at or _now_iso(config)
     started = started_at or completed
     sources = source_definitions or {}
@@ -1082,5 +1083,5 @@ def write_pipeline_run_summary(
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
         "created_at": _now_iso(config),
     }
-    write_lakehouse_table(spark.createDataFrame([row]), config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
+    write_lakehouse_table(spark.createDataFrame([row]), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context=resolved_context, mode=mode)
     return row

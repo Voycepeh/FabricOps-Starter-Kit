@@ -245,3 +245,25 @@ The notebook prints registered tables, missing tables, warnings, steward readine
 | FabricStore | Fabric workspace/item values and target type. | Required field names, validation rules, and derived `root`. |
 | First-run setup | Run once during environment bootstrap, then keep available for validation. | `setup_metadata_tables` implementation and metadata routing through `metadata` target. |
 | Later runs | Review printed warnings and migrate broken tables manually when required. | No automatic deletion or migration of existing user data. |
+
+## Default Fabric context for downstream notebooks
+
+`00_env_config` is the single source of truth for environment settings in a notebook run. It initializes `FABRIC_CONTEXT`, an active context dictionary that includes the selected environment name, the validated `CONFIG`, the active workspace/lakehouse identifiers, and the setup context returned by `setup_notebook`.
+
+Subsequent template notebooks run `00_env_config` first and use helper defaults that resolve framework plumbing from `FABRIC_CONTEXT`. Common users should edit only business inputs such as source tables, target tables, file paths, primary keys, validation rules, and output names. They should not need to pass `CONFIG`, `ENV`, workspace IDs, or lakehouse IDs in normal helper calls.
+
+For example, prefer:
+
+```python
+source_table = "your_source_table"  # Change this to your input table
+source_df = read_data(source_table)
+```
+
+Advanced users can still override the active context explicitly when a notebook needs to read from another configured environment or target:
+
+```python
+custom_context = get_fabric_context(env_name="DEV")
+source_df = read_data("table_name", context=custom_context)
+```
+
+If a downstream notebook is run without first running `00_env_config`, context-aware helpers raise a clear error asking the user to run `00_env_config` before continuing.

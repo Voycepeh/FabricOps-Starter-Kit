@@ -5,9 +5,9 @@ Return the agreement selected by widget_select_agreement.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/data_agreement.py:1023`
+`fabricops_kit/data_agreement.py:1027`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/data_agreement.py#L1023-L1039">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/data_agreement.py#L1027-L1043">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -132,7 +132,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `1023`
+- Source line: `1027`
 - Inbound references count: 0
 - Outbound references count: 0
 - Used in templates: 02_pipeline
@@ -158,9 +158,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/data_agreement.py#L1023-L1039">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/9135bb1c3976c63456724b4fb538f20fa1709234/src/fabricops_kit/data_agreement.py#L1023-L1039</a>
-- Start line: `1023`
-- End line: `1039`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/data_agreement.py#L1027-L1043">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/data_agreement.py#L1027-L1043</a>
+- Start line: `1027`
+- End line: `1043`
 - Signature:
 
 ```python

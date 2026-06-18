@@ -784,7 +784,7 @@ def enforce_profile_behavior(
     if rules_df is None and config is not None and env is not None:
         from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table
         try:
-            rules_df = read_lakehouse_table(config, env, "metadata", rules_table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark)
+            rules_df = read_lakehouse_table(rules_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, spark_session=spark)
         except Exception as exc:
             if not _is_missing_table_error(exc):
                 raise
@@ -811,7 +811,7 @@ def enforce_profile_behavior(
     if catalogue_df is None and config is not None and env is not None:
         from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table
         try:
-            catalogue_df = read_lakehouse_table(config, env, "metadata", metadata_table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark)
+            catalogue_df = read_lakehouse_table(metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, spark_session=spark)
         except Exception as exc:
             if _is_missing_table_error(exc):
                 catalogue_df = None

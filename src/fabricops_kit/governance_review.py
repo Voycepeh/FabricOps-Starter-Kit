@@ -8,7 +8,7 @@ import re
 import uuid
 from typing import Any, Iterable, Mapping
 
-from .config import _current_audit_timestamp, _get_audit_timezone
+from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .data_profiling import profile_dataframe
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row
@@ -321,7 +321,7 @@ def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) ->
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
-    rows = _coerce_rows(read_lakehouse_table(config, env, "metadata", CATALOGUE_TABLE, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    rows = _coerce_rows(read_lakehouse_table(CATALOGUE_TABLE, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, spark_session=spark_session))
     selection_identity = _catalogue_physical_identity(selection)
     filtered = []
     for row in rows:
@@ -631,11 +631,10 @@ def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, c
     if records:
         write_lakehouse_table(
             spark_session.createDataFrame(records),
-            config,
-            env,
-            "metadata",
             ENRICHMENT_RULES_TABLE,
+            target="metadata",
             schema=_configured_lakehouse_schema(config, env, "metadata"),
+            context={"config": config, "env_name": env},
             mode="append",
         )
 
@@ -643,9 +642,8 @@ def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, c
 def widget_enrich_table_metadata(
     guardrail_state: Mapping[str, Any],
     *,
-    config: Any,
-    env: str,
     spark_session: Any,
+    context: dict[str, Any] | None = None,
     source_notebook_type: str = "02_pipeline",
     created_by_role: str = "engineering",
 ) -> dict[str, Any]:
@@ -655,14 +653,11 @@ def widget_enrich_table_metadata(
     ----------
     guardrail_state : Mapping[str, Any]
         Target handover state returned by :func:`widget_select_guardrail_target`.
-    config : Any
-        Runtime configuration from ``00_env_config`` containing metadata routing
-        and enrichment dropdown/custom-field settings.
-    env : str
-        Environment key used to route metadata writes to the configured
-        ``metadata`` target.
     spark_session : Any
         Spark session used to create write DataFrames.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
         Notebook type stamped on authored records.
     created_by_role : {"engineering", "governance", "system"}, default="engineering"
@@ -678,6 +673,7 @@ def widget_enrich_table_metadata(
         guardrail rules.
 
     """
+    config, env, _context = resolve_fabric_context(context=context)
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
@@ -846,7 +842,7 @@ def _status_is_warning(value: Any) -> bool:
 
 
 def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    return _coerce_rows(read_lakehouse_table(config, env, "metadata", table, schema=_configured_lakehouse_schema(config, env, "metadata"), spark_session=spark_session))
+    return _coerce_rows(read_lakehouse_table(table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, spark_session=spark_session))
 
 
 def _evaluate_governance_readiness(
@@ -1086,7 +1082,7 @@ def record_table_governance(
     }
     for table_name, records in writes.items():
         if records:
-            write_lakehouse_table(spark_session.createDataFrame(records), config, env, "metadata", table_name, schema=_configured_lakehouse_schema(config, env, "metadata"), mode=mode)
+            write_lakehouse_table(spark_session.createDataFrame(records), table_name, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, mode=mode)
 
     readiness_summary = None
     if evaluate_readiness:
@@ -1483,7 +1479,7 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
 def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
     """Read current DQ guardrail rules from the configured metadata target."""
     schema = _configured_lakehouse_schema(config, env, "metadata")
-    frame = read_lakehouse_table(config, env, "metadata", GUARDRAIL_RULES_TABLE, schema=schema, spark_session=spark_session)
+    frame = read_lakehouse_table(GUARDRAIL_RULES_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env_name": env})
     if "guardrail_type" in set(getattr(frame, "columns", [])):
         _, F, _ = _spark_sql_helpers()
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
@@ -1910,11 +1906,10 @@ def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spa
     """Read a metadata table and return row dictionaries."""
     try:
         frame = read_lakehouse_table(
-            config,
-            env,
-            "metadata",
             table_name,
+            target="metadata",
             schema=_configured_lakehouse_schema(config, env, "metadata"),
+            context={"config": config, "env_name": env},
             spark_session=spark_session,
         )
     except Exception as exc:
@@ -1972,26 +1967,24 @@ def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str,
         return
     write_lakehouse_table(
         spark_session.createDataFrame(records),
-        config,
-        env,
-        "metadata",
         GUARDRAIL_RULES_TABLE,
+        target="metadata",
         schema=_configured_lakehouse_schema(config, env, "metadata"),
+        context={"config": config, "env_name": env},
         mode="append",
     )
 
 
-def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any) -> dict[str, Any]:
+def widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render an interactive guardrail target selector and return handover state.
 
     Parameters
     ----------
-    config : Any
-        Runtime configuration containing metadata lakehouse routing.
-    env : str
-        Environment name used to read metadata tables.
     spark_session : Any
         Spark session for metadata reads.
+    context : dict, optional
+        Advanced override context. Defaults to the active ``FABRIC_CONTEXT``
+        initialized by ``00_env_config``.
 
     Returns
     -------
@@ -2001,6 +1994,7 @@ def widget_select_guardrail_target(config: Any, env: str, *, spark_session: Any)
         state updates when the user changes the selected target.
 
     """
+    config, env, _context = resolve_fabric_context(context=context)
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
@@ -2137,9 +2131,8 @@ def _schema_freshness_profile_records_from_selection(
 def widget_author_schema_freshness_profile_rules(
     state: Mapping[str, Any],
     *,
-    config: Any = None,
-    env: str | None = None,
     spark_session: Any = None,
+    context: dict[str, Any] | None = None,
     bypass_reason: str = "",
     source_notebook_type: str = "02_pipeline",
     created_by_role: str = "engineering",
@@ -2151,8 +2144,11 @@ def widget_author_schema_freshness_profile_rules(
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
-    config, env, spark_session : Any, optional
-        Runtime objects used for save actions.
+    spark_session : Any, optional
+        Spark session used for save actions.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     bypass_reason : str, optional
         Initial approval-bypass reason.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
@@ -2169,6 +2165,7 @@ def widget_author_schema_freshness_profile_rules(
         ``build_records``/``save`` helpers for tests and notebook automation.
 
     """
+    config, env, _context = resolve_fabric_context(context=context)
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
@@ -2231,7 +2228,7 @@ def widget_author_schema_freshness_profile_rules(
         records = build_records(action="apply_now" if use_bypass else action)
         records_state["records"] = records
         if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save."
+            message.value = "<b>Preview only:</b> FABRIC_CONTEXT/context and spark_session are required to save."
             return records
         _write_rule_records(records, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {len(records)} guardrail rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
@@ -2325,9 +2322,8 @@ def widget_author_dq_rules(
     selected_columns: Iterable[str] | None = None,
     parameters: Mapping[str, Any] | None = None,
     severity: str = "warning",
-    config: Any = None,
-    env: str | None = None,
     spark_session: Any = None,
+    context: dict[str, Any] | None = None,
     bypass_reason: str = "",
     source_notebook_type: str = "02_pipeline",
     created_by_role: str = "engineering",
@@ -2349,8 +2345,11 @@ def widget_author_dq_rules(
         Initial JSON rule parameters.
     severity : str, default="warning"
         Initial rule severity.
-    config, env, spark_session : Any, optional
-        Runtime objects used for saves.
+    spark_session : Any, optional
+        Spark session used for saves.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     bypass_reason : str, optional
         Initial approval-bypass reason.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
@@ -2367,6 +2366,7 @@ def widget_author_dq_rules(
         helpers for tests and notebook automation.
 
     """
+    config, env, _context = resolve_fabric_context(context=context)
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
@@ -2437,7 +2437,7 @@ def widget_author_dq_rules(
     def save_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         records_state["records"] = records
         if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save."
+            message.value = "<b>Preview only:</b> FABRIC_CONTEXT/context and spark_session are required to save."
             return records
         _write_rule_records(records, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
@@ -2555,9 +2555,8 @@ def mark_table_ungoverned(state: Mapping[str, Any], *, actor: str | None = None,
 def widget_author_guardrail_rules(
     state: Mapping[str, Any],
     *,
-    config: Any = None,
-    env: str | None = None,
     spark_session: Any = None,
+    context: dict[str, Any] | None = None,
     source_notebook_type: str = "03_governance",
     created_by_role: str = "governance",
 ) -> dict[str, Any]:
@@ -2567,8 +2566,11 @@ def widget_author_guardrail_rules(
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
-    config, env, spark_session : Any, optional
-        Runtime objects used for saves.
+    spark_session : Any, optional
+        Spark session used for saves.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="03_governance"
         Notebook type stamped on authored records.
     created_by_role : {"engineering", "governance", "system"}, default="governance"
@@ -2580,21 +2582,25 @@ def widget_author_guardrail_rules(
         Combined widget states for guardrail authoring.
 
     """
+    resolved_context = resolve_fabric_context(context=context)[2]
     return {
-        "schema_freshness_profile": widget_author_schema_freshness_profile_rules(state, config=config, env=env, spark_session=spark_session, source_notebook_type=source_notebook_type, created_by_role=created_by_role),
-        "dq": widget_author_dq_rules(state, config=config, env=env, spark_session=spark_session, source_notebook_type=source_notebook_type, created_by_role=created_by_role),
+        "schema_freshness_profile": widget_author_schema_freshness_profile_rules(state, context=resolved_context, spark_session=spark_session, source_notebook_type=source_notebook_type, created_by_role=created_by_role),
+        "dq": widget_author_dq_rules(state, context=resolved_context, spark_session=spark_session, source_notebook_type=source_notebook_type, created_by_role=created_by_role),
     }
 
 
-def widget_review_table_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None, source_notebook_type: str = "03_governance") -> dict[str, Any]:
+def widget_review_table_governance(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None, source_notebook_type: str = "03_governance") -> dict[str, Any]:
     """Render the 03-only formal governance review widget for a selected table.
 
     Parameters
     ----------
     state : mapping
         Selected table state containing enrichment and guardrail rule history.
-    config, env, spark_session : Any, optional
-        Runtime objects used to append formal review outcomes.
+    spark_session : Any, optional
+        Spark session used to append formal review outcomes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     source_notebook_type : str, default="03_governance"
         Notebook context. Formal review actions require ``03_governance``.
 
@@ -2605,6 +2611,7 @@ def widget_review_table_governance(state: Mapping[str, Any], *, config: Any = No
 
     """
     _assert_governance_review_context(source_notebook_type)
+    config, env, _context = resolve_fabric_context(context=context)
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
@@ -2742,7 +2749,7 @@ def widget_review_table_governance(state: Mapping[str, Any], *, config: Any = No
             review_row.pop("_record_kind", None)
         records_state["last_record"] = row
         if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save review action."
+            message.value = "<b>Preview only:</b> FABRIC_CONTEXT/context and spark_session are required to save review action."
             return row
         writer(rows_to_write, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {action} formal review event to {target_table}.</b>"
@@ -2785,7 +2792,7 @@ def widget_review_table_governance(state: Mapping[str, Any], *, config: Any = No
         "ui": ui,
     }
 
-def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any = None, env: str | None = None, spark_session: Any = None) -> dict[str, Any]:
+def widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render interactive 03 governance policy and shared rule-review controls.
 
     Parameters
@@ -2794,8 +2801,11 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
         Handover state from :func:`widget_select_guardrail_target`. The state may
         include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and
         ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``.
-    config, env, spark_session : Any, optional
-        Runtime objects used for save actions.
+    spark_session : Any, optional
+        Spark session used for save actions.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -2804,6 +2814,7 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
         enrichment lifecycle decisions.
 
     """
+    config, env, _context = resolve_fabric_context(context=context)
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
@@ -2855,7 +2866,7 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, config: Any 
             review_row.pop("_record_kind", None)
         records_state["last_record"] = row
         if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> config, env, and spark_session are required to save review action."
+            message.value = "<b>Preview only:</b> FABRIC_CONTEXT/context and spark_session are required to save review action."
             return row
         writer(rows_to_write, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {action} review event to {target_table}.</b>"

@@ -75,17 +75,18 @@ def _schema_io_config() -> PathConfig:
 def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
     """Verify lakehouse table read routes every configured lakehouse store."""
     config = _io_config()
+    context = {"config": config, "env_name": "dev"}
 
     for target in ("source", "unified", "product"):
         spark = _Spark()
-        io.read_lakehouse_table(config, "dev", target, "orders", schema=None, spark_session=spark)
+        io.read_lakehouse_table("orders", target=target, schema=None, spark_session=spark, context=context)
 
         expected_path = f"abfss://dev-{target}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target}-item/Tables/orders"
         assert ("format", "delta") in spark.read.calls
         assert ("load", expected_path) in spark.read.calls
 
     metadata_spark = _Spark()
-    io.read_lakehouse_table(config, "dev", "metadata", "orders", schema=None, spark_session=metadata_spark)
+    io.read_lakehouse_table("orders", target="metadata", schema=None, spark_session=metadata_spark, context=context)
     metadata_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/orders"
     assert ("format", "delta") in metadata_spark.read.calls
     assert ("load", metadata_path) in metadata_spark.read.calls
@@ -95,9 +96,10 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
 def test_lakehouse_table_write_routes_to_configured_store():
     """Verify lakehouse table write routes to configured store."""
     config = _io_config()
+    context = {"config": config, "env_name": "dev"}
     frame = _Frame()
 
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "metadata_orders", schema=None, mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
+    io.write_lakehouse_table(frame, "metadata_orders", target="metadata", schema=None, mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/metadata_orders"
     assert ("mode", "overwrite") in frame.write.calls
@@ -109,10 +111,11 @@ def test_lakehouse_table_write_routes_to_configured_store():
 def test_lakehouse_file_readers_build_configured_files_paths():
     """Verify lakehouse file readers build configured files paths."""
     config = _io_config()
+    context = {"config": config, "env_name": "dev"}
     spark = _Spark()
 
-    io.read_lakehouse_csv(config, "dev", "source", "Files/raw/orders.csv", spark_session=spark)
-    io.read_lakehouse_parquet(config, "dev", "unified", "curated/orders.parquet", spark_session=spark, verbose=False)
+    io.read_lakehouse_csv("Files/raw/orders.csv", target="source", spark_session=spark, context=context)
+    io.read_lakehouse_parquet("curated/orders.parquet", target="unified", spark_session=spark, verbose=False, context=context)
 
     assert ("csv", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv") in spark.read.calls
     assert ("parquet", "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Files/curated/orders.parquet") in spark.read.calls
@@ -128,6 +131,7 @@ def test_lakehouse_excel_remains_exposed_and_callable():
 def test_warehouse_helpers_build_configured_query(monkeypatch):
     """Verify warehouse helpers build configured query."""
     config = _io_config()
+    context = {"config": config, "env_name": "dev"}
 
     class Constants:
         WorkspaceId = "workspace_id"
@@ -143,8 +147,8 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
 
     spark = _Spark()
     frame = _Frame()
-    read_result = io.read_warehouse_table(config, "dev", "warehouse", "dbo", "orders", spark_session=spark)
-    io.write_warehouse_table(frame, config, "dev", "warehouse", "dbo", "orders", mode="overwrite")
+    read_result = io.read_warehouse_table("dbo", "orders", target="warehouse", spark_session=spark, context=context)
+    io.write_warehouse_table(frame, "dbo", "orders", target="warehouse", mode="overwrite", context=context)
 
     assert read_result == {"synapsesql": "wh_product_dev.dbo.orders"}
     assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
@@ -187,9 +191,10 @@ def test_io_orchestrators_are_root_exports_and_low_level_helpers_are_module_only
 def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
     """Verify lakehouse table read with explicit schema uses schema physical path."""
     config = _io_config()
+    context = {"config": config, "env_name": "dev"}
     spark = _Spark()
 
-    io.read_lakehouse_table(config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema="METADATA", spark_session=spark)
+    io.read_lakehouse_table("METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", spark_session=spark, context=context)
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
     assert ("load", expected_path) in spark.read.calls
@@ -199,9 +204,10 @@ def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
 def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
     """Verify lakehouse table write with explicit schema uses schema physical path."""
     config = _io_config()
+    context = {"config": config, "env_name": "dev"}
     frame = _Frame()
 
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema="METADATA", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
+    io.write_lakehouse_table(frame, "METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
     assert ("save", expected_path) in frame.write.calls
@@ -211,11 +217,12 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
 def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_config():
     """Verify lakehouse schema enabled target routes paths and identifiers from config."""
     config = _schema_io_config()
+    context = {"config": config, "env_name": "dev"}
     spark = _Spark()
     frame = _Frame()
 
-    io.read_lakehouse_table(config, "dev", "source", "orders", schema="src", spark_session=spark)
-    io.write_lakehouse_table(frame, config, "dev", "metadata", "METADATA_GUARDRAIL_RULES", schema="meta", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False)
+    io.read_lakehouse_table("orders", target="source", schema="src", spark_session=spark, context=context)
+    io.write_lakehouse_table(frame, "METADATA_GUARDRAIL_RULES", target="metadata", schema="meta", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
     metadata_store = config.paths["dev"]["metadata"]
 
     assert ("load", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders") in spark.read.calls
@@ -239,14 +246,14 @@ import pytest
 def test_lakehouse_table_schema_validation_rejects_unsafe_names(schema):
     """Verify lakehouse table schema validation rejects unsafe names."""
     with pytest.raises(ValueError):
-        io.read_lakehouse_table(_io_config(), "dev", "metadata", "TABLE", schema=schema, spark_session=_Spark())
+        io.read_lakehouse_table("TABLE", target="metadata", schema=schema, spark_session=_Spark(), context={"config": _io_config(), "env_name": "dev"})
 
 
 @pytest.mark.parametrize("table", ["schema.table", "bad/name", "bad-name", "1TABLE", ""])
 def test_lakehouse_table_validation_rejects_unsafe_names(table):
     """Verify lakehouse table validation rejects unsafe names."""
     with pytest.raises(ValueError):
-        io.read_lakehouse_table(_io_config(), "dev", "metadata", table, schema=None, spark_session=_Spark())
+        io.read_lakehouse_table(table, target="metadata", schema=None, spark_session=_Spark(), context={"config": _io_config(), "env_name": "dev"})
 
 
 def test_read_write_data_are_public_orchestrators_and_low_level_io_is_module_only(monkeypatch):
@@ -264,12 +271,55 @@ def test_read_write_data_are_public_orchestrators_and_low_level_io_is_module_onl
     monkeypatch.setattr(io, "read_lakehouse_table", lambda *args, **kwargs: calls.append(("read_table", args, kwargs)) or "read")
     monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: calls.append(("write_table", args, kwargs)))
 
-    assert io.read_data("config", "dev", "source", "orders", schema="dbo") == "read"
-    io.write_data("df", "config", "dev", "unified", "orders", schema="dbo", mode="overwrite")
+    context = {"config": _io_config(), "env_name": "dev"}
+
+    assert io.read_data("orders", target="source", schema="dbo", context=context) == "read"
+    io.write_data("df", "orders", target="unified", schema="dbo", mode="overwrite", context=context)
 
     assert calls[0][0] == "read_table"
-    assert calls[0][1][:4] == ("config", "dev", "source", "orders")
+    assert calls[0][1] == ("orders",)
+    assert calls[0][2]["target"] == "source"
     assert calls[0][2]["schema"] == "dbo"
+    assert calls[0][2]["context"] == context
     assert calls[1][0] == "write_table"
-    assert calls[1][1][:5] == ("df", "config", "dev", "unified", "orders")
+    assert calls[1][1] == ("df", "orders")
+    assert calls[1][2]["target"] == "unified"
     assert calls[1][2]["mode"] == "overwrite"
+    assert calls[1][2]["context"] == context
+
+
+def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
+    """Verify lakehouse reads can default to the active Fabric context."""
+    import builtins
+
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env_name": "dev"}, raising=False)
+    spark = _Spark()
+
+    io.read_lakehouse_table("orders", spark_session=spark)
+
+    expected_path = "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/orders"
+    assert ("load", expected_path) in spark.read.calls
+
+
+def test_write_lakehouse_table_defaults_to_active_context(monkeypatch):
+    """Verify lakehouse writes can default to the active Fabric context."""
+    import builtins
+
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env_name": "dev"}, raising=False)
+    frame = _Frame()
+
+    io.write_lakehouse_table(frame, "orders_clean", mode="overwrite", verbose=False)
+
+    expected_path = "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/orders_clean"
+    assert ("save", expected_path) in frame.write.calls
+
+
+def test_missing_active_context_has_clear_error(monkeypatch):
+    """Verify missing 00_env_config state raises a clear action message."""
+    import builtins
+    import pytest
+
+    monkeypatch.delattr(builtins, "FABRIC_CONTEXT", raising=False)
+
+    with pytest.raises(RuntimeError, match="Please run 00_env_config"):
+        io.read_lakehouse_table("orders", spark_session=_Spark())
