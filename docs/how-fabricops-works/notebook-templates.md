@@ -24,10 +24,13 @@ Use this page as a launch point, not only a concept map. The template notebooks 
 
 ## Optional example notebooks
 
-| Example notebook | Purpose | Notes |
+These notebooks are release-specific validation aids. They stay aligned to the notebook handshake. They are not production workflow templates. Use them when you need discovery support, demo data, or focused smoke checks before adapting the core templates.
+
+| Notebook | Purpose | Relevant helpers |
 | --- | --- | --- |
-| [`templates/notebooks/example_pipeline_demo.ipynb`](../../templates/notebooks/example_pipeline_demo.ipynb) | Builds deterministic `demo_` source data for the real pipeline template. | Useful for validating happy path, schema guardrails, DQ guardrails, freshness, and load-behaviour scenarios. |
-| [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](../../templates/notebooks/example_dq_rule_smoke_test.ipynb) | Exercises DQ rule evaluation with warning and blocking behavior. | Useful before introducing custom project data. |
+| [`templates/notebooks/99_explore.ipynb`](../../templates/notebooks/99_explore.ipynb) | Optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis support. | [`read_data`](../api/reference/read_data.md), [`profile_dataframe`](../api/reference/profile_dataframe.md) |
+| [`templates/notebooks/example_pipeline_demo.ipynb`](../../templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. | [`write_data`](../api/reference/write_data.md) |
+| [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](../../templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. | [`write_data`](../api/reference/write_data.md), [`enforce_dq_rules`](../api/reference/enforce_dq_rules.md) |
 
 ![FabricOps workspace setup](../assets/fabric-example-workspace-setup.png)
 
@@ -40,14 +43,3 @@ Use this page as a launch point, not only a concept map. The template notebooks 
 5. Use `99_explore` and examples for investigation, demos, and smoke tests, not as replacements for the governed template sequence.
 
 The templates intentionally call public helpers rather than hiding workflow behavior in large custom cells. Function links are embedded in the implementation guide page for each notebook, including [setup_notebook](../api/reference/setup_notebook.md), [prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs.md), and [widget_select_guardrail_target](../api/reference/widget_select_guardrail_target.md).
-
-
-## Optional example notebooks
-
-These notebooks are release-specific validation aids. They stay aligned to the notebook handshake. They are not production workflow templates. Use them when you need discovery support, demo data, or focused smoke checks before adapting the core templates.
-
-| Notebook | Purpose | Relevant helpers |
-| --- | --- | --- |
-| `99_explore.ipynb` | Optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis support. | [`read_data`](../api/reference/read_data.md), [`profile_dataframe`](../api/reference/profile_dataframe.md) |
-| `example_pipeline_demo.ipynb` | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. | [`write_data`](../api/reference/write_data.md) |
-| `example_dq_rule_smoke_test.ipynb` | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. | [`write_data`](../api/reference/write_data.md), [`enforce_dq_rules`](../api/reference/enforce_dq_rules.md) |
