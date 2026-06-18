@@ -55,7 +55,7 @@ Do not manually edit generated reference outputs as source of truth. Update sour
 
 Generated artifacts:
 - `docs/reference/index.md`
-- `docs/reference/dependency-metadata.json`
+- `docs/reference/_data/dependency-metadata.json`
 - `docs/reference/call-graph.md`
 - `docs/api/reference/*.md`
 - `docs/reference/internal/*.md`

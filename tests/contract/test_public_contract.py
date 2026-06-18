@@ -148,7 +148,7 @@ def test_root_public_exports_match_approved_v1_list():
 def test_generated_callable_manifest_matches_approved_v1_list():
     """Verify generated callable manifest matches approved v1 list."""
     root = Path(__file__).parents[2]
-    manifest = json.loads((root / "docs" / "reference" / "manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads((root / "docs" / "reference" / "_data" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
     assert manifest_callables == APPROVED_V1_CALLABLES
 
@@ -186,7 +186,7 @@ def test_removed_summary_module_is_not_part_of_v1_surface():
 def test_template_function_map_matches_actual_template_calls_and_pages():
     """Verify template function map matches actual template calls and pages."""
     root = Path(__file__).parents[2]
-    manifest = json.loads((root / "docs" / "reference" / "manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads((root / "docs" / "reference" / "_data" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
     called = _template_called_fabricops_functions()
 
