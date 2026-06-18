@@ -1,30 +1,26 @@
 # Metadata Dashboard
 
-A full metadata dashboard is planned after v1.0.0. The current starter kit creates metadata evidence first, so teams have useful records before a dashboard exists.
+The metadata dashboard is the visibility layer over the FabricOps metadata handshake. It helps users see the current governed state without opening every notebook or querying every metadata table manually.
 
-Read [How FabricOps Works](index.md) first for the notebook workflow.
+## What users can see
 
-## Current v1.0.0 foundation
+A dashboard over the FabricOps metadata tables should expose:
 
-Today, the notebooks create metadata that can already support review and operations:
+- **Agreements** — steward, agreement, contract, and evidence context created from `01_agreement`.
+- **Catalogue and profile evidence** — observed table and column evidence from `METADATA_DATA_CATALOGUE`.
+- **Guardrail rules** — active, pending, draft, rejected, inactive, and superseded guardrail intent from `METADATA_GUARDRAIL_RULES`.
+- **Guardrail results** — runtime pass, warning, fail, skipped, and continuation outcomes from `METADATA_GUARDRAIL_RESULTS`.
+- **Pipeline run status** — run summaries from `METADATA_PIPELINE_RUNS`.
+- **Lineage** — source-to-target relationships from `METADATA_DATA_LINEAGE_TABLE`.
+- **Governance review state** — enrichment and guardrail lifecycle state, including records that need review and records active pending post-review.
 
-- `01_agreement` captures agreement, steward, and supporting evidence.
-- `02_pipeline` writes profiles, lineage, guardrail results, output context, and run metadata evidence.
-- `03_governance` saves guardrail review decisions for profiled tables.
+## How to use it
 
-## Planned visibility layer
+Use the dashboard as a user-facing check on the notebook handshake:
 
-![FabricOps metadata dashboard wireframe](../assets/fabricops-metadata-dashboard.png){ .full-width }
+1. Confirm `01_agreement` created the expected agreement and steward context.
+2. Confirm `02_pipeline` wrote catalogue evidence, guardrail results, lineage, and run summaries.
+3. Confirm `03_governance` review decisions are visible and distinguish active rules from pending or superseded history.
+4. Use warning or failed guardrail results to decide which notebook and table target needs attention.
 
-A future dashboard should make collected metadata easier to browse. It should not become the source of truth and it should not enforce production rules.
-
-| Planned view | Purpose |
-| --- | --- |
-| Agreement overview | Show agreement status, owner, steward, and evidence coverage. |
-| Pipeline evidence | Show recent `02_pipeline` profiles, lineage, guardrail results, and run context. |
-| Governance review | Show guardrail review decisions from `03_governance`. |
-| Support readiness | Show whether enough evidence exists for support and review. |
-
-## Design principle
-
-Keep the metadata tables as the source of evidence. A dashboard should report what notebooks and reviewers recorded; it should not imply that dashboard views approve rules or block pipeline runs.
+The dashboard should stay practical: it summarizes the governed state held in metadata tables; it is not the source of truth for changing rules or rewriting evidence.

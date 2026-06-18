@@ -27,11 +27,12 @@ nav:
 
   - How FabricOps Works:
       - Overview: how-fabricops-works/index.md
-      - Notebook Templates: how-fabricops-works/notebook-templates.md
-      - Environment Configuration: how-fabricops-works/environment-config.md
+      - Template Notebooks: how-fabricops-works/notebook-templates.md
+      - 00 Environment Configuration: how-fabricops-works/environment-config.md
+      - 01 Agreement Setup: how-fabricops-works/agreement-setup.md
+      - 02 Pipeline Execution: how-fabricops-works/pipeline-execution.md
+      - 03 Governance Review: how-fabricops-works/governance-review.md
       - Metadata Tables: how-fabricops-works/metadata-tables.md
-      - Pipeline Guardrails: how-fabricops-works/pipeline-guardrails.md
-      - Data quality & Governance: how-fabricops-works/governance-review.md
       - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
 
   - Function & DQ Rules Reference:

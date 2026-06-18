@@ -481,20 +481,23 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
 
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:
-    """Verify concept pages link back to key callable references."""
+    """Verify user-guide pages link back to key callable references."""
     notebook_templates = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md").read_text(encoding="utf-8")
-    pipeline_guardrails = (ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md").read_text(encoding="utf-8")
+    environment_config = (ROOT / "docs" / "how-fabricops-works" / "environment-config.md").read_text(encoding="utf-8")
+    agreement_setup = (ROOT / "docs" / "how-fabricops-works" / "agreement-setup.md").read_text(encoding="utf-8")
+    pipeline_execution = (ROOT / "docs" / "how-fabricops-works" / "pipeline-execution.md").read_text(encoding="utf-8")
     governance_review = (ROOT / "docs" / "how-fabricops-works" / "governance-review.md").read_text(encoding="utf-8")
     metadata_tables = (ROOT / "docs" / "how-fabricops-works" / "metadata-tables.md").read_text(encoding="utf-8")
 
     assert "[setup_notebook](../api/reference/setup_notebook/)" in notebook_templates
-    assert "[prepare_pipeline_table_configs](../api/reference/prepare_pipeline_table_configs/)" in notebook_templates
-    assert "[widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/)" in notebook_templates
-    assert "[run_table_guardrails](../api/reference/run_table_guardrails/)" in pipeline_guardrails
-    assert "[enforce_profile_behavior](../api/reference/enforce_profile_behavior/)" in pipeline_guardrails
-    assert "[stop_if_failed](../api/reference/stop_if_failed/)" in pipeline_guardrails
-    assert "[widget_select_guardrail_target](../api/reference/widget_select_guardrail_target/)" in governance_review
-    assert "[widget_review_guardrail_governance](../api/reference/widget_review_guardrail_governance/)" in governance_review
+    assert "[`setup_notebook`](../api/reference/setup_notebook/)" in environment_config
+    assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables/)" in environment_config
+    assert "[`widget_render_data_steward`](../api/reference/widget_render_data_steward/)" in agreement_setup
+    assert "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/)" in pipeline_execution
+    assert "[`run_table_guardrails`](../api/reference/run_table_guardrails/)" in pipeline_execution
+    assert "[`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/)" in governance_review
+    assert "[`widget_author_guardrail_rules`](../api/reference/widget_author_guardrail_rules/)" in governance_review
+    assert "[`widget_review_table_governance`](../api/reference/widget_review_table_governance/)" in governance_review
     assert "[setup_metadata_tables](../api/reference/setup_metadata_tables/)" in metadata_tables
     assert "[write_pipeline_lineage](../api/reference/write_pipeline_lineage/)" in metadata_tables
 
@@ -518,23 +521,16 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
         assert f'data-callable-name="{callable_name}"' not in reference_index
 
 
-def test_template_function_map_matches_direct_public_notebook_calls() -> None:
-    """Verify template function map matches direct public notebook calls."""
-    function_manifest = json.loads((REFERENCE_DIR / "function-manifest.json").read_text(encoding="utf-8"))
-    public_names = {entry["name"] for entry in function_manifest if entry.get("classification") == "Callable"}
+def test_template_function_map_points_to_notebook_aligned_user_guide() -> None:
+    """Verify template function map delegates to the notebook-aligned guide."""
     template_map = (REFERENCE_DIR / "template-function-map.md").read_text(encoding="utf-8")
 
-    mapped_sections = {}
-    for section in template_map.split('<section class="template-function-group">')[1:]:
-        notebook_key = re.search(r"<h2><code>([^<]+)</code></h2>", section)
-        assert notebook_key is not None
-        mapped_sections[notebook_key.group(1)] = set(re.findall(r"<code>([^<]+)</code></a>", section))
-
-    template_paths = sorted((ROOT / "templates" / "notebooks").glob("*.ipynb"))
-    assert set(mapped_sections) == {path.stem for path in template_paths}
-
-    for path in template_paths:
-        assert mapped_sections[path.stem] == _direct_public_notebook_calls(path, public_names)
+    assert "now embedded into the notebook-aligned user guide pages" in template_map
+    assert "../how-fabricops-works/environment-config.md" in template_map
+    assert "../how-fabricops-works/agreement-setup.md" in template_map
+    assert "../how-fabricops-works/pipeline-execution.md" in template_map
+    assert "../how-fabricops-works/governance-review.md" in template_map
+    assert '<section class="template-function-group">' not in template_map
 
 
 def _direct_public_notebook_calls(path: Path, public_names: set[str]) -> set[str]:
