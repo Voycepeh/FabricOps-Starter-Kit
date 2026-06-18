@@ -20,7 +20,6 @@ Use this file as a concise navigation map for documentation and automation workf
 ## Notebook flow
 
 - [Notebook Templates](how-fabricops-works/notebook-templates.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
-- [Template Function Map](reference/template-function-map.md): Map from notebook templates to supported package helpers.
 
 ## Metadata and contracts
 
