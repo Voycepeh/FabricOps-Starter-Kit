@@ -300,15 +300,24 @@ def test_template_examples_use_default_context_not_framework_plumbing():
         "config=CONFIG",
         "env_name=ENV",
         "env_name=ENV_NAME",
+        "ENV_NAME = FABRIC_CONTEXT",
+        "context=custom_context",
         "workspace_id=",
         "lakehouse_id=",
         "read_data(CONFIG",
         "write_data(\n        CONFIG",
     ]
-    top_block = code[: code.index("df_orders = read_data(")]
-    assert all(item not in top_block for item in forbidden)
-    assert "context=custom_context" in top_block
-    assert 'format="csv"' in top_block
-    assert 'format="excel"' in top_block
-    assert 'format="parquet"' in top_block
-    assert "run_parallel(" in top_block
+    bootstrap_block = code[: code.index("source_table = ")]
+    read_config_block = code[code.index("source_table = ") : code.index("df_orders = read_data(")]
+    load_block = code[code.index("df_orders = read_data(") : code.index("SOURCE_TABLES = [")]
+
+    assert all(item not in code for item in forbidden)
+    assert "source_table" not in bootstrap_block
+    assert "customer_table" not in bootstrap_block
+    assert "source_table" in read_config_block
+    assert "customer_table" in read_config_block
+    assert "target_table = " not in code
+    assert "primary_key = " not in code
+    assert 'format="csv"' in load_block
+    assert 'format="excel"' in load_block
+    assert 'format="parquet"' in load_block
