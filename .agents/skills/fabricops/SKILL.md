@@ -18,7 +18,6 @@ Start with the existing generated function reference system. Do not replace it w
 - `docs/api/reference/` — public callable pages for notebook authors.
 - Public callable pages under `docs/api/reference/` embed internal helper implementation details for package maintenance. Standalone `docs/reference/internal/` pages are generated only when explicitly enabled for maintainer diagnostics.
 - `docs/reference/dq-rules/` — generated DQ rule reference pages for supported rule types, parameters, and examples.
-- `docs/reference/template-function-map.md` — notebook-template to callable map.
 
 ## Core operating principles
 
@@ -85,14 +84,13 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 - Use `docs/reference/_data/function-manifest.json` for the machine-readable function inventory and dependency metadata.
 - Use pages in `docs/api/reference/` for notebook authoring guidance.
 - Use the embedded Internal implementation summary on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
-- Use `docs/reference/template-function-map.md` to connect notebook templates to callable references.
 - Do not manually edit generated reference files unless source inputs or generator behavior require it.
 - If source metadata, public API surface, callable documentation contracts, or generator behavior changes, regenerate the existing reference outputs with `PYTHONPATH=src python scripts/generate_function_reference.py` and run relevant tests.
 
 ## Workflow
 
 1. Identify whether the task is agreement, profiling or review, pipeline enforcement, governance review, handover, notebook authoring, or package maintenance.
-2. Check the notebook workflow ownership above and `docs/reference/template-function-map.md` for the relevant starter flow.
+2. Check the notebook workflow ownership above and current `How FabricOps Works` guide for the relevant starter flow.
 3. Read the matching page in `docs/api/reference/` before calling or recommending a public helper.
 4. For DQ work, read `docs/reference/dq-rules/index.md`, each relevant generated DQ rule page, and the callable page before generating notebook code.
 5. Inspect `docs/reference/_data/automation-manifest.json` and `docs/reference/_data/function-manifest.json` when you need execution metadata, dependencies, side effects, failure modes, or verification guidance.
