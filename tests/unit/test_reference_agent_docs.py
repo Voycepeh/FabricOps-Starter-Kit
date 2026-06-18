@@ -52,6 +52,22 @@ def _subsection_text(page_text: str, subsection: str) -> str:
     return after.split("\n### ", 1)[0].strip()
 
 
+def _exported_symbols() -> list[str]:
+    """Return exported public symbol names from the package root."""
+    init_path = ROOT / "src" / "fabricops_kit" / "__init__.py"
+    tree = ast.parse(init_path.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
+        ):
+            return [
+                elt.value
+                for elt in node.value.elts
+                if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
+            ]
+    raise AssertionError("Could not parse __all__")
+
+
 def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
     """Verify reference agent/automation metadata files exist and are valid json."""
     automation_manifest = REFERENCE_DIR / "_data" / "automation-manifest.json"
@@ -614,10 +630,34 @@ def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> N
     assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
 
 
+def test_reference_nav_promotes_catalogue_entry_pages_only() -> None:
+    """Verify reference sidebar promotes catalogue entries without callable page noise."""
+    mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    reference_nav = mkdocs_text.split("  - Function & DQ Rules Reference:", 1)[1].split(
+        "\n  - Maintainer Guide:", 1
+    )[0]
+
+    assert "      - List of functions: reference/index.md" in reference_nav
+    assert "      - Glossary: reference/glossary.md" in reference_nav
+    assert "      - List of DQ rules:" in reference_nav
+    assert "          - Overview: reference/dq-rules/index.md" in reference_nav
+    assert "      - DQ Rules:" not in reference_nav
+    assert "api/reference/" not in reference_nav
+
+    missing = [
+        name
+        for name in _exported_symbols()
+        if not (API_REFERENCE_DIR / f"{name}.md").exists()
+    ]
+    assert missing == []
+
+
 def test_module_pages_are_demoted_to_maintainer_appendix() -> None:
     """Verify module pages are not first-class Function Reference navigation."""
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    reference_nav = mkdocs_text.split("  - Function & DQ Rules Reference:", 1)[1].split("\n  - Maintainer Guide:", 1)[0]
+    reference_nav = mkdocs_text.split("  - Function & DQ Rules Reference:", 1)[1].split(
+        "\n  - Maintainer Guide:", 1
+    )[0]
     maintainer_nav = mkdocs_text.split("  - Maintainer Guide:", 1)[1]
 
     assert "Functions by Modules" not in reference_nav

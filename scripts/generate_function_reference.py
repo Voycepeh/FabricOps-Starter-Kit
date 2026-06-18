@@ -1899,14 +1899,9 @@ def main() -> None:
     function_start_marker = "          # AUTO-GENERATED-FUNCTIONS-START"
     function_end_marker = "          # AUTO-GENERATED-FUNCTIONS-END"
     if function_start_marker in mkdocs_text and function_end_marker in mkdocs_text:
-        generated_function_lines = [
-            f"          - {name}: api/reference/{name}.md"
-            for name in sorted(public, key=str.lower)
-        ]
-        generated_functions = "\n".join(generated_function_lines)
         before, rest = mkdocs_text.split(function_start_marker, 1)
-        middle, after = rest.split(function_end_marker, 1)
-        mkdocs_text = before + function_start_marker + "\n" + generated_functions + "\n" + function_end_marker + after
+        _middle, after = rest.split(function_end_marker, 1)
+        mkdocs_text = before + function_start_marker + "\n" + function_end_marker + after
 
     start_marker = "          # AUTO-GENERATED-MODULES-START"
     end_marker = "      # AUTO-GENERATED-MODULES-END"
