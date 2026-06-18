@@ -24,7 +24,7 @@ def _notebook_text(name: str) -> str:
     return "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
 
-def test_00_env_config_owns_env_name_definition():
+def test_00_env_config_owns_env_name_definition():  # noqa: D103
     text = _notebook_text("00_env_config.ipynb")
 
     assert "ENV_NAME = ENV" in text
@@ -32,7 +32,7 @@ def test_00_env_config_owns_env_name_definition():
 
 
 @pytest.mark.parametrize("name", DOWNSTREAM_NOTEBOOKS)
-def test_downstream_templates_do_not_redefine_env_name(name: str):
+def test_downstream_templates_do_not_redefine_env_name(name: str):  # noqa: D103
     text = _notebook_text(name)
 
     assert 'ENV_NAME = FABRIC_CONTEXT["env_name"]' not in text
