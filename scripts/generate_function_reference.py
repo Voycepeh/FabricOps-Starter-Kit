@@ -547,21 +547,43 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
 
 
 def parse_glossary_metadata() -> dict[str, dict[str, Any]]:
-    """Return glossary metadata keyed by normalized term."""
+    """Return glossary metadata keyed by normalized canonical terms and aliases."""
     if not GLOSSARY_SOURCE_PATH.exists():
         return {}
     entries = json.loads(GLOSSARY_SOURCE_PATH.read_text(encoding="utf-8"))
     glossary: dict[str, dict[str, Any]] = {}
+    required_fields = {
+        "term",
+        "aliases",
+        "category",
+        "short_definition",
+        "long_definition",
+        "preferred_usage",
+        "avoid_usage",
+    }
     for entry in entries:
+        missing = sorted(required_fields - set(entry))
         term = str(entry.get("term", "")).strip()
         if not term:
             raise RuntimeError("Glossary entries must include a term.")
-        if not entry.get("plain_language_definition"):
-            raise RuntimeError(f"Glossary entry {term!r} is missing plain_language_definition.")
-        key = term.lower()
-        if key in glossary:
-            raise RuntimeError(f"Duplicate glossary term: {term}")
-        glossary[key] = entry
+        if missing:
+            raise RuntimeError(f"Glossary entry {term!r} is missing: {', '.join(missing)}")
+        if not entry.get("short_definition") or not entry.get("long_definition"):
+            raise RuntimeError(f"Glossary entry {term!r} must include short and long definitions.")
+        aliases = entry.get("aliases")
+        if not isinstance(aliases, list):
+            raise RuntimeError(f"Glossary entry {term!r} aliases must be a list.")
+        canonical_key = term.lower()
+        if canonical_key in glossary:
+            raise RuntimeError(f"Duplicate glossary term or alias: {term}")
+        glossary[canonical_key] = entry
+        for alias in aliases:
+            alias_key = str(alias).strip().lower()
+            if not alias_key:
+                continue
+            if alias_key in glossary:
+                raise RuntimeError(f"Duplicate glossary term or alias: {alias}")
+            glossary[alias_key] = entry
     return glossary
 
 
@@ -570,21 +592,19 @@ def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
     lines = [
         "# FabricOps glossary",
         "",
-        "Concise FabricOps terms used across generated callable references and workflow documentation.",
+        "Searchable source of truth for FabricOps documentation wording and inline glossary chips.",
         "",
     ]
-    for entry in sorted(glossary.values(), key=lambda row: row["term"].lower()):
-        term = str(entry["term"])
-        lines.extend([f"## {term}", "", f"**Plain language:** {entry['plain_language_definition']}", ""])
-        technical = entry.get("technical_definition")
-        if technical:
-            lines.extend([f"**Technical:** {technical}", ""])
-        example = entry.get("example")
-        if example:
-            lines.extend([f"**Example:** {example}", ""])
-        related = entry.get("related_terms") or []
-        if related:
-            lines.extend([f"**Related terms:** {', '.join(f'`{item}`' for item in related)}", ""])
+    canonical_entries = list({id(entry): entry for entry in glossary.values()}.values())
+    for category in sorted({str(entry["category"]) for entry in canonical_entries}):
+        lines.extend([f"## {category}", ""])
+        category_entries = [entry for entry in canonical_entries if entry["category"] == category]
+        for entry in sorted(category_entries, key=lambda row: row["term"].lower()):
+            term = str(entry["term"])
+            lines.extend([f"### {term}", "", entry["long_definition"], ""])
+            if entry.get("aliases"):
+                lines.extend([f"**Aliases:** {', '.join(f'`{item}`' for item in entry['aliases'])}", ""])
+            lines.extend([f"**Preferred usage:** {entry['preferred_usage']}", "", f"**Avoid usage:** {entry['avoid_usage']}", ""])
     GLOSSARY_PAGE_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
 
 
@@ -617,15 +637,16 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
     seen: set[str] = set()
     for term in glossary_terms:
         key = term.lower()
-        if key in seen:
-            continue
-        seen.add(key)
         entry = glossary.get(key)
         if entry is None:
             raise RuntimeError(f"Callable references unknown glossary term: {term}")
+        canonical_key = str(entry["term"]).lower()
+        if canonical_key in seen:
+            continue
+        seen.add(canonical_key)
         term_text = str(entry["term"])
         display_term = term_text if "_" in term_text else term_text.capitalize()
-        lines.append(f"- **{display_term}:** {entry['plain_language_definition']}")
+        lines.append(f"- <details class=\"glossary-chip\"><summary>{display_term}</summary>{entry['short_definition']}</details>")
     lines.extend(["", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
     return lines
 
@@ -2423,17 +2444,13 @@ def main() -> None:
             usage_guidance_lines: list[str] = []
             usage_guidance_body: list[str] = []
             if human_use_when != PLACEHOLDER:
-                usage_guidance_body.extend(["**Use when:**", "", *_bullet_lines(human_use_when), ""])
+                usage_guidance_body.extend(["### Use when", "", *_bullet_lines(human_use_when), ""])
             if human_do_not_use != PLACEHOLDER:
-                usage_guidance_body.extend(["**Do not use when:**", "", *_bullet_lines(human_do_not_use), ""])
+                usage_guidance_body.extend(["### Do not use when", "", *_bullet_lines(human_do_not_use), ""])
             if expanded_purpose != PLACEHOLDER:
-                usage_guidance_body.extend(["**Additional context:**", "", expanded_purpose])
+                usage_guidance_body.extend(["### Additional context", "", expanded_purpose])
             if usage_guidance_body:
-                usage_guidance_lines = markdown_details(
-                    "Usage guidance",
-                    usage_guidance_body,
-                    class_name="reference-usage-details",
-                )
+                usage_guidance_lines = ["## Usage guidance", "", *usage_guidance_body, ""]
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
             key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)

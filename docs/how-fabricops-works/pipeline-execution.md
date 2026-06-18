@@ -38,7 +38,7 @@ Freshness options are `enforce` and `skip`. `enforce` writes a `max_lag_days` ru
 
 Profile mode options are `static_data`, `changing_data`, and `skip`. `static_data` profiles the full table as one baseline. `changing_data` requires `watermark_column` and profiles each distinct watermark value separately. `skip` returns `skipped` with `can_continue=true`.
 
-When previous accepted catalogue evidence exists, current profile evidence is compared to previous accepted `METADATA_DATA_CATALOGUE` evidence. If no previous evidence exists, the current profile establishes the baseline. If differences are found, status depends on severity.
+When previous accepted evidence exists, current profiles is compared to previous approved `METADATA_DATA_CATALOGUE` evidence. If no previous evidence exists, the current profile establishes the baseline. If differences are found, status depends on severity.
 
 ### DQ rules
 
@@ -62,7 +62,7 @@ Use [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary.m
 
 Use [`display_guardrail_results`](../api/reference/display_guardrail_results.md) to show guardrail outcomes in `summary`, `detailed`, or `debug` mode. The display mode changes presentation only; the runtime result bundle remains available to the notebook.
 
-## Optional metadata enrichment and guardrail authoring
+## Optional enrichment and guardrail authoring
 
 After profiling evidence exists, `02_pipeline` can use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to pick a profiled table, [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) to author guardrail intent, and [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive enrichment. The current `02_pipeline` template also imports and calls [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md); formal table governance review is still owned by [03 Governance Review](governance-review.md).
 
@@ -70,8 +70,8 @@ After profiling evidence exists, `02_pipeline` can use [`widget_select_guardrail
 
 | Evidence area | Metadata table | Why it matters during `02_pipeline` |
 | --- | --- | --- |
-| Profile/catalogue evidence | `METADATA_DATA_CATALOGUE` | Stores observed table/column profiles, profile hashes, watermark values, and run context for later comparison and review. |
-| Rule intent | `METADATA_GUARDRAIL_RULES` | Stores schema, freshness, profile-behaviour, and DQ rules that runtime enforcement loads. |
+| Profile/evidence | `METADATA_DATA_CATALOGUE` | Stores observed table/column profiles, profile hashes, watermark values, and run context for later comparison and review. |
+| Rule intent | `METADATA_GUARDRAIL_RULES` | Stores schema, freshness, profile-behaviour, and DQ rules that enforcement loads. |
 | Runtime results | `METADATA_GUARDRAIL_RESULTS` | Stores pass/warn/fail/skipped status, severity, continuation flag, reason, expected/actual values, and result payloads. |
 | Run summary | `METADATA_PIPELINE_RUNS` | Summarizes source/target counts, guardrail rollups, lineage/catalogue write status, and JSON detail. |
 | Lineage | `METADATA_DATA_LINEAGE_TABLE` | Records source-to-target relationships for handover, dashboarding, and review context. |

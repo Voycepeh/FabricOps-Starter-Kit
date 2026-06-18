@@ -7,25 +7,23 @@ Prepare source or target table configs for 02_pipeline.
 
 `fabricops_kit/pipeline.py:412`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L412-L501">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L412-L501">View on GitHub</a>
 </div>
 
-<details class="reference-usage-details">
-<summary>Usage guidance</summary>
+## Usage guidance
 
-**Use when:**
+### Use when
 
 - Use before running table guardrails or writes when notebook-editable table configs need package defaults and derived keys.
 
-**Do not use when:**
+### Do not use when
 
 - Do not use for ad hoc reads or writes outside the pipeline table-config pattern.
 
-**Additional context:**
+### Additional context
 
 Normalizes source and target table configuration dictionaries so pipeline guardrail, write, lineage, and evidence helpers receive consistent fields.
 
-</details>
 
 ## Signature
 
@@ -140,10 +138,10 @@ FabricOps audit columns.
         <h4>Audit timestamp</h4>
         <p>Resolve and stamp audit time consistently.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L399-L409"><code>_add_audit_columns</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/config.py#L193-L199"><code>_current_audit_timestamp</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/config.py#L185-L190"><code>_get_audit_timezone</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/config.py#L150-L182"><code>_validate_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L399-L409"><code>_add_audit_columns</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/config.py#L193-L199"><code>_current_audit_timestamp</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/config.py#L185-L190"><code>_get_audit_timezone</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/config.py#L150-L182"><code>_validate_audit_timezone</code></a>
         </div>
       </section>
     </div>
@@ -165,7 +163,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Inbound references count: 0
 - Outbound references count: 1
 - Used in templates: 02_pipeline
-- Glossary terms: source table, target table, stage, guardrail
+- Glossary terms: source data, target table, stage, guardrails
 
 ### Implementation contract
 
@@ -188,7 +186,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L412-L501">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L412-L501</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L412-L501">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L412-L501</a>
 - Start line: `412`
 - End line: `501`
 - Signature:
@@ -219,10 +217,10 @@ def prepare_pipeline_table_configs(
 
 ## Glossary
 
-- **Source table:** An input table or file read by the pipeline.
-- **Target table:** An output table written by the pipeline.
-- **Stage:** The part of the pipeline being checked, such as source or target.
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
+- <details class="glossary-chip"><summary>Source data</summary>Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</details>
+- <details class="glossary-chip"><summary>Target table</summary>A written table produced by a pipeline output.</details>
+- <details class="glossary-chip"><summary>Stage</summary>Named part of a pipeline such as source, transformation, or target.</details>
+- <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

@@ -14,7 +14,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module purpose
 
-Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.
+Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.
 
 ## Module manifest
 
@@ -32,7 +32,7 @@ Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals
     </tr>
     <tr>
       <td>Module purpose</td>
-      <td>Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.</td>
+      <td>Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.</td>
     </tr>
     <tr>
       <td>Public callable count</td>

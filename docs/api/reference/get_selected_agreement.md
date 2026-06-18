@@ -7,25 +7,23 @@ Return the agreement selected by widget_select_agreement.
 
 `fabricops_kit/data_agreement.py:1027`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/data_agreement.py#L1027-L1043">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/data_agreement.py#L1027-L1043">View on GitHub</a>
 </div>
 
-<details class="reference-usage-details">
-<summary>Usage guidance</summary>
+## Usage guidance
 
-**Use when:**
+### Use when
 
 - Use after rendering and completing widget_select_agreement when code needs the selected agreement values.
 
-**Do not use when:**
+### Do not use when
 
 - Do not use before rendering and completing widget_select_agreement, or as a substitute for querying all agreement metadata.
 
-**Additional context:**
+### Additional context
 
 Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.
 
-</details>
 
 ## Signature
 
@@ -158,7 +156,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/data_agreement.py#L1027-L1043">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/data_agreement.py#L1027-L1043</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/data_agreement.py#L1027-L1043">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/data_agreement.py#L1027-L1043</a>
 - Start line: `1027`
 - End line: `1043`
 - Signature:
@@ -182,7 +180,7 @@ def get_selected_agreement() -> dict[str, Any]
 
 ## Glossary
 
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- <details class="glossary-chip"><summary>Notebook registry</summary>Metadata inventory of notebooks and responsibilities used for handover and operating context.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

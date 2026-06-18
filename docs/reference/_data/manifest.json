@@ -45,7 +45,7 @@
     {
       "module_name": "guardrails",
       "visibility": "public",
-      "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during runtime enforcement.",
+      "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during enforcement.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true
     },
@@ -59,7 +59,7 @@
     {
       "module_name": "pipeline",
       "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true
     }
@@ -361,7 +361,7 @@
     {
       "module_name": "pipeline",
       "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "display_guardrail_results",
@@ -377,7 +377,7 @@
     {
       "module_name": "pipeline",
       "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "prepare_pipeline_table_configs",
@@ -393,7 +393,7 @@
     {
       "module_name": "pipeline",
       "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "run_table_guardrails",
@@ -409,7 +409,7 @@
     {
       "module_name": "pipeline",
       "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "write_pipeline_lineage",
@@ -425,7 +425,7 @@
     {
       "module_name": "pipeline",
       "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for catalogue evidence internals, lineage persistence, and runtime summaries.",
+      "module_summary": "Owns thin 02_pipeline metadata evidence helpers for evidence internals, lineage persistence, and runtime summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
       "callable_name": "write_pipeline_run_summary",

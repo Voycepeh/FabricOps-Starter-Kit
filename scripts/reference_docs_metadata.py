@@ -94,7 +94,7 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
  {'module_name': 'guardrails',
   'visibility': 'public',
   'module_summary': 'Owns schema, freshness, and profile behavior checks as pipeline guardrails '
-                    'during runtime enforcement.',
+                    'during enforcement.',
   'sidebar_group': '3. Data engineer',
   'sidebar_include': True},
  {'module_name': 'metadata',
@@ -105,7 +105,7 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'sidebar_include': True},
  {'module_name': 'pipeline',
   'visibility': 'public',
-  'module_summary': 'Owns thin 02_pipeline metadata evidence helpers for catalogue evidence '
+  'module_summary': 'Owns thin 02_pipeline metadata evidence helpers for evidence '
                     'internals, lineage persistence, and runtime summaries.',
   'sidebar_group': '3. Data engineer',
   'sidebar_include': True},
@@ -274,7 +274,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'paths, not Spark partial namespaces or an attached default lakehouse.',
   'when_to_use': 'Use after setup_notebook in 00_env_config when bootstrapping or validating the '
                  'metadata store for an environment.',
-  'glossary_terms': ['metadata lakehouse', 'catalogue evidence'],
+  'glossary_terms': ['metadata lakehouse', 'evidence'],
   'return_interpretation': 'The returned setup status tells you which metadata tables were created '
                            'or validated and whether the environment is ready for workflows that '
                            'write evidence.',
@@ -340,7 +340,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'record links or files that justify an agreement.',
   'when_to_use': 'Use in 01_agreement when agreement records need supporting evidence that '
                  'downstream users can audit.',
-  'glossary_terms': ['notebook template', 'catalogue evidence'],
+  'glossary_terms': ['notebook template', 'evidence'],
   'return_interpretation': 'The widget records evidence references when saved; review the '
                            'resulting metadata rows before relying on them in handover or audit '
                            'flows.',
@@ -501,7 +501,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'returns it as a Spark DataFrame.',
   'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be '
                  'resolved through configured lakehouse paths.',
-  'glossary_terms': ['source table', 'notebook template'],
+  'glossary_terms': ['source data', 'notebook template'],
   'return_interpretation': 'The returned DataFrame reflects Spark CSV parsing options; inspect '
                            'schema and sample rows before profiling or writing.',
   'common_failure_causes': ['The file path is wrong or outside the configured lakehouse.',
@@ -539,7 +539,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'lakehouse into a Spark DataFrame.',
   'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a '
                  'managed table.',
-  'glossary_terms': ['source table', 'notebook template'],
+  'glossary_terms': ['source data', 'notebook template'],
   'return_interpretation': 'The returned DataFrame uses the Parquet schema read by Spark; validate '
                            'it before downstream profile or guardrail checks.',
   'common_failure_causes': ['The Parquet path is missing or misspelled.',
@@ -579,7 +579,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'into a Spark DataFrame for notebook processing.',
   'when_to_use': 'Use when source data arrives as an Excel workbook and should still follow '
                  'configured Fabric lakehouse routing.',
-  'glossary_terms': ['source table', 'notebook template'],
+  'glossary_terms': ['source data', 'notebook template'],
   'return_interpretation': 'The returned DataFrame depends on workbook sheet and parsing options; '
                            'confirm headers and types before using it as pipeline input.',
   'common_failure_causes': ['The workbook path or sheet name is incorrect.',
@@ -615,7 +615,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'Spark DataFrame.',
   'when_to_use': 'Use when source data lives in a Fabric Warehouse rather than a lakehouse file or '
                  'Delta table.',
-  'glossary_terms': ['source table', 'notebook template'],
+  'glossary_terms': ['source data', 'notebook template'],
   'return_interpretation': 'The returned DataFrame represents the warehouse read result; confirm '
                            'filters and row counts before profiling or transformation.',
   'common_failure_causes': ['The warehouse target is not configured.',
@@ -650,7 +650,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'pipeline outputs that belong in warehouse storage.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
                  'warehouse table.',
-  'glossary_terms': ['target table', 'guardrail'],
+  'glossary_terms': ['target table', 'guardrails'],
   'return_interpretation': 'A successful write means the helper submitted the DataFrame write to '
                            'the configured warehouse target; verify downstream table state for '
                            'business checks.',
@@ -679,17 +679,17 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'side_effects': 'Computes profiling aggregations on the provided DataFrame; it does not write '
                   'metadata, tables, or files.',
   'fabric_context': 'Use after reading source/target data and before metadata persistence or '
-                    'governance review workflows that need profile evidence.',
+                    'governance review workflows that need profiles.',
   'ai_verification': 'Verify the profile row count matches expected business columns and inspect '
                      'key schema/profile fields before writing evidence.',
   'preferred_example': 'profile_rows_df = profile_dataframe(df, table_name="orders", '
                        'include_distributions=True, distribution_columns=["status"] )',
   'related_functions': ['enforce_profile_behavior', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Builds deterministic profile evidence for a DataFrame, including schema, '
+  'expanded_purpose': 'Builds deterministic profiles for a DataFrame, including schema, '
                       'row counts, nulls, distinct counts, and optional summary values.',
   'when_to_use': 'Use during exploration, governance review, or guardrail preparation when a table '
-                 'needs reproducible profile evidence.',
-  'glossary_terms': ['catalogue evidence', 'source table', 'target table'],
+                 'needs reproducible profiles.',
+  'glossary_terms': ['evidence', 'source data', 'target table'],
   'return_interpretation': 'Each returned profile row describes one table or column metric. '
                            'Downstream governance and guardrail helpers use those rows as '
                            'evidence.',
@@ -734,7 +734,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'the configured maximum lag before pipeline writes continue.',
   'when_to_use': 'Use as a pipeline guardrail when stale source or target data should block or '
                  'warn before downstream work proceeds.',
-  'glossary_terms': ['guardrail', 'can_continue', 'source table', 'target table'],
+  'glossary_terms': ['guardrails', 'can_continue', 'source data', 'target table'],
   'return_interpretation': 'If can_continue is true, the latest freshness value is within the '
                            'allowed lag or the check was skipped. If false, investigate stale data '
                            'before writing outputs.',
@@ -748,17 +748,17 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'module': 'guardrails',
   'function_type': 'callable',
   'summary_override': 'Enforce static, changing, or skipped profile behavior against accepted '
-                      'catalogue profile evidence.',
+                      'catalogue profiles.',
   'symbol_name': 'enforce_profile_behavior',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profile behavior enforcement',
   'expanded_purpose': 'This function protects against silent data behavior changes. It compares '
-                      'current static_data or changing_data profile evidence with previous '
-                      'accepted catalogue evidence. If the current profile no longer matches the '
+                      'current static_data or changing_data profiles with previous '
+                      'approved evidence. If the current profile no longer matches the '
                       'approved baseline, the function returns a failed guardrail result so the '
                       'pipeline can stop before writing data.',
   'use_when': 'Use in 02_pipeline to enforce profile_mode expectations against previous accepted '
-              'catalogue profile evidence.',
+              'catalogue profiles.',
   'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously '
                  'approved profile behavior pattern. It is especially useful when full-table '
                  'static data changes unexpectedly or when a previous watermark group changes or '
@@ -766,29 +766,29 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
                      'run_table_guardrails or enforce_dq_rules for those checks.',
   'glossary_terms': ['profile behavior',
-                     'accepted catalogue profile evidence',
+                     'evidence',
                      'profile',
                      'stage',
                      'profile behavior',
-                     'guardrail',
+                     'guardrails',
                      'can_continue',
                      'static_data',
                      'changing_data',
                      'skip',
                      'metadata lakehouse'],
-  'parameters': {'spark': 'Spark session used to read accepted profile evidence from the '
+  'parameters': {'spark': 'Spark session used to read accepted profiles from the '
                           'configured metadata target.',
                  'dataframe': 'Current source or target DataFrame being checked.',
                  'metadata_table': 'Metadata table that stores accepted catalogue profile '
                                    'evidence.',
-                 'dataset_name': 'Dataset name used to find matching catalogue evidence.',
-                 'table_name': 'Table name used to find matching catalogue evidence.',
+                 'dataset_name': 'Dataset name used to find matching evidence.',
+                 'table_name': 'Table name used to find matching evidence.',
                  'stage': 'The part of the pipeline being checked, such as source or target.',
                  'run_id': 'Current pipeline run identifier recorded in the generated profile '
                            'evidence.',
                  'profile_mode': 'Profile behavior mode to evaluate: static_data, changing_data, '
                                  'or skip.',
-                 'watermark_column': 'Column used to group changing_data profile evidence when '
+                 'watermark_column': 'Column used to group changing_data profiles when '
                                      'configured.',
                  'exclude_columns': 'Optional columns to ignore while comparing profile fields.',
                  'exclude_run_id': 'Optional run id to exclude when selecting the accepted '
@@ -801,9 +801,9 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                            'writing the table. If intentional, review or supersede the relevant '
                            'guardrail rule in governance. If not intentional, fix the source data '
                            'or pipeline configuration.',
-  'raises': 'Raises Spark or metadata-read errors when baseline profile evidence cannot be loaded '
+  'raises': 'Raises Spark or metadata-read errors when baseline profiles cannot be loaded '
             'or compared.',
-  'common_failure_causes': ['Accepted profile evidence has not been created or approved yet.',
+  'common_failure_causes': ['Accepted profiles has not been created or approved yet.',
                             'The current profile behavior does not match the accepted baseline.',
                             'The configured dataset or table name does not match catalogue '
                             'evidence.',
@@ -812,7 +812,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                             'The accepted evidence is missing required profile behavior fields.',
                             'The current profile_mode value is invalid or unsupported.',
                             'The accepted evidence is stale or incomplete.'],
-  'side_effects': 'Reads baseline profile metadata and computes current profile evidence; it does '
+  'side_effects': 'Reads baseline profile metadata and computes current profiles; it does '
                   'not write target data.',
   'fabric_context': 'Requires profile metadata routed through the configured 00_env_config '
                     'metadata target and a valid source/target stage.',
@@ -869,7 +869,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'continue into unsafe downstream writes.',
   'when_to_use': 'Use immediately after schema, freshness, profile behavior, or DQ guardrail '
                  'helpers when can_continue controls whether the pipeline should proceed.',
-  'glossary_terms': ['guardrail', 'can_continue'],
+  'glossary_terms': ['guardrails', 'can_continue'],
   'return_interpretation': 'No return value means execution may continue. A blocking result raises '
                            'or exits according to runtime settings.',
   'common_failure_causes': ['The guardrail result is missing can_continue or status fields.',
@@ -909,7 +909,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'guardrail evidence that can block unsafe writes.',
   'when_to_use': 'Use in pipeline guardrails after governance-approved DQ rules exist for the '
                  'dataset and table.',
-  'glossary_terms': ['guardrail', 'can_continue', 'catalogue evidence', 'metadata lakehouse'],
+  'glossary_terms': ['guardrails', 'can_continue', 'evidence', 'metadata lakehouse'],
   'return_interpretation': 'When can_continue is true, active rules passed or only non-blocking '
                            'issues were found. When false, inspect failing rule details before '
                            'writing the table.',
@@ -949,7 +949,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'guardrail, write, lineage, and evidence helpers receive consistent fields.',
   'when_to_use': 'Use before running table guardrails or writes when notebook-editable table '
                  'configs need package defaults and derived keys.',
-  'glossary_terms': ['source table', 'target table', 'stage', 'guardrail'],
+  'glossary_terms': ['source data', 'target table', 'stage', 'guardrails'],
   'return_interpretation': 'The returned configs are enriched copies keyed for downstream helpers. '
                            'Confirm each table has the expected stage, key, and write settings.',
   'common_failure_causes': ['A table config is missing key or table_name fields.',
@@ -978,7 +978,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
              'results, DQ results, catalogue status, evidence definitions, summary, can_continue, '
              'and failed_tables.',
   'side_effects': 'Profiles DataFrames, reads stability/DQ metadata through configured metadata '
-                  'routing, writes catalogue evidence, and may update table config DataFrames with '
+                  'routing, writes evidence, and may update table config DataFrames with '
                   'DQ annotations.',
   'fabric_context': 'Requires CONFIG and env from 00_env_config so metadata operations use the '
                     'configured metadata target.',
@@ -989,14 +989,14 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                        'stop_on_failure=True)',
   'related_functions': ['prepare_pipeline_table_configs', 'write_catalogue_evidence'],
   'expanded_purpose': 'Coordinates profiling, schema, freshness, profile behavior, DQ, and '
-                      'catalogue evidence checks for a group of pipeline table configs.',
+                      'evidence checks for a group of pipeline table configs.',
   'when_to_use': 'Use in 02_pipeline before transformations or writes when table configs should be '
                  'validated by the standard guardrail sequence.',
-  'glossary_terms': ['guardrail',
+  'glossary_terms': ['guardrails',
                      'can_continue',
-                     'source table',
+                     'source data',
                      'target table',
-                     'catalogue evidence'],
+                     'evidence'],
   'return_interpretation': 'The result groups each guardrail outcome and a summary DataFrame. If '
                            'any blocking result has can_continue false, stop before writing data.',
   'common_failure_causes': ['One of the table configs is incomplete.',
@@ -1008,23 +1008,23 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Enrich profile rows with guardrail context and write catalogue evidence.',
+  'summary_override': 'Enrich profile rows with guardrail context and write evidence.',
   'symbol_name': 'write_catalogue_evidence',
   'template_notebook': '02_pipeline',
   'template_segment': 'Catalogue evidence',
   'use_when': 'Use after source or target profiles and guardrail results are available to persist '
-              'catalogue evidence through the configured metadata route.',
+              'evidence through the configured metadata route.',
   'parameters': 'profiles, dataset definitions, config, env, run_id, agreement context, notebook '
                 'context, and optional guardrail results.',
   'returns': 'Dictionary of write statuses keyed by dataset alias.',
   'side_effects': 'Writes METADATA_DATA_CATALOGUE through the configured metadata lakehouse '
                   'target.',
   'related_functions': ['profile_dataframe', 'write_data'],
-  'expanded_purpose': 'Writes runtime catalogue evidence rows generated by pipeline guardrails to '
+  'expanded_purpose': 'Writes runtime evidence rows generated by pipeline guardrails to '
                       'the configured metadata target.',
   'when_to_use': 'Use after guardrail evidence is built and before governance or handover '
                  'workflows need the latest runtime evidence.',
-  'glossary_terms': ['catalogue evidence', 'metadata lakehouse', 'guardrail'],
+  'glossary_terms': ['evidence', 'metadata lakehouse', 'guardrails'],
   'return_interpretation': 'The returned status summarizes which evidence rows were prepared or '
                            'written. Confirm expected table keys appear before relying on '
                            'governance review outputs.',
@@ -1055,7 +1055,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'tables, and transformation steps remain traceable.',
   'when_to_use': 'Use near the end of 02_pipeline after transformations and target config '
                  'resolution have produced lineage-ready records.',
-  'glossary_terms': ['source table', 'target table', 'catalogue evidence', 'metadata lakehouse'],
+  'glossary_terms': ['source data', 'target table', 'evidence', 'metadata lakehouse'],
   'return_interpretation': 'A successful result indicates lineage rows were prepared for metadata '
                            'persistence; review returned counts against expected transformation '
                            'steps.',
@@ -1087,7 +1087,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'context, guardrail results, lineage, and write outcomes together.',
   'when_to_use': 'Use at the end of 02_pipeline when downstream operators need one metadata record '
                  'describing the run outcome.',
-  'glossary_terms': ['guardrail', 'can_continue', 'catalogue evidence', 'metadata lakehouse'],
+  'glossary_terms': ['guardrails', 'can_continue', 'evidence', 'metadata lakehouse'],
   'return_interpretation': 'The returned summary shows what run metadata was assembled or written. '
                            'Compare status and guardrail counts with expected pipeline outcomes.',
   'common_failure_causes': ['Required run identifiers are missing.',
@@ -1119,7 +1119,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                  'should determine the freshness column and maximum lag.',
   'do_not_use_when': 'Do not use to create or review freshness rules; use the guardrail authoring '
                      'and governance review widgets for lifecycle changes.',
-  'glossary_terms': ['guardrail', 'metadata lakehouse', 'can_continue'],
+  'glossary_terms': ['guardrails', 'metadata lakehouse', 'can_continue'],
   'return_interpretation': 'A can_continue value of true means the latest freshness value '
                            'satisfied the active rule or no blocking rule applied; false means the '
                            'run should stop after display.',
@@ -1149,7 +1149,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                  'stop_if_failed so users see guardrail outcomes before the notebook stops.',
   'do_not_use_when': 'Do not use to mutate guardrail results or decide active rules; it is '
                      'presentation-only.',
-  'glossary_terms': ['guardrail', 'notebook template'],
+  'glossary_terms': ['guardrails', 'notebook template'],
   'return_interpretation': 'Summary and detailed modes return display-friendly rows or Spark '
                            'DataFrames; debug mode returns the raw nested guardrail summary or '
                            'bundle.',
@@ -1160,7 +1160,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
  {'kind': 'function',
   'module': 'governance_review',
   'function_type': 'callable',
-  'summary_override': 'Render a consolidated column metadata enrichment widget.',
+  'summary_override': 'Render a consolidated column enrichment widget.',
   'symbol_name': 'widget_enrich_table_metadata',
   'template_notebook': '03_governance',
   'template_segment': 'Guardrail governance review',
@@ -1168,12 +1168,12 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'parameters': 'See the source docstring for the selected guardrail state, configuration, environment, and Spark session parameters.',
   'returns': 'Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.',
   'related_functions': ['widget_select_guardrail_target', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profile evidence.',
+  'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.',
   'when_to_use': 'Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.',
-  'do_not_use_when': 'Do not use to author DQ rules or runtime enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.',
-  'glossary_terms': ['catalogue evidence', 'metadata lakehouse', 'guardrail'],
+  'do_not_use_when': 'Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.',
+  'glossary_terms': ['evidence', 'metadata lakehouse', 'guardrails'],
   'return_interpretation': 'The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT_RULES.',
-  'common_failure_causes': ['The selected guardrail target has no column-level catalogue evidence.',
+  'common_failure_causes': ['The selected guardrail target has no column-level evidence.',
                             'Configured custom fields omit a field name.',
                             'Metadata lakehouse writes cannot be routed through 00_env_config.']},
  {'kind': 'function',
@@ -1191,18 +1191,18 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders an interactive selector that reads catalogue profile evidence, '
+  'expanded_purpose': 'Renders an interactive selector that reads catalogue profiles, '
                       'existing guardrail rules, and table governance policy to create the '
                       'handover state for guardrail authoring or review.',
   'when_to_use': 'Use at the start of 02_pipeline authoring or 03_governance review when a user '
                  'must choose which profiled table to work on.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or to write metadata; this '
                      'selector reads metadata and prepares widget state only.',
-  'glossary_terms': ['catalogue evidence', 'guardrail', 'metadata lakehouse', 'notebook template'],
+  'glossary_terms': ['evidence', 'guardrails', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The returned state includes environment, dataset, table, metadata '
                            'keys, profile rows, existing rules, and governance policy values for '
                            'downstream widgets.',
-  'common_failure_causes': ['METADATA_DATA_CATALOGUE has no profile evidence.',
+  'common_failure_causes': ['METADATA_DATA_CATALOGUE has no profiles.',
                             'The selected table lacks metadata identity fields.',
                             'Metadata tables cannot be read.',
                             'ipywidgets is unavailable.']},
@@ -1227,9 +1227,9 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'when_to_use': 'Use in 02_pipeline after selecting a guardrail target to save active '
                  'self-approved rules, submit proposed rules, or bypass approval with a required '
                  'reason.',
-  'do_not_use_when': 'Do not use to write catalogue evidence or runtime outcomes; it writes rule '
+  'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
                      'intent only to METADATA_GUARDRAIL_RULES when saving.',
-  'glossary_terms': ['guardrail', 'profile behavior', 'metadata lakehouse', 'notebook template'],
+  'glossary_terms': ['guardrails', 'profile behavior', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget state exposes controls, preview records, and save actions '
                            'that produce append-only guardrail rule rows under the table policy.',
   'common_failure_causes': ['The handover state is missing columns.',
@@ -1256,7 +1256,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                  'batch-create, edit, clear, or draft DQ guardrail rules.',
   'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling; use '
                      'enforce_dq_rules for execution and profile helpers for observed evidence.',
-  'glossary_terms': ['guardrail', 'catalogue evidence', 'metadata lakehouse', 'notebook template'],
+  'glossary_terms': ['guardrails', 'evidence', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns mutable preview records; '
                            'approved saves write guardrail rule intent to '
                            'METADATA_GUARDRAIL_RULES.',
@@ -1278,7 +1278,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'expanded_purpose': 'Renders the existing guardrail authoring widgets together so guardrail creation remains separate from formal governance review.',
   'when_to_use': 'Use after selecting a target in 03_governance when governance users need to create guardrail records.',
   'do_not_use_when': 'Do not use for formal approve, reject, replace, or deactivate decisions; use widget_review_table_governance.',
-  'glossary_terms': ['guardrail', 'metadata lakehouse', 'notebook template'],
+  'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The helper returns child widget states whose saves append guardrail intent to METADATA_GUARDRAIL_RULES.',
   'common_failure_causes': ['No target state is selected.', 'Rule parameters are invalid.', 'The metadata target cannot be written.']},
  {'kind': 'function',
@@ -1294,8 +1294,8 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'related_functions': ['widget_select_guardrail_target', 'widget_enrich_table_metadata', 'widget_author_guardrail_rules'],
   'expanded_purpose': 'Renders the formal review workflow that reads and appends review history in METADATA_ENRICHMENT_RULES and METADATA_GUARDRAIL_RULES.',
   'when_to_use': 'Use only in 03_governance for formal governance review decisions.',
-  'do_not_use_when': 'Do not use in 02_pipeline or for runtime enforcement results; runtime results belong in METADATA_GUARDRAIL_RESULTS.',
-  'glossary_terms': ['guardrail', 'metadata lakehouse', 'notebook template'],
+  'do_not_use_when': 'Do not use in 02_pipeline or for enforcement results; runtime results belong in METADATA_GUARDRAIL_RESULTS.',
+  'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns controls and action helpers that append formal review rows to the enrichment or guardrail rule history tables.',
   'common_failure_causes': ['The notebook context is not 03_governance.', 'No reviewable records are available.', 'The metadata target cannot be written.']},
  {'kind': 'function',
@@ -1318,9 +1318,9 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                       'supersede actions.',
   'when_to_use': 'Use in 03_governance after selecting a guardrail target to perform human review '
                  'of enrichment and guardrail rule intent.',
-  'do_not_use_when': 'Do not use for automatic pipeline enforcement or profile evidence '
+  'do_not_use_when': 'Do not use for automatic pipeline enforcement or profiles '
                      'generation; it is an interactive governance review widget.',
-  'glossary_terms': ['guardrail', 'metadata lakehouse', 'notebook template'],
+  'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns controls, current rule history, and action helpers '
                            'that write to enrichment or guardrail rule tables when '
                            'invoked.',
@@ -1351,7 +1351,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                            'when_to_use': 'Use after setup_notebook in 00_env_config when '
                                           'bootstrapping or validating the metadata store for an '
                                           'environment.',
-                           'glossary_terms': ['metadata lakehouse', 'catalogue evidence'],
+                           'glossary_terms': ['metadata lakehouse', 'evidence'],
                            'return_interpretation': 'The returned setup status tells you which '
                                                     'metadata tables were created or validated and '
                                                     'whether the environment is ready for '
@@ -1409,7 +1409,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                       'when_to_use': 'Use in 01_agreement when agreement records '
                                                      'need supporting evidence that downstream '
                                                      'users can audit.',
-                                      'glossary_terms': ['notebook template', 'catalogue evidence'],
+                                      'glossary_terms': ['notebook template', 'evidence'],
                                       'return_interpretation': 'The widget records evidence '
                                                                'references when saved; review the '
                                                                'resulting metadata rows before '
@@ -1430,7 +1430,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                           'when_to_use': 'Use when notebook code needs a managed lakehouse Delta '
                                          'table by ABFSS path rather than a file path, registered '
                                          'Spark table name, or warehouse SQL query.',
-                          'glossary_terms': ['source table', 'metadata lakehouse'],
+                          'glossary_terms': ['source data', 'metadata lakehouse'],
                           'return_interpretation': 'The returned DataFrame represents the resolved '
                                                    'lakehouse table; validate row counts and '
                                                    'schema before relying on it for guardrails or '
@@ -1450,7 +1450,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                           'guardrails have passed when the destination should be '
                                           'saved by ABFSS Delta path, not saveAsTable or a Spark '
                                           'namespace.',
-                           'glossary_terms': ['target table', 'guardrail', 'metadata lakehouse'],
+                           'glossary_terms': ['target table', 'guardrails', 'metadata lakehouse'],
                            'return_interpretation': 'The helper returns the write operation result '
                                                     'from the underlying DataFrame writer when '
                                                     'available; verify downstream table state for '
@@ -1467,7 +1467,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                             'Fabric lakehouse and returns it as a Spark DataFrame.',
                         'when_to_use': 'Use for file-based source ingestion when the source is CSV '
                                        'and should be resolved through configured lakehouse paths.',
-                        'glossary_terms': ['source table', 'notebook template'],
+                        'glossary_terms': ['source data', 'notebook template'],
                         'return_interpretation': 'The returned DataFrame reflects Spark CSV '
                                                  'parsing options; inspect schema and sample rows '
                                                  'before profiling or writing.',
@@ -1482,7 +1482,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                 'Spark DataFrame.',
                             'when_to_use': 'Use for file-based source ingestion when the source is '
                                            'Parquet rather than a managed table.',
-                            'glossary_terms': ['source table', 'notebook template'],
+                            'glossary_terms': ['source data', 'notebook template'],
                             'return_interpretation': 'The returned DataFrame uses the Parquet '
                                                      'schema read by Spark; validate it before '
                                                      'downstream profile or guardrail checks.',
@@ -1496,7 +1496,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                               'for notebook processing.',
                           'when_to_use': 'Use when source data arrives as an Excel workbook and '
                                          'should still follow configured Fabric lakehouse routing.',
-                          'glossary_terms': ['source table', 'notebook template'],
+                          'glossary_terms': ['source data', 'notebook template'],
                           'return_interpretation': 'The returned DataFrame depends on workbook '
                                                    'sheet and parsing options; confirm headers and '
                                                    'types before using it as pipeline input.',
@@ -1510,7 +1510,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                               'or query target into a Spark DataFrame.',
                           'when_to_use': 'Use when source data lives in a Fabric Warehouse rather '
                                          'than a lakehouse file or Delta table.',
-                          'glossary_terms': ['source table', 'notebook template'],
+                          'glossary_terms': ['source data', 'notebook template'],
                           'return_interpretation': 'The returned DataFrame represents the '
                                                    'warehouse read result; confirm filters and row '
                                                    'counts before profiling or transformation.',
@@ -1523,7 +1523,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                'belong in warehouse storage.',
                            'when_to_use': 'Use for target writes after guardrails pass and the '
                                           'configured output layer is a warehouse table.',
-                           'glossary_terms': ['target table', 'guardrail'],
+                           'glossary_terms': ['target table', 'guardrails'],
                            'return_interpretation': 'A successful write means the helper submitted '
                                                     'the DataFrame write to the configured '
                                                     'warehouse target; verify downstream table '
@@ -1534,13 +1534,13 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                      'invalid.',
                                                      'Warehouse connector support is unavailable.',
                                                      'The caller lacks write permission.']},
- 'profile_dataframe': {'expanded_purpose': 'Builds deterministic profile evidence for a DataFrame, '
+ 'profile_dataframe': {'expanded_purpose': 'Builds deterministic profiles for a DataFrame, '
                                            'including schema, row counts, nulls, distinct counts, '
                                            'and optional summary values.',
                        'when_to_use': 'Use during exploration, governance review, or guardrail '
                                       'preparation when a table needs reproducible profile '
                                       'evidence.',
-                       'glossary_terms': ['catalogue evidence', 'source table', 'target table'],
+                       'glossary_terms': ['evidence', 'source data', 'target table'],
                        'return_interpretation': 'Each returned profile row describes one table or '
                                                 'column metric. Downstream governance and '
                                                 'guardrail helpers use those rows as evidence.',
@@ -1557,9 +1557,9 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                            'pipeline writes continue.',
                        'when_to_use': 'Use as a pipeline guardrail when stale source or target '
                                       'data should block or warn before downstream work proceeds.',
-                       'glossary_terms': ['guardrail',
+                       'glossary_terms': ['guardrails',
                                           'can_continue',
-                                          'source table',
+                                          'source data',
                                           'target table'],
                        'return_interpretation': 'If can_continue is true, the latest freshness '
                                                 'value is within the allowed lag or the check was '
@@ -1572,8 +1572,8 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                  'for stale data.']},
  'enforce_profile_behavior': {'expanded_purpose': 'This function protects against silent data '
                                                   'behavior changes. It compares current '
-                                                  'static_data or changing_data profile evidence '
-                                                  'with previous accepted catalogue evidence. If '
+                                                  'static_data or changing_data profiles '
+                                                  'with previous approved evidence. If '
                                                   'the current profile no longer matches the '
                                                   'approved baseline, the function returns a '
                                                   'failed guardrail result so the pipeline can '
@@ -1584,11 +1584,11 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                              'static data changes unexpectedly or when a previous '
                                              'watermark group changes or disappears.',
                               'glossary_terms': ['profile behavior',
-                                                 'accepted catalogue profile evidence',
+                                                 'evidence',
                                                  'profile',
                                                  'stage',
                                                  'profile behavior',
-                                                 'guardrail',
+                                                 'guardrails',
                                                  'can_continue',
                                                  'static_data',
                                                  'changing_data',
@@ -1603,12 +1603,12 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                        'or supersede the relevant guardrail rule '
                                                        'in governance. If not intentional, fix the '
                                                        'source data or pipeline configuration.',
-                              'common_failure_causes': ['Accepted profile evidence has not been '
+                              'common_failure_causes': ['Accepted profiles has not been '
                                                         'created or approved yet.',
                                                         'The current profile behavior does not '
                                                         'match the accepted baseline.',
                                                         'The configured dataset or table name does '
-                                                        'not match catalogue evidence.',
+                                                        'not match evidence.',
                                                         'The configured stage does not match the '
                                                         'accepted evidence.',
                                                         'The metadata lakehouse or catalogue '
@@ -1624,7 +1624,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                     'when_to_use': 'Use immediately after schema, freshness, profile behavior, or '
                                    'DQ guardrail helpers when can_continue controls whether the '
                                    'pipeline should proceed.',
-                    'glossary_terms': ['guardrail', 'can_continue'],
+                    'glossary_terms': ['guardrails', 'can_continue'],
                     'return_interpretation': 'No return value means execution may continue. A '
                                              'blocking result raises or exits according to runtime '
                                              'settings.',
@@ -1641,9 +1641,9 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                           'unsafe writes.',
                       'when_to_use': 'Use in pipeline guardrails after governance-approved DQ '
                                      'rules exist for the dataset and table.',
-                      'glossary_terms': ['guardrail',
+                      'glossary_terms': ['guardrails',
                                          'can_continue',
-                                         'catalogue evidence',
+                                         'evidence',
                                          'metadata lakehouse'],
                       'return_interpretation': 'When can_continue is true, active rules passed or '
                                                'only non-blocking issues were found. When false, '
@@ -1660,10 +1660,10 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                     'when_to_use': 'Use before running table guardrails or writes '
                                                    'when notebook-editable table configs need '
                                                    'package defaults and derived keys.',
-                                    'glossary_terms': ['source table',
+                                    'glossary_terms': ['source data',
                                                        'target table',
                                                        'stage',
-                                                       'guardrail'],
+                                                       'guardrails'],
                                     'return_interpretation': 'The returned configs are enriched '
                                                              'copies keyed for downstream helpers. '
                                                              'Confirm each table has the expected '
@@ -1677,16 +1677,16 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                               'Defaults in CONFIG do not match the '
                                                               'notebook environment.']},
  'run_table_guardrails': {'expanded_purpose': 'Coordinates profiling, schema, freshness, profile '
-                                              'behavior, DQ, and catalogue evidence checks for a '
+                                              'behavior, DQ, and evidence checks for a '
                                               'group of pipeline table configs.',
                           'when_to_use': 'Use in 02_pipeline before transformations or writes when '
                                          'table configs should be validated by the standard '
                                          'guardrail sequence.',
-                          'glossary_terms': ['guardrail',
+                          'glossary_terms': ['guardrails',
                                              'can_continue',
-                                             'source table',
+                                             'source data',
                                              'target table',
-                                             'catalogue evidence'],
+                                             'evidence'],
                           'return_interpretation': 'The result groups each guardrail outcome and a '
                                                    'summary DataFrame. If any blocking result has '
                                                    'can_continue false, stop before writing data.',
@@ -1696,15 +1696,15 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                     'Approved metadata evidence cannot be read.',
                                                     'Spark cannot profile or validate one of the '
                                                     'DataFrames.']},
- 'write_catalogue_evidence': {'expanded_purpose': 'Writes runtime catalogue evidence rows '
+ 'write_catalogue_evidence': {'expanded_purpose': 'Writes runtime evidence rows '
                                                   'generated by pipeline guardrails to the '
                                                   'configured metadata target.',
                               'when_to_use': 'Use after guardrail evidence is built and before '
                                              'governance or handover workflows need the latest '
                                              'runtime evidence.',
-                              'glossary_terms': ['catalogue evidence',
+                              'glossary_terms': ['evidence',
                                                  'metadata lakehouse',
-                                                 'guardrail'],
+                                                 'guardrails'],
                               'return_interpretation': 'The returned status summarizes which '
                                                        'evidence rows were prepared or written. '
                                                        'Confirm expected table keys appear before '
@@ -1722,9 +1722,9 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                             'when_to_use': 'Use near the end of 02_pipeline after transformations '
                                            'and target config resolution have produced '
                                            'lineage-ready records.',
-                            'glossary_terms': ['source table',
+                            'glossary_terms': ['source data',
                                                'target table',
-                                               'catalogue evidence',
+                                               'evidence',
                                                'metadata lakehouse'],
                             'return_interpretation': 'A successful result indicates lineage rows '
                                                      'were prepared for metadata persistence; '
@@ -1743,9 +1743,9 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                 'when_to_use': 'Use at the end of 02_pipeline when downstream '
                                                'operators need one metadata record describing the '
                                                'run outcome.',
-                                'glossary_terms': ['guardrail',
+                                'glossary_terms': ['guardrails',
                                                    'can_continue',
-                                                   'catalogue evidence',
+                                                   'evidence',
                                                    'metadata lakehouse'],
                                 'return_interpretation': 'The returned summary shows what run '
                                                          'metadata was assembled or written. '
@@ -1767,7 +1767,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                             'do_not_use_when': 'Do not use to create or review freshness rules; '
                                                'use the guardrail authoring and governance review '
                                                'widgets for lifecycle changes.',
-                            'glossary_terms': ['guardrail', 'metadata lakehouse', 'can_continue'],
+                            'glossary_terms': ['guardrails', 'metadata lakehouse', 'can_continue'],
                             'return_interpretation': 'A can_continue value of true means the '
                                                      'latest freshness value satisfied the active '
                                                      'rule or no blocking rule applied; false '
@@ -1786,7 +1786,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                               'stops.',
                                'do_not_use_when': 'Do not use to mutate guardrail results or '
                                                   'decide active rules; it is presentation-only.',
-                               'glossary_terms': ['guardrail', 'notebook template'],
+                               'glossary_terms': ['guardrails', 'notebook template'],
                                'return_interpretation': 'Summary and detailed modes return '
                                                         'display-friendly rows or Spark '
                                                         'DataFrames; debug mode returns the raw '
@@ -1798,7 +1798,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                          'The caller expects debug internals while '
                                                          'using summary mode.']},
  'widget_select_guardrail_target': {'expanded_purpose': 'Renders an interactive selector that '
-                                                        'reads catalogue profile evidence, '
+                                                        'reads catalogue profiles, '
                                                         'existing guardrail rules, and table '
                                                         'governance policy to create the handover '
                                                         'state for guardrail authoring or review.',
@@ -1809,8 +1809,8 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                        'enforcement or to write metadata; this '
                                                        'selector reads metadata and prepares '
                                                        'widget state only.',
-                                    'glossary_terms': ['catalogue evidence',
-                                                       'guardrail',
+                                    'glossary_terms': ['evidence',
+                                                       'guardrails',
                                                        'metadata lakehouse',
                                                        'notebook template'],
                                     'return_interpretation': 'The returned state includes '
@@ -1820,7 +1820,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                              'policy values for downstream '
                                                              'widgets.',
                                     'common_failure_causes': ['METADATA_DATA_CATALOGUE has no '
-                                                              'profile evidence.',
+                                                              'profiles.',
                                                               'The selected table lacks metadata '
                                                               'identity fields.',
                                                               'Metadata tables cannot be read.',
@@ -1838,12 +1838,12 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                  'submit proposed rules, or bypass '
                                                                  'approval with a required reason.',
                                                   'do_not_use_when': 'Do not use to write '
-                                                                     'catalogue evidence or '
+                                                                     'evidence or '
                                                                      'runtime outcomes; it writes '
                                                                      'rule intent only to '
                                                                      'METADATA_GUARDRAIL_RULES '
                                                                      'when saving.',
-                                                  'glossary_terms': ['guardrail',
+                                                  'glossary_terms': ['guardrails',
                                                                      'profile behavior',
                                                                      'metadata lakehouse',
                                                                      'notebook template'],
@@ -1874,8 +1874,8 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                             'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue '
                                                'profiling; use enforce_dq_rules for execution and '
                                                'profile helpers for observed evidence.',
-                            'glossary_terms': ['guardrail',
-                                               'catalogue evidence',
+                            'glossary_terms': ['guardrails',
+                                               'evidence',
                                                'metadata lakehouse',
                                                'notebook template'],
                             'return_interpretation': 'The widget returns mutable preview records '
@@ -1891,13 +1891,13 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
  'widget_author_guardrail_rules': {'expanded_purpose': 'Renders the guardrail authoring widgets together so creation remains separate from formal review.',
                                   'when_to_use': 'Use in 03_governance after target selection to author guardrail records.',
                                   'do_not_use_when': 'Do not use for formal review decisions; use widget_review_table_governance.',
-                                  'glossary_terms': ['guardrail', 'metadata lakehouse', 'notebook template'],
+                                  'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
                                   'return_interpretation': 'Returns combined child widget states for guardrail authoring.',
                                   'common_failure_causes': ['No target state is selected.', 'Rule parameters are invalid.']},
  'widget_review_table_governance': {'expanded_purpose': 'Renders 03-only formal review controls for enrichment and guardrail records.',
                                     'when_to_use': 'Use only in 03_governance to approve, reject, replace, deactivate, or view history.',
-                                    'do_not_use_when': 'Do not use from 02_pipeline or to write runtime enforcement results.',
-                                    'glossary_terms': ['guardrail', 'metadata lakehouse', 'notebook template'],
+                                    'do_not_use_when': 'Do not use from 02_pipeline or to write enforcement results.',
+                                    'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
                                     'return_interpretation': 'Returns controls and helpers that append review outcomes to review history tables.',
                                     'common_failure_causes': ['The notebook context is not 03_governance.', 'No reviewable records are available.']},
  'widget_review_guardrail_governance': {'expanded_purpose': 'Renders governance review controls '
@@ -1909,10 +1909,10 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                        'guardrail target to perform human review '
                                                        'of enrichment and guardrail rule intent.',
                                         'do_not_use_when': 'Do not use for automatic pipeline '
-                                                           'enforcement or profile evidence '
+                                                           'enforcement or profiles '
                                                            'generation; it is an interactive '
                                                            'governance review widget.',
-                                        'glossary_terms': ['guardrail',
+                                        'glossary_terms': ['guardrails',
                                                            'metadata lakehouse',
                                                            'notebook template'],
                                         'return_interpretation': 'The widget returns controls, '

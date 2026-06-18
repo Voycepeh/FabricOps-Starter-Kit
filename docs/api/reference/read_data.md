@@ -7,25 +7,23 @@ Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook
 
 `fabricops_kit/fabric_input_output.py:235`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/fabric_input_output.py#L235-L309">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/fabric_input_output.py#L235-L309">View on GitHub</a>
 </div>
 
-<details class="reference-usage-details">
-<summary>Usage guidance</summary>
+## Usage guidance
 
-**Use when:**
+### Use when
 
 - Use whenever a starter notebook needs to load data from a configured Fabric target.
 
-**Do not use when:**
+### Do not use when
 
 - Do not use inside package internals that intentionally need a specific storage implementation helper.
 
-**Additional context:**
+### Additional context
 
 Provides a stable notebook-facing read orchestrator while format-specific Lakehouse and Warehouse helpers remain implementation details.
 
-</details>
 
 ## Signature
 
@@ -234,7 +232,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/fabric_input_output.py#L235-L309">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/fabric_input_output.py#L235-L309</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/fabric_input_output.py#L235-L309">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/fabric_input_output.py#L235-L309</a>
 - Start line: `235`
 - End line: `309`
 - Signature:
@@ -270,7 +268,7 @@ def read_data(
 
 ## Glossary
 
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- <details class="glossary-chip"><summary>Notebook registry</summary>Metadata inventory of notebooks and responsibilities used for handover and operating context.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

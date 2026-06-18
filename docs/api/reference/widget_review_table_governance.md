@@ -7,25 +7,23 @@ Render 03-only formal review controls for enrichment and guardrail records.
 
 `fabricops_kit/governance_review.py:2592`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L2592-L2793">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2592-L2793">View on GitHub</a>
 </div>
 
-<details class="reference-usage-details">
-<summary>Usage guidance</summary>
+## Usage guidance
 
-**Use when:**
+### Use when
 
 - Use only in 03_governance for formal governance review decisions.
 
-**Do not use when:**
+### Do not use when
 
-- Do not use in 02_pipeline or for runtime enforcement results; runtime results belong in METADATA_GUARDRAIL_RESULTS.
+- Do not use in 02_pipeline or for enforcement results; runtime results belong in METADATA_GUARDRAIL_RESULTS.
 
-**Additional context:**
+### Additional context
 
 Renders the formal review workflow that reads and appends review history in METADATA_ENRICHMENT_RULES and METADATA_GUARDRAIL_RULES.
 
-</details>
 
 ## Signature
 
@@ -151,14 +149,14 @@ No additional callable notes are documented.
         <h4>Rule evaluation</h4>
         <p>Convert configured rules into executable checks and evaluation results.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L778-L793"><code>_dq_rule_parameters_summary</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L778-L793"><code>_dq_rule_parameters_summary</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L1648-L1651"><code>_assert_governance_review_context</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L1648-L1651"><code>_assert_governance_review_context</code></a>
         </div>
       </section>
     </div>
@@ -180,7 +178,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Inbound references count: 0
 - Outbound references count: 6
 - Used in templates: 03_governance
-- Glossary terms: guardrail, metadata lakehouse, notebook template
+- Glossary terms: guardrails, metadata lakehouse, notebook template
 
 ### Implementation contract
 
@@ -207,7 +205,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L2592-L2793">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L2592-L2793</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2592-L2793">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2592-L2793</a>
 - Start line: `2592`
 - End line: `2793`
 - Signature:
@@ -238,9 +236,9 @@ def widget_review_table_governance(
 
 ## Glossary
 
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
+- <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
+- <details class="glossary-chip"><summary>Notebook registry</summary>Metadata inventory of notebooks and responsibilities used for handover and operating context.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

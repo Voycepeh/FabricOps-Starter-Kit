@@ -152,9 +152,9 @@ Use the finder below to look up exported public functions from active v1 modules
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>widget_author_guardrail_rules</code></li></ul></details>
   </div>
 </article>
-<article id="governance_review-widget_enrich_table_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_enrich_table_metadata" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="template-called" data-callable-purpose="Render a consolidated column metadata enrichment widget.">
+<article id="governance_review-widget_enrich_table_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_enrich_table_metadata" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="template-called" data-callable-purpose="Render a consolidated column enrichment widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render a consolidated column metadata enrichment widget.</p>
+  <p class="reference-catalogue-item-purpose">Render a consolidated column enrichment widget.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 03_governance</p>
   <div class="reference-catalogue-item-counts">

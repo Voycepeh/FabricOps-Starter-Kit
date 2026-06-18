@@ -900,3 +900,33 @@
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+.glossary-chip {
+  display: inline;
+  margin: 0 0.08rem;
+}
+
+.glossary-chip > summary {
+  display: inline;
+  cursor: pointer;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-accent-fg-color) 8%, transparent);
+  color: var(--md-primary-fg-color--dark);
+  font-weight: 600;
+  list-style: none;
+}
+
+.glossary-chip > summary::-webkit-details-marker {
+  display: none;
+}
+
+.glossary-chip[open] {
+  display: inline-block;
+  max-width: min(36rem, 100%);
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.45rem;
+  background: var(--md-code-bg-color);
+  vertical-align: baseline;
+}

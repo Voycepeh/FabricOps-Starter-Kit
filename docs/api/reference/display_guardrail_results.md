@@ -7,25 +7,23 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 `fabricops_kit/pipeline.py:368`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L368-L396">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L368-L396">View on GitHub</a>
 </div>
 
-<details class="reference-usage-details">
-<summary>Usage guidance</summary>
+## Usage guidance
 
-**Use when:**
+### Use when
 
 - Use in 02_pipeline immediately after run_table_guardrails and before stop_if_failed so users see guardrail outcomes before the notebook stops.
 
-**Do not use when:**
+### Do not use when
 
 - Do not use to mutate guardrail results or decide active rules; it is presentation-only.
 
-**Additional context:**
+### Additional context
 
 Returns summary, detailed, or debug guardrail display output so Fabric notebooks show readable tables by default while preserving raw result bundles for developers.
 
-</details>
 
 ## Signature
 
@@ -157,7 +155,7 @@ No additional callable notes are documented.
         <h4>Fabric or Spark access</h4>
         <p>Access Fabric or Spark runtime services used by the implementation.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L361-L365"><code>_rows_for_display</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L361-L365"><code>_rows_for_display</code></a>
         </div>
       </section>
     </div>
@@ -179,7 +177,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 02_pipeline
-- Glossary terms: guardrail, notebook template
+- Glossary terms: guardrails, notebook template
 
 ### Implementation contract
 
@@ -203,7 +201,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L368-L396">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/pipeline.py#L368-L396</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L368-L396">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/pipeline.py#L368-L396</a>
 - Start line: `368`
 - End line: `396`
 - Signature:
@@ -232,8 +230,8 @@ def display_guardrail_results(
 
 ## Glossary
 
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
+- <details class="glossary-chip"><summary>Notebook registry</summary>Metadata inventory of notebooks and responsibilities used for handover and operating context.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

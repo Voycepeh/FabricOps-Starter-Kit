@@ -7,25 +7,23 @@ Render combined guardrail authoring controls for the selected table.
 
 `fabricops_kit/governance_review.py:2555`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L2555-L2589">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2555-L2589">View on GitHub</a>
 </div>
 
-<details class="reference-usage-details">
-<summary>Usage guidance</summary>
+## Usage guidance
 
-**Use when:**
+### Use when
 
 - Use after selecting a target in 03_governance when governance users need to create guardrail records.
 
-**Do not use when:**
+### Do not use when
 
 - Do not use for formal approve, reject, replace, or deactivate decisions; use widget_review_table_governance.
 
-**Additional context:**
+### Additional context
 
 Renders the existing guardrail authoring widgets together so guardrail creation remains separate from formal governance review.
 
-</details>
 
 ## Signature
 
@@ -238,7 +236,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 03_governance
-- Glossary terms: guardrail, metadata lakehouse, notebook template
+- Glossary terms: guardrails, metadata lakehouse, notebook template
 
 ### Implementation contract
 
@@ -262,7 +260,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L2555-L2589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6ccf1d568c95cb9a60adec66db0b1e7c8f8da22c/src/fabricops_kit/governance_review.py#L2555-L2589</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2555-L2589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/f18735b765699aa5069c82d2916cec0a01edd7c8/src/fabricops_kit/governance_review.py#L2555-L2589</a>
 - Start line: `2555`
 - End line: `2589`
 - Signature:
@@ -294,9 +292,9 @@ def widget_author_guardrail_rules(
 
 ## Glossary
 
-- **Guardrail:** A check that tells the notebook whether it is safe to continue.
-- **Metadata lakehouse:** The configured Fabric lakehouse where FabricOps stores governance and runtime metadata.
-- **Notebook template:** A starter notebook that shows where and how FabricOps helpers are used.
+- <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
+- <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
+- <details class="glossary-chip"><summary>Notebook registry</summary>Metadata inventory of notebooks and responsibilities used for handover and operating context.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

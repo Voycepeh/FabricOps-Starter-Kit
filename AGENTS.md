@@ -19,7 +19,7 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
   docs language too; do not preserve old names as compatibility columns unless
   explicitly requested.
 - Keep metadata responsibilities separated: `METADATA_DATA_CATALOGUE` is
-  observed physical/profile evidence, `METADATA_GUARDRAIL_RULES` is approved
+  observed physical/profiles, `METADATA_GUARDRAIL_RULES` is approved
   guardrail intent, and `METADATA_GUARDRAIL_RESULTS` is runtime outcomes.
 
 ## Public safety and positioning
@@ -198,3 +198,12 @@ Run relevant checks (at least for repo-wide hygiene PRs):
 - `uv run python -m compileall src tests`
 - `uv run python -m pytest -q`
 - `uv run mkdocs build`
+
+## Glossary-backed documentation wording
+
+- Use `docs/reference/_data/glossary.json` as the source of truth for user-facing FabricOps, governance, Microsoft Fabric, data engineering, file/configuration, and metadata table terminology.
+- Use canonical glossary terms in narrative docs and notebook markdown; use aliases only when needed for natural grammar or when documenting literal technical names.
+- Do not introduce new glossary-like wording without adding a canonical entry or alias mapping in `glossary.json`.
+- Prefer simple narrative terms such as profile, enrichment, guardrails, enforcement, metadata lakehouse, pipeline output, data agreement, data steward, governance review, and lineage.
+- Avoid heavy implementation terms in narrative docs unless the page is explicitly documenting metadata tables, implementation details, or API-level precision.
+- Keep glossary chips non-invasive: first meaningful occurrence per page or section, click/tap expandable, and never inside code blocks, signatures, file paths, URLs, raw SQL, JSON, YAML, table names, or notebook code cells.

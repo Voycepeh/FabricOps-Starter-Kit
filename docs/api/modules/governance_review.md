@@ -107,7 +107,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Render a consolidated column metadata enrichment widget.</td>
+      <td>Render a consolidated column enrichment widget.</td>
       <td><code>_collect_enrichment_extra_fields</code> (internal), <code>_enrichment_options</code> (internal), <code>_render_enrichment_extra_fields</code> (internal), <code>_selected_catalogue_rows_for_enrichment</code> (internal), <code>_value</code> (internal), <code>_write_table_metadata_enrichment_records</code> (internal)</td>
     </tr>
     <tr>
