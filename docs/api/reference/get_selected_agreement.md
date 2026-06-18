@@ -7,7 +7,7 @@ Return the agreement selected by widget_select_agreement.
 
 `fabricops_kit/data_agreement.py:1027`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6812cbbf6b66029748770b50d8b543aa9bf2a445/src/fabricops_kit/data_agreement.py#L1027-L1043">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/data_agreement.py#L1027-L1043">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -158,7 +158,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6812cbbf6b66029748770b50d8b543aa9bf2a445/src/fabricops_kit/data_agreement.py#L1027-L1043">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6812cbbf6b66029748770b50d8b543aa9bf2a445/src/fabricops_kit/data_agreement.py#L1027-L1043</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/data_agreement.py#L1027-L1043">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/data_agreement.py#L1027-L1043</a>
 - Start line: `1027`
 - End line: `1043`
 - Signature:

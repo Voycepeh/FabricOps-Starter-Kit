@@ -130,7 +130,7 @@ def test_governance_review_builders_commit_only_human_approved_records():
 def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
     """Verify table governance persists only enrichment and guardrail rule rows."""
     writes = []
-    monkeypatch.setattr(gr, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df)))
+    monkeypatch.setattr(gr, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
 
     result = gr.record_table_governance(
         framework_config(),

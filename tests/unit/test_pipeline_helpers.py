@@ -195,12 +195,11 @@ def test_add_audit_columns_uses_configured_audit_timezone(monkeypatch):
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):
     """Verify write pipeline lineage supports many to many relationships."""
     writes = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)))
 
     result = pipeline.write_pipeline_lineage(
         spark=FakeSpark(),
-        config={},
-        env="dev",
+        context={"config": {}, "env_name": "dev"},
         run_id="run-1",
         source_definitions={"s1": {"table_name": "source_one"}, "s2": {"table_name": "source_two"}},
         target_definitions={"t1": {"table_name": "target_one"}, "t2": {"table_name": "target_two"}},
@@ -218,12 +217,11 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
     """Verify write pipeline run summary writes metadata table."""
     writes = []
     fake_spark = FakeSpark()
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)))
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)))
 
     row = pipeline.write_pipeline_run_summary(
         spark=fake_spark,
-        config={},
-        env="dev",
+        context={"config": {}, "env_name": "dev"},
         run_id="run-1",
         source_definitions={"s1": {"table_name": "source_one"}, "s2": {"table_name": "source_two"}},
         target_definitions={"t1": {"table_name": "target_one"}, "t2": {"table_name": "target_two"}},
@@ -368,8 +366,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
 
     result = pipeline.run_table_guardrails(
         table_configs,
-        config={"config": True},
-        env="dev",
+        context={"config": {"config": True}, "env_name": "dev"},
         run_id="run-1",
         spark_session="spark",
         agreement_id="agreement-1",
@@ -434,8 +431,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
             "expected_schema": {"id": "bigint"},
             "dq_preset": "active_rules",
         }],
-        config={},
-        env="dev",
+        context={"config": {}, "env_name": "dev"},
         run_id="run-1",
         spark_session=Spark(),
     )
@@ -490,8 +486,7 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
 
     pipeline.run_table_guardrails(
         table_configs,
-        config={},
-        env="dev",
+        context={"config": {}, "env_name": "dev"},
         run_id="run-1",
         spark_session="spark",
     )
@@ -525,8 +520,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
                 "dq_preset": "skip",
             }
         ],
-        config={},
-        env="dev",
+        context={"config": {}, "env_name": "dev"},
         run_id="run-1",
         spark_session="spark",
         stop_on_failure=True,
@@ -658,8 +652,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
                 "dq_preset": "active_rules",
             }
         ],
-        config=framework_config(),
-        env="dev",
+        context={"config": framework_config(), "env_name": "dev"},
         run_id="run-1",
         spark_session=spark_session,
     )
@@ -706,8 +699,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
                 "dq_preset": "skip",
             }
         ],
-        config=framework_config(),
-        env="dev",
+        context={"config": framework_config(), "env_name": "dev"},
         run_id="run-1",
         spark_session=spark_session,
     )

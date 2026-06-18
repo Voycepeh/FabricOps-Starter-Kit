@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2795`
+`fabricops_kit/governance_review.py:2825`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6812cbbf6b66029748770b50d8b543aa9bf2a445/src/fabricops_kit/governance_review.py#L2795-L2894">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2825-L2925">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -80,6 +80,7 @@ Not documented yet
 
 ### Calls
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
 - `fabricops_kit.governance_review.load_rule_review_history`
@@ -131,7 +132,9 @@ No additional callable notes are documented.
     │       ├── _context_get(...)
     │       └── _runtime_context(...)
     │           └── _context_get(...)
-    └── load_rule_review_history(...)
+    ├── load_rule_review_history(...)
+    └── resolve_fabric_context(...)
+        └── get_default_fabric_context(...)
     ```
 
 ??? info "Internal helpers used: 0"
@@ -158,9 +161,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2795`
+- Source line: `2825`
 - Inbound references count: 0
-- Outbound references count: 3
+- Outbound references count: 4
 - Used in templates: 02_pipeline
 - Glossary terms: guardrail, metadata lakehouse, notebook template
 
@@ -179,6 +182,7 @@ Not documented yet
 
 ### Outbound references
 
+- `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.governance_review.apply_governance_enrichment_action`
 - `fabricops_kit.governance_review.apply_governance_rule_action`
 - `fabricops_kit.governance_review.load_rule_review_history`
@@ -186,9 +190,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6812cbbf6b66029748770b50d8b543aa9bf2a445/src/fabricops_kit/governance_review.py#L2795-L2894">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/6812cbbf6b66029748770b50d8b543aa9bf2a445/src/fabricops_kit/governance_review.py#L2795-L2894</a>
-- Start line: `2795`
-- End line: `2894`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2825-L2925">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2825-L2925</a>
+- Start line: `2825`
+- End line: `2925`
 - Signature:
 
 ```python

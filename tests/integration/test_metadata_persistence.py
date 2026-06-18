@@ -37,7 +37,8 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     reads = []
     writes = []
 
-    def read_table(config, env, target, table, spark_session=None):
+    def read_table(table, *, target, context, spark_session=None, **kwargs):
+        env = context["env_name"]
         reads.append((env, target, table))
         return Table(schemas[table].fieldNames())
 

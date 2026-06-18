@@ -226,8 +226,8 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "contract_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda config, env, target, table, **kwargs: tables[table])
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows, env, target, kwargs)))
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda table, *, target, context, **kwargs: tables[table])
+    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df.rows, context["env_name"], target, kwargs)))
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark(), reviewed_by="reviewer@example.com")
 
@@ -260,8 +260,8 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [],
     }
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda config, env, target, table, **kwargs: tables[table])
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows)))
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda table, *, target, context, **kwargs: tables[table])
+    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df.rows)))
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark())
 
@@ -312,8 +312,8 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-dq", "contract_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda config, env, target, table, **kwargs: tables[table])
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, config, env, target, table, **kwargs: writes.append((table, df.rows)))
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda table, *, target, context, **kwargs: tables[table])
+    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df.rows)))
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark())
     return result, writes

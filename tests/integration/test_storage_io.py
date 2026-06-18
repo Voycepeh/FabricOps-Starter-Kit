@@ -144,11 +144,13 @@ def test_lakehouse_table_helpers_reject_nested_table_paths():
 
 def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeypatch):
     """Verify file readers validate source paths and excel uses pandas kwargs."""
+    from types import SimpleNamespace
+
     config = framework_config()
     spark = _Spark()
     captured = {}
 
-    monkeypatch.setattr(io.pd, "read_excel", lambda path, sheet_name=0, **kwargs: captured.setdefault("kwargs", kwargs) or [{"a": 1}])
+    monkeypatch.setattr(io, "pd", SimpleNamespace(read_excel=lambda path, sheet_name=0, **kwargs: captured.setdefault("kwargs", kwargs) or [{"a": 1}]))
 
     with pytest.raises(ValueError, match="relative_path"):
         io.read_lakehouse_csv("", target="source", spark_session=spark, context={"config": config, "env_name": "dev"})

@@ -35,7 +35,7 @@ def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
     monkeypatch.setattr(
         metadata,
         "write_lakehouse_table",
-        lambda df, config, env, target, table, **kwargs: writes.append((df, env, target, table, kwargs)),
+        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)),
     )
     monkeypatch.setattr(
         metadata,
@@ -144,12 +144,14 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     writes = []
     steward_rows = []
 
-    def write_table(df, config, env, target, table, **kwargs):
+    def write_table(df, table, *, target, context, **kwargs):
+        env = context["env_name"]
         writes.append((table, df.rows, env, target, kwargs))
         if table == agreement.DATA_STEWARD_TABLE:
             steward_rows.extend(df.rows)
 
-    def read_table(config, env, target, table, **kwargs):
+    def read_table(table, *, target, context, **kwargs):
+        env = context["env_name"]
         assert (env, target) == ("dev", "metadata")
         if table == agreement.DATA_STEWARD_TABLE:
             return steward_rows

@@ -600,6 +600,7 @@ def run_table_guardrails(
     are routed through the configured metadata target by the called helpers.
 
     """
+    config, env, resolved_context = resolve_fabric_context(context=context)
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
     freshness_results: dict[str, Mapping[str, Any]] = {}
@@ -927,6 +928,7 @@ def write_pipeline_lineage(
         Status, row count, and written rows.
 
     """
+    config, env, resolved_context = resolve_fabric_context(context=context)
     audit = _runtime_audit_fields(config, env)
     created_at = _now_iso(config)
     if relationships is None:
@@ -964,7 +966,7 @@ def write_pipeline_lineage(
                     **audit,
                 })
     if rows:
-        write_lakehouse_table(spark.createDataFrame(rows), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, mode=mode)
+        write_lakehouse_table(spark.createDataFrame(rows), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context=resolved_context, mode=mode)
     return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
 
 
@@ -1038,6 +1040,7 @@ def write_pipeline_run_summary(
     relies on a default attached lakehouse.
 
     """
+    config, env, resolved_context = resolve_fabric_context(context=context)
     completed = completed_at or _now_iso(config)
     started = started_at or completed
     sources = source_definitions or {}
@@ -1080,5 +1083,5 @@ def write_pipeline_run_summary(
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
         "created_at": _now_iso(config),
     }
-    write_lakehouse_table(spark.createDataFrame([row]), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, mode=mode)
+    write_lakehouse_table(spark.createDataFrame([row]), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context=resolved_context, mode=mode)
     return row
