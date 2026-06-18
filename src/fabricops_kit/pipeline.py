@@ -1035,9 +1035,9 @@ def write_pipeline_run_summary(
 
     Notes
     -----
-    The row is written via ``write_lakehouse_table(..., config, env,
-    "metadata", metadata_table, mode="append")`` so runtime evidence never
-    relies on a default attached lakehouse.
+    The row is written via ``write_lakehouse_table(..., metadata_table,
+    target="metadata", context=resolved_context, mode="append")`` so runtime
+    evidence never relies on a default attached lakehouse.
 
     """
     config, env, resolved_context = resolve_fabric_context(context=context)

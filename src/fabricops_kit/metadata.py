@@ -125,13 +125,13 @@ def _write_guardrail_result_row(
         "created_at": _now_utc_iso(config),
         **audit,
     }
+    context = {"config": config, "env_name": env}
     write_lakehouse_table(
         spark_session.createDataFrame([row]),
-        config,
-        env,
-        "metadata",
         results_table,
-        target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env},
+        target="metadata",
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        context=context,
         mode="append",
     )
 

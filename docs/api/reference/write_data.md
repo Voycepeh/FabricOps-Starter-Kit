@@ -7,7 +7,7 @@ Write Lakehouse or Warehouse targets through one notebook-facing IO function.
 
 `fabricops_kit/fabric_input_output.py:312`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/fabric_input_output.py#L312-L379">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -202,7 +202,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/fabric_input_output.py#L312-L379">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/fabric_input_output.py#L312-L379</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379</a>
 - Start line: `312`
 - End line: `379`
 - Signature:
