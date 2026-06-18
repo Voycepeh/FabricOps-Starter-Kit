@@ -1,8 +1,8 @@
 # FabricOps Starter Kit
 
-FabricOps Starter Kit is a lightweight Microsoft Fabric notebook starter kit for governed, quality checked pipelines.
+FabricOps Starter Kit is a lightweight Microsoft Fabric operating model for config driven engineering, standardized notebook delivery, metadata collection, and governed pipeline execution.
 
-Use it when you want Fabric notebooks to move data from source to target while keeping useful metadata for review, guardrails, and governance.
+Use it when analysts, data scientists, engineers, and governance users need to work from the same reusable notebook patterns while keeping setup, evidence, guardrails, lineage, and review decisions visible through shared metadata.
 
 ## FabricOps at a glance
 
@@ -11,28 +11,28 @@ Use it when you want Fabric notebooks to move data from source to target while k
 <div class="fabricops-kpi-card" markdown="1">
   <div class="fabricops-kpi-number">5</div>
   <div class="fabricops-kpi-label">notebook templates</div>
-  <p>A small starter workflow covers environment setup, agreement intake, exploration, pipeline delivery, and governance review.</p>
+  <p>Reusable notebook patterns for setup, agreement intake, exploration, pipeline execution, and governance review.</p>
   <a href="how-fabricops-works/notebook-templates/">View notebook templates</a>
 </div>
 
 <div class="fabricops-kpi-card" markdown="1">
   <div class="fabricops-kpi-number">22</div>
   <div class="fabricops-kpi-label">starter-kit-functions</div>
-  <p>Functions actively called by core starter template notebook code cells keep repeated setup, IO, profiling, guardrails, lineage, and review steps consistent without counting import-only or lower-level helpers.</p>
+  <p>Shared helper functions keep IO, profiling, guardrails, lineage, metadata capture, and review steps consistent across notebooks without counting import-only or lower-level helpers.</p>
   <a href="reference/">View function reference</a>
 </div>
 
 <div class="fabricops-kpi-card" markdown="1">
   <div class="fabricops-kpi-number">23</div>
   <div class="fabricops-kpi-label">native DQ rules</div>
-  <p>Built-in data quality rule types support approved metadata-driven checks during later pipeline runs.</p>
+  <p>Built in rule types support metadata driven data quality checks during governed pipeline runs.</p>
   <a href="reference/dq-rules/">View DQ rules</a>
 </div>
 
 <div class="fabricops-kpi-card" markdown="1">
   <div class="fabricops-kpi-number">12</div>
   <div class="fabricops-kpi-label">metadata tables</div>
-  <p><code>00_env_config</code> prepares the governed evidence tables used by agreement, notebook registry, catalogue, lineage, DQ, pipeline, and review workflows.</p>
+  <p>Shared evidence tables capture configuration, agreements, catalogue records, lineage, DQ results, pipeline runs, and review decisions.</p>
   <a href="how-fabricops-works/metadata-tables/">View metadata tables</a>
 </div>
 
@@ -40,15 +40,25 @@ Use it when you want Fabric notebooks to move data from source to target while k
 
 ## Start here
 
-Choose where to begin:
+Choose the next page based on what you need to do:
 
-<div class="home-cta" markdown="1">
+<div class="grid cards" markdown="1">
 
-[Guided Demo](guided-demo.md){ .md-button .md-button--primary }
+-   **New to FabricOps?**
 
-[How FabricOps Works](how-fabricops-works/index.md){ .md-button }
+    Start with the [Guided Demo](guided-demo.md) to install the helper wheel, copy the templates, and run a smoke test.
 
-[Notebook Templates](how-fabricops-works/notebook-templates.md){ .md-button }
+-   **Want to understand the operating model?**
+
+    Read [How FabricOps Works](how-fabricops-works/index.md) for the workspace model, role workflow, and metadata movement.
+
+-   **Ready to open and run notebooks?**
+
+    Use [Notebook Templates](how-fabricops-works/notebook-templates.md) to choose which notebook to open, when to run it, and what evidence it creates.
+
+-   **Need implementation details?**
+
+    Browse the generated [Function Reference](reference/index.md) for helper behavior, parameters, and related callable pages.
 
 </div>
 
@@ -56,9 +66,9 @@ Choose where to begin:
 
 | Page | Use it for |
 | --- | --- |
-| [Guided Demo](guided-demo.md) | Install the helper wheel, copy the templates, and run a Fabric smoke test. |
-| [How FabricOps Works](how-fabricops-works/index.md) | Understand the target delivery workflow from Agreement to Pipeline to Review. |
-| [Notebook Templates](how-fabricops-works/notebook-templates.md) | See what each notebook template is for. |
-| [Metadata Tables](how-fabricops-works/metadata-tables.md) | See what metadata the notebooks write and read. |
-| [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md) | Understand how `02_pipeline` checks schema, freshness, profile behavior, and approved governance metadata. |
-| [Governance Review](how-fabricops-works/governance-review.md) | Understand how `03_governance` adds reviewed governance metadata. |
+| [Guided Demo](guided-demo.md) | First walkthrough and smoke test path for the starter workflow. |
+| [How FabricOps Works](how-fabricops-works/index.md) | Operating model, role workflow, metadata movement, and what FabricOps abstracts. |
+| [Notebook Templates](how-fabricops-works/notebook-templates.md) | Practical guide for choosing, opening, and running the starter notebooks. |
+| [Function Reference](reference/index.md) | Callable-level implementation details generated from source code and metadata. |
+| [Metadata Tables](how-fabricops-works/metadata-tables.md) | Metadata table purposes and evidence records written by the workflow. |
+| [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md) | Schema, freshness, profile behavior, and approved governance checks used by `02_pipeline`. |
