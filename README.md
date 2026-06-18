@@ -7,7 +7,7 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 <div align="center">
 
 [![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
-[![Guided Demo](https://img.shields.io/badge/Start-Use%20Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
+[![Guided Demo](https://img.shields.io/badge/Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
 [![Install](https://img.shields.io/badge/Install-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
 
 </div>
