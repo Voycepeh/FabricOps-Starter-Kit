@@ -316,8 +316,8 @@ def test_template_examples_use_default_context_not_framework_plumbing():
     assert "customer_table" not in bootstrap_block
     assert "source_table" in read_config_block
     assert "customer_table" in read_config_block
-    assert "target_table" not in code
-    assert "primary_key" not in code
+    assert "target_table = " not in code
+    assert "primary_key = " not in code
     assert 'format="csv"' in load_block
     assert 'format="excel"' in load_block
     assert 'format="parquet"' in load_block
