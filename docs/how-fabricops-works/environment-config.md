@@ -6,7 +6,7 @@
 
 Set `ENV` / `ENV_NAME` to the active environment key, such as `dev`, and keep that key aligned with `ENV_PATHS`. The notebook assembles `PathConfig`, `NotebookRuntimeConfig`, governance config, agreement config, and audit timezone into one `FrameworkConfig`.
 
-The key setup helper is [`setup_notebook`](../api/reference/setup_notebook/). It validates the runtime context, required target configuration, notebook naming/readiness checks, and returns the run context used by downstream cells.
+The key setup helper is [`setup_notebook`](../api/reference/setup_notebook.md). It validates the runtime context, required target configuration, notebook naming/readiness checks, and returns the run context used by downstream cells.
 
 ## Workspace, lakehouse, metadata routing, and runtime configuration
 
@@ -18,7 +18,7 @@ Runtime values such as audit timezone, schema-enabled Lakehouse settings, defaul
 
 ## Metadata table setup
 
-Use [`setup_metadata_tables`](../api/reference/setup_metadata_tables/) to create missing FabricOps metadata tables and validate existing metadata structures in the configured metadata target. On first run it creates empty tables for agreement, notebook registry, catalogue, guardrail, lineage, pipeline run, and governance/enrichment metadata. It does not create business rows; `01_agreement`, `02_pipeline`, and `03_governance` populate those tables.
+Use [`setup_metadata_tables`](../api/reference/setup_metadata_tables.md) to create missing FabricOps metadata tables and validate existing metadata structures in the configured metadata target. On first run it creates empty tables for agreement, notebook registry, catalogue, guardrail, lineage, pipeline run, and governance/enrichment metadata. It does not create business rows; `01_agreement`, `02_pipeline`, and `03_governance` populate those tables.
 
 ## Handoff to the next notebooks
 
