@@ -109,13 +109,13 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
     assert "These notebooks are release-specific validation aids." in notebook_docs
     assert "They are not production workflow templates." in notebook_docs
     assert notebook_docs.count("## Optional example notebooks") == 1
-    assert "[`templates/notebooks/99_explore.ipynb`](../../templates/notebooks/99_explore.ipynb)" in notebook_docs
+    assert "[`templates/notebooks/99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)" in notebook_docs
     assert "[`read_data`](../api/reference/read_data.md)" in notebook_docs
     assert "[`profile_dataframe`](../api/reference/profile_dataframe.md)" in notebook_docs
     assert "[`write_data`](../api/reference/write_data.md)" in notebook_docs
     assert "[`enforce_dq_rules`](../api/reference/enforce_dq_rules.md)" in notebook_docs
-    assert "| [`templates/notebooks/example_pipeline_demo.ipynb`](../../templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |" in notebook_docs
-    assert "| [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](../../templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |" in notebook_docs
+    assert "| [`templates/notebooks/example_pipeline_demo.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |" in notebook_docs
+    assert "| [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |" in notebook_docs
 
 
 def test_guided_demo_links_pipeline_guardrail_demo():

@@ -16,11 +16,11 @@ Use this page as a launch point, not only a concept map. The template notebooks 
 
 | Notebook file | Guide page | When to open it |
 | --- | --- | --- |
-| [`templates/notebooks/00_env_config.ipynb`](../../templates/notebooks/00_env_config.ipynb) | [00 Environment Configuration](environment-config.md) | First. Configure runtime paths, metadata routing, schemas, governance settings, and table setup. |
-| [`templates/notebooks/01_agreement.ipynb`](../../templates/notebooks/01_agreement.ipynb) | [01 Agreement Setup](agreement-setup.md) | After setup. Capture data steward, agreement, and supporting evidence records. |
-| [`templates/notebooks/02_pipeline.ipynb`](../../templates/notebooks/02_pipeline.ipynb) | [02 Pipeline Execution](pipeline-execution.md) | Delivery notebook. Select agreement context, read data, run guardrails, write outputs, and publish evidence. |
-| [`templates/notebooks/03_governance.ipynb`](../../templates/notebooks/03_governance.ipynb) | [03 Governance Review](governance-review.md) | Review notebook. Author and review enrichment and guardrail lifecycle records. |
-| [`templates/notebooks/99_explore.ipynb`](../../templates/notebooks/99_explore.ipynb) | Optional | Discovery/troubleshooting notebook for profiling, investigation, and ad hoc exploration. |
+| [`templates/notebooks/00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) | [00 Environment Configuration](environment-config.md) | First. Configure runtime paths, metadata routing, schemas, governance settings, and table setup. |
+| [`templates/notebooks/01_agreement.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_agreement.ipynb) | [01 Agreement Setup](agreement-setup.md) | After setup. Capture data steward, agreement, and supporting evidence records. |
+| [`templates/notebooks/02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) | [02 Pipeline Execution](pipeline-execution.md) | Delivery notebook. Select agreement context, read data, run guardrails, write outputs, and publish evidence. |
+| [`templates/notebooks/03_governance.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_governance.ipynb) | [03 Governance Review](governance-review.md) | Review notebook. Author and review enrichment and guardrail lifecycle records. |
+| [`templates/notebooks/99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Optional | Discovery/troubleshooting notebook for profiling, investigation, and ad hoc exploration. |
 
 ## Optional example notebooks
 
@@ -28,9 +28,9 @@ These notebooks are release-specific validation aids. They stay aligned to the n
 
 | Notebook | Purpose | Relevant helpers |
 | --- | --- | --- |
-| [`templates/notebooks/99_explore.ipynb`](../../templates/notebooks/99_explore.ipynb) | Optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis support. | [`read_data`](../api/reference/read_data.md), [`profile_dataframe`](../api/reference/profile_dataframe.md) |
-| [`templates/notebooks/example_pipeline_demo.ipynb`](../../templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. | [`write_data`](../api/reference/write_data.md) |
-| [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](../../templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. | [`write_data`](../api/reference/write_data.md), [`enforce_dq_rules`](../api/reference/enforce_dq_rules.md) |
+| [`templates/notebooks/99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis support. | [`read_data`](../api/reference/read_data.md), [`profile_dataframe`](../api/reference/profile_dataframe.md) |
+| [`templates/notebooks/example_pipeline_demo.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. | [`write_data`](../api/reference/write_data.md) |
+| [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. | [`write_data`](../api/reference/write_data.md), [`enforce_dq_rules`](../api/reference/enforce_dq_rules.md) |
 
 ![FabricOps workspace setup](../assets/fabric-example-workspace-setup.png)
 
