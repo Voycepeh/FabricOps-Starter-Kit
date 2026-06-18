@@ -1,6 +1,6 @@
 # 03 Governance Review
 
-`03_governance` is the formal review layer. It is where governance users review table enrichment and guardrail intent after pipeline profiling and authoring have produced metadata evidence.
+`03_governance` is the formal review layer that records governance decisions. It is where governance users review table enrichment and guardrail intent after pipeline profiling and authoring have produced metadata evidence.
 
 ## Selecting a guardrail target
 
@@ -13,7 +13,9 @@ Use [`widget_author_guardrail_rules`](../api/reference/widget_author_guardrail_r
 - `schema_freshness_profile` from [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/);
 - `dq` from [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/).
 
-Guardrail records are appended to `METADATA_GUARDRAIL_RULES`. Schema, freshness, profile, and DQ behaviour is described in [02 Pipeline Execution](pipeline-execution.md) because runtime interpretation happens when `02_pipeline` executes checks.
+Guardrail records are appended to `METADATA_GUARDRAIL_RULES`. Schema, freshness, profile, and DQ behaviour is described in [02 Pipeline Execution](pipeline-execution.md) because runtime interpretation and enforcement happen when `02_pipeline` executes checks.
+
+`METADATA_GUARDRAIL_RULES` contains authored rule intent and lifecycle state. `METADATA_GUARDRAIL_RESULTS` contains runtime outcomes written by pipeline execution. Review users can inspect runtime evidence from `METADATA_GUARDRAIL_RESULTS` alongside `METADATA_GUARDRAIL_RULES` and `METADATA_ENRICHMENT_RULES`; [`widget_review_table_governance`](../api/reference/widget_review_table_governance/) can show runtime result context for guardrail records where matching results exist.
 
 ## Metadata enrichment
 
