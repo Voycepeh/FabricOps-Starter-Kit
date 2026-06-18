@@ -13,8 +13,8 @@ This skill guides automation tools working on the FabricOps Starter Kit reposito
 
 Start with the existing generated function reference system. Do not replace it with a separate documentation or manifest system.
 
-- `docs/reference/automation-manifest.json` — automation-oriented callable and helper execution metadata.
-- `docs/reference/function-manifest.json` — machine-readable function inventory and dependency metadata.
+- `docs/reference/_data/automation-manifest.json` — automation-oriented callable and helper execution metadata.
+- `docs/reference/_data/function-manifest.json` — machine-readable function inventory and dependency metadata.
 - `docs/api/reference/` — public callable pages for notebook authors.
 - Public callable pages under `docs/api/reference/` embed internal helper implementation details for package maintenance. Standalone `docs/reference/internal/` pages are generated only when explicitly enabled for maintainer diagnostics.
 - `docs/reference/dq-rules/` — generated DQ rule reference pages for supported rule types, parameters, and examples.
@@ -81,8 +81,8 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 
 ## Generated reference discipline
 
-- Use `docs/reference/automation-manifest.json` for required context, inputs, outputs, side effects, failure modes, verification, and related functions.
-- Use `docs/reference/function-manifest.json` for the machine-readable function inventory and dependency metadata.
+- Use `docs/reference/_data/automation-manifest.json` for required context, inputs, outputs, side effects, failure modes, verification, and related functions.
+- Use `docs/reference/_data/function-manifest.json` for the machine-readable function inventory and dependency metadata.
 - Use pages in `docs/api/reference/` for notebook authoring guidance.
 - Use the embedded Internal implementation summary on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
 - Use `docs/reference/template-function-map.md` to connect notebook templates to callable references.
@@ -95,6 +95,6 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 2. Check the notebook workflow ownership above and `docs/reference/template-function-map.md` for the relevant starter flow.
 3. Read the matching page in `docs/api/reference/` before calling or recommending a public helper.
 4. For DQ work, read `docs/reference/dq-rules/index.md`, each relevant generated DQ rule page, and the callable page before generating notebook code.
-5. Inspect `docs/reference/automation-manifest.json` and `docs/reference/function-manifest.json` when you need execution metadata, dependencies, side effects, failure modes, or verification guidance.
+5. Inspect `docs/reference/_data/automation-manifest.json` and `docs/reference/_data/function-manifest.json` when you need execution metadata, dependencies, side effects, failure modes, or verification guidance.
 6. Use the embedded Internal implementation summary on callable pages when maintaining package implementation details; only use `docs/reference/internal/` if standalone internal pages were explicitly generated for maintainer diagnostics.
 7. Preserve `00_env_config` metadata routing for reads and writes, especially governed evidence tables such as `METADATA_DQ_RULES`.

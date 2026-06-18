@@ -18,19 +18,20 @@ PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
 DOCS_METADATA_PATH = ROOT / "scripts" / "reference_docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
+REFERENCE_DATA_DIR = ROOT / "docs" / "reference" / "_data"
 MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
-DEPENDENCY_METADATA_PATH = ROOT / "docs" / "reference" / "dependency-metadata.json"
+DEPENDENCY_METADATA_PATH = REFERENCE_DATA_DIR / "dependency-metadata.json"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
 LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
-MANIFEST_PATH = ROOT / "docs" / "reference" / "manifest.json"
-AGENT_MANIFEST_PATH = ROOT / "docs" / "reference" / "automation-manifest.json"
-FUNCTION_MANIFEST_PATH = ROOT / "docs" / "reference" / "function-manifest.json"
+MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
+AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
+FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
-CALLABLE_SURFACE_AUDIT_PATH = ROOT / "docs" / "reference" / "callable-surface-audit.json"
-GLOSSARY_SOURCE_PATH = ROOT / "docs" / "reference" / "glossary.json"
+CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
+GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
@@ -1501,6 +1502,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
 
 def main() -> None:
     """Run the command-line workflow."""
+    REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
     public = parse_public_exports()
     if set(public) != V1_CALLABLES:
         missing = sorted(V1_CALLABLES - set(public))
@@ -2165,10 +2167,10 @@ def main() -> None:
         "- **Callable helpers** are public v1 functions intended for notebook authors and human operators.",
         "- **Internal helpers** are maintainer implementation details embedded inside the public callable pages that use them.",
         "- **Implementation modules** show source ownership, module-level dependencies, and helper relationships for maintainers.",
-        "- **Function manifests** (`manifest.json` and `function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
-        "- **Automation manifest** (`automation-manifest.json`) adds automation-oriented execution fields for planning, side-effect checks, and verification.",
+        "- **Function manifests** (`_data/manifest.json` and `_data/function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
+        "- **Agent/automation metadata** (`_data/automation-manifest.json`) adds automation-oriented execution fields for planning, side-effect checks, and verification.",
         "- **Implementation contracts** on callable pages summarize expectations maintainers must satisfy before using or changing a function.",
-        "- **Skill file** (`.automation tools/skills/fabricops/SKILL.md`) gives contributors repo-specific rules and points them to these generated references.",
+        "- **Skill file** (`.agents/skills/fabricops/SKILL.md`) gives contributors repo-specific rules and points them to these generated references.",
         "",
     ]
 

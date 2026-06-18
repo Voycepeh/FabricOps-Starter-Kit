@@ -122,7 +122,7 @@ def _audit_rows() -> list[dict[str, object]]:
     """Return generated callable surface audit rows."""
     import json
 
-    return json.loads((ROOT / "docs" / "reference" / "callable-surface-audit.json").read_text(encoding="utf-8"))
+    return json.loads((ROOT / "docs" / "reference" / "_data" / "callable-surface-audit.json").read_text(encoding="utf-8"))
 
 
 def _core_template_called_public() -> set[str]:
