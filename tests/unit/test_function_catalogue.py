@@ -23,13 +23,15 @@ def test_function_catalogue_uses_template_called_filter() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to look up template-called public functions from active v1 modules." in page
+    assert "Use the finder below to look up exported public functions from active v1 modules." in page
     assert "Search functions" in page
     assert 'placeholder="Search functions"' in page
     assert "Function type filters" in page
-    assert 'data-function-type-filter="callable" checked' in page
+    assert 'data-function-type-filter="template-called" checked' in page
+    assert 'data-function-type-filter="advanced-public" checked' in page
+    assert 'data-function-type-filter="example-only" checked' in page
     assert 'data-function-type-filter="internal"> Internal' not in page
-    assert "Template-called public functions used by starter notebook code cells." in page
+    assert "Advanced public" in page
     assert "For internal helper behavior, open the public function page and expand the Internal implementation summary." in page
 
 
@@ -51,7 +53,9 @@ def test_callable_is_default_and_internal_is_opt_in() -> None:
     """Verify callable is default and internal is opt in."""
     page = _reference_index()
 
-    assert re.search(r'data-function-type-filter="callable"\s+checked', page)
+    assert re.search(r'data-function-type-filter="template-called"\s+checked', page)
+    assert re.search(r'data-function-type-filter="advanced-public"\s+checked', page)
+    assert re.search(r'data-function-type-filter="example-only"\s+checked', page)
     assert not re.search(r'data-function-type-filter="internal"\s+checked', page)
 
 
@@ -59,7 +63,7 @@ def test_internal_functions_are_not_indexed_for_normal_catalogue_search() -> Non
     """Verify internal functions are not indexed for normal catalogue search."""
     page = _reference_index()
 
-    assert 'data-function-type="callable"' in page
+    assert 'data-function-type="template-called"' in page
     assert 'data-function-type="internal"' not in page
     assert 'class="reference-chip reference-chip-type reference-chip-internal">Internal</span>' not in page
     assert "reference/internal/" not in page
@@ -160,9 +164,12 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "write_warehouse_table" not in called
 
 
-def test_reference_catalogue_rows_match_direct_template_calls() -> None:
-    """Verify catalogue rows exactly match direct starter template calls."""
-    assert _catalogue_row_names() == _core_template_called_public()
+def test_reference_catalogue_rows_include_all_exported_public_functions() -> None:
+    """Verify catalogue rows keep all exported functions while classifying template use."""
+    exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+
+    assert _core_template_called_public() <= _catalogue_row_names()
+    assert _catalogue_row_names() == exported_names
 
 
 def test_every_counted_function_has_standalone_page() -> None:
@@ -219,7 +226,11 @@ def test_example_only_helpers_do_not_inflate_core_count() -> None:
 
     assert "enforce_dq_rules" in example_only
     assert example_only.isdisjoint(_core_template_called_public())
-    assert example_only.isdisjoint(_catalogue_row_names())
+    assert example_only <= _catalogue_row_names()
+    page = _reference_index()
+    for name in example_only:
+        assert f'data-callable-name="{name}"' in page
+        assert 'data-function-type="example-only"' in page
 
 
 def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> None:

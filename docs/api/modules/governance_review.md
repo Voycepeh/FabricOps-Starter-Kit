@@ -76,56 +76,56 @@ Owns current guardrail authoring and governance review widgets plus internal rev
   </thead>
   <tbody>
     <tr>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
       <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_read_guardrail_rule_metadata</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
+      <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render interactive manual DQ guardrail authoring controls.</td>
       <td><code>_dq_records_from_selection</code> (internal), <code>_latest_rule</code> (internal), <code>_rule_params</code> (internal), <code>_write_rule_records</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a></td>
+      <td><a href="../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render combined guardrail authoring controls for the selected table.</td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+      <td><a href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render interactive schema, freshness, and profile-behavior guardrail authoring controls.</td>
       <td><code>_latest_rule</code> (internal), <code>_rule_params</code> (internal), <code>_schema_freshness_profile_records_from_selection</code> (internal), <code>_write_rule_records</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+      <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render a consolidated column metadata enrichment widget.</td>
       <td><code>_collect_enrichment_extra_fields</code> (internal), <code>_enrichment_options</code> (internal), <code>_render_enrichment_extra_fields</code> (internal), <code>_selected_catalogue_rows_for_enrichment</code> (internal), <code>_value</code> (internal), <code>_write_table_metadata_enrichment_records</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
+      <td><a href="../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render interactive controls for reviewing proposed and bypassed guardrail rules.</td>
       <td>—</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
+      <td><a href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render 03-only formal review controls for enrichment and guardrail records.</td>
       <td><code>_assert_governance_review_context</code> (internal), <code>_dq_rule_parameters_summary</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+      <td><a href="../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render an interactive target selector for guardrail authoring and governance review.</td>
@@ -148,42 +148,42 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
+<a class="reference-chip" href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>
+<a class="reference-chip" href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_dq_records_from_selection</code></span>, <span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a>
+<a class="reference-chip" href="../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a class="reference-chip" href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>
+<a class="reference-chip" href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a class="reference-chip" href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>
+<a class="reference-chip" href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_schema_freshness_profile_records_from_selection</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>
+<a class="reference-chip" href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_collect_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_enrichment_options</code></span>, <span class="reference-chip"><code>_render_enrichment_extra_fields</code></span>, <span class="reference-chip"><code>_selected_catalogue_rows_for_enrichment</code></span>, <span class="reference-chip"><code>_value</code></span>, <span class="reference-chip"><code>_write_table_metadata_enrichment_records</code></span>, <span class="reference-chip"><code>build_enrichment_rule_records</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>
+<a class="reference-chip" href="../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>apply_governance_enrichment_action</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>load_rule_review_history</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a>
+<a class="reference-chip" href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_assert_governance_review_context</code></span>, <span class="reference-chip"><code>_dq_rule_parameters_summary</code></span>, <span class="reference-chip"><code>apply_governance_enrichment_action</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>load_rule_review_history</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
+<a class="reference-chip" href="../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_filter_table_rows</code></span>, <span class="reference-chip"><code>_read_metadata_table_or_empty</code></span>, <span class="reference-chip"><code>resolve_table_governance_policy</code></span>
 </li>
@@ -214,7 +214,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_assert_governance_review_context</code></td>
-      <td><a href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
+      <td><a href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
     </tr>
     <tr>
       <td><code>_authoring_lifecycle</code></td>
@@ -250,7 +250,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_collect_enrichment_extra_fields</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+      <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_check_status</code></td>
@@ -262,11 +262,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_dq_failed_row_count</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_records_from_selection</code></td>
-      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
+      <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_rule_display_rows</code></td>
@@ -278,19 +278,19 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_dq_rule_parameters_summary</code></td>
-      <td><a href="../../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
+      <td><a href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_summary</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_tagged_dataframe</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_enrichment_options</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+      <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
     <tr>
       <td><code>_enrichment_payload_from_review</code></td>
@@ -302,7 +302,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_filter_table_rows</code></td>
-      <td><a href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+      <td><a href="../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
     </tr>
     <tr>
       <td><code>_first_present</code></td>
@@ -338,7 +338,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_latest_rule</code></td>
-      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+      <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_lifecycle_fields</code></td>
@@ -346,7 +346,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_load_active_dq_rules</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_normalize_dq_severity</code></td>
@@ -362,7 +362,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_read_guardrail_rule_metadata</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_read_metadata_rows</code></td>
@@ -370,7 +370,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_read_metadata_table_or_empty</code></td>
-      <td><a href="../../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+      <td><a href="../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
     </tr>
     <tr>
       <td><code>_record_identity</code></td>
@@ -378,15 +378,15 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_render_enrichment_extra_fields</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+      <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
     <tr>
       <td><code>_rule_params</code></td>
-      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+      <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_run_dq_guardrail_checks</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_schema</code></td>
@@ -394,11 +394,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_schema_freshness_profile_records_from_selection</code></td>
-      <td><a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+      <td><a href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_selected_catalogue_rows_for_enrichment</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+      <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
     <tr>
       <td><code>_spark_sql_helpers</code></td>
@@ -418,7 +418,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_summarize_dq_guardrail</code></td>
-      <td><a href="../../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_validate_dq_rules</code></td>
@@ -426,7 +426,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_value</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+      <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
     <tr>
       <td><code>_write_enrichment_records</code></td>
@@ -434,11 +434,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_write_rule_records</code></td>
-      <td><a href="../../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+      <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
     </tr>
     <tr>
       <td><code>_write_table_metadata_enrichment_records</code></td>
-      <td><a href="../../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+      <td><a href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
     </tr>
   </tbody>
 </table>
@@ -691,21 +691,21 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 ### External callers
 
 **config**
-<a class="reference-chip" href="../config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="../config/#_get_metadata_table_schema_registry"><code>_get_metadata_table_schema_registry</code></a>, <a class="reference-chip" href="../config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
+<a class="reference-chip" href="config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="config/#_get_metadata_table_schema_registry"><code>_get_metadata_table_schema_registry</code></a>, <a class="reference-chip" href="config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
 
 ### External callees
 
 **config**
-<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>, <a class="reference-chip" href="../config/#resolve_fabric_context"><code>resolve_fabric_context</code></a>
+<a class="reference-chip" href="config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>, <a class="reference-chip" href="config/#resolve_fabric_context"><code>resolve_fabric_context</code></a>
 
 **data_profiling**
-<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>, <a class="reference-chip" href="../metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="../metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="../metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="../metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="../metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>
+<a class="reference-chip" href="metadata/#_build_dq_rule_key"><code>_build_dq_rule_key</code></a>, <a class="reference-chip" href="metadata/#_build_metadata_column_key"><code>_build_metadata_column_key</code></a>, <a class="reference-chip" href="metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="metadata/#_resolve_action_by"><code>_resolve_action_by</code></a>, <a class="reference-chip" href="metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

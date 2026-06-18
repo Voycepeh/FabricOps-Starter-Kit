@@ -7,7 +7,7 @@ Write Lakehouse or Warehouse targets through one notebook-facing IO function.
 
 `fabricops_kit/fabric_input_output.py:312`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/fb08351bdfb16c1e8e4368d29066e6a3d5999672/src/fabricops_kit/fabric_input_output.py#L312-L379">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -202,7 +202,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/fabric_input_output.py#L312-L379</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/fb08351bdfb16c1e8e4368d29066e6a3d5999672/src/fabricops_kit/fabric_input_output.py#L312-L379">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/fb08351bdfb16c1e8e4368d29066e6a3d5999672/src/fabricops_kit/fabric_input_output.py#L312-L379</a>
 - Start line: `312`
 - End line: `379`
 - Signature:
@@ -226,8 +226,8 @@ def write_data(
 
 ### Public related functions
 
-- <a href="../read_data/"><code>fabricops_kit.fabric_input_output.read_data</code></a>
-- <a href="../run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="read_data/"><code>fabricops_kit.fabric_input_output.read_data</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Internal implementation summary
 

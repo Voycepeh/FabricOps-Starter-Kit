@@ -852,11 +852,11 @@ def public_reference_link(
     if symbol not in docs_metadata:
         raise RuntimeError(f"Missing PUBLIC_SYMBOL_DOCS entry for exported symbol: {symbol}")
     if context == "module":
-        return f"../../reference/{symbol}/"
+        return f"../reference/{symbol}/"
     if context == "reference":
         return f"../api/reference/{symbol}/"
     if context == "template_map":
-        return f"../../api/reference/{symbol}/"
+        return f"../api/reference/{symbol}/"
     if context == "notebook":
         return f"../api/reference/{symbol}/"
     raise RuntimeError(f"Unknown link context: {context}")
@@ -871,11 +871,11 @@ def callable_docs_link(
     source_module: str | None = None,
 ) -> str:
     """Return a safe docs link for a public callable."""
-    if symbol_name in docs_metadata:
+    if symbol_name in docs_metadata and symbol_name in V1_CALLABLES:
         return public_reference_link(symbol_name, docs_metadata, context=context)
     if context == "module":
         if source_module and module != source_module:
-            return f"../{module}/#{symbol_name}"
+            return f"{module}/#{symbol_name}"
         return f"#{symbol_name}"
     if context == "reference":
         return f"../../api/modules/{module}/#{symbol_name}"
@@ -1138,13 +1138,13 @@ def _related_function_links(
         node = node_by_qn.get(qn)
         label = qn
         if node and node.get("exported"):
-            href = f"../{node['callable_name']}/"
+            href = f"{node['callable_name']}/"
         elif node and generate_internal_reference_pages():
             href = f"../internal/{node['module_name']}_{node['callable_name']}/"
         elif node:
             rows.append(f"- `{label}`")
             continue
-        elif item in docs_metadata:
+        elif item in docs_metadata and item in V1_CALLABLES:
             href = f"../{item}/"
             label = item
         else:
@@ -2153,11 +2153,11 @@ def main() -> None:
     ref = [
         "# Function Reference",
         "",
-        "Use this page as a function lookup after you understand the notebook flow. The default catalogue shows template-called public functions that starter notebooks actively call in code cells; Implementation Modules show the active source modules that maintainers debug and extend.",
+        "Use this page as a function lookup after you understand the notebook flow. The catalogue shows every exported public callable page, with chips distinguishing template-called, example-only, and advanced public helpers; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
         "- Use [Template Function Map](template-function-map.md) to see what starter notebooks actively call in code cells. A callable is not counted as used when it is only imported, mentioned in markdown, present in generated metadata, or called internally by another helper.",
         "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
-        "- Use the Function catalogue below to browse template-called public functions. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
+        "- Use the Function catalogue below to browse exported public functions without losing standalone reference pages for advanced helpers. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
         "## How to use this reference",
@@ -2176,7 +2176,7 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up template-called public functions from active v1 modules. For internal helper behavior, open the public function page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.",
+            "Use the finder below to look up exported public functions from active v1 modules. Filter chips distinguish template-called, example-only, and advanced public helpers. For internal helper behavior, open the public function page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
@@ -2186,8 +2186,10 @@ def main() -> None:
             '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing callable functions.</p>',
             '  <fieldset class="callable-type-filters">',
             '    <legend>Function type filters</legend>',
-            '    <label><input type="checkbox" data-function-type-filter="callable" checked> Callable</label>',
-            '    <p class="callable-type-note"><strong>Callable</strong>: Template-called public functions used by starter notebook code cells.</p>',
+            '    <label><input type="checkbox" data-function-type-filter="template-called" checked> Template-called</label>',
+            '    <label><input type="checkbox" data-function-type-filter="advanced-public" checked> Advanced public</label>',
+            '    <label><input type="checkbox" data-function-type-filter="example-only" checked> Example-only</label>',
+            '    <p class="callable-type-note"><strong>Template-called</strong>: directly used by starter notebook code cells. <strong>Advanced public</strong>: exported and documented, but not directly called by core templates.</p>',
             '  </fieldset>',
             '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
             "</div>",
@@ -2199,23 +2201,30 @@ def main() -> None:
         ]
     )
     all_items: list[str] = []
-    def _function_type_label(function_type: str) -> str:
-        return "Callable" if function_type == "callable" else "Internal"
+    def _catalogue_classification(name: str) -> tuple[str, str]:
+        if name in template_called_function_names:
+            return "template-called", "Template-called"
+        if name in example_only_function_names:
+            return "example-only", "Example-only"
+        return "advanced-public", "Advanced public"
 
     catalogue_nodes = sorted(
         [
             n
             for n in node_by_qn.values()
             if n["exported"]
-            and n["callable_name"] in template_called_function_names
             and n["callable_name"] in module_data[n["module_name"]]["functions"]
         ],
-        key=lambda n: (n["callable_name"].lower(), n["module_name"]),
+        key=lambda n: (
+            0 if n["callable_name"] in template_called_function_names else 1 if n["callable_name"] in example_only_function_names else 2,
+            n["callable_name"].lower(),
+            n["module_name"],
+        ),
     )
     for node in catalogue_nodes:
         name = node["callable_name"]
         module_name = node["module_name"]
-        function_type = node.get("role", "internal")
+        function_type, classification_label = _catalogue_classification(name)
         symbol = function_symbol_map.get(name)
         if node["exported"] and symbol:
             symbol_link = public_reference_link(name, docs_metadata, context="reference")
@@ -2235,7 +2244,6 @@ def main() -> None:
         used_by = [item for item in raw_used_by if not _hide_from_public_relationships(item)] if node["exported"] else raw_used_by
         calls_count = len(calls)
         used_by_count = len(used_by)
-        classification_label = _function_type_label(function_type)
         all_items.extend(
             [
                 (
@@ -2363,9 +2371,9 @@ def main() -> None:
                 if not n:
                     continue
                 if n.get("exported"):
-                    href = f"../{n['callable_name']}/"
+                    href = f"{n['callable_name']}/"
                     out.append(f'- <a href="{href}"><code>{item}</code></a>')
-                elif generate_internal_reference_pages():
+                elif n.get("callable_name", "").startswith("_") and generate_internal_reference_pages():
                     href = f"../internal/{n['module_name']}_{n['callable_name']}/"
                     out.append(f'- <a href="{href}"><code>{item}</code></a>')
                 else:

@@ -312,15 +312,15 @@ No public exports in this module.
 ### External callers
 
 **pipeline**
-<a class="reference-chip" href="../../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
 
 ### External callees
 
 **data_profiling**
-<a class="reference-chip" href="../../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="../fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>
+<a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>
 
 **metadata**
-<a class="reference-chip" href="../metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>
+<a class="reference-chip" href="metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

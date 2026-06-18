@@ -124,4 +124,4 @@ None.
 ### External callees
 
 **config**
-<a class="reference-chip" href="../config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>
+<a class="reference-chip" href="config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>

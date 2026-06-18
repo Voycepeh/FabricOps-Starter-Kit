@@ -7,7 +7,7 @@ Render combined guardrail authoring controls for the selected table.
 
 `fabricops_kit/governance_review.py:2555`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/governance_review.py#L2555-L2589">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/fb08351bdfb16c1e8e4368d29066e6a3d5999672/src/fabricops_kit/governance_review.py#L2555-L2589">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -84,8 +84,8 @@ Not documented yet
 ### Calls
 
 - `fabricops_kit.config.resolve_fabric_context`
-- <a href="../widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
-- <a href="../widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
+- <a href="widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
+- <a href="widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
 
 ## Implementation details
 
@@ -256,13 +256,13 @@ Not documented yet
 ### Outbound references
 
 - `fabricops_kit.config.resolve_fabric_context`
-- <a href="../widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
-- <a href="../widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
+- <a href="widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
+- <a href="widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/governance_review.py#L2555-L2589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/d9c6d5cabf9e4377e1bb98e966c0ecde74d8cd58/src/fabricops_kit/governance_review.py#L2555-L2589</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/fb08351bdfb16c1e8e4368d29066e6a3d5999672/src/fabricops_kit/governance_review.py#L2555-L2589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/fb08351bdfb16c1e8e4368d29066e6a3d5999672/src/fabricops_kit/governance_review.py#L2555-L2589</a>
 - Start line: `2555`
 - End line: `2589`
 - Signature:
@@ -281,9 +281,9 @@ def widget_author_guardrail_rules(
 
 ### Public related functions
 
-- <a href="../widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
-- <a href="../widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
-- <a href="../widget_review_table_governance/"><code>fabricops_kit.governance_review.widget_review_table_governance</code></a>
+- <a href="widget_author_schema_freshness_profile_rules/"><code>fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules</code></a>
+- <a href="widget_author_dq_rules/"><code>fabricops_kit.governance_review.widget_author_dq_rules</code></a>
+- <a href="widget_review_table_governance/"><code>fabricops_kit.governance_review.widget_review_table_governance</code></a>
 
 ### Internal implementation summary
 
