@@ -7,7 +7,7 @@ Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook
 
 `fabricops_kit/fabric_input_output.py:235`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/fabric_input_output.py#L235-L309">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad0e01454e054556946f1727b681a5d0bef553b2/src/fabricops_kit/fabric_input_output.py#L235-L309">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -232,7 +232,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/fabric_input_output.py#L235-L309">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5f362a35a02a204ac95dbf339c3661a972eb1cff/src/fabricops_kit/fabric_input_output.py#L235-L309</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad0e01454e054556946f1727b681a5d0bef553b2/src/fabricops_kit/fabric_input_output.py#L235-L309">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad0e01454e054556946f1727b681a5d0bef553b2/src/fabricops_kit/fabric_input_output.py#L235-L309</a>
 - Start line: `235`
 - End line: `309`
 - Signature:

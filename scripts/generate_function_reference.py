@@ -29,7 +29,6 @@ INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
 AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
-TEMPLATE_FUNCTION_MAP_PATH = ROOT / "docs" / "reference" / "template-function-map.md"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
@@ -1899,14 +1898,9 @@ def main() -> None:
     function_start_marker = "          # AUTO-GENERATED-FUNCTIONS-START"
     function_end_marker = "          # AUTO-GENERATED-FUNCTIONS-END"
     if function_start_marker in mkdocs_text and function_end_marker in mkdocs_text:
-        generated_function_lines = [
-            f"          - {name}: api/reference/{name}.md"
-            for name in sorted(public, key=str.lower)
-        ]
-        generated_functions = "\n".join(generated_function_lines)
         before, rest = mkdocs_text.split(function_start_marker, 1)
-        middle, after = rest.split(function_end_marker, 1)
-        mkdocs_text = before + function_start_marker + "\n" + generated_functions + "\n" + function_end_marker + after
+        _middle, after = rest.split(function_end_marker, 1)
+        mkdocs_text = before + function_start_marker + "\n" + function_end_marker + after
 
     start_marker = "          # AUTO-GENERATED-MODULES-START"
     end_marker = "      # AUTO-GENERATED-MODULES-END"
@@ -2083,20 +2077,6 @@ def main() -> None:
         encoding="utf-8",
     )
 
-    template_function_map = [
-        "# Template Function Map",
-        "",
-        "The template function map is now embedded into the notebook-aligned user guide pages under [How FabricOps Works](../how-fabricops-works/).",
-        "",
-        "Use these pages for the current notebook-to-helper flow:",
-        "",
-        "- [00 Environment Configuration](../how-fabricops-works/environment-config.md) for `setup_notebook` and `setup_metadata_tables`.",
-        "- [01 Agreement Setup](../how-fabricops-works/agreement-setup.md) for steward, agreement, and agreement evidence widgets.",
-        "- [02 Pipeline Execution](../how-fabricops-works/pipeline-execution.md) for agreement selection, source reads, table config preparation, guardrail execution, target writes, lineage, run summary, guardrail display, and optional authoring/enrichment helpers.",
-        "- [03 Governance Review](../how-fabricops-works/governance-review.md) for guardrail target selection, combined guardrail authoring, enrichment, and formal governance review.",
-        "",
-        "For callable-level details, use the generated [Function Reference](index.md). This page intentionally avoids duplicating notebook groupings so stale function maps do not conflict with the user guide.",
-    ]
     template_paths_in_metadata = {flow.get("template_path") for flow in template_flow_docs}
     missing_template_paths = sorted(
         str(path.relative_to(ROOT))
@@ -2122,7 +2102,6 @@ def main() -> None:
                 "TEMPLATE_FLOW_DOCS symbols must match direct public callable usage in "
                 f"{flow.get('template_path')}: expected metadata [{expected}], actual notebook calls [{actual}]"
             )
-    TEMPLATE_FUNCTION_MAP_PATH.write_text("\n".join(template_function_map) + "\n", encoding="utf-8", newline="\n")
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
@@ -2178,7 +2157,6 @@ def main() -> None:
         "",
         "Use this page as a function lookup after you understand the notebook flow. The catalogue shows every exported public callable page, with chips distinguishing template-called, example-only, and advanced public helpers; Implementation Modules show the active source modules that maintainers debug and extend.",
         "",
-        "- Use [Template Function Map](template-function-map.md) to see what starter notebooks actively call in code cells. A callable is not counted as used when it is only imported, mentioned in markdown, present in generated metadata, or called internally by another helper.",
         "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
         "- Use the Function catalogue below to browse exported public functions without losing standalone reference pages for advanced helpers. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
