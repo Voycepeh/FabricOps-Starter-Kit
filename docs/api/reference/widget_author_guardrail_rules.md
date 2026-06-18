@@ -5,9 +5,9 @@ Render combined guardrail authoring controls for the selected table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2585`
+`fabricops_kit/governance_review.py:2555`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2585-L2619">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/governance_review.py#L2555-L2589">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -234,7 +234,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2585`
+- Source line: `2555`
 - Inbound references count: 0
 - Outbound references count: 3
 - Used in templates: 03_governance
@@ -262,9 +262,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2585-L2619">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2585-L2619</a>
-- Start line: `2585`
-- End line: `2619`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/governance_review.py#L2555-L2589">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/governance_review.py#L2555-L2589</a>
+- Start line: `2555`
+- End line: `2589`
 - Signature:
 
 ```python

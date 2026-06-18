@@ -293,8 +293,8 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
 
     reads = []
 
-    def fake_read(config, env, target, table, **kwargs):
-        reads.append((env, target, table, kwargs))
+    def fake_read(table, *, target, context, **kwargs):
+        reads.append((context["env_name"], target, table, kwargs))
         return metadata
 
     monkeypatch.setattr(governance, "read_lakehouse_table", fake_read)

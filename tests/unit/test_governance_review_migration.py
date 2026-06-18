@@ -226,8 +226,18 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "contract_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda table, *, target, context, **kwargs: tables[table])
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df.rows, context["env_name"], target, kwargs)))
+    def read_table(table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        return tables[table]
+
+    def write_table(df, table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        writes.append((table, df.rows, context["env_name"], target, kwargs))
+
+    monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark(), reviewed_by="reviewer@example.com")
 
@@ -260,8 +270,18 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [],
     }
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda table, *, target, context, **kwargs: tables[table])
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df.rows)))
+    def read_table(table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        return tables[table]
+
+    def write_table(df, table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        writes.append((table, df.rows))
+
+    monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark())
 
@@ -312,8 +332,18 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-dq", "contract_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda table, *, target, context, **kwargs: tables[table])
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df.rows)))
+    def read_table(table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        return tables[table]
+
+    def write_table(df, table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        writes.append((table, df.rows))
+
+    monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark())
     return result, writes

@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2825`
+`fabricops_kit/governance_review.py:2795`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2825-L2925">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/governance_review.py#L2795-L2895">View on GitHub</a>
 </div>
 
 <details class="reference-usage-details">
@@ -161,7 +161,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2825`
+- Source line: `2795`
 - Inbound references count: 0
 - Outbound references count: 4
 - Used in templates: 02_pipeline
@@ -190,9 +190,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2825-L2925">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/44e4cbda9f201de6e840b10f9c6417da91462baa/src/fabricops_kit/governance_review.py#L2825-L2925</a>
-- Start line: `2825`
-- End line: `2925`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/governance_review.py#L2795-L2895">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/971a27d9854a055f9454efbd8ac262c7a8b58ae6/src/fabricops_kit/governance_review.py#L2795-L2895</a>
+- Start line: `2795`
+- End line: `2895`
 - Signature:
 
 ```python

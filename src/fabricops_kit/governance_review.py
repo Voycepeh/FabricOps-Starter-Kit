@@ -110,38 +110,8 @@ def _spark_types():
     """Return Spark SQL type classes lazily so package import stays lightweight."""
     try:
         from pyspark.sql.types import BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType
-    except Exception:  # pragma: no cover - lightweight local test fallback
-        class _Type:
-            pass
-
-        class StringType(_Type):
-            pass
-
-        class LongType(_Type):
-            pass
-
-        class DoubleType(_Type):
-            pass
-
-        class BooleanType(_Type):
-            pass
-
-        class TimestampType(_Type):
-            pass
-
-        class StructField:
-            def __init__(self, name, dataType, nullable=True):  # noqa: N803 - mirrors Spark API
-                self.name = name
-                self.dataType = dataType
-                self.nullable = nullable
-
-        class StructType(list):
-            def __init__(self, fields=None):
-                super().__init__(fields or [])
-
-            def fieldNames(self):  # noqa: N802 - mirrors Spark API
-                return [field.name for field in self]
-
+    except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
+        raise RuntimeError("governance metadata schemas require pyspark.sql.types in the active runtime.") from exc
     return BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType
 
 

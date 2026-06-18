@@ -195,7 +195,13 @@ def test_add_audit_columns_uses_configured_audit_timezone(monkeypatch):
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):
     """Verify write pipeline lineage supports many to many relationships."""
     writes = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)))
+
+    def write_table(df, table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        writes.append((df, context["env_name"], target, table, kwargs))
+
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", write_table)
 
     result = pipeline.write_pipeline_lineage(
         spark=FakeSpark(),
@@ -217,7 +223,13 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
     """Verify write pipeline run summary writes metadata table."""
     writes = []
     fake_spark = FakeSpark()
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)))
+
+    def write_table(df, table, *, target, context, **kwargs):
+        assert target == "metadata"
+        assert context["env_name"] == "dev"
+        writes.append((df, context["env_name"], target, table, kwargs))
+
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", write_table)
 
     row = pipeline.write_pipeline_run_summary(
         spark=fake_spark,
