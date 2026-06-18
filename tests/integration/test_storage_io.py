@@ -145,18 +145,17 @@ def test_lakehouse_table_helpers_reject_nested_table_paths():
 def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeypatch):
     """Verify file readers validate source paths and excel uses pandas kwargs."""
     config = framework_config()
-    context = {"config": config, "env_name": "dev"}
     spark = _Spark()
     captured = {}
 
     monkeypatch.setattr(io.pd, "read_excel", lambda path, sheet_name=0, **kwargs: captured.setdefault("kwargs", kwargs) or [{"a": 1}])
 
     with pytest.raises(ValueError, match="relative_path"):
-        io.read_lakehouse_csv(config, "dev", "source", "", spark_session=spark)
+        io.read_lakehouse_csv("", target="source", spark_session=spark, context={"config": config, "env_name": "dev"})
     with pytest.raises(ValueError, match="folder/file.parquet"):
-        io.read_lakehouse_parquet(config, "dev", "source", "orders.parquet", spark_session=spark, verbose=False)
+        io.read_lakehouse_parquet("orders.parquet", target="source", spark_session=spark, verbose=False, context={"config": config, "env_name": "dev"})
 
-    io.read_lakehouse_excel(config, "dev", "source", "Files/reference/map.xlsx", sheet_name="Sheet1", spark_session=spark, skiprows=1)
+    io.read_lakehouse_excel("Files/reference/map.xlsx", target="source", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env_name": "dev"}, skiprows=1)
     assert captured["kwargs"] == {"skiprows": 1}
 
 

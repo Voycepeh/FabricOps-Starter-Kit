@@ -233,7 +233,6 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
     """Verify lakehouse schema disabled target routes legacy paths and identifiers."""
     config = _io_config()
-    context = {"config": config, "env_name": "dev"}
     metadata_store = config.paths["dev"]["metadata"]
 
     assert io._resolve_lakehouse_table_path(metadata_store, "orders").endswith("/Tables/orders")

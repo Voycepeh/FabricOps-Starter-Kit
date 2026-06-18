@@ -569,14 +569,13 @@ def run_table_guardrails(
         ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``,
         ``distribution_columns``, and ``exclude_columns`` control the guardrail
         behavior.
-    config : Any
-        FabricOps framework configuration from ``00_env_config``.
-    env : str
-        Environment key used for configured metadata routing.
     run_id : str
         Current pipeline run identifier.
     spark_session : Any
         Spark session used by profile behavior and DQ helpers.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context written with catalogue evidence.
     stop_on_failure : bool, default False
@@ -904,8 +903,9 @@ def write_pipeline_lineage(
     ----------
     spark : pyspark.sql.SparkSession
         Spark session used to create lineage rows.
-    config, env : object, str
-        Metadata route from ``00_env_config``.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     run_id : str
         Pipeline run identifier.
     source_definitions, target_definitions : mapping
@@ -1004,8 +1004,9 @@ def write_pipeline_run_summary(
     ----------
     spark : pyspark.sql.SparkSession
         Spark session used to create the one-row summary DataFrame.
-    config, env : object, str
-        Metadata route from ``00_env_config``.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     run_id : str
         Pipeline run identifier.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional

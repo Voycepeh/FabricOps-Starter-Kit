@@ -1409,14 +1409,12 @@ def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | No
 
     Parameters
     ----------
-    config : FrameworkConfig or dict
-        Configuration containing agreement metadata routing and evidence table
-        settings.
-    env_name : str
-        Environment key configured by ``00_env_config``.
     spark : pyspark.sql.SparkSession
         Fabric Spark session used for metadata reads, file writes, and
         append-only evidence metadata writes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -1447,12 +1445,11 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     Parameters
     ----------
-    config : FrameworkConfig or dict
-        Configuration containing steward widget fields and metadata routing.
-    env_name : str
-        Environment key configured by ``00_env_config``.
     spark : pyspark.sql.SparkSession
         Fabric Spark session used for metadata reads and append-only writes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -1469,12 +1466,11 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     Parameters
     ----------
-    config : FrameworkConfig or dict
-        Configuration containing agreement widget fields and metadata routing.
-    env_name : str
-        Environment key configured by ``00_env_config``.
     spark : pyspark.sql.SparkSession
         Fabric Spark session used for metadata reads and append-only writes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -1484,4 +1480,3 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     """
     config, env_name, _context = resolve_fabric_context(context=context)
     return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
-

@@ -653,14 +653,11 @@ def widget_enrich_table_metadata(
     ----------
     guardrail_state : Mapping[str, Any]
         Target handover state returned by :func:`widget_select_guardrail_target`.
-    config : Any
-        Runtime configuration from ``00_env_config`` containing metadata routing
-        and enrichment dropdown/custom-field settings.
-    env : str
-        Environment key used to route metadata writes to the configured
-        ``metadata`` target.
     spark_session : Any
         Spark session used to create write DataFrames.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
         Notebook type stamped on authored records.
     created_by_role : {"engineering", "governance", "system"}, default="engineering"
@@ -2147,8 +2144,11 @@ def widget_author_schema_freshness_profile_rules(
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
-    config, env, spark_session : Any, optional
-        Runtime objects used for save actions.
+    spark_session : Any, optional
+        Spark session used for save actions.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     bypass_reason : str, optional
         Initial approval-bypass reason.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
@@ -2345,8 +2345,11 @@ def widget_author_dq_rules(
         Initial JSON rule parameters.
     severity : str, default="warning"
         Initial rule severity.
-    config, env, spark_session : Any, optional
-        Runtime objects used for saves.
+    spark_session : Any, optional
+        Spark session used for saves.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     bypass_reason : str, optional
         Initial approval-bypass reason.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
@@ -2563,8 +2566,11 @@ def widget_author_guardrail_rules(
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`.
-    config, env, spark_session : Any, optional
-        Runtime objects used for saves.
+    spark_session : Any, optional
+        Spark session used for saves.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     source_notebook_type : {"02_pipeline", "03_governance"}, default="03_governance"
         Notebook type stamped on authored records.
     created_by_role : {"engineering", "governance", "system"}, default="governance"
@@ -2590,8 +2596,11 @@ def widget_review_table_governance(state: Mapping[str, Any], *, spark_session: A
     ----------
     state : mapping
         Selected table state containing enrichment and guardrail rule history.
-    config, env, spark_session : Any, optional
-        Runtime objects used to append formal review outcomes.
+    spark_session : Any, optional
+        Spark session used to append formal review outcomes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     source_notebook_type : str, default="03_governance"
         Notebook context. Formal review actions require ``03_governance``.
 
@@ -2792,8 +2801,11 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_sessio
         Handover state from :func:`widget_select_guardrail_target`. The state may
         include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and
         ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``.
-    config, env, spark_session : Any, optional
-        Runtime objects used for save actions.
+    spark_session : Any, optional
+        Spark session used for save actions.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------

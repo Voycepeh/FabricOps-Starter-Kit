@@ -43,6 +43,7 @@ def get_default_fabric_context() -> dict[str, Any]:
     The helper first checks the IPython notebook namespace, then ``builtins``.
     This keeps common notebooks simple while still allowing tests and advanced
     workflows to inject an explicit context.
+
     """
     context = None
     try:
@@ -101,6 +102,7 @@ def get_fabric_context(
     -------
     dict[str, Any]
         Fabric context dictionary suitable for helper ``context=`` overrides.
+
     """
     base: dict[str, Any] = {} if config is not None and env_name is not None else dict(get_default_fabric_context())
     if config is not None:

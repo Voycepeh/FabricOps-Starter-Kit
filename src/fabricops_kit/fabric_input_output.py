@@ -276,6 +276,7 @@ def read_data(
     -------
     pyspark.sql.DataFrame
         DataFrame loaded from the configured Fabric target.
+
     """
     config, env, resolved_context = resolve_fabric_context(context=context)
     normalized_format = str(format or "table").strip().lower()
@@ -352,6 +353,7 @@ def write_data(
     -------
     None
         The DataFrame is written to the configured Fabric target.
+
     """
     config, env, resolved_context = resolve_fabric_context(context=context)
     normalized_format = str(format or "table").strip().lower()
@@ -388,14 +390,11 @@ def read_lakehouse_table(table_name: str, *, target: str = "source", schema: str
 
     Parameters
     ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
+    table_name : str
+        Name of the Lakehouse table to read. Do not pass ``schema.table``; use
+        ``schema`` separately.
     target : str
         Logical target name such as `"source"` or `"unified"`.
-    table : str
-        Simple table name. Do not pass ``schema.table``; use ``schema`` separately.
     schema : str or None, default=None
         Optional schema override for schema-enabled Lakehouses. When omitted,
         schema routing comes from the configured lakehouse target. Schema-enabled
@@ -404,6 +403,9 @@ def read_lakehouse_table(table_name: str, *, target: str = "source", schema: str
     spark_session : object, optional
         Spark session to use. If omitted, the helper uses the notebook global
         `spark`.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -458,14 +460,11 @@ def write_lakehouse_table(
     ----------
     df : pyspark.sql.DataFrame
         Spark DataFrame to write.
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
+    table_name : str
+        Name of the Lakehouse table to write. Do not pass ``schema.table``; use
+        ``schema`` separately.
     target : str
         Logical target name such as `"source"` or `"unified"`.
-    table : str
-        Simple target table name. Do not pass ``schema.table``; use ``schema`` separately.
     schema : str or None, default=None
         Optional schema override for schema-enabled Lakehouses. When omitted,
         schema routing comes from the configured lakehouse target. Schema-enabled
@@ -483,6 +482,9 @@ def write_lakehouse_table(
         as ``{"overwriteSchema": "true"}``.
     verbose : bool, default=True
         Whether to print the resolved output path before writing.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -555,20 +557,19 @@ def read_lakehouse_csv(relative_path: str, *, target: str = "source", spark_sess
 
     Parameters
     ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
     relative_path : str
         Path to the CSV file or folder under the lakehouse root, for example
         `"Files/raw/orders.csv"` or `"Files/raw/orders/"`.
+    target : str, default="source"
+        Logical lakehouse target from the active Fabric context.
     spark_session : object, optional
         Spark session to use. If omitted, the helper uses the notebook global
         `spark`.
     header : bool, default True
         Whether the first row of the CSV file contains column names.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -603,20 +604,19 @@ def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehou
 
     Parameters
     ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
+    schema : str
+        Warehouse schema name, for example `"dbo"`.
+    table_name : str
+        Name of the Warehouse table to read.
     target : str
         Warehouse target name under the selected environment, for example
         `"Warehouse"` or `"wh_Bronze"`.
-    schema : str
-        Warehouse schema name, for example `"dbo"`.
-    table : str
-        Warehouse table name.
     spark_session : object, optional
         Spark session to use. If omitted, the helper uses the notebook global
         `spark`.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -670,19 +670,18 @@ def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "wa
     ----------
     df : pyspark.sql.DataFrame
         Spark DataFrame to write.
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment name in the config mapping, for example `"Sandbox"` or `"DE"`.
+    schema : str
+        Warehouse schema name, for example `"dbo"`.
+    table_name : str
+        Name of the Warehouse table to write.
     target : str
         Warehouse target name under the selected environment, for example
         `"Warehouse"` or `"wh_Bronze"`.
-    schema : str
-        Warehouse schema name, for example `"dbo"`.
-    table : str
-        Warehouse table name.
     mode : str, default "append"
         Spark write mode, for example `"append"` or `"overwrite"`.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -795,21 +794,20 @@ def read_lakehouse_parquet(relative_path: str, *, target: str = "source", verbos
 
     Parameters
     ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
     relative_path : str
         Path to the Parquet file under the lakehouse `Files/` folder, without
         the leading `"Files/"`. For example:
         `"raw/orders/orders_2026.parquet"`.
+    target : str, default="source"
+        Logical lakehouse target from the active Fabric context.
     verbose : bool, default True
         Whether to print read and fallback progress.
     spark_session : object, optional
         Spark session to use. If omitted, the helper uses the notebook global
         `spark`.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
 
     Returns
     -------
@@ -925,22 +923,21 @@ def read_lakehouse_excel(relative_path: str, *, target: str = "source", sheet_na
 
     Parameters
     ----------
-    config : FrameworkConfig | dict
-        FabricOps FrameworkConfig or compatible config object.
-    env : str
-        Environment key such as `"dev"`.
-    target : str
-        Logical target name such as `"source"` or `"unified"`.
     relative_path : str
         Path to the Excel file relative to the lakehouse ``Files`` area, for
         example ``"reference/faculty_mapping.xlsx"``. A leading ``"Files/"``
         prefix is accepted for consistency with notebook examples and is
         normalized away before the lakehouse path is resolved.
+    target : str, default="source"
+        Logical lakehouse target from the active Fabric context.
     sheet_name : str or int, default 0
         Worksheet name or index to read. Defaults to the first worksheet.
     spark_session : object, optional
         Spark session to use. If omitted, the helper uses the notebook global
         `spark`.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     **read_excel_kwargs
         Additional keyword arguments passed directly to
         :func:`pandas.read_excel`. Common options include ``skiprows`` for
