@@ -490,17 +490,17 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     governance_review = (ROOT / "docs" / "how-fabricops-works" / "governance-review.md").read_text(encoding="utf-8")
     metadata_tables = (ROOT / "docs" / "how-fabricops-works" / "metadata-tables.md").read_text(encoding="utf-8")
 
-    assert "[setup_notebook](../api/reference/setup_notebook/)" in notebook_templates
-    assert "[`setup_notebook`](../api/reference/setup_notebook/)" in environment_config
-    assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables/)" in environment_config
-    assert "[`widget_render_data_steward`](../api/reference/widget_render_data_steward/)" in agreement_setup
-    assert "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/)" in pipeline_execution
-    assert "[`run_table_guardrails`](../api/reference/run_table_guardrails/)" in pipeline_execution
-    assert "[`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/)" in governance_review
-    assert "[`widget_author_guardrail_rules`](../api/reference/widget_author_guardrail_rules/)" in governance_review
-    assert "[`widget_review_table_governance`](../api/reference/widget_review_table_governance/)" in governance_review
-    assert "[setup_metadata_tables](../api/reference/setup_metadata_tables/)" in metadata_tables
-    assert "[write_pipeline_lineage](../api/reference/write_pipeline_lineage/)" in metadata_tables
+    assert "[setup_notebook](../api/reference/setup_notebook.md)" in notebook_templates
+    assert "[`setup_notebook`](../api/reference/setup_notebook.md)" in environment_config
+    assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in environment_config
+    assert "[`widget_render_data_steward`](../api/reference/widget_render_data_steward.md)" in agreement_setup
+    assert "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
+    assert "[`run_table_guardrails`](../api/reference/run_table_guardrails.md)" in pipeline_execution
+    assert "[`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md)" in governance_review
+    assert "[`widget_author_guardrail_rules`](../api/reference/widget_author_guardrail_rules.md)" in governance_review
+    assert "[`widget_review_table_governance`](../api/reference/widget_review_table_governance.md)" in governance_review
+    assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
+    assert "[`write_pipeline_lineage`](../api/reference/write_pipeline_lineage.md)" in metadata_tables
 
 
 def test_template_usage_metadata_renders_from_structured_reference_model() -> None:

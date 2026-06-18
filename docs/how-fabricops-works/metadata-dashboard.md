@@ -2,6 +2,10 @@
 
 The metadata dashboard is the visibility layer over the FabricOps metadata handshake. It helps users see the current governed state without opening every notebook or querying every metadata table manually.
 
+![FabricOps metadata dashboard](../assets/fabricops-metadata-dashboard.png)
+
+*Figure: dashboard-style view over the same metadata tables written by the notebook handshake.*
+
 ## What users can see
 
 A dashboard over the FabricOps metadata tables should expose:
@@ -24,3 +28,10 @@ Use the dashboard as a user-facing check on the notebook handshake:
 4. Use warning or failed guardrail results to decide which notebook and table target needs attention.
 
 The dashboard should stay practical: it summarizes the governed state held in metadata tables; it is not the source of truth for changing rules or rewriting evidence.
+
+## Implementation guidance
+
+- Build dashboard visuals from metadata tables; do not let dashboard edits mutate governed evidence.
+- Separate rule intent (`METADATA_GUARDRAIL_RULES`) from runtime results (`METADATA_GUARDRAIL_RESULTS`).
+- Show lifecycle states distinctly so active, pending, rejected, inactive, and superseded records are not confused.
+- Include drill-through links or labels back to notebook type, run id, agreement id, table name, and rule key where available.
