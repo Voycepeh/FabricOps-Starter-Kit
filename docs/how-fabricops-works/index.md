@@ -1,18 +1,8 @@
 # How FabricOps Works
 
-FabricOps Starter Kit is a practical notebook handshake for governed, quality-checked Microsoft Fabric workflows. The notebooks pass context, evidence, and review state through shared metadata tables instead of relying on notebook memory or informal handover notes.
+FabricOps Starter Kit is a lightweight Microsoft Fabric operating model for reusable notebook delivery, shared metadata evidence, and governed pipeline execution.
 
-## The notebook handshake
-
-| Step | What it does | What the next step receives |
-| --- | --- | --- |
-| [00 Environment Configuration](environment-config.md) | Defines where the workflow runs and validates workspace, Lakehouse, Warehouse, schema, and metadata routing. | A configured `CONFIG`, environment name, and metadata tables that later notebooks can use. |
-| [01 Agreement Setup](agreement-setup.md) | Defines what is allowed, who owns it, and which agreement evidence applies. | Agreement and steward metadata that pipeline notebooks can select. |
-| [02 Pipeline Execution](pipeline-execution.md) | Reads source data, prepares table configs, executes guardrails, writes outputs, and records run evidence. | Runtime evidence in catalogue, guardrail results, lineage, and pipeline run metadata. |
-| [03 Governance Review](governance-review.md) | Reviews governed rules and enrichment records, and manages formal rule lifecycle. | Approved, rejected, superseded, active, or pending rule and enrichment state. |
-| [Metadata Tables](metadata-tables.md) | Act as the shared memory for agreements, catalogue evidence, rules, results, lineage, runs, and review state. | A durable view of what was configured, checked, written, and reviewed. |
-| [Metadata Dashboard](metadata-dashboard.md) | Exposes the current governed state for users who need visibility without reading every metadata row. | Operational insight into agreements, rules, results, runs, lineage, and review status. |
-
+This overview explains how the system works: the workspace operating model, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Template Notebooks user guide](notebook-templates.md).
 
 ## Workspace Operating Model
 
@@ -33,24 +23,54 @@ FabricOps Starter Kit assumes Microsoft Fabric is the execution runtime and GitH
 
 The model is intentionally notebook-first for handover. Junior engineers can open the active notebook, see what it owns, then inspect the metadata table it writes. Governance users can review durable evidence without reverse-engineering cell order from a previous run.
 
+## Role workflow
+
 ![FabricOps role workflow](../assets/fabricops-role-workflow.png)
 
-### How the pieces interact
+The role workflow keeps implementation and review responsibilities clear without requiring every user to understand every notebook line by line:
 
-1. `00_env_config` defines `CONFIG`, `ENV`, runtime metadata, and the active metadata table registry.
-2. `01_agreement` records steward, agreement, and evidence metadata that describes approved usage.
-3. `02_pipeline` selects agreement context, reads source data, profiles/checks it, writes target data, and appends catalogue, guardrail-result, lineage, and run-summary evidence.
-4. `03_governance` reviews table/column enrichment and guardrail intent, appending approval/rejection/replacement/deactivation lifecycle records.
-5. Metadata dashboard views read the same shared metadata to summarize agreements, catalogue evidence, active rules, runtime outcomes, run status, lineage, and review state.
+1. Project owners, engineers, or workspace administrators run `00_env_config` to establish runtime configuration and metadata routing.
+2. Governance users, data stewards, project owners, or supporting engineers run `01_agreement` to record approved steward and agreement context.
+3. Engineers, analyst engineers, or data scientists run `02_pipeline` to execute governed source-to-target delivery under the selected agreement context.
+4. Governance users, stewards, reviewers, or supporting engineers run `03_governance` to review evidence, rules, enrichment, approvals, rejections, replacements, deactivations, and lifecycle decisions.
+5. Dashboard and reference pages read shared metadata and source-generated docs so current state, history, and implementation details remain visible.
 
-## What FabricOps is trying to do
+[Open the Template Notebooks user guide](notebook-templates.md){ .md-button .md-button--primary }
 
-FabricOps keeps notebook delivery explainable for teams that need junior-friendly handover and governance evidence:
+## How metadata moves between notebooks
 
-- **Make setup explicit.** `00_env_config` owns the runtime and metadata target instead of assuming an attached/default Lakehouse.
-- **Make intent selectable.** `01_agreement` records the steward and agreement context that `02_pipeline` can select later.
-- **Make checks executable.** `02_pipeline` applies active guardrail rules and writes guardrail result evidence.
-- **Make review append-only.** `03_governance` manages rule and enrichment lifecycle without overwriting history.
-- **Make evidence reusable.** Metadata tables connect notebook actions to the dashboard and reference docs.
+FabricOps notebooks do not depend on notebook memory or informal handover notes. Each notebook reads and writes shared metadata so configuration, agreement context, catalogue evidence, guardrail results, lineage, run status, and review decisions remain visible across the workflow.
+
+<div class="grid cards" markdown="1">
+
+-   **`00_env_config`**
+
+    Creates workspace, runtime, and metadata configuration.
+
+-   **`01_agreement`**
+
+    Records steward, agreement, and approved usage context.
+
+-   **`02_pipeline`**
+
+    Uses agreement context, executes data movement, writes catalogue evidence, guardrail results, lineage, and run status.
+
+-   **`03_governance`**
+
+    Reviews rules, enrichment, lifecycle decisions, and approval state.
+
+-   **Dashboard and reference pages**
+
+    Read metadata tables to show current state, history, and implementation details.
+
+</div>
+
+The Overview page explains how the system works. The [Template Notebooks page](notebook-templates.md) explains what to open and run.
+
+## What FabricOps abstracts
+
+FabricOps abstracts the repeated setup and governance work that often slows down Microsoft Fabric delivery. Instead of asking every analyst, data scientist, or engineer to design their own workspace conventions, notebook structure, metadata capture, and review process, the starter kit provides a lightweight operating model that teams can reuse.
+
+It does this through config driven engineering, standardized notebook templates, shared metadata collection, and pipeline guardrails. Engineers can focus on data movement and transformation. Analysts and data scientists can work from clearer inputs and reusable patterns. Governance users can review evidence, rules, enrichment, and lifecycle decisions without reading every notebook line by line.
 
 Use the pages in this section as the user guide for running and adapting the starter notebooks. Use the generated [Function Reference](../reference/) only when you need callable-level details.
