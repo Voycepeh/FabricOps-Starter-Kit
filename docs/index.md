@@ -4,19 +4,23 @@
 
 Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
 
-FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
+FabricOps Starter Kit helps teams quickly bootstrap config driven Fabric notebook using reusable templates and a lightweight helper wheel.
 
-It gives teams a shared operating model for configuration, notebook execution, metadata collection, and pipeline guardrails without turning every project into a custom build.
+It gives teams a standardized operating model for configuration, notebook execution, metadata collection, and pipeline guardrails.
 
 <section class="fabricops-delivery-model" aria-labelledby="fabricops-delivery-model-heading" markdown="1">
 
 ## How FabricOps connects delivery teams { #fabricops-delivery-model-heading }
 
-FabricOps helps governance, engineering, and analytics teams work from the same notebook based delivery flow.
+FabricOps helps governance, engineering, and analytics teams work from the same notebook flow.
 
-Governance captures agreement, enrichment, and pipeline guardrail evidence. Engineering configures the environment, runs notebooks, and writes metadata. Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
+Governance captures agreement, enrichment, and pipeline guardrail evidence. 
+Engineering configures the environment, runs notebooks, and writes metadata. 
+Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
 
-The shared metadata tables act as the handoff layer. They record what was agreed, what ran, what passed, and what is ready for review. This keeps delivery repeatable without forcing every project to become a custom build.
+The shared metadata tables act as the handoff layer. 
+They record what was agreed, what ran, what passed, and what is ready for review. 
+This abstract away the important by tedious work into and a simplified plug and play wofkrflow that will make handover easy even for new team members.
 
 <p class="fabricops-architecture-image">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
@@ -39,7 +43,7 @@ The shared metadata tables act as the handoff layer. They record what was agreed
     <span class="fabricops-landing-card__body">Reusable notebook workflow templates.</span>
   </a>
   <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title">22 starter-kit functions</span>
+    <span class="fabricops-landing-card__title">20 starter-kit functions</span>
     <span class="fabricops-landing-card__body">Shared helpers used by the templates.</span>
   </a>
   <a class="fabricops-landing-card" href="reference/dq-rules/">
