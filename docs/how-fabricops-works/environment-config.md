@@ -45,6 +45,19 @@ Keep runtime settings visible in this notebook so users can review them before r
 
 This includes required targets, validation mode, notebook naming checks, schema settings, default schemas, metadata schema, and audit timezone.
 
+### Agreement widget configuration
+
+`00_env_config` is also the source of truth for reusable `01_agreement` widget configuration. Configure agreement intake through `DataAgreementConfig` rather than hardcoding widget choices in `01_agreement` or downstream notebooks.
+
+Use this configuration area for:
+
+- agreement metadata table names prepared by `setup_metadata_tables`;
+- visible standard columns for the data steward and data agreement widgets;
+- controlled dropdown values such as the data steward role options;
+- custom steward and agreement metadata fields that should appear in the widgets.
+
+Custom steward and agreement fields are captured by the widgets and stored in `custom_fields_json` on the relevant metadata table. They are reusable widget configuration, not new physical table columns.
+
 ## What this notebook does
 
 `00_env_config` uses [`setup_notebook`](../api/reference/setup_notebook.md) to validate the notebook runtime and configured targets.
