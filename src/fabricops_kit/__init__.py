@@ -23,7 +23,6 @@ from .pipeline import (
     write_pipeline_run_summary,
 )
 from .governance_review import (
-    enforce_dq_rules,
     get_latest_metadata_catalogue,
     widget_select_guardrail_target,
     widget_enrich_table_metadata,
@@ -59,7 +58,6 @@ __all__ = [
     "read_data",
     "write_data",
     "profile_dataframe",
-    "enforce_dq_rules",
     "get_latest_metadata_catalogue",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",

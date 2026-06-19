@@ -417,7 +417,7 @@ None.
 <a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>
 
 **governance_review**
-<a class="reference-chip" href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
+<a class="reference-chip" href="governance_review/#_run_active_dq_guardrail"><code>_run_active_dq_guardrail</code></a>
 
 **guardrails**
 <a class="reference-chip" href="guardrails/#enforce_freshness"><code>enforce_freshness</code></a>, <a class="reference-chip" href="guardrails/#enforce_freshness_rule"><code>enforce_freshness_rule</code></a>, <a class="reference-chip" href="guardrails/#enforce_profile_behavior"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="guardrails/#stop_if_failed"><code>stop_if_failed</code></a>

@@ -5319,7 +5319,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._dq_failed_expression",
@@ -5348,7 +5348,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "enforce_dq_rules",
+      "_run_active_dq_guardrail",
       "_dq_failed_expression",
       "_spark_sql_helpers"
     ]
@@ -5509,7 +5509,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.config._current_audit_timestamp",
@@ -5538,7 +5538,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "enforce_dq_rules",
+      "_run_active_dq_guardrail",
       "_current_audit_timestamp",
       "_summarize_dq_guardrail"
     ]
@@ -5550,7 +5550,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._dq_failed_expression",
@@ -5580,7 +5580,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "enforce_dq_rules",
+      "_run_active_dq_guardrail",
       "_dq_failed_expression",
       "_normalize_dq_severity",
       "_spark_sql_helpers"
@@ -6149,7 +6149,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._canonical_dq_rule_type",
@@ -6182,7 +6182,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "enforce_dq_rules",
+      "_run_active_dq_guardrail",
       "_canonical_dq_rule_type",
       "_coerce_rows",
       "_latest_dq_rule_versions",
@@ -6318,7 +6318,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
@@ -6348,7 +6348,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "enforce_dq_rules",
+      "_run_active_dq_guardrail",
       "_configured_lakehouse_schema",
       "read_lakehouse_table",
       "_spark_sql_helpers"
@@ -6555,13 +6555,66 @@
     ]
   },
   {
+    "name": "_run_active_dq_guardrail",
+    "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.pipeline.run_table_guardrails"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._dq_failed_row_count",
+      "fabricops_kit.governance_review._dq_summary",
+      "fabricops_kit.governance_review._dq_tagged_dataframe",
+      "fabricops_kit.governance_review._load_active_dq_rules",
+      "fabricops_kit.governance_review._read_guardrail_rule_metadata",
+      "fabricops_kit.governance_review._run_dq_guardrail_checks",
+      "fabricops_kit.governance_review._summarize_dq_guardrail",
+      "fabricops_kit.metadata._write_guardrail_result_row"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 1609,
+    "source_end_line": 1692,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+    "docs_path": null,
+    "summary": "Enforce active DQ guardrail rules as a simple pipeline guardrail.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "dataframe : Any\n    Spark DataFrame to evaluate before the target write. The full DataFrame\n    is never filtered or split by this helper.\nconfig : FrameworkConfig or dict\n    Runtime configuration containing the configured metadata lakehouse\n    route from ``00_env_config``.\nenv : str\n    Environment name used to read ``METADATA_GUARDRAIL_RULES`` from the\n    configured metadata target.\ndataset_name : str\n    Dataset identifier used with ``table_name`` to scope active DQ guardrail rules\n    when those columns exist in the metadata table.\ntable_name : str\n    Target table name whose active DQ guardrail rules should be enforced.\nspark_session : pyspark.sql.SparkSession, optional\n    Spark session used to read metadata when required by the configured\n    storage helper.\nrun_id : str, optional\n    Pipeline run identifier written to runtime result evidence.\nwrite_results : bool, default=False\n    Whether to append the aggregate DQ runtime outcome to\n    ``METADATA_GUARDRAIL_RESULTS`` when a Spark session is available.",
+    "output": "dict\n    Guardrail result with ``status``, ``can_continue``, ``checks``, and\n    ``message``. The result also carries the full tagged ``dataframe`` and\n    aggregate ``summary`` fields for runtime result evidence.\n    Error-severity rule failures return ``status='failed'`` and\n    ``can_continue=False``. Warning-severity failures return\n    ``status='warning'`` and ``can_continue=True``. Passing or absent rules\n    return ``status='passed'`` and ``can_continue=True``.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "run_table_guardrails",
+      "_dq_failed_row_count",
+      "_dq_summary",
+      "_dq_tagged_dataframe",
+      "_load_active_dq_rules",
+      "_read_guardrail_rule_metadata",
+      "_run_dq_guardrail_checks",
+      "_summarize_dq_guardrail",
+      "_write_guardrail_result_row"
+    ]
+  },
+  {
     "name": "_run_dq_guardrail_checks",
     "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._dq_check_status",
@@ -6593,7 +6646,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "enforce_dq_rules",
+      "_run_active_dq_guardrail",
       "_dq_check_status",
       "_dq_failed_expression",
       "_normalize_dq_severity",
@@ -6888,7 +6941,7 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.governance_review._dq_summary",
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -6915,7 +6968,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_dq_summary",
-      "enforce_dq_rules"
+      "_run_active_dq_guardrail"
     ]
   },
   {
@@ -7330,68 +7383,6 @@
     ]
   },
   {
-    "name": "enforce_dq_rules",
-    "qualified_name": "fabricops_kit.governance_review.enforce_dq_rules",
-    "module": "governance_review",
-    "type": "callable",
-    "role": "callable",
-    "inbound": [
-      "fabricops_kit.pipeline.run_table_guardrails"
-    ],
-    "outbound": [
-      "fabricops_kit.governance_review._dq_failed_row_count",
-      "fabricops_kit.governance_review._dq_summary",
-      "fabricops_kit.governance_review._dq_tagged_dataframe",
-      "fabricops_kit.governance_review._load_active_dq_rules",
-      "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-      "fabricops_kit.governance_review._run_dq_guardrail_checks",
-      "fabricops_kit.governance_review._summarize_dq_guardrail",
-      "fabricops_kit.metadata._write_guardrail_result_row"
-    ],
-    "used_in_templates": [
-      "example_dq_rule_smoke_test"
-    ],
-    "glossary_terms": [
-      "guardrails",
-      "can_continue",
-      "evidence",
-      "metadata lakehouse"
-    ],
-    "expanded_purpose": "Evaluates approved data-quality rules against a DataFrame and returns guardrail evidence that can block unsafe writes.",
-    "when_to_use": "Use in pipeline guardrails after governance-approved DQ rules exist for the dataset and table.",
-    "source_file": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 1609,
-    "source_end_line": 1692,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
-    "docs_path": "api/reference/enforce_dq_rules.md",
-    "summary": "Enforce approved active DQ rules as a target-write guardrail without filtering rows.",
-    "use_when": "Use in pipeline guardrails after governance-approved DQ rules exist for the dataset and table.",
-    "do_not_use_when": "Do not use to filter bad rows, author new DQ rules, or bypass governance review approval.",
-    "required_context": "Requires active approved DQ-rule evidence in the configured metadata target from 03_governance governance workflows.",
-    "inputs": "dataframe, config, env, dataset_name, table_name, and optional spark_session.",
-    "output": "Guardrail result dictionary with status, can_continue, checks, message, tagged dataframe, and summary fields.",
-    "return_interpretation": "When can_continue is true, active rules passed or only non-blocking issues were found. When false, inspect failing rule details before writing the table.",
-    "side_effects": "Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it does not filter the DataFrame or write target data.",
-    "failure_modes": "Raises configuration, metadata-read, or Spark expression errors when approved rules cannot be loaded or evaluated.",
-    "common_failure_causes": "- No approved active DQ rules exist for the table.\n- Rule parameters are invalid or unsupported.\n- Required columns are missing from the DataFrame.\n- The metadata lakehouse cannot be read.",
-    "related_guides": [
-      {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-guardrails.md"
-      },
-      {
-        "title": "Governance Review",
-        "path": "../../how-fabricops-works/governance-review.md"
-      }
-    ],
-    "preferred_example": "dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, spark_session=spark)\nstop_if_failed(dq_result)",
-    "verification": "Verify approved metadata exists, inspect status/can_continue, and call stop_if_failed before writing when blocking failures occur.",
-    "related_functions": [
-      "widget_review_guardrail_governance",
-      "stop_if_failed"
-    ]
-  },
-  {
     "name": "get_latest_metadata_catalogue",
     "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
     "module": "governance_review",
@@ -7764,7 +7755,7 @@
     "docs_path": "api/reference/widget_author_dq_rules.md",
     "summary": "Render interactive manual DQ guardrail authoring controls.",
     "use_when": "Use in 02_pipeline after target selection when engineering needs to batch-create, edit, clear, or draft DQ guardrail rules.",
-    "do_not_use_when": "Do not use for runtime DQ enforcement or catalogue profiling; use enforce_dq_rules for execution and profile helpers for observed evidence.",
+    "do_not_use_when": "Do not use for runtime DQ enforcement or catalogue profiling; use run_table_guardrails for execution and profile helpers for observed evidence.",
     "required_context": "Starter template: `02_pipeline`; segment: `Guardrail authoring`.",
     "inputs": "See the source docstring for the notebook runtime, Spark session, state, and record parameters accepted by this helper.",
     "output": "Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.",
@@ -9088,7 +9079,7 @@
     "docs_path": null,
     "summary": "Enforce whether the latest data arrived within the configured freshness lag.",
     "use_when": "Not documented yet",
-    "do_not_use_when": "Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use enforce_profile_behavior or enforce_dq_rules for those checks.",
+    "do_not_use_when": "Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use enforce_profile_behavior or run_table_guardrails for those checks.",
     "required_context": "Use in 02_pipeline after schema validation and before downstream writes so stale data can block or warn independently from profile behavior.",
     "inputs": "dataframe, freshness_column, max_lag_days, severity, and optional reference_date for deterministic validation.",
     "output": "Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.",
@@ -9184,7 +9175,7 @@
     "docs_path": null,
     "summary": "Enforce static, changing, or skipped profile behavior against accepted catalogue profiles.",
     "use_when": "Not documented yet",
-    "do_not_use_when": "Do not use for simple schema validation or DQ-rule enforcement; use run_table_guardrails or enforce_dq_rules for those checks.",
+    "do_not_use_when": "Do not use for simple schema validation or DQ-rule enforcement; use run_table_guardrails or run_table_guardrails for those checks.",
     "required_context": "Requires profile metadata routed through the configured 00_env_config metadata target and a valid source/target stage.",
     "inputs": "- `spark`: Spark session used to read accepted profiles from the configured metadata target.\n- `dataframe`: Current source or target DataFrame being checked.\n- `metadata_table`: Metadata table that stores accepted catalogue profile evidence.\n- `dataset_name`: Dataset name used to find matching evidence.\n- `table_name`: Table name used to find matching evidence.\n- `stage`: The part of the pipeline being checked, such as source or target.\n- `run_id`: Current pipeline run identifier recorded in the generated profile evidence.\n- `profile_mode`: Profile behavior mode to evaluate: static_data, changing_data, or skip.\n- `watermark_column`: Column used to group changing_data profiles when configured.\n- `exclude_columns`: Optional columns to ignore while comparing profile fields.\n- `exclude_run_id`: Optional run id to exclude when selecting the accepted baseline evidence.",
     "output": "Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and profile behavior checks.",
@@ -9225,7 +9216,7 @@
     "summary": "Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.",
     "use_when": "Not documented yet",
     "do_not_use_when": "Do not use for informational warnings that should not block execution, or before a guardrail result exists.",
-    "required_context": "Use in 02_pipeline after run_table_guardrails, enforce_freshness, enforce_profile_behavior, or enforce_dq_rules and before write helpers.",
+    "required_context": "Use in 02_pipeline after run_table_guardrails, enforce_freshness, enforce_profile_behavior, or run_table_guardrails and before write helpers.",
     "inputs": "guardrail result dictionary and optional message/runtime controls.",
     "output": "None when execution may continue; otherwise raises or exits according to runtime behavior.",
     "return_interpretation": "No return value means execution may continue. A blocking result raises or exits according to runtime settings.",
@@ -9233,12 +9224,12 @@
     "failure_modes": "Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.",
     "common_failure_causes": "- The guardrail result is missing can_continue or status fields.\n- A blocking guardrail returned can_continue as false.\n- Notebook exit behavior is not supported in the current runtime.\n- The caller passed a warning result that should not stop execution.",
     "related_guides": [],
-    "preferred_example": "guardrail_result = run_table_guardrails(table_configs, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark)\nstop_if_failed(guardrail_result)",
+    "preferred_example": "guardrail_result = run_table_guardrails(table_configs, context={\"config\": CONFIG, \"env\": ENV}, run_id=RUN_ID, spark_session=spark)\nstop_if_failed(guardrail_result)",
     "verification": "Verify the guardrail result shape includes status/can_continue/message before passing it to stop_if_failed.",
     "related_functions": [
       "enforce_freshness",
       "enforce_profile_behavior",
-      "enforce_dq_rules"
+      "run_table_guardrails"
     ]
   },
   {
@@ -9976,7 +9967,7 @@
     "type": "internal",
     "role": "internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules",
+      "fabricops_kit.governance_review._run_active_dq_guardrail",
       "fabricops_kit.guardrails.enforce_profile_behavior",
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -10009,7 +10000,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "enforce_dq_rules",
+      "_run_active_dq_guardrail",
       "enforce_profile_behavior",
       "run_table_guardrails",
       "_configured_lakehouse_schema",
@@ -11367,7 +11358,7 @@
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
       "fabricops_kit.data_profiling.profile_dataframe",
-      "fabricops_kit.governance_review.enforce_dq_rules",
+      "fabricops_kit.governance_review._run_active_dq_guardrail",
       "fabricops_kit.guardrails.enforce_freshness",
       "fabricops_kit.guardrails.enforce_freshness_rule",
       "fabricops_kit.guardrails.enforce_profile_behavior",
@@ -11385,7 +11376,8 @@
       "fabricops_kit.pipeline.write_catalogue_evidence"
     ],
     "used_in_templates": [
-      "02_pipeline"
+      "02_pipeline",
+      "example_dq_rule_smoke_test"
     ],
     "glossary_terms": [
       "guardrails",
@@ -11405,7 +11397,7 @@
     "use_when": "Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.",
     "do_not_use_when": "Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.",
     "required_context": "Requires CONFIG and env from 00_env_config so metadata operations use the configured metadata target.",
-    "inputs": "table_configs plus config, env, run_id, spark_session, and agreement/notebook context.",
+    "inputs": "table_configs plus context, run_id, spark_session, and agreement/notebook context.",
     "output": "Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.",
     "return_interpretation": "The result groups each guardrail outcome and a summary DataFrame. If any blocking result has can_continue false, stop before writing data.",
     "side_effects": "Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes evidence, and may update table config DataFrames with DQ annotations.",

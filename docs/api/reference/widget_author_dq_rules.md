@@ -18,7 +18,7 @@ Render interactive manual DQ guardrail authoring controls.
 
 ### Do not use when
 
-- Do not use for runtime DQ enforcement or catalogue profiling; use enforce_dq_rules for execution and profile helpers for observed evidence.
+- Do not use for runtime DQ enforcement or catalogue profiling; use run_table_guardrails for execution and profile helpers for observed evidence.
 
 ### Additional context
 

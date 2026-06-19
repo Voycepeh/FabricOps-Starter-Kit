@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from fabricops_kit.governance_review import _load_active_dq_rules, _prepare_dq_profile_input_rows, enforce_dq_rules
+from fabricops_kit.governance_review import _load_active_dq_rules, _prepare_dq_profile_input_rows, _run_active_dq_guardrail
 from fabricops_kit.guardrails import stop_if_failed, _check_schema_runtime
 from tests.helpers import framework_config
 
@@ -219,7 +219,7 @@ def _dq_metadata_df(spark_session, rows):
     return spark_session.createDataFrame(rows, schema=schema)
 
 
-def test_enforce_dq_rules_returns_passed_when_no_active_rules(spark_session, monkeypatch):
+def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_session, monkeypatch):
     """Verify enforce dq rules returns passed when no active rules."""
     import fabricops_kit.governance_review as governance
 
@@ -227,7 +227,7 @@ def test_enforce_dq_rules_returns_passed_when_no_active_rules(spark_session, mon
     metadata_df = _dq_metadata_df(spark_session, [])
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
 
-    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "passed"
     assert result["can_continue"] is True
@@ -238,7 +238,7 @@ def test_enforce_dq_rules_returns_passed_when_no_active_rules(spark_session, mon
 
 
 
-def test_enforce_dq_rules_result_write_toggle_targets_results(spark_session, monkeypatch):
+def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_session, monkeypatch):
     """Verify DQ enforcement writes result rows only when enabled."""
     import fabricops_kit.governance_review as governance
     import fabricops_kit.metadata as metadata
@@ -249,10 +249,10 @@ def test_enforce_dq_rules_result_write_toggle_targets_results(spark_session, mon
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
     monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
-    enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-1", write_results=False)
+    _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-1", write_results=False)
     assert writes == []
 
-    enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-2", write_results=True)
+    _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-2", write_results=True)
 
     assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
     row = writes[0][0].collect()[0].asDict()
@@ -260,7 +260,7 @@ def test_enforce_dq_rules_result_write_toggle_targets_results(spark_session, mon
     assert row["run_id"] == "run-2"
     assert row["status"] == "passed"
 
-def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatch):
+def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, monkeypatch):
     """Verify enforce dq rules warning failure can continue."""
     import fabricops_kit.governance_review as governance
 
@@ -291,7 +291,7 @@ def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatc
     )
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
 
-    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "warning"
     assert result["can_continue"] is True
@@ -302,7 +302,7 @@ def test_enforce_dq_rules_warning_failure_can_continue(spark_session, monkeypatc
 
 
 
-def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
+def test__run_active_dq_guardrail_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
     """Verify enforce dq rules warning failure adds technical columns and preserves rows."""
     import fabricops_kit.governance_review as governance
 
@@ -357,7 +357,7 @@ def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_r
     )
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
 
-    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
     tagged_rows = {row["order_id"]: row.asDict() for row in result["dataframe"].collect()}
 
     assert result["status"] == "warning"
@@ -374,7 +374,7 @@ def test_enforce_dq_rules_warning_failure_adds_technical_columns_and_preserves_r
     assert result["summary"]["DQ_FAILED_ROW_PERCENT"] == 50.0
 
 
-def test_enforce_dq_rules_error_failure_blocks(spark_session, monkeypatch):
+def test__run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatch):
     """Verify enforce dq rules error failure blocks."""
     import fabricops_kit.governance_review as governance
 
@@ -405,7 +405,7 @@ def test_enforce_dq_rules_error_failure_blocks(spark_session, monkeypatch):
     )
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
 
-    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
@@ -414,7 +414,7 @@ def test_enforce_dq_rules_error_failure_blocks(spark_session, monkeypatch):
         stop_if_failed(result)
 
 
-def test_enforce_dq_rules_mixed_warning_and_error_failures_return_failed(spark_session, monkeypatch):
+def test__run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed(spark_session, monkeypatch):
     """Verify enforce dq rules mixed warning and error failures return failed."""
     import fabricops_kit.governance_review as governance
 
@@ -464,14 +464,14 @@ def test_enforce_dq_rules_mixed_warning_and_error_failures_return_failed(spark_s
     )
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
 
-    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
     assert {check["status"] for check in result["checks"]} == {"failed", "warning"}
 
 
-def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monkeypatch):
+def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_session, monkeypatch):
     """Verify enforce dq rules supports current v1 metadata shape."""
     import fabricops_kit.governance_review as governance
 
@@ -502,7 +502,7 @@ def test_enforce_dq_rules_supports_current_v1_metadata_shape(spark_session, monk
     )
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
 
-    result = enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "passed"
     assert result["can_continue"] is True

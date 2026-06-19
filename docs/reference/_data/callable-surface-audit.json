@@ -12,20 +12,6 @@
     "decision": "template_called_public"
   },
   {
-    "function": "enforce_dq_rules",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [],
-    "directly_called_in_example_templates": [
-      "example_dq_rule_smoke_test"
-    ],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "run_table_guardrails"
-    ],
-    "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
-  },
-  {
     "function": "enforce_freshness",
     "in_root_exports": false,
     "directly_called_in_core_templates": [],
@@ -186,7 +172,9 @@
     "directly_called_in_core_templates": [
       "02_pipeline"
     ],
-    "directly_called_in_example_templates": [],
+    "directly_called_in_example_templates": [
+      "example_dq_rule_smoke_test"
+    ],
     "imported_only_in_templates": false,
     "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,

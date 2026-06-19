@@ -284,7 +284,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
     ])
     monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: rules_df)
 
-    result = governance_review.enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+    result = governance_review._run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
@@ -330,7 +330,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
         _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
     ])
     monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
-    dq = governance_review.enforce_dq_rules(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+    dq = governance_review._run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
     for result in (schema, freshness, profile, dq):
         assert result["can_continue"] is True

@@ -230,22 +230,6 @@
       "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
-      "callable_name": "enforce_dq_rules",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "DQ guardrails",
-      "used_in_templates": [
-        "example_dq_rule_smoke_test"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
       "callable_name": "get_latest_metadata_catalogue",
       "callable_visibility": "public",
       "callable_type": "callable",
@@ -386,7 +370,8 @@
       "template_notebook": "02_pipeline",
       "template_segment": "Guardrail orchestration",
       "used_in_templates": [
-        "02_pipeline"
+        "02_pipeline",
+        "example_dq_rule_smoke_test"
       ]
     },
     {

@@ -35,7 +35,7 @@ EXPECTED_V1_CALLABLES = [
         "read_data",
         "write_data",
         "profile_dataframe",
-        "enforce_dq_rules",
+        "_run_active_dq_guardrail",
         "get_latest_metadata_catalogue",
         "display_guardrail_results",
         "prepare_pipeline_table_configs",

@@ -19,7 +19,7 @@ CORE_CALLABLES = {
     "read_data",
     "write_data",
     "profile_dataframe",
-    "enforce_dq_rules",
+    "_run_active_dq_guardrail",
 }
 CORE_PAGE_SECTIONS = (
     "Signature",
@@ -138,13 +138,13 @@ def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
     assert json.loads(refactor_signals.read_text(encoding="utf-8"))
 
 
-def test_refactor_signals_json_includes_enforce_dq_rules() -> None:
-    """Verify structured refactor signals are generated for enforce_dq_rules."""
+def test_refactor_signals_json_includes__run_active_dq_guardrail() -> None:
+    """Verify structured refactor signals are generated for _run_active_dq_guardrail."""
     signal_path = REFERENCE_DIR / "_data" / "refactor-signals.json"
     signals = json.loads(signal_path.read_text(encoding="utf-8"))
-    enforce_signals = signals["enforce_dq_rules"]
+    enforce_signals = signals["_run_active_dq_guardrail"]
 
-    assert enforce_signals["qualified_name"].endswith(".enforce_dq_rules")
+    assert enforce_signals["qualified_name"].endswith("._run_active_dq_guardrail")
     assert enforce_signals["unique_internal_helper_count"] > 0
     assert {
         "qualified_name",
