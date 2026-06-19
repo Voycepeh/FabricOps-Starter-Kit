@@ -13,14 +13,38 @@ FabricOps gives teams a shared operating model for configuration, notebook execu
 
 ![FabricOps roles working from a shared governed foundation](assets/fabricops-roles.png){ .fabricops-roles-image }
 
+<div class="fabricops-kpi-strip" markdown="1">
+
+<a href="how-fabricops-works/notebook-templates.md">
+  <strong>5</strong>
+  <span>notebook templates</span>
+</a>
+
+<a href="reference/index.md">
+  <strong>22</strong>
+  <span>starter-kit functions</span>
+</a>
+
+<a href="reference/dq-rules/index.md">
+  <strong>23</strong>
+  <span>DQ rule types</span>
+</a>
+
+<a href="how-fabricops-works/metadata-tables.md">
+  <strong>12</strong>
+  <span>metadata tables</span>
+</a>
+
+</div>
+
 ## Built for the teams behind BI and AI
 
-FabricOps connects governance, engineering, and analytics work through reusable notebooks, shared metadata, and governance enforced pipeline guardrails.
+FabricOps connects governance, engineering, analysts, and scientists through reusable notebooks, shared metadata, and governance-enforced pipeline guardrails.
 
 Configuration stays explicit.<br>
 Notebook patterns stay reusable.<br>
 Metadata stays visible.<br>
-Guardrails stay reviewable.
+Guardrails stay enforced.
 
 ## Choose where to begin
 
