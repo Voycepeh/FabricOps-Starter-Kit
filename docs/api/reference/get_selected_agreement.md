@@ -73,7 +73,7 @@ Raises an error when no agreement has been selected in the current session.
 
 ### Used by
 
-Not documented yet
+- <a href="start_pipeline_run/"><code>fabricops_kit.pipeline.start_pipeline_run</code></a>
 
 ### Calls
 
@@ -88,7 +88,7 @@ Not documented yet
 
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
-- `02_pipeline`
+None.
 
 **Side effects:**
 
@@ -123,9 +123,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source line: `1027`
-- Inbound references count: 0
+- Inbound references count: 1
 - Outbound references count: 0
-- Used in templates: 02_pipeline
+- Used in templates: —
 - Glossary terms: notebook template
 
 ### Implementation contract
@@ -139,7 +139,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 ### Inbound references
 
-Not documented yet
+- <a href="start_pipeline_run/"><code>fabricops_kit.pipeline.start_pipeline_run</code></a>
 
 ### Outbound references
 

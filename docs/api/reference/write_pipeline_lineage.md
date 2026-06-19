@@ -5,9 +5,9 @@ Write many-to-many source-to-target lineage evidence.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:884`
+`fabricops_kit/pipeline.py:1062`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L884-L970">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1062-L1149">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -55,7 +55,7 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `spark` | `Any` | Yes | Spark session used to create lineage rows. |
-| `run_id` | `str` | Yes | Pipeline run identifier. |
+| `run_id` | `str` | Yes | Pipeline run identifier. When omitted, the active context from :func:`start_pipeline_run` is used. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
 | `source_definitions` | `Mapping[str, Mapping[str, Any]]` | Yes | Source and target definitions keyed by alias. |
 | `target_definitions` | `Mapping[str, Mapping[str, Any]]` | Yes | Not documented yet |
@@ -176,7 +176,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `884`
+- Source line: `1062`
 - Inbound references count: 0
 - Outbound references count: 7
 - Used in templates: 02_pipeline
@@ -208,9 +208,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L884-L970">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L884-L970</a>
-- Start line: `884`
-- End line: `970`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1062-L1149">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1062-L1149</a>
+- Start line: `1062`
+- End line: `1149`
 - Signature:
 
 ```python

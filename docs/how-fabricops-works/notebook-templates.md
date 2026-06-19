@@ -108,7 +108,7 @@ The core sequence is governed by shared metadata rather than notebook memory. `9
 
     **Use this when**
 
-    You need discovery, profiling, troubleshooting, demo support, or smoke test analysis before adapting the governed templates.
+    You need context-aware, read-only discovery, profiling, troubleshooting, or investigation support without changing governed metadata.
 
     **Who uses this**
 
@@ -116,15 +116,15 @@ The core sequence is governed by shared metadata rather than notebook memory. `9
 
     **What you do**
 
-    Explore sources, test helper functions, profile data, inspect outputs, and troubleshoot without treating the notebook as a production workflow.
+    Select agreement context, read source data, inspect existing metadata catalogue evidence, optionally profile locally, and run scratch checks without treating the notebook as a production workflow.
 
     **What it creates**
 
-    Ad hoc investigation outputs or validation evidence, depending on how the notebook is used.
+    Ad hoc investigation output in the notebook session only. It does not write catalogue rows, approvals, guardrail results, pipeline summaries, or delivery registration records.
 
     **What the next notebook receives**
 
-    Nothing required. This notebook is optional and does not replace the governed sequence.
+    Nothing required. This notebook is optional, read-only, and does not replace the governed sequence.
 
 </div>
 
@@ -132,12 +132,12 @@ The core sequence is governed by shared metadata rather than notebook memory. `9
 
 1. Run `00_env_config` first.
 2. Run `01_agreement` to define approved steward and agreement context.
-3. Optionally use `99_explore` for discovery, profiling, troubleshooting, demos, or smoke checks.
+3. Optionally use `99_explore` for read-only discovery, profiling, troubleshooting, or investigation.
 4. Run `02_pipeline` for governed source to target execution.
 5. Run `03_governance` for review, enrichment, approval, rejection, replacement, or lifecycle updates.
 6. Use dashboard and reference pages to inspect evidence, metadata, and current state.
 
-`99_explore` is optional. It can help teams understand data and helper behavior before `02_pipeline`, but it is not a replacement for `00_env_config`, `01_agreement`, `02_pipeline`, or `03_governance` in the governed notebook sequence.
+`99_explore` is optional and read-only. It can help teams understand source data and existing catalogue context before or during troubleshooting, but it is not a replacement for `00_env_config`, `01_agreement`, `02_pipeline`, or `03_governance` in the governed notebook sequence. Repeatable transformations belong in `02_pipeline`; approval and review workflows belong in `01_agreement` or `03_governance`.
 
 ## Optional example notebooks
 
@@ -145,7 +145,7 @@ These notebooks are release-specific validation aids. Optional examples are rele
 
 | Notebook | Purpose | Relevant helpers |
 | --- | --- | --- |
-| [`templates/notebooks/99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Optional discovery, profiling, troubleshooting, investigation, and ad hoc analysis support. | [`read_data`](../api/reference/read_data.md), [`profile_dataframe`](../api/reference/profile_dataframe.md) |
+| [`templates/notebooks/99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Optional context-aware, read-only discovery, profiling, troubleshooting, investigation, and ad hoc analysis support. | [`widget_select_agreement`](../api/reference/widget_select_agreement.md), [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue.md), [`read_data`](../api/reference/read_data.md), [`profile_dataframe`](../api/reference/profile_dataframe.md) |
 | [`templates/notebooks/example_pipeline_demo.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. | [`write_data`](../api/reference/write_data.md) |
 | [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. | [`write_data`](../api/reference/write_data.md), [`enforce_dq_rules`](../api/reference/enforce_dq_rules.md) |
 

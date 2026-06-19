@@ -5,9 +5,9 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:548`
+`fabricops_kit/pipeline.py:687`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L548-L773">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L687-L950">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -32,15 +32,17 @@ Coordinates profiling, schema, freshness, profile behavior, DQ, and evidence che
 ```python
 def run_table_guardrails(
     table_configs: list[dict[str, Any]],
-    run_id: str,
+    run_id: str | None=None,
     context: dict[str, Any] | None=None,
-    spark_session: Any,
+    spark_session: Any | None=None,
     agreement_id: str='',
     agreement_contract_version: str='',
     notebook_registry_id: str='',
     notebook_id: str='',
     pipeline_name: str='',
-    stop_on_failure: bool=False,
+    table_role: str='',
+    mode: str='profile',
+    stop_on_failure: bool | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -61,15 +63,17 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `table_configs` | `list[dict[str, Any]]` | Yes | Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``, ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior. |
-| `run_id` | `str` | Yes | Current pipeline run identifier. |
+| `run_id` | `str \| None` | No | Current pipeline run identifier. When omitted, the active context from :func:`start_pipeline_run` is used. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
-| `spark_session` | `Any` | Yes | Spark session used by profile behavior and DQ helpers. |
-| `agreement_id` | `str` | No | Governance context written with catalogue evidence. |
+| `spark_session` | `Any \| None` | No | Spark session used by profile behavior and DQ helpers. When omitted, the active context from :func:`start_pipeline_run` is used. |
+| `agreement_id` | `str` | No | Governance context written with catalogue evidence. Omitted values are resolved from the active context when available. |
 | `agreement_contract_version` | `str` | No | Not documented yet |
 | `notebook_registry_id` | `str` | No | Not documented yet |
 | `notebook_id` | `str` | No | Not documented yet |
 | `pipeline_name` | `str` | No | Not documented yet |
-| `stop_on_failure` | `bool` | No | When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue. |
+| `table_role` | `str` | No | Template-facing table role used to retain source and target definitions in the active context for summary defaults. |
+| `mode` | `str` | No | Template-facing mode. ``profile`` defaults to non-blocking display, and ``enforce`` defaults to ``stop_on_failure=True``. |
+| `stop_on_failure` | `bool \| None` | No | When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue. When omitted, the default is derived from ``mode``. |
 
 ## Returns
 
@@ -107,6 +111,7 @@ Not documented yet
 - `fabricops_kit.guardrails.stop_if_failed`
 - `fabricops_kit.metadata._build_metadata_table_key`
 - `fabricops_kit.metadata._write_guardrail_result_row`
+- `fabricops_kit.pipeline._active_pipeline_context`
 - `fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle`
 - `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
 - `fabricops_kit.pipeline._guardrail_can_continue`
@@ -302,9 +307,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `548`
+- Source line: `687`
 - Inbound references count: 0
-- Outbound references count: 17
+- Outbound references count: 18
 - Used in templates: 02_pipeline
 - Glossary terms: guardrails, can_continue, source data, target table, evidence
 
@@ -332,6 +337,7 @@ Not documented yet
 - `fabricops_kit.guardrails.stop_if_failed`
 - `fabricops_kit.metadata._build_metadata_table_key`
 - `fabricops_kit.metadata._write_guardrail_result_row`
+- `fabricops_kit.pipeline._active_pipeline_context`
 - `fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle`
 - `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
 - `fabricops_kit.pipeline._guardrail_can_continue`
@@ -344,23 +350,25 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L548-L773">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L548-L773</a>
-- Start line: `548`
-- End line: `773`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L687-L950">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L687-L950</a>
+- Start line: `687`
+- End line: `950`
 - Signature:
 
 ```python
 def run_table_guardrails(
     table_configs: list[dict[str, Any]],
-    run_id: str,
+    run_id: str | None=None,
     context: dict[str, Any] | None=None,
-    spark_session: Any,
+    spark_session: Any | None=None,
     agreement_id: str='',
     agreement_contract_version: str='',
     notebook_registry_id: str='',
     notebook_id: str='',
     pipeline_name: str='',
-    stop_on_failure: bool=False,
+    table_role: str='',
+    mode: str='profile',
+    stop_on_failure: bool | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -373,7 +381,7 @@ def run_table_guardrails(
 
 ### Internal implementation summary
 
-- Internal helper count: 88
+- Internal helper count: 89
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

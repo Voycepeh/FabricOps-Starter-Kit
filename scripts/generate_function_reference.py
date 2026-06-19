@@ -113,9 +113,11 @@ V1_CALLABLES = {
     "write_data",
     "profile_dataframe",
     "enforce_dq_rules",
+    "get_latest_metadata_catalogue",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
+    "start_pipeline_run",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -2288,6 +2290,7 @@ def main() -> None:
             starter_path = "—"
             purpose = module_data[module_name]["functions"].get(name) or "Internal helper used by the package."
             display_module = canonical_public_module(module_name)
+        starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
         raw_calls = dependency_meta.get("calls", [])
@@ -2301,8 +2304,8 @@ def main() -> None:
                 (
                     f'<article id="{_esc(module_name)}-{_esc(name)}" class="reference-catalogue-item" '
                     f'data-callable-row="true" data-callable-name="{_esc(name)}" '
-                    f'data-callable-module="{_esc(display_module)}" '
-                    f'data-callable-starter-path="{_esc(starter_path)}" '
+                    f'data-callable-module="{_esc(display_module)}"'
+                    f'{starter_path_attribute} '
                     f'data-function-type="{_esc(function_type)}" '
                     f'data-callable-purpose="{_esc(purpose)}">'
                 ),

@@ -5,9 +5,9 @@ Write one pipeline runtime summary row to metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:973`
+`fabricops_kit/pipeline.py:1152`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L973-L1087">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1152-L1321">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -27,8 +27,8 @@ Writes a compact run-level summary that ties pipeline name, agreement context, g
 
 ```python
 def write_pipeline_run_summary(
-    spark: Any,
-    run_id: str,
+    spark: Any | None=None,
+    run_id: str | None=None,
     context: dict[str, Any] | None=None,
     agreement_id: str='',
     agreement_contract_version: str='',
@@ -52,6 +52,10 @@ def write_pipeline_run_summary(
     lineage_status: str='not_run',
     catalogue_status: str='not_run',
     message: str='',
+    source_guardrail_results: Mapping[str, Any] | None=None,
+    target_guardrail_results: Mapping[str, Any] | None=None,
+    target_write_status: Mapping[str, Any] | None=None,
+    lineage_result: Mapping[str, Any] | None=None,
     metadata_table: str=METADATA_PIPELINE_RUNS_TABLE,
     mode: str='append',
 ) -> dict[str, Any]:
@@ -67,8 +71,8 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark` | `Any` | Yes | Spark session used to create the one-row summary DataFrame. |
-| `run_id` | `str` | Yes | Pipeline run identifier. |
+| `spark` | `Any \| None` | No | Spark session used to create the one-row summary DataFrame. When omitted, the active context from :func:`start_pipeline_run` is used. |
+| `run_id` | `str \| None` | No | Pipeline run identifier. When omitted, the active context from :func:`start_pipeline_run` is used. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
 | `agreement_id` | `str` | No | Agreement and notebook registry context. |
 | `agreement_contract_version` | `str` | No | Not documented yet |
@@ -92,6 +96,10 @@ Example usage not documented yet.
 | `lineage_status` | `str` | No | Evidence write statuses and support message. |
 | `catalogue_status` | `str` | No | Not documented yet |
 | `message` | `str` | No | Not documented yet |
+| `source_guardrail_results` | `Mapping[str, Any] \| None` | No | Template-facing guardrail result bundles returned by :func:`run_table_guardrails`. When supplied, schema, freshness, profile behavior, DQ, catalogue, and status fields are derived automatically. |
+| `target_guardrail_results` | `Mapping[str, Any] \| None` | No | Not documented yet |
+| `target_write_status` | `Mapping[str, Any] \| None` | No | Template-facing write and lineage outcomes included in the run summary. |
+| `lineage_result` | `Mapping[str, Any] \| None` | No | Not documented yet |
 | `metadata_table` | `str` | No | Metadata table that stores runtime summaries. |
 | `mode` | `str` | No | Write mode for the runtime summary row. |
 
@@ -125,6 +133,7 @@ Not documented yet
 - `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - `fabricops_kit.fabric_input_output.write_lakehouse_table`
+- `fabricops_kit.pipeline._active_pipeline_context`
 - `fabricops_kit.pipeline._definition_name`
 - `fabricops_kit.pipeline._now_iso`
 - `fabricops_kit.pipeline._summary_status`
@@ -197,9 +206,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `973`
+- Source line: `1152`
 - Inbound references count: 0
-- Outbound references count: 6
+- Outbound references count: 7
 - Used in templates: 02_pipeline
 - Glossary terms: guardrails, can_continue, evidence, metadata lakehouse
 
@@ -221,6 +230,7 @@ Not documented yet
 - `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`
 - `fabricops_kit.fabric_input_output.write_lakehouse_table`
+- `fabricops_kit.pipeline._active_pipeline_context`
 - `fabricops_kit.pipeline._definition_name`
 - `fabricops_kit.pipeline._now_iso`
 - `fabricops_kit.pipeline._summary_status`
@@ -228,15 +238,15 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L973-L1087">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L973-L1087</a>
-- Start line: `973`
-- End line: `1087`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1152-L1321">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1152-L1321</a>
+- Start line: `1152`
+- End line: `1321`
 - Signature:
 
 ```python
 def write_pipeline_run_summary(
-    spark: Any,
-    run_id: str,
+    spark: Any | None=None,
+    run_id: str | None=None,
     context: dict[str, Any] | None=None,
     agreement_id: str='',
     agreement_contract_version: str='',
@@ -260,6 +270,10 @@ def write_pipeline_run_summary(
     lineage_status: str='not_run',
     catalogue_status: str='not_run',
     message: str='',
+    source_guardrail_results: Mapping[str, Any] | None=None,
+    target_guardrail_results: Mapping[str, Any] | None=None,
+    target_write_status: Mapping[str, Any] | None=None,
+    lineage_result: Mapping[str, Any] | None=None,
     metadata_table: str=METADATA_PIPELINE_RUNS_TABLE,
     mode: str='append',
 ) -> dict[str, Any]:
@@ -275,7 +289,7 @@ def write_pipeline_run_summary(
 
 ### Internal implementation summary
 
-- Internal helper count: 13
+- Internal helper count: 14
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

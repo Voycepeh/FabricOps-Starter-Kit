@@ -5,9 +5,9 @@ Render interactive schema, freshness, and profile-behavior guardrail authoring c
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2133`
+`fabricops_kit/governance_review.py:2252`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2133-L2278">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -151,7 +151,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2133`
+- Source line: `2252`
 - Inbound references count: 1
 - Outbound references count: 5
 - Used in templates: 02_pipeline
@@ -181,9 +181,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2133-L2278">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2133-L2278</a>
-- Start line: `2133`
-- End line: `2278`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397</a>
+- Start line: `2252`
+- End line: `2397`
 - Signature:
 
 ```python
