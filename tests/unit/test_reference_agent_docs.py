@@ -215,7 +215,6 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         assert implementation_pos < text.index("<summary>Machine-readable metadata / metadata details"), page
 
 
-
 def test_internalized_enforce_profile_behavior_has_no_standalone_page() -> None:
     """Verify internalized enforce_profile_behavior has no standalone page after audit."""
     assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
@@ -247,8 +246,21 @@ def test_internal_reference_page_generation_flag(monkeypatch) -> None:
     assert generate_internal_reference_pages()
 
 
+def test_github_source_url_defaults_to_main(monkeypatch) -> None:
+    """Verify github source url defaults to the reachable main branch."""
+    monkeypatch.delenv("GITHUB_SOURCE_REF", raising=False)
+    monkeypatch.delenv("FABRICOPS_SOURCE_REF", raising=False)
+
+    from scripts.generate_function_reference import github_source_url
+
+    assert github_source_url("src/fabricops_kit/config.py", 595, 704) == (
+        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/"
+        "main/src/fabricops_kit/config.py#L595-L704"
+    )
+
+
 def test_github_source_url_uses_configured_source_ref(monkeypatch) -> None:
-    """Verify github source url uses configured source ref."""
+    """Verify github source url uses an explicitly configured reachable source ref."""
     monkeypatch.setenv("GITHUB_SOURCE_REF", "review-sha-123")
 
     from scripts.generate_function_reference import github_source_url
@@ -292,6 +304,30 @@ def test_callable_pages_include_one_top_source_card_and_github_source_link() -> 
         assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in source_card, page
         assert "/src/fabricops_kit/" in source_card, page
         assert "#L" in source_card, page
+
+
+def test_display_guardrail_results_lists_nested_private_helpers() -> None:
+    """Verify nested private helpers appear in callable helper chips."""
+    text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
+    helper_section = text.split('\n<details class="reference-metadata-details">', 1)[0]
+
+    assert '??? info "Internal helpers used: 1"' not in helper_section
+    assert '??? info "Internal helpers used: 12"' in helper_section
+    for helper_name in [
+        "_rows_for_display",
+        "_guardrail_reason",
+        "_dq_reason",
+        "_freshness_reason",
+        "_profile_behavior_reason",
+        "_result_reason",
+        "_result_status",
+        "_schema_reason",
+        "_next_action",
+        "_result_can_continue",
+        "_table_keys",
+        "_yes_no",
+    ]:
+        assert f"><code>{helper_name}</code></a>" in helper_section
 
 
 def test_callable_pages_collapse_ai_machine_metadata() -> None:
@@ -378,7 +414,6 @@ def test_generated_manifests_point_public_callables_to_canonical_api_reference()
             assert entry["docs_path"].startswith("reference/internal/")
 
 
-
 def test_glossary_page_exists_and_includes_required_terms() -> None:
     """Verify glossary page exists and includes required terms."""
     glossary_page = REFERENCE_DIR / "glossary.md"
@@ -410,7 +445,6 @@ def test_glossary_page_exists_and_includes_required_terms() -> None:
     for term in required_terms:
         assert f"## {term}".lower() in glossary_text.lower()
     assert "Searchable source of truth" in glossary_text
-
 
 
 def test_public_callable_records_have_real_metadata_backed_guidance() -> None:
@@ -478,7 +512,6 @@ def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
         text = page.read_text(encoding="utf-8")
         for phrase in forbidden:
             assert phrase not in text, page
-
 
 
 def test_related_guides_metadata_renders_before_template_and_call_graph_sections() -> None:
