@@ -617,7 +617,7 @@ def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
             lines.extend(
                 [
                     f'<section class="glossary-definition-card" id="{markdown_anchor(term)}">',
-                    f"<h2>{term}</h2>",
+                    f'<p class="glossary-definition-title">{term}</p>',
                     f"<p>{entry['long_definition']}</p>",
                 ]
             )

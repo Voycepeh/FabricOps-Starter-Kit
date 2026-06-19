@@ -915,19 +915,16 @@
   background: color-mix(in srgb, var(--md-code-bg-color) 45%, var(--md-default-bg-color));
 }
 
-.md-typeset .glossary-definition-card h2 {
-  margin: 0 0 0.35rem;
-  color: var(--md-primary-fg-color--dark);
-  font-size: 1.05rem;
-  line-height: 1.35;
-}
-
-.md-typeset .glossary-definition-card h2 .headerlink {
-  display: none;
-}
-
 .md-typeset .glossary-definition-card p {
   margin: 0.35rem 0 0;
+}
+
+.md-typeset .glossary-definition-card .glossary-definition-title {
+  margin-top: 0;
+  color: var(--md-primary-fg-color--dark);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .md-typeset .glossary-definition-meta {
