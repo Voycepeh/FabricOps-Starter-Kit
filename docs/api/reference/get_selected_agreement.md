@@ -108,6 +108,26 @@ No additional callable notes are documented.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>get_selected_agreement(...)</code></div>
     </div>
 
+    ### Refactor signals
+
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - None detected in the reachable package-local call tree.
+
+    **Call chains deeper than 4 levels**
+
+    - None detected.
+
+    **Helpers that only call one package-local helper**
+
+    - None detected.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - None detected from helper names, doc summaries, and module placement.
+
 This callable uses 0 internal helpers; `get_selected_agreement` does not have package-local helper descendants in the generated call graph.
 
 <div class="reference-helper-groups">

@@ -202,7 +202,11 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         assert "Internal helpers used by this callable" not in text, page
         assert '??? info "Nested helper functions:' not in text, page
         assert "Unique internal helpers:" in text, page
+        assert "### Refactor signals" in text, page
+        assert "Large call graph shown to two levels." not in text, page
+        assert "Tree is truncated to keep the page readable." not in text, page
         assert 'class="reference-call-tree"' in text, page
+        assert 'class="reference-call-tree-more"' not in text, page
         assert '```text' not in text.split('??? info "Call flow"', 1)[1].split("##", 1)[0], page
         assert '??? info "Internal helpers used:' not in text, page
         source_card_pos = text.index('<div class="reference-source-card" markdown="1">')
@@ -350,6 +354,8 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert 'class="reference-helper-groups"' in implementation_section
     assert "Unique internal helpers: 12. Repeated calls may appear in multiple branches." in implementation_section
     assert '<div class="reference-call-tree" role="tree">' in implementation_section
+    assert "### Refactor signals" in implementation_section
+    assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
     for helper_name in [

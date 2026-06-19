@@ -145,6 +145,31 @@ pipeline metadata.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83"><code>get_default_fabric_context(...)</code></a></div>
     </div>
 
+    ### Refactor signals
+
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - `_get_store` appears in 2 branches.
+    - `_normalize_path_config` appears in 2 branches.
+    - `_normalize_schema_name` appears in 2 branches.
+    - `_normalize_table_name` appears in 2 branches.
+
+    **Call chains deeper than 4 levels**
+
+    - None detected.
+
+    **Helpers that only call one package-local helper**
+
+    - `_get_store` only delegates to `_normalize_path_config`.
+    - `_resolve_lakehouse_schema` only delegates to `_normalize_schema_name`.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - `Fabric or Spark access` contains helpers from multiple modules (`config`, `fabric_input_output`); review whether the helper grouping still matches intent.
+    - `Rule parsing` contains helpers from multiple modules (`config`, `fabric_input_output`); review whether the helper grouping still matches intent.
+
 This callable uses 10 internal helpers for metadata loading, rule parsing, fabric or spark access, and other.
 
 <div class="reference-helper-groups">

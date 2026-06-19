@@ -148,6 +148,36 @@ No additional callable notes are documented.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L255-L257"><code>_yes_no(...)</code></a></div>
     </div>
 
+    ### Refactor signals
+
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - `_result_reason` appears in 8 branches.
+    - `_result_status` appears in 8 branches.
+    - `_dq_reason` appears in 2 branches.
+    - `_freshness_reason` appears in 2 branches.
+    - `_guardrail_reason` appears in 2 branches.
+    - `_next_action` appears in 2 branches.
+    - `_profile_behavior_reason` appears in 2 branches.
+    - `_result_can_continue` appears in 2 branches.
+    - `_schema_reason` appears in 2 branches.
+    - `_table_keys` appears in 2 branches.
+    - `_yes_no` appears in 2 branches.
+
+    **Call chains deeper than 4 levels**
+
+    - None detected.
+
+    **Helpers that only call one package-local helper**
+
+    - `_dq_reason` only delegates to `_result_reason`.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - None detected from helper names, doc summaries, and module placement.
+
 This callable uses 12 internal helpers for metadata loading, rule parsing, rule evaluation, result summary, fabric or spark access, and other.
 
 <div class="reference-helper-groups">
