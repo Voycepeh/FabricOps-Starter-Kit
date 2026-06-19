@@ -97,7 +97,7 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 
 ### Used by
 
-- <a href="start_pipeline_run_with_agreement/"><code>fabricops_kit.pipeline.start_pipeline_run_with_agreement</code></a>
+Not documented yet
 
 ### Calls
 
@@ -119,7 +119,8 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
-None.
+- `02_pipeline`
+- `99_explore`
 
 **Side effects:**
 
@@ -257,9 +258,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source line: `788`
-- Inbound references count: 1
+- Inbound references count: 0
 - Outbound references count: 8
-- Used in templates: —
+- Used in templates: 02_pipeline, 99_explore
 - Glossary terms: notebook template
 
 ### Implementation contract
@@ -273,7 +274,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 ### Inbound references
 
-- <a href="start_pipeline_run_with_agreement/"><code>fabricops_kit.pipeline.start_pipeline_run_with_agreement</code></a>
+Not documented yet
 
 ### Outbound references
 

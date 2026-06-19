@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>2</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>config</code>, <code>pipeline</code></td>
+      <td><code>config</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -466,9 +466,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 
 **config**
 <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
-
-**pipeline**
-<a class="reference-chip" href="../reference/start_pipeline_run_with_agreement/"><code>start_pipeline_run_with_agreement</code></a>
 
 ### External callees
 

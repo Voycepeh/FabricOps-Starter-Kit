@@ -30,13 +30,10 @@ def test_pipeline_notebook_uses_existing_public_helpers_without_pr_only_wrappers
 
     for helper in [
         "prepare_pipeline_table_configs",
-        "profile_source_tables",
-        "profile_target_tables",
-        "enforce_source_guardrails",
-        "enforce_target_guardrails",
+        "run_table_guardrails",
         "write_data",
         "write_pipeline_lineage",
-        "complete_pipeline_run",
+        "write_pipeline_run_summary",
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",
         "widget_enrich_table_metadata",
@@ -62,13 +59,15 @@ def test_pipeline_notebook_uses_existing_public_helpers_without_pr_only_wrappers
 
 
 def test_pipeline_agreement_selector_registers_notebook_context():
-    """Verify guided pipeline startup resolves agreement registration context."""
+    """Verify pipeline agreement selector registers notebook context."""
     _markdown, code, _cells = _notebook_sources()
 
-    assert "PIPELINE = start_pipeline_run_with_agreement()" in code
-    assert "widget_select_agreement(" not in code
-    assert "get_selected_agreement(" not in code
-    assert "AGREEMENT_ID" not in code
+    selector_block = code[code.index("widget_select_agreement(") : code.index("AGREEMENT = get_selected_agreement()")]
+    assert "metadata_schema=METADATA_SCHEMA" in selector_block
+    assert "register_notebook=True" in selector_block
+    assert 'AGREEMENT_ID = AGREEMENT.get("agreement_id", "")' in code
+    assert 'NOTEBOOK_REGISTRY_ID = AGREEMENT.get("notebook_registry_id", AGREEMENT.get("registration_id", ""))' in code
+
 
 def test_pipeline_notebook_contains_widget_led_flow_sections():
     """Verify the template documents the intended simplified flow."""
@@ -132,8 +131,8 @@ def test_source_and_target_registration_are_key_and_dataframe_only():
     """Verify registration cells no longer contain guardrail authoring knobs."""
     _markdown, code, _cells = _notebook_sources()
 
-    source_block = code[code.index("SOURCE_TABLES = [") : code.index("source_profile_results = profile_source_tables(")]
-    target_block = code[code.index("TARGET_TABLES = [") : code.index("target_profile_results = profile_target_tables(")]
+    source_block = code[code.index("SOURCE_TABLES = [") : code.index("source_profile_results = run_table_guardrails(")]
+    target_block = code[code.index("TARGET_TABLES = [") : code.index("target_profile_results = run_table_guardrails(")]
 
     for block, keys in [(source_block, ["orders", "customers"]), (target_block, ["orders_enriched", "orders_summary"] )]:
         for key in keys:
@@ -166,9 +165,9 @@ def test_transform_and_target_write_settings_are_separate_from_registration():
 
     transform = code.index("df_orders_enriched = (")
     target_register = code.index("TARGET_TABLES = [", transform)
-    target_profile = code.index("target_profile_results = profile_target_tables(", target_register)
+    target_profile = code.index("target_profile_results = run_table_guardrails(", target_register)
     widget_step = code.index("selected_guardrail_target = widget_select_guardrail_target(", target_profile)
-    enforcement_gate = code.index("source_enforcement_results = enforce_source_guardrails(", widget_step)
+    enforcement_gate = code.index("source_enforcement_results = run_table_guardrails(", widget_step)
     write_settings = code.index("TARGET_WRITE_SETTINGS = {", enforcement_gate)
     target_write = code.index("target_write_status = {}", write_settings)
 
@@ -182,14 +181,14 @@ def test_guardrail_gate_stops_before_target_writes():
     """Verify source and target enforcement block before write settings and writes."""
     _markdown, code, _cells = _notebook_sources()
 
-    source_enforcement = code.index("source_enforcement_results = enforce_source_guardrails(")
-    target_enforcement = code.index("target_enforcement_results = enforce_target_guardrails(", source_enforcement)
+    source_enforcement = code.index("source_enforcement_results = run_table_guardrails(")
+    target_enforcement = code.index("target_enforcement_results = run_table_guardrails(", source_enforcement)
     write_settings = code.index("TARGET_WRITE_SETTINGS = {", target_enforcement)
     target_write = code.index("target_write_status = {}", write_settings)
 
     assert source_enforcement < target_enforcement < write_settings < target_write
-    assert "enforce_source_guardrails stops the notebook when blocking source guardrails fail" in code
-    assert "enforce_target_guardrails stops the notebook when blocking target guardrails fail" in code
+    assert "run_table_guardrails stops the notebook when blocking source guardrails fail" in code
+    assert "run_table_guardrails stops the notebook when blocking target guardrails fail" in code
     assert "display_guardrail_results(source_enforcement_results" in code
     assert "display_guardrail_results(target_enforcement_results" in code
 
@@ -222,7 +221,7 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     markdown, code, _cells = _notebook_sources()
 
     assert "write_pipeline_lineage(" in code
-    assert "complete_pipeline_run(" in code
+    assert "write_pipeline_run_summary(" in code
     assert '"sources": ["orders", "customers"]' not in code
     assert '"targets": ["orders_enriched", "orders_summary"]' not in code
     assert "source_profile_results" in code
@@ -231,6 +230,7 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert "target_enforcement_results" in code
     assert "source_guardrail_results=source_enforcement_results" in code
     assert "target_guardrail_results=target_enforcement_results" in code
+    assert "completed_at=_current_audit_timestamp()" in code
     assert "runtime summary" in markdown.lower()
 
 
@@ -261,28 +261,37 @@ def test_default_target_config_has_matching_write_settings():
         assert "write_mode" in write_settings_block
 
 
-def test_guided_guardrail_wrappers_hide_runtime_plumbing():
-    """Verify guided guardrail calls do not expose repeated runtime keywords."""
+def test_run_table_guardrails_calls_match_keyword_only_signature():
+    """Verify run_table_guardrails calls use supported keyword-only arguments."""
     _markdown, _code, cells = _notebook_sources()
-    wrapper_names = {
-        "profile_source_tables",
-        "profile_target_tables",
-        "enforce_source_guardrails",
-        "enforce_target_guardrails",
-    }
     calls = []
     for cell in cells:
         tree = ast.parse("\n".join(line for line in cell.splitlines() if not line.lstrip().startswith("%")))
         calls.extend(
             node
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and getattr(node.func, "id", "") in wrapper_names
+            if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "run_table_guardrails"
         )
 
     assert len(calls) == 4
+    unsupported = {"metadata_schema", "table_role"}
     for call in calls:
         assert len(call.args) == 1
-        assert not call.keywords
+        keyword_names = {keyword.arg for keyword in call.keywords}
+        assert {"run_id", "spark_session"} <= keyword_names
+        assert "config" not in keyword_names
+        assert "env" not in keyword_names
+        assert unsupported.isdisjoint(keyword_names)
+
+    stop_values = [
+        keyword.value
+        for call in calls
+        for keyword in call.keywords
+        if keyword.arg == "stop_on_failure"
+    ]
+    assert len(stop_values) == 2
+    assert all(isinstance(value, ast.Constant) and value.value is True for value in stop_values)
+
 
 def test_template_examples_use_default_context_not_framework_plumbing():
     """Verify common template examples do not expose repeated framework plumbing."""
@@ -301,8 +310,8 @@ def test_template_examples_use_default_context_not_framework_plumbing():
     load_block = code[code.index("df_orders = read_data(") : code.index("SOURCE_TABLES = [")]
 
     assert all(item not in code for item in forbidden)
-    assert "source_table =" not in bootstrap_block
-    assert "customer_table =" not in bootstrap_block
+    assert "source_table" not in bootstrap_block
+    assert "customer_table" not in bootstrap_block
     assert "source_table" in read_config_block
     assert "customer_table" in read_config_block
     assert "target_table = " not in code

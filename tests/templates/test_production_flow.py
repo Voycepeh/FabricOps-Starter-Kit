@@ -32,14 +32,11 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     governance = _code("03_governance.ipynb")
 
     for expected in [
-        "profile_source_tables",
-        "profile_target_tables",
-        "enforce_source_guardrails",
-        "enforce_target_guardrails",
+        "run_table_guardrails",
         "prepare_pipeline_table_configs",
         "write_data",
         "write_pipeline_lineage",
-        "complete_pipeline_run",
+        "write_pipeline_run_summary",
         "runtime_summary_result",
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",
@@ -58,12 +55,12 @@ def test_production_template_enforces_guardrails_before_full_dataset_write():
     """Verify production template enforces guardrails before full dataset write."""
     production = _code("02_pipeline.ipynb")
 
-    source_profile = production.index("source_profile_results = profile_source_tables")
+    source_profile = production.index("source_profile_results = run_table_guardrails")
     transformation = production.index("df_orders_enriched = (", source_profile)
-    target_profile = production.index("target_profile_results = profile_target_tables", transformation)
+    target_profile = production.index("target_profile_results = run_table_guardrails", transformation)
     widget_curation = production.index("selected_guardrail_target = widget_select_guardrail_target", target_profile)
-    source_enforcement = production.index("source_enforcement_results = enforce_source_guardrails", widget_curation)
-    target_enforcement = production.index("target_enforcement_results = enforce_target_guardrails", source_enforcement)
+    source_enforcement = production.index("source_enforcement_results = run_table_guardrails", widget_curation)
+    target_enforcement = production.index("target_enforcement_results = run_table_guardrails", source_enforcement)
     write_settings = production.index("TARGET_WRITE_SETTINGS = {", target_enforcement)
     target_write = production.index("target_write_status = {}", write_settings)
 
@@ -82,8 +79,7 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
 
     assert "def run_table_guardrails(" not in production
     assert "def _table_key(" not in production
-    assert "profile_source_tables," in production
-    assert "enforce_source_guardrails," in production
+    assert "run_table_guardrails," in production
     assert "prepare_pipeline_table_configs," in production
     assert "read_data," in production
     assert "read_lakehouse_table," not in production
@@ -216,11 +212,11 @@ def test_pipeline_demo_example_notebook_exists_and_generates_pipeline_scenarios(
     for orchestration_concern in [
         "SOURCE_TABLES",
         "TARGET_TABLES",
-        "profile_source_tables",
+        "run_table_guardrails",
         "prepare_pipeline_table_configs",
         "write_warehouse_table",
         "write_pipeline_lineage",
-        "complete_pipeline_run",
+        "write_pipeline_run_summary",
         "PASS: FabricOps pipeline demo completed.",
         "def run_table_guardrails(",
         "prepare_source_table_configs",

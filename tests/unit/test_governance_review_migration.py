@@ -36,15 +36,7 @@ EXPECTED_V1_CALLABLES = [
         "write_data",
         "profile_dataframe",
         "enforce_dq_rules",
-        "PipelineRunContext",
-        "start_pipeline_run",
-        "start_pipeline_run_with_agreement",
-        "get_active_pipeline_context",
-        "profile_source_tables",
-        "profile_target_tables",
-        "enforce_source_guardrails",
-        "enforce_target_guardrails",
-        "complete_pipeline_run",
+        "get_latest_metadata_catalogue",
         "display_guardrail_results",
         "prepare_pipeline_table_configs",
         "run_table_guardrails",
@@ -389,3 +381,43 @@ def test_evaluate_governance_readiness_ignores_pipeline_passed_dq_status(monkeyp
     assert result["warnings"] == []
     assert writes == []
     assert result["review"]["outcome"] == "approved"
+
+
+def test_get_latest_metadata_catalogue_returns_friendly_not_found(monkeypatch):
+    """Verify exploratory catalogue lookup is read-only and tolerant of missing rows."""
+    monkeypatch.setattr(governance, "resolve_fabric_context", lambda context=None: (object(), "dev", {"config": object(), "env": "dev"}))
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: [])
+
+    result = governance.get_latest_metadata_catalogue(
+        table_name="orders",
+        agreement={"agreement_id": "agreement-1", "contract_version": "1"},
+        spark_session=None,
+    )
+
+    assert result == [
+        {
+            "status": "not_found",
+            "table_name": "orders",
+            "message": "No metadata catalogue rows found for orders. Run 02_pipeline profiling to create governed catalogue evidence.",
+        }
+    ]
+
+
+def test_get_latest_metadata_catalogue_filters_latest_agreement_rows(monkeypatch):
+    """Verify exploratory catalogue lookup returns latest matching catalogue rows."""
+    rows = [
+        {"table_name": "orders", "column_name": "old", "profiled_at": "2026-01-01", "agreement_id": "agreement-1", "contract_version": "1"},
+        {"table_name": "orders", "column_name": "latest_a", "profiled_at": "2026-01-02", "agreement_id": "agreement-1", "contract_version": "1"},
+        {"table_name": "orders", "column_name": "latest_b", "profiled_at": "2026-01-02", "agreement_id": "agreement-1", "contract_version": "1"},
+        {"table_name": "orders", "column_name": "other_agreement", "profiled_at": "2026-01-03", "agreement_id": "agreement-2", "contract_version": "1"},
+    ]
+    monkeypatch.setattr(governance, "resolve_fabric_context", lambda context=None: (object(), "dev", {"config": object(), "env": "dev"}))
+    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: rows)
+
+    result = governance.get_latest_metadata_catalogue(
+        table_name="orders",
+        agreement={"agreement_id": "agreement-1", "contract_version": "1"},
+        spark_session=None,
+    )
+
+    assert [row["column_name"] for row in result] == ["latest_a", "latest_b"]

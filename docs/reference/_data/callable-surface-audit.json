@@ -1,17 +1,5 @@
 [
   {
-    "function": "complete_pipeline_run",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "02_pipeline"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
     "function": "display_guardrail_results",
     "in_root_exports": true,
     "directly_called_in_core_templates": [
@@ -72,64 +60,29 @@
     "decision": "convert_to_internal"
   },
   {
-    "function": "enforce_source_guardrails",
+    "function": "get_latest_metadata_catalogue",
     "in_root_exports": true,
     "directly_called_in_core_templates": [
-      "02_pipeline"
+      "99_explore"
     ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
     "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
     "decision": "template_called_public"
-  },
-  {
-    "function": "enforce_target_guardrails",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "02_pipeline"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
-    "function": "get_active_pipeline_context",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "complete_pipeline_run"
-    ],
-    "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
   },
   {
     "function": "get_selected_agreement",
     "in_root_exports": true,
-    "directly_called_in_core_templates": [],
+    "directly_called_in_core_templates": [
+      "02_pipeline",
+      "99_explore"
+    ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run_with_agreement"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
-  },
-  {
-    "function": "PipelineRunContext",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run"
-    ],
-    "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
+    "decision": "template_called_public"
   },
   {
     "function": "prepare_pipeline_table_configs",
@@ -154,30 +107,6 @@
     "called_only_internally_by_public_helper": [
       "run_table_guardrails"
     ],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
-    "function": "profile_source_tables",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "02_pipeline"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
-    "function": "profile_target_tables",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "02_pipeline"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
     "decision": "template_called_public"
   },
@@ -255,12 +184,14 @@
   {
     "function": "run_table_guardrails",
     "in_root_exports": true,
-    "directly_called_in_core_templates": [],
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
     "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
+    "decision": "template_called_public"
   },
   {
     "function": "setup_metadata_tables",
@@ -279,30 +210,6 @@
     "in_root_exports": true,
     "directly_called_in_core_templates": [
       "00_env_config"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
-    "function": "start_pipeline_run",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run_with_agreement"
-    ],
-    "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
-  },
-  {
-    "function": "start_pipeline_run_with_agreement",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "02_pipeline"
     ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
@@ -438,14 +345,15 @@
   {
     "function": "widget_select_agreement",
     "in_root_exports": true,
-    "directly_called_in_core_templates": [],
+    "directly_called_in_core_templates": [
+      "02_pipeline",
+      "99_explore"
+    ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run_with_agreement"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
+    "decision": "template_called_public"
   },
   {
     "function": "widget_select_guardrail_target",
@@ -512,14 +420,14 @@
   {
     "function": "write_pipeline_run_summary",
     "in_root_exports": true,
-    "directly_called_in_core_templates": [],
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "complete_pipeline_run"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
+    "decision": "template_called_public"
   },
   {
     "function": "write_warehouse_table",

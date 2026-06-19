@@ -41,16 +41,6 @@ Use the finder below to look up exported public functions from active v1 modules
 ## Functions
 
 <div class="reference-catalogue-list">
-<article id="pipeline-complete_pipeline_run" class="reference-catalogue-item" data-callable-row="true" data-callable-name="complete_pipeline_run" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Write the guided pipeline run summary from active context and results.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/complete_pipeline_run/"><code>complete_pipeline_run</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Write the guided pipeline run summary from active context and results.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_pipeline_status_from_results</code></li><li><code>get_active_pipeline_context</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
-
-  </div>
-</article>
 <article id="pipeline-display_guardrail_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="display_guardrail_results" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Return summary, detailed, or debug guardrail display output for Fabric notebooks.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return summary, detailed, or debug guardrail display output for Fabric notebooks.</p>
@@ -61,23 +51,23 @@ Use the finder below to look up exported public functions from active v1 modules
 
   </div>
 </article>
-<article id="pipeline-enforce_source_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_source_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Enforce blocking source guardrails using the active pipeline context.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/enforce_source_guardrails/"><code>enforce_source_guardrails</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Enforce blocking source guardrails using the active pipeline context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+<article id="governance_review-get_latest_metadata_catalogue" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_latest_metadata_catalogue" data-callable-module="governance_review" data-callable-starter-path="99_explore" data-function-type="template-called" data-callable-purpose="Fetch the latest metadata catalogue rows for a table without writing metadata.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Fetch the latest metadata catalogue rows for a table without writing metadata.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/governance_review/" title="Open governance_review module page" aria-label="Open governance_review module page">governance_review</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">99_explore</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 99_explore</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_run_active_table_guardrails</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>read_lakehouse_table</code></li><li><code>_catalogue_lookup_value</code></li><li><code>_coerce_rows</code></li></ul></details>
 
   </div>
 </article>
-<article id="pipeline-enforce_target_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_target_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Enforce blocking target guardrails using the active pipeline context.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/enforce_target_guardrails/"><code>enforce_target_guardrails</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Enforce blocking target guardrails using the active pipeline context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+<article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="template-called" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Return the agreement selected by widget_select_agreement.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_run_active_table_guardrails</code></li></ul></details>
+
 
   </div>
 </article>
@@ -101,26 +91,6 @@ Use the finder below to look up exported public functions from active v1 modules
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 3</span></summary><ul><li><code>_prepare_dq_profile_input_rows</code></li><li><code>enforce_profile_behavior</code></li><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
-<article id="pipeline-profile_source_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_source_tables" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Profile source tables using the active guided pipeline context.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_source_tables/"><code>profile_source_tables</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Profile source tables using the active guided pipeline context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_run_active_table_guardrails</code></li></ul></details>
-
-  </div>
-</article>
-<article id="pipeline-profile_target_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_target_tables" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Profile target tables using the active guided pipeline context.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_target_tables/"><code>profile_target_tables</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Profile target tables using the active guided pipeline context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 1</span></summary><ul><li><code>_run_active_table_guardrails</code></li></ul></details>
-
-  </div>
-</article>
 <article id="fabric_input_output-read_data" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_data" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="template-called" data-callable-purpose="Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook-facing IO function.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_data/"><code>read_data</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook-facing IO function.</p>
@@ -128,6 +98,16 @@ Use the finder below to look up exported public functions from active v1 modules
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>read_lakehouse_csv</code></li><li><code>read_lakehouse_excel</code></li><li><code>read_lakehouse_parquet</code></li><li><code>read_lakehouse_table</code></li><li><code>read_warehouse_table</code></li></ul></details>
+
+  </div>
+</article>
+<article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 17</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>profile_dataframe</code></li><li><code>enforce_dq_rules</code></li><li><code>enforce_freshness</code></li><li><code>enforce_freshness_rule</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>_build_metadata_table_key</code></li><li><code>_write_guardrail_result_row</code></li><li><code>_build_guardrail_blocking_message_from_bundle</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
 
   </div>
 </article>
@@ -148,16 +128,6 @@ Use the finder below to look up exported public functions from active v1 modules
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>NotebookSetupContext</code></li><li><code>_get_store</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_validate_framework_config</code></li></ul></details>
-
-  </div>
-</article>
-<article id="pipeline-start_pipeline_run_with_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="start_pipeline_run_with_agreement" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Start a guided pipeline run and resolve the active agreement selection.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/start_pipeline_run_with_agreement/"><code>start_pipeline_run_with_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Start a guided pipeline run and resolve the active agreement selection.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>get_selected_agreement</code></li><li><code>widget_select_agreement</code></li><li><code>start_pipeline_run</code></li></ul></details>
 
   </div>
 </article>
@@ -251,6 +221,16 @@ Use the finder below to look up exported public functions from active v1 modules
 
   </div>
 </article>
+<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="template-called" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
+
+  </div>
+</article>
 <article id="governance_review-widget_select_guardrail_target" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_guardrail_target" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="template-called" data-callable-purpose="Render an interactive target selector for guardrail authoring and governance review.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render an interactive target selector for guardrail authoring and governance review.</p>
@@ -281,6 +261,16 @@ Use the finder below to look up exported public functions from active v1 modules
 
   </div>
 </article>
+<article id="pipeline-write_pipeline_run_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_run_summary" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-function-type="template-called" data-callable-purpose="Write one pipeline runtime summary row to metadata.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Write one pipeline runtime summary row to metadata.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_definition_name</code></li><li><code>_now_iso</code></li><li><code>_summary_status</code></li></ul></details>
+
+  </div>
+</article>
 <article id="governance_review-enforce_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="enforce_dq_rules" data-callable-module="governance_review" data-callable-starter-path="example_dq_rule_smoke_test" data-function-type="example-only" data-callable-purpose="Enforce approved active DQ rules as a target-write guardrail without filtering rows.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Enforce approved active DQ rules as a target-write guardrail without filtering rows.</p>
@@ -291,66 +281,6 @@ Use the finder below to look up exported public functions from active v1 modules
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
-<article id="pipeline-get_active_pipeline_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_active_pipeline_context" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Return the active guided pipeline context.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_active_pipeline_context/"><code>get_active_pipeline_context</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the active guided pipeline context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 2</span></summary><ul><li><code>_run_active_table_guardrails</code></li><li><code>complete_pipeline_run</code></li></ul></details>
-  </div>
-</article>
-<article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the agreement selected by widget_select_agreement.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run_with_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 17</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>profile_dataframe</code></li><li><code>enforce_dq_rules</code></li><li><code>enforce_freshness</code></li><li><code>enforce_freshness_rule</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>_build_metadata_table_key</code></li><li><code>_write_guardrail_result_row</code></li><li><code>_build_guardrail_blocking_message_from_bundle</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>_run_active_table_guardrails</code></li></ul></details>
-  </div>
-</article>
-<article id="pipeline-start_pipeline_run" class="reference-catalogue-item" data-callable-row="true" data-callable-name="start_pipeline_run" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Start a guided pipeline run and store active runtime context.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Start a guided pipeline run and store active runtime context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>PipelineRunContext</code></li><li><code>_notebook_global</code></li><li><code>_now_iso</code></li><li><code>_runtime_metadata_value</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run_with_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run_with_agreement</code></li></ul></details>
-  </div>
-</article>
-<article id="pipeline-write_pipeline_run_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_run_summary" data-callable-module="pipeline" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Write one pipeline runtime summary row to metadata.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Write one pipeline runtime summary row to metadata.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_definition_name</code></li><li><code>_now_iso</code></li><li><code>_summary_status</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>complete_pipeline_run</code></li></ul></details>
-  </div>
-</article>
 </div>
 
 ## Example-only helpers
@@ -358,15 +288,4 @@ Use the finder below to look up exported public functions from active v1 modules
 These public helpers are directly called only by example notebooks and are not included in the core template-called count.
 
 - [`enforce_dq_rules`](../api/reference/enforce_dq_rules/)
-
-## Advanced public helpers
-
-These exported helpers remain public and documented, but they are not directly called by core starter template code cells and are not included in the core template-called count.
-
-- [`get_active_pipeline_context`](../api/reference/get_active_pipeline_context/)
-- [`get_selected_agreement`](../api/reference/get_selected_agreement/)
-- [`run_table_guardrails`](../api/reference/run_table_guardrails/)
-- [`start_pipeline_run`](../api/reference/start_pipeline_run/)
-- [`widget_select_agreement`](../api/reference/widget_select_agreement/)
-- [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/)
 
