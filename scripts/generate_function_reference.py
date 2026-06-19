@@ -40,6 +40,20 @@ DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
 CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
 
+# Public module-level building blocks that users may call intentionally when they
+# customize or decouple from the guided workflow. These are not root exports, but
+# they should remain discoverable as Composable functions rather than hidden as
+# maintainer-only Utility functions.
+COMPOSABLE_SUPPORT_FUNCTIONS = {
+    "read_lakehouse_csv",
+    "read_lakehouse_excel",
+    "read_lakehouse_parquet",
+    "read_lakehouse_table",
+    "read_warehouse_table",
+    "write_lakehouse_table",
+    "write_warehouse_table",
+}
+
 
 def markdown_anchor(value: str) -> str:
     """Return a Material for MkDocs-compatible heading anchor."""
@@ -2704,17 +2718,20 @@ def main() -> None:
             return "internal-private", "Internal/private"
         if name in template_called_function_names:
             return "workflow", "Workflow"
-        if name in function_symbol_map:
+        if name in function_symbol_map or name in COMPOSABLE_SUPPORT_FUNCTIONS:
             return "composable", "Composable"
         return "utility", "Utility"
 
-    function_category_by_name = {name: _catalogue_classification(name)[0] for name in function_symbol_map}
+    function_category_by_name = {
+        name: _catalogue_classification(name)[0]
+        for name in set(function_symbol_map) | COMPOSABLE_SUPPORT_FUNCTIONS
+    }
 
     catalogue_nodes = sorted(
         [
             n
             for n in node_by_qn.values()
-            if n["exported"]
+            if (n["exported"] or n["callable_name"] in COMPOSABLE_SUPPORT_FUNCTIONS)
             and n["callable_name"] in module_data[n["module_name"]]["functions"]
         ],
         key=lambda n: (
@@ -2734,6 +2751,17 @@ def main() -> None:
             usage_source = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
             purpose = symbol.purpose or symbol.summary or "—"
             display_module = symbol.public_module
+        elif name in COMPOSABLE_SUPPORT_FUNCTIONS:
+            display_module = canonical_public_module(module_name)
+            symbol_link = f"../api/modules/{_esc(display_module)}/"
+            starter_path = "—"
+            usage_source = "Manual/module API"
+            purpose = (
+                docs_metadata.get(name, {}).get("purpose")
+                or docs_metadata.get(name, {}).get("summary_override")
+                or module_data[module_name]["functions"].get(name)
+                or "Composable module-level building block."
+            )
         else:
             symbol_link = f"internal/{_esc(module_name)}_{_esc(name)}/"
             starter_path = "—"
@@ -2771,7 +2799,11 @@ def main() -> None:
                     "</p>"
                 ),
                 (
-                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(usage_source)}</p>'
+                    (
+                        f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(usage_source)}</p>'
+                        if starter_path != "—"
+                        else f'  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> {_esc(usage_source)}</p>'
+                    )
                     if usage_source != "—"
                     else ""
                 ),
@@ -2795,12 +2827,16 @@ def main() -> None:
             ]
         )
     ref.extend(['<div class="reference-catalogue-list">', *all_items, "</div>"])
-    composable_names = sorted(set(function_symbol_map) - template_called_function_names, key=str.lower)
+    composable_names = sorted((set(function_symbol_map) - template_called_function_names) | COMPOSABLE_SUPPORT_FUNCTIONS, key=str.lower)
     if composable_names:
-        ref.extend(["", "## Composable functions", "", "These exported public functions are standalone building blocks for customization or decoupled notebook authoring. They are not directly called by core starter template code cells and are not included in the Workflow count.", ""])
+        ref.extend(["", "## Composable functions", "", "These public or module-level functions are standalone building blocks for customization or decoupled notebook authoring. They are not directly called by core starter template code cells and are not included in the Workflow count.", ""])
         for name in composable_names:
             usage_note = " (example usage source)" if name in example_only_function_names else ""
-            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))}){usage_note}")
+            if name in COMPOSABLE_SUPPORT_FUNCTIONS:
+                module_name = canonical_public_module(str(docs_metadata.get(name, {}).get("module", "fabric_input_output")))
+                ref.append(f"- [`{name}`](../api/modules/{_esc(module_name)}/) (module-level composable)")
+            else:
+                ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))}){usage_note}")
 
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -3184,7 +3220,7 @@ def main() -> None:
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
         record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
-        manifest_category = function_category_by_name.get(short_name, "internal-private" if short_name.startswith("_") else "utility") if node["exported"] else ("internal-private" if short_name.startswith("_") else "utility")
+        manifest_category = function_category_by_name.get(short_name, "internal-private" if short_name.startswith("_") else "utility")
         function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "function_category": manifest_category, "usage_sources": record_used_in_templates, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,

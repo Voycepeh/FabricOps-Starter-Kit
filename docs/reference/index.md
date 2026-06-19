@@ -253,6 +253,56 @@ Use the finder below to look up Workflow and Composable functions from active v1
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run</code></li></ul></details>
   </div>
 </article>
+<article id="fabric_input_output-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Read a CSV file from a configured Fabric lakehouse Files path.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>read_lakehouse_csv</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read a CSV file from a configured Fabric lakehouse Files path.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">Manual/module API</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> Manual/module API</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>read_data</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Read an Excel file from a configured Fabric lakehouse Files path.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>read_lakehouse_excel</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read an Excel file from a configured Fabric lakehouse Files path.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">Manual/module API</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> Manual/module API</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>read_data</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Read a Parquet path from a configured Fabric lakehouse Files path.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>read_lakehouse_parquet</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read a Parquet path from a configured Fabric lakehouse Files path.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">Manual/module API</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> Manual/module API</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_convert_single_parquet_ns_to_us</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>read_data</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-read_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_table" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Read a Delta table from a Fabric lakehouse.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>read_lakehouse_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read a Delta table from a Fabric lakehouse.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">Manual/module API</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> Manual/module API</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 5</span></summary><ul><li><code>_get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_get_spark</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 12</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_validate_metadata_table_registration</code></li><li><code>_list_all_data_agreement_rows</code></li><li><code>_list_data_stewards</code></li><li><code>read_data</code></li><li><code>_read_guardrail_rule_metadata</code></li><li><code>_read_metadata_rows</code></li><li><code>_read_metadata_table_or_empty</code></li><li><code>get_latest_metadata_catalogue</code></li><li><code>load_catalogue_profile_rows</code></li><li><code>enforce_profile_behavior</code></li><li><code>_load_notebook_registry</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>read_warehouse_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read a table from a configured Fabric warehouse target.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">Manual/module API</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> Manual/module API</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 3</span></summary><ul><li><code>_get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_get_spark</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>read_data</code></li></ul></details>
+  </div>
+</article>
 <article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-function-type="composable" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
@@ -263,12 +313,39 @@ Use the finder below to look up Workflow and Composable functions from active v1
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run</code></li></ul></details>
   </div>
 </article>
+<article id="fabric_input_output-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Write a Spark DataFrame to a Fabric lakehouse Delta table.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>write_lakehouse_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Write a Spark DataFrame to a Fabric lakehouse Delta table.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">Manual/module API</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> Manual/module API</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>_get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 11</span></summary><ul><li><code>_setup_metadata_table_registry</code></li><li><code>_write_row</code></li><li><code>write_data</code></li><li><code>_write_rule_records</code></li><li><code>_write_table_metadata_enrichment_records</code></li><li><code>record_table_governance</code></li><li><code>_register_current_notebook</code></li><li><code>_write_guardrail_result_row</code></li><li><code>write_catalogue_evidence</code></li><li><code>write_pipeline_lineage</code></li><li><code>write_pipeline_run_summary</code></li></ul></details>
+  </div>
+</article>
+<article id="fabric_input_output-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>write_warehouse_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">Manual/module API</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> Manual/module API</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 2</span></summary><ul><li><code>_get_store</code></li><li><code>resolve_fabric_context</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>write_data</code></li></ul></details>
+  </div>
+</article>
 </div>
 
 ## Composable functions
 
-These exported public functions are standalone building blocks for customization or decoupled notebook authoring. They are not directly called by core starter template code cells and are not included in the Workflow count.
+These public or module-level functions are standalone building blocks for customization or decoupled notebook authoring. They are not directly called by core starter template code cells and are not included in the Workflow count.
 
 - [`get_selected_agreement`](../api/reference/get_selected_agreement/)
+- [`read_lakehouse_csv`](../api/modules/fabric_input_output/) (module-level composable)
+- [`read_lakehouse_excel`](../api/modules/fabric_input_output/) (module-level composable)
+- [`read_lakehouse_parquet`](../api/modules/fabric_input_output/) (module-level composable)
+- [`read_lakehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
+- [`read_warehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
 - [`widget_select_agreement`](../api/reference/widget_select_agreement/)
+- [`write_lakehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
+- [`write_warehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
 

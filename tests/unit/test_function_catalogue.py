@@ -180,19 +180,29 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "write_warehouse_table" not in called
 
 
-def test_reference_catalogue_rows_include_all_exported_public_functions() -> None:
-    """Verify catalogue rows keep all exported functions while classifying template use."""
+def test_reference_catalogue_rows_include_public_api_and_module_composables() -> None:
+    """Verify catalogue rows keep root public functions and approved module composables."""
     exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+    module_composables = {
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+    }
 
     assert _core_template_called_public() <= _catalogue_row_names()
-    assert _catalogue_row_names() == exported_names
+    assert _catalogue_row_names() == exported_names | module_composables
 
 
-def test_every_counted_function_has_standalone_page() -> None:
-    """Verify every counted template-called function has a standalone page."""
+def test_root_exported_catalogue_functions_have_standalone_pages() -> None:
+    """Verify root-exported catalogue functions have standalone pages."""
     api_reference_dir = ROOT / "docs" / "api" / "reference"
+    exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
 
-    for name in sorted(_catalogue_row_names()):
+    for name in sorted(exported_names):
         assert (api_reference_dir / f"{name}.md").exists(), name
 
 
@@ -207,6 +217,32 @@ def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
     assert "write_data" in page_names
     assert "read_lakehouse_csv" not in page_names
     assert "write_warehouse_table" not in page_names
+
+
+
+def test_format_specific_io_helpers_are_composable_module_functions() -> None:
+    """Verify format-specific IO helpers stay discoverable as composable module functions."""
+    page = _reference_index()
+    function_manifest = __import__("json").loads(
+        (ROOT / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
+    )
+    manifest_by_name = {entry["name"]: entry for entry in function_manifest}
+
+    for name in (
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+    ):
+        assert f'data-callable-name="{name}"' in page
+        assert f'data-callable-name="{name}"' in page and 'data-function-type="composable"' in page
+        assert f'href="../api/modules/fabric_input_output/"' in page
+        assert manifest_by_name[name]["function_category"] == "composable"
+
+    assert '<strong>Usage source:</strong> Manual/module API' in page
 
 
 def test_functions_with_blank_starter_path_are_not_counted() -> None:

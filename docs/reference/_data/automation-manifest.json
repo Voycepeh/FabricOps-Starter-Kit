@@ -4382,7 +4382,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4426,7 +4426,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4470,7 +4470,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4515,7 +4515,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.config._validate_metadata_table_registration",
@@ -4585,7 +4585,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4678,7 +4678,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.data_agreement._write_row",
@@ -4744,7 +4744,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.fabric_input_output.write_data"
     ],

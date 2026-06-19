@@ -3097,7 +3097,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
@@ -3128,7 +3128,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
@@ -3159,7 +3159,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
@@ -3191,7 +3191,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
@@ -3234,7 +3234,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
@@ -3311,7 +3311,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
@@ -3352,7 +3352,7 @@
     "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
     "module": "fabric_input_output",
     "classification": "Internal",
-    "function_category": "utility",
+    "function_category": "composable",
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.fabric_input_output.write_data"
