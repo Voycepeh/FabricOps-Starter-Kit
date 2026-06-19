@@ -106,3 +106,45 @@
     padding-inline: clamp(0.8rem, 4vw, 1rem);
   }
 }
+
+/* Generated List of Metadata Tables overview. */
+.md-typeset .metadata-model-image {
+  margin: 1.5rem auto 2rem;
+  text-align: center;
+  width: min(100%, 62rem);
+}
+
+.md-typeset .metadata-model-image img {
+  display: inline-block;
+  height: auto;
+  max-width: 100%;
+  width: min(100%, 58rem);
+}
+
+.md-typeset table.metadata-tables-overview {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.md-typeset table.metadata-tables-overview col.metadata-tables-overview__name {
+  width: 34%;
+}
+
+.md-typeset table.metadata-tables-overview col.metadata-tables-overview__purpose {
+  width: 44%;
+}
+
+.md-typeset table.metadata-tables-overview col.metadata-tables-overview__step {
+  width: 22%;
+}
+
+.md-typeset table.metadata-tables-overview td,
+.md-typeset table.metadata-tables-overview th {
+  vertical-align: top;
+}
+
+.md-typeset table.metadata-tables-overview td:first-child code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
+from html import escape
 import json
 import os
 from pathlib import Path
@@ -1766,14 +1767,38 @@ def generate_metadata_table_reference() -> None:
         "",
         "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.",
         "",
-        "| Metadata table | Purpose | Primary template step |",
-        "| --- | --- | --- |",
+        '<figure class="metadata-model-image">',
+        '  <img src="../../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />',
+        "</figure>",
+        "",
+        '<table class="metadata-tables-overview">',
+        "  <colgroup>",
+        '    <col class="metadata-tables-overview__name" />',
+        '    <col class="metadata-tables-overview__purpose" />',
+        '    <col class="metadata-tables-overview__step" />',
+        "  </colgroup>",
+        "  <thead>",
+        "    <tr>",
+        "      <th>Metadata table</th>",
+        "      <th>Purpose</th>",
+        "      <th>Primary template step</th>",
+        "    </tr>",
+        "  </thead>",
+        "  <tbody>",
     ]
     for table_name in sorted(registry):
         rel = _METADATA_TABLE_RELATIONSHIPS.get(table_name, {})
         templates = str(rel.get("related_step") or ", ".join(rel.get("templates", [])) or "Not currently discoverable.")
         purpose = _METADATA_TABLE_PURPOSES.get(table_name, "Implemented metadata table prepared by `00_env_config`.")
-        index_lines.append(f"| [`{table_name}`]({_metadata_slug(table_name)}.md) | {purpose} | {templates} |")
+        index_lines.extend(
+            [
+                "    <tr>",
+                f'      <td><a href="{_metadata_slug(table_name)}.md"><code>{escape(table_name)}</code></a></td>',
+                f"      <td>{escape(purpose)}</td>",
+                f"      <td>{escape(templates)}</td>",
+                "    </tr>",
+            ]
+        )
 
         page = [
             f"# {table_name}",
@@ -1802,6 +1827,7 @@ def generate_metadata_table_reference() -> None:
             page.append("- Not currently discoverable.")
         (METADATA_REFERENCE_DIR / f"{_metadata_slug(table_name)}.md").write_text("\n".join(page) + "\n", encoding="utf-8")
 
+    index_lines.extend(["  </tbody>", "</table>"])
     (METADATA_REFERENCE_DIR / "index.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
 
 def main() -> None:
