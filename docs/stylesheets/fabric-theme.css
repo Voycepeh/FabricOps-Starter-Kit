@@ -75,6 +75,17 @@
 }
 
 
+/* Centered CTA block for single-button documentation calls to action. */
+.md-typeset .cta-center {
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.md-typeset .cta-center .md-button {
+  display: inline-block;
+}
+
 /* Homepage landing page components. */
 .md-typeset .fabricops-cta {
   display: flex;

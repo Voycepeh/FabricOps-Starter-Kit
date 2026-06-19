@@ -35,7 +35,11 @@ The role workflow keeps implementation and review responsibilities clear without
 4. Governance users, stewards, reviewers, or supporting engineers run `03_governance` to review evidence, rules, enrichment, approvals, rejections, replacements, deactivations, and lifecycle decisions.
 5. Dashboard and reference pages read shared metadata and source-generated docs so current state, history, and implementation details remain visible.
 
-[Open the Template Notebooks user guide](notebook-templates.md){ .md-button .md-button--primary }
+<div class="cta-center">
+  <a class="md-button md-button--primary" href="notebook-templates.md">
+    Open the Template Notebooks user guide
+  </a>
+</div>
 
 ## How metadata moves between notebooks
 
