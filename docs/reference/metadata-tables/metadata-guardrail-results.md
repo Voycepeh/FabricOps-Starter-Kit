@@ -5,7 +5,7 @@
 ## Workflow usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb
-- **Written by function or widget:** [`guardrail orchestration`](../../api/reference/run_table_guardrails.md)
+- **Written by function or widget:** [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
 - **Read by function or widget:** [`display_guardrail_results`](../../api/reference/display_guardrail_results.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
 - **Related template step:** 02_pipeline.ipynb
 
@@ -40,5 +40,5 @@
 ## Related function reference
 
 - [`display_guardrail_results`](../../api/reference/display_guardrail_results.md)
-- [`guardrail orchestration`](../../api/reference/run_table_guardrails.md)
+- [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
 - [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)

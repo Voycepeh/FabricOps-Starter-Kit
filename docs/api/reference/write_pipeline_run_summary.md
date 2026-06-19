@@ -138,7 +138,7 @@ Not documented yet
 - `fabricops_kit.pipeline._now_iso`
 - `fabricops_kit.pipeline._summary_status`
 
-## Implementation details
+## Maintainer/developer implementation details
 
 <details class="reference-implementation-details">
 <summary>Notes, side effects, and template usage</summary>
@@ -161,9 +161,11 @@ evidence never relies on a default attached lakehouse.
 
 </details>
 
-??? info "Call flow"
+??? info "Maintainer/developer call flow"
 
-    Unique internal helpers: 14. Repeated calls may appear in multiple branches.
+    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
+
+    Unique internal/private helpers: 14. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>write_pipeline_run_summary(...)</code></div>
@@ -286,6 +288,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.pipeline.write_pipeline_run_summary`
 - Short name: `write_pipeline_run_summary`
 - Module: `pipeline`
+- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
@@ -362,7 +365,7 @@ def write_pipeline_run_summary(
 ) -> dict[str, Any]:
 ```
 
-### Internal relationship graph
+### Maintainer/developer relationship graph
 
 ### Public related functions
 
@@ -373,7 +376,7 @@ def write_pipeline_run_summary(
 ### Internal implementation summary
 
 - Internal helper count: 14
-- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
+- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
 
 </details>
 

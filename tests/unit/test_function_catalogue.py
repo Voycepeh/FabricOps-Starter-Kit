@@ -18,21 +18,22 @@ def _finder_js() -> str:
     return CALLABLE_FINDER_JS.read_text(encoding="utf-8")
 
 
-def test_function_catalogue_uses_template_called_filter() -> None:
-    """Verify function catalogue uses template-called function filter."""
+def test_function_catalogue_uses_workflow_composable_filters() -> None:
+    """Verify function catalogue uses workflow and composable taxonomy filters."""
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to look up exported public functions from active v1 modules." in page
+    assert "Use the finder below to look up Workflow and Composable functions from active v1 modules." in page
     assert "Search functions" in page
     assert 'placeholder="Search functions"' in page
-    assert "Function type filters" in page
-    assert 'data-function-type-filter="template-called" checked' in page
-    assert 'data-function-type-filter="advanced-public" checked' in page
-    assert 'data-function-type-filter="example-only" checked' in page
+    assert "Function taxonomy filters" in page
+    assert 'data-function-type-filter="workflow" checked' in page
+    assert 'data-function-type-filter="composable" checked' in page
+    assert 'data-function-type-filter="utility"> Utility (maintainer)' in page
+    assert 'data-function-type-filter="example-only"' not in page
     assert 'data-function-type-filter="internal"> Internal' not in page
-    assert "Advanced public" in page
-    assert "For internal helper behavior, open the public function page and expand the Internal implementation summary." in page
+    assert "Composable" in page
+    assert "For private helper behavior, open a public function page and expand the maintainer/developer call flow." in page
 
 
 def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
@@ -53,9 +54,9 @@ def test_callable_is_default_and_internal_is_opt_in() -> None:
     """Verify callable is default and internal is opt in."""
     page = _reference_index()
 
-    assert re.search(r'data-function-type-filter="template-called"\s+checked', page)
-    assert re.search(r'data-function-type-filter="advanced-public"\s+checked', page)
-    assert re.search(r'data-function-type-filter="example-only"\s+checked', page)
+    assert re.search(r'data-function-type-filter="workflow"\s+checked', page)
+    assert re.search(r'data-function-type-filter="composable"\s+checked', page)
+    assert not re.search(r'data-function-type-filter="example-only"\s+checked', page)
     assert not re.search(r'data-function-type-filter="internal"\s+checked', page)
 
 
@@ -63,7 +64,7 @@ def test_internal_functions_are_not_indexed_for_normal_catalogue_search() -> Non
     """Verify internal functions are not indexed for normal catalogue search."""
     page = _reference_index()
 
-    assert 'data-function-type="template-called"' in page
+    assert 'data-function-type="workflow"' in page
     assert 'data-function-type="internal"' not in page
     assert 'class="reference-chip reference-chip-type reference-chip-internal">Internal</span>' not in page
     assert "reference/internal/" not in page
@@ -82,6 +83,7 @@ def test_finder_filters_by_function_type_and_searches_all_catalogue_fields() -> 
         "row.dataset.callableName",
         "row.dataset.callableModule",
         "row.dataset.callableStarterPath",
+        "row.dataset.callableUsageSource",
         "row.dataset.functionType",
         "row.dataset.callablePurpose",
     ):
@@ -109,7 +111,7 @@ def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:
     page = _reference_index()
 
     assert "“Used in” means direct starter notebook code-cell invocation" in page
-    assert "not import-only, markdown-only, generated metadata, or internal helper usage" in page
+    assert "not import-only, markdown-only, generated metadata, example-only usage, or internal/private helper usage" in page
 
 
 def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:

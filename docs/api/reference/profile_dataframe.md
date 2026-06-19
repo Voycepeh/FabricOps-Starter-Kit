@@ -96,8 +96,7 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 - `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
 - `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/">
-<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Calls
 
@@ -107,7 +106,7 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 - `fabricops_kit.data_profiling._get_profiled_columns`
 - `fabricops_kit.data_profiling._is_min_max_supported_type`
 
-## Implementation details
+## Maintainer/developer implementation details
 
 <details class="reference-implementation-details">
 <summary>Notes, side effects, and template usage</summary>
@@ -130,9 +129,11 @@ complete datasets to the driver.
 
 </details>
 
-??? info "Call flow"
+??? info "Maintainer/developer call flow"
 
-    Unique internal helpers: 9. Repeated calls may appear in multiple branches.
+    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
+
+    Unique internal/private helpers: 9. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>profile_dataframe(...)</code></div>
@@ -225,6 +226,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
 - Short name: `profile_dataframe`
 - Module: `data_profiling`
+- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
@@ -247,8 +249,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 - `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
 - `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/">
-<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 
@@ -281,7 +282,7 @@ def profile_dataframe(
 ):
 ```
 
-### Internal relationship graph
+### Maintainer/developer relationship graph
 
 ### Public related functions
 
@@ -291,7 +292,7 @@ def profile_dataframe(
 ### Internal implementation summary
 
 - Internal helper count: 9
-- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
+- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
 
 </details>
 

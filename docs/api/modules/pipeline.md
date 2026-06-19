@@ -90,8 +90,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
       <td><code>_add_audit_columns</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</td>
@@ -145,8 +144,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
 <span class="reference-chip"><code>_add_audit_columns</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_active_pipeline_context</code></span>, <span class="reference-chip"><code>_build_guardrail_blocking_message_from_bundle</code></span>, <span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_guardrail_can_continue</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>, <span class="reference-chip"><code>write_catalogue_evidence</code></span>
 </li>
@@ -184,8 +182,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
   <tbody>
     <tr>
       <td><code>_active_pipeline_context</code></td>
-      <td><a href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a>, <a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
     <tr>
       <td><code>_add_audit_columns</code></td>
@@ -197,13 +194,11 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_build_guardrail_blocking_message_from_bundle</code></td>
-      <td><a href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
       <td><code>_build_guardrail_evidence_definitions</code></td>
-      <td><a href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
       <td><code>_canonical_catalogue_profile_df</code></td>
@@ -223,8 +218,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_guardrail_can_continue</code></td>
-      <td><a href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
       <td><code>_guardrail_reason</code></td>
@@ -284,8 +278,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_table_key</code></td>
-      <td><a href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
       <td><code>_table_keys</code></td>
@@ -293,8 +286,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_table_name</code></td>
-      <td><a href="../reference/run_table_guardrails/">
-<code>run_table_guardrails</code></a></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
     </tr>
     <tr>
       <td><code>_yes_no</code></td>

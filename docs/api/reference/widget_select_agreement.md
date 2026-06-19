@@ -110,7 +110,7 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 - `fabricops_kit.metadata._current_notebook_active_registrations`
 - `fabricops_kit.metadata._register_current_notebook`
 
-## Implementation details
+## Maintainer/developer implementation details
 
 <details class="reference-implementation-details">
 <summary>Notes, side effects, and template usage</summary>
@@ -131,9 +131,11 @@ No additional callable notes are documented.
 
 </details>
 
-??? info "Call flow"
+??? info "Maintainer/developer call flow"
 
-    Unique internal helpers: 30. Repeated calls may appear in multiple branches.
+    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
+
+    Unique internal/private helpers: 30. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>widget_select_agreement(...)</code></div>
@@ -341,6 +343,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.data_agreement.widget_select_agreement`
 - Short name: `widget_select_agreement`
 - Module: `data_agreement`
+- Taxonomy category: Composable
 - Classification: Callable
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
@@ -398,7 +401,7 @@ def widget_select_agreement(
 ) -> Any:
 ```
 
-### Internal relationship graph
+### Maintainer/developer relationship graph
 
 ### Public related functions
 
@@ -408,7 +411,7 @@ def widget_select_agreement(
 ### Internal implementation summary
 
 - Internal helper count: 30
-- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
+- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
 
 </details>
 

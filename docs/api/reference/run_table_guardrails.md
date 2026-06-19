@@ -121,7 +121,7 @@ Not documented yet
 - `fabricops_kit.pipeline.build_guardrail_summary_rows`
 - `fabricops_kit.pipeline.write_catalogue_evidence`
 
-## Implementation details
+## Maintainer/developer implementation details
 
 <details class="reference-implementation-details">
 <summary>Notes, side effects, and template usage</summary>
@@ -147,9 +147,11 @@ are routed through the configured metadata target by the called helpers.
 
 </details>
 
-??? info "Call flow"
+??? info "Maintainer/developer call flow"
 
-    Unique internal helpers: 87. Repeated calls may appear in multiple branches.
+    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
+
+    Unique internal/private helpers: 87. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>run_table_guardrails(...)</code></div>
@@ -769,6 +771,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.pipeline.run_table_guardrails`
 - Short name: `run_table_guardrails`
 - Module: `pipeline`
+- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
@@ -837,7 +840,7 @@ def run_table_guardrails(
 ) -> dict[str, Any]:
 ```
 
-### Internal relationship graph
+### Maintainer/developer relationship graph
 
 ### Public related functions
 
@@ -847,7 +850,7 @@ def run_table_guardrails(
 ### Internal implementation summary
 
 - Internal helper count: 87
-- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
+- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
 
 </details>
 

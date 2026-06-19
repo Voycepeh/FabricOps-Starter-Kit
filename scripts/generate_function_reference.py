@@ -2650,17 +2650,19 @@ def main() -> None:
     ref = [
         "# Function Reference",
         "",
-        "Use this page as a function lookup after you understand the notebook flow. The catalogue shows every exported public callable page, with chips distinguishing template-called, example-only, and advanced public helpers; Implementation Modules show the active source modules that maintainers debug and extend.",
+        "Use this page as a function lookup after you understand the notebook flow. The normal catalogue emphasizes Workflow functions and Composable functions as the public API; maintainer/developer views keep implementation call flow, utility support, and refactor signals available without presenting every helper as a user-facing concept.",
         "",
         "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
-        "- Use the Function catalogue below to browse exported public functions without losing standalone reference pages for advanced helpers. Internal helper details are embedded inside callable pages instead of normal catalogue entries.",
+        "- Use the Function catalogue below to browse Workflow and Composable functions. Internal/private helpers are source-level implementation details shown only for maintainer source navigation, not public API.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
         "## How to use this reference",
         "",
-        "- **Callable helpers** are public v1 functions intended for notebook authors and human operators.",
-        "- **Internal helpers** are maintainer implementation details embedded inside the public callable pages that use them.",
-        "- **Implementation modules** show source ownership, module-level dependencies, and helper relationships for maintainers.",
+        "- **Workflow functions** are guided end-to-end notebook entry points that users normally call from starter templates.",
+        "- **Composable functions** are public standalone building blocks for notebook authors customizing or decoupling from the guided workflow.",
+        "- **Utility functions** are reusable framework support for contributors and maintainers; they are not highlighted as normal user-facing API.",
+        "- **Internal/private functions** are implementation details, usually underscore-prefixed, and are shown only in maintainer/source-navigation views such as call flow.",
+        "- **Implementation modules** show source ownership, module-level dependencies, and utility/internal relationships for maintainers.",
         "- **Function manifests** (`_data/manifest.json` and `_data/function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
         "- **Agent/automation metadata** (`_data/automation-manifest.json`) adds automation-oriented execution fields for planning, side-effect checks, and verification.",
         "- **Implementation contracts** on callable pages summarize expectations maintainers must satisfy before using or changing a function.",
@@ -2672,20 +2674,20 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up exported public functions from active v1 modules. Filter chips distinguish template-called, example-only, and advanced public helpers. For internal helper behavior, open the public function page and expand the Internal implementation summary. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, or internal helper usage.",
+            "Use the finder below to look up Workflow and Composable functions from active v1 modules. Developer/maintainer filters can reveal Utility support functions when present, but internal/private helpers stay out of the normal catalogue. For private helper behavior, open a public function page and expand the maintainer/developer call flow. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example-only usage, or internal/private helper usage.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
             '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
-            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, function type, starter path, or description.</p>',
+            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, taxonomy category, starter path, usage source, or description.</p>',
             '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">quarantine</span></p>',
-            '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing callable functions.</p>',
+            '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing Workflow and Composable functions.</p>',
             '  <fieldset class="callable-type-filters">',
-            '    <legend>Function type filters</legend>',
-            '    <label><input type="checkbox" data-function-type-filter="template-called" checked> Template-called</label>',
-            '    <label><input type="checkbox" data-function-type-filter="advanced-public" checked> Advanced public</label>',
-            '    <label><input type="checkbox" data-function-type-filter="example-only" checked> Example-only</label>',
-            '    <p class="callable-type-note"><strong>Template-called</strong>: directly used by starter notebook code cells. <strong>Advanced public</strong>: exported and documented, but not directly called by core templates.</p>',
+            '    <legend>Function taxonomy filters</legend>',
+            '    <label><input type="checkbox" data-function-type-filter="workflow" checked> Workflow</label>',
+            '    <label><input type="checkbox" data-function-type-filter="composable" checked> Composable</label>',
+            '    <label class="reference-maintainer-filter"><input type="checkbox" data-function-type-filter="utility"> Utility (maintainer)</label>',
+            '    <p class="callable-type-note"><strong>Workflow</strong>: guided end-to-end notebook entry points. <strong>Composable</strong>: public standalone building blocks for customization. <strong>Utility</strong>: developer/maintainer support, not normal notebook API. Example-only usage is tracked as source metadata instead of a function type.</p>',
             '  </fieldset>',
             '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
             "</div>",
@@ -2698,11 +2700,15 @@ def main() -> None:
     )
     all_items: list[str] = []
     def _catalogue_classification(name: str) -> tuple[str, str]:
+        if name.startswith("_"):
+            return "internal-private", "Internal/private"
         if name in template_called_function_names:
-            return "template-called", "Template-called"
-        if name in example_only_function_names:
-            return "example-only", "Example-only"
-        return "advanced-public", "Advanced public"
+            return "workflow", "Workflow"
+        if name in function_symbol_map:
+            return "composable", "Composable"
+        return "utility", "Utility"
+
+    function_category_by_name = {name: _catalogue_classification(name)[0] for name in function_symbol_map}
 
     catalogue_nodes = sorted(
         [
@@ -2712,7 +2718,7 @@ def main() -> None:
             and n["callable_name"] in module_data[n["module_name"]]["functions"]
         ],
         key=lambda n: (
-            0 if n["callable_name"] in template_called_function_names else 1 if n["callable_name"] in example_only_function_names else 2,
+            0 if _catalogue_classification(n["callable_name"])[0] == "workflow" else 1 if _catalogue_classification(n["callable_name"])[0] == "composable" else 2,
             n["callable_name"].lower(),
             n["module_name"],
         ),
@@ -2724,15 +2730,18 @@ def main() -> None:
         symbol = function_symbol_map.get(name)
         if node["exported"] and symbol:
             symbol_link = public_reference_link(name, docs_metadata, context="reference")
-            starter_path = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
+            starter_path = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
+            usage_source = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
             purpose = symbol.purpose or symbol.summary or "—"
             display_module = symbol.public_module
         else:
             symbol_link = f"internal/{_esc(module_name)}_{_esc(name)}/"
             starter_path = "—"
+            usage_source = "—"
             purpose = module_data[module_name]["functions"].get(name) or "Internal helper used by the package."
             display_module = canonical_public_module(module_name)
         starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
+        usage_source_attribute = f' data-callable-usage-source="{_esc(usage_source)}"' if usage_source != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
         raw_calls = dependency_meta.get("calls", [])
@@ -2747,7 +2756,8 @@ def main() -> None:
                     f'<article id="{_esc(module_name)}-{_esc(name)}" class="reference-catalogue-item" '
                     f'data-callable-row="true" data-callable-name="{_esc(name)}" '
                     f'data-callable-module="{_esc(display_module)}"'
-                    f'{starter_path_attribute} '
+                    f'{starter_path_attribute}'
+                    f'{usage_source_attribute} '
                     f'data-function-type="{_esc(function_type)}" '
                     f'data-callable-purpose="{_esc(purpose)}">'
                 ),
@@ -2757,12 +2767,12 @@ def main() -> None:
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_module_link(display_module)}'
                     f'<span class="reference-chip reference-chip-type reference-chip-{_esc(function_type)}">{_esc(classification_label)}</span>'
-                    f'<span class="reference-chip">{_esc(starter_path)}</span>'
+                    f'<span class="reference-chip">{_esc(usage_source)}</span>'
                     "</p>"
                 ),
                 (
-                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(starter_path)}</p>'
-                    if starter_path != "—"
+                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(usage_source)}</p>'
+                    if usage_source != "—"
                     else ""
                 ),
                 '  <div class="reference-catalogue-item-counts">',
@@ -2785,15 +2795,12 @@ def main() -> None:
             ]
         )
     ref.extend(['<div class="reference-catalogue-list">', *all_items, "</div>"])
-    if example_only_function_names:
-        ref.extend(["", "## Example-only helpers", "", "These public helpers are directly called only by example notebooks and are not included in the core template-called count.", ""])
-        for name in sorted(example_only_function_names, key=str.lower):
-            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))})")
-    advanced_names = sorted(set(function_symbol_map) - template_called_function_names - example_only_function_names, key=str.lower)
-    if advanced_names:
-        ref.extend(["", "## Advanced public helpers", "", "These exported helpers remain public and documented, but they are not directly called by core starter template code cells and are not included in the core template-called count.", ""])
-        for name in advanced_names:
-            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))})")
+    composable_names = sorted(set(function_symbol_map) - template_called_function_names, key=str.lower)
+    if composable_names:
+        ref.extend(["", "## Composable functions", "", "These exported public functions are standalone building blocks for customization or decoupled notebook authoring. They are not directly called by core starter template code cells and are not included in the Workflow count.", ""])
+        for name in composable_names:
+            usage_note = " (example usage source)" if name in example_only_function_names else ""
+            ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))}){usage_note}")
 
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -2896,11 +2903,15 @@ def main() -> None:
                 excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
             )
             refactor_signals_manifest[short_name] = refactor_signals
+            function_category = function_category_by_name.get(short_name, "internal-private" if short_name.startswith("_") else "utility")
+            function_category_label = _catalogue_classification(short_name)[1]
             call_flow_lines = [
-                '??? info "Call flow"',
+                '??? info "Maintainer/developer call flow"',
                 "",
                 *_indent_markdown([
-                    f"Unique internal helpers: {len(helper_qns)}. Repeated calls may appear in multiple branches.",
+                    "This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.",
+                    "",
+                    f"Unique internal/private helpers: {len(helper_qns)}. Repeated calls may appear in multiple branches.",
                     "",
                     *_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data),
                     "",
@@ -2975,6 +2986,7 @@ def main() -> None:
                 f"- Fully qualified function name: `{qn}`",
                 f"- Short name: `{short_name}`",
                 f"- Module: `{module_name}`",
+                f"- Taxonomy category: {function_category_label}",
                 "- Classification: Callable",
                 f"- Related module: `{rel_module}`",
                 f"- Source file path: `{source_path}`",
@@ -3002,7 +3014,7 @@ def main() -> None:
                 "",
                 f"- Internal helper count: {len(helper_qns)}",
                 (
-                    "- Grouped helper summary is rendered in the page-level Implementation details section; "
+                    "- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; "
                     "helper chips link to source."
                 ),
             ]
@@ -3029,7 +3041,7 @@ def main() -> None:
                 "",
                 *raw_source_metadata_lines,
                 "",
-                "### Internal relationship graph",
+                "### Maintainer/developer relationship graph",
                 "",
                 *internal_relationship_graph_lines,
             ]
@@ -3082,7 +3094,7 @@ def main() -> None:
                 "",
                 *(_fmt_links(deps) if deps else [PLACEHOLDER]),
                 "",
-                "## Implementation details",
+                "## Maintainer/developer implementation details",
                 "",
                 *notes_and_side_effects_lines,
                 "",
@@ -3172,13 +3184,15 @@ def main() -> None:
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
         record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
+        manifest_category = function_category_by_name.get(short_name, "internal-private" if short_name.startswith("_") else "utility") if node["exported"] else ("internal-private" if short_name.startswith("_") else "utility")
+        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "function_category": manifest_category, "usage_sources": record_used_in_templates, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,
             "module": module_name,
             "type": "callable" if node["exported"] else "internal",
             "role": node.get("role", "internal"),
+            "function_category": manifest_category,
             "inbound": used_by,
             "outbound": deps,
             "used_in_templates": record_used_in_templates,

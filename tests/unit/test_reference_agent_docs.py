@@ -184,7 +184,7 @@ def test_every_callable_page_has_machine_readable_reference_sections() -> None:
         assert "## Relationships" in text, page
         assert "### Used by" in text, page
         assert "### Calls" in text, page
-        assert "## Implementation details" in text, page
+        assert "## Maintainer/developer implementation details" in text, page
         assert "## Source link" not in text, page
         assert '??? example "Source code"' not in text, page
         assert '??? example "View helper source by area"' not in text, page
@@ -268,7 +268,7 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
             "## Relationships",
             "### Used by",
             "### Calls",
-            "## Implementation details",
+            "## Maintainer/developer implementation details",
             '<summary>Machine-readable metadata / metadata details',
             "## See also",
         ]
@@ -278,23 +278,24 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
             ordered_markers.insert(ordered_markers.index("## Relationships"), "### Common failure causes")
         positions = [text.index(marker) for marker in ordered_markers]
         assert positions == sorted(positions), page
-        assert '??? info "Call flow"' in text, page
+        assert '??? info "Maintainer/developer call flow"' in text, page
         assert "### Call flow" not in text, page
         assert "### Internal helpers used by this callable" not in text, page
         assert "Internal helpers used by this callable" not in text, page
         assert '??? info "Nested helper functions:' not in text, page
-        assert "Unique internal helpers:" in text, page
+        assert "Unique internal/private helpers:" in text, page
         assert "### Refactor signals" in text, page
+        assert "Internal/private helpers shown here are implementation details, not public API" in text, page
         assert "Large call graph shown to two levels." not in text, page
         assert "Tree is truncated to keep the page readable." not in text, page
         assert 'class="reference-call-tree"' in text, page
         assert 'class="reference-call-tree-more"' not in text, page
-        assert '```text' not in text.split('??? info "Call flow"', 1)[1].split("##", 1)[0], page
+        assert '```text' not in text.split('??? info "Maintainer/developer call flow"', 1)[1].split("##", 1)[0], page
         assert '??? info "Internal helpers used:' not in text, page
         source_card_pos = text.index('<div class="reference-source-card" markdown="1">')
         signature_pos = text.index("## Signature")
-        implementation_pos = text.index("## Implementation details")
-        call_flow_pos = text.index('??? info "Call flow"')
+        implementation_pos = text.index("## Maintainer/developer implementation details")
+        call_flow_pos = text.index('??? info "Maintainer/developer call flow"')
         assert source_card_pos < signature_pos < implementation_pos < call_flow_pos, page
         assert '??? example "View helper source by area"' not in text, page
         assert '??? example "Source code"' not in text, page
@@ -397,9 +398,9 @@ def test_callable_pages_include_one_top_source_card_and_github_source_link() -> 
 def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     """Verify display guardrail results renders one linked helper call tree."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
-    implementation_section = _section_text(text, "Implementation details")
+    implementation_section = _section_text(text, "Maintainer/developer implementation details")
 
-    assert text.count('??? info "Call flow"') == 1
+    assert text.count('??? info "Maintainer/developer call flow"') == 1
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
     assert "Internal helper count: 12" in text
@@ -431,10 +432,10 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split('\n<details class="reference-metadata-details">', 1)[0]
 
-    assert implementation_section.count('??? info "Call flow"') == 1
+    assert implementation_section.count('??? info "Maintainer/developer call flow"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' in implementation_section
-    assert "Unique internal helpers: 12. Repeated calls may appear in multiple branches." in implementation_section
+    assert "Unique internal/private helpers: 12. Repeated calls may appear in multiple branches." in implementation_section
     assert '<div class="reference-call-tree" role="tree">' in implementation_section
     assert "### Refactor signals" in implementation_section
     assert 'class="reference-call-tree-more"' not in implementation_section
@@ -549,7 +550,7 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
         text = canonical_page.read_text(encoding="utf-8")
         assert "## Relationships" in text, canonical_page
-        assert "## Implementation details" in text, canonical_page
+        assert "## Maintainer/developer implementation details" in text, canonical_page
 
     generated_pages = sorted(page.stem for page in API_REFERENCE_DIR.glob("*.md"))
     assert generated_pages == public_names
@@ -689,7 +690,7 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
     text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
     assert "## See also" in text
     assert "- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)" in text
-    assert text.index("## Implementation details") < text.index("## See also")
+    assert text.index("## Maintainer/developer implementation details") < text.index("## See also")
 
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:

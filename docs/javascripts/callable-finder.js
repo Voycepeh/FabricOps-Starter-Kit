@@ -45,7 +45,7 @@
     if (entry.name.startsWith(query)) return 80;
     if (entry.name.includes(query)) return 60;
     if (queryMatchesEntry(queryTokens, entry.nameTokens)) return 50;
-    if (entry.module.includes(query) || entry.functionType.includes(query) || entry.starterPath.includes(query)) return 40;
+    if (entry.module.includes(query) || entry.functionType.includes(query) || entry.starterPath.includes(query) || entry.usageSource.includes(query)) return 40;
     if (queryMatchesEntry(queryTokens, entry.tokens)) return 30;
     if (queryTokens.every((token) => fuzzyTokenMatch(token, entry.tokens))) return 10;
     return 0;
@@ -67,11 +67,13 @@
       module: normalize(row.dataset.callableModule),
       functionType: normalize(row.dataset.functionType),
       starterPath: normalize(row.dataset.callableStarterPath),
+      usageSource: normalize(row.dataset.callableUsageSource),
       purpose: normalize(row.dataset.callablePurpose),
       text: normalize([
         row.dataset.callableName,
         row.dataset.callableModule,
         row.dataset.callableStarterPath,
+        row.dataset.callableUsageSource,
         row.dataset.functionType,
         row.dataset.callablePurpose,
       ].join(" ")),

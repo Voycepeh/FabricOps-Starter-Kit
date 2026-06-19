@@ -97,7 +97,7 @@ Not documented yet
 - `fabricops_kit.config._run_config_smoke_tests`
 - `fabricops_kit.config._validate_framework_config`
 
-## Implementation details
+## Maintainer/developer implementation details
 
 <details class="reference-implementation-details">
 <summary>Notes, side effects, and template usage</summary>
@@ -119,9 +119,11 @@ not provision Fabric resources or persist metadata.
 
 </details>
 
-??? info "Call flow"
+??? info "Maintainer/developer call flow"
 
-    Unique internal helpers: 8. Repeated calls may appear in multiple branches.
+    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
+
+    Unique internal/private helpers: 8. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>setup_notebook(...)</code></div>
@@ -216,6 +218,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.config.setup_notebook`
 - Short name: `setup_notebook`
 - Module: `config`
+- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
@@ -264,7 +267,7 @@ def setup_notebook(
 ) -> NotebookSetupContext:
 ```
 
-### Internal relationship graph
+### Maintainer/developer relationship graph
 
 ### Public related functions
 
@@ -273,7 +276,7 @@ def setup_notebook(
 ### Internal implementation summary
 
 - Internal helper count: 8
-- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
+- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
 
 </details>
 

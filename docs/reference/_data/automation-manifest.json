@@ -5,6 +5,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
@@ -41,6 +42,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -73,6 +75,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config._validate_framework_config"
     ],
@@ -109,6 +112,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -141,6 +145,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -173,6 +178,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -205,6 +211,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config.setup_notebook"
     ],
@@ -241,6 +248,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config._normalize_path_config"
     ],
@@ -277,6 +285,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -309,6 +318,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -341,6 +351,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
@@ -380,6 +391,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
@@ -416,6 +428,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._metadata_table_columns"
     ],
@@ -452,6 +465,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry"
     ],
@@ -488,6 +502,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_lineage._build_lineage_records",
       "fabricops_kit.governance_review._dq_summary",
@@ -541,6 +556,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._validate_metadata_table_registration"
     ],
@@ -580,6 +596,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._validate_metadata_table_registration"
     ],
@@ -621,6 +638,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._audit_timestamp_expr",
       "fabricops_kit.config._current_audit_timestamp",
@@ -664,6 +682,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
@@ -700,6 +719,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables"
     ],
@@ -743,6 +763,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._detect_nested_metadata_delta_folders",
       "fabricops_kit.config._resolve_metadata_schema",
@@ -808,6 +829,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.config.setup_metadata_tables"
@@ -846,6 +868,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry"
     ],
@@ -885,6 +908,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables"
     ],
@@ -921,6 +945,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._get_store"
     ],
@@ -960,6 +985,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -992,6 +1018,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._validate_metadata_table_registration",
       "fabricops_kit.config.setup_metadata_tables"
@@ -1033,6 +1060,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config.setup_notebook"
     ],
@@ -1080,6 +1108,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables"
     ],
@@ -1129,6 +1158,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._get_metadata_table_schema_registry"
     ],
@@ -1165,6 +1195,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._get_audit_timezone",
       "fabricops_kit.config._validate_framework_config"
@@ -1203,6 +1234,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._get_active_metadata_tables",
       "fabricops_kit.config._get_metadata_table_schema_registry",
@@ -1254,6 +1286,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables"
     ],
@@ -1303,6 +1336,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._run_config_smoke_tests"
     ],
@@ -1339,6 +1373,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config.get_fabric_context",
       "fabricops_kit.config.resolve_fabric_context"
@@ -1377,6 +1412,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.get_default_fabric_context"
@@ -1413,6 +1449,7 @@
     "module": "config",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.data_agreement.widget_render_agreement_evidence",
       "fabricops_kit.data_agreement.widget_render_data_agreement",
@@ -1494,6 +1531,7 @@
     "module": "config",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_metadata_table_schema_registry",
@@ -1554,6 +1592,7 @@
     "module": "config",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.NotebookSetupContext",
@@ -1611,6 +1650,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_steward",
       "fabricops_kit.data_agreement._list_data_stewards"
@@ -1652,6 +1692,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -1691,6 +1732,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement"
     ],
@@ -1732,6 +1774,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._latest_agreement_versions",
       "fabricops_kit.data_agreement._latest_by_key",
@@ -1772,6 +1815,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -1813,6 +1857,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -1861,6 +1906,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -1920,6 +1966,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -1973,6 +2020,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -2011,6 +2059,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement"
     ],
@@ -2047,6 +2096,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_steward"
     ],
@@ -2083,6 +2133,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._prepare_evidence_file_references"
     ],
@@ -2119,6 +2170,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -2158,6 +2210,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_searchable_selector",
       "fabricops_kit.data_agreement.widget_select_agreement"
@@ -2196,6 +2249,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._list_data_agreements",
       "fabricops_kit.data_agreement.widget_select_agreement"
@@ -2239,6 +2293,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._list_data_stewards"
     ],
@@ -2278,6 +2333,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._list_data_agreements",
@@ -2327,6 +2383,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget",
       "fabricops_kit.data_agreement.widget_select_agreement"
@@ -2370,6 +2427,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config.setup_metadata_tables",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
@@ -2419,6 +2477,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._agreement_identity_text",
       "fabricops_kit.data_agreement._create_or_update_data_agreement"
@@ -2460,6 +2519,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._latest_agreement_versions",
@@ -2500,6 +2560,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward"
@@ -2538,6 +2599,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._save_agreement_evidence_records"
     ],
@@ -2577,6 +2639,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement.widget_render_agreement_evidence"
     ],
@@ -2624,6 +2687,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -2669,6 +2733,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement.widget_render_data_agreement",
       "fabricops_kit.data_agreement.widget_render_data_steward"
@@ -2738,6 +2803,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_maintenance_widget",
@@ -2783,6 +2849,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_custom_fields",
@@ -2827,6 +2894,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget"
     ],
@@ -2872,6 +2940,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
@@ -2912,6 +2981,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -2955,6 +3025,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._active_steward",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -2999,6 +3070,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._collect_custom_fields",
       "fabricops_kit.data_agreement._render_maintenance_widget"
@@ -3037,6 +3109,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget",
       "fabricops_kit.data_agreement._render_custom_fields",
@@ -3079,6 +3152,7 @@
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -3124,6 +3198,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.pipeline.start_pipeline_run"
     ],
@@ -3167,6 +3242,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -3219,6 +3295,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -3266,6 +3343,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -3313,6 +3391,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
+    "function_category": "composable",
     "inbound": [
       "fabricops_kit.pipeline.start_pipeline_run"
     ],
@@ -3366,6 +3445,7 @@
     "module": "data_lineage",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._current_audit_timestamp",
@@ -3404,6 +3484,7 @@
     "module": "data_lineage",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_lineage._build_lineage_records"
     ],
@@ -3440,6 +3521,7 @@
     "module": "data_profiling",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -3476,6 +3558,7 @@
     "module": "data_profiling",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
@@ -3519,6 +3602,7 @@
     "module": "data_profiling",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -3555,6 +3639,7 @@
     "module": "data_profiling",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
@@ -3591,6 +3676,7 @@
     "module": "data_profiling",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_profiling.profile_dataframe"
     ],
@@ -3627,6 +3713,7 @@
     "module": "data_profiling",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_profiling._build_distribution_summaries"
     ],
@@ -3663,6 +3750,7 @@
     "module": "data_profiling",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [
       "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
       "fabricops_kit.guardrails.enforce_profile_behavior",
@@ -3723,6 +3811,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -3755,6 +3844,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [],
     "used_in_templates": [],
@@ -3787,6 +3877,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
       "fabricops_kit.data_agreement._write_row",
@@ -3860,6 +3951,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
     ],
@@ -3896,6 +3988,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_csv",
       "fabricops_kit.fabric_input_output.read_lakehouse_excel",
@@ -3940,6 +4033,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_csv",
       "fabricops_kit.fabric_input_output.read_lakehouse_excel",
@@ -3980,6 +4074,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
       "fabricops_kit.fabric_input_output._qualified_table_name",
@@ -4020,6 +4115,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output._qualified_table_name",
       "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier",
@@ -4064,6 +4160,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier"
     ],
@@ -4105,6 +4202,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier",
       "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path"
@@ -4146,6 +4244,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output._normalize_table_name",
@@ -4186,6 +4285,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
       "fabricops_kit.fabric_input_output.write_lakehouse_table"
@@ -4229,6 +4329,7 @@
     "module": "fabric_input_output",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -4281,6 +4382,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4324,6 +4426,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4367,6 +4470,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4411,6 +4515,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.config._validate_metadata_table_registration",
@@ -4480,6 +4585,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4521,6 +4627,7 @@
     "module": "fabric_input_output",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -4571,6 +4678,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.data_agreement._write_row",
@@ -4636,6 +4744,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.write_data"
     ],
@@ -4677,6 +4786,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review.build_enrichment_rule_records"
@@ -4722,6 +4832,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review.build_enrichment_rule_records"
@@ -4769,6 +4880,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.apply_governance_enrichment_action",
       "fabricops_kit.governance_review.apply_governance_rule_action"
@@ -4807,6 +4919,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.guardrail_authoring_status"
     ],
@@ -4852,6 +4965,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._dq_records_from_selection",
       "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection"
@@ -4903,6 +5017,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.record_table_governance"
     ],
@@ -4956,6 +5071,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review._dq_rule_display_rows",
@@ -4998,6 +5114,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.get_latest_metadata_catalogue"
     ],
@@ -5034,6 +5151,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._catalogue_profile_target_model",
       "fabricops_kit.governance_review.load_catalogue_profile_rows"
@@ -5079,6 +5197,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._catalogue_physical_identity",
@@ -5119,6 +5238,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._schema"
     ],
@@ -5155,6 +5275,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._load_active_dq_rules",
       "fabricops_kit.governance_review._read_metadata_rows",
@@ -5201,6 +5322,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_enrich_table_metadata"
     ],
@@ -5237,6 +5359,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_dq_guardrail_checks"
     ],
@@ -5273,6 +5396,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._dq_failed_row_count",
       "fabricops_kit.governance_review._dq_tagged_dataframe",
@@ -5318,6 +5442,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
@@ -5359,6 +5484,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_author_dq_rules"
     ],
@@ -5398,6 +5524,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._canonical_dq_rule_type",
@@ -5436,6 +5563,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._build_dq_rule_records"
     ],
@@ -5472,6 +5600,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._dq_rule_display_rows"
     ],
@@ -5508,6 +5637,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
@@ -5549,6 +5679,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
@@ -5592,6 +5723,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_enrich_table_metadata"
     ],
@@ -5628,6 +5760,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.build_enrichment_rule_records"
     ],
@@ -5664,6 +5797,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.record_table_governance"
     ],
@@ -5721,6 +5855,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_select_guardrail_target"
     ],
@@ -5757,6 +5892,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._catalogue_physical_identity"
     ],
@@ -5796,6 +5932,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._get_active_metadata_tables",
       "fabricops_kit.config._get_metadata_table_schema_registry",
@@ -5841,6 +5978,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._authoring_lifecycle",
       "fabricops_kit.governance_review.guardrail_authoring_status"
@@ -5879,6 +6017,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._catalogue_profile_target_model",
       "fabricops_kit.governance_review.load_catalogue_profile_rows"
@@ -5920,6 +6059,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.governance_review._read_metadata_table_or_empty"
@@ -5958,6 +6098,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review.build_enrichment_rule_records"
@@ -5996,6 +6137,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._load_active_dq_rules"
     ],
@@ -6035,6 +6177,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._evaluate_governance_readiness"
     ],
@@ -6074,6 +6217,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_author_dq_rules",
       "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
@@ -6112,6 +6256,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._authoring_lifecycle"
     ],
@@ -6148,6 +6293,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
@@ -6197,6 +6343,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review._dq_tagged_dataframe",
@@ -6241,6 +6388,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._current_audit_timestamp",
@@ -6281,6 +6429,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._value"
@@ -6317,6 +6466,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
@@ -6360,6 +6510,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._evaluate_governance_readiness"
     ],
@@ -6403,6 +6554,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_select_guardrail_target"
     ],
@@ -6448,6 +6600,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.apply_governance_enrichment_action",
       "fabricops_kit.governance_review.apply_governance_rule_action"
@@ -6486,6 +6639,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_enrich_table_metadata"
     ],
@@ -6522,6 +6676,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_author_dq_rules",
       "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
@@ -6560,6 +6715,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -6613,6 +6769,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
@@ -6660,6 +6817,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._get_governance_metadata_schemas"
     ],
@@ -6701,6 +6859,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
     ],
@@ -6740,6 +6899,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_enrich_table_metadata"
     ],
@@ -6779,6 +6939,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._dq_failed_expression",
       "fabricops_kit.governance_review._dq_failed_row_count",
@@ -6829,6 +6990,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._get_governance_metadata_schemas",
       "fabricops_kit.governance_review._schema"
@@ -6867,6 +7029,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._evaluate_governance_readiness"
     ],
@@ -6903,6 +7066,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._evaluate_governance_readiness"
     ],
@@ -6939,6 +7103,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._dq_summary",
       "fabricops_kit.governance_review._run_active_dq_guardrail"
@@ -6977,6 +7142,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._build_dq_rule_records",
       "fabricops_kit.governance_review._dq_failed_expression",
@@ -7024,6 +7190,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._approved_column_identity",
       "fabricops_kit.governance_review._approved_review_context",
@@ -7082,6 +7249,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review._write_table_metadata_enrichment_records"
@@ -7118,6 +7286,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review.widget_author_dq_rules",
       "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
@@ -7161,6 +7330,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._write_enrichment_records",
       "fabricops_kit.governance_review.widget_enrich_table_metadata"
@@ -7204,6 +7374,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review.widget_review_guardrail_governance"
     ],
@@ -7249,6 +7420,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review.widget_review_guardrail_governance"
     ],
@@ -7294,6 +7466,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.governance_review.widget_enrich_table_metadata"
@@ -7345,6 +7518,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review.mark_table_governed",
       "fabricops_kit.governance_review.mark_table_ungoverned"
@@ -7388,6 +7562,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7441,6 +7616,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review._base_guardrail_rule_record",
       "fabricops_kit.governance_review.build_enrichment_rule_records"
@@ -7484,6 +7660,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review._evaluate_governance_readiness"
     ],
@@ -7533,6 +7710,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review.widget_review_guardrail_governance"
     ],
@@ -7569,6 +7747,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review.build_table_governance_policy_record"
@@ -7605,6 +7784,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [
       "fabricops_kit.governance_review.build_table_governance_policy_record"
@@ -7641,6 +7821,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [],
     "outbound": [
       "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
@@ -7689,6 +7870,7 @@
     "module": "governance_review",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.governance_review.widget_select_guardrail_target"
     ],
@@ -7728,6 +7910,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7777,6 +7960,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7826,6 +8010,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7877,6 +8062,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7924,6 +8110,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7973,6 +8160,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.guardrails.stop_if_failed"
     ],
@@ -8009,6 +8197,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_profile_behavior"
     ],
@@ -8052,6 +8241,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._check_schema_runtime",
       "fabricops_kit.guardrails._schema_signature"
@@ -8093,6 +8283,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._check_schema_rule_runtime",
       "fabricops_kit.guardrails.enforce_freshness_rule",
@@ -8136,6 +8327,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._accepted_profile_rows",
       "fabricops_kit.guardrails._check_schema_rule_runtime",
@@ -8188,6 +8380,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -8237,6 +8430,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._check_schema_rule_runtime",
       "fabricops_kit.pipeline.run_table_guardrails"
@@ -8280,6 +8474,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._iso_date_value",
       "fabricops_kit.guardrails.enforce_freshness"
@@ -8318,6 +8513,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_profile_behavior"
     ],
@@ -8354,6 +8550,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._select_profile_behavior_rule",
       "fabricops_kit.guardrails._select_table_guardrail_rule"
@@ -8399,6 +8596,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_profile_behavior"
     ],
@@ -8435,6 +8633,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_freshness"
     ],
@@ -8474,6 +8673,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._profile_hash",
       "fabricops_kit.guardrails.enforce_profile_behavior"
@@ -8512,6 +8712,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_freshness"
     ],
@@ -8548,6 +8749,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._actual_schema",
       "fabricops_kit.guardrails._check_schema_runtime"
@@ -8586,6 +8788,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._normalize_profile",
       "fabricops_kit.guardrails._profile_payload_from_profile",
@@ -8629,6 +8832,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._check_schema_rule_runtime",
       "fabricops_kit.guardrails.enforce_freshness_rule"
@@ -8670,6 +8874,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_profile_behavior"
     ],
@@ -8709,6 +8914,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_profile_behavior"
     ],
@@ -8754,6 +8960,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._profile_payload_from_profile"
     ],
@@ -8793,6 +9000,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._accepted_profile_rows",
       "fabricops_kit.guardrails._select_profile_behavior_rule",
@@ -8833,6 +9041,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._apply_bypass_post_review_warning",
       "fabricops_kit.guardrails._is_active_guardrail_rule"
@@ -8876,6 +9085,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._profile_payload_from_profile"
     ],
@@ -8915,6 +9125,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails.enforce_profile_behavior"
     ],
@@ -8960,6 +9171,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._check_schema_rule_runtime",
       "fabricops_kit.guardrails.enforce_freshness_rule"
@@ -9007,6 +9219,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.guardrails._accepted_profile_rows",
       "fabricops_kit.guardrails._check_schema_rule_runtime",
@@ -9059,6 +9272,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.guardrails.enforce_freshness_rule",
       "fabricops_kit.pipeline.run_table_guardrails"
@@ -9101,6 +9315,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -9145,6 +9360,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -9198,6 +9414,7 @@
     "module": "guardrails",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -9238,6 +9455,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._base_guardrail_rule_record",
       "fabricops_kit.governance_review._build_dq_rule_records",
@@ -9281,6 +9499,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._approved_column_identity",
       "fabricops_kit.governance_review._base_guardrail_rule_record"
@@ -9322,6 +9541,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._approved_column_identity",
       "fabricops_kit.governance_review._base_guardrail_rule_record",
@@ -9375,6 +9595,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -9434,6 +9655,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._load_notebook_registry"
     ],
@@ -9470,6 +9692,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._current_notebook_active_registrations",
@@ -9514,6 +9737,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
@@ -9559,6 +9783,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._current_notebook_active_registrations"
     ],
@@ -9604,6 +9829,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._load_notebook_registry",
       "fabricops_kit.metadata._register_current_notebook"
@@ -9642,6 +9868,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._approved_review_context",
       "fabricops_kit.governance_review._authoring_lifecycle",
@@ -9697,6 +9924,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
@@ -9750,6 +9978,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._approved_review_context",
       "fabricops_kit.governance_review._authoring_lifecycle",
@@ -9805,6 +10034,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._register_current_notebook"
     ],
@@ -9841,6 +10071,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._current_notebook_active_registrations",
@@ -9886,6 +10117,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._current_notebook_active_registrations",
@@ -9926,6 +10158,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._build_dq_rule_key",
       "fabricops_kit.metadata._build_metadata_column_key",
@@ -9966,6 +10199,7 @@
     "module": "metadata",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.governance_review._run_active_dq_guardrail",
       "fabricops_kit.guardrails.enforce_profile_behavior",
@@ -10015,6 +10249,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.start_pipeline_run"
     ],
@@ -10051,6 +10286,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails",
       "fabricops_kit.pipeline.write_pipeline_run_summary"
@@ -10089,6 +10325,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.prepare_pipeline_table_configs"
     ],
@@ -10128,6 +10365,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle"
     ],
@@ -10164,6 +10402,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -10205,6 +10444,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -10246,6 +10486,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.write_catalogue_evidence"
     ],
@@ -10282,6 +10523,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.write_catalogue_evidence",
       "fabricops_kit.pipeline.write_pipeline_lineage",
@@ -10322,6 +10564,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._guardrail_reason"
     ],
@@ -10361,6 +10604,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._guardrail_reason"
     ],
@@ -10402,6 +10646,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -10438,6 +10683,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.build_guardrail_detail_rows",
       "fabricops_kit.pipeline.build_guardrail_summary_rows"
@@ -10489,6 +10735,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.build_guardrail_detail_rows",
       "fabricops_kit.pipeline.build_guardrail_summary_rows"
@@ -10527,6 +10774,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.write_catalogue_evidence"
     ],
@@ -10563,6 +10811,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.start_pipeline_run"
     ],
@@ -10599,6 +10848,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._runtime_audit_fields",
       "fabricops_kit.pipeline.start_pipeline_run",
@@ -10646,6 +10896,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._guardrail_reason"
     ],
@@ -10687,6 +10938,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.build_guardrail_detail_rows",
       "fabricops_kit.pipeline.build_guardrail_summary_rows"
@@ -10725,6 +10977,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._dq_reason",
       "fabricops_kit.pipeline._freshness_reason",
@@ -10767,6 +11020,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._freshness_reason",
       "fabricops_kit.pipeline._guardrail_reason",
@@ -10811,6 +11065,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.display_guardrail_results"
     ],
@@ -10847,6 +11102,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.write_catalogue_evidence",
       "fabricops_kit.pipeline.write_pipeline_lineage"
@@ -10890,6 +11146,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.start_pipeline_run"
     ],
@@ -10929,6 +11186,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._guardrail_reason"
     ],
@@ -10965,6 +11223,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.write_pipeline_run_summary"
     ],
@@ -11001,6 +11260,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
       "fabricops_kit.pipeline.run_table_guardrails"
@@ -11039,6 +11299,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.build_guardrail_detail_rows",
       "fabricops_kit.pipeline.build_guardrail_summary_rows"
@@ -11077,6 +11338,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
       "fabricops_kit.pipeline.run_table_guardrails"
@@ -11115,6 +11377,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.pipeline.build_guardrail_detail_rows",
       "fabricops_kit.pipeline.build_guardrail_summary_rows"
@@ -11153,6 +11416,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline.display_guardrail_results",
       "fabricops_kit.pipeline.run_table_guardrails"
@@ -11204,6 +11468,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
       "fabricops_kit.pipeline.display_guardrail_results",
@@ -11257,6 +11522,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.pipeline._rows_for_display",
@@ -11301,6 +11567,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.pipeline._add_audit_columns"
@@ -11354,6 +11621,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -11422,6 +11690,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement.get_selected_agreement",
@@ -11481,6 +11750,7 @@
     "module": "pipeline",
     "type": "internal",
     "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -11527,6 +11797,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -11586,6 +11857,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
+    "function_category": "workflow",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",

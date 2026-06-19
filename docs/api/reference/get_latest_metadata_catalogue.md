@@ -93,7 +93,7 @@ Not documented yet
 - `fabricops_kit.governance_review._catalogue_lookup_value`
 - `fabricops_kit.governance_review._coerce_rows`
 
-## Implementation details
+## Maintainer/developer implementation details
 
 <details class="reference-implementation-details">
 <summary>Notes, side effects, and template usage</summary>
@@ -116,9 +116,11 @@ pipeline metadata.
 
 </details>
 
-??? info "Call flow"
+??? info "Maintainer/developer call flow"
 
-    Unique internal helpers: 10. Repeated calls may appear in multiple branches.
+    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
+
+    Unique internal/private helpers: 10. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>get_latest_metadata_catalogue(...)</code></div>
@@ -218,6 +220,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.governance_review.get_latest_metadata_catalogue`
 - Short name: `get_latest_metadata_catalogue`
 - Module: `governance_review`
+- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
@@ -266,7 +269,7 @@ def get_latest_metadata_catalogue(
 ) -> Any:
 ```
 
-### Internal relationship graph
+### Maintainer/developer relationship graph
 
 ### Public related functions
 
@@ -277,7 +280,7 @@ def get_latest_metadata_catalogue(
 ### Internal implementation summary
 
 - Internal helper count: 10
-- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
+- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
 
 </details>
 
