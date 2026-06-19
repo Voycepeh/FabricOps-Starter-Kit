@@ -92,7 +92,7 @@ Not documented yet
 
 ### Used by
 
-- <a href="widget_author_guardrail_rules/"><code>fabricops_kit.governance_review.widget_author_guardrail_rules</code></a>
+Not documented yet
 
 ### Calls
 
@@ -112,6 +112,7 @@ Not documented yet
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
 - `02_pipeline`
+- `03_governance`
 
 **Side effects:**
 
@@ -234,9 +235,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source line: `2438`
-- Inbound references count: 1
+- Inbound references count: 0
 - Outbound references count: 5
-- Used in templates: 02_pipeline
+- Used in templates: 02_pipeline, 03_governance
 - Glossary terms: guardrails, evidence, metadata lakehouse, notebook template
 
 ### Implementation contract
@@ -250,7 +251,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 ### Inbound references
 
-- <a href="widget_author_guardrail_rules/"><code>fabricops_kit.governance_review.widget_author_guardrail_rules</code></a>
+Not documented yet
 
 ### Outbound references
 

@@ -380,14 +380,10 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     )
 
 
-def test_clickable_call_tree_links_public_pages_and_private_source() -> None:
-    """Verify call-tree links route exported callables to pages and private helpers to source."""
-    text = (API_REFERENCE_DIR / "widget_author_guardrail_rules.md").read_text(encoding="utf-8")
-    call_flow = text.split('??? info "Call flow"', 1)[1].split("## See also", 1)[0]
-
-    assert 'href="../widget_author_dq_rules/"' in call_flow
-    assert 'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/' in call_flow
-    assert '><code>_latest_rule(...)</code></a>' in call_flow
+def test_removed_aggregate_governance_wrapper_pages_are_absent() -> None:
+    """Verify removed aggregate governance wrapper pages are no longer generated."""
+    assert not (API_REFERENCE_DIR / "widget_author_guardrail_rules.md").exists()
+    assert not (API_REFERENCE_DIR / "widget_review_table_governance.md").exists()
 
 
 def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
@@ -624,8 +620,9 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     assert "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
     assert "[`run_table_guardrails`](../api/reference/run_table_guardrails.md)" in pipeline_execution
     assert "[`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md)" in governance_review
-    assert "[`widget_author_guardrail_rules`](../api/reference/widget_author_guardrail_rules.md)" in governance_review
-    assert "[`widget_review_table_governance`](../api/reference/widget_review_table_governance.md)" in governance_review
+    assert "[`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md)" in governance_review
+    assert "[`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md)" in governance_review
+    assert "[`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md)" in governance_review
     assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
     assert "[`write_pipeline_lineage`](../api/reference/write_pipeline_lineage.md)" in metadata_tables
 

@@ -5,8 +5,8 @@
 ## Workflow usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb, 03_governance.ipynb
-- **Written by function or widget:** [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md), [`widget_review_table_governance`](../../api/reference/widget_review_table_governance.md)
-- **Read by function or widget:** [`widget_review_table_governance`](../../api/reference/widget_review_table_governance.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
+- **Written by function or widget:** [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
+- **Read by function or widget:** [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
 - **Related template step:** 02_pipeline.ipynb, 03_governance.ipynb
 
 ## Implemented schema
@@ -80,4 +80,3 @@
 
 - [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)
 - [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
-- [`widget_review_table_governance`](../../api/reference/widget_review_table_governance.md)

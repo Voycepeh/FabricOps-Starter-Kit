@@ -269,22 +269,7 @@
       "template_notebook": "02_pipeline",
       "template_segment": "Guardrail authoring",
       "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_author_guardrail_rules",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Author guardrail rules",
-      "used_in_templates": [
+        "02_pipeline",
         "03_governance"
       ]
     },
@@ -301,7 +286,8 @@
       "template_notebook": "02_pipeline",
       "template_segment": "Guardrail authoring",
       "used_in_templates": [
-        "02_pipeline"
+        "02_pipeline",
+        "03_governance"
       ]
     },
     {
@@ -334,22 +320,7 @@
       "template_notebook": "03_governance",
       "template_segment": "Governance review",
       "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_review_table_governance",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Review table governance",
-      "used_in_templates": [
+        "02_pipeline",
         "03_governance"
       ]
     },
