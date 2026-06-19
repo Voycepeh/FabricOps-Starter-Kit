@@ -1,12 +1,12 @@
 # Pipeline Guardrails
 
-<span class="glossary-term" title="Approved checks that evaluate schema, freshness, profile behavior, or data quality expectations during a pipeline run.">Pipeline guardrails</span> are the runtime checks in `02_pipeline` that decide whether a run can continue, continue with warnings, or stop before writing <span class="glossary-term" title="DataFrames or tables produced by the pipeline after transformation.">pipeline outputs</span>. They turn contract expectations into executable checks for schema, freshness, profile behavior, and data quality (DQ).
+Pipeline guardrails are the runtime checks in `02_pipeline` that decide whether a run can continue, continue with warnings, or stop before writing pipeline outputs. They turn contract expectations into executable checks for schema, freshness, profile behavior, and data quality (DQ).
 
 Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` workflow. This page focuses on the guardrails enforced by `02_pipeline`.
 
 ![Schema, freshness, profile behavior, and DQ guardrails showing source, transform, and target validation flow](../assets/fabricops-pipeline-guardrails.png){ .full-width }
 
-## Contract expectation versus <span class="glossary-term" title="Running active guardrails and deciding whether the pipeline can continue, warn, or stop.">enforcement</span>
+## Contract expectation versus enforcement
 
 FabricOps keeps the responsibility split clear:
 

@@ -214,10 +214,12 @@ def widget_author_schema_freshness_profile_rules(
 
 ## Glossary
 
-- <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
-- <details class="glossary-chip"><summary>Profile mode</summary>Configured behavior mode for profile guardrails: static_data, changing_data, or skip.</details>
-- <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
-- <details class="glossary-chip"><summary>Notebook template</summary>Reusable starter notebook workflow that shows how to run a FabricOps phase.</details>
+<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
+<details class="glossary-chip"><summary>Guardrails</summary><span>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../../reference/glossary/#guardrails">Full definition</a></details>
+<details class="glossary-chip"><summary>Profile mode</summary><span>Configured behavior mode for profile guardrails: static_data, changing_data, or skip.</span> <a href="../../../reference/glossary/#profile-mode">Full definition</a></details>
+<details class="glossary-chip"><summary>Metadata lakehouse</summary><span>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</span> <a href="../../../reference/glossary/#metadata-lakehouse">Full definition</a></details>
+<details class="glossary-chip"><summary>Notebook template</summary><span>Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../../reference/glossary/#notebook-template">Full definition</a></details>
+</div>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

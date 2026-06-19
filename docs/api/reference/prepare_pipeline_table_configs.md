@@ -203,10 +203,12 @@ def prepare_pipeline_table_configs(
 
 ## Glossary
 
-- <details class="glossary-chip"><summary>Source data</summary>Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</details>
-- <details class="glossary-chip"><summary>Target table</summary>A written table produced by a pipeline output.</details>
-- <details class="glossary-chip"><summary>Stage</summary>Named part of a pipeline such as source, transformation, or target.</details>
-- <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
+<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
+<details class="glossary-chip"><summary>Source data</summary><span>Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../../reference/glossary/#source-data">Full definition</a></details>
+<details class="glossary-chip"><summary>Target table</summary><span>A written table produced by a pipeline output.</span> <a href="../../../reference/glossary/#target-table">Full definition</a></details>
+<details class="glossary-chip"><summary>Stage</summary><span>Named part of a pipeline such as source, transformation, or target.</span> <a href="../../../reference/glossary/#stage">Full definition</a></details>
+<details class="glossary-chip"><summary>Guardrails</summary><span>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../../reference/glossary/#guardrails">Full definition</a></details>
+</div>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

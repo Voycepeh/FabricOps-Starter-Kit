@@ -271,8 +271,10 @@ def setup_metadata_tables(
 
 ## Glossary
 
-- <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
-- <details class="glossary-chip"><summary>Evidence</summary>Stored proof that a profile, decision, result, or relationship existed at a point in time.</details>
+<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
+<details class="glossary-chip"><summary>Metadata lakehouse</summary><span>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</span> <a href="../../../reference/glossary/#metadata-lakehouse">Full definition</a></details>
+<details class="glossary-chip"><summary>Evidence</summary><span>Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../../reference/glossary/#evidence">Full definition</a></details>
+</div>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

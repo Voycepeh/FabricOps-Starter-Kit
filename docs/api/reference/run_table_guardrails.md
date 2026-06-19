@@ -389,11 +389,13 @@ def run_table_guardrails(
 
 ## Glossary
 
-- <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
-- <details class="glossary-chip"><summary>can_continue</summary>Boolean result that tells downstream notebook code whether processing can keep running.</details>
-- <details class="glossary-chip"><summary>Source data</summary>Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</details>
-- <details class="glossary-chip"><summary>Target table</summary>A written table produced by a pipeline output.</details>
-- <details class="glossary-chip"><summary>Evidence</summary>Stored proof that a profile, decision, result, or relationship existed at a point in time.</details>
+<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
+<details class="glossary-chip"><summary>Guardrails</summary><span>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../../reference/glossary/#guardrails">Full definition</a></details>
+<details class="glossary-chip"><summary>can_continue</summary><span>Boolean result that tells downstream notebook code whether processing can keep running.</span> <a href="../../../reference/glossary/#cancontinue">Full definition</a></details>
+<details class="glossary-chip"><summary>Source data</summary><span>Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../../reference/glossary/#source-data">Full definition</a></details>
+<details class="glossary-chip"><summary>Target table</summary><span>A written table produced by a pipeline output.</span> <a href="../../../reference/glossary/#target-table">Full definition</a></details>
+<details class="glossary-chip"><summary>Evidence</summary><span>Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../../reference/glossary/#evidence">Full definition</a></details>
+</div>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

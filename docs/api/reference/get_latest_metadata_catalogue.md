@@ -221,9 +221,11 @@ def get_latest_metadata_catalogue(
 
 ## Glossary
 
-- <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
-- <details class="glossary-chip"><summary>Profile</summary>Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.</details>
-- <details class="glossary-chip"><summary>Data agreement</summary>FabricOps agreement record that captures ownership, steward context, usage, and expectations.</details>
+<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
+<details class="glossary-chip"><summary>Metadata lakehouse</summary><span>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</span> <a href="../../../reference/glossary/#metadata-lakehouse">Full definition</a></details>
+<details class="glossary-chip"><summary>Profile</summary><span>Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.</span> <a href="../../../reference/glossary/#profile">Full definition</a></details>
+<details class="glossary-chip"><summary>Data agreement</summary><span>FabricOps agreement record that captures ownership, steward context, usage, and expectations.</span> <a href="../../../reference/glossary/#data-agreement">Full definition</a></details>
+</div>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

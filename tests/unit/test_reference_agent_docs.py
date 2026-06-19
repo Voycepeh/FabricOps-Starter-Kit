@@ -371,11 +371,11 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
 
     assert (
-        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L306-L335"'
+        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338"'
         in implementation_section
     )
     assert (
-        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L240-L303"'
+        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L293-L304"'
         in implementation_section
     )
 
@@ -518,7 +518,7 @@ def test_glossary_page_exists_and_includes_required_terms() -> None:
 
     glossary_text = glossary_page.read_text(encoding="utf-8")
     for term in required_terms:
-        assert f"## {term}".lower() in glossary_text.lower()
+        assert f"<h2>{term}</h2>".lower() in glossary_text.lower()
     assert "Searchable source of truth" in glossary_text
 
 
