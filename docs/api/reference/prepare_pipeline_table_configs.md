@@ -121,30 +121,16 @@ FabricOps audit columns.
 
 ??? info "Call flow"
 
-    ```text
-    prepare_pipeline_table_configs(...)
-    └── _add_audit_columns(...)
-        └── _current_audit_timestamp(...)
-            └── _get_audit_timezone(...)
-                └── _validate_audit_timezone(...)
-    ```
+    Unique internal helpers: 4. Repeated calls may appear in multiple branches.
 
-??? info "Internal helpers used: 4"
-
-    This callable uses 4 internal helpers for audit timestamp.
-
-    <div class="reference-helper-groups">
-      <section class="reference-helper-group">
-        <h4>Audit timestamp</h4>
-        <p>Resolve and stamp audit time consistently.</p>
-        <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L399-L409"><code>_add_audit_columns</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a>
-        </div>
-      </section>
+    <div class="reference-call-tree" role="tree">
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><a href="prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L399-L409"><code>_add_audit_columns(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">            └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone(...)</code></a></div>
     </div>
+
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
