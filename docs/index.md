@@ -1,8 +1,10 @@
 # FabricOps Starter Kit
 
-Governed Microsoft Fabric delivery, without every project becoming a custom build.
+Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
 
-FabricOps gives teams a shared operating model for configuration, notebook execution, metadata collection, and pipeline guardrails.
+FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
+
+It gives teams a shared operating model for configuration, notebook execution, metadata collection, and pipeline guardrails without turning every project into a custom build.
 
 <div class="fabricops-cta" markdown="1">
 
@@ -17,9 +19,11 @@ FabricOps gives teams a shared operating model for configuration, notebook execu
 
 ## How FabricOps connects delivery teams { #fabricops-delivery-model-heading }
 
-FabricOps gives governance, engineering, and analytics teams one shared way to move from request to governed delivery. Governance captures the agreement, enrichment, and guardrail evidence. Engineering configures the environment, runs notebooks, and writes metadata. Analysts and scientists consume trusted outputs for BI, AI, and exploration.
+FabricOps helps governance, engineering, and analytics teams work from the same notebook based delivery flow.
 
-The shared metadata tables are the handoff layer. They record what was agreed, what ran, what passed, and what is ready for review. This keeps delivery repeatable without forcing every project to become a custom build.
+Governance captures agreement, enrichment, and guardrail evidence. Engineering configures the environment, runs notebooks, and writes metadata. Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
+
+The shared metadata tables act as the handoff layer. They record what was agreed, what ran, what passed, and what is ready for review. This keeps delivery repeatable without forcing every project to become a custom build.
 
 </div>
 
