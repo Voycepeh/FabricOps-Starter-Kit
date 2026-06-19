@@ -68,15 +68,98 @@ def _exported_symbols() -> list[str]:
     raise AssertionError("Could not parse __all__")
 
 
+def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
+    """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
+    from scripts.generate_function_reference import _collect_refactor_signals, _render_refactor_signals
+
+    root_qn = "fabricops_kit.pipeline.public_api"
+    calls_by_qn = {
+        root_qn: [
+            "fabricops_kit.pipeline._load_metadata_rules",
+            "fabricops_kit.metadata._load_metadata_table",
+        ],
+    }
+    node_by_qn = {
+        root_qn: {"callable_name": "public_api", "module_name": "pipeline", "exported": True},
+        "fabricops_kit.pipeline._load_metadata_rules": {
+            "callable_name": "_load_metadata_rules",
+            "module_name": "pipeline",
+            "exported": False,
+        },
+        "fabricops_kit.metadata._load_metadata_table": {
+            "callable_name": "_load_metadata_table",
+            "module_name": "metadata",
+            "exported": False,
+        },
+    }
+    module_data = {
+        "pipeline": {"functions": {"_load_metadata_rules": "Load metadata rules for the callable."}},
+        "metadata": {"functions": {"_load_metadata_table": "Load metadata table rows."}},
+    }
+
+    signal_data = _collect_refactor_signals(root_qn, calls_by_qn, node_by_qn, module_data)
+    signals = "\n".join(_render_refactor_signals(signal_data, node_by_qn))
+
+    assert "contains helpers from multiple modules" not in signals
+    assert "- None detected from helper names, doc summaries, and module placement." in signals
+    assert signal_data["possible_grouping_mismatches"] == []
+
+
+def test_helper_area_mismatch_signal_requires_three_way_mismatch() -> None:
+    """Verify wrong-area signals require name, summary, and grouping mismatch."""
+    from scripts.generate_function_reference import _helper_area_mismatch_signal
+
+    two_way_signal = _helper_area_mismatch_signal(
+        "_metadata_check",
+        "Validate required inputs before the workflow continues.",
+        "Metadata loading",
+    )
+    three_way_signal = _helper_area_mismatch_signal(
+        "_validate_inputs",
+        "Evaluate configured rules for the callable.",
+        "Metadata loading",
+    )
+
+    assert two_way_signal is None
+    assert three_way_signal == ("Metadata loading", "Validation", "Rule evaluation")
+
+
 def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
     """Verify reference agent/automation metadata files exist and are valid json."""
     automation_manifest = REFERENCE_DIR / "_data" / "automation-manifest.json"
     function_manifest = REFERENCE_DIR / "_data" / "function-manifest.json"
+    refactor_signals = REFERENCE_DIR / "_data" / "refactor-signals.json"
 
     assert automation_manifest.exists()
     assert function_manifest.exists()
+    assert refactor_signals.exists()
     assert json.loads(automation_manifest.read_text(encoding="utf-8"))
     assert json.loads(function_manifest.read_text(encoding="utf-8"))
+    assert json.loads(refactor_signals.read_text(encoding="utf-8"))
+
+
+def test_refactor_signals_json_includes_enforce_dq_rules() -> None:
+    """Verify structured refactor signals are generated for enforce_dq_rules."""
+    signal_path = REFERENCE_DIR / "_data" / "refactor-signals.json"
+    signals = json.loads(signal_path.read_text(encoding="utf-8"))
+    enforce_signals = signals["enforce_dq_rules"]
+
+    assert enforce_signals["qualified_name"].endswith(".enforce_dq_rules")
+    assert enforce_signals["unique_internal_helper_count"] > 0
+    assert {
+        "qualified_name",
+        "unique_internal_helper_count",
+        "repeated_helpers",
+        "deep_call_chains",
+        "single_delegate_helpers",
+        "possible_grouping_mismatches",
+    } <= set(enforce_signals)
+    assert enforce_signals["repeated_helpers"]
+    assert enforce_signals["single_delegate_helpers"]
+    assert all(
+        {"helper", "qualified_name", "branch_count"} <= set(item)
+        for item in enforce_signals["repeated_helpers"]
+    )
 
 
 def test_fabricops_skill_file_exists() -> None:
@@ -202,7 +285,11 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         assert "Internal helpers used by this callable" not in text, page
         assert '??? info "Nested helper functions:' not in text, page
         assert "Unique internal helpers:" in text, page
+        assert "### Refactor signals" in text, page
+        assert "Large call graph shown to two levels." not in text, page
+        assert "Tree is truncated to keep the page readable." not in text, page
         assert 'class="reference-call-tree"' in text, page
+        assert 'class="reference-call-tree-more"' not in text, page
         assert '```text' not in text.split('??? info "Call flow"', 1)[1].split("##", 1)[0], page
         assert '??? info "Internal helpers used:' not in text, page
         source_card_pos = text.index('<div class="reference-source-card" markdown="1">')
@@ -350,6 +437,8 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert 'class="reference-helper-groups"' in implementation_section
     assert "Unique internal helpers: 12. Repeated calls may appear in multiple branches." in implementation_section
     assert '<div class="reference-call-tree" role="tree">' in implementation_section
+    assert "### Refactor signals" in implementation_section
+    assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
     for helper_name in [

@@ -148,6 +148,28 @@ complete datasets to the driver.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type(...)</code></a></div>
     </div>
 
+    ### Refactor signals
+
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - `_get_audit_timezone` appears in 2 branches.
+    - `_validate_audit_timezone` appears in 2 branches.
+
+    **Call chains deeper than 4 levels**
+
+    - None detected.
+
+    **Helpers that only call one package-local helper**
+
+    - `_audit_timestamp_expr` only delegates to `_get_audit_timezone`.
+    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - None detected from helper names, doc summaries, and module placement.
+
 This callable uses 9 internal helpers for audit timestamp, column handling, result summary, fabric or spark access, and other.
 
 <div class="reference-helper-groups">

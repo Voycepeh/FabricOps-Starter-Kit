@@ -150,6 +150,29 @@ No additional callable notes are documented.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83"><code>get_default_fabric_context(...)</code></a></div>
     </div>
 
+    ### Refactor signals
+
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - `_get_store` appears in 2 branches.
+    - `_normalize_path_config` appears in 2 branches.
+    - `_normalize_table_name` appears in 2 branches.
+
+    **Call chains deeper than 4 levels**
+
+    - None detected.
+
+    **Helpers that only call one package-local helper**
+
+    - `_get_store` only delegates to `_normalize_path_config`.
+    - `_resolve_lakehouse_schema` only delegates to `_normalize_schema_name`.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - None detected from helper names, doc summaries, and module placement.
+
 This callable uses 6 internal helpers for metadata loading, rule parsing, and fabric or spark access.
 
 <div class="reference-helper-groups">

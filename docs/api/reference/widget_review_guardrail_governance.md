@@ -138,6 +138,38 @@ No additional callable notes are documented.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83"><code>get_default_fabric_context(...)</code></a></div>
     </div>
 
+    ### Refactor signals
+
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - `_context_get` appears in 4 branches.
+    - `_assert_governance_review_context` appears in 2 branches.
+    - `_current_audit_timestamp` appears in 2 branches.
+    - `_get_audit_timezone` appears in 2 branches.
+    - `_now_utc_iso` appears in 2 branches.
+    - `_record_identity` appears in 2 branches.
+    - `_resolve_action_by` appears in 2 branches.
+    - `_runtime_context` appears in 2 branches.
+    - `_validate_audit_timezone` appears in 2 branches.
+
+    **Call chains deeper than 4 levels**
+
+    - `widget_review_guardrail_governance` → `apply_governance_enrichment_action` → `_now_utc_iso` → `_current_audit_timestamp` → `_get_audit_timezone` → `_validate_audit_timezone`
+    - `widget_review_guardrail_governance` → `apply_governance_rule_action` → `_now_utc_iso` → `_current_audit_timestamp` → `_get_audit_timezone` → `_validate_audit_timezone`
+
+    **Helpers that only call one package-local helper**
+
+    - `_current_audit_timestamp` only delegates to `_get_audit_timezone`.
+    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
+    - `_now_utc_iso` only delegates to `_current_audit_timestamp`.
+    - `_runtime_context` only delegates to `_context_get`.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - None detected from helper names, doc summaries, and module placement.
+
 This callable uses 9 internal helpers for audit timestamp, metadata loading, and other.
 
 <div class="reference-helper-groups">

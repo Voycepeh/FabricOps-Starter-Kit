@@ -29,6 +29,7 @@ INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
 AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
+REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
@@ -1287,10 +1288,8 @@ def _render_clickable_call_tree(
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
-    *,
-    max_depth: int = 6,
 ) -> list[str]:
-    """Render a mobile-friendly HTML call tree with clickable package callables."""
+    """Render the full reachable package call tree with recursion protection."""
     lines = [
         '<div class="reference-call-tree" role="tree">',
         f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span>{_call_tree_label(root_qn, root_qn, node_by_qn, module_data)}</div>',
@@ -1302,13 +1301,7 @@ def _render_clickable_call_tree(
             key=lambda c: (0 if _is_internal_helper_qn(c, node_by_qn) else 1, node_by_qn[c]["callable_name"].lower(), c),
         )
 
-    def visit(qn: str, prefix: str, ancestors: set[str], depth: int) -> None:
-        if depth >= max_depth:
-            if children(qn):
-                lines.append(
-                    f'  <div class="reference-call-tree-row reference-call-tree-more" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix)}└── </span>…</div>'
-                )
-            return
+    def visit(qn: str, prefix: str, ancestors: set[str]) -> None:
         child_qns = children(qn)
         for index, child in enumerate(child_qns):
             connector = "└── " if index == len(child_qns) - 1 else "├── "
@@ -1318,10 +1311,194 @@ def _render_clickable_call_tree(
             )
             if not recursive:
                 extension = "    " if index == len(child_qns) - 1 else "│   "
-                visit(child, prefix + extension, ancestors | {child}, depth + 1)
+                visit(child, prefix + extension, ancestors | {child})
 
-    visit(root_qn, "", {root_qn}, 0)
+    visit(root_qn, "", {root_qn})
     lines.append("</div>")
+    return lines
+
+
+def _helper_area_mismatch_signal(helper_name: str, purpose: str, assigned_area: str) -> tuple[str, str, str] | None:
+    """Return a wrong-area signal only when name, purpose, and assignment disagree."""
+    name_area, _ = _helper_area(helper_name, "")
+    purpose_area, _ = _helper_area("", purpose)
+    if (
+        name_area != "Other"
+        and purpose_area != "Other"
+        and assigned_area != "Other"
+        and len({assigned_area, name_area, purpose_area}) == 3
+    ):
+        return assigned_area, name_area, purpose_area
+    return None
+
+
+def _collect_refactor_signals(
+    root_qn: str,
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+    *,
+    excluded_helpers: set[str] | None = None,
+) -> dict[str, Any]:
+    """Return structured maintainability signals discovered from the full call tree."""
+    excluded_helpers = excluded_helpers or set()
+
+    def children(qn: str) -> list[str]:
+        return sorted(
+            {c for c in calls_by_qn.get(qn, []) if c in node_by_qn},
+            key=lambda c: node_by_qn[c]["callable_name"].lower(),
+        )
+
+    occurrences: dict[str, int] = {}
+    deep_chains: list[list[str]] = []
+
+    def walk(qn: str, path: list[str]) -> None:
+        if len(path) > 5:
+            deep_chains.append(path)
+        for child in children(qn):
+            if child not in excluded_helpers:
+                occurrences[child] = occurrences.get(child, 0) + 1
+            if child not in path:
+                walk(child, [*path, child])
+
+    walk(root_qn, [root_qn])
+
+    repeated_helpers = sorted(
+        (
+            (qn, count)
+            for qn, count in occurrences.items()
+            if count > 1 and _is_internal_helper_qn(qn, node_by_qn)
+        ),
+        key=lambda item: (-item[1], node_by_qn[item[0]]["callable_name"].lower()),
+    )
+    single_delegate_helpers = sorted(
+        qn
+        for qn in occurrences
+        if (
+            _is_internal_helper_qn(qn, node_by_qn)
+            and len(children(qn)) == 1
+            and _is_internal_helper_qn(children(qn)[0], node_by_qn)
+        )
+    )
+
+    area_mismatch_signals: list[tuple[str, str, str, str, str]] = []
+    for qn in occurrences:
+        if not _is_internal_helper_qn(qn, node_by_qn):
+            continue
+        node = node_by_qn[qn]
+        module_name = node["module_name"]
+        helper_name = node["callable_name"]
+        purpose = module_data[module_name].get("functions", {}).get(helper_name) or ""
+        assigned_area, _ = _helper_area(helper_name, purpose)
+        signal = _helper_area_mismatch_signal(helper_name, purpose, assigned_area)
+        if signal:
+            name_area: str
+            purpose_area: str
+            assigned_area, name_area, purpose_area = signal
+            area_mismatch_signals.append((helper_name, qn, assigned_area, name_area, purpose_area))
+
+    helper_qns = [
+        helper_qn
+        for helper_qn in _collect_internal_helper_descendants(root_qn, calls_by_qn, node_by_qn)
+        if helper_qn not in excluded_helpers
+    ]
+    return {
+        "qualified_name": root_qn,
+        "unique_internal_helper_count": len(helper_qns),
+        "repeated_helpers": [
+            {
+                "helper": node_by_qn[qn]["callable_name"],
+                "qualified_name": qn,
+                "branch_count": count,
+            }
+            for qn, count in repeated_helpers[:12]
+        ],
+        "deep_call_chains": [
+            {
+                "depth": len(path) - 1,
+                "chain": path,
+            }
+            for path in deep_chains[:8]
+        ],
+        "single_delegate_helpers": [
+            {
+                "helper": node_by_qn[qn]["callable_name"],
+                "qualified_name": qn,
+                "delegates_to": node_by_qn[children(qn)[0]]["callable_name"],
+                "delegates_to_qualified_name": children(qn)[0],
+            }
+            for qn in single_delegate_helpers[:12]
+        ],
+        "possible_grouping_mismatches": [
+            {
+                "area": assigned_area,
+                "reason": (
+                    f"`{helper_name}` is grouped as `{assigned_area}`, but its name suggests "
+                    f"`{name_area}` while its summary suggests `{purpose_area}`."
+                ),
+                "helpers": [
+                    {
+                        "helper": helper_name,
+                        "qualified_name": qn,
+                        "name_area": name_area,
+                        "purpose_area": purpose_area,
+                    }
+                ],
+            }
+            for helper_name, qn, assigned_area, name_area, purpose_area in sorted(
+                area_mismatch_signals,
+                key=lambda item: (item[2].lower(), item[0].lower()),
+            )[:8]
+        ],
+    }
+
+
+def _render_refactor_signals(
+    signals: dict[str, Any],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Render structured maintainability signals as human-readable Markdown."""
+
+    def label(qn: str) -> str:
+        return node_by_qn[qn]["callable_name"]
+
+    lines = ["### Refactor signals", ""]
+    lines.append(
+        "These generated hints point maintainers to call-tree shapes worth reviewing; "
+        "they are not automatic refactor requirements."
+    )
+    lines.append("")
+
+    lines.append("**Helpers appearing in multiple branches**")
+    lines.append("")
+    lines.extend(
+        [
+            f"- `{item['helper']}` appears in {item['branch_count']} branches."
+            for item in signals["repeated_helpers"]
+        ]
+        or ["- None detected in the reachable package-local call tree."]
+    )
+    lines.extend(["", "**Call chains deeper than 4 levels**", ""])
+    lines.extend(
+        [
+            f"- {' → '.join(f'`{label(item)}`' for item in chain['chain'])}"
+            for chain in signals["deep_call_chains"]
+        ]
+        or ["- None detected."]
+    )
+    lines.extend(["", "**Helpers that only call one package-local helper**", ""])
+    lines.extend(
+        [
+            f"- `{item['helper']}` only delegates to `{item['delegates_to']}`."
+            for item in signals["single_delegate_helpers"]
+        ]
+        or ["- None detected."]
+    )
+    lines.extend(["", "**Helpers grouped into possibly wrong areas**", ""])
+    lines.extend(
+        [f"- {item['reason']}" for item in signals["possible_grouping_mismatches"]]
+        or ["- None detected from helper names, doc summaries, and module placement."]
+    )
     return lines
 
 
@@ -2626,6 +2803,7 @@ def main() -> None:
         generated_page.unlink()
     agent_manifest: list[dict[str, Any]] = []
     function_manifest: list[dict[str, Any]] = []
+    refactor_signals_manifest: dict[str, dict[str, Any]] = {}
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
         module_name = node["module_name"]
@@ -2702,24 +2880,23 @@ def main() -> None:
                 for helper_qn in _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
                 if helper_qn not in INTERNAL_HELPER_EXCLUSIONS.get(short_name, set())
             ]
-            call_tree_depth = 2 if len(helper_qns) > 12 else 6
+            refactor_signals = _collect_refactor_signals(
+                qn,
+                calls_by_qn,
+                node_by_qn,
+                module_data,
+                excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
+            )
+            refactor_signals_manifest[short_name] = refactor_signals
             call_flow_lines = [
                 '??? info "Call flow"',
                 "",
                 *_indent_markdown([
-                    *(
-                        [
-                            "Large call graph shown to two levels.",
-                            "",
-                            "Tree is truncated to keep the page readable.",
-                            "",
-                        ]
-                        if call_tree_depth == 2
-                        else []
-                    ),
                     f"Unique internal helpers: {len(helper_qns)}. Repeated calls may appear in multiple branches.",
                     "",
-                    *_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data, max_depth=call_tree_depth),
+                    *_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data),
+                    "",
+                    *_render_refactor_signals(refactor_signals, node_by_qn),
                 ]),
             ]
             source_card_lines = _source_card_lines(
@@ -3022,6 +3199,10 @@ def main() -> None:
         })
     AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
     FUNCTION_MANIFEST_PATH.write_text(json.dumps(function_manifest, indent=2) + "\n", encoding="utf-8")
+    REFACTOR_SIGNALS_PATH.write_text(
+        json.dumps(refactor_signals_manifest, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

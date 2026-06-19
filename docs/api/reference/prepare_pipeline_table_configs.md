@@ -131,6 +131,28 @@ FabricOps audit columns.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">            └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone(...)</code></a></div>
     </div>
 
+    ### Refactor signals
+
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - None detected in the reachable package-local call tree.
+
+    **Call chains deeper than 4 levels**
+
+    - None detected.
+
+    **Helpers that only call one package-local helper**
+
+    - `_current_audit_timestamp` only delegates to `_get_audit_timezone`.
+    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
+    - `_add_audit_columns` only delegates to `_current_audit_timestamp`.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - None detected from helper names, doc summaries, and module placement.
+
 This callable uses 4 internal helpers for audit timestamp.
 
 <div class="reference-helper-groups">
