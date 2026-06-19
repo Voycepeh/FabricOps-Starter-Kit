@@ -74,6 +74,44 @@
   background-color: rgba(71, 215, 172, 0.12);
 }
 
+
+/* Homepage landing page components. */
+.md-typeset .fabricops-cta {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.md-typeset .fabricops-cta .md-button {
+  margin: 0;
+}
+
+.md-typeset .fabricops-architecture-image {
+  margin: 1.5rem auto 2rem;
+  text-align: center;
+}
+
+.md-typeset .fabricops-architecture-image img {
+  display: inline-block;
+  max-width: min(100%, 42rem);
+  width: 100%;
+  height: auto;
+}
+
+@media screen and (max-width: 480px) {
+  .md-typeset .fabricops-cta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .md-typeset .fabricops-cta .md-button {
+    text-align: center;
+  }
+}
+
 /* Scoped KPI cards for the docs homepage. */
 .md-typeset .fabricops-kpi-grid {
   display: grid;
