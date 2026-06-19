@@ -168,7 +168,7 @@ No additional callable notes are documented.
 
     **Helpers grouped into possibly wrong areas**
 
-    - `Other` contains helpers from multiple modules (`governance_review`, `metadata`); review whether the helper grouping still matches intent.
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 9 internal helpers for audit timestamp, metadata loading, and other.
 

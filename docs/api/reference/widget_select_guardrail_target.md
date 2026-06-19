@@ -165,9 +165,7 @@ No additional callable notes are documented.
 
     **Helpers grouped into possibly wrong areas**
 
-    - `Fabric or Spark access` contains helpers from multiple modules (`config`, `fabric_input_output`); review whether the helper grouping still matches intent.
-    - `Metadata loading` contains helpers from multiple modules (`fabric_input_output`, `governance_review`, `metadata`); review whether the helper grouping still matches intent.
-    - `Rule parsing` contains helpers from multiple modules (`config`, `fabric_input_output`); review whether the helper grouping still matches intent.
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 14 internal helpers for metadata loading, rule parsing, fabric or spark access, and other.
 

@@ -1316,6 +1316,20 @@ def _render_clickable_call_tree(
     return lines
 
 
+def _helper_area_mismatch_signal(helper_name: str, purpose: str, assigned_area: str) -> tuple[str, str, str] | None:
+    """Return a wrong-area signal only when name, purpose, and assignment disagree."""
+    name_area, _ = _helper_area(helper_name, "")
+    purpose_area, _ = _helper_area("", purpose)
+    if (
+        name_area != "Other"
+        and purpose_area != "Other"
+        and assigned_area != "Other"
+        and len({assigned_area, name_area, purpose_area}) == 3
+    ):
+        return assigned_area, name_area, purpose_area
+    return None
+
+
 def _render_refactor_signals(
     root_qn: str,
     calls_by_qn: dict[str, list[str]],
@@ -1361,8 +1375,7 @@ def _render_refactor_signals(
         )
     )
 
-    helper_areas: dict[str, set[str]] = {}
-    helper_modules: dict[str, set[str]] = {}
+    area_mismatch_signals: list[tuple[str, str, str, str]] = []
     for qn in occurrences:
         if not _is_internal_helper_qn(qn, node_by_qn):
             continue
@@ -1370,13 +1383,16 @@ def _render_refactor_signals(
         module_name = node["module_name"]
         helper_name = node["callable_name"]
         purpose = module_data[module_name].get("functions", {}).get(helper_name) or ""
-        area, _ = _helper_area(helper_name, purpose)
-        helper_areas.setdefault(area, set()).add(helper_name)
-        helper_modules.setdefault(area, set()).add(module_name)
-    mixed_area_signals = sorted(
-        (area, modules)
-        for area, modules in helper_modules.items()
-        if len(modules) > 1 and len(helper_areas.get(area, set())) > 1
+        assigned_area, _ = _helper_area(helper_name, purpose)
+        signal = _helper_area_mismatch_signal(helper_name, purpose, assigned_area)
+        if signal:
+            name_area: str
+            purpose_area: str
+            assigned_area, name_area, purpose_area = signal
+            area_mismatch_signals.append((helper_name, assigned_area, name_area, purpose_area))
+    area_mismatch_signals = sorted(
+        area_mismatch_signals,
+        key=lambda item: (item[1].lower(), item[0].lower()),
     )
 
     def label(qn: str) -> str:
@@ -1409,11 +1425,10 @@ def _render_refactor_signals(
     lines.extend(
         [
             (
-                f"- `{area}` contains helpers from multiple modules "
-                f"({', '.join(f'`{module}`' for module in sorted(modules))}); "
-                "review whether the helper grouping still matches intent."
+                f"- `{helper_name}` is grouped as `{assigned_area}`, but its name suggests "
+                f"`{name_area}` while its summary suggests `{purpose_area}`."
             )
-            for area, modules in mixed_area_signals[:8]
+            for helper_name, assigned_area, name_area, purpose_area in area_mismatch_signals[:8]
         ]
         or ["- None detected from helper names, doc summaries, and module placement."]
     )

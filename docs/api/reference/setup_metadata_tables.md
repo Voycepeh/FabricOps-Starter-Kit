@@ -288,10 +288,7 @@ migrate user data automatically.
 
     **Helpers grouped into possibly wrong areas**
 
-    - `Fabric or Spark access` contains helpers from multiple modules (`config`, `fabric_input_output`); review whether the helper grouping still matches intent.
-    - `Metadata loading` contains helpers from multiple modules (`config`, `data_agreement`, `fabric_input_output`, `governance_review`); review whether the helper grouping still matches intent.
-    - `Other` contains helpers from multiple modules (`data_agreement`, `governance_review`); review whether the helper grouping still matches intent.
-    - `Rule parsing` contains helpers from multiple modules (`config`, `fabric_input_output`); review whether the helper grouping still matches intent.
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 32 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, fabric or spark access, and other.
 

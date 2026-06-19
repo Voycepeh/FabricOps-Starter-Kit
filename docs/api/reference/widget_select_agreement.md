@@ -264,10 +264,7 @@ No additional callable notes are documented.
 
     **Helpers grouped into possibly wrong areas**
 
-    - `Fabric or Spark access` contains helpers from multiple modules (`config`, `fabric_input_output`, `metadata`); review whether the helper grouping still matches intent.
-    - `Metadata loading` contains helpers from multiple modules (`data_agreement`, `fabric_input_output`, `metadata`); review whether the helper grouping still matches intent.
-    - `Other` contains helpers from multiple modules (`data_agreement`, `metadata`); review whether the helper grouping still matches intent.
-    - `Rule parsing` contains helpers from multiple modules (`config`, `data_agreement`, `fabric_input_output`); review whether the helper grouping still matches intent.
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 30 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
 

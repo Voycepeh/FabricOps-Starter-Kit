@@ -151,7 +151,7 @@ FabricOps audit columns.
 
     **Helpers grouped into possibly wrong areas**
 
-    - `Audit timestamp` contains helpers from multiple modules (`config`, `pipeline`); review whether the helper grouping still matches intent.
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 4 internal helpers for audit timestamp.
 

@@ -68,6 +68,60 @@ def _exported_symbols() -> list[str]:
     raise AssertionError("Could not parse __all__")
 
 
+def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
+    """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
+    from scripts.generate_function_reference import _render_refactor_signals
+
+    root_qn = "fabricops_kit.pipeline.public_api"
+    calls_by_qn = {
+        root_qn: [
+            "fabricops_kit.pipeline._load_metadata_rules",
+            "fabricops_kit.metadata._load_metadata_table",
+        ],
+    }
+    node_by_qn = {
+        root_qn: {"callable_name": "public_api", "module_name": "pipeline", "exported": True},
+        "fabricops_kit.pipeline._load_metadata_rules": {
+            "callable_name": "_load_metadata_rules",
+            "module_name": "pipeline",
+            "exported": False,
+        },
+        "fabricops_kit.metadata._load_metadata_table": {
+            "callable_name": "_load_metadata_table",
+            "module_name": "metadata",
+            "exported": False,
+        },
+    }
+    module_data = {
+        "pipeline": {"functions": {"_load_metadata_rules": "Load metadata rules for the callable."}},
+        "metadata": {"functions": {"_load_metadata_table": "Load metadata table rows."}},
+    }
+
+    signals = "\n".join(_render_refactor_signals(root_qn, calls_by_qn, node_by_qn, module_data))
+
+    assert "contains helpers from multiple modules" not in signals
+    assert "- None detected from helper names, doc summaries, and module placement." in signals
+
+
+def test_helper_area_mismatch_signal_requires_three_way_mismatch() -> None:
+    """Verify wrong-area signals require name, summary, and grouping mismatch."""
+    from scripts.generate_function_reference import _helper_area_mismatch_signal
+
+    two_way_signal = _helper_area_mismatch_signal(
+        "_metadata_check",
+        "Validate required inputs before the workflow continues.",
+        "Metadata loading",
+    )
+    three_way_signal = _helper_area_mismatch_signal(
+        "_validate_inputs",
+        "Evaluate configured rules for the callable.",
+        "Metadata loading",
+    )
+
+    assert two_way_signal is None
+    assert three_way_signal == ("Metadata loading", "Validation", "Rule evaluation")
+
+
 def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
     """Verify reference agent/automation metadata files exist and are valid json."""
     automation_manifest = REFERENCE_DIR / "_data" / "automation-manifest.json"

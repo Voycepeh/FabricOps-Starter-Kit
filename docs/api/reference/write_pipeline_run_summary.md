@@ -219,7 +219,7 @@ evidence never relies on a default attached lakehouse.
 
     **Helpers grouped into possibly wrong areas**
 
-    - `Rule parsing` contains helpers from multiple modules (`config`, `fabric_input_output`, `pipeline`); review whether the helper grouping still matches intent.
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 14 internal helpers for audit timestamp, metadata loading, rule parsing, result summary, fabric or spark access, and other.
 

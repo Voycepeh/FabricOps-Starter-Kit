@@ -604,14 +604,7 @@ are routed through the configured metadata target by the called helpers.
 
     **Helpers grouped into possibly wrong areas**
 
-    - `Audit timestamp` contains helpers from multiple modules (`config`, `metadata`, `pipeline`); review whether the helper grouping still matches intent.
-    - `Column handling` contains helpers from multiple modules (`data_profiling`, `guardrails`); review whether the helper grouping still matches intent.
-    - `Fabric or Spark access` contains helpers from multiple modules (`config`, `data_profiling`, `fabric_input_output`); review whether the helper grouping still matches intent.
-    - `Metadata loading` contains helpers from multiple modules (`fabric_input_output`, `governance_review`, `guardrails`, `metadata`, `pipeline`); review whether the helper grouping still matches intent.
-    - `Other` contains helpers from multiple modules (`data_profiling`, `governance_review`, `guardrails`, `metadata`, `pipeline`); review whether the helper grouping still matches intent.
-    - `Result summary` contains helpers from multiple modules (`data_profiling`, `pipeline`); review whether the helper grouping still matches intent.
-    - `Rule evaluation` contains helpers from multiple modules (`governance_review`, `guardrails`, `pipeline`); review whether the helper grouping still matches intent.
-    - `Rule parsing` contains helpers from multiple modules (`config`, `fabric_input_output`, `governance_review`, `guardrails`, `pipeline`); review whether the helper grouping still matches intent.
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 89 internal helpers for audit timestamp, metadata loading, validation, rule parsing, profile comparison, column handling, rule evaluation, result summary, fabric or spark access, and other.
 
