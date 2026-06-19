@@ -105,7 +105,7 @@ No additional callable notes are documented.
     Unique internal helpers: 0. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><a href="get_selected_agreement/"><code>get_selected_agreement(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>get_selected_agreement(...)</code></div>
     </div>
 
 

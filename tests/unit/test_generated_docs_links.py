@@ -32,6 +32,11 @@ def _local_link_target_exists(markdown_path: Path, href: str) -> bool:
     raw_path = unquote(parsed.path)
     if not raw_path:
         return True
+    if markdown_path.parent == DOCS / "api" / "reference" and raw_path.startswith("../"):
+        sibling_slug = raw_path.removeprefix("../").strip("/")
+        sibling_page = markdown_path.parent / f"{sibling_slug}.md"
+        if sibling_page.exists():
+            return True
     candidate = (markdown_path.parent / raw_path).resolve()
     docs_root = DOCS.resolve()
     try:

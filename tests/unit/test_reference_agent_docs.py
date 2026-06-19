@@ -353,9 +353,25 @@ def test_clickable_call_tree_links_public_pages_and_private_source() -> None:
     text = (API_REFERENCE_DIR / "widget_author_guardrail_rules.md").read_text(encoding="utf-8")
     call_flow = text.split('??? info "Call flow"', 1)[1].split("## See also", 1)[0]
 
-    assert 'href="widget_author_dq_rules/"' in call_flow
+    assert 'href="../widget_author_dq_rules/"' in call_flow
     assert 'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/' in call_flow
     assert '><code>_latest_rule(...)</code></a>' in call_flow
+
+
+def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
+    """Verify root call-tree labels are plain text rather than nested self links."""
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
+        text = page.read_text(encoding="utf-8")
+        match = re.search(r'<div class="reference-call-tree" role="tree">(?P<body>.*?)</div>', text, re.DOTALL)
+        assert match, page
+        slug = page.stem
+        first_row = match.group("body").split("\n", 2)[1]
+        assert f'href="{slug}/"' not in match.group("body"), page
+        assert f'href="../{slug}/"' not in first_row, page
+        assert f"<code>{slug}(...)</code>" in first_row, page
 
 def test_callable_pages_collapse_ai_machine_metadata() -> None:
     """Verify callable pages collapse machine metadata."""

@@ -1202,13 +1202,20 @@ def _collect_internal_helper_descendants(
     return helpers
 
 
-def _call_tree_link(qn: str, node_by_qn: dict[str, dict[str, Any]], module_data: dict[str, dict[str, Any]]) -> str | None:
+def _call_tree_link(
+    qn: str,
+    root_qn: str,
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> str | None:
     """Return the generated docs or source URL for a call-tree node when available."""
     node = node_by_qn.get(qn)
     if not node:
         return None
+    if qn == root_qn:
+        return None
     if node.get("exported"):
-        return f"{node['callable_name']}/"
+        return f"../{node['callable_name']}/"
     module_name = node.get("module_name")
     callable_name = node.get("callable_name")
     if module_name and callable_name and module_name in module_data:
@@ -1223,6 +1230,7 @@ def _call_tree_link(qn: str, node_by_qn: dict[str, dict[str, Any]], module_data:
 
 def _call_tree_label(
     qn: str,
+    root_qn: str,
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
     *,
@@ -1232,7 +1240,7 @@ def _call_tree_label(
     node = node_by_qn.get(qn)
     name = node.get("callable_name", qn) if node else qn
     label = f"<code>{html_escape(name)}(...)</code>"
-    href = _call_tree_link(qn, node_by_qn, module_data)
+    href = _call_tree_link(qn, root_qn, node_by_qn, module_data)
     if href:
         label = f'<a href="{html_escape(href)}">{label}</a>'
     if recursive:
@@ -1251,7 +1259,7 @@ def _render_clickable_call_tree(
     """Render a mobile-friendly HTML call tree with clickable package callables."""
     lines = [
         '<div class="reference-call-tree" role="tree">',
-        f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span>{_call_tree_label(root_qn, node_by_qn, module_data)}</div>',
+        f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span>{_call_tree_label(root_qn, root_qn, node_by_qn, module_data)}</div>',
     ]
 
     def children(qn: str) -> list[str]:
@@ -1272,7 +1280,7 @@ def _render_clickable_call_tree(
             connector = "└── " if index == len(child_qns) - 1 else "├── "
             recursive = child in ancestors
             lines.append(
-                f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix + connector)}</span>{_call_tree_label(child, node_by_qn, module_data, recursive=recursive)}</div>'
+                f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix + connector)}</span>{_call_tree_label(child, root_qn, node_by_qn, module_data, recursive=recursive)}</div>'
             )
             if not recursive:
                 extension = "    " if index == len(child_qns) - 1 else "│   "
