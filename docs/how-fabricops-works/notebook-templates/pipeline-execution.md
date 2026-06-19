@@ -28,7 +28,9 @@ Use [`prepare_pipeline_table_configs`](../../api/reference/prepare_pipeline_tabl
 
 ## Guardrail execution
 
-Use [`guardrail orchestration`](../../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
+Guardrails are part of `02_pipeline`. They are the runtime checks that decide whether a run can continue, continue with warnings, or stop before writing pipeline outputs. They turn agreement and rule expectations into executable checks for schema, freshness, profile behaviour, and data quality.
+
+Use [`run_table_guardrails`](../../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
 
 ```python
 source_profile_results = run_table_guardrails(
@@ -58,9 +60,38 @@ target_enforcement_results = run_table_guardrails(
 
 `mode="profile"` is non-blocking by default, so the notebook can collect catalogue and guardrail visibility without stopping the run. `mode="enforce"` defaults `stop_on_failure=True`, so failed error-severity checks stop before unsafe target publication. Omitted `run_id`, `spark_session`, `pipeline_name`, `notebook_id`, `notebook_registry_id`, `agreement_id`, and `agreement_contract_version` values are resolved from the active pipeline context created by `start_pipeline_run`.
 
-Guardrail results are not just UI messages: they are evidence rows and continuation decisions. The dropdowns used during authoring save rule records in `METADATA_GUARDRAIL_RULES`; runtime interprets those saved records later.
+Guardrail results are not just UI messages. They are evidence rows and continuation decisions. Warning-severity failures can continue with evidence; error-severity or blocking failures stop before the next critical step.
 
-### Schema mode
+## Contract expectation versus enforcement
+
+FabricOps keeps the responsibility split clear:
+
+| Concept | Responsibility |
+| --- | --- |
+| Data contract | Describes what the data should look like, how fresh it should be, how it should behave over time, and which DQ expectations matter. |
+| Guardrail | Turns an expectation into a runtime pass, warning, fail, or skipped result. |
+| `02_pipeline` | Enforces schema, freshness, profile behaviour, and active DQ rules before pipeline outputs are written. |
+| `03_governance` | Reviews, approves, rejects, replaces, and deactivates guardrail rules and table governance state. |
+
+## Guardrail flow in `02_pipeline`
+
+| Point in the run | What happens | Why it matters |
+| --- | --- | --- |
+| After source read | Validate source schema, freshness, profile behaviour, and active source DQ guardrail rules. | Catch upstream structure, recency, behaviour, and quality issues before transformation. |
+| Transformation | Apply user-defined deterministic business logic. | Keep the output repeatable and explainable. |
+| Before target write | Validate target schema, freshness, profile behaviour, and active target DQ guardrail rules. | Avoid publishing stale, unexpected, or DQ-failing pipeline outputs. |
+| After successful checks | Write the output, lineage, profile, and run summary. | Keep governance review and support grounded in what actually ran. |
+
+## Guardrail types
+
+| Guardrail | Checks |
+| --- | --- |
+| Schema guardrail | Checks expected columns and data types. |
+| Freshness guardrail | Checks whether `max(freshness_column)` is recent enough based on `freshness_max_lag_days`. |
+| Profile behaviour guardrail | Checks whether the current profile follows `profile_mode`: `static_data`, `changing_data`, or `skip`. |
+| DQ guardrail | Checks active DQ guardrail rules from governance metadata. |
+
+## Schema mode
 
 [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md) offers schema mode options `strict`, `relaxed`, and `skip`. Runtime maps those as follows:
 
@@ -70,21 +101,53 @@ Guardrail results are not just UI messages: they are evidence rows and continuat
 | `relaxed` | `allow_new_columns` | Blocks missing columns and datatype mismatches. Unexpected columns are warnings and `can_continue` remains true. |
 | `skip` | `monitor_only` | Reports differences as warnings when checks exist, but `can_continue` remains true. |
 
-### Freshness
+![FabricOps schema guardrails](../../assets/fabricops-schema-guardrails.png)
+
+## Freshness
 
 Freshness options are `enforce` and `skip`. `enforce` writes a `max_lag_days` rule with `freshness_column` and `max_lag_days`. `skip` writes a `skip` rule. At runtime, skip returns `skipped` with `can_continue=true`. Enforced freshness checks whether the latest value in the freshness column is older than the allowed lag; stale data fails or warns depending on rule severity.
 
-### Profile mode
+Freshness is separate from profile behaviour: a table can follow its `profile_mode` and still be stale if the newest business date is too old.
+
+```python
+"freshness_column": "business_date",
+"freshness_max_lag_days": 1,
+"freshness_severity": "blocking"
+```
+
+![FabricOps freshness guardrails](../../assets/fabricops-freshness-guardrails.png)
+
+## Profile behaviour
 
 Profile mode options are `static_data`, `changing_data`, and `skip`. `static_data` profiles the full table as one baseline. `changing_data` requires `watermark_column` and profiles each distinct watermark value separately. `skip` returns `skipped` with `can_continue=true`.
 
-When previous accepted evidence exists, current profiles is compared to previous approved `METADATA_DATA_CATALOGUE` evidence. If no previous evidence exists, the current profile establishes the baseline. If differences are found, status depends on severity.
+When previous accepted evidence exists, the current profile is compared to previous approved `METADATA_DATA_CATALOGUE` evidence. If no previous evidence exists, the current profile establishes the baseline. If differences are found, status depends on severity.
 
-### DQ rules
+`append` and `overwrite` are physical write modes only. They are not profile behaviour concepts. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed by governance or represented by superseding rule or evidence history.
+
+![FabricOps load behaviour guardrails](../../assets/fabricops-load-behaviour-guardrails.png)
+
+| `rule_type` | Use when | Guardrail behaviour |
+| --- | --- | --- |
+| `static_data` | The full table should remain stable. | Treat the full table as one profile group with `watermark_value="__FULL_TABLE__"`. Row count, schema signature, profile hash, and configured profile differences must match the previous accepted or passed full-table profile. |
+| `changing_data` | New business periods or partitions can arrive, but old periods must remain stable. | Require `watermark_column`, profile one group per watermark value, allow new watermark values, and fail or warn when a previously seen watermark group changes or disappears. |
+| `skip` | Profile behaviour should not run for the table. | Do not create profile-behaviour comparison evidence; other guardrails still run. |
+
+## DQ rules
 
 [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) offers DQ severity options `warning` and `error`. Runtime loads DQ rules from `METADATA_GUARDRAIL_RULES`. Error-severity failures return `failed` and `can_continue=false`; warning-severity failures return `warning` and `can_continue=true`. Passing or absent DQ rules return `passed` and `can_continue=true`.
 
 DQ does not quarantine rows, write row-level failure metadata, filter invalid rows, send alerts, or partially write targets. It records aggregate rule outcomes and continuation decisions.
+
+![FabricOps DQ guardrails](../../assets/fabricops-DQ-guardrails.png)
+
+## Guardrail authoring and governance handoff
+
+Guardrail authoring is still part of the pipeline workflow, not a separate public documentation page. After profiling evidence exists, the simplified `02_pipeline` flow can use [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md) to pick a profiled table, [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) to author guardrail intent, and [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md) to author descriptive enrichment.
+
+For ungoverned tables, engineering-authored saves remain active and non-pending with `review_status="self_approved"`. For governed tables, authors can save drafts, submit rules for governance review, or apply rules immediately as `active_pending_governance_review` when pipeline continuity requires it.
+
+Formal table governance review is still owned by [03 Governance Review](governance-review.md). `03_governance` uses [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md) to review enrichment and guardrail rows, approve pending records, reject records, replace records, deactivate approved records, and view history.
 
 ## Target write
 
@@ -113,10 +176,6 @@ The summary helper derives status, guardrail rollups, target write status, linea
 
 Use [`display_guardrail_results`](../../api/reference/display_guardrail_results.md) to show profile or enforcement outcomes in `summary`, `detailed`, or `debug` mode. The display mode changes presentation only; the runtime result bundles remain available for continuation checks and run summary writing.
 
-## Optional enrichment and guardrail authoring
-
-After profiling evidence exists, the simplified `02_pipeline` flow can still use [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md) to pick a profiled table, [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) to author guardrail intent, and [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md) to author descriptive enrichment. The template can also call [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md); formal table governance review is still owned by [03 Governance Review](governance-review.md).
-
 ## Guardrail evidence tables
 
 | Evidence area | Metadata table | Why it matters during `02_pipeline` |
@@ -127,13 +186,7 @@ After profiling evidence exists, the simplified `02_pipeline` flow can still use
 | Run summary | `METADATA_PIPELINE_RUNS` | Summarizes source/target counts, guardrail rollups, lineage/catalogue write status, and JSON detail. |
 | Lineage | `METADATA_DATA_LINEAGE_TABLE` | Records source-to-target relationships for handover, dashboarding, and review context. |
 
-![FabricOps schema guardrails](../../assets/fabricops-schema-guardrails.png)
-
-![FabricOps freshness guardrails](../../assets/fabricops-freshness-guardrails.png)
-
-![FabricOps DQ guardrails](../../assets/fabricops-DQ-guardrails.png)
-
-### Implementation guidance
+## Implementation guidance
 
 - Start the notebook with [`start_pipeline_run`](../../api/reference/start_pipeline_run.md), then rely on active defaults instead of repeating run and agreement metadata in every helper call.
 - Keep source and target table config dictionaries beginner-editable, then let [`prepare_pipeline_table_configs`](../../api/reference/prepare_pipeline_table_configs.md) normalize them for runtime helpers.
