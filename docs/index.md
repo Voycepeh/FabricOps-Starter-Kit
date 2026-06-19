@@ -56,6 +56,8 @@ This abstract away the important by tedious work into and a simplified plug and 
   </a>
 </div>
 
+The function reference currently documents **20 starter-kit functions**; see [Function Reference](reference/index.md).
+
 ## Choose where to begin
 
 <div class="fabricops-card-grid">

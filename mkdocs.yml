@@ -20,16 +20,19 @@ theme:
 nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works/index.md
-  - Guided Demo:
+  - Guided Demo - run the workflow:
       - Overview: guided-demo.md
-      - Setup Fabric Workspace: guided-demo/setup-fabric-workspace.md
+      - Create Wheel: guided-demo/create-wheel.md
+      - Create Fabric Workspace: guided-demo/create-fabric-workspace.md
+      - Create Lakehouses / Warehouse: guided-demo/create-lakehouses-warehouse.md
       - Configure Environment: guided-demo/configure-environment.md
+      - Run Environment Setup: guided-demo/run-environment-setup.md
       - Create Agreement: guided-demo/create-agreement.md
       - Run Pipeline: guided-demo/run-pipeline.md
       - Enrich Metadata: guided-demo/enrich-metadata.md
       - Review Guardrails: guided-demo/review-guardrails.md
       - Explore Metadata Outputs: guided-demo/explore-metadata-outputs.md
-  - List of Templates: how-fabricops-works/notebook-templates.md
+  - Template Notebooks - understand and configure notebooks: how-fabricops-works/notebook-templates.md
   - List of Metadata Tables:
       - Overview: reference/metadata-tables/index.md
       - Data Access: reference/metadata-tables/metadata-data-access.md

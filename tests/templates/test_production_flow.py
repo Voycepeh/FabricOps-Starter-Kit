@@ -148,29 +148,43 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
         encoding="utf-8"
     )
 
-    assert "## Optional example notebooks" in notebook_docs
-    assert "These notebooks are release-specific validation aids." in notebook_docs
-    assert "They are not production workflow templates." in notebook_docs
-    assert notebook_docs.count("## Optional example notebooks") == 1
-    assert "[`templates/notebooks/99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)" in notebook_docs
-    assert "[`read_data`](../api/reference/read_data.md)" in notebook_docs
-    assert "[`profile_dataframe`](../api/reference/profile_dataframe.md)" in notebook_docs
-    assert "[`write_data`](../api/reference/write_data.md)" in notebook_docs
-    assert "[`enforce_dq_rules`](../api/reference/enforce_dq_rules.md)" in notebook_docs
-    assert "| [`templates/notebooks/example_pipeline_demo.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. |" in notebook_docs
-    assert "| [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. |" in notebook_docs
+    for expected in [
+        "## `example_pipeline_demo`",
+        "## `example_dq_rule_smoke_test`",
+        "No. Demo helper only.",
+        "No. Validation helper only.",
+        "Generates deterministic demo source tables for the guided demo.",
+        "Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a smoke-test context.",
+        "It is not a production delivery notebook.",
+        "No production notebook depends on this smoke test.",
+    ]:
+        assert expected in notebook_docs
 
 
 def test_guided_demo_links_pipeline_guardrail_demo():
     """Verify guided demo links the step pages for the pipeline guardrail demo."""
     guided_demo = (ROOT / "docs" / "guided-demo.md").read_text(encoding="utf-8")
-    setup_page = (ROOT / "docs" / "guided-demo" / "setup-fabric-workspace.md").read_text(encoding="utf-8")
+    create_wheel_page = (ROOT / "docs" / "guided-demo" / "create-wheel.md").read_text(
+        encoding="utf-8"
+    )
+    workspace_page = (ROOT / "docs" / "guided-demo" / "create-fabric-workspace.md").read_text(
+        encoding="utf-8"
+    )
+    lakehouse_page = (ROOT / "docs" / "guided-demo" / "create-lakehouses-warehouse.md").read_text(
+        encoding="utf-8"
+    )
+    env_setup_page = (ROOT / "docs" / "guided-demo" / "run-environment-setup.md").read_text(
+        encoding="utf-8"
+    )
 
     for expected in [
         "# FabricOps Guided Demo",
-        "## Guided demo flow",
-        "[Setup Fabric Workspace](guided-demo/setup-fabric-workspace.md)",
+        "## Run sequence",
+        "[Create Wheel](guided-demo/create-wheel.md)",
+        "[Create Fabric Workspace](guided-demo/create-fabric-workspace.md)",
+        "[Create Lakehouses / Warehouse](guided-demo/create-lakehouses-warehouse.md)",
         "[Configure Environment](guided-demo/configure-environment.md)",
+        "[Run Environment Setup](guided-demo/run-environment-setup.md)",
         "[Create Agreement](guided-demo/create-agreement.md)",
         "[Run Pipeline](guided-demo/run-pipeline.md)",
         "[Enrich Metadata](guided-demo/enrich-metadata.md)",
@@ -184,11 +198,15 @@ def test_guided_demo_links_pipeline_guardrail_demo():
     assert "milestone" not in guided_demo
 
     for expected in [
-        "# Setup Fabric Workspace",
-        "metadata_lakehouse",
-        "source_lakehouse",
-        "unified_lakehouse",
-        "product_warehouse",
+        "# Create Wheel",
+        "../setup/create-wheel.md",
+        "FabricOps `.whl` file",
+    ]:
+        assert expected in create_wheel_page
+
+    for expected in [
+        "# Create Fabric Workspace",
+        "wheel created in [Create Wheel](create-wheel.md)",
         "00_env_config",
         "01_agreement",
         "02_pipeline",
@@ -196,7 +214,24 @@ def test_guided_demo_links_pipeline_guardrail_demo():
         "example_pipeline_demo",
         "99_explore",
     ]:
-        assert expected in setup_page
+        assert expected in workspace_page
+
+    for expected in [
+        "# Create Lakehouses / Warehouse",
+        "metadata_lakehouse",
+        "source_lakehouse",
+        "unified_lakehouse",
+        "product_warehouse",
+    ]:
+        assert expected in lakehouse_page
+
+    for expected in [
+        "# Run Environment Setup",
+        "CONFIG",
+        "ENV",
+        "METADATA_*",
+    ]:
+        assert expected in env_setup_page
 
     assert (TEMPLATES / "example_pipeline_demo.ipynb").exists()
     assert (TEMPLATES / "example_dq_rule_smoke_test.ipynb").exists()
