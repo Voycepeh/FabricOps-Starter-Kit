@@ -17,6 +17,8 @@ Keep the default demo values for your first run so the notebooks and expected me
 | Happy path source tables | `demo_src_orders_happy` and `demo_src_customers_happy` |
 | Default unified outputs | `demo_unified_orders_enriched` and `demo_unified_orders_summary` |
 
+## Guided demo flow
+
 ## Run sequence
 
 | Order | Step | What you do | What you should have afterward |
