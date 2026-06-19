@@ -31,8 +31,6 @@ nav:
       - Guardrails:
           - Pipeline Guardrails: how-fabricops-works/guardrails/pipeline-guardrails.md
           - Governed Guardrail Authoring: how-fabricops-works/guardrails/guardrail-authoring.md
-      - API Design:
-          - Template-driven Callable Surface: how-fabricops-works/api/template-driven-api.md
   - Guided Demo:
       - Overview: guided-demo.md
       - Create Wheel: guided-demo/create-wheel.md
