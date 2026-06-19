@@ -254,3 +254,34 @@
     columns: 1;
   }
 }
+
+/* Metadata notebook flow cards on the How FabricOps Works page. */
+.md-typeset .metadata-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.md-typeset .metadata-flow-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.28rem solid var(--md-primary-fg-color);
+  border-radius: 0.35rem;
+  padding: 1rem;
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+}
+
+.md-typeset .metadata-flow-card p:first-of-type {
+  font-weight: 600;
+}
+
+.md-typeset .metadata-flow-card p:last-child {
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .metadata-flow-grid {
+    grid-template-columns: 1fr;
+  }
+}
