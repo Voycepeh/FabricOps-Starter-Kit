@@ -1,30 +1,70 @@
 # 00 Environment Configuration
 
-`00_env_config` is the implementation guide for bootstrapping FabricOps in a Fabric workspace. It defines the active environment, validates the configured Fabric targets, and prepares the metadata tables used by the rest of the notebook handshake.
+`00_env_config` is the control panel for a FabricOps workspace.
 
-## Environment setup
+Run this notebook first in each environment. It tells FabricOps:
 
-Set `ENV` / `ENV_NAME` to the active environment key, such as `dev`, and keep that key aligned with `ENV_PATHS`. The notebook assembles `PathConfig`, `NotebookRuntimeConfig`, governance config, agreement config, and audit timezone into one `FrameworkConfig`.
+- which environment is active;
+- where the source, unified, product, and metadata Lakehouses or Warehouses are;
+- where FabricOps should write metadata;
+- which runtime checks should be applied;
+- which metadata tables must exist before the workflow continues.
 
-The key setup helper is [`setup_notebook`](../api/reference/setup_notebook.md). It validates the runtime context, required target configuration, notebook naming/readiness checks, and returns the run context used by downstream cells.
+Most downstream notebooks depend on this configuration. If `00_env_config` is wrong, agreement, pipeline, governance, and metadata writes may point to the wrong Fabric items.
 
-## Workspace, lakehouse, metadata routing, and runtime configuration
+## What you configure here
 
-`ENV_PATHS` maps logical targets such as `source`, `unified`, `product`, and `metadata` to `FabricStore` values. Each target carries workspace ID, item ID, item name, kind, schema settings, and environment.
+### Active environment
 
-Metadata must route through the configured `metadata` target. Do not rely on a default attached Lakehouse for metadata tables. Later helpers read and write metadata through the environment and `CONFIG.path_config.paths[ENV]["metadata"]`.
+Set `ENV` / `ENV_NAME` to the environment you are running, such as `dev`, `qat`, or `prd`.
 
-Runtime values such as audit timezone, schema-enabled Lakehouse settings, default schemas, metadata schema, required targets, and validation mode should stay visible in `00_env_config` so users can see what the workflow will do before they run agreement, pipeline, or governance notebooks.
+This key must exist in `ENV_PATHS`.
 
-## Metadata table setup
+### Fabric targets
 
-Use [`setup_metadata_tables`](../api/reference/setup_metadata_tables.md) to create missing FabricOps metadata tables and validate existing metadata structures in the configured metadata target. On first run it creates empty tables for agreement, notebook registry, catalogue, guardrail, lineage, pipeline run, and governance/enrichment metadata. It does not create business rows; `01_agreement`, `02_pipeline`, and `03_governance` populate those tables.
+`ENV_PATHS` maps each logical FabricOps target to a real Fabric item.
 
-## Handoff to the next notebooks
+Typical targets are:
 
-When `00_env_config` finishes successfully, later templates receive:
+- `source`: where source data is read from;
+- `unified`: where cleaned or conformed data may be written;
+- `product`: where data product outputs may be written;
+- `metadata`: where FabricOps metadata tables are stored.
 
-- the active environment name;
-- a validated `CONFIG`;
-- configured source, unified, product, and metadata targets;
-- metadata tables ready for agreement, pipeline, and governance evidence.
+Each target should define its workspace, item ID, item name, item kind, schema settings, and environment.
+
+### Metadata routing
+
+FabricOps metadata must write to the configured `metadata` target.
+
+Do not depend on the default attached Lakehouse for metadata. Downstream helpers use the active environment and configured metadata target to read and write FabricOps tables.
+
+### Runtime settings
+
+Keep runtime settings visible in this notebook so users can review them before running the rest of the workflow.
+
+This includes required targets, validation mode, notebook naming checks, schema settings, default schemas, metadata schema, and audit timezone.
+
+## What this notebook does
+
+`00_env_config` uses [`setup_notebook`](../api/reference/setup_notebook.md) to validate the notebook runtime and configured targets.
+
+It then uses [`setup_metadata_tables`](../api/reference/setup_metadata_tables.md) to create missing FabricOps metadata tables and validate existing ones in the configured metadata target.
+
+On first run, this prepares the empty metadata structures needed by the rest of the workflow.
+
+It does not create business evidence rows. Those are written later by:
+
+- `01_agreement`;
+- `02_pipeline`;
+- `03_governance`.
+
+## What should be true before moving on
+
+After this notebook runs successfully:
+
+- the active environment is known;
+- `CONFIG` is available;
+- source, unified, product, and metadata targets are validated;
+- FabricOps metadata tables exist in the configured metadata target;
+- downstream notebooks can safely write agreement, catalogue, guardrail, lineage, pipeline, governance, and enrichment evidence.
