@@ -302,7 +302,7 @@ def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
         ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md",
         ROOT / "docs" / "how-fabricops-works" / "governance-review.md",
         ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md",
-        ROOT / "docs" / "how-fabricops-works" / "metadata-tables.md",
+        ROOT / "docs" / "reference" / "metadata-tables" / "index.md",
         ROOT / "docs" / "guided-demo.md",
         ROOT / "templates" / "notebooks" / "02_pipeline.ipynb",
         ROOT / "templates" / "notebooks" / "03_governance.ipynb",
