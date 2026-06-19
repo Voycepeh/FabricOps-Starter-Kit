@@ -144,6 +144,16 @@ def _direct_template_call_set() -> set[str]:
     return called
 
 
+def _expected_direct_public_template_calls() -> set[str]:
+    """Return audited exported functions directly called by template code cells."""
+    return {
+        str(row["function"])
+        for row in _audit_rows()
+        if row["in_root_exports"]
+        and (row["directly_called_in_core_templates"] or row["directly_called_in_example_templates"])
+    }
+
+
 def _catalogue_row_names() -> set[str]:
     """Return function names rendered as Function Reference catalogue rows."""
     return set(re.findall(r'data-callable-name="([^"]+)"', _reference_index()))
@@ -153,7 +163,7 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     """Verify starter template code-cell calls drive the reference surface."""
     called = _direct_template_call_set()
 
-    assert len(called) == 23
+    assert called == _expected_direct_public_template_calls()
     assert "setup_notebook" in called
     assert "write_pipeline_run_summary" in called
     assert "get_latest_metadata_catalogue" in called
