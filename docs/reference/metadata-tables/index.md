@@ -6,8 +6,6 @@ These pages are generated from the implemented metadata setup schema registry us
   <img src="../../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />
 </figure>
 
-<div class="metadata-table-grid" markdown="1">
-
 <table class="metadata-tables-overview">
   <colgroup>
     <col class="metadata-tables-overview__name" />
@@ -79,5 +77,3 @@ These pages are generated from the implemented metadata setup schema registry us
     </tr>
   </tbody>
 </table>
-
-</div>

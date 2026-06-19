@@ -33,7 +33,7 @@ Run it first in every workspace setup, demo, or delivery flow. Revisit it when w
 - Metadata lakehouse routing for `METADATA_*` tables.
 - Runtime validation defaults.
 - Audit and notebook registration settings.
-- Metadata table setup and validation cells.
+- Metadata table setup and validation cells that use [setup_notebook](../api/reference/setup_notebook.md).
 
 **User-editable configuration**
 
