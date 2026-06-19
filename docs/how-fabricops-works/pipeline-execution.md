@@ -24,13 +24,13 @@ Use [`read_data`](../api/reference/read_data.md) for source reads. The template 
 
 Use [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md) to enrich beginner-editable table settings into the config shape expected by guardrail and evidence helpers. The template prepares source configs before source profiling/checks and target configs before target profiling/checks.
 
-![FabricOps pipeline guardrails](../../assets/fabricops-pipeline-guardrails.png)
+![FabricOps pipeline guardrails](../assets/fabricops-pipeline-guardrails.png)
 
 ## Guardrail execution
 
 Guardrails are part of `02_pipeline`. They are the runtime checks that decide whether a run can continue, continue with warnings, or stop before writing pipeline outputs. They turn agreement and rule expectations into executable checks for schema, freshness, profile behaviour, and data quality.
 
-Use [`run_table_guardrails`](../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
+Use [`run_table_guardrails`](../api/reference/run_table_guardrails.md) for guardrail orchestration to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
 
 ```python
 source_profile_results = run_table_guardrails(
@@ -60,7 +60,7 @@ target_enforcement_results = run_table_guardrails(
 
 `mode="profile"` is non-blocking by default, so the notebook can collect catalogue and guardrail visibility without stopping the run. `mode="enforce"` defaults `stop_on_failure=True`, so failed error-severity checks stop before unsafe target publication. Omitted `run_id`, `spark_session`, `pipeline_name`, `notebook_id`, `notebook_registry_id`, `agreement_id`, and `agreement_contract_version` values are resolved from the active pipeline context created by `start_pipeline_run`.
 
-Guardrail results are not just UI messages. They are evidence rows and continuation decisions. Warning-severity failures can continue with evidence; error-severity or blocking failures stop before the next critical step.
+Guardrail results are not just UI messages. They are evidence rows and continuation decisions. A Warning-severity failure can continue with evidence; an Error-severity failure blocks before the next critical step.
 
 ## Contract expectation versus enforcement
 
@@ -101,7 +101,7 @@ FabricOps keeps the responsibility split clear:
 | `relaxed` | `allow_new_columns` | Blocks missing columns and datatype mismatches. Unexpected columns are warnings and `can_continue` remains true. |
 | `skip` | `monitor_only` | Reports differences as warnings when checks exist, but `can_continue` remains true. |
 
-![FabricOps schema guardrails](../../assets/fabricops-schema-guardrails.png)
+![FabricOps schema guardrails](../assets/fabricops-schema-guardrails.png)
 
 ## Freshness
 
@@ -115,7 +115,7 @@ Freshness is separate from profile behaviour: a table can follow its `profile_mo
 "freshness_severity": "blocking"
 ```
 
-![FabricOps freshness guardrails](../../assets/fabricops-freshness-guardrails.png)
+![FabricOps freshness guardrails](../assets/fabricops-freshness-guardrails.png)
 
 ## Profile behaviour
 
@@ -125,7 +125,7 @@ When previous accepted evidence exists, the current profile is compared to previ
 
 `append` and `overwrite` are physical write modes only. They are not profile behaviour concepts. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed by governance or represented by superseding rule or evidence history.
 
-![FabricOps load behaviour guardrails](../../assets/fabricops-load-behaviour-guardrails.png)
+![FabricOps load behaviour guardrails](../assets/fabricops-load-behaviour-guardrails.png)
 
 | `rule_type` | Use when | Guardrail behaviour |
 | --- | --- | --- |
@@ -135,11 +135,11 @@ When previous accepted evidence exists, the current profile is compared to previ
 
 ## DQ rules
 
-[`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) offers DQ severity options `warning` and `error`. Runtime loads DQ rules from `METADATA_GUARDRAIL_RULES`. Error-severity failures return `failed` and `can_continue=false`; warning-severity failures return `warning` and `can_continue=true`. Passing or absent DQ rules return `passed` and `can_continue=true`.
+[`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) offers DQ severity options `warning` and `error`. Runtime loads DQ rules from `METADATA_GUARDRAIL_RULES`. An Error-severity failure returns `failed` and `can_continue=false`; a Warning-severity failure returns `warning` and `can_continue=true`. Passing or absent DQ rules return `passed` and `can_continue=true`.
 
 DQ does not quarantine rows, write row-level failure metadata, filter invalid rows, send alerts, or partially write targets. It records aggregate rule outcomes and continuation decisions.
 
-![FabricOps DQ guardrails](../../assets/fabricops-DQ-guardrails.png)
+![FabricOps DQ guardrails](../assets/fabricops-DQ-guardrails.png)
 
 ## Guardrail authoring and governance handoff
 

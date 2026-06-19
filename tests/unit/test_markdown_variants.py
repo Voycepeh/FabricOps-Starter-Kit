@@ -53,9 +53,6 @@ def test_markdown_variant_hook_preserves_grouped_source_paths(tmp_path: Path) ->
         site_dir / "how-fabricops-works" / "pipeline-execution.md",
         site_dir / "how-fabricops-works" / "notebook-templates" / "governance-review.md",
         site_dir / "how-fabricops-works" / "notebook-templates" / "metadata-dashboard.md",
-        site_dir / "how-fabricops-works" / "pipeline-execution.md",
-        site_dir / "how-fabricops-works" / "guardrails" / "guardrail-authoring.md",
-        site_dir / "how-fabricops-works" / "api" / "template-driven-api.md",
     ]
     stale_flat_paths = [
         site_dir / "how-fabricops-works" / "notebook-templates.md",
@@ -67,12 +64,19 @@ def test_markdown_variant_hook_preserves_grouped_source_paths(tmp_path: Path) ->
         site_dir / "how-fabricops-works" / "guardrail-authoring.md",
         site_dir / "how-fabricops-works" / "template-driven-api.md",
     ]
+    removed_page_paths = [
+        site_dir / "how-fabricops-works" / "guardrails" / "pipeline-guardrails.md",
+        site_dir / "how-fabricops-works" / "guardrails" / "guardrail-authoring.md",
+        site_dir / "how-fabricops-works" / "api" / "template-driven-api.md",
+    ]
 
     missing_grouped_paths = [str(path.relative_to(site_dir)) for path in expected_grouped_paths if not path.exists()]
     stale_paths = [str(path.relative_to(site_dir)) for path in stale_flat_paths if path.exists()]
+    recreated_removed_paths = [str(path.relative_to(site_dir)) for path in removed_page_paths if path.exists()]
 
     assert missing_grouped_paths == []
     assert stale_paths == []
+    assert recreated_removed_paths == []
 
 
 def test_markdown_variant_hook_publishes_versioned_agent_friendly_entrypoints(tmp_path: Path) -> None:
