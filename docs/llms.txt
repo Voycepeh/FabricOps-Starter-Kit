@@ -14,16 +14,16 @@ Use this file as a concise navigation map for documentation and automation workf
 
 - [How FabricOps Works](how-fabricops-works.md): Overview of the governed Fabric notebook operating model.
 - [List of Metadata Tables](reference/metadata-tables/index.md): Metadata table responsibilities and governance evidence model.
-- [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md): Runtime guardrails for schemas, freshness, DQ enforcement, and profile behavior.
-- [Metadata Dashboard](how-fabricops-works/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
+- [Pipeline Guardrails](how-fabricops-works/guardrails/pipeline-guardrails.md): Runtime guardrails for schemas, freshness, DQ enforcement, and profile behavior.
+- [Metadata Dashboard](how-fabricops-works/metadata/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
 
 ## Notebook flow
 
-- [Notebook Templates](how-fabricops-works/notebook-templates.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
+- [Notebook Templates](how-fabricops-works/notebook-templates/index.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
 
 ## Metadata and contracts
 
-- [Data Quality and Governance](how-fabricops-works/governance-review.md): Review flows for column context, classification, DQ rules, and governance evidence.
+- [Data Quality and Governance](how-fabricops-works/notebook-templates/governance-review.md): Review flows for column context, classification, DQ rules, and governance evidence.
 - [DQ Rules Reference](reference/dq-rules.md): Supported rule types, parameters, examples, and enforcement expectations.
 - [Glossary](reference/glossary.md): Shared terminology for governed notebook delivery.
 

@@ -227,8 +227,7 @@ def prepare_pipeline_table_configs(
 
 ### Public related functions
 
-- <a href="run_table_guardrails/">
-<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="read_data/"><code>fabricops_kit.fabric_input_output.read_data</code></a>
 
 ### Internal implementation summary
@@ -241,15 +240,15 @@ def prepare_pipeline_table_configs(
 ## Glossary
 
 <div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Source data</span><span class="glossary-chip-definition">Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../../reference/glossary/#source-data">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Target table</span><span class="glossary-chip-definition">A written table produced by a pipeline output.</span> <a href="../../../reference/glossary/#target-table">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Stage</span><span class="glossary-chip-definition">Named part of a pipeline such as source, transformation, or target.</span> <a href="../../../reference/glossary/#stage">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Guardrails</span><span class="glossary-chip-definition">Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../../reference/glossary/#guardrails">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Source data</span><span class="glossary-chip-definition">Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../reference/glossary/#source-data">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Target table</span><span class="glossary-chip-definition">A written table produced by a pipeline output.</span> <a href="../../reference/glossary/#target-table">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Stage</span><span class="glossary-chip-definition">Named part of a pipeline such as source, transformation, or target.</span> <a href="../../reference/glossary/#stage">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Guardrails</span><span class="glossary-chip-definition">Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../reference/glossary/#guardrails">Full definition</a></span>
 </div>
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Notebook Templates](../../how-fabricops-works/notebook-templates/index.md)
+- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)

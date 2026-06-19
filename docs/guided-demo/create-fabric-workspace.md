@@ -15,4 +15,4 @@ Create or choose the Microsoft Fabric workspace that will host the copied demo n
 
 The workspace contains editable copies of `00_env_config`, `01_agreement`, `example_pipeline_demo`, `02_pipeline`, `03_governance`, and `99_explore`, and at least one notebook can import `fabricops_kit`.
 
-Next, continue to [Create Lakehouses / Warehouse](create-lakehouses-warehouse.md). For the detailed role of each notebook, see [Template Notebooks](../how-fabricops-works/notebook-templates.md).
+Next, continue to [Create Lakehouses / Warehouse](create-lakehouses-warehouse.md). For the detailed role of each notebook, see [Template Notebooks](../how-fabricops-works/notebook-templates/index.md).

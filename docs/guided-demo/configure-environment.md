@@ -14,4 +14,4 @@ Edit `00_env_config` before running setup so every later notebook uses the same 
 
 `00_env_config` is ready to run, but no later notebook should run until [Run Environment Setup](run-environment-setup.md) completes.
 
-For the complete `00_env_config` reference, see [Template Notebooks](../how-fabricops-works/notebook-templates.md#00_env_config).
+For the complete `00_env_config` reference, see [Template Notebooks](../how-fabricops-works/notebook-templates/index.md#00_env_config).

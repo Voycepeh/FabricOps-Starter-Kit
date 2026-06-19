@@ -23,4 +23,4 @@ Create the Fabric data items that the demo will route through `00_env_config`.
 
 The required lakehouse and warehouse targets exist and can be referenced from `00_env_config`.
 
-For configuration details, see [Template Notebooks](../how-fabricops-works/notebook-templates.md#00_env_config).
+For configuration details, see [Template Notebooks](../how-fabricops-works/notebook-templates/index.md#00_env_config).

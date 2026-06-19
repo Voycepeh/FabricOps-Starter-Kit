@@ -356,13 +356,13 @@ Not documented yet
 ## Glossary
 
 <div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../../reference/glossary/#notebook-template">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Evidence</span><span class="glossary-chip-definition">Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../../reference/glossary/#evidence">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../reference/glossary/#notebook-template">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Evidence</span><span class="glossary-chip-definition">Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../reference/glossary/#evidence">Full definition</a></span>
 </div>
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Notebook Templates](../../how-fabricops-works/notebook-templates/index.md)
 - [Metadata Tables](../../reference/metadata-tables/index.md)

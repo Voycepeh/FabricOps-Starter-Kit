@@ -407,8 +407,7 @@ def start_pipeline_run(
 
 ### Public related functions
 
-- <a href="run_table_guardrails/">
-<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 - <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
@@ -422,14 +421,14 @@ def start_pipeline_run(
 ## Glossary
 
 <div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../../reference/glossary/#notebook-template">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Data agreement</span><span class="glossary-chip-definition">FabricOps agreement record that captures ownership, steward context, usage, and expectations.</span> <a href="../../../reference/glossary/#data-agreement">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Metadata lakehouse</span><span class="glossary-chip-definition">Configured Fabric Lakehouse target where FabricOps stores metadata tables.</span> <a href="../../../reference/glossary/#metadata-lakehouse">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../reference/glossary/#notebook-template">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Data agreement</span><span class="glossary-chip-definition">FabricOps agreement record that captures ownership, steward context, usage, and expectations.</span> <a href="../../reference/glossary/#data-agreement">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Metadata lakehouse</span><span class="glossary-chip-definition">Configured Fabric Lakehouse target where FabricOps stores metadata tables.</span> <a href="../../reference/glossary/#metadata-lakehouse">Full definition</a></span>
 </div>
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Notebook Templates](../../how-fabricops-works/notebook-templates/index.md)
+- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)

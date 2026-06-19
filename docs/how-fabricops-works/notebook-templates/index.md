@@ -1,6 +1,6 @@
 # Template Notebooks
 
-Template Notebooks is the canonical user guide for what each FabricOps notebook contains and what users can configure. Use it when you need notebook-level detail. Use the [Guided Demo](../guided-demo.md) for the run sequence, and use the [API Reference](../reference/index.md) for reusable functions and classes.
+Template Notebooks is the canonical user guide for what each FabricOps notebook contains and what users can configure. Use it when you need notebook-level detail. Use the [Guided Demo](../../guided-demo.md) for the run sequence, and use the [API Reference](../../reference/index.md) for reusable functions and classes.
 
 ## Notebook roles
 
@@ -33,7 +33,7 @@ Run it first in every workspace setup, demo, or delivery flow. Revisit it when w
 - Metadata lakehouse routing for `METADATA_*` tables.
 - Runtime validation defaults.
 - Audit and notebook registration settings.
-- Metadata table setup and validation cells that use [setup_notebook](../api/reference/setup_notebook.md).
+- Metadata table setup and validation cells that use [setup_notebook](../../api/reference/setup_notebook.md).
 
 **User-editable configuration**
 
@@ -375,4 +375,4 @@ Only smoke-test artifacts expected by the notebook. It does not define productio
 
 **Downstream dependencies**
 
-No production notebook depends on this smoke test. Use [DQ Rules](../reference/dq-rules/index.md) for rule syntax and supported behavior.
+No production notebook depends on this smoke test. Use [DQ Rules](../../reference/dq-rules/index.md) for rule syntax and supported behavior.

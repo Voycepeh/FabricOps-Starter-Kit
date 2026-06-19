@@ -289,8 +289,7 @@ def display_guardrail_results(
 
 ### Public related functions
 
-- <a href="run_table_guardrails/">
-<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
 
 ### Internal implementation summary
@@ -303,11 +302,11 @@ def display_guardrail_results(
 ## Glossary
 
 <div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Guardrails</span><span class="glossary-chip-definition">Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../../reference/glossary/#guardrails">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../../reference/glossary/#notebook-template">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Guardrails</span><span class="glossary-chip-definition">Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../reference/glossary/#guardrails">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../reference/glossary/#notebook-template">Full definition</a></span>
 </div>
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 

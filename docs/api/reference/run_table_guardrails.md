@@ -854,15 +854,15 @@ def run_table_guardrails(
 ## Glossary
 
 <div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Guardrails</span><span class="glossary-chip-definition">Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../../reference/glossary/#guardrails">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">can_continue</span><span class="glossary-chip-definition">Boolean result that tells downstream notebook code whether processing can keep running.</span> <a href="../../../reference/glossary/#cancontinue">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Source data</span><span class="glossary-chip-definition">Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../../reference/glossary/#source-data">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Target table</span><span class="glossary-chip-definition">A written table produced by a pipeline output.</span> <a href="../../../reference/glossary/#target-table">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Evidence</span><span class="glossary-chip-definition">Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../../reference/glossary/#evidence">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Guardrails</span><span class="glossary-chip-definition">Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../reference/glossary/#guardrails">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">can_continue</span><span class="glossary-chip-definition">Boolean result that tells downstream notebook code whether processing can keep running.</span> <a href="../../reference/glossary/#cancontinue">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Source data</span><span class="glossary-chip-definition">Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../reference/glossary/#source-data">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Target table</span><span class="glossary-chip-definition">A written table produced by a pipeline output.</span> <a href="../../reference/glossary/#target-table">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Evidence</span><span class="glossary-chip-definition">Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../reference/glossary/#evidence">Full definition</a></span>
 </div>
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
+- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)

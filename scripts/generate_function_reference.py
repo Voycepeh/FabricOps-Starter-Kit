@@ -681,9 +681,9 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
             f'<span class="glossary-chip">'
             f'<span class="glossary-chip-label">{display_term}</span>'
             f'<span class="glossary-chip-definition">{entry["short_definition"]}</span> '
-            f'<a href="../../../reference/glossary/#{anchor}">Full definition</a></span>'
+            f'<a href="../../reference/glossary/#{anchor}">Full definition</a></span>'
         )
-    lines.extend(["</div>", "", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
+    lines.extend(["</div>", "", "See the [full glossary](../../reference/glossary/) for more FabricOps terms."])
     return lines
 
 

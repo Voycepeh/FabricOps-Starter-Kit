@@ -96,8 +96,7 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 - `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
 - `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/">
-<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Calls
 
@@ -247,8 +246,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 - `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
 - `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/">
-<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 
@@ -298,14 +296,14 @@ def profile_dataframe(
 ## Glossary
 
 <div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Evidence</span><span class="glossary-chip-definition">Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../../reference/glossary/#evidence">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Source data</span><span class="glossary-chip-definition">Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../../reference/glossary/#source-data">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Target table</span><span class="glossary-chip-definition">A written table produced by a pipeline output.</span> <a href="../../../reference/glossary/#target-table">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Evidence</span><span class="glossary-chip-definition">Stored proof that a profile, decision, result, or relationship existed at a point in time.</span> <a href="../../reference/glossary/#evidence">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Source data</span><span class="glossary-chip-definition">Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../reference/glossary/#source-data">Full definition</a></span>
+<span class="glossary-chip"><span class="glossary-chip-label">Target table</span><span class="glossary-chip-definition">A written table produced by a pipeline output.</span> <a href="../../reference/glossary/#target-table">Full definition</a></span>
 </div>
 
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+See the [full glossary](../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/notebook-templates/governance-review.md)

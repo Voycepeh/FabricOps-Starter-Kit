@@ -78,4 +78,4 @@ No FabricOps metadata is required yet. This setup step prepares the runtime and 
 
 ## Next
 
-Continue to [Configure Environment](configure-environment.md). For template responsibilities, see [List of Templates](../how-fabricops-works/notebook-templates.md).
+Continue to [Configure Environment](configure-environment.md). For template responsibilities, see [List of Templates](../how-fabricops-works/notebook-templates/index.md).
