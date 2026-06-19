@@ -73,7 +73,7 @@ Raises an error when no agreement has been selected in the current session.
 
 ### Used by
 
-Not documented yet
+- <a href="start_pipeline_run/"><code>fabricops_kit.pipeline.start_pipeline_run</code></a>
 
 ### Calls
 
@@ -88,7 +88,7 @@ Not documented yet
 
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
-- `02_pipeline`
+None.
 
 **Side effects:**
 
@@ -102,20 +102,12 @@ No additional callable notes are documented.
 
 ??? info "Call flow"
 
-    ```text
-    get_selected_agreement(...)
-    ```
+    Unique internal helpers: 0. Repeated calls may appear in multiple branches.
 
-??? info "Internal helpers used: 0"
-
-    This callable uses 0 internal helpers; `get_selected_agreement` does not have package-local helper descendants in the generated call graph.
-
-    <div class="reference-helper-groups">
-      <section class="reference-helper-group reference-helper-group-empty">
-        <h4>No internal helpers detected</h4>
-        <p>This callable does not have package-local helper descendants in the generated call graph.</p>
-      </section>
+    <div class="reference-call-tree" role="tree">
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>get_selected_agreement(...)</code></div>
     </div>
+
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
@@ -131,9 +123,9 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source line: `1027`
-- Inbound references count: 0
+- Inbound references count: 1
 - Outbound references count: 0
-- Used in templates: 02_pipeline
+- Used in templates: —
 - Glossary terms: notebook template
 
 ### Implementation contract
@@ -147,7 +139,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 ### Inbound references
 
-Not documented yet
+- <a href="start_pipeline_run/"><code>fabricops_kit.pipeline.start_pipeline_run</code></a>
 
 ### Outbound references
 

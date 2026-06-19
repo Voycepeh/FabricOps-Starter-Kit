@@ -113,9 +113,11 @@ V1_CALLABLES = {
     "write_data",
     "profile_dataframe",
     "enforce_dq_rules",
+    "get_latest_metadata_catalogue",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
+    "start_pipeline_run",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -1202,16 +1204,65 @@ def _collect_internal_helper_descendants(
     return helpers
 
 
-def _render_call_tree(
+def _call_tree_link(
+    qn: str,
+    root_qn: str,
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> str | None:
+    """Return the generated docs or source URL for a call-tree node when available."""
+    node = node_by_qn.get(qn)
+    if not node:
+        return None
+    if qn == root_qn:
+        return None
+    if node.get("exported"):
+        return f"../{node['callable_name']}/"
+    module_name = node.get("module_name")
+    callable_name = node.get("callable_name")
+    if module_name and callable_name and module_name in module_data:
+        source_location = module_data.get(module_name, {}).get("source_locations", {}).get(callable_name, {})
+        return github_source_url(
+            f"src/fabricops_kit/{module_name}.py",
+            source_location.get("start_line"),
+            source_location.get("end_line"),
+        )
+    return None
+
+
+def _call_tree_label(
+    qn: str,
+    root_qn: str,
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+    *,
+    recursive: bool = False,
+) -> str:
+    """Render one call-tree callable label, linking package callables when possible."""
+    node = node_by_qn.get(qn)
+    name = node.get("callable_name", qn) if node else qn
+    label = f"<code>{html_escape(name)}(...)</code>"
+    href = _call_tree_link(qn, root_qn, node_by_qn, module_data)
+    if href:
+        label = f'<a href="{html_escape(href)}">{label}</a>'
+    if recursive:
+        label += ' <span class="reference-call-tree-note">(recursive)</span>'
+    return label
+
+
+def _render_clickable_call_tree(
     root_qn: str,
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
     *,
     max_depth: int = 6,
 ) -> list[str]:
-    """Render a compact ASCII call tree for package-local calls."""
-    root = node_by_qn[root_qn]["callable_name"]
-    lines = [f"{root}(...)"]
+    """Render a mobile-friendly HTML call tree with clickable package callables."""
+    lines = [
+        '<div class="reference-call-tree" role="tree">',
+        f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span>{_call_tree_label(root_qn, root_qn, node_by_qn, module_data)}</div>',
+    ]
 
     def children(qn: str) -> list[str]:
         return sorted(
@@ -1222,20 +1273,24 @@ def _render_call_tree(
     def visit(qn: str, prefix: str, ancestors: set[str], depth: int) -> None:
         if depth >= max_depth:
             if children(qn):
-                lines.append(f"{prefix}└── …")
+                lines.append(
+                    f'  <div class="reference-call-tree-row reference-call-tree-more" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix)}└── </span>…</div>'
+                )
             return
         child_qns = children(qn)
         for index, child in enumerate(child_qns):
             connector = "└── " if index == len(child_qns) - 1 else "├── "
-            child_name = node_by_qn[child]["callable_name"]
-            suffix = " (recursive)" if child in ancestors else ""
-            lines.append(f"{prefix}{connector}{child_name}(...){suffix}")
-            if child not in ancestors:
+            recursive = child in ancestors
+            lines.append(
+                f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix + connector)}</span>{_call_tree_label(child, root_qn, node_by_qn, module_data, recursive=recursive)}</div>'
+            )
+            if not recursive:
                 extension = "    " if index == len(child_qns) - 1 else "│   "
                 visit(child, prefix + extension, ancestors | {child}, depth + 1)
 
     visit(root_qn, "", {root_qn}, 0)
-    return ["```text", *lines, "```"]
+    lines.append("</div>")
+    return lines
 
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
@@ -2235,6 +2290,7 @@ def main() -> None:
             starter_path = "—"
             purpose = module_data[module_name]["functions"].get(name) or "Internal helper used by the package."
             display_module = canonical_public_module(module_name)
+        starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
         raw_calls = dependency_meta.get("calls", [])
@@ -2248,8 +2304,8 @@ def main() -> None:
                 (
                     f'<article id="{_esc(module_name)}-{_esc(name)}" class="reference-catalogue-item" '
                     f'data-callable-row="true" data-callable-name="{_esc(name)}" '
-                    f'data-callable-module="{_esc(display_module)}" '
-                    f'data-callable-starter-path="{_esc(starter_path)}" '
+                    f'data-callable-module="{_esc(display_module)}"'
+                    f'{starter_path_attribute} '
                     f'data-function-type="{_esc(function_type)}" '
                     f'data-callable-purpose="{_esc(purpose)}">'
                 ),
@@ -2398,13 +2454,15 @@ def main() -> None:
                         [
                             "Large call graph shown to two levels.",
                             "",
-                            "Expanded internal helper tree is available in Implementation details.",
+                            "Tree is truncated to keep the page readable.",
                             "",
                         ]
                         if call_tree_depth == 2
                         else []
                     ),
-                    *_render_call_tree(qn, calls_by_qn, node_by_qn, max_depth=call_tree_depth),
+                    f"Unique internal helpers: {len(helper_qns)}. Repeated calls may appear in multiple branches.",
+                    "",
+                    *_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data, max_depth=call_tree_depth),
                 ]),
             ]
             source_card_lines = _source_card_lines(
@@ -2413,7 +2471,7 @@ def main() -> None:
                 source_ref=source_ref,
                 short_name=short_name,
             )
-            nested_helper_lines = _render_nested_helper_section(qn, helper_qns, node_by_qn, module_data)
+            nested_helper_lines: list[str] = []
             human_use_when = _documented_text(metadata.get("when_to_use"))
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
             expanded_purpose = _documented_text(metadata.get("expanded_purpose"))

@@ -201,8 +201,10 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
         assert "### Internal helpers used by this callable" not in text, page
         assert "Internal helpers used by this callable" not in text, page
         assert '??? info "Nested helper functions:' not in text, page
-        assert '??? info "Internal helpers used:' in text, page
-        assert 'class="reference-helper-groups"' in text, page
+        assert "Unique internal helpers:" in text, page
+        assert 'class="reference-call-tree"' in text, page
+        assert '```text' not in text.split('??? info "Call flow"', 1)[1].split("##", 1)[0], page
+        assert '??? info "Internal helpers used:' not in text, page
         source_card_pos = text.index('<div class="reference-source-card" markdown="1">')
         signature_pos = text.index("## Signature")
         implementation_pos = text.index("## Implementation details")
@@ -341,26 +343,67 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     """Verify nested private helpers appear in callable helper chips."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
-    helper_section = text.split('\n<details class="reference-metadata-details">', 1)[0]
+    implementation_section = text.split('\n<details class="reference-metadata-details">', 1)[0]
 
-    assert '??? info "Internal helpers used: 1"' not in helper_section
-    assert '??? info "Internal helpers used: 12"' in helper_section
+    assert implementation_section.count('??? info "Call flow"') == 1
+    assert '??? info "Internal helpers used:' not in implementation_section
+    assert 'class="reference-helper-groups"' not in implementation_section
+    assert "Unique internal helpers: 12. Repeated calls may appear in multiple branches." in implementation_section
+    assert '<div class="reference-call-tree" role="tree">' in implementation_section
+    assert "```text" not in implementation_section
+
     for helper_name in [
         "_rows_for_display",
+        "build_guardrail_detail_rows",
         "_guardrail_reason",
         "_dq_reason",
-        "_freshness_reason",
-        "_profile_behavior_reason",
         "_result_reason",
+        "_freshness_reason",
         "_result_status",
+        "_profile_behavior_reason",
         "_schema_reason",
         "_next_action",
         "_result_can_continue",
         "_table_keys",
         "_yes_no",
+        "build_guardrail_summary_rows",
     ]:
-        assert f"><code>{helper_name}</code></a>" in helper_section
+        assert f"><code>{helper_name}(...)</code></a>" in implementation_section
 
+    assert (
+        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L306-L335"'
+        in implementation_section
+    )
+    assert (
+        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L240-L303"'
+        in implementation_section
+    )
+
+
+def test_clickable_call_tree_links_public_pages_and_private_source() -> None:
+    """Verify call-tree links route exported callables to pages and private helpers to source."""
+    text = (API_REFERENCE_DIR / "widget_author_guardrail_rules.md").read_text(encoding="utf-8")
+    call_flow = text.split('??? info "Call flow"', 1)[1].split("## See also", 1)[0]
+
+    assert 'href="../widget_author_dq_rules/"' in call_flow
+    assert 'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/' in call_flow
+    assert '><code>_latest_rule(...)</code></a>' in call_flow
+
+
+def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
+    """Verify root call-tree labels are plain text rather than nested self links."""
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
+        text = page.read_text(encoding="utf-8")
+        match = re.search(r'<div class="reference-call-tree" role="tree">(?P<body>.*?)</div>', text, re.DOTALL)
+        assert match, page
+        slug = page.stem
+        first_row = match.group("body").split("\n", 2)[1]
+        assert f'href="{slug}/"' not in match.group("body"), page
+        assert f'href="../{slug}/"' not in first_row, page
+        assert f"<code>{slug}(...)</code>" in first_row, page
 
 def test_callable_pages_collapse_ai_machine_metadata() -> None:
     """Verify callable pages collapse machine metadata."""

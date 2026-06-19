@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 59</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 9</span><span class="reference-chip">Internal helpers: 60</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>8</td>
+      <td>9</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>59</td>
+      <td>60</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -81,6 +81,13 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>function</td>
       <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
       <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_read_guardrail_rule_metadata</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Fetch the latest metadata catalogue rows for a table without writing metadata.</td>
+      <td><code>_catalogue_lookup_value</code> (internal), <code>_coerce_rows</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
@@ -151,6 +158,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <a class="reference-chip" href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_catalogue_lookup_value</code></span>, <span class="reference-chip"><code>_coerce_rows</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>
@@ -233,6 +245,10 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_catalogue_lookup_value</code></td>
+      <td><a href="../reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></td>
+    </tr>
+    <tr>
       <td><code>_catalogue_physical_identity</code></td>
       <td>—</td>
     </tr>
@@ -246,7 +262,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_coerce_rows</code></td>
-      <td>—</td>
+      <td><a href="../reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></td>
     </tr>
     <tr>
       <td><code>_collect_enrichment_extra_fields</code></td>
@@ -476,6 +492,9 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 </li>
 <li>
 <span class="reference-chip"><code>_canonical_dq_rule_type</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_catalogue_lookup_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_catalogue_physical_identity</code></span>
