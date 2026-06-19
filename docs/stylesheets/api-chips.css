@@ -966,28 +966,16 @@
   vertical-align: top;
 }
 
-.md-typeset .glossary-chip > summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
+.md-typeset .glossary-chip-label {
+  display: block;
   padding: 0;
   background: transparent;
-  cursor: pointer;
   color: var(--md-primary-fg-color--dark);
   font-weight: 700;
   line-height: 1.45;
-  list-style: none;
 }
 
-.md-typeset .glossary-chip[open] > summary {
-  background: transparent;
-}
-
-.md-typeset .glossary-chip > summary::-webkit-details-marker {
-  display: none;
-}
-
-.md-typeset .glossary-chip > span {
+.md-typeset .glossary-chip-definition {
   display: block;
   margin-top: 0.28rem;
   color: var(--md-default-fg-color);
