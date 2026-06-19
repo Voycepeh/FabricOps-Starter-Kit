@@ -112,7 +112,7 @@ The exact version number may differ if the project version has changed.
       and rebuild so there is only one wheel to choose from.
 
 For more detail on versioning and rebuilding wheels, see
-[Setup: Create Wheel](setup/create-wheel.md).
+[Create Wheel](guided-demo/create-wheel.md).
 
 ## 6. Install the wheel in a Microsoft Fabric Environment
 
