@@ -37,6 +37,12 @@ GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_P
 CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
 
 
+def markdown_anchor(value: str) -> str:
+    """Return a Material for MkDocs-compatible heading anchor."""
+    anchor = re.sub(r"[^a-z0-9 -]", "", value.lower())
+    return re.sub(r"[ -]+", "-", anchor).strip("-")
+
+
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
@@ -596,19 +602,38 @@ def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
     lines = [
         "# FabricOps glossary",
         "",
-        "Searchable source of truth for FabricOps documentation wording and inline glossary chips.",
+        "Searchable source of truth for FabricOps documentation wording and page-level glossary references.",
         "",
     ]
     canonical_entries = list({id(entry): entry for entry in glossary.values()}.values())
     for category in sorted({str(entry["category"]) for entry in canonical_entries}):
         lines.extend([f"## {category}", ""])
         category_entries = [entry for entry in canonical_entries if entry["category"] == category]
+        lines.append('<div class="glossary-definition-list">')
+        lines.append("")
         for entry in sorted(category_entries, key=lambda row: row["term"].lower()):
             term = str(entry["term"])
-            lines.extend([f"### {term}", "", entry["long_definition"], ""])
+            lines.extend(
+                [
+                    f'<section class="glossary-definition-card" id="{markdown_anchor(term)}">',
+                    f"<h2>{term}</h2>",
+                    f"<p>{entry['long_definition']}</p>",
+                ]
+            )
             if entry.get("aliases"):
-                lines.extend([f"**Aliases:** {', '.join(f'`{item}`' for item in entry['aliases'])}", ""])
-            lines.extend([f"**Preferred usage:** {entry['preferred_usage']}", "", f"**Avoid usage:** {entry['avoid_usage']}", ""])
+                lines.append(
+                    f'<p class="glossary-definition-meta"><strong>Aliases:</strong> '
+                    f"{', '.join(f'`{item}`' for item in entry['aliases'])}</p>"
+                )
+            lines.extend(
+                [
+                    f'<p class="glossary-definition-meta"><strong>Preferred usage:</strong> {entry["preferred_usage"]}</p>',
+                    f'<p class="glossary-definition-meta"><strong>Avoid usage:</strong> {entry["avoid_usage"]}</p>',
+                    "</section>",
+                    "",
+                ]
+            )
+        lines.extend(["</div>", ""])
     GLOSSARY_PAGE_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
 
 
@@ -637,7 +662,7 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
     """Render compact glossary-backed key terms for a callable page."""
     if not glossary_terms:
         return []
-    lines: list[str] = []
+    lines: list[str] = ['<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">']
     seen: set[str] = set()
     for term in glossary_terms:
         key = term.lower()
@@ -650,8 +675,13 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
         seen.add(canonical_key)
         term_text = str(entry["term"])
         display_term = term_text if "_" in term_text else term_text.capitalize()
-        lines.append(f"- <details class=\"glossary-chip\"><summary>{display_term}</summary>{entry['short_definition']}</details>")
-    lines.extend(["", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
+        anchor = markdown_anchor(str(entry["term"]))
+        lines.append(
+            f'<details class="glossary-chip"><summary>{display_term}</summary>'
+            f'<span>{entry["short_definition"]}</span> '
+            f'<a href="../../../reference/glossary/#{anchor}">Full definition</a></details>'
+        )
+    lines.extend(["</div>", "", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
     return lines
 
 
