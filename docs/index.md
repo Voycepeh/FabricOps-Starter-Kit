@@ -14,7 +14,7 @@ It gives teams a shared operating model for configuration, notebook execution, m
 
 FabricOps helps governance, engineering, and analytics teams work from the same notebook based delivery flow.
 
-Governance captures agreement, enrichment, and guardrail evidence. Engineering configures the environment, runs notebooks, and writes metadata. Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
+Governance captures agreement, enrichment, and pipeline guardrail evidence. Engineering configures the environment, runs notebooks, and writes metadata. Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
 
 The shared metadata tables act as the handoff layer. They record what was agreed, what ran, what passed, and what is ready for review. This keeps delivery repeatable without forcing every project to become a custom build.
 
