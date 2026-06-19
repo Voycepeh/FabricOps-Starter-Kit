@@ -36,20 +36,20 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 
     config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
     steward = agreement._create_or_update_data_steward(
-        spark=object(), config=config, env_name="dev", values=steward_row(), custom_fields={"group": "Shared Services"}
+        spark=object(), config=config, env="dev", values=steward_row(), custom_fields={"group": "Shared Services"}
     )
     created = agreement._create_or_update_data_agreement(
-        spark=object(), config=config, env_name="dev", values=agreement_row(), custom_fields={"consumer_group": "ODI"}
+        spark=object(), config=config, env="dev", values=agreement_row(), custom_fields={"consumer_group": "ODI"}
     )
     updated = agreement._create_or_update_data_agreement(
-        spark=object(), config=config, env_name="dev", values=agreement_row(), selected_agreement=created
+        spark=object(), config=config, env="dev", values=agreement_row(), selected_agreement=created
     )
 
     assert steward["custom_fields_json"]
     assert created["agreement_id"] == updated["agreement_id"] == "DA-GENERATED"
     assert (created["contract_version"], updated["contract_version"]) == ("1.0.0", "1.1.0")
     assert [write["table"] for write in writes] == ["CUSTOM_STEWARD", "CUSTOM_AGREEMENT", "CUSTOM_AGREEMENT"]
-    assert all(write["env_name"] == "dev" for write in writes)
+    assert all(write["env"] == "dev" for write in writes)
 
 
 def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monkeypatch):
@@ -58,9 +58,9 @@ def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monke
     monkeypatch.setattr(agreement, "_write_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
 
     with pytest.raises(ValueError, match="steward_name"):
-        agreement._create_or_update_data_steward(spark=object(), config=agreement_config(), env_name="dev", values=steward_row(steward_name=""))
+        agreement._create_or_update_data_steward(spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_name=""))
     with pytest.raises(ValueError, match="recipient"):
-        agreement._create_or_update_data_agreement(spark=object(), config=agreement_config(), env_name="dev", values=agreement_row(recipient=""))
+        agreement._create_or_update_data_agreement(spark=object(), config=agreement_config(), env="dev", values=agreement_row(recipient=""))
 
     references = agreement._prepare_evidence_file_references("- Files/fabricops/evidence/a.pdf\n* Files/fabricops/evidence/b.docx\n")
     assert [item["file_name"] for item in references] == ["a.pdf", "b.docx"]

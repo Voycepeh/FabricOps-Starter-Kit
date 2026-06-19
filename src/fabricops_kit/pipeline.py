@@ -877,7 +877,7 @@ def write_catalogue_evidence(
                 evidence = evidence.withColumn(column, F.lit(value))
             evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
             evidence = _normalize_catalogue_evidence_types(evidence)
-            write_lakehouse_table(evidence, metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, mode=mode)
+            write_lakehouse_table(evidence, metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
         statuses[name] = "written"
     return statuses
 

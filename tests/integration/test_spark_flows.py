@@ -247,7 +247,7 @@ def test_enforce_dq_rules_result_write_toggle_targets_results(spark_session, mon
     metadata_df = _dq_metadata_df(spark_session, [])
     writes = []
     monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
-    monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)))
+    monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     enforce_dq_rules(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-1", write_results=False)
     assert writes == []
@@ -515,7 +515,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
     from fabricops_kit import pipeline
 
     writes = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)))
+    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
     profile_df = profile_dataframe(df, "orders")
 
@@ -544,7 +544,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     from fabricops_kit import metadata
 
     writes = []
-    monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)))
+    monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     metadata._write_guardrail_result_row(
         spark_session=spark_session,
@@ -574,7 +574,7 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
     monkeypatch.setattr(
         pipeline,
         "write_lakehouse_table",
-        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)),
+        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
     profile_df = profile_dataframe(df, "orders")

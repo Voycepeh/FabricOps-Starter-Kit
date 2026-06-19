@@ -26,11 +26,11 @@ def active_fabric_context(monkeypatch):
             governance_config=types.SimpleNamespace(
                 sensitivity_labels=["public"],
                 pii_classifications=["none"],
-                enrichment_context_extra_fields=[],
-                enrichment_classification_extra_fields=[],
+                enrichment_context_widget={"custom_fields": []},
+                enrichment_classification_widget={"custom_fields": []},
             )
         ),
-        "env_name": "dev",
+        "env": "dev",
     }
     monkeypatch.setattr(builtins, "FABRIC_CONTEXT", context, raising=False)
     return context
@@ -501,7 +501,7 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
         return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_RULES_TABLE: rules, governance_review.ENRICHMENT_RULES_TABLE: enrichment}[table_name]
 
     monkeypatch.setattr(governance_review, "_read_metadata_table_or_empty", fake_read)
-    state = governance_review.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env_name": "dev"})
+    state = governance_review.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
 
     assert state["environment_name"] == "dev"
     assert state["columns"] == ["order_id"]
@@ -541,7 +541,7 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
 
     monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, table, *, target, context, **kwargs: writes.append(table))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
-    widget = widget_author_schema_freshness_profile_rules(state, context={"config": object(), "env_name": "dev"}, spark_session=Spark())
+    widget = widget_author_schema_freshness_profile_rules(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
 
     widget["save"]()
 
@@ -563,7 +563,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
 
     monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, table, *, target, context, **kwargs: writes.append(table))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
-    widget = governance_review.widget_review_guardrail_governance(state, context={"config": object(), "env_name": "dev"}, spark_session=Spark())
+    widget = governance_review.widget_review_guardrail_governance(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
 
     widget["save_rule_action"]("approve")
 
@@ -618,7 +618,7 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     rows[-1].pop("is_active")
     frame = spark_session.createDataFrame(rows)
 
-    loaded = _load_active_dq_rules(frame, table_name="orders", env_name="dev", dataset_name="sales")
+    loaded = _load_active_dq_rules(frame, table_name="orders", env="dev", dataset_name="sales")
 
     assert {rule["rule_id"] for rule in loaded} == {"self", "gov", "bypass"}
 
@@ -638,8 +638,8 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
         governance_config=types.SimpleNamespace(
             sensitivity_labels=["classified", "restricted", "public"],
             pii_classifications=["direct PII", "indirect PII", "none"],
-            enrichment_context_extra_fields=[{"name": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}],
-            enrichment_classification_extra_fields=[{"name": "retention_class", "label": "Retention Class", "type": "dropdown", "options": ["standard", "long_term", "temporary"]}],
+            enrichment_context_widget={"custom_fields": [{"key": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}]},
+            enrichment_classification_widget={"custom_fields": [{"key": "retention_class", "label": "Retention Class", "type": "select", "options": ["standard", "long_term", "temporary"]}]},
         )
     )
     state = {
@@ -655,7 +655,7 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
         ],
     }
 
-    widget = governance_review.widget_enrich_table_metadata(state, context={"config": config, "env_name": "dev"}, spark_session=Spark())
+    widget = governance_review.widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=Spark())
 
     assert len(widget["rows"]) == 2
     assert list(widget["rows"][0]["sensitivity_label"].options) == ["classified", "restricted", "public"]
@@ -779,9 +779,9 @@ def test_enrichment_widget_exposes_required_authoring_actions(monkeypatch):
     _install_fake_notebook_widgets(monkeypatch)
     import types
 
-    config = types.SimpleNamespace(governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"], enrichment_context_extra_fields=[], enrichment_classification_extra_fields=[]))
+    config = types.SimpleNamespace(governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"], enrichment_context_widget={"custom_fields": []}, enrichment_classification_widget={"custom_fields": []}))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "run", "profile_stage": "target", "catalogue_profile_rows": [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "order_id", "data_type": "int", "profile_run_id": "run", "profile_stage": "target"}], "governance_mode": "governed", "approval_policy": "approval_required"}
-    widget = governance_review.widget_enrich_table_metadata(state, context={"config": config, "env_name": "dev"}, spark_session=object())
+    widget = governance_review.widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=object())
 
     assert widget["save_draft_button"].description == "Save draft"
     assert widget["submit_button"].description == "Submit for governance review"

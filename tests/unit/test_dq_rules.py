@@ -113,7 +113,7 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
             {"rule_key": "k2", "rule_id": "r2", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "accepted_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
         ]
     )
-    rules = governance._load_active_dq_rules(metadata, "orders", env_name="dev", dataset_name="sales")
+    rules = governance._load_active_dq_rules(metadata, "orders", env="dev", dataset_name="sales")
     assert [r["rule_id"] for r in rules] == ["r2"]
 
 
@@ -294,7 +294,7 @@ def test_enforce_dq_rules_loads_only_approved_active_metadata_rules(monkeypatch,
     reads = []
 
     def fake_read(table, *, target, context, **kwargs):
-        reads.append((context["env_name"], target, table, kwargs))
+        reads.append((context["env"], target, table, kwargs))
         return metadata
 
     monkeypatch.setattr(governance, "read_lakehouse_table", fake_read)
@@ -388,8 +388,8 @@ def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):
     ]
     lifecycle = spark_session.createDataFrame(lifecycle_rows)
 
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(both, "orders", env_name="dev", dataset_name="sales")] == ["both"]
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(transitional, "orders", env_name="dev", dataset_name="sales")] == ["transitional"]
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(legacy, "orders", env_name="dev", dataset_name="sales")] == ["legacy"]
-    assert governance._load_active_dq_rules(missing_review, "orders", env_name="dev", dataset_name="sales") == []
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(lifecycle, "orders", env_name="dev", dataset_name="sales")] == ["active_pending"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(both, "orders", env="dev", dataset_name="sales")] == ["both"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(transitional, "orders", env="dev", dataset_name="sales")] == ["transitional"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(legacy, "orders", env="dev", dataset_name="sales")] == ["legacy"]
+    assert governance._load_active_dq_rules(missing_review, "orders", env="dev", dataset_name="sales") == []
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(lifecycle, "orders", env="dev", dataset_name="sales")] == ["active_pending"]

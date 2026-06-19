@@ -228,13 +228,13 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
 
     def read_table(table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         return tables[table]
 
     def write_table(df, table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
-        writes.append((table, df.rows, context["env_name"], target, kwargs))
+        assert context["env"] == "dev"
+        writes.append((table, df.rows, context["env"], target, kwargs))
 
     monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
     monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
@@ -272,12 +272,12 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
 
     def read_table(table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         return tables[table]
 
     def write_table(df, table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         writes.append((table, df.rows))
 
     monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
@@ -334,12 +334,12 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
 
     def read_table(table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         return tables[table]
 
     def write_table(df, table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         writes.append((table, df.rows))
 
     monkeypatch.setattr(governance, "read_lakehouse_table", read_table)

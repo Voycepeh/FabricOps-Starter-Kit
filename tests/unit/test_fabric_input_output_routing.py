@@ -75,7 +75,7 @@ def _schema_io_config() -> PathConfig:
 def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
     """Verify lakehouse table read routes every configured lakehouse store."""
     config = _io_config()
-    context = {"config": config, "env_name": "dev"}
+    context = {"config": config, "env": "dev"}
 
     for target in ("source", "unified", "product"):
         spark = _Spark()
@@ -96,7 +96,7 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
 def test_lakehouse_table_write_routes_to_configured_store():
     """Verify lakehouse table write routes to configured store."""
     config = _io_config()
-    context = {"config": config, "env_name": "dev"}
+    context = {"config": config, "env": "dev"}
     frame = _Frame()
 
     io.write_lakehouse_table(frame, "metadata_orders", target="metadata", schema=None, mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
@@ -111,7 +111,7 @@ def test_lakehouse_table_write_routes_to_configured_store():
 def test_lakehouse_file_readers_build_configured_files_paths():
     """Verify lakehouse file readers build configured files paths."""
     config = _io_config()
-    context = {"config": config, "env_name": "dev"}
+    context = {"config": config, "env": "dev"}
     spark = _Spark()
 
     io.read_lakehouse_csv("Files/raw/orders.csv", target="source", spark_session=spark, context=context)
@@ -131,7 +131,7 @@ def test_lakehouse_excel_remains_exposed_and_callable():
 def test_warehouse_helpers_build_configured_query(monkeypatch):
     """Verify warehouse helpers build configured query."""
     config = _io_config()
-    context = {"config": config, "env_name": "dev"}
+    context = {"config": config, "env": "dev"}
 
     class Constants:
         WorkspaceId = "workspace_id"
@@ -191,7 +191,7 @@ def test_io_orchestrators_are_root_exports_and_low_level_helpers_are_module_only
 def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
     """Verify lakehouse table read with explicit schema uses schema physical path."""
     config = _io_config()
-    context = {"config": config, "env_name": "dev"}
+    context = {"config": config, "env": "dev"}
     spark = _Spark()
 
     io.read_lakehouse_table("METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", spark_session=spark, context=context)
@@ -204,7 +204,7 @@ def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
 def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
     """Verify lakehouse table write with explicit schema uses schema physical path."""
     config = _io_config()
-    context = {"config": config, "env_name": "dev"}
+    context = {"config": config, "env": "dev"}
     frame = _Frame()
 
     io.write_lakehouse_table(frame, "METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
@@ -217,7 +217,7 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
 def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_config():
     """Verify lakehouse schema enabled target routes paths and identifiers from config."""
     config = _schema_io_config()
-    context = {"config": config, "env_name": "dev"}
+    context = {"config": config, "env": "dev"}
     spark = _Spark()
     frame = _Frame()
 
@@ -246,14 +246,14 @@ import pytest
 def test_lakehouse_table_schema_validation_rejects_unsafe_names(schema):
     """Verify lakehouse table schema validation rejects unsafe names."""
     with pytest.raises(ValueError):
-        io.read_lakehouse_table("TABLE", target="metadata", schema=schema, spark_session=_Spark(), context={"config": _io_config(), "env_name": "dev"})
+        io.read_lakehouse_table("TABLE", target="metadata", schema=schema, spark_session=_Spark(), context={"config": _io_config(), "env": "dev"})
 
 
 @pytest.mark.parametrize("table", ["schema.table", "bad/name", "bad-name", "1TABLE", ""])
 def test_lakehouse_table_validation_rejects_unsafe_names(table):
     """Verify lakehouse table validation rejects unsafe names."""
     with pytest.raises(ValueError):
-        io.read_lakehouse_table(table, target="metadata", schema=None, spark_session=_Spark(), context={"config": _io_config(), "env_name": "dev"})
+        io.read_lakehouse_table(table, target="metadata", schema=None, spark_session=_Spark(), context={"config": _io_config(), "env": "dev"})
 
 
 def test_read_write_data_are_public_orchestrators_and_low_level_io_is_module_only(monkeypatch):
@@ -271,7 +271,7 @@ def test_read_write_data_are_public_orchestrators_and_low_level_io_is_module_onl
     monkeypatch.setattr(io, "read_lakehouse_table", lambda *args, **kwargs: calls.append(("read_table", args, kwargs)) or "read")
     monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: calls.append(("write_table", args, kwargs)))
 
-    context = {"config": _io_config(), "env_name": "dev"}
+    context = {"config": _io_config(), "env": "dev"}
 
     assert io.read_data("orders", target="source", schema="dbo", context=context) == "read"
     io.write_data("df", "orders", target="unified", schema="dbo", mode="overwrite", context=context)
@@ -292,7 +292,7 @@ def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
     """Verify lakehouse reads can default to the active Fabric context."""
     import builtins
 
-    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env_name": "dev"}, raising=False)
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env": "dev"}, raising=False)
     spark = _Spark()
 
     io.read_lakehouse_table("orders", spark_session=spark)
@@ -305,7 +305,7 @@ def test_write_lakehouse_table_defaults_to_active_context(monkeypatch):
     """Verify lakehouse writes can default to the active Fabric context."""
     import builtins
 
-    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env_name": "dev"}, raising=False)
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env": "dev"}, raising=False)
     frame = _Frame()
 
     io.write_lakehouse_table(frame, "orders_clean", mode="overwrite", verbose=False)

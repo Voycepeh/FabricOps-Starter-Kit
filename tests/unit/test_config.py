@@ -21,6 +21,9 @@ from fabricops_kit.config import (
     _get_active_metadata_tables,
     _validate_audit_timezone,
     _validate_metadata_table_registration,
+    get_default_fabric_context,
+    get_fabric_context,
+    resolve_fabric_context,
     setup_metadata_tables,
     setup_notebook,
 )
@@ -28,6 +31,53 @@ from fabricops_kit.fabric_input_output import FabricStore
 from tests.helpers import framework_config, store
 
 pytestmark = pytest.mark.unit
+
+
+def test_get_fabric_context_uses_env_as_primary_key():
+    """Verify explicit Fabric contexts expose env as the primary environment key."""
+    config = object()
+
+    context = get_fabric_context(env="dev", config=config)
+
+    assert context["env"] == "dev"
+    assert context["config"] is config
+
+
+def test_default_fabric_context_requires_env(monkeypatch):
+    """Verify active contexts expose env without legacy aliases."""
+    import builtins
+
+    config = object()
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": config, "env": "dev"}, raising=False)
+
+    context = get_default_fabric_context()
+
+    assert context["env"] == "dev"
+    assert context["config"] is config
+
+
+def test_resolve_fabric_context_uses_env_only():
+    """Verify context resolution uses env as the single environment key."""
+    config = object()
+
+    resolved_config, env, context = resolve_fabric_context(context={"config": config, "env": "dev"})
+
+    assert resolved_config is config
+    assert env == "dev"
+    assert context["env"] == "dev"
+
+
+def test_governance_config_uses_widget_custom_fields_contract():
+    """Verify governance widget additions use custom_fields keyed by key."""
+    config = GovernanceConfig(
+        enrichment_context_widget={"custom_fields": [{"key": "business_owner_notes", "type": "textarea"}]},
+        enrichment_classification_widget={"custom_fields": [{"key": "retention_class", "type": "select"}]},
+    )
+
+    assert config.enrichment_context_widget["custom_fields"][0]["key"] == "business_owner_notes"
+    assert config.enrichment_classification_widget["custom_fields"][0]["key"] == "retention_class"
+    assert not hasattr(config, "enrichment_context_extra_fields")
+    assert not hasattr(config, "enrichment_classification_extra_fields")
 
 
 def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
@@ -158,7 +208,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
 
     def read_table(table, *, target, context, schema=None, spark_session=None):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         assert schema is None
         reads[table] += 1
         if reads[table] == 1:
@@ -170,8 +220,8 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     monkeypatch.setattr(io, "read_lakehouse_table", read_table)
     def write_table(df, table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
-        writes.append((context["env_name"], target, table, kwargs))
+        assert context["env"] == "dev"
+        writes.append((context["env"], target, table, kwargs))
 
     monkeypatch.setattr(io, "write_lakehouse_table", write_table)
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
@@ -214,9 +264,9 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
     reads = []
 
     def read_table(table, *, target, context, spark_session=None, **kwargs):
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         assert target == "metadata"
-        reads.append((context["env_name"], target, table, spark_session))
+        reads.append((context["env"], target, table, spark_session))
         return Table(schemas[table].fieldNames())
 
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
@@ -285,9 +335,9 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
     calls = []
 
     def read_table(table, *, target, context, schema=None, spark_session=None):
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         assert target == "metadata"
-        calls.append((context["env_name"], target, table, schema, spark_session))
+        calls.append((context["env"], target, table, schema, spark_session))
         return object()
 
     class Spark:
@@ -320,7 +370,7 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
     import fabricops_kit.fabric_input_output as io
 
     def read_table(table, *, target, context, schema=None, spark_session=None):
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         assert target == "metadata"
         raise RuntimeError("table does not exist")
 
@@ -360,7 +410,7 @@ def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch)
     writes = []
 
     def read_table(table, *, target, context, schema=None, spark_session=None):
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         assert target == "metadata"
         reads.append((table, schema))
         return Table()

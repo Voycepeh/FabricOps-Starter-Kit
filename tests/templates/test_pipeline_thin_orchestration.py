@@ -298,9 +298,7 @@ def test_template_examples_use_default_context_not_framework_plumbing():
     _markdown, code, _cells = _notebook_sources()
     forbidden = [
         "config=CONFIG",
-        "env_name=ENV",
-        "env_name=ENV_NAME",
-        "ENV_NAME = FABRIC_CONTEXT",
+        "env=ENV",
         "context=custom_context",
         "workspace_id=",
         "lakehouse_id=",

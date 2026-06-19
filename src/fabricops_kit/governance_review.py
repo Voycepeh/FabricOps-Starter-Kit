@@ -93,13 +93,13 @@ def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any 
 
 def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:
     col = str(review_row.get("column_name") or _value(profile_row, "column_name") or ((review_row.get("columns") or [""])[0]))
-    env_name = str(_value(profile_row, "environment_name") or review_row.get("environment_name") or env or "")
+    environment = str(_value(profile_row, "environment_name") or review_row.get("environment_name") or env or "")
     dataset = str(_value(profile_row, "dataset_name") or review_row.get("dataset_name") or "")
     table = str(_value(profile_row, "table_name") or review_row.get("table_name") or "")
     return {
-        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(env_name, dataset, table, col)),
-        "metadata_table_key": str(_value(profile_row, "metadata_table_key") or review_row.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)),
-        "environment_name": env_name,
+        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(environment, dataset, table, col)),
+        "metadata_table_key": str(_value(profile_row, "metadata_table_key") or review_row.get("metadata_table_key") or _build_metadata_table_key(environment, dataset, table)),
+        "environment_name": environment,
         "dataset_name": dataset,
         "table_name": table,
         "column_name": col,
@@ -240,7 +240,7 @@ def _profile_sort_key(row: dict[str, Any]) -> tuple[str, str, str, str]:
 
 def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
     """Return stable physical table identity without profile stage or pipeline identity."""
-    env = str(_first_present(row, ["environment_name", "env_name"]))
+    env = str(_first_present(row, ["environment_name", "env"]))
     asset_kind = str(_first_present(row, ["asset_kind", "asset_type"]))
     asset_name = str(_first_present(row, ["asset_name", "dataset_name", "lakehouse_name", "warehouse_name"]))
     schema_or_layer = str(_first_present(row, ["schema_name", "layer"]))
@@ -321,7 +321,7 @@ def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) ->
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
-    rows = _coerce_rows(read_lakehouse_table(CATALOGUE_TABLE, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, spark_session=spark_session))
+    rows = _coerce_rows(read_lakehouse_table(CATALOGUE_TABLE, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
     selection_identity = _catalogue_physical_identity(selection)
     filtered = []
     for row in rows:
@@ -438,19 +438,21 @@ def _enrichment_options(config: Any) -> tuple[list[str], list[str], list[dict[st
     governance = getattr(config, "governance_config", None)
     sensitivity = list(getattr(governance, "sensitivity_labels", None) or SENSITIVITY_LABELS)
     pii = list(getattr(governance, "pii_classifications", None) or PERSONAL_DATA_CLASSIFICATIONS)
-    context_fields = list(getattr(governance, "enrichment_context_extra_fields", None) or [])
-    classification_fields = list(getattr(governance, "enrichment_classification_extra_fields", None) or [])
+    context_widget = getattr(governance, "enrichment_context_widget", None) or {}
+    classification_widget = getattr(governance, "enrichment_classification_widget", None) or {}
+    context_fields = list(context_widget.get("custom_fields", []) or [])
+    classification_fields = list(classification_widget.get("custom_fields", []) or [])
     return sensitivity, pii, context_fields, classification_fields
 
 
 def _render_enrichment_extra_fields(widgets: Any, definitions: list[dict[str, Any]]) -> dict[str, Any]:
-    """Render configured enrichment extra fields keyed by field name."""
+    """Render configured enrichment extra fields keyed by field key."""
     controls: dict[str, Any] = {}
     for definition in definitions:
-        name = str(definition.get("name") or definition.get("key") or "").strip()
-        if not name:
-            raise ValueError("Custom enrichment fields require a name.")
-        label = str(definition.get("label") or name.replace("_", " ").title())
+        key = str(definition.get("key") or "").strip()
+        if not key:
+            raise ValueError("Custom enrichment fields require a key.")
+        label = str(definition.get("label") or key.replace("_", " ").title())
         field_type = str(definition.get("type") or "text").lower()
         common = {"description": label, "layout": widgets.Layout(width="420px")}
         if field_type == "textarea":
@@ -460,7 +462,7 @@ def _render_enrichment_extra_fields(widgets: Any, definitions: list[dict[str, An
             control = widgets.Dropdown(options=options, value=options[0] if options else None, **common)
         else:
             control = widgets.Text(value="", **common)
-        controls[name] = control
+        controls[key] = control
     return controls
 
 
@@ -634,7 +636,7 @@ def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, c
             ENRICHMENT_RULES_TABLE,
             target="metadata",
             schema=_configured_lakehouse_schema(config, env, "metadata"),
-            context={"config": config, "env_name": env},
+            context={"config": config, "env": env},
             mode="append",
         )
 
@@ -842,7 +844,7 @@ def _status_is_warning(value: Any) -> bool:
 
 
 def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    return _coerce_rows(read_lakehouse_table(table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, spark_session=spark_session))
+    return _coerce_rows(read_lakehouse_table(table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
 
 
 def _evaluate_governance_readiness(
@@ -881,10 +883,10 @@ def _evaluate_governance_readiness(
     """
     profile_rows = load_catalogue_profile_rows(config, env, selection, spark_session=spark_session)
     first_profile = profile_rows[0]
-    env_name = str(_value(first_profile, "environment_name") or selection.get("environment_name") or env)
+    environment = str(_value(first_profile, "environment_name") or selection.get("environment_name") or env)
     dataset_name = str(_value(first_profile, "dataset_name") or selection.get("dataset_name") or "")
     table_name = str(_value(first_profile, "table_name") or selection.get("table_name") or "")
-    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset_name, table_name))
+    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(environment, dataset_name, table_name))
     profile_run_id = str(_value(first_profile, "profile_run_id") or selection.get("profile_run_id") or "")
     profile_stage = str(_value(first_profile, "profile_stage") or selection.get("profile_stage") or "")
     agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")
@@ -892,7 +894,7 @@ def _evaluate_governance_readiness(
 
     all_pipeline_rows = [
         row for row in _read_metadata_rows(config, env, PIPELINE_RUNS_TABLE, spark_session=spark_session)
-        if str(_value(row, "environment_name")) == env_name
+        if str(_value(row, "environment_name")) == environment
     ]
     related_pipeline_rows = [
         row for row in all_pipeline_rows
@@ -968,7 +970,7 @@ def _evaluate_governance_readiness(
     }
     row = {
         "review_id": f"{profile_run_id or 'profile'}-{uuid.uuid4().hex[:12]}",
-        "environment_name": env_name,
+        "environment_name": env,
         "dataset_name": dataset_name,
         "table_name": table_name,
         "metadata_table_key": table_key,
@@ -1082,7 +1084,7 @@ def record_table_governance(
     }
     for table_name, records in writes.items():
         if records:
-            write_lakehouse_table(spark_session.createDataFrame(records), table_name, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env_name": env}, mode=mode)
+            write_lakehouse_table(spark_session.createDataFrame(records), table_name, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
 
     readiness_summary = None
     if evaluate_readiness:
@@ -1185,7 +1187,7 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
     return rules
 
-def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None):
+def _latest_dq_rule_versions(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None):
     """Resolve latest append-only DQ metadata rows by stable rule identity."""
     _, F, Window = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
@@ -1199,8 +1201,8 @@ def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None 
     if not partition_cols:
         raise ValueError("DQ metadata must include rule_key or rule identity columns.")
     scoped = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
-    if env_name is not None and "environment_name" in columns:
-        scoped = scoped.filter(F.col("environment_name") == env_name)
+    if env is not None and "environment_name" in columns:
+        scoped = scoped.filter(F.col("environment_name") == env)
     if dataset_name is not None and "dataset_name" in columns:
         scoped = scoped.filter(F.col("dataset_name") == dataset_name)
     if not order_cols:
@@ -1209,11 +1211,11 @@ def _latest_dq_rule_versions(metadata_df, table_name: str, env_name: str | None 
     return scoped.withColumn("_rn", F.row_number().over(w)).filter(F.col("_rn") == 1).drop("_rn")
 
 
-def _load_active_dq_rules(metadata_df, table_name: str, env_name: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
     """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, _ = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
-    latest = _latest_dq_rule_versions(metadata_df, table_name, env_name=env_name, dataset_name=dataset_name)
+    latest = _latest_dq_rule_versions(metadata_df, table_name, env=env, dataset_name=dataset_name)
     if "activation_state" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("activation_state"), F.lit(""))) == "active")
     elif "is_active" in columns:
@@ -1479,7 +1481,7 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
 def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
     """Read current DQ guardrail rules from the configured metadata target."""
     schema = _configured_lakehouse_schema(config, env, "metadata")
-    frame = read_lakehouse_table(GUARDRAIL_RULES_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env_name": env})
+    frame = read_lakehouse_table(GUARDRAIL_RULES_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
     if "guardrail_type" in set(getattr(frame, "columns", [])):
         _, F, _ = _spark_sql_helpers()
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
@@ -1544,7 +1546,7 @@ def enforce_dq_rules(
 
     """
     metadata_df = _read_guardrail_rule_metadata(config, env, spark_session=spark_session)
-    rules = _load_active_dq_rules(metadata_df, table_name=table_name, env_name=env, dataset_name=dataset_name)
+    rules = _load_active_dq_rules(metadata_df, table_name=table_name, env=env, dataset_name=dataset_name)
     checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
     total_count = int(dataframe.count())
     failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
@@ -1884,7 +1886,7 @@ def _write_enrichment_records(records: list[dict[str, Any]], *, config: Any, env
 
 def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str, rule_type: str, column_name: str = "", parameters: Mapping[str, Any] | None = None, severity: str = "warning", description: str = "", policy: Mapping[str, Any] | None = None, bypass_reason: str = "", actor: str | None = None, action: str = "submit", source_notebook_type: str = "02_pipeline", created_by_role: str = "engineering", config: Any = None) -> dict[str, Any]:
     """Build one ``METADATA_GUARDRAIL_RULES`` record for widget save actions."""
-    env_name = str(state.get("environment_name") or "")
+    env = str(state.get("environment_name") or "")
     dataset = str(state.get("dataset_name") or "")
     table = str(state.get("table_name") or "")
     rule_id = f"{table}.{column_name or '_table'}.{guardrail_type}.{rule_type}"
@@ -1899,7 +1901,7 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     )
     created_at = _now_utc_iso(config)
     created_by = _resolve_action_by(actor)
-    return {"rule_key": _build_dq_rule_key(env_name, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env_name, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env_name, dataset, table)), "environment_name": env_name, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": created_by, "created_at": created_at, "submitted_by": created_by, "submitted_at": created_at, "reviewed_by": created_by if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": created_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": created_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
+    return {"rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env, dataset, table)), "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": created_by, "created_at": created_at, "submitted_by": created_by, "submitted_at": created_at, "reviewed_by": created_by if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": created_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": created_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
 
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
@@ -1909,7 +1911,7 @@ def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spa
             table_name,
             target="metadata",
             schema=_configured_lakehouse_schema(config, env, "metadata"),
-            context={"config": config, "env_name": env},
+            context={"config": config, "env": env},
             spark_session=spark_session,
         )
     except Exception as exc:
@@ -1970,7 +1972,7 @@ def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str,
         GUARDRAIL_RULES_TABLE,
         target="metadata",
         schema=_configured_lakehouse_schema(config, env, "metadata"),
-        context={"config": config, "env_name": env},
+        context={"config": config, "env": env},
         mode="append",
     )
 
