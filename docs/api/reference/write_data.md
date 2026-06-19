@@ -7,7 +7,7 @@ Write Lakehouse or Warehouse targets through one notebook-facing IO function.
 
 `fabricops_kit/fabric_input_output.py:312`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad0e01454e054556946f1727b681a5d0bef553b2/src/fabricops_kit/fabric_input_output.py#L312-L379">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L312-L379">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -148,14 +148,34 @@ No additional callable notes are documented.
             └── get_default_fabric_context(...)
     ```
 
-??? info "Internal helpers used: 0"
+??? info "Internal helpers used: 6"
 
-    This callable uses 0 internal helpers; `write_data` does not have package-local helper descendants in the generated call graph.
+    This callable uses 6 internal helpers for metadata loading, rule parsing, and fabric or spark access.
 
     <div class="reference-helper-groups">
-      <section class="reference-helper-group reference-helper-group-empty">
-        <h4>No internal helpers detected</h4>
-        <p>This callable does not have package-local helper descendants in the generated call graph.</p>
+      <section class="reference-helper-group">
+        <h4>Metadata loading</h4>
+        <p>Load and identify the metadata or table context needed by the callable.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114"><code>_normalize_table_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144"><code>_resolve_lakehouse_schema</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154"><code>_resolve_lakehouse_table_path</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Rule parsing</h4>
+        <p>Normalize stored or user-provided values before applying rules.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L599-L639"><code>_normalize_path_config</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a>
+        </div>
+      </section>
+      <section class="reference-helper-group">
+        <h4>Fabric or Spark access</h4>
+        <p>Access Fabric or Spark runtime services used by the implementation.</p>
+        <div class="reference-helper-chip-wrap">
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L642-L681"><code>_get_store</code></a>
+        </div>
       </section>
     </div>
 
@@ -200,7 +220,7 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad0e01454e054556946f1727b681a5d0bef553b2/src/fabricops_kit/fabric_input_output.py#L312-L379">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/ad0e01454e054556946f1727b681a5d0bef553b2/src/fabricops_kit/fabric_input_output.py#L312-L379</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L312-L379">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L312-L379</a>
 - Start line: `312`
 - End line: `379`
 - Signature:
@@ -229,7 +249,7 @@ def write_data(
 
 ### Internal implementation summary
 
-- Internal helper count: 0
+- Internal helper count: 6
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>

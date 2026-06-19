@@ -59,6 +59,20 @@ def test_generated_docs_local_links_resolve() -> None:
     assert broken == []
 
 
+def test_generated_github_links_use_main_not_local_sha() -> None:
+    """Verify generated GitHub links do not point at local commit SHAs."""
+    stale_sha_pattern = re.compile(
+        r"https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/[0-9a-f]{40}/"
+    )
+    offenders = [
+        str(path.relative_to(ROOT))
+        for path in sorted(DOCS.rglob("*.md"))
+        if stale_sha_pattern.search(path.read_text(encoding="utf-8"))
+    ]
+
+    assert offenders == []
+
+
 def test_generated_reference_includes_every_exported_public_callable_page() -> None:
     """Verify PR 555-style template filtering does not remove public pages."""
     env = {**os.environ, "PYTHONPATH": "src"}

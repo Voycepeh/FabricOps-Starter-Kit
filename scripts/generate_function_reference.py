@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 import re
 import runpy
-import subprocess
 from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,6 +68,10 @@ INTERNAL_ALIAS_MODULES = {}
 # notebook-template function that users actively call, not every public helper in
 # the Python package. Keep this list in sync with src/fabricops_kit/__init__.py.
 
+# Internal helper chips should mirror the generated package-local call tree.
+# Exclude reachable private helpers only when a callable has an explicit deny
+# rule here; this keeps ordinary private implementation helpers visible while
+# suppressing intentionally noisy shared plumbing.
 INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     "enforce_profile_behavior": {
         "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
@@ -935,23 +938,18 @@ def render_html_table(headers: list[str], rows: list[list[str]], *, table_class:
 
 
 def github_source_ref() -> str:
-    """Return the stable GitHub ref used by generated source links."""
+    """Return the stable GitHub ref used by generated source links.
+
+    Generated documentation is published independently from local working trees.
+    A local commit SHA can 404 after publishing when it has not been pushed or
+    is otherwise unreachable from GitHub, so generated links default to
+    ``main``. Release automation may set ``GITHUB_SOURCE_REF`` or
+    ``FABRICOPS_SOURCE_REF`` only when it can guarantee the ref is reachable.
+    """
     for variable in ("GITHUB_SOURCE_REF", "FABRICOPS_SOURCE_REF"):
         explicit_ref = os.environ.get(variable, "").strip()
         if explicit_ref:
             return explicit_ref
-    try:
-        commit_sha = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=ROOT,
-            text=True,
-            capture_output=True,
-            check=False,
-        ).stdout.strip()
-    except Exception:
-        commit_sha = ""
-    if commit_sha:
-        return commit_sha
     return DEFAULT_SOURCE_REF
 
 
@@ -1187,18 +1185,18 @@ def _collect_internal_helper_descendants(
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
 ) -> list[str]:
-    """Return internal helper qualified names reachable from a callable."""
+    """Return private helper qualified names reachable through the full call tree."""
     seen: set[str] = set()
     helpers: list[str] = []
 
     def visit(qn: str) -> None:
         for callee in sorted(set(calls_by_qn.get(qn, []))):
-            if callee in seen:
+            if callee in seen or callee not in node_by_qn:
                 continue
             seen.add(callee)
             if _is_internal_helper_qn(callee, node_by_qn):
                 helpers.append(callee)
-                visit(callee)
+            visit(callee)
 
     visit(root_qn)
     return helpers
