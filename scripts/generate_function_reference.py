@@ -29,6 +29,7 @@ INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
 AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
+REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
@@ -1330,13 +1331,16 @@ def _helper_area_mismatch_signal(helper_name: str, purpose: str, assigned_area: 
     return None
 
 
-def _render_refactor_signals(
+def _collect_refactor_signals(
     root_qn: str,
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
-) -> list[str]:
-    """Render maintainability signals discovered from the full call tree."""
+    *,
+    excluded_helpers: set[str] | None = None,
+) -> dict[str, Any]:
+    """Return structured maintainability signals discovered from the full call tree."""
+    excluded_helpers = excluded_helpers or set()
 
     def children(qn: str) -> list[str]:
         return sorted(
@@ -1351,7 +1355,8 @@ def _render_refactor_signals(
         if len(path) > 5:
             deep_chains.append(path)
         for child in children(qn):
-            occurrences[child] = occurrences.get(child, 0) + 1
+            if child not in excluded_helpers:
+                occurrences[child] = occurrences.get(child, 0) + 1
             if child not in path:
                 walk(child, [*path, child])
 
@@ -1375,7 +1380,7 @@ def _render_refactor_signals(
         )
     )
 
-    area_mismatch_signals: list[tuple[str, str, str, str]] = []
+    area_mismatch_signals: list[tuple[str, str, str, str, str]] = []
     for qn in occurrences:
         if not _is_internal_helper_qn(qn, node_by_qn):
             continue
@@ -1389,11 +1394,69 @@ def _render_refactor_signals(
             name_area: str
             purpose_area: str
             assigned_area, name_area, purpose_area = signal
-            area_mismatch_signals.append((helper_name, assigned_area, name_area, purpose_area))
-    area_mismatch_signals = sorted(
-        area_mismatch_signals,
-        key=lambda item: (item[1].lower(), item[0].lower()),
-    )
+            area_mismatch_signals.append((helper_name, qn, assigned_area, name_area, purpose_area))
+
+    helper_qns = [
+        helper_qn
+        for helper_qn in _collect_internal_helper_descendants(root_qn, calls_by_qn, node_by_qn)
+        if helper_qn not in excluded_helpers
+    ]
+    return {
+        "qualified_name": root_qn,
+        "unique_internal_helper_count": len(helper_qns),
+        "repeated_helpers": [
+            {
+                "helper": node_by_qn[qn]["callable_name"],
+                "qualified_name": qn,
+                "branch_count": count,
+            }
+            for qn, count in repeated_helpers[:12]
+        ],
+        "deep_call_chains": [
+            {
+                "depth": len(path) - 1,
+                "chain": path,
+            }
+            for path in deep_chains[:8]
+        ],
+        "single_delegate_helpers": [
+            {
+                "helper": node_by_qn[qn]["callable_name"],
+                "qualified_name": qn,
+                "delegates_to": node_by_qn[children(qn)[0]]["callable_name"],
+                "delegates_to_qualified_name": children(qn)[0],
+            }
+            for qn in single_delegate_helpers[:12]
+        ],
+        "possible_grouping_mismatches": [
+            {
+                "area": assigned_area,
+                "reason": (
+                    f"`{helper_name}` is grouped as `{assigned_area}`, but its name suggests "
+                    f"`{name_area}` while its summary suggests `{purpose_area}`."
+                ),
+                "helpers": [
+                    {
+                        "helper": helper_name,
+                        "qualified_name": qn,
+                        "name_area": name_area,
+                        "purpose_area": purpose_area,
+                    }
+                ],
+            }
+            for helper_name, qn, assigned_area, name_area, purpose_area in sorted(
+                area_mismatch_signals,
+                key=lambda item: (item[2].lower(), item[0].lower()),
+            )[:8]
+        ],
+    }
+
+
+def _render_refactor_signals(
+    signals: dict[str, Any],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Render structured maintainability signals as human-readable Markdown."""
 
     def label(qn: str) -> str:
         return node_by_qn[qn]["callable_name"]
@@ -1408,28 +1471,31 @@ def _render_refactor_signals(
     lines.append("**Helpers appearing in multiple branches**")
     lines.append("")
     lines.extend(
-        [f"- `{label(qn)}` appears in {count} branches." for qn, count in repeated_helpers[:12]]
+        [
+            f"- `{item['helper']}` appears in {item['branch_count']} branches."
+            for item in signals["repeated_helpers"]
+        ]
         or ["- None detected in the reachable package-local call tree."]
     )
     lines.extend(["", "**Call chains deeper than 4 levels**", ""])
     lines.extend(
-        [f"- {' → '.join(f'`{label(item)}`' for item in path)}" for path in deep_chains[:8]]
+        [
+            f"- {' → '.join(f'`{label(item)}`' for item in chain['chain'])}"
+            for chain in signals["deep_call_chains"]
+        ]
         or ["- None detected."]
     )
     lines.extend(["", "**Helpers that only call one package-local helper**", ""])
     lines.extend(
-        [f"- `{label(qn)}` only delegates to `{label(children(qn)[0])}`." for qn in single_delegate_helpers[:12]]
+        [
+            f"- `{item['helper']}` only delegates to `{item['delegates_to']}`."
+            for item in signals["single_delegate_helpers"]
+        ]
         or ["- None detected."]
     )
     lines.extend(["", "**Helpers grouped into possibly wrong areas**", ""])
     lines.extend(
-        [
-            (
-                f"- `{helper_name}` is grouped as `{assigned_area}`, but its name suggests "
-                f"`{name_area}` while its summary suggests `{purpose_area}`."
-            )
-            for helper_name, assigned_area, name_area, purpose_area in area_mismatch_signals[:8]
-        ]
+        [f"- {item['reason']}" for item in signals["possible_grouping_mismatches"]]
         or ["- None detected from helper names, doc summaries, and module placement."]
     )
     return lines
@@ -2736,6 +2802,7 @@ def main() -> None:
         generated_page.unlink()
     agent_manifest: list[dict[str, Any]] = []
     function_manifest: list[dict[str, Any]] = []
+    refactor_signals_manifest: dict[str, dict[str, Any]] = {}
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
         module_name = node["module_name"]
@@ -2812,6 +2879,14 @@ def main() -> None:
                 for helper_qn in _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
                 if helper_qn not in INTERNAL_HELPER_EXCLUSIONS.get(short_name, set())
             ]
+            refactor_signals = _collect_refactor_signals(
+                qn,
+                calls_by_qn,
+                node_by_qn,
+                module_data,
+                excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
+            )
+            refactor_signals_manifest[short_name] = refactor_signals
             call_flow_lines = [
                 '??? info "Call flow"',
                 "",
@@ -2820,7 +2895,7 @@ def main() -> None:
                     "",
                     *_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data),
                     "",
-                    *_render_refactor_signals(qn, calls_by_qn, node_by_qn, module_data),
+                    *_render_refactor_signals(refactor_signals, node_by_qn),
                 ]),
             ]
             source_card_lines = _source_card_lines(
@@ -3123,6 +3198,10 @@ def main() -> None:
         })
     AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
     FUNCTION_MANIFEST_PATH.write_text(json.dumps(function_manifest, indent=2) + "\n", encoding="utf-8")
+    REFACTOR_SIGNALS_PATH.write_text(
+        json.dumps(refactor_signals_manifest, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

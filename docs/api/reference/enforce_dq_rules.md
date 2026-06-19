@@ -245,10 +245,10 @@ rows, send alerts, or partially write targets.
     - `_validate_dq_rules` appears in 5 branches.
     - `_normalize_schema_name` appears in 4 branches.
     - `_normalize_table_name` appears in 4 branches.
-    - `_current_audit_timestamp` appears in 3 branches.
     - `_dq_failed_expression` appears in 3 branches.
-    - `_get_audit_timezone` appears in 3 branches.
-    - `_validate_audit_timezone` appears in 3 branches.
+    - `_configured_lakehouse_schema` appears in 2 branches.
+    - `_context_get` appears in 2 branches.
+    - `_resolve_lakehouse_schema` appears in 2 branches.
 
     **Call chains deeper than 4 levels**
 
@@ -263,8 +263,6 @@ rows, send alerts, or partially write targets.
 
     **Helpers that only call one package-local helper**
 
-    - `_current_audit_timestamp` only delegates to `_get_audit_timezone`.
-    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
     - `_get_store` only delegates to `_normalize_path_config`.
     - `_resolve_lakehouse_schema` only delegates to `_normalize_schema_name`.
     - `_latest_dq_rule_versions` only delegates to `_spark_sql_helpers`.
