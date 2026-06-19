@@ -18,7 +18,12 @@ Most downstream notebooks depend on this configuration. If `00_env_config` is wr
 
 Set `ENV` to the environment you are running, such as `dev`, `qat`, or `prd`.
 
-This key must exist in `ENV_PATHS`.
+`ENV` is the only active environment key. It must exist in `ENV_PATHS`.
+
+After `00_env_config` runs, downstream notebooks use the active FabricOps context exposed as:
+
+- `FABRIC_CONTEXT["env"]` for the active environment;
+- `FABRIC_CONTEXT["config"]` for the active FabricOps configuration.
 
 ### Fabric targets
 
@@ -33,30 +38,33 @@ Typical targets are:
 
 Each target should define its workspace, item ID, item name, item kind, schema settings, and environment.
 
+### Config objects
+
+`00_env_config` keeps the main configuration objects visible and editable:
+
+- `RUNTIME_CONFIG`: notebook naming, validation, required-target, schema, and audit settings;
+- `PATH_CONFIG`: environment-specific Fabric target routing from `ENV_PATHS`;
+- `DATA_AGREEMENT_CONFIG`: reusable `01_agreement` widget and table setup;
+- `GOVERNANCE_CONFIG`: reusable `03_governance` review and enrichment setup;
+- `CONFIG`: the combined FabricOps configuration passed to setup helpers and exposed through `FABRIC_CONTEXT["config"]`.
+
 ### Metadata routing
 
 FabricOps metadata must write to the configured `metadata` target.
 
-Do not depend on the default attached Lakehouse for metadata. Downstream helpers use the active environment and configured metadata target to read and write FabricOps tables.
+Do not depend on the default attached Lakehouse for metadata. Downstream helpers use `FABRIC_CONTEXT["env"]` and `FABRIC_CONTEXT["config"]` to read and write FabricOps tables through the configured metadata target.
 
-### Runtime settings
+### Agreement configuration
 
-Keep runtime settings visible in this notebook so users can review them before running the rest of the workflow.
-
-This includes required targets, validation mode, notebook naming checks, schema settings, default schemas, metadata schema, and audit timezone.
-
-### Agreement widget configuration
-
-`00_env_config` is also the source of truth for reusable `01_agreement` widget configuration. Configure agreement intake through `DataAgreementConfig` rather than hardcoding widget choices in `01_agreement` or downstream notebooks.
-
-Use this configuration area for:
-
-- agreement metadata table names prepared by `setup_metadata_tables`;
-- visible standard columns for the data steward and data agreement widgets;
-- controlled dropdown values such as the data steward role options;
-- custom steward and agreement metadata fields that should appear in the widgets.
+`DATA_AGREEMENT_CONFIG` controls `01_agreement` table names, data steward role options, visible widget columns, and widget `custom_fields`.
 
 Custom steward and agreement fields are captured by the widgets and stored in `custom_fields_json` on the relevant metadata table. They are reusable widget configuration, not new physical table columns.
+
+### Governance configuration
+
+`GOVERNANCE_CONFIG` controls `03_governance` sensitivity labels, PII classifications, and enrichment widget `custom_fields`.
+
+Use `enrichment_context_widget` and `enrichment_classification_widget` to configure enrichment widgets. Each widget can define `custom_fields` that are captured with the governance review evidence.
 
 ## What this notebook does
 
@@ -76,8 +84,8 @@ It does not create business evidence rows. Those are written later by:
 
 After this notebook runs successfully:
 
-- the active environment is known;
-- `CONFIG` is available;
+- the active environment is known through `FABRIC_CONTEXT["env"]`;
+- `CONFIG` is available through `FABRIC_CONTEXT["config"]`;
 - source, unified, product, and metadata targets are validated;
 - FabricOps metadata tables exist in the configured metadata target;
 - downstream notebooks can safely write agreement, catalogue, guardrail, lineage, pipeline, governance, and enrichment evidence.
