@@ -1,38 +1,14 @@
 # FabricOps Guided Demo
 
-<div class="demo-hero" markdown>
+Use this walkthrough to run the FabricOps Starter Kit demo from workspace setup through metadata inspection. It focuses on the user journey: what to open, what to run, and what evidence to expect.
 
-Use this page as the journey map for the FabricOps Starter Kit guided demo in Microsoft Fabric. The detailed instructions now live on the individual step pages in the guided demo sidebar.
+For the detailed contents and configurable settings inside each notebook, use [Template Notebooks](how-fabricops-works/notebook-templates.md). The [API Reference](reference/index.md) remains the source for reusable functions and classes.
 
-## Demo at a glance
+## Overview
 
-This demo builds a governed, quality-checked Microsoft Fabric notebook workflow around deterministic order and customer source data. You prepare Fabric workspace items, configure notebook routing, create agreement metadata, generate demo source tables, run the pipeline template, enrich and review metadata, rerun with active guardrails, and inspect the evidence that explains what happened.
+The guided demo builds a governed, quality-checked Microsoft Fabric notebook workflow around deterministic order and customer source data. You create Fabric runtime items, configure shared routes, capture an agreement, generate demo source tables, run the pipeline, enrich metadata, review guardrails, and inspect the metadata outputs.
 
-It is for data engineers, analytics engineers, data stewards, governance reviewers, and junior team members who need a practical handover path through FabricOps. Plan for a focused half-day the first time if you are also setting up Fabric workspaces and wheel installation; the notebook flow itself is shorter once your Fabric workspace, lakehouses, warehouse, and Environment are ready.
-
-By the end, you should understand how FabricOps uses Fabric workspaces, lakehouses, notebooks, and metadata tables to make delivery traceable from data agreement through governed pipeline review. For the full operating model, read [How FabricOps Works](how-fabricops-works/index.md).
-
-</div>
-
-<div class="demo-learning-outcomes" markdown>
-
-## What the guided demo teaches
-
-- How `00_env_config` centralizes environment-specific Fabric routes and metadata targets.
-- How `01_agreement` captures steward, agreement, and evidence metadata.
-- How `example_pipeline_demo.ipynb` creates deterministic source scenarios for repeatable learning.
-- How `02_pipeline` reads, transforms, validates, profiles, and writes governed outputs.
-- How enrichment and governance review separate observed metadata from approved guardrail intent.
-- How active guardrails are evaluated during later pipeline runs.
-- How metadata outputs explain ownership, transformations, controls, lineage, and run outcomes.
-
-</div>
-
-<div class="demo-defaults" markdown>
-
-## Demo defaults
-
-Keep these defaults for your first pass so notebooks and expected metadata evidence line up.
+Keep the default demo values for your first run so the notebooks and expected metadata evidence line up.
 
 | Default | Value |
 | ------- | ----- |
@@ -40,47 +16,35 @@ Keep these defaults for your first pass so notebooks and expected metadata evide
 | Generated source table prefix | `demo_` |
 | Happy path source tables | `demo_src_orders_happy` and `demo_src_customers_happy` |
 | Default unified outputs | `demo_unified_orders_enriched` and `demo_unified_orders_summary` |
-| Demo generator behavior | `example_pipeline_demo.ipynb` is safe to rerun and overwrites demo tables only. |
 
-</div>
+## Run sequence
 
-## Guided demo flow
+| Order | Step | What you do | What you should have afterward |
+| ----- | ---- | ----------- | ------------------------------ |
+| 1 | [Create Fabric Workspace](guided-demo/create-fabric-workspace.md) | Create or choose the Fabric workspace and attach the Fabric Environment that contains the FabricOps wheel. | A workspace where copied notebooks can import `fabricops_kit`. |
+| 2 | [Create Lakehouses / Warehouse](guided-demo/create-lakehouses-warehouse.md) | Create the metadata, source, unified, and optional warehouse items used by the demo. | Named runtime targets ready for `00_env_config`. |
+| 3 | [Configure Environment](guided-demo/configure-environment.md) | Edit the user-owned values in `00_env_config`. | Environment, path, metadata routing, runtime validation, and audit settings ready to run. |
+| 4 | [Run Environment Setup](guided-demo/run-environment-setup.md) | Run `00_env_config` setup cells. | Shared `CONFIG` and `ENV` values plus registered metadata tables. |
+| 5 | [Create Agreement](guided-demo/create-agreement.md) | Run `01_agreement` to capture owner, purpose, readiness, and evidence. | Agreement metadata that the pipeline can select. |
+| 6 | [Run Pipeline](guided-demo/run-pipeline.md) | Run `example_pipeline_demo`, then run `02_pipeline`. | Demo source tables, governed outputs, profiles, guardrail outcomes, lineage, and run summaries. |
+| 7 | [Enrich Metadata](guided-demo/enrich-metadata.md) | Add business context, classifications, and notes to observed metadata. | Enrichment records tied to catalogue evidence. |
+| 8 | [Review Guardrails](guided-demo/review-guardrails.md) | Use governance review widgets to approve or update guardrail intent, then rerun the pipeline when needed. | Approved rules and fresh runtime results from active checks. |
+| 9 | [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md) | Inspect generated metadata reference pages or use `99_explore` for troubleshooting. | Traceable answers about agreements, profiles, rules, lineage, and runs. |
 
-Follow the pages in this order. Each page focuses on the work to perform in Fabric and the output or evidence produced by that step.
+## Success criteria
 
-| Order | Page | Notebook or Fabric item | What it produces |
-| ----- | ---- | ----------------------- | ---------------- |
-| 1 | [Setup Fabric Workspace](guided-demo/setup-fabric-workspace.md) | Fabric workspaces, lakehouses, warehouse, Environment, and copied notebook templates | Fabric runtime items, installed FabricOps wheel, and editable notebook copies ready for the demo. |
-| 2 | [Configure Environment](guided-demo/configure-environment.md) | `00_env_config` | Shared `CONFIG` and `ENV` values, configured metadata routing, and registered `METADATA_*` tables. |
-| 3 | [Create Agreement](guided-demo/create-agreement.md) | `01_agreement` | Steward, agreement, and agreement evidence metadata for the demo workflow. |
-| 4 | [Run Pipeline](guided-demo/run-pipeline.md) | `example_pipeline_demo` and `02_pipeline` | Deterministic demo source tables, governed unified outputs, profiles, guardrail outcomes, lineage, and run summaries. |
-| 5 | [Enrich Metadata](guided-demo/enrich-metadata.md) | `02_pipeline` or `03_governance` enrichment widgets | Business context, classifications, and enrichment intent tied to observed catalogue evidence. |
-| 6 | [Review Guardrails](guided-demo/review-guardrails.md) | `03_governance`, then optional `02_pipeline` rerun | Approved guardrail intent and runtime evidence from active guardrail enforcement. |
-| 7 | [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md) | `99_explore` and generated metadata reference pages | Traceable answers about agreements, profiles, rules, lineage, pipeline runs, and final outputs. |
+After the walkthrough, you should be able to answer these questions from metadata rather than notebook memory.
 
-## What success looks like
+| Question | Metadata-backed answer |
+| -------- | ---------------------- |
+| Who owns the data and what is it used for? | Agreement and steward metadata from `01_agreement`. |
+| What was profiled? | Catalogue evidence captured by `02_pipeline`. |
+| Which transformations created the outputs? | Pipeline registration, lineage, output records, and run summaries. |
+| Which expectations were reviewed? | Approved governance rows in `METADATA_GUARDRAIL_RULES` and enrichment review metadata. |
+| Which checks ran during execution? | Runtime outcomes in guardrail results and pipeline run metadata. |
 
-After the full demo, the flow should replace tribal knowledge with metadata-backed answers.
+## Where to go for details
 
-| Question | Where the answer should come from |
-| -------- | --------------------------------- |
-| Who owns the data and what is it used for? | Agreement and steward metadata captured in `01_agreement`. |
-| What source and target data was profiled? | Source and target profiles captured by `02_pipeline`, plus `99_explore` notes when used. |
-| What transformations created the output? | Pipeline registration, lineage, and output metadata captured in `02_pipeline`. |
-| Which schema, freshness, profile, DQ, or enrichment expectations were reviewed? | Governance metadata from `03_governance`, especially active rows in `METADATA_GUARDRAIL_RULES`. |
-| Which production guardrails ran? | Runtime evidence from `02_pipeline` guardrail checks, DQ enforcement, output writes, lineage, and run summaries. |
-| What should support use after production? | Stored production notebook export, metadata evidence, final output tables, run summaries, and support notes. |
-
-The goal is that support and review should no longer depend on memory or side conversations. The metadata should explain who owns the data, how it was transformed, which controls were approved, what evidence exists from the run, and which final outputs were published.
-
-## Next reads
-
-| Page | Why read it |
-| ---- | ----------- |
-| [Setup Fabric Workspace](guided-demo/setup-fabric-workspace.md) | Prepare the Fabric workspace items, Environment, wheel, and copied notebooks before the notebook flow. |
-| [Environment Configuration](how-fabricops-works/environment-config.md) | Understand how `00_env_config` controls configured runtime targets and metadata routing. |
-| [List of Templates](how-fabricops-works/notebook-templates.md) | Learn each notebook responsibility and handoff. |
-| [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md) | Learn how `02_pipeline` owns schema, freshness, DQ, profile behavior, and run evidence. |
-| [Governance Review](how-fabricops-works/governance-review.md) | Learn how `03_governance` reviews and records approved guardrail intent. |
-| [List of Metadata Tables](reference/metadata-tables/index.md) | See how observed evidence, approved intent, and runtime outcomes stay separated. |
-| [Function Reference](reference/index.md) | Review the reusable helper APIs used by the notebook templates. |
+- Use [Template Notebooks](how-fabricops-works/notebook-templates.md) to understand notebook internals, editable settings, advanced options, validations, and downstream dependencies.
+- Use [Metadata Tables](reference/metadata-tables/index.md) to inspect the shape of stored evidence.
+- Use [Function Reference](reference/index.md) only when you need helper-level API details.
