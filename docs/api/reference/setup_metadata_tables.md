@@ -102,7 +102,7 @@ Not documented yet
 - `fabricops_kit.data_agreement._list_data_stewards`
 - `fabricops_kit.governance_review._get_governance_metadata_schemas`
 
-## Implementation details
+## Maintainer/developer implementation details
 
 <details class="reference-implementation-details">
 <summary>Notes, side effects, and template usage</summary>
@@ -131,9 +131,11 @@ migrate user data automatically.
 
 </details>
 
-??? info "Call flow"
+??? info "Maintainer/developer call flow"
 
-    Unique internal helpers: 32. Repeated calls may appear in multiple branches.
+    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
+
+    Unique internal/private helpers: 32. Repeated calls may appear in multiple branches.
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>setup_metadata_tables(...)</code></div>
@@ -379,6 +381,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.config.setup_metadata_tables`
 - Short name: `setup_metadata_tables`
 - Module: `config`
+- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
@@ -431,7 +434,7 @@ def setup_metadata_tables(
 ) -> dict[str, Any]:
 ```
 
-### Internal relationship graph
+### Maintainer/developer relationship graph
 
 ### Public related functions
 
@@ -441,7 +444,7 @@ def setup_metadata_tables(
 ### Internal implementation summary
 
 - Internal helper count: 32
-- Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
+- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
 
 </details>
 

@@ -5,8 +5,8 @@
 ## Workflow usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb, 03_governance.ipynb, 99_explore.ipynb
-- **Written by function or widget:** [`guardrail orchestration`](../../api/reference/run_table_guardrails.md)
-- **Read by function or widget:** [`get_latest_metadata_catalogue`](../../api/reference/get_latest_metadata_catalogue.md), [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), [`guardrail orchestration`](../../api/reference/run_table_guardrails.md)
+- **Written by function or widget:** [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
+- **Read by function or widget:** [`get_latest_metadata_catalogue`](../../api/reference/get_latest_metadata_catalogue.md), [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
 - **Related template step:** 02_pipeline.ipynb, 03_governance.ipynb, 99_explore.ipynb
 
 ## Implemented schema
@@ -63,6 +63,6 @@
 ## Related function reference
 
 - [`get_latest_metadata_catalogue`](../../api/reference/get_latest_metadata_catalogue.md)
-- [`guardrail orchestration`](../../api/reference/run_table_guardrails.md)
+- [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
 - [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
 - [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md)
