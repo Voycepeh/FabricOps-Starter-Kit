@@ -100,8 +100,21 @@
   margin: 0;
 }
 
+.md-typeset .fabricops-delivery-model {
+  margin: 1.5rem 0 2rem;
+}
+
+.md-typeset .fabricops-delivery-model__copy {
+  margin: 0 auto 1.25rem;
+  max-width: 46rem;
+}
+
+.md-typeset .fabricops-delivery-model__copy h2 {
+  margin-top: 0;
+}
+
 .md-typeset .fabricops-architecture-image {
-  margin: 1.5rem auto 2rem;
+  margin: 1rem auto 1.25rem;
   text-align: center;
 }
 
@@ -110,6 +123,84 @@
   max-width: min(100%, 42rem);
   width: 100%;
   height: auto;
+}
+
+.md-typeset .fabricops-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 2rem;
+}
+
+.md-typeset .fabricops-team-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+  border-radius: 0.35rem;
+  padding: 0.85rem 1rem;
+}
+
+.md-typeset .fabricops-team-card h3 {
+  margin-top: 0;
+}
+
+.md-typeset .fabricops-team-card p {
+  margin-bottom: 0;
+}
+
+.md-typeset .fabricops-start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .fabricops-start-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 8.5rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.25rem solid var(--md-primary-fg-color);
+  border-radius: 0.4rem;
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.md-typeset .fabricops-start-card:hover,
+.md-typeset .fabricops-start-card:focus {
+  border-color: var(--md-primary-fg-color);
+  background-color: var(--md-accent-fg-color--transparent);
+  box-shadow: 0 0.25rem 0.8rem rgba(15, 143, 131, 0.16);
+  color: var(--md-default-fg-color);
+  transform: translateY(-0.05rem);
+}
+
+.md-typeset .fabricops-start-card:focus-visible {
+  outline: 0.15rem solid var(--md-accent-fg-color);
+  outline-offset: 0.15rem;
+}
+
+.md-typeset .fabricops-start-card__title {
+  color: var(--md-primary-fg-color);
+  font-size: 1.12rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.md-typeset .fabricops-start-card__body {
+  margin-top: 0.55rem;
+  color: var(--md-default-fg-color);
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .fabricops-team-grid,
+  .md-typeset .fabricops-start-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media screen and (max-width: 480px) {
