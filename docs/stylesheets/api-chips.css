@@ -916,10 +916,14 @@
 }
 
 .md-typeset .glossary-definition-card h2 {
-  margin: 0 2.25rem 0.35rem 0;
+  margin: 0 0 0.35rem;
   color: var(--md-primary-fg-color--dark);
   font-size: 1.05rem;
   line-height: 1.35;
+}
+
+.md-typeset .glossary-definition-card h2 .headerlink {
+  display: none;
 }
 
 .md-typeset .glossary-definition-card p {
@@ -947,7 +951,8 @@
   display: inline-block;
   max-width: min(100%, 28rem);
   margin: 0;
-  padding: 0.24rem 0.55rem;
+  min-width: 5.75rem;
+  padding: 0.28rem 0.8rem;
   border: 1px solid var(--md-default-fg-color--lightest);
   border-radius: 0.45rem;
   background: color-mix(in srgb, var(--md-code-bg-color) 55%, var(--md-default-bg-color));
@@ -957,7 +962,7 @@
 .md-typeset .glossary-chip > summary {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0;
   padding: 0;
   background: transparent;
   cursor: pointer;
@@ -973,20 +978,6 @@
 
 .md-typeset .glossary-chip > summary::-webkit-details-marker {
   display: none;
-}
-
-.md-typeset .glossary-chip > summary::after {
-  content: "";
-  width: 0.42rem;
-  height: 0.42rem;
-  border-right: 0.1rem solid currentColor;
-  border-bottom: 0.1rem solid currentColor;
-  transform: rotate(45deg) translateY(-0.08rem);
-  opacity: 0.65;
-}
-
-.md-typeset .glossary-chip[open] > summary::after {
-  transform: rotate(225deg) translateY(-0.08rem);
 }
 
 .md-typeset .glossary-chip > span {
