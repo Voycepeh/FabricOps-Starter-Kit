@@ -69,7 +69,7 @@ Use governed outputs for BI, AI, and exploration.
 
     Reusable notebook workflow templates.
 
--   [**22 starter-kit functions**](reference/index.md)
+-   [**20 starter-kit functions**](reference/index.md)
 
     Shared helpers used by the templates.
 
