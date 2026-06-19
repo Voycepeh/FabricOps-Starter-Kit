@@ -39,8 +39,8 @@ Each guardrail returns run evidence that can be displayed in the notebook and us
 
 Use these generated API references for the runtime helpers behind this guardrail flow:
 
-- [run_table_guardrails](../api/reference/run_table_guardrails.md) coordinates the table-level guardrail checks.
-- [run_table_guardrails](../api/reference/run_table_guardrails.md) orchestrates widget-authored schema, freshness, profile behavior, and DQ enforcement before writes. [enforce_freshness](../api/modules/guardrails.md#enforce_freshness), [enforce_profile_behavior](../api/modules/fabric_input_output.md#enforce_profile_behavior), and [enforce_dq_rules](../api/reference/enforce_dq_rules.md) remain the runtime check helpers used by the governed flow.
+- [run table guardrails](../api/reference/run_table_guardrails.md) coordinates the table-level guardrail checks.
+- [run table guardrails](../api/reference/run_table_guardrails.md) orchestrates widget-authored schema, freshness, profile behavior, and DQ enforcement before writes. [enforce_freshness](../api/modules/guardrails.md#enforce_freshness) and [enforce_profile_behavior](../api/modules/fabric_input_output.md#enforce_profile_behavior) remain focused runtime checks, while DQ execution is reached through the supported guardrail orchestration flow.
 - [stop_if_failed](../api/modules/guardrails.md#stop_if_failed) is the compact notebook stop helper for failed guardrail results.
 - [profile_dataframe](../api/reference/profile_dataframe.md) and [write_catalogue_evidence](../api/modules/metadata.md#write_catalogue_evidence) create the profiles that later checks and governance review use.
 

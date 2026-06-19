@@ -238,7 +238,6 @@ def test_example_only_helpers_do_not_inflate_core_count() -> None:
         if row["directly_called_in_example_templates"] and not row["directly_called_in_core_templates"]
     }
 
-    assert "enforce_dq_rules" in example_only
     assert example_only.isdisjoint(_core_template_called_public())
     assert example_only <= _catalogue_row_names()
     page = _reference_index()

@@ -60,7 +60,7 @@ def test_explore_template_is_read_only_context_aware_sequence():
         "write_lakehouse_table(",
         "write_pipeline_run_summary(",
         "run_table_guardrails(",
-        "enforce_dq_rules(",
+        "_run_active_dq_guardrail(",
         "widget_review_guardrail_governance(",
         "widget_enrich_table_metadata(",
         "register_notebook=True",
@@ -70,3 +70,12 @@ def test_explore_template_is_read_only_context_aware_sequence():
     ]
     for item in forbidden:
         assert item not in code
+
+
+def test_dq_rule_smoke_test_uses_supported_guardrail_path():
+    """Verify DQ smoke-test notebook no longer uses stale public DQ helper."""
+    code = _code("example_dq_rule_smoke_test.ipynb")
+
+    assert "run_table_guardrails(" in code
+    stale_helper = "enforce" + "_dq_rules"
+    assert stale_helper not in code

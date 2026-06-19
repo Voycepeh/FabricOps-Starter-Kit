@@ -268,7 +268,8 @@ def write_data(
 ### Public related functions
 
 - <a href="read_data/"><code>fabricops_kit.fabric_input_output.read_data</code></a>
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/">
+<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Internal implementation summary
 

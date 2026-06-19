@@ -19,7 +19,6 @@ CORE_CALLABLES = {
     "read_data",
     "write_data",
     "profile_dataframe",
-    "enforce_dq_rules",
 }
 CORE_PAGE_SECTIONS = (
     "Signature",
@@ -138,14 +137,14 @@ def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
     assert json.loads(refactor_signals.read_text(encoding="utf-8"))
 
 
-def test_refactor_signals_json_includes_enforce_dq_rules() -> None:
-    """Verify structured refactor signals are generated for enforce_dq_rules."""
+def test_refactor_signals_json_includes_run_table_guardrails() -> None:
+    """Verify structured refactor signals are generated for public guardrail orchestration."""
     signal_path = REFERENCE_DIR / "_data" / "refactor-signals.json"
     signals = json.loads(signal_path.read_text(encoding="utf-8"))
-    enforce_signals = signals["enforce_dq_rules"]
+    guardrail_signals = signals["run_table_guardrails"]
 
-    assert enforce_signals["qualified_name"].endswith(".enforce_dq_rules")
-    assert enforce_signals["unique_internal_helper_count"] > 0
+    assert guardrail_signals["qualified_name"].endswith(".run_table_guardrails")
+    assert guardrail_signals["unique_internal_helper_count"] > 0
     assert {
         "qualified_name",
         "unique_internal_helper_count",
@@ -153,12 +152,12 @@ def test_refactor_signals_json_includes_enforce_dq_rules() -> None:
         "deep_call_chains",
         "single_delegate_helpers",
         "possible_grouping_mismatches",
-    } <= set(enforce_signals)
-    assert enforce_signals["repeated_helpers"]
-    assert enforce_signals["single_delegate_helpers"]
+    } <= set(guardrail_signals)
+    assert guardrail_signals["repeated_helpers"]
+    assert guardrail_signals["single_delegate_helpers"]
     assert all(
         {"helper", "qualified_name", "branch_count"} <= set(item)
-        for item in enforce_signals["repeated_helpers"]
+        for item in guardrail_signals["repeated_helpers"]
     )
 
 
@@ -708,7 +707,9 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in environment_config
     assert "[`widget_render_data_steward`](../api/reference/widget_render_data_steward.md)" in agreement_setup
     assert "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
-    assert "[`run_table_guardrails`](../api/reference/run_table_guardrails.md)" in pipeline_execution
+    guardrail_target = "run_table_guardrails"
+    guardrail_link = f"[`guardrail orchestration`](../api/reference/{guardrail_target}.md)"
+    assert guardrail_link in pipeline_execution
     assert "[`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md)" in governance_review
     assert "[`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md)" in governance_review
     assert "[`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md)" in governance_review

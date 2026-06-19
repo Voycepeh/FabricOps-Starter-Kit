@@ -1190,195 +1190,6 @@
     ],
     "possible_grouping_mismatches": []
   },
-  "enforce_dq_rules": {
-    "qualified_name": "fabricops_kit.governance_review.enforce_dq_rules",
-    "unique_internal_helper_count": 29,
-    "repeated_helpers": [
-      {
-        "helper": "_spark_sql_helpers",
-        "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-        "branch_count": 9
-      },
-      {
-        "helper": "_normalize_dq_severity",
-        "qualified_name": "fabricops_kit.governance_review._normalize_dq_severity",
-        "branch_count": 8
-      },
-      {
-        "helper": "_canonical_dq_rule_type",
-        "qualified_name": "fabricops_kit.governance_review._canonical_dq_rule_type",
-        "branch_count": 6
-      },
-      {
-        "helper": "_get_store",
-        "qualified_name": "fabricops_kit.config._get_store",
-        "branch_count": 5
-      },
-      {
-        "helper": "_normalize_path_config",
-        "qualified_name": "fabricops_kit.config._normalize_path_config",
-        "branch_count": 5
-      },
-      {
-        "helper": "_validate_dq_rules",
-        "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
-        "branch_count": 5
-      },
-      {
-        "helper": "_normalize_schema_name",
-        "qualified_name": "fabricops_kit.fabric_input_output._normalize_schema_name",
-        "branch_count": 4
-      },
-      {
-        "helper": "_normalize_table_name",
-        "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
-        "branch_count": 4
-      },
-      {
-        "helper": "_dq_failed_expression",
-        "qualified_name": "fabricops_kit.governance_review._dq_failed_expression",
-        "branch_count": 3
-      },
-      {
-        "helper": "_configured_lakehouse_schema",
-        "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-        "branch_count": 2
-      },
-      {
-        "helper": "_context_get",
-        "qualified_name": "fabricops_kit.metadata._context_get",
-        "branch_count": 2
-      },
-      {
-        "helper": "_resolve_lakehouse_schema",
-        "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
-        "branch_count": 2
-      }
-    ],
-    "deep_call_chains": [
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-          "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-          "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-          "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
-          "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
-          "fabricops_kit.fabric_input_output._normalize_schema_name"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.metadata._write_guardrail_result_row",
-          "fabricops_kit.metadata._build_runtime_audit_fields",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
-          "fabricops_kit.config._validate_audit_timezone"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.metadata._write_guardrail_result_row",
-          "fabricops_kit.metadata._build_runtime_audit_fields",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.metadata._write_guardrail_result_row",
-          "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.metadata._write_guardrail_result_row",
-          "fabricops_kit.metadata._now_utc_iso",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
-          "fabricops_kit.config._validate_audit_timezone"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.enforce_dq_rules",
-          "fabricops_kit.metadata._write_guardrail_result_row",
-          "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      }
-    ],
-    "single_delegate_helpers": [
-      {
-        "helper": "_get_store",
-        "qualified_name": "fabricops_kit.config._get_store",
-        "delegates_to": "_normalize_path_config",
-        "delegates_to_qualified_name": "fabricops_kit.config._normalize_path_config"
-      },
-      {
-        "helper": "_resolve_lakehouse_schema",
-        "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
-        "delegates_to": "_normalize_schema_name",
-        "delegates_to_qualified_name": "fabricops_kit.fabric_input_output._normalize_schema_name"
-      },
-      {
-        "helper": "_latest_dq_rule_versions",
-        "qualified_name": "fabricops_kit.governance_review._latest_dq_rule_versions",
-        "delegates_to": "_spark_sql_helpers",
-        "delegates_to_qualified_name": "fabricops_kit.governance_review._spark_sql_helpers"
-      },
-      {
-        "helper": "_now_utc_iso",
-        "qualified_name": "fabricops_kit.metadata._now_utc_iso",
-        "delegates_to": "_current_audit_timestamp",
-        "delegates_to_qualified_name": "fabricops_kit.config._current_audit_timestamp"
-      },
-      {
-        "helper": "_runtime_context",
-        "qualified_name": "fabricops_kit.metadata._runtime_context",
-        "delegates_to": "_context_get",
-        "delegates_to_qualified_name": "fabricops_kit.metadata._context_get"
-      }
-    ],
-    "possible_grouping_mismatches": []
-  },
   "get_latest_metadata_catalogue": {
     "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
     "unique_internal_helper_count": 10,
@@ -2377,7 +2188,7 @@
   },
   "run_table_guardrails": {
     "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
-    "unique_internal_helper_count": 89,
+    "unique_internal_helper_count": 87,
     "repeated_helpers": [
       {
         "helper": "_catalogue_value",
@@ -2400,16 +2211,6 @@
         "branch_count": 16
       },
       {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "branch_count": 14
-      },
-      {
-        "helper": "_validate_audit_timezone",
-        "qualified_name": "fabricops_kit.config._validate_audit_timezone",
-        "branch_count": 14
-      },
-      {
         "helper": "_normalize_schema_name",
         "qualified_name": "fabricops_kit.fabric_input_output._normalize_schema_name",
         "branch_count": 12
@@ -2430,14 +2231,24 @@
         "branch_count": 12
       },
       {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "branch_count": 10
-      },
-      {
         "helper": "_spark_sql_helpers",
         "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
         "branch_count": 9
+      },
+      {
+        "helper": "_context_get",
+        "qualified_name": "fabricops_kit.metadata._context_get",
+        "branch_count": 8
+      },
+      {
+        "helper": "_normalize_dq_severity",
+        "qualified_name": "fabricops_kit.governance_review._normalize_dq_severity",
+        "branch_count": 8
+      },
+      {
+        "helper": "_canonical_dq_rule_type",
+        "qualified_name": "fabricops_kit.governance_review._canonical_dq_rule_type",
+        "branch_count": 6
       }
     ],
     "deep_call_chains": [
@@ -2522,11 +2333,11 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.run_table_guardrails",
-          "fabricops_kit.metadata._write_guardrail_result_row",
-          "fabricops_kit.metadata._build_runtime_audit_fields",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
-          "fabricops_kit.config._validate_audit_timezone"
+          "fabricops_kit.governance_review._run_active_dq_guardrail",
+          "fabricops_kit.governance_review._dq_failed_row_count",
+          "fabricops_kit.governance_review._dq_failed_expression",
+          "fabricops_kit.governance_review._validate_dq_rules",
+          "fabricops_kit.governance_review._canonical_dq_rule_type"
         ]
       }
     ],
@@ -2536,18 +2347,6 @@
         "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
         "delegates_to": "_get_audit_timezone",
         "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
       },
       {
         "helper": "_get_store",
@@ -2602,6 +2401,18 @@
         "qualified_name": "fabricops_kit.guardrails._profile_hash",
         "delegates_to": "_json_dumps_stable",
         "delegates_to_qualified_name": "fabricops_kit.guardrails._json_dumps_stable"
+      },
+      {
+        "helper": "_profile_row_count",
+        "qualified_name": "fabricops_kit.guardrails._profile_row_count",
+        "delegates_to": "_normalize_profile",
+        "delegates_to_qualified_name": "fabricops_kit.guardrails._normalize_profile"
+      },
+      {
+        "helper": "_schema_signature",
+        "qualified_name": "fabricops_kit.guardrails._schema_signature",
+        "delegates_to": "_actual_schema",
+        "delegates_to_qualified_name": "fabricops_kit.guardrails._actual_schema"
       }
     ],
     "possible_grouping_mismatches": []

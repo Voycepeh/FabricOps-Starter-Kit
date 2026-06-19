@@ -190,7 +190,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
  {'notebook_key': 'example_dq_rule_smoke_test',
   'notebook_label': '`example_dq_rule_smoke_test`',
   'segment_intro': 'Isolated DQ rule smoke-test checks for notebook authors.',
-  'segments': [{'symbols': ['write_data', 'enforce_dq_rules'],
+  'segments': [{'symbols': ['write_data', 'run_table_guardrails'],
                 'title': 'DQ smoke checks'}],
   'template_path': 'templates/notebooks/example_dq_rule_smoke_test.ipynb'}]
 
@@ -737,7 +737,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
               'freshness_max_lag_days.',
   'do_not_use_when': 'Do not use for schema validation, load-behavior enforcement, or DQ-rule '
                      'enforcement; use enforce_profile_behavior or '
-                     'enforce_dq_rules for those checks.',
+                     'run_table_guardrails for those checks.',
   'parameters': 'dataframe, freshness_column, max_lag_days, severity, and optional reference_date '
                 'for deterministic validation.',
   'returns': 'Guardrail result dictionary with status, can_continue, latest_value, '
@@ -788,7 +788,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                  'static data changes unexpectedly or when a previous watermark group changes or '
                  'disappears.',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
-                     'run_table_guardrails or enforce_dq_rules for those checks.',
+                     'run_table_guardrails for DQ-rule enforcement.',
   'glossary_terms': ['profile behavior',
                      'evidence',
                      'profile',
@@ -881,14 +881,12 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an '
                   'exception.',
   'fabric_context': 'Use in 02_pipeline after run_table_guardrails, enforce_freshness, '
-                    'enforce_profile_behavior, or enforce_dq_rules and before write helpers.',
+                    'or enforce_profile_behavior and before write helpers.',
   'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
                      'before passing it to stop_if_failed.',
-  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark)\n'
+  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, context={"config": CONFIG, "env": ENV}, run_id=RUN_ID, spark_session=spark)\n'
                        'stop_if_failed(guardrail_result)',
-  'related_functions': ['enforce_freshness',
-                        'enforce_profile_behavior',
-                        'enforce_dq_rules'],
+  'related_functions': ['enforce_freshness', 'enforce_profile_behavior', 'run_table_guardrails'],
   'expanded_purpose': 'Stops or raises for a blocking guardrail result so a notebook does not '
                       'continue into unsafe downstream writes.',
   'when_to_use': 'Use immediately after schema, freshness, profile behavior, or DQ guardrail '
@@ -902,49 +900,6 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                             'The caller passed a warning result that should not stop execution.'],
   'related_guides': [{'title': 'Pipeline Guardrails',
                       'path': '../../how-fabricops-works/pipeline-guardrails.md'}]},
- {'kind': 'function',
-  'module': 'governance_review',
-  'function_type': 'callable',
-  'summary_override': 'Enforce approved active DQ rules as a target-write guardrail without '
-                      'filtering rows.',
-  'symbol_name': 'enforce_dq_rules',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'DQ guardrails',
-  'use_when': 'Use before target writes to enforce active approved DQ rules for a dataset/table as '
-              'a pipeline guardrail.',
-  'do_not_use_when': 'Do not use to filter bad rows, author new DQ rules, or bypass governance '
-                     'review approval.',
-  'parameters': 'dataframe, config, env, dataset_name, table_name, and optional spark_session.',
-  'returns': 'Guardrail result dictionary with status, can_continue, checks, message, tagged '
-             'dataframe, and summary fields.',
-  'raises': 'Raises configuration, metadata-read, or Spark expression errors when approved rules '
-            'cannot be loaded or evaluated.',
-  'side_effects': 'Reads approved DQ-rule metadata and evaluates checks against the DataFrame; it '
-                  'does not filter the DataFrame or write target data.',
-  'fabric_context': 'Requires active approved DQ-rule evidence in the configured metadata target '
-                    'from 03_governance governance workflows.',
-  'ai_verification': 'Verify approved metadata exists, inspect status/can_continue, and call '
-                     'stop_if_failed before writing when blocking failures occur.',
-  'preferred_example': 'dq_result = enforce_dq_rules(df, CONFIG, env, dataset_name, table_name, '
-                       'spark_session=spark)\n'
-                       'stop_if_failed(dq_result)',
-  'related_functions': ['widget_review_guardrail_governance', 'stop_if_failed'],
-  'expanded_purpose': 'Evaluates approved data-quality rules against a DataFrame and returns '
-                      'guardrail evidence that can block unsafe writes.',
-  'when_to_use': 'Use in pipeline guardrails after governance-approved DQ rules exist for the '
-                 'dataset and table.',
-  'glossary_terms': ['guardrails', 'can_continue', 'evidence', 'metadata lakehouse'],
-  'return_interpretation': 'When can_continue is true, active rules passed or only non-blocking '
-                           'issues were found. When false, inspect failing rule details before '
-                           'writing the table.',
-  'common_failure_causes': ['No approved active DQ rules exist for the table.',
-                            'Rule parameters are invalid or unsupported.',
-                            'Required columns are missing from the DataFrame.',
-                            'The metadata lakehouse cannot be read.'],
-  'related_guides': [{'title': 'Pipeline Guardrails',
-                      'path': '../../how-fabricops-works/pipeline-guardrails.md'},
-                     {'title': 'Governance Review',
-                      'path': '../../how-fabricops-works/governance-review.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1018,7 +973,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
               'guardrails before writes while keeping per-table results separated.',
   'do_not_use_when': 'Do not use as a replacement for individual helper calls when debugging one '
                      'specific guardrail interactively.',
-  'parameters': 'table_configs plus config, env, run_id, spark_session, and agreement/notebook '
+  'parameters': 'table_configs plus context, run_id, spark_session, and agreement/notebook '
                 'context.',
   'returns': 'Guardrail result bundle with profiles, schema results, freshness results, stability '
              'results, DQ results, catalogue status, evidence definitions, summary, can_continue, '
@@ -1301,7 +1256,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'when_to_use': 'Use in 02_pipeline after target selection when engineering needs to '
                  'batch-create, edit, clear, or draft DQ guardrail rules.',
   'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling; use '
-                     'enforce_dq_rules for execution and profile helpers for observed evidence.',
+                     'run_table_guardrails for execution and profile helpers for observed evidence.',
   'glossary_terms': ['guardrails', 'evidence', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns mutable preview records; '
                            'approved saves write guardrail rule intent to '
@@ -1656,7 +1611,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                               'current runtime.',
                                               'The caller passed a warning result that should not '
                                               'stop execution.']},
- 'enforce_dq_rules': {'expanded_purpose': 'Evaluates approved data-quality rules against a '
+ 'run_table_guardrails': {'expanded_purpose': 'Evaluates approved data-quality rules against a '
                                           'DataFrame and returns guardrail evidence that can block '
                                           'unsafe writes.',
                       'when_to_use': 'Use in pipeline guardrails after governance-approved DQ '
@@ -1900,7 +1855,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                            'engineering needs to batch-create, edit, clear, or '
                                            'draft DQ guardrail rules.',
                             'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue '
-                                               'profiling; use enforce_dq_rules for execution and '
+                                               'profiling; use run_table_guardrails for execution and '
                                                'profile helpers for observed evidence.',
                             'glossary_terms': ['guardrails',
                                                'evidence',
@@ -2023,7 +1978,7 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Notebook Templates',
                                'path': '../../how-fabricops-works/governance-review.md'}],
  'stop_if_failed': [{'title': 'Pipeline Guardrails',
                      'path': '../../how-fabricops-works/pipeline-guardrails.md'}],
- 'enforce_dq_rules': [{'title': 'Pipeline Guardrails',
+ 'run_table_guardrails': [{'title': 'Pipeline Guardrails',
                        'path': '../../how-fabricops-works/pipeline-guardrails.md'},
                       {'title': 'Governance Review',
                        'path': '../../how-fabricops-works/governance-review.md'}],

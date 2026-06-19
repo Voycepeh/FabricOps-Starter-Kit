@@ -18,7 +18,7 @@ Render interactive manual DQ guardrail authoring controls.
 
 ### Do not use when
 
-- Do not use for runtime DQ enforcement or catalogue profiling; use enforce_dq_rules for execution and profile helpers for observed evidence.
+- Do not use for runtime DQ enforcement or catalogue profiling; use run_table_guardrails for execution and profile helpers for observed evidence.
 
 ### Additional context
 
@@ -371,7 +371,8 @@ def widget_author_dq_rules(
 
 ### Public related functions
 
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/">
+<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
 
 ### Internal implementation summary

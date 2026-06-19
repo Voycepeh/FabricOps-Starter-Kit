@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 60</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 61</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>7</td>
+      <td>6</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>60</td>
+      <td>61</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -75,13 +75,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Enforce approved active DQ rules as a target-write guardrail without filtering rows.</td>
-      <td><code>_dq_failed_row_count</code> (internal), <code>_dq_summary</code> (internal), <code>_dq_tagged_dataframe</code> (internal), <code>_load_active_dq_rules</code> (internal), <code>_read_guardrail_rule_metadata</code> (internal), <code>_run_dq_guardrail_checks</code> (internal), <code>_summarize_dq_guardrail</code> (internal)</td>
-    </tr>
     <tr>
       <td><a href="../reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></td>
       <td>Callable</td>
@@ -140,11 +133,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <h5>governance_review</h5>
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
-</li>
 <li>
 <a class="reference-chip" href="../reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>
  <span class="callable-relationship-uses">uses:</span>
@@ -254,7 +242,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_dq_failed_row_count</code></td>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_dq_records_from_selection</code></td>
@@ -274,11 +262,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_dq_summary</code></td>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_dq_tagged_dataframe</code></td>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_enrichment_options</code></td>
@@ -338,7 +326,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_load_active_dq_rules</code></td>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_normalize_dq_severity</code></td>
@@ -354,7 +342,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_read_guardrail_rule_metadata</code></td>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_read_metadata_rows</code></td>
@@ -377,8 +365,12 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
     </tr>
     <tr>
+      <td><code>_run_active_dq_guardrail</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_run_dq_guardrail_checks</code></td>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_schema</code></td>
@@ -410,7 +402,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_summarize_dq_guardrail</code></td>
-      <td><a href="../reference/enforce_dq_rules/"><code>enforce_dq_rules</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_validate_dq_rules</code></td>
@@ -627,6 +619,11 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_rule_params</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_run_active_dq_guardrail</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_dq_failed_row_count</code></span>, <span class="reference-chip"><code>_dq_summary</code></span>, <span class="reference-chip"><code>_dq_tagged_dataframe</code></span>, <span class="reference-chip"><code>_load_active_dq_rules</code></span>, <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>, <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>, <span class="reference-chip"><code>_summarize_dq_guardrail</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_run_dq_guardrail_checks</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_dq_check_status</code></span>, <span class="reference-chip"><code>_dq_failed_expression</code></span>, <span class="reference-chip"><code>_normalize_dq_severity</code></span>, <span class="reference-chip"><code>_spark_sql_helpers</code></span>, <span class="reference-chip"><code>_validate_dq_rules</code></span>
@@ -689,7 +686,8 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <a class="reference-chip" href="config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="config/#_get_metadata_table_schema_registry"><code>_get_metadata_table_schema_registry</code></a>, <a class="reference-chip" href="config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/">
+<code>run_table_guardrails</code></a>
 
 ### External callees
 

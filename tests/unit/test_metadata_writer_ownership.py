@@ -86,7 +86,7 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
 
 def test_runtime_enforcement_functions_route_outcomes_to_results():
     """Verify runtime guardrails expose result-table outcome writes."""
-    dq_source = _function_source("governance_review.py", "enforce_dq_rules")
+    dq_source = _function_source("governance_review.py", "_run_active_dq_guardrail")
     pipeline_source = _function_source("pipeline.py", "run_table_guardrails")
 
     assert "_write_guardrail_result_row" in dq_source

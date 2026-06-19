@@ -1606,7 +1606,7 @@ def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
     return frame
 
-def enforce_dq_rules(
+def _run_active_dq_guardrail(
     dataframe,
     config,
     env,

@@ -1,6 +1,6 @@
 # DQ rule reference
 
-FabricOps supports **23 native DQ rule types** for metadata-driven checks. Reviewers approve these rules in Governance Review, FabricOps stores them as `guardrail_type="dq"` rows in `METADATA_GUARDRAIL_RULES`, and `enforce_dq_rules` evaluates the active approved rules during later `02_pipeline` runs.
+FabricOps supports **23 native DQ rule types** for metadata-driven checks. Reviewers approve these rules in Governance Review, FabricOps stores them as `guardrail_type="dq"` rows in `METADATA_GUARDRAIL_RULES`, and `run_table_guardrails` evaluates the active approved rules during later `02_pipeline` runs.
 
 FabricOps uses one canonical DQ rule vocabulary. It does **not** require Great Expectations or dbt at runtime, and it does not expose one Python callable per rule. Rules are metadata: choose the rule type, provide the required parameters, approve the row, and let the pipeline load the approved metadata.
 
@@ -96,4 +96,4 @@ Set `severity="error"` when a failure should block unsafe or misleading output. 
 
 ## Runtime behavior
 
-`METADATA_GUARDRAIL_RULES` is append-only for DQ rows. Create, update, deactivate, and reactivate actions add new metadata rows instead of deleting history. During a pipeline run, `enforce_dq_rules` resolves the newest version of each rule, keeps only active approved rules, evaluates them, and records the DQ outcome as guardrail evidence.
+`METADATA_GUARDRAIL_RULES` is append-only for DQ rows. Create, update, deactivate, and reactivate actions add new metadata rows instead of deleting history. During a pipeline run, `run_table_guardrails` resolves the newest version of each rule, keeps only active approved rules, evaluates them, and records the DQ outcome as guardrail evidence.

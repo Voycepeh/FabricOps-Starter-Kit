@@ -11,7 +11,7 @@ from .data_agreement import get_selected_agreement, widget_select_agreement
 from .data_profiling import profile_dataframe
 from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, _check_schema_runtime, _check_schema_rule_runtime
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
-from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, enforce_dq_rules
+from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
 from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
 
@@ -850,7 +850,7 @@ def run_table_guardrails(
                 "message": "DQ guardrail skipped by preset.",
             }
         else:
-            dq_results[table_key] = enforce_dq_rules(
+            dq_results[table_key] = _run_active_dq_guardrail(
                 dataframe,
                 config,
                 env,

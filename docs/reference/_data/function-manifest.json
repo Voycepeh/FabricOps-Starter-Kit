@@ -3559,7 +3559,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._dq_failed_expression",
@@ -3685,7 +3685,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.config._current_audit_timestamp",
@@ -3712,7 +3712,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._dq_failed_expression",
@@ -4105,7 +4105,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._canonical_dq_rule_type",
@@ -4214,7 +4214,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
@@ -4367,13 +4367,46 @@
     "summary": "Return parsed rule parameters for widget prepopulation."
   },
   {
+    "id": "fabricops_kit.governance_review._run_active_dq_guardrail",
+    "name": "_run_active_dq_guardrail",
+    "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
+    "module": "governance_review",
+    "classification": "Internal",
+    "inbound": [
+      "fabricops_kit.pipeline.run_table_guardrails"
+    ],
+    "outbound": [
+      "fabricops_kit.governance_review._dq_failed_row_count",
+      "fabricops_kit.governance_review._dq_summary",
+      "fabricops_kit.governance_review._dq_tagged_dataframe",
+      "fabricops_kit.governance_review._load_active_dq_rules",
+      "fabricops_kit.governance_review._read_guardrail_rule_metadata",
+      "fabricops_kit.governance_review._run_dq_guardrail_checks",
+      "fabricops_kit.governance_review._summarize_dq_guardrail",
+      "fabricops_kit.metadata._write_guardrail_result_row"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 1609,
+    "source_end_line": 1692,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+    "docs_path": null,
+    "summary": "Enforce active DQ guardrail rules as a simple pipeline guardrail."
+  },
+  {
     "id": "fabricops_kit.governance_review._run_dq_guardrail_checks",
     "name": "_run_dq_guardrail_checks",
     "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [
       "fabricops_kit.governance_review._dq_check_status",
@@ -4587,7 +4620,7 @@
     "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review._dq_summary",
-      "fabricops_kit.governance_review.enforce_dq_rules"
+      "fabricops_kit.governance_review._run_active_dq_guardrail"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -4866,60 +4899,6 @@
     "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2608-L2662",
     "docs_path": null,
     "summary": "Build a table-level governance policy row."
-  },
-  {
-    "id": "fabricops_kit.governance_review.enforce_dq_rules",
-    "name": "enforce_dq_rules",
-    "qualified_name": "fabricops_kit.governance_review.enforce_dq_rules",
-    "module": "governance_review",
-    "classification": "Callable",
-    "inbound": [
-      "fabricops_kit.pipeline.run_table_guardrails"
-    ],
-    "outbound": [
-      "fabricops_kit.governance_review._dq_failed_row_count",
-      "fabricops_kit.governance_review._dq_summary",
-      "fabricops_kit.governance_review._dq_tagged_dataframe",
-      "fabricops_kit.governance_review._load_active_dq_rules",
-      "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-      "fabricops_kit.governance_review._run_dq_guardrail_checks",
-      "fabricops_kit.governance_review._summarize_dq_guardrail",
-      "fabricops_kit.metadata._write_guardrail_result_row"
-    ],
-    "used_in_templates": [
-      "example_dq_rule_smoke_test"
-    ],
-    "glossary_terms": [
-      "guardrails",
-      "can_continue",
-      "evidence",
-      "metadata lakehouse"
-    ],
-    "expanded_purpose": "Evaluates approved data-quality rules against a DataFrame and returns guardrail evidence that can block unsafe writes.",
-    "when_to_use": "Use in pipeline guardrails after governance-approved DQ rules exist for the dataset and table.",
-    "return_interpretation": "When can_continue is true, active rules passed or only non-blocking issues were found. When false, inspect failing rule details before writing the table.",
-    "common_failure_causes": [
-      "No approved active DQ rules exist for the table.",
-      "Rule parameters are invalid or unsupported.",
-      "Required columns are missing from the DataFrame.",
-      "The metadata lakehouse cannot be read."
-    ],
-    "related_guides": [
-      {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-guardrails.md"
-      },
-      {
-        "title": "Governance Review",
-        "path": "../../how-fabricops-works/governance-review.md"
-      }
-    ],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 1609,
-    "source_end_line": 1692,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
-    "docs_path": "api/reference/enforce_dq_rules.md",
-    "summary": "Enforce approved active DQ rules as a target-write guardrail without filtering rows."
   },
   {
     "id": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
@@ -6659,7 +6638,7 @@
     "module": "metadata",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.enforce_dq_rules",
+      "fabricops_kit.governance_review._run_active_dq_guardrail",
       "fabricops_kit.guardrails.enforce_profile_behavior",
       "fabricops_kit.pipeline.run_table_guardrails"
     ],
@@ -7587,7 +7566,7 @@
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
       "fabricops_kit.data_profiling.profile_dataframe",
-      "fabricops_kit.governance_review.enforce_dq_rules",
+      "fabricops_kit.governance_review._run_active_dq_guardrail",
       "fabricops_kit.guardrails.enforce_freshness",
       "fabricops_kit.guardrails.enforce_freshness_rule",
       "fabricops_kit.guardrails.enforce_profile_behavior",
@@ -7605,7 +7584,8 @@
       "fabricops_kit.pipeline.write_catalogue_evidence"
     ],
     "used_in_templates": [
-      "02_pipeline"
+      "02_pipeline",
+      "example_dq_rule_smoke_test"
     ],
     "glossary_terms": [
       "guardrails",
