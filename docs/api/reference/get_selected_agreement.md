@@ -102,20 +102,12 @@ No additional callable notes are documented.
 
 ??? info "Call flow"
 
-    ```text
-    get_selected_agreement(...)
-    ```
+    Unique internal helpers: 0. Repeated calls may appear in multiple branches.
 
-??? info "Internal helpers used: 0"
-
-    This callable uses 0 internal helpers; `get_selected_agreement` does not have package-local helper descendants in the generated call graph.
-
-    <div class="reference-helper-groups">
-      <section class="reference-helper-group reference-helper-group-empty">
-        <h4>No internal helpers detected</h4>
-        <p>This callable does not have package-local helper descendants in the generated call graph.</p>
-      </section>
+    <div class="reference-call-tree" role="tree">
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>get_selected_agreement(...)</code></div>
     </div>
+
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>

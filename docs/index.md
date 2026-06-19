@@ -1,8 +1,20 @@
 # FabricOps Starter Kit
 
-FabricOps Starter Kit is a lightweight Microsoft Fabric operating model for config driven engineering, standardized notebook delivery, metadata collection, and governed pipeline execution.
+FabricOps Starter Kit is a lightweight Microsoft Fabric operating model for config-driven engineering, standardized notebook delivery, metadata collection, and governed pipeline execution.
 
 Use it when analysts, data scientists, engineers, and governance users need to work from the same reusable notebook patterns while keeping setup, evidence, guardrails, lineage, and review decisions visible through shared metadata.
+
+## What FabricOps abstracts
+
+FabricOps abstracts the repeated setup and governance work that often slows down Microsoft Fabric delivery.
+
+Instead of asking every analyst, data scientist, or engineer to define their own workspace conventions, notebook structure, metadata capture, and review process, the starter kit provides a reusable operating model for delivery teams.
+
+It does this through config-driven engineering, standardized notebook templates, shared metadata collection, and pipeline guardrails.
+
+Engineers can focus on data movement and transformation. Analysts and data scientists can work from clearer inputs and reusable patterns. Governance users can review evidence, rules, enrichment, and lifecycle decisions without reading every notebook line by line.
+
+
 
 ## FabricOps at a glance
 

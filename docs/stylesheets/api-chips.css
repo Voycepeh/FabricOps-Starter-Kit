@@ -930,3 +930,51 @@
   background: var(--md-code-bg-color);
   vertical-align: baseline;
 }
+
+.md-typeset .reference-call-tree {
+  max-width: 100%;
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.55rem;
+  background: var(--md-code-bg-color);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.md-typeset .reference-call-tree-row {
+  min-width: max-content;
+  font-family: var(--md-code-font-family);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.md-typeset .reference-call-tree-prefix {
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .reference-call-tree a {
+  text-decoration: none;
+}
+
+.md-typeset .reference-call-tree code {
+  padding: 0;
+  background: transparent;
+  white-space: pre;
+}
+
+.md-typeset .reference-call-tree-note,
+.md-typeset .reference-call-tree-more {
+  color: var(--md-default-fg-color--light);
+}
+
+@media screen and (max-width: 760px) {
+  .md-typeset .reference-call-tree {
+    padding: 0.65rem 0.7rem;
+  }
+
+  .md-typeset .reference-call-tree-row {
+    font-size: 0.68rem;
+  }
+}

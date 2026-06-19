@@ -65,12 +65,3 @@ FabricOps notebooks do not depend on notebook memory or informal handover notes.
 
 </div>
 
-The Overview page explains how the system works. The [Template Notebooks page](notebook-templates.md) explains what to open and run.
-
-## What FabricOps abstracts
-
-FabricOps abstracts the repeated setup and governance work that often slows down Microsoft Fabric delivery. Instead of asking every analyst, data scientist, or engineer to design their own workspace conventions, notebook structure, metadata capture, and review process, the starter kit provides a lightweight operating model that teams can reuse.
-
-It does this through config driven engineering, standardized notebook templates, shared metadata collection, and pipeline guardrails. Engineers can focus on data movement and transformation. Analysts and data scientists can work from clearer inputs and reusable patterns. Governance users can review evidence, rules, enrichment, and lifecycle decisions without reading every notebook line by line.
-
-Use the pages in this section as the user guide for running and adapting the starter notebooks. Use the generated [Function Reference](../reference/) only when you need callable-level details.
