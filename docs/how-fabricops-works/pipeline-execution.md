@@ -28,7 +28,7 @@ Use [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_c
 
 ## Guardrail execution
 
-Use [`run_table_guardrails`](../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
+Use [`guardrail orchestration`](../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
 
 ```python
 source_profile_results = run_table_guardrails(

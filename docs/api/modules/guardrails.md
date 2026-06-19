@@ -312,7 +312,8 @@ No public exports in this module.
 ### External callers
 
 **pipeline**
-<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/">
+<code>run_table_guardrails</code></a>
 
 ### External callees
 

@@ -356,7 +356,8 @@ def widget_author_schema_freshness_profile_rules(
 
 ### Public related functions
 
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/">
+<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
 
 ### Internal implementation summary

@@ -788,7 +788,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                  'static data changes unexpectedly or when a previous watermark group changes or '
                  'disappears.',
   'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
-                     'run_table_guardrails or run_table_guardrails for those checks.',
+                     'run_table_guardrails for DQ-rule enforcement.',
   'glossary_terms': ['profile behavior',
                      'evidence',
                      'profile',
@@ -881,7 +881,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an '
                   'exception.',
   'fabric_context': 'Use in 02_pipeline after run_table_guardrails, enforce_freshness, '
-                    'enforce_profile_behavior, or run_table_guardrails and before write helpers.',
+                    'or enforce_profile_behavior and before write helpers.',
   'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
                      'before passing it to stop_if_failed.',
   'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, context={"config": CONFIG, "env": ENV}, run_id=RUN_ID, spark_session=spark)\n'

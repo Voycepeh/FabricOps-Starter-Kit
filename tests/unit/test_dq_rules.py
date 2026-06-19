@@ -233,7 +233,7 @@ def test_cross_column_rules_use_consistent_null_behavior(spark_session):
 
 
 def test__run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monkeypatch, spark_session):
-    """Verify enforce dq rules loads only active guardrail metadata rules."""
+    """Verify the internal active DQ guardrail loads only active metadata rules."""
     df = spark_session.createDataFrame([(1, "ok"), (None, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
         [
@@ -311,7 +311,7 @@ def test__run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monk
 
 
 def test__run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(monkeypatch, spark_session):
-    """Verify enforce dq rules returns passed when no active guardrail rules."""
+    """Verify the internal active DQ guardrail returns passed when no active guardrail rules."""
     df = spark_session.createDataFrame([(1, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
         [

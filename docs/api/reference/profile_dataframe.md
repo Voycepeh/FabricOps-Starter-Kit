@@ -96,7 +96,8 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 - `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
 - `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/">
+<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Calls
 
@@ -246,7 +247,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 - `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
 - `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/">
+<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Outbound references
 

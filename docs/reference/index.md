@@ -91,8 +91,10 @@ Use the finder below to look up exported public functions from active v1 modules
 
   </div>
 </article>
-<article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline, example_dq_rule_smoke_test" data-function-type="template-called" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></h3>
+<article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true"
+ data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline, example_dq_rule_smoke_test" data-function-type="template-called" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_table_guardrails/">
+<code>run_table_guardrails</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline, example_dq_rule_smoke_test</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, example_dq_rule_smoke_test</p>

@@ -686,7 +686,8 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <a class="reference-chip" href="config/#_get_active_metadata_tables"><code>_get_active_metadata_tables</code></a>, <a class="reference-chip" href="config/#_get_metadata_table_schema_registry"><code>_get_metadata_table_schema_registry</code></a>, <a class="reference-chip" href="config/#_setup_metadata_table_registry"><code>_setup_metadata_table_registry</code></a>, <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/">
+<code>run_table_guardrails</code></a>
 
 ### External callees
 

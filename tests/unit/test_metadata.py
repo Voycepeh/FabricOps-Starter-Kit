@@ -224,7 +224,6 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "read_data",
         "write_data",
         "profile_dataframe",
-        "_run_active_dq_guardrail",
         "get_latest_metadata_catalogue",
         "display_guardrail_results",
         "prepare_pipeline_table_configs",
@@ -236,5 +235,5 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "widget_enrich_table_metadata",
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",
-                "widget_review_guardrail_governance",
+        "widget_review_guardrail_governance",
     ]

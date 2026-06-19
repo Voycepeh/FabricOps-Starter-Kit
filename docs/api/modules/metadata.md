@@ -253,7 +253,8 @@ No public exports in this module.
 <a class="reference-chip" href="guardrails/#enforce_profile_behavior"><code>enforce_profile_behavior</code></a>
 
 **pipeline**
-<a class="reference-chip" href="pipeline/#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>, <a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a class="reference-chip" href="pipeline/#write_catalogue_evidence"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
+<a class="reference-chip" href="pipeline/#_runtime_audit_fields"><code>_runtime_audit_fields</code></a>, <a class="reference-chip" href="../reference/run_table_guardrails/">
+<code>run_table_guardrails</code></a>, <a class="reference-chip" href="pipeline/#write_catalogue_evidence"><code>write_catalogue_evidence</code></a>, <a class="reference-chip" href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
 
 ### External callees
 

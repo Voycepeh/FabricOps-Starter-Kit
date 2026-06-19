@@ -407,7 +407,8 @@ def start_pipeline_run(
 
 ### Public related functions
 
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="run_table_guardrails/">
+<code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 - <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
