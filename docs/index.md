@@ -6,13 +6,6 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 
 It gives teams a shared operating model for configuration, notebook execution, metadata collection, and pipeline guardrails without turning every project into a custom build.
 
-<div class="fabricops-cta" markdown="1">
-
-[Start the guided demo](guided-demo.md){ .md-button .md-button--primary }
-[See how it works](how-fabricops-works/index.md){ .md-button }
-
-</div>
-
 <section class="fabricops-delivery-model" aria-labelledby="fabricops-delivery-model-heading" markdown="1">
 
 <div class="fabricops-delivery-model__copy" markdown="1">
@@ -24,6 +17,13 @@ FabricOps helps governance, engineering, and analytics teams work from the same 
 Governance captures agreement, enrichment, and guardrail evidence. Engineering configures the environment, runs notebooks, and writes metadata. Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
 
 The shared metadata tables act as the handoff layer. They record what was agreed, what ran, what passed, and what is ready for review. This keeps delivery repeatable without forcing every project to become a custom build.
+
+</div>
+
+<div class="fabricops-cta" markdown="1">
+
+[Start the guided demo](guided-demo.md){ .md-button .md-button--primary }
+[See how it works](how-fabricops-works/index.md){ .md-button }
 
 </div>
 
