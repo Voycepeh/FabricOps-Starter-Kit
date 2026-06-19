@@ -2,7 +2,7 @@
 
 <div class="demo-hero" markdown>
 
-Use this page as a course-style walkthrough for the FabricOps Starter Kit in Microsoft Fabric. It now lives under the **Get Started** navigation, and the primary flow is the end-to-end guided demo.
+Use this page as a course-style walkthrough for the FabricOps Starter Kit in Microsoft Fabric. It now lives in the main navigation, and the primary flow is the end-to-end guided demo.
 
 ## Demo at a glance
 
@@ -95,7 +95,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 <div class="demo-next-step" markdown>
 
-**Next:** Continue to [Milestone 1](#milestone-1-configure-00_env_config). For template responsibilities, see [Notebook Templates](how-fabricops-works/notebook-templates.md).
+**Next:** Continue to [Milestone 1](#milestone-1-configure-00_env_config). For template responsibilities, see [List of Templates](how-fabricops-works/notebook-templates.md).
 
 </div>
 
@@ -124,7 +124,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 <div class="demo-evidence" markdown>
 
-**Metadata or table evidence produced:** Metadata table setup/registration is available in `metadata_lakehouse`, including the shared `METADATA_*` tables described in [Metadata Tables](how-fabricops-works/metadata-tables.md).
+**Metadata or table evidence produced:** Metadata table setup/registration is available in `metadata_lakehouse`, including the shared `METADATA_*` tables described in [List of Metadata Tables](reference/metadata-tables/index.md).
 
 </div>
 
@@ -149,7 +149,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Objective:** Capture the steward, agreement, and initial evidence metadata that explains what the demo pipeline is meant to build and who owns it.
 
-**Open:** `01_agreement` in Fabric and the [Notebook Templates](how-fabricops-works/notebook-templates.md) guide.
+**Open:** `01_agreement` in Fabric and the [List of Templates](how-fabricops-works/notebook-templates.md) guide.
 
 **Run or edit:**
 
@@ -288,7 +288,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 <div class="demo-evidence" markdown>
 
-**Metadata or table evidence produced:** Reviewed guardrail intent is written to `METADATA_GUARDRAIL_RULES`; observed profiles remains separate from approved guardrail intent, and runtime outcomes remain separate in guardrail results. See [Metadata Tables](how-fabricops-works/metadata-tables.md) for the table responsibilities.
+**Metadata or table evidence produced:** Reviewed guardrail intent is written to `METADATA_GUARDRAIL_RULES`; observed profiles remains separate from approved guardrail intent, and runtime outcomes remain separate in guardrail results. See [List of Metadata Tables](reference/metadata-tables/index.md) for the table responsibilities.
 
 </div>
 
@@ -398,7 +398,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 **Objective:** Use exploration support without making it a prerequisite for the governed delivery flow.
 
-**Open:** `99_explore` in Fabric and [Notebook Templates](how-fabricops-works/notebook-templates.md).
+**Open:** `99_explore` in Fabric and [List of Templates](how-fabricops-works/notebook-templates.md).
 
 **Run or edit:**
 
@@ -425,7 +425,7 @@ Keep these defaults for your first pass so the screenshots, notebooks, and expec
 
 <div class="demo-next-step" markdown>
 
-**Next:** Review [Metadata Tables](how-fabricops-works/metadata-tables.md) and the [Function Reference](reference/index.md) when you need to trace which helpers produced each evidence row.
+**Next:** Review [List of Metadata Tables](reference/metadata-tables/index.md) and the [Function Reference](reference/index.md) when you need to trace which helpers produced each evidence row.
 
 </div>
 
@@ -467,8 +467,8 @@ The goal is that support and review should no longer depend on memory or side co
 | Page | Why read it |
 | ---- | ----------- |
 | [Environment Configuration](how-fabricops-works/environment-config.md) | Understand how `00_env_config` controls configured runtime targets and metadata routing. |
-| [Notebook Templates](how-fabricops-works/notebook-templates.md) | Learn each notebook responsibility and handoff. |
+| [List of Templates](how-fabricops-works/notebook-templates.md) | Learn each notebook responsibility and handoff. |
 | [Pipeline Guardrails](how-fabricops-works/pipeline-guardrails.md) | Learn how `02_pipeline` owns schema, freshness, DQ, profile behavior, and run evidence. |
 | [Governance Review](how-fabricops-works/governance-review.md) | Learn how `03_governance` reviews and records approved guardrail intent. |
-| [Metadata Tables](how-fabricops-works/metadata-tables.md) | See how observed evidence, approved intent, and runtime outcomes stay separated. |
+| [List of Metadata Tables](reference/metadata-tables/index.md) | See how observed evidence, approved intent, and runtime outcomes stay separated. |
 | [Function Reference](reference/index.md) | Review the reusable helper APIs used by the notebook templates. |
