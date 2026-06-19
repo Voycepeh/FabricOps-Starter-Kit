@@ -48,29 +48,29 @@ FabricOps notebooks do not pass state through notebook memory or informal handov
 <div class="metadata-flow-grid">
 
 <div class="metadata-flow-card">
-<strong><code>00_env_config</code></strong>
-<p>Creates the metadata foundation.</p>
-<p>Writes or validates the 12 metadata tables used by the workflow.</p>
+<strong><a href="environment-config.md"><code>00_env_config</code></a></strong>
+<p>Creates the <a href="../reference/metadata-tables/index.md">metadata foundation</a>.</p>
+<p>Writes or validates the 12 <a href="../reference/metadata-tables/index.md">metadata tables</a> used by the workflow.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><code>01_agreement</code></strong>
-<p>Captures agreement and steward context.</p>
-<p>Writes to agreement metadata tables, including agreement records, steward context, approved usage, and supporting agreement evidence.</p>
+<strong><a href="agreement-setup.md"><code>01_agreement</code></a></strong>
+<p>Captures <a href="../reference/metadata-tables/metadata-data-agreement.md">agreement</a> and <a href="../reference/metadata-tables/metadata-data-steward.md">steward context</a>.</p>
+<p>Writes to <a href="../reference/metadata-tables/index.md">agreement metadata tables</a>, including <a href="../reference/metadata-tables/metadata-data-agreement.md">agreement records</a>, <a href="../reference/metadata-tables/metadata-data-steward.md">steward context</a>, <a href="../reference/metadata-tables/metadata-data-agreement.md">approved usage</a>, and supporting <a href="../reference/metadata-tables/metadata-data-agreement-evidence.md">agreement evidence</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><code>02_pipeline</code></strong>
+<strong><a href="pipeline-execution.md"><code>02_pipeline</code></a></strong>
 <p>Runs governed source to target delivery.</p>
-<p>Reads agreement and configuration metadata.</p>
-<p>Writes pipeline evidence, schema evidence, DQ results, drift results, lineage, output table records, and run status.</p>
+<p>Reads <a href="../reference/metadata-tables/metadata-data-agreement.md">agreement</a> and configuration metadata.</p>
+<p>Writes <a href="../reference/metadata-tables/metadata-pipeline-runs.md">pipeline evidence</a>, <a href="../reference/metadata-tables/metadata-data-catalogue.md">schema evidence</a>, <a href="../reference/metadata-tables/metadata-guardrail-results.md">DQ results</a>, <a href="../reference/metadata-tables/metadata-guardrail-results.md">drift results</a>, <a href="../reference/metadata-tables/metadata-data-lineage-table.md">lineage</a>, <a href="../reference/metadata-tables/metadata-data-catalogue.md">output table records</a>, and <a href="../reference/metadata-tables/metadata-pipeline-runs.md">run status</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><code>03_governance</code></strong>
+<strong><a href="governance-review.md"><code>03_governance</code></a></strong>
 <p>Reviews and approves governed outputs.</p>
-<p>Reads agreement, pipeline evidence, schema evidence, DQ results, drift results, lineage, and run status.</p>
-<p>Writes review decisions, approval state, rule outcomes, enrichment decisions, lifecycle decisions, and production handover state.</p>
+<p>Reads <a href="../reference/metadata-tables/metadata-data-agreement.md">agreement</a>, <a href="../reference/metadata-tables/metadata-pipeline-runs.md">pipeline evidence</a>, <a href="../reference/metadata-tables/metadata-data-catalogue.md">schema evidence</a>, <a href="../reference/metadata-tables/metadata-guardrail-results.md">DQ results</a>, <a href="../reference/metadata-tables/metadata-guardrail-results.md">drift results</a>, <a href="../reference/metadata-tables/metadata-data-lineage-table.md">lineage</a>, and <a href="../reference/metadata-tables/metadata-pipeline-runs.md">run status</a>.</p>
+<p>Writes <a href="../reference/metadata-tables/metadata-guardrail-rules.md">review decisions</a>, <a href="../reference/metadata-tables/metadata-guardrail-rules.md">approval state</a>, <a href="../reference/metadata-tables/metadata-guardrail-rules.md">rule outcomes</a>, <a href="../reference/metadata-tables/metadata-enrichment-rules.md">enrichment decisions</a>, <a href="../reference/metadata-tables/metadata-enrichment-rules.md">lifecycle decisions</a>, and production handover state.</p>
 </div>
 
 </div>
