@@ -31,6 +31,8 @@ FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
+
+METADATA_REFERENCE_DIR = ROOT / "docs" / "reference" / "metadata-tables"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
@@ -1608,6 +1610,200 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
     ])
     return "\n".join(lines) + "\n"
 
+
+def _metadata_slug(table_name: str) -> str:
+    """Return a stable markdown filename for a metadata table."""
+    return table_name.lower().replace("_", "-")
+
+
+def _default_reference_config() -> Any:
+    """Return a minimal validated config for schema registry generation."""
+    from types import SimpleNamespace
+
+    from fabricops_kit.config import FrameworkConfig, NotebookRuntimeConfig, PathConfig
+
+    metadata_store = SimpleNamespace(
+        workspace_id="reference-workspace",
+        item_id="reference-metadata-lakehouse",
+        name="Reference Metadata Lakehouse",
+        kind="lakehouse",
+    )
+    return FrameworkConfig(
+        path_config=PathConfig(paths={"dev": {"metadata": metadata_store}}),
+        notebook_runtime_config=NotebookRuntimeConfig(),
+    )
+
+
+_METADATA_TABLE_PURPOSES = {
+    "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
+    "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
+    "METADATA_DATA_AGREEMENT_EVIDENCE": "Supporting agreement files and evidence metadata captured during agreement intake.",
+    "METADATA_NOTEBOOK_REGISTRY": "Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.",
+    "METADATA_DATA_CATALOGUE": "Observed table and column profile evidence. This is runtime evidence, not approved guardrail intent.",
+    "METADATA_ENRICHMENT_RULES": "Append-only enrichment and business metadata intent authored and reviewed through governance workflows.",
+    "METADATA_GUARDRAIL_RULES": "Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.",
+    "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
+    "METADATA_DATA_LINEAGE_TABLE": "Source-to-target lineage evidence written by pipeline runs.",
+    "METADATA_PIPELINE_RUNS": "Pipeline run summary evidence for execution, guardrail, lineage, and catalogue status.",
+    "METADATA_DATA_ACCESS": "Externally collected access inventory for workspace, object, schema, and table access review.",
+}
+
+_METADATA_TABLE_RELATIONSHIPS = {
+    "METADATA_DATA_STEWARD": {"templates": ["01_agreement.ipynb"], "written_by": ["widget_render_data_steward"], "read_by": ["widget_render_data_agreement", "widget_select_agreement"]},
+    "METADATA_DATA_AGREEMENT": {"templates": ["01_agreement.ipynb", "02_pipeline.ipynb"], "written_by": ["widget_render_data_agreement"], "read_by": ["widget_select_agreement", "get_selected_agreement", "write_pipeline_run_summary"]},
+    "METADATA_DATA_AGREEMENT_EVIDENCE": {"templates": ["01_agreement.ipynb"], "written_by": ["widget_render_agreement_evidence"], "read_by": ["widget_select_agreement"]},
+    "METADATA_NOTEBOOK_REGISTRY": {"templates": ["02_pipeline.ipynb"], "written_by": ["widget_select_agreement"], "read_by": ["get_selected_agreement", "write_pipeline_lineage", "write_pipeline_run_summary"]},
+    "METADATA_DATA_CATALOGUE": {"templates": ["02_pipeline.ipynb", "03_governance.ipynb", "99_explore.ipynb"], "written_by": ["run_table_guardrails"], "read_by": ["get_latest_metadata_catalogue", "widget_select_guardrail_target", "widget_review_table_governance", "run_table_guardrails"]},
+    "METADATA_ENRICHMENT_RULES": {"templates": ["02_pipeline.ipynb", "03_governance.ipynb"], "written_by": ["widget_enrich_table_metadata", "widget_review_table_governance"], "read_by": ["widget_review_table_governance", "widget_review_guardrail_governance"]},
+    "METADATA_GUARDRAIL_RULES": {"templates": ["02_pipeline.ipynb", "03_governance.ipynb"], "written_by": ["widget_author_schema_freshness_profile_rules", "widget_author_dq_rules", "widget_author_guardrail_rules", "widget_review_guardrail_governance"], "read_by": ["enforce_dq_rules", "run_table_guardrails", "widget_review_guardrail_governance"]},
+    "METADATA_GUARDRAIL_RESULTS": {"templates": ["02_pipeline.ipynb"], "written_by": ["run_table_guardrails", "enforce_dq_rules"], "read_by": ["display_guardrail_results", "widget_review_guardrail_governance"]},
+    "METADATA_DATA_LINEAGE_TABLE": {"templates": ["02_pipeline.ipynb"], "written_by": ["write_pipeline_lineage"], "read_by": ["widget_review_guardrail_governance"]},
+    "METADATA_PIPELINE_RUNS": {"templates": ["02_pipeline.ipynb"], "written_by": ["write_pipeline_run_summary"], "read_by": ["widget_review_guardrail_governance"]},
+    "METADATA_DATA_ACCESS": {"templates": ["External access-log inventory collection, not a FabricOps notebook template."], "written_by": [], "read_by": [], "related_step": "External inventory ingestion / governance access review."},
+}
+
+
+def _function_link(symbol: str, relative_prefix: str = "../") -> str:
+    """Return a markdown link to a generated function reference page."""
+    return f"[`{symbol}`]({relative_prefix}api/reference/{symbol}.md)"
+
+
+def _format_symbol_list(symbols: list[str], relative_prefix: str = "../") -> str:
+    """Return linked function names or a fallback label."""
+    return ", ".join(_function_link(symbol, relative_prefix) for symbol in symbols) if symbols else "Not currently discoverable."
+
+
+def _schema_rows(schema: Any) -> list[dict[str, str]]:
+    """Return serializable rows from a Spark StructType-like object."""
+    rows = []
+    for field in getattr(schema, "fields", []):
+        data_type = getattr(field, "dataType", "")
+        if hasattr(data_type, "simpleString"):
+            data_type_label = data_type.simpleString()
+        else:
+            data_type_label = str(data_type)
+        rows.append({"name": str(field.name), "type": data_type_label, "required": "Nullable" if getattr(field, "nullable", True) else "Required"})
+    return rows
+
+
+def _metadata_registry_without_pyspark() -> dict[str, Any]:
+    """Return schema registry with small Spark type stand-ins when PySpark is unavailable."""
+    import sys
+    import types
+
+    class _Type:
+        def __init__(self, label: str) -> None:
+            self._label = label
+
+        def simpleString(self) -> str:
+            return self._label
+
+    class StringType(_Type):
+        def __init__(self) -> None:
+            super().__init__("string")
+
+    class LongType(_Type):
+        def __init__(self) -> None:
+            super().__init__("bigint")
+
+    class DoubleType(_Type):
+        def __init__(self) -> None:
+            super().__init__("double")
+
+    class BooleanType(_Type):
+        def __init__(self) -> None:
+            super().__init__("boolean")
+
+    class TimestampType(_Type):
+        def __init__(self) -> None:
+            super().__init__("timestamp")
+
+    class StructField:
+        def __init__(self, name: str, dataType: Any, nullable: bool = True) -> None:
+            self.name = name
+            self.dataType = dataType
+            self.nullable = nullable
+
+    class StructType:
+        def __init__(self, fields: list[Any]) -> None:
+            self.fields = fields
+
+        def fieldNames(self) -> list[str]:
+            return [field.name for field in self.fields]
+
+    pyspark = types.ModuleType("pyspark")
+    sql = types.ModuleType("pyspark.sql")
+    sql_types = types.ModuleType("pyspark.sql.types")
+    for cls in (BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType):
+        setattr(sql_types, cls.__name__, cls)
+    sql.types = sql_types
+    pyspark.sql = sql
+    sys.modules.setdefault("pyspark", pyspark)
+    sys.modules.setdefault("pyspark.sql", sql)
+    sys.modules.setdefault("pyspark.sql.types", sql_types)
+
+    from fabricops_kit.config import _get_metadata_table_schema_registry
+
+    return _get_metadata_table_schema_registry(_default_reference_config())
+
+
+def generate_metadata_table_reference() -> None:
+    """Generate metadata table reference pages from implemented schema definitions."""
+    try:
+        from fabricops_kit.config import _get_metadata_table_schema_registry
+
+        registry = _get_metadata_table_schema_registry(_default_reference_config())
+    except RuntimeError as exc:
+        if "pyspark.sql.types" not in str(exc):
+            raise
+        registry = _metadata_registry_without_pyspark()
+    METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
+    for old_page in METADATA_REFERENCE_DIR.glob("*.md"):
+        old_page.unlink()
+
+    index_lines = [
+        "# List of Metadata Tables",
+        "",
+        "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.",
+        "",
+        "| Metadata table | Purpose | Primary template step |",
+        "| --- | --- | --- |",
+    ]
+    for table_name in sorted(registry):
+        rel = _METADATA_TABLE_RELATIONSHIPS.get(table_name, {})
+        templates = str(rel.get("related_step") or ", ".join(rel.get("templates", [])) or "Not currently discoverable.")
+        purpose = _METADATA_TABLE_PURPOSES.get(table_name, "Implemented metadata table prepared by `00_env_config`.")
+        index_lines.append(f"| [`{table_name}`]({_metadata_slug(table_name)}.md) | {purpose} | {templates} |")
+
+        page = [
+            f"# {table_name}",
+            "",
+            f"**Purpose:** {purpose}",
+            "",
+            "## Workflow usage",
+            "",
+            f"- **Written by notebook/template:** {', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
+            f"- **Written by function or widget:** {_format_symbol_list(rel.get('written_by', []), '../../')}",
+            f"- **Read by function or widget:** {_format_symbol_list(rel.get('read_by', []), '../../')}",
+            f"- **Related template step:** {rel.get('related_step') or ', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
+            "",
+            "## Implemented schema",
+            "",
+            "| Column name | Data type | Nullable / required |",
+            "| --- | --- | --- |",
+        ]
+        for row in _schema_rows(registry[table_name]):
+            page.append(f"| `{row['name']}` | `{row['type']}` | {row['required']} |")
+        page.extend(["", "## Related function reference", ""])
+        symbols = sorted(set(rel.get("written_by", []) + rel.get("read_by", [])))
+        if symbols:
+            page.extend(f"- {_function_link(symbol, '../../')}" for symbol in symbols)
+        else:
+            page.append("- Not currently discoverable.")
+        (METADATA_REFERENCE_DIR / f"{_metadata_slug(table_name)}.md").write_text("\n".join(page) + "\n", encoding="utf-8")
+
+    (METADATA_REFERENCE_DIR / "index.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
+
 def main() -> None:
     """Run the command-line workflow."""
     REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -1626,6 +1822,7 @@ def main() -> None:
     module_docs_metadata = parse_module_docs_metadata()
     glossary = parse_glossary_metadata()
     _render_glossary_page(glossary)
+    generate_metadata_table_reference()
 
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:

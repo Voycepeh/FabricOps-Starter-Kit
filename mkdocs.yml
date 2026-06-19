@@ -19,25 +19,31 @@ theme:
 
 nav:
   - Home: index.md
-
-  - Get Started:
-      - Guided Demo: guided-demo.md
-      - Install: install.md
-      - Create Wheel: setup/create-wheel.md
-
-  - How FabricOps Works:
-      - Overview: how-fabricops-works/index.md
-      - Template Notebooks: how-fabricops-works/notebook-templates.md
-      - 00 Environment Configuration: how-fabricops-works/environment-config.md
-      - 01 Agreement Setup: how-fabricops-works/agreement-setup.md
-      - 02 Pipeline Execution: how-fabricops-works/pipeline-execution.md
-      - 03 Governance Review: how-fabricops-works/governance-review.md
-      - Metadata Tables: how-fabricops-works/metadata-tables.md
-      - Metadata Dashboard: how-fabricops-works/metadata-dashboard.md
-
-  - List of functions: reference/index.md
-  - Glossary: reference/glossary.md
-  - List of DQ rules:
+  - How FabricOps Works: how-fabricops-works/index.md
+  - Guided Demo:
+      - Overview: guided-demo.md
+      - Configure Environment: guided-demo/configure-environment.md
+      - Create Agreement: guided-demo/create-agreement.md
+      - Run Pipeline: guided-demo/run-pipeline.md
+      - Enrich Metadata: guided-demo/enrich-metadata.md
+      - Review Guardrails: guided-demo/review-guardrails.md
+      - Explore Metadata Outputs: guided-demo/explore-metadata-outputs.md
+  - List of Templates: how-fabricops-works/notebook-templates.md
+  - List of Metadata Tables:
+      - Overview: reference/metadata-tables/index.md
+      - METADATA_DATA_ACCESS: reference/metadata-tables/metadata-data-access.md
+      - METADATA_DATA_AGREEMENT: reference/metadata-tables/metadata-data-agreement.md
+      - METADATA_DATA_AGREEMENT_EVIDENCE: reference/metadata-tables/metadata-data-agreement-evidence.md
+      - METADATA_DATA_CATALOGUE: reference/metadata-tables/metadata-data-catalogue.md
+      - METADATA_DATA_LINEAGE_TABLE: reference/metadata-tables/metadata-data-lineage-table.md
+      - METADATA_DATA_STEWARD: reference/metadata-tables/metadata-data-steward.md
+      - METADATA_ENRICHMENT_RULES: reference/metadata-tables/metadata-enrichment-rules.md
+      - METADATA_GUARDRAIL_RESULTS: reference/metadata-tables/metadata-guardrail-results.md
+      - METADATA_GUARDRAIL_RULES: reference/metadata-tables/metadata-guardrail-rules.md
+      - METADATA_NOTEBOOK_REGISTRY: reference/metadata-tables/metadata-notebook-registry.md
+      - METADATA_PIPELINE_RUNS: reference/metadata-tables/metadata-pipeline-runs.md
+  - List of Functions: reference/index.md
+  - List of DQ Rules:
       - Overview: reference/dq-rules/index.md
       - not_null: reference/dq-rules/not-null.md
       - null_rate_below: reference/dq-rules/null-rate-below.md
@@ -62,8 +68,10 @@ nav:
       - required_when: reference/dq-rules/required-when.md
       - value_when: reference/dq-rules/value-when.md
       - expression_true: reference/dq-rules/expression-true.md
-
+  - Glossary: reference/glossary.md
   - Maintainer Guide:
+      - Install: install.md
+      - Create Wheel: setup/create-wheel.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
       - Documentation Versioning: development/docs-versioning.md

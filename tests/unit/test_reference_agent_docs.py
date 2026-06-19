@@ -739,9 +739,11 @@ def test_reference_nav_promotes_catalogue_entry_pages_only() -> None:
     """Verify reference entries are top-level nav items without callable page noise."""
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
-    assert "  - List of functions: reference/index.md" in mkdocs_text
+    assert "  - List of Functions: reference/index.md" in mkdocs_text
+    assert "  - List of Metadata Tables:" in mkdocs_text
+    assert "      - Overview: reference/metadata-tables/index.md" in mkdocs_text
     assert "  - Glossary: reference/glossary.md" in mkdocs_text
-    assert "  - List of DQ rules:" in mkdocs_text
+    assert "  - List of DQ Rules:" in mkdocs_text
     assert "      - Overview: reference/dq-rules/index.md" in mkdocs_text
     assert "  - Function & DQ Rules Reference:" not in mkdocs_text
     assert "      - DQ Rules:" not in mkdocs_text
