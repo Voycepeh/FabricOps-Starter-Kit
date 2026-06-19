@@ -43,29 +43,36 @@ The role workflow keeps implementation and review responsibilities clear without
 
 ## How metadata moves between notebooks
 
-FabricOps notebooks do not depend on notebook memory or informal handover notes. Each notebook reads and writes shared metadata so configuration, agreement context, evidence, guardrail results, lineage, run status, and review decisions remain visible across the workflow.
+FabricOps notebooks do not pass state through notebook memory or informal handover notes. They share state through metadata tables, so each notebook can continue from the configuration, agreement context, pipeline evidence, and review decisions written by earlier steps.
 
-<div class="grid cards" markdown="1">
+<div class="metadata-flow-grid">
 
--   **`00_env_config`**
+<div class="metadata-flow-card">
+<strong><code>00_env_config</code></strong>
+<p>Creates the metadata foundation.</p>
+<p>Writes or validates the 12 metadata tables used by the workflow.</p>
+</div>
 
-    Creates workspace, runtime, and metadata configuration.
+<div class="metadata-flow-card">
+<strong><code>01_agreement</code></strong>
+<p>Captures agreement and steward context.</p>
+<p>Writes to agreement metadata tables, including agreement records, steward context, approved usage, and supporting agreement evidence.</p>
+</div>
 
--   **`01_agreement`**
+<div class="metadata-flow-card">
+<strong><code>02_pipeline</code></strong>
+<p>Runs governed source to target delivery.</p>
+<p>Reads agreement and configuration metadata.</p>
+<p>Writes pipeline evidence, schema evidence, DQ results, drift results, lineage, output table records, and run status.</p>
+</div>
 
-    Records steward, agreement, and approved usage context.
-
--   **`02_pipeline`**
-
-    Uses agreement context, executes data movement, writes evidence, guardrail results, lineage, and run status.
-
--   **`03_governance`**
-
-    Reviews rules, enrichment, lifecycle decisions, and approval state.
-
--   **Dashboard and reference pages**
-
-    Read metadata tables to show current state, history, and implementation details.
+<div class="metadata-flow-card">
+<strong><code>03_governance</code></strong>
+<p>Reviews and approves governed outputs.</p>
+<p>Reads agreement, pipeline evidence, schema evidence, DQ results, drift results, lineage, and run status.</p>
+<p>Writes review decisions, approval state, rule outcomes, enrichment decisions, lifecycle decisions, and production handover state.</p>
+</div>
 
 </div>
 
+Dashboard and reference pages consume metadata to show current state, history, and implementation details; they are not writers in the notebook workflow.
