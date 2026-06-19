@@ -1642,12 +1642,11 @@
       "classification": "callable",
       "calls": [],
       "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
+      "used_by": [
+        "fabricops_kit.pipeline.start_pipeline_run"
       ],
+      "used_by_count": 1,
+      "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -1735,12 +1734,11 @@
         "fabricops_kit.metadata._register_current_notebook"
       ],
       "calls_count": 8,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
+      "used_by": [
+        "fabricops_kit.pipeline.start_pipeline_run"
       ],
+      "used_by_count": 1,
+      "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.data_agreement._html_escape",
         "fabricops_kit.data_agreement._latest_agreement_versions",
@@ -5323,6 +5321,41 @@
       ],
       "internal_helper_count": 2
     },
+    "fabricops_kit.pipeline._PipelineRunContext": {
+      "qualified_name": "fabricops_kit.pipeline._PipelineRunContext",
+      "short_name": "_PipelineRunContext",
+      "module": "pipeline",
+      "callable": "_PipelineRunContext",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.start_pipeline_run"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline._active_pipeline_context": {
+      "qualified_name": "fabricops_kit.pipeline._active_pipeline_context",
+      "short_name": "_active_pipeline_context",
+      "module": "pipeline",
+      "callable": "_active_pipeline_context",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.run_table_guardrails",
+        "fabricops_kit.pipeline.write_pipeline_run_summary"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.pipeline._add_audit_columns": {
       "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
       "short_name": "_add_audit_columns",
@@ -5568,6 +5601,23 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.pipeline._notebook_global": {
+      "qualified_name": "fabricops_kit.pipeline._notebook_global",
+      "short_name": "_notebook_global",
+      "module": "pipeline",
+      "callable": "_notebook_global",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.start_pipeline_run"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.pipeline._now_iso": {
       "qualified_name": "fabricops_kit.pipeline._now_iso",
       "short_name": "_now_iso",
@@ -5581,11 +5631,12 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.pipeline._runtime_audit_fields",
+        "fabricops_kit.pipeline.start_pipeline_run",
         "fabricops_kit.pipeline.write_catalogue_evidence",
         "fabricops_kit.pipeline.write_pipeline_lineage",
         "fabricops_kit.pipeline.write_pipeline_run_summary"
       ],
-      "used_by_count": 4,
+      "used_by_count": 5,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -5711,6 +5762,25 @@
         "fabricops_kit.pipeline._now_iso"
       ],
       "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline._runtime_metadata_value": {
+      "qualified_name": "fabricops_kit.pipeline._runtime_metadata_value",
+      "short_name": "_runtime_metadata_value",
+      "module": "pipeline",
+      "callable": "_runtime_metadata_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata.get"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.start_pipeline_run"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.pipeline._schema_reason": {
       "qualified_name": "fabricops_kit.pipeline._schema_reason",
@@ -5946,6 +6016,7 @@
         "fabricops_kit.guardrails.stop_if_failed",
         "fabricops_kit.metadata._build_metadata_table_key",
         "fabricops_kit.metadata._write_guardrail_result_row",
+        "fabricops_kit.pipeline._active_pipeline_context",
         "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
         "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
         "fabricops_kit.pipeline._guardrail_can_continue",
@@ -5955,20 +6026,51 @@
         "fabricops_kit.pipeline.build_guardrail_summary_rows",
         "fabricops_kit.pipeline.write_catalogue_evidence"
       ],
-      "calls_count": 19,
+      "calls_count": 20,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [
         "02_pipeline"
       ],
       "internal_helpers_used": [
+        "fabricops_kit.pipeline._active_pipeline_context",
         "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
         "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
         "fabricops_kit.pipeline._guardrail_can_continue",
         "fabricops_kit.pipeline._table_key",
         "fabricops_kit.pipeline._table_name"
       ],
-      "internal_helper_count": 5
+      "internal_helper_count": 6
+    },
+    "fabricops_kit.pipeline.start_pipeline_run": {
+      "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+      "short_name": "start_pipeline_run",
+      "module": "pipeline",
+      "callable": "start_pipeline_run",
+      "docs_url": "/FabricOps-Starter-Kit/reference/start_pipeline_run/",
+      "classification": "callable",
+      "calls": [
+        "fabricops_kit.data_agreement.get_selected_agreement",
+        "fabricops_kit.data_agreement.widget_select_agreement",
+        "fabricops_kit.pipeline._PipelineRunContext",
+        "fabricops_kit.pipeline._notebook_global",
+        "fabricops_kit.pipeline._now_iso",
+        "fabricops_kit.pipeline._runtime_metadata_value"
+      ],
+      "calls_count": 6,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [
+        "02_pipeline",
+        "99_explore"
+      ],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline._PipelineRunContext",
+        "fabricops_kit.pipeline._notebook_global",
+        "fabricops_kit.pipeline._now_iso",
+        "fabricops_kit.pipeline._runtime_metadata_value"
+      ],
+      "internal_helper_count": 4
     },
     "fabricops_kit.pipeline.write_catalogue_evidence": {
       "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
@@ -6042,22 +6144,24 @@
         "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
         "fabricops_kit.fabric_input_output.write_lakehouse_table",
+        "fabricops_kit.pipeline._active_pipeline_context",
         "fabricops_kit.pipeline._definition_name",
         "fabricops_kit.pipeline._now_iso",
         "fabricops_kit.pipeline._summary_status"
       ],
-      "calls_count": 6,
+      "calls_count": 7,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [
         "02_pipeline"
       ],
       "internal_helpers_used": [
+        "fabricops_kit.pipeline._active_pipeline_context",
         "fabricops_kit.pipeline._definition_name",
         "fabricops_kit.pipeline._now_iso",
         "fabricops_kit.pipeline._summary_status"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 4
     }
   },
   "modules": {
@@ -6090,10 +6194,11 @@
         "metadata"
       ],
       "inbound_modules": [
-        "config"
+        "config",
+        "pipeline"
       ],
       "outbound_count": 3,
-      "inbound_count": 1
+      "inbound_count": 2
     },
     "data_lineage": {
       "callable_count": 0,
@@ -6183,10 +6288,11 @@
       "inbound_count": 4
     },
     "pipeline": {
-      "callable_count": 5,
-      "internal_count": 25,
+      "callable_count": 6,
+      "internal_count": 29,
       "outbound_modules": [
         "config",
+        "data_agreement",
         "data_profiling",
         "fabric_input_output",
         "governance_review",
@@ -6194,7 +6300,7 @@
         "metadata"
       ],
       "inbound_modules": [],
-      "outbound_count": 6,
+      "outbound_count": 7,
       "inbound_count": 0
     }
   }

@@ -1,28 +1,28 @@
-# widget_select_agreement
+# start_pipeline_run
 
-Render an agreement selector and optionally register the active notebook.
+Start a guided notebook run and store runtime defaults.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/data_agreement.py:788`
+`fabricops_kit/pipeline.py:63`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L150">View on GitHub</a>
 </div>
 
 ## Usage guidance
 
 ### Use when
 
-- Use near the start of 02_pipeline or 99_explore before reads, profiling, lineage, or governance evidence need an agreement id.
+- Use near the top of 02_pipeline or read-only exploration notebooks that need agreement-aware runtime defaults.
 
 ### Do not use when
 
-- Do not use for guardrail target selection; use widget_select_guardrail_target for catalogue-backed guardrail authoring and review targets.
+- Do not use when an advanced custom notebook needs to pass every runtime parameter explicitly to lower-level helpers.
 
 ### Additional context
 
-Displays an agreement selector and stores the chosen agreement so pipeline and exploration notebooks can bind work to approved business context.
+Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.
 
 
 ## Signature
@@ -30,19 +30,17 @@ Displays an agreement selector and stores the chosen agreement so pipeline and e
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_select_agreement(
-    agreement_rows: Any=None,
-    context: dict[str, Any] | None=None,
+def start_pipeline_run(
+    notebook_type: str='02_pipeline',
+    select_agreement: bool=False,
+    register_notebook: bool=False,
+    read_only: bool=False,
+    run_context: Any=None,
     spark_session: Any=None,
     metadata_schema: str | None=None,
-    register_notebook: bool=False,
-    notebook_type: str | None=None,
-    environment_name: str | None=None,
-    dataset_name: str | None=None,
-    table_name: str | None=None,
-    topic: str | None=None,
     pipeline_name: str | None=None,
-) -> Any:
+    context: dict[str, Any] | None=None,
+) -> _PipelineRunContext:
 ```
 
 </div>
@@ -52,8 +50,7 @@ def widget_select_agreement(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-widget_select_agreement(spark_session=spark)
-agreement = get_selected_agreement()
+PIPELINE = start_pipeline_run(notebook_type="02_pipeline", select_agreement=True, register_notebook=True)
 ```
 
 </div>
@@ -62,53 +59,49 @@ agreement = get_selected_agreement()
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `agreement_rows` | `Any` | No | Preloaded agreement rows. When omitted, agreements are loaded from the active ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override context. Defaults to the active ``FABRIC_CONTEXT``. |
-| `spark_session` | `Any` | No | Fabric Spark session used for configured metadata-table reads. |
-| `metadata_schema` | `str \| None` | No | Explicit metadata Lakehouse schema override. Pass ``METADATA_SCHEMA`` from ``00_env_config`` in schema-enabled Lakehouses so agreement reads and notebook registration use the same metadata route. |
-| `register_notebook` | `bool` | No | When True, render registration status and a button that links the current notebook to the selected agreement. |
-| `notebook_type` | `str \| None` | No | Workflow metadata passed to ``_register_current_notebook`` when ``register_notebook`` is enabled. |
-| `environment_name` | `str \| None` | No | Not documented yet |
-| `dataset_name` | `str \| None` | No | Not documented yet |
-| `table_name` | `str \| None` | No | Not documented yet |
-| `topic` | `str \| None` | No | Not documented yet |
-| `pipeline_name` | `str \| None` | No | Not documented yet |
+| `notebook_type` | `str` | No | FabricOps notebook type to associate with the active context. |
+| `select_agreement` | `bool` | No | When True, render the agreement selector and capture the selected agreement for downstream defaults. |
+| `register_notebook` | `bool` | No | When True, allow ``widget_select_agreement`` to register this notebook to the selected agreement. Use ``False`` for read-only exploration. |
+| `read_only` | `bool` | No | Marks the active context as read-only for exploratory notebooks. The startup helper itself does not write metadata unless ``register_notebook=True`` is explicitly requested. |
+| `run_context` | `Any` | No | ``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook variable named ``RUN_CONTEXT``. |
+| `spark_session` | `Any` | No | Spark session. Defaults to the active notebook variable named ``spark``. |
+| `metadata_schema` | `str \| None` | No | ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used. |
+| `pipeline_name` | `str \| None` | No | Friendly pipeline name. Defaults to Fabric runtime notebook metadata. |
+| `context` | `dict[str, Any] \| None` | No | Advanced FabricOps context override. |
 
 ## Returns
 
-Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
+Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults.
 
 ### Return interpretation
 
-A visible selection widget does not mean an agreement is selected; call get_selected_agreement after the user chooses a row.
+The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically.
 
 ## Raises / Errors
 
-Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
+Not documented yet
 
 ### Common failure causes
 
-- No agreement metadata rows are available.
+- RUN_CONTEXT is unavailable.
+- spark is unavailable.
+- No agreement exists when select_agreement=True.
 - The user has not selected an agreement.
-- Notebook registration metadata cannot be written.
-- The configured metadata lakehouse cannot be read.
 
 ## Relationships
 
 ### Used by
 
-- <a href="start_pipeline_run/"><code>fabricops_kit.pipeline.start_pipeline_run</code></a>
+Not documented yet
 
 ### Calls
 
-- `fabricops_kit.config.resolve_fabric_context`
-- `fabricops_kit.data_agreement._html_escape`
-- `fabricops_kit.data_agreement._latest_agreement_versions`
-- `fabricops_kit.data_agreement._list_data_agreements`
-- `fabricops_kit.data_agreement._render_searchable_selector`
-- `fabricops_kit.data_agreement._require_ipywidgets`
-- `fabricops_kit.metadata._current_notebook_active_registrations`
-- `fabricops_kit.metadata._register_current_notebook`
+- <a href="get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
+- <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
+- `fabricops_kit.pipeline._PipelineRunContext`
+- `fabricops_kit.pipeline._notebook_global`
+- `fabricops_kit.pipeline._now_iso`
+- `fabricops_kit.pipeline._runtime_metadata_value`
 
 ## Implementation details
 
@@ -119,15 +112,17 @@ Raises metadata read, widget dependency, or configuration errors when agreement 
 
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
-None.
+- `02_pipeline`
+- `99_explore`
 
 **Side effects:**
 
-Displays an IPython widget and may register the active notebook selection in metadata when requested.
+Stores active in-memory context for the current notebook session; renders agreement selection when select_agreement=True and registers only when register_notebook=True.
 
 **Notes:**
 
-No additional callable notes are documented.
+This helper keeps template code concise while preserving explicit lower-level
+parameters on guardrail and summary helpers for advanced notebooks.
 
 </details>
 
@@ -138,47 +133,34 @@ No additional callable notes are documented.
     Expanded internal helper tree is available in Implementation details.
 
     ```text
-    widget_select_agreement(...)
-    ├── _current_notebook_active_registrations(...)
-    │   ├── _context_get(...)
-    │   ├── _load_notebook_registry(...)
-    │   │   └── …
-    │   ├── _runtime_context(...)
-    │   │   └── …
-    │   └── _safe_str(...)
-    ├── _html_escape(...)
-    ├── _latest_agreement_versions(...)
-    │   ├── _coerce_row_dicts(...)
-    │   └── _parse_contract_version(...)
-    ├── _list_data_agreements(...)
-    │   ├── _latest_agreement_versions(...)
-    │   │   └── …
-    │   └── _list_all_data_agreement_rows(...)
+    start_pipeline_run(...)
+    ├── _notebook_global(...)
+    ├── _now_iso(...)
+    │   └── _current_audit_timestamp(...)
     │       └── …
-    ├── _register_current_notebook(...)
-    │   ├── _configured_lakehouse_schema(...)
-    │   │   └── …
-    │   ├── _context_get(...)
-    │   ├── _current_audit_timestamp(...)
-    │   │   └── …
-    │   ├── _notebook_registration_key(...)
-    │   ├── _rows_for_spark(...)
-    │   ├── _runtime_context(...)
-    │   │   └── …
-    │   ├── _safe_str(...)
-    │   └── write_lakehouse_table(...)
-    │       └── …
-    ├── _render_searchable_selector(...)
-    │   ├── _html_escape(...)
-    │   └── _widget_common(...)
-    ├── _require_ipywidgets(...)
-    └── resolve_fabric_context(...)
-        └── get_default_fabric_context(...)
+    ├── _PipelineRunContext(...)
+    ├── _runtime_metadata_value(...)
+    ├── get_selected_agreement(...)
+    └── widget_select_agreement(...)
+        ├── _current_notebook_active_registrations(...)
+        │   └── …
+        ├── _html_escape(...)
+        ├── _latest_agreement_versions(...)
+        │   └── …
+        ├── _list_data_agreements(...)
+        │   └── …
+        ├── _register_current_notebook(...)
+        │   └── …
+        ├── _render_searchable_selector(...)
+        │   └── …
+        ├── _require_ipywidgets(...)
+        └── resolve_fabric_context(...)
+            └── …
     ```
 
-??? info "Internal helpers used: 30"
+??? info "Internal helpers used: 34"
 
-    This callable uses 30 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
+    This callable uses 34 internal helpers for audit timestamp, metadata loading, rule parsing, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
@@ -203,6 +185,7 @@ No additional callable notes are documented.
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L201-L311"><code>_render_searchable_selector</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144"><code>_resolve_lakehouse_schema</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154"><code>_resolve_lakehouse_table_path</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L55-L60"><code>_runtime_metadata_value</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
@@ -233,7 +216,10 @@ No additional callable notes are documented.
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L451-L507"><code>_current_notebook_active_registrations</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L195-L198"><code>_html_escape</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L46-L52"><code>_notebook_global</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L44-L53"><code>_notebook_registration_key</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L158-L159"><code>_now_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L23-L40"><code>_PipelineRunContext</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L276-L395"><code>_register_current_notebook</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L63-L72"><code>_require_ipywidgets</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
@@ -250,76 +236,73 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 ### Function manifest
 
-- Fully qualified function name: `fabricops_kit.data_agreement.widget_select_agreement`
-- Short name: `widget_select_agreement`
-- Module: `data_agreement`
+- Fully qualified function name: `fabricops_kit.pipeline.start_pipeline_run`
+- Short name: `start_pipeline_run`
+- Module: `pipeline`
 - Classification: Callable
-- Related module: `data_agreement`
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- Source line: `788`
-- Inbound references count: 1
-- Outbound references count: 8
-- Used in templates: —
-- Glossary terms: notebook template
+- Related module: `pipeline`
+- Source file path: `src/fabricops_kit/pipeline.py`
+- Source line: `63`
+- Inbound references count: 0
+- Outbound references count: 6
+- Used in templates: 02_pipeline, 99_explore
+- Glossary terms: notebook template, data agreement, metadata lakehouse
 
 ### Implementation contract
 
-- **required_context:** Requires agreement metadata created through 01_agreement and metadata routing from 00_env_config.
-- **inputs:** config, env, optional spark_session, and notebook registration options for loading agreement choices from metadata.
-- **output:** Interactive widget state; call get_selected_agreement to retrieve the selected agreement record.
-- **side_effects:** Displays an IPython widget and may register the active notebook selection in metadata when requested.
-- **failure_modes:** Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.
-- **verification:** Verify the user selected an agreement and call get_selected_agreement before generating pipeline code that depends on agreement context.
+- **required_context:** Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config.
+- **inputs:** notebook_type, select_agreement, register_notebook, read_only, and optional runtime overrides.
+- **output:** Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults.
+- **side_effects:** Stores active in-memory context for the current notebook session; renders agreement selection when select_agreement=True and registers only when register_notebook=True.
+- **failure_modes:** Not documented yet
+- **verification:** Verify delivery notebooks use register_notebook=True and read-only exploration notebooks use register_notebook=False with read_only=True.
 
 ### Inbound references
 
-- <a href="start_pipeline_run/"><code>fabricops_kit.pipeline.start_pipeline_run</code></a>
+Not documented yet
 
 ### Outbound references
 
-- `fabricops_kit.config.resolve_fabric_context`
-- `fabricops_kit.data_agreement._html_escape`
-- `fabricops_kit.data_agreement._latest_agreement_versions`
-- `fabricops_kit.data_agreement._list_data_agreements`
-- `fabricops_kit.data_agreement._render_searchable_selector`
-- `fabricops_kit.data_agreement._require_ipywidgets`
-- `fabricops_kit.metadata._current_notebook_active_registrations`
-- `fabricops_kit.metadata._register_current_notebook`
+- <a href="get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
+- <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
+- `fabricops_kit.pipeline._PipelineRunContext`
+- `fabricops_kit.pipeline._notebook_global`
+- `fabricops_kit.pipeline._now_iso`
+- `fabricops_kit.pipeline._runtime_metadata_value`
 
 ### Raw source metadata
 
-- Source file path: `src/fabricops_kit/data_agreement.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024</a>
-- Start line: `788`
-- End line: `1024`
+- Source file path: `src/fabricops_kit/pipeline.py`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L150">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L150</a>
+- Start line: `63`
+- End line: `150`
 - Signature:
 
 ```python
-def widget_select_agreement(
-    agreement_rows: Any=None,
-    context: dict[str, Any] | None=None,
+def start_pipeline_run(
+    notebook_type: str='02_pipeline',
+    select_agreement: bool=False,
+    register_notebook: bool=False,
+    read_only: bool=False,
+    run_context: Any=None,
     spark_session: Any=None,
     metadata_schema: str | None=None,
-    register_notebook: bool=False,
-    notebook_type: str | None=None,
-    environment_name: str | None=None,
-    dataset_name: str | None=None,
-    table_name: str | None=None,
-    topic: str | None=None,
     pipeline_name: str | None=None,
-) -> Any:
+    context: dict[str, Any] | None=None,
+) -> _PipelineRunContext:
 ```
 
 ### Internal relationship graph
 
 ### Public related functions
 
-- <a href="get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
-- <a href="setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
+- <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
 
 ### Internal implementation summary
 
-- Internal helper count: 30
+- Internal helper count: 34
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
@@ -327,9 +310,12 @@ def widget_select_agreement(
 ## Glossary
 
 - <details class="glossary-chip"><summary>Notebook template</summary>Reusable starter notebook workflow that shows how to run a FabricOps phase.</details>
+- <details class="glossary-chip"><summary>Data agreement</summary>FabricOps agreement record that captures ownership, steward context, usage, and expectations.</details>
+- <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
 - [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)

@@ -109,10 +109,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Agreement selection",
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "data_agreement",
@@ -174,10 +171,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Agreement selection",
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "data_profiling",
@@ -422,6 +416,23 @@
       "template_segment": "Guardrail orchestration",
       "used_in_templates": [
         "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "start_pipeline_run",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Runtime context setup",
+      "used_in_templates": [
+        "02_pipeline",
+        "99_explore"
       ]
     },
     {

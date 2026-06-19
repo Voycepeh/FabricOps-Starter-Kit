@@ -154,10 +154,11 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     """Verify starter template code-cell calls drive the reference surface."""
     called = _direct_template_call_set()
 
-    assert len(called) == 24
+    assert len(called) == 23
     assert "setup_notebook" in called
     assert "write_pipeline_run_summary" in called
     assert "get_latest_metadata_catalogue" in called
+    assert "start_pipeline_run" in called
     assert "validate_schema" not in called
     assert "validate_schema_rule" not in called
     assert "read_lakehouse_csv" not in called

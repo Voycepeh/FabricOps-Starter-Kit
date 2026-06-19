@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
 from typing import Any, Mapping
 from uuid import uuid4
 
+from .data_agreement import get_selected_agreement, widget_select_agreement
 from .data_profiling import profile_dataframe
 from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, _check_schema_runtime, _check_schema_rule_runtime
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
@@ -15,6 +17,142 @@ from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _w
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
+
+
+@dataclass
+class _PipelineRunContext:
+    """Internal runtime context resolved for guided notebook defaults."""
+
+    run_id: str
+    pipeline_started_at: str
+    pipeline_name: str
+    spark_session: Any = None
+    metadata_schema: str = ""
+    notebook_type: str = "02_pipeline"
+    notebook_id: str = ""
+    notebook_registry_id: str = ""
+    agreement_id: str = ""
+    agreement_contract_version: str = ""
+    agreement: dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] | None = None
+    read_only: bool = False
+    source_definitions: dict[str, dict[str, Any]] = field(default_factory=dict)
+    target_definitions: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+
+_ACTIVE_PIPELINE_CONTEXT: _PipelineRunContext | None = None
+
+
+def _notebook_global(name: str, default: Any = None) -> Any:
+    """Return an active IPython notebook global when available."""
+    try:
+        ip = get_ipython()  # type: ignore[name-defined]
+    except Exception:
+        return default
+    return getattr(ip, "user_ns", {}).get(name, default) if ip is not None else default
+
+
+def _runtime_metadata_value(run_context: Any, key: str, default: str = "") -> str:
+    """Return one runtime metadata value from ``RUN_CONTEXT``."""
+    metadata = getattr(run_context, "runtime_metadata", {}) or {}
+    if isinstance(metadata, Mapping):
+        return str(metadata.get(key) or default)
+    return default
+
+
+def start_pipeline_run(
+    *,
+    notebook_type: str = "02_pipeline",
+    select_agreement: bool = False,
+    register_notebook: bool = False,
+    read_only: bool = False,
+    run_context: Any = None,
+    spark_session: Any = None,
+    metadata_schema: str | None = None,
+    pipeline_name: str | None = None,
+    context: dict[str, Any] | None = None,
+) -> _PipelineRunContext:
+    """Start a guided notebook run and store runtime defaults.
+
+    Parameters
+    ----------
+    notebook_type : str, default="02_pipeline"
+        FabricOps notebook type to associate with the active context.
+    select_agreement : bool, default=False
+        When True, render the agreement selector and capture the selected
+        agreement for downstream defaults.
+    register_notebook : bool, default=False
+        When True, allow ``widget_select_agreement`` to register this notebook
+        to the selected agreement. Use ``False`` for read-only exploration.
+    read_only : bool, default=False
+        Marks the active context as read-only for exploratory notebooks. The
+        startup helper itself does not write metadata unless
+        ``register_notebook=True`` is explicitly requested.
+    run_context : object, optional
+        ``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook
+        variable named ``RUN_CONTEXT``.
+    spark_session : Any, optional
+        Spark session. Defaults to the active notebook variable named ``spark``.
+    metadata_schema : str, optional
+        ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
+    pipeline_name : str, optional
+        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
+    context : dict, optional
+        Advanced FabricOps context override.
+
+    Returns
+    -------
+    _PipelineRunContext
+        Internal context object with resolved runtime defaults. Most notebooks
+        use it only as ``PIPELINE`` for ``run_id`` and ``pipeline_name`` when
+        preparing target configs or lineage.
+
+    Notes
+    -----
+    This helper keeps template code concise while preserving explicit lower-level
+    parameters on guardrail and summary helpers for advanced notebooks.
+
+    """
+    global _ACTIVE_PIPELINE_CONTEXT
+    run_context = run_context if run_context is not None else _notebook_global("RUN_CONTEXT")
+    spark_session = spark_session if spark_session is not None else _notebook_global("spark")
+    schema = metadata_schema if metadata_schema is not None else _notebook_global("METADATA_SCHEMA", "")
+    resolved_pipeline_name = str(pipeline_name or _runtime_metadata_value(run_context, "currentNotebookName", notebook_type))
+    active = _PipelineRunContext(
+        run_id=str(getattr(run_context, "run_id", "") or uuid4()),
+        pipeline_started_at=_now_iso(),
+        pipeline_name=resolved_pipeline_name,
+        spark_session=spark_session,
+        metadata_schema=str(schema or ""),
+        notebook_type=str(notebook_type or "02_pipeline"),
+        notebook_id=_runtime_metadata_value(run_context, "currentNotebookId", ""),
+        context=context,
+        read_only=bool(read_only),
+    )
+    _ACTIVE_PIPELINE_CONTEXT = active
+
+    if select_agreement:
+        widget_select_agreement(
+            spark_session=active.spark_session,
+            metadata_schema=active.metadata_schema or None,
+            register_notebook=register_notebook,
+            notebook_type=active.notebook_type,
+            pipeline_name=active.pipeline_name,
+            context=active.context,
+        )
+        agreement = get_selected_agreement()
+        active.agreement = dict(agreement)
+        active.agreement_id = str(agreement.get("agreement_id", ""))
+        active.agreement_contract_version = str(agreement.get("agreement_contract_version", agreement.get("contract_version", "")))
+        active.notebook_registry_id = str(agreement.get("notebook_registry_id", agreement.get("registration_id", "")))
+        active.notebook_id = str(agreement.get("notebook_id", active.notebook_id))
+
+    return active
+
+
+def _active_pipeline_context() -> _PipelineRunContext | None:
+    """Return the active pipeline context when one has been started."""
+    return _ACTIVE_PIPELINE_CONTEXT
 
 
 def _now_iso(config: Any = None) -> str:
@@ -548,15 +686,17 @@ def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]
 def run_table_guardrails(
     table_configs: list[dict[str, Any]],
     *,
-    run_id: str,
+    run_id: str | None = None,
     context: dict[str, Any] | None = None,
-    spark_session: Any,
+    spark_session: Any | None = None,
     agreement_id: str = "",
     agreement_contract_version: str = "",
     notebook_registry_id: str = "",
     notebook_id: str = "",
     pipeline_name: str = "",
-    stop_on_failure: bool = False,
+    table_role: str = "",
+    mode: str = "profile",
+    stop_on_failure: bool | None = None,
 ) -> dict[str, Any]:
     """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.
 
@@ -569,19 +709,28 @@ def run_table_guardrails(
         ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``,
         ``distribution_columns``, and ``exclude_columns`` control the guardrail
         behavior.
-    run_id : str
-        Current pipeline run identifier.
-    spark_session : Any
-        Spark session used by profile behavior and DQ helpers.
+    run_id : str, optional
+        Current pipeline run identifier. When omitted, the active context from
+        :func:`start_pipeline_run` is used.
+    spark_session : Any, optional
+        Spark session used by profile behavior and DQ helpers. When omitted,
+        the active context from :func:`start_pipeline_run` is used.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
-        Governance context written with catalogue evidence.
-    stop_on_failure : bool, default False
+        Governance context written with catalogue evidence. Omitted values are
+        resolved from the active context when available.
+    table_role : {"source", "target"}, optional
+        Template-facing table role used to retain source and target definitions
+        in the active context for summary defaults.
+    mode : {"profile", "enforce"}, default="profile"
+        Template-facing mode. ``profile`` defaults to non-blocking display, and
+        ``enforce`` defaults to ``stop_on_failure=True``.
+    stop_on_failure : bool, optional
         When True, collect all guardrail results and catalogue evidence, then
         stop notebook execution via the standard guardrail stopper if any table
-        cannot continue.
+        cannot continue. When omitted, the default is derived from ``mode``.
 
     Returns
     -------
@@ -600,6 +749,26 @@ def run_table_guardrails(
     are routed through the configured metadata target by the called helpers.
 
     """
+    active = _active_pipeline_context()
+    if active is not None:
+        context = context if context is not None else active.context
+        run_id = run_id or active.run_id
+        spark_session = spark_session if spark_session is not None else active.spark_session
+        pipeline_name = pipeline_name or active.pipeline_name
+        notebook_id = notebook_id or active.notebook_id
+        notebook_registry_id = notebook_registry_id or active.notebook_registry_id
+        agreement_id = agreement_id or active.agreement_id
+        agreement_contract_version = agreement_contract_version or active.agreement_contract_version
+    if not run_id:
+        raise ValueError("run_id is required unless start_pipeline_run has established an active context.")
+    if spark_session is None:
+        raise ValueError("spark_session is required unless start_pipeline_run has established an active context.")
+    normalized_mode = str(mode or "profile").lower().strip()
+    if normalized_mode not in {"profile", "enforce"}:
+        raise ValueError("mode must be one of: profile, enforce.")
+    if stop_on_failure is None:
+        stop_on_failure = normalized_mode == "enforce"
+
     config, env, resolved_context = resolve_fabric_context(context=context)
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
@@ -760,6 +929,13 @@ def run_table_guardrails(
     result["detail_rows"] = build_guardrail_detail_rows(result)
     result["blocking_message"] = _build_guardrail_blocking_message_from_bundle(result)
 
+    normalized_role = str(table_role or "").lower().strip()
+    if active is not None and normalized_role in {"source", "target"}:
+        if normalized_role == "source":
+            active.source_definitions = evidence_definitions
+        else:
+            active.target_definitions = evidence_definitions
+
     if stop_on_failure and failed_tables:
         stop_if_failed(
             {
@@ -802,8 +978,9 @@ def write_catalogue_evidence(
         Source or target definitions containing table, stage, and layer context.
     config, env : object, str
         Metadata lakehouse route from ``00_env_config``.
-    run_id : str
-        Pipeline run identifier.
+    run_id : str, optional
+        Pipeline run identifier. When omitted, the active context from
+        :func:`start_pipeline_run` is used.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context added to each catalogue row.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
@@ -907,8 +1084,9 @@ def write_pipeline_lineage(
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    run_id : str
-        Pipeline run identifier.
+    run_id : str, optional
+        Pipeline run identifier. When omitted, the active context from
+        :func:`start_pipeline_run` is used.
     source_definitions, target_definitions : mapping
         Source and target definitions keyed by alias.
     relationships : list of mapping, optional
@@ -972,8 +1150,8 @@ def write_pipeline_lineage(
 
 def write_pipeline_run_summary(
     *,
-    spark: Any,
-    run_id: str,
+    spark: Any | None = None,
+    run_id: str | None = None,
     context: dict[str, Any] | None = None,
     agreement_id: str = "",
     agreement_contract_version: str = "",
@@ -997,6 +1175,10 @@ def write_pipeline_run_summary(
     lineage_status: str = "not_run",
     catalogue_status: str = "not_run",
     message: str = "",
+    source_guardrail_results: Mapping[str, Any] | None = None,
+    target_guardrail_results: Mapping[str, Any] | None = None,
+    target_write_status: Mapping[str, Any] | None = None,
+    lineage_result: Mapping[str, Any] | None = None,
     metadata_table: str = METADATA_PIPELINE_RUNS_TABLE,
     mode: str = "append",
 ) -> dict[str, Any]:
@@ -1004,13 +1186,15 @@ def write_pipeline_run_summary(
 
     Parameters
     ----------
-    spark : pyspark.sql.SparkSession
-        Spark session used to create the one-row summary DataFrame.
+    spark : pyspark.sql.SparkSession, optional
+        Spark session used to create the one-row summary DataFrame. When omitted,
+        the active context from :func:`start_pipeline_run` is used.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    run_id : str
-        Pipeline run identifier.
+    run_id : str, optional
+        Pipeline run identifier. When omitted, the active context from
+        :func:`start_pipeline_run` is used.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional
         Agreement and notebook registry context.
     started_at, completed_at : str, optional
@@ -1023,6 +1207,12 @@ def write_pipeline_run_summary(
         Guardrail result dictionaries included in the JSON summary.
     lineage_status, catalogue_status, message : str, optional
         Evidence write statuses and support message.
+    source_guardrail_results, target_guardrail_results : mapping, optional
+        Template-facing guardrail result bundles returned by
+        :func:`run_table_guardrails`. When supplied, schema, freshness, profile
+        behavior, DQ, catalogue, and status fields are derived automatically.
+    target_write_status, lineage_result : mapping, optional
+        Template-facing write and lineage outcomes included in the run summary.
     metadata_table : str, default="METADATA_PIPELINE_RUNS"
         Metadata table that stores runtime summaries.
     mode : str, default="append"
@@ -1040,6 +1230,47 @@ def write_pipeline_run_summary(
     evidence never relies on a default attached lakehouse.
 
     """
+    active = _active_pipeline_context()
+    if active is not None:
+        context = context if context is not None else active.context
+        spark = spark if spark is not None else active.spark_session
+        run_id = run_id or active.run_id
+        agreement_id = agreement_id or active.agreement_id
+        agreement_contract_version = agreement_contract_version or active.agreement_contract_version
+        notebook_registry_id = notebook_registry_id or active.notebook_registry_id
+        notebook_id = notebook_id or active.notebook_id
+        notebook_type = notebook_type or active.notebook_type
+        pipeline_name = pipeline_name or active.pipeline_name
+        started_at = started_at or active.pipeline_started_at
+        source_definitions = source_definitions or active.source_definitions
+        target_definitions = target_definitions or active.target_definitions
+    if spark is None:
+        raise ValueError("spark is required unless start_pipeline_run has established an active context.")
+    if not run_id:
+        raise ValueError("run_id is required unless start_pipeline_run has established an active context.")
+
+    source_guardrail_results = source_guardrail_results or {}
+    target_guardrail_results = target_guardrail_results or {}
+    source_schema_results = source_schema_results or source_guardrail_results.get("schema_results")
+    target_schema_results = target_schema_results or target_guardrail_results.get("schema_results")
+    source_freshness_results = source_freshness_results or source_guardrail_results.get("freshness_results")
+    target_freshness_results = target_freshness_results or target_guardrail_results.get("freshness_results")
+    source_stability_results = source_stability_results or source_guardrail_results.get("stability_results")
+    target_stability_results = target_stability_results or target_guardrail_results.get("stability_results")
+    source_dq_results = source_dq_results or source_guardrail_results.get("dq_results")
+    target_dq_results = target_dq_results or target_guardrail_results.get("dq_results")
+    source_definitions = source_definitions or source_guardrail_results.get("evidence_definitions")
+    target_definitions = target_definitions or target_guardrail_results.get("evidence_definitions")
+    if lineage_result is not None:
+        lineage_status = str(lineage_result.get("status", lineage_status))
+    if source_guardrail_results or target_guardrail_results:
+        if status == "completed":
+            status = "succeeded" if all(bool(result.get("can_continue", True)) for result in (source_guardrail_results, target_guardrail_results)) else "failed"
+        if catalogue_status == "not_run" and any(result.get("catalogue_status") for result in (source_guardrail_results, target_guardrail_results)):
+            catalogue_status = "written"
+    if target_write_status and not message:
+        message = json.dumps({"target_write_status": target_write_status}, default=str, sort_keys=True)
+
     config, env, resolved_context = resolve_fabric_context(context=context)
     completed = completed_at or _now_iso(config)
     started = started_at or completed
@@ -1059,6 +1290,8 @@ def write_pipeline_run_summary(
         "target_dq_results": target_dq_results or {},
         "source_tables": [_definition_name(name, definition) for name, definition in sources.items()],
         "target_tables": [_definition_name(name, definition) for name, definition in targets.items()],
+        "target_write_status": dict(target_write_status or {}),
+        "lineage_result": dict(lineage_result or {}),
     }
     row = {
         "run_id": run_id or str(uuid4()),

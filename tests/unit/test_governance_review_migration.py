@@ -40,6 +40,7 @@ EXPECTED_V1_CALLABLES = [
         "display_guardrail_results",
         "prepare_pipeline_table_configs",
         "run_table_guardrails",
+        "start_pipeline_run",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "widget_select_guardrail_target",

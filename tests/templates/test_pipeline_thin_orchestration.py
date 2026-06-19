@@ -59,15 +59,16 @@ def test_pipeline_notebook_uses_existing_public_helpers_without_pr_only_wrappers
 
 
 def test_pipeline_agreement_selector_registers_notebook_context():
-    """Verify pipeline agreement selector registers notebook context."""
+    """Verify pipeline startup selects and registers agreement context."""
     _markdown, code, _cells = _notebook_sources()
 
-    selector_block = code[code.index("widget_select_agreement(") : code.index("AGREEMENT = get_selected_agreement()")]
-    assert "metadata_schema=METADATA_SCHEMA" in selector_block
-    assert "register_notebook=True" in selector_block
-    assert 'AGREEMENT_ID = AGREEMENT.get("agreement_id", "")' in code
-    assert 'NOTEBOOK_REGISTRY_ID = AGREEMENT.get("notebook_registry_id", AGREEMENT.get("registration_id", ""))' in code
-
+    assert "PIPELINE = start_pipeline_run(" in code
+    start_block = code[code.index("PIPELINE = start_pipeline_run(") : code.index("# SOURCE AREA") if "# SOURCE AREA" in code else code.index("source_table = ")]
+    assert 'notebook_type="02_pipeline"' in start_block
+    assert "select_agreement=True" in start_block
+    assert "register_notebook=True" in start_block
+    assert "AGREEMENT_ID" not in code
+    assert "NOTEBOOK_REGISTRY_ID" not in code
 
 def test_pipeline_notebook_contains_widget_led_flow_sections():
     """Verify the template documents the intended simplified flow."""
@@ -230,7 +231,6 @@ def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
     assert "target_enforcement_results" in code
     assert "source_guardrail_results=source_enforcement_results" in code
     assert "target_guardrail_results=target_enforcement_results" in code
-    assert "completed_at=_current_audit_timestamp()" in code
     assert "runtime summary" in markdown.lower()
 
 
@@ -261,8 +261,8 @@ def test_default_target_config_has_matching_write_settings():
         assert "write_mode" in write_settings_block
 
 
-def test_run_table_guardrails_calls_match_keyword_only_signature():
-    """Verify run_table_guardrails calls use supported keyword-only arguments."""
+def test_run_table_guardrails_calls_use_template_friendly_defaults():
+    """Verify run_table_guardrails calls use mode and table role defaults."""
     _markdown, _code, cells = _notebook_sources()
     calls = []
     for cell in cells:
@@ -274,24 +274,18 @@ def test_run_table_guardrails_calls_match_keyword_only_signature():
         )
 
     assert len(calls) == 4
-    unsupported = {"metadata_schema", "table_role"}
-    for call in calls:
+    expected = [("source", "profile"), ("target", "profile"), ("source", "enforce"), ("target", "enforce")]
+    for call, (table_role, mode) in zip(calls, expected):
         assert len(call.args) == 1
-        keyword_names = {keyword.arg for keyword in call.keywords}
-        assert {"run_id", "spark_session"} <= keyword_names
-        assert "config" not in keyword_names
-        assert "env" not in keyword_names
-        assert unsupported.isdisjoint(keyword_names)
-
-    stop_values = [
-        keyword.value
-        for call in calls
-        for keyword in call.keywords
-        if keyword.arg == "stop_on_failure"
-    ]
-    assert len(stop_values) == 2
-    assert all(isinstance(value, ast.Constant) and value.value is True for value in stop_values)
-
+        keyword_values = {keyword.arg: keyword.value for keyword in call.keywords}
+        assert isinstance(keyword_values["table_role"], ast.Constant)
+        assert keyword_values["table_role"].value == table_role
+        assert isinstance(keyword_values["mode"], ast.Constant)
+        assert keyword_values["mode"].value == mode
+        assert "run_id" not in keyword_values
+        assert "spark_session" not in keyword_values
+        assert "metadata_schema" not in keyword_values
+        assert "stop_on_failure" not in keyword_values
 
 def test_template_examples_use_default_context_not_framework_plumbing():
     """Verify common template examples do not expose repeated framework plumbing."""
