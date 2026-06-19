@@ -1572,7 +1572,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -1631,7 +1631,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -3227,7 +3227,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       }
     ],
     "preferred_example": "agreement = get_selected_agreement()\ndataset_name = agreement[\"dataset_name\"]",
@@ -3275,7 +3275,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -3327,7 +3327,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       }
     ],
     "preferred_example": "Not documented yet",
@@ -3375,7 +3375,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       }
     ],
     "preferred_example": "Not documented yet",
@@ -3429,7 +3429,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       }
     ],
     "preferred_example": "widget_select_agreement(spark_session=spark)\nagreement = get_selected_agreement()",
@@ -3791,11 +3791,11 @@
     "related_guides": [
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
       },
       {
         "title": "Governance Review",
-        "path": "../../how-fabricops-works/governance-review.md"
+        "path": "../../how-fabricops-works/notebook-templates/governance-review.md"
       }
     ],
     "preferred_example": "profile_rows_df = profile_dataframe(df, table_name=\"orders\", include_distributions=True, distribution_columns=[\"status\"] )",
@@ -4366,7 +4366,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       }
     ],
     "preferred_example": "df_orders = read_data(\"orders\", target=\"source\", schema=SOURCE_SCHEMA, spark_session=spark)",
@@ -4662,7 +4662,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       }
     ],
     "preferred_example": "write_data(df_orders, \"orders_clean\", target=\"unified\", schema=UNIFIED_SCHEMA, mode=\"overwrite\")",
@@ -7599,7 +7599,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       }
     ],
     "preferred_example": "latest_catalogue = get_latest_metadata_catalogue(table_name=source_table_name, agreement=AGREEMENT, metadata_schema=METADATA_SCHEMA, spark_session=spark)",
@@ -11601,11 +11601,11 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
       }
     ],
     "preferred_example": "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role=\"source\")",
@@ -11674,7 +11674,7 @@
     "related_guides": [
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
       }
     ],
     "preferred_example": "source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)",
@@ -11729,11 +11729,11 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
       }
     ],
     "preferred_example": "PIPELINE = start_pipeline_run(notebook_type=\"02_pipeline\", select_agreement=True, register_notebook=True)",
@@ -11837,7 +11837,7 @@
     "related_guides": [
       {
         "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates.md"
+        "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -11897,7 +11897,7 @@
     "related_guides": [
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
       },
       {
         "title": "Metadata Tables",

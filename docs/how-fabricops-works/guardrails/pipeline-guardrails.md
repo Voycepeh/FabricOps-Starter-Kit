@@ -2,9 +2,9 @@
 
 Pipeline guardrails are the runtime checks in `02_pipeline` that decide whether a run can continue, continue with warnings, or stop before writing pipeline outputs. They turn contract expectations into executable checks for schema, freshness, profile behavior, and data quality (DQ).
 
-Read [How FabricOps Works](index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` workflow. This page focuses on the guardrails enforced by `02_pipeline`.
+Read [How FabricOps Works](../index.md) first for the standard `01_agreement` → `02_pipeline` → `03_governance` workflow. This page focuses on the guardrails enforced by `02_pipeline`.
 
-![Schema, freshness, profile behavior, and DQ guardrails showing source, transform, and target validation flow](../assets/fabricops-pipeline-guardrails.png){ .full-width }
+![Schema, freshness, profile behavior, and DQ guardrails showing source, transform, and target validation flow](../../assets/fabricops-pipeline-guardrails.png){ .full-width }
 
 ## Contract expectation versus enforcement
 
@@ -39,16 +39,16 @@ Each guardrail returns run evidence that can be displayed in the notebook and us
 
 Use these generated API references for the runtime helpers behind this guardrail flow:
 
-- [run table guardrails](../api/reference/run_table_guardrails.md) coordinates the table-level guardrail checks.
-- [run table guardrails](../api/reference/run_table_guardrails.md) orchestrates widget-authored schema, freshness, profile behavior, and DQ enforcement before writes. [enforce_freshness](../api/modules/guardrails.md#enforce_freshness) and [enforce_profile_behavior](../api/modules/fabric_input_output.md#enforce_profile_behavior) remain focused runtime checks, while DQ execution is reached through the supported guardrail orchestration flow.
-- [stop_if_failed](../api/modules/guardrails.md#stop_if_failed) is the compact notebook stop helper for failed guardrail results.
-- [profile_dataframe](../api/reference/profile_dataframe.md) and [write_catalogue_evidence](../api/modules/metadata.md#write_catalogue_evidence) create the profiles that later checks and governance review use.
+- [run table guardrails](../../api/reference/run_table_guardrails.md) coordinates the table-level guardrail checks.
+- [run table guardrails](../../api/reference/run_table_guardrails.md) orchestrates widget-authored schema, freshness, profile behavior, and DQ enforcement before writes. [enforce_freshness](../../api/modules/guardrails.md#enforce_freshness) and [enforce_profile_behavior](../../api/modules/fabric_input_output.md#enforce_profile_behavior) remain focused runtime checks, while DQ execution is reached through the supported guardrail orchestration flow.
+- [stop_if_failed](../../api/modules/guardrails.md#stop_if_failed) is the compact notebook stop helper for failed guardrail results.
+- [profile_dataframe](../../api/reference/profile_dataframe.md) and [write_catalogue_evidence](../../api/modules/metadata.md#write_catalogue_evidence) create the profiles that later checks and governance review use.
 
 ## Schema guardrails
 
 Schema guardrails check whether a source or pipeline output still matches the expected columns and data types. Use `schema_preset` separately from freshness, profile behavior, and DQ settings so structure checks stay easy to reason about.
 
-![Schema guardrails](../assets/fabricops-schema-guardrails.png){ .full-width }
+![Schema guardrails](../../assets/fabricops-schema-guardrails.png){ .full-width }
 
 | Preset | Use when | Guardrail behavior |
 | --- | --- | --- |
@@ -72,7 +72,7 @@ Configure freshness with the flat config fields:
 
 For each configured table, `02_pipeline` checks whether `max(freshness_column)` is recent enough for the configured lag. For example, if the run date is `2026-06-11` and `freshness_max_lag_days=1`, the latest value must be at least `2026-06-10`.
 
-![Freshness guardrails](../assets/fabricops-freshness-guardrails.png){ .full-width }
+![Freshness guardrails](../../assets/fabricops-freshness-guardrails.png){ .full-width }
 
 ## Profile behavior guardrails
 
@@ -80,7 +80,7 @@ Profile behavior guardrails use `METADATA_DATA_CATALOGUE` as the profile history
 
 The three profile modes are `static_data`, `changing_data`, and `skip`. `append` and `overwrite` are physical write modes only; they are not profile behavior concepts. The two enforcing modes follow the same pattern: profile the current data, write the current profile to `METADATA_DATA_CATALOGUE`, compare against previous accepted or passed profile, and write the runtime outcome to `METADATA_GUARDRAIL_RESULTS`. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed and approved in governance or handled by superseding/resetting the relevant rule.
 
-![Load behaviour guardrails](../assets/fabricops-load-behaviour-guardrails.png){ .full-width }
+![Load behaviour guardrails](../../assets/fabricops-load-behaviour-guardrails.png){ .full-width }
 
 | `rule_type` | Use when | Guardrail behavior |
 | --- | --- | --- |
@@ -101,7 +101,7 @@ DQ rules are defined and approved in `03_governance`, then enforced in `02_pipel
 
 This separation keeps failures easier to explain and makes handover evidence clearer for junior engineers.
 
-![DQ guardrails](../assets/fabricops-DQ-guardrails.png){ .full-width }
+![DQ guardrails](../../assets/fabricops-DQ-guardrails.png){ .full-width }
 
 ## Metadata evidence
 

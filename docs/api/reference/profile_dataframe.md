@@ -308,5 +308,5 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-guardrails.md)
-- [Governance Review](../../how-fabricops-works/governance-review.md)
+- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)
+- [Governance Review](../../how-fabricops-works/notebook-templates/governance-review.md)

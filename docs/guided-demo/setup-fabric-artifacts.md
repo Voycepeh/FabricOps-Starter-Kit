@@ -61,7 +61,7 @@ Download or copy editable notebook templates from the GitHub [`templates/noteboo
 | `99_explore` | Supports optional read-only discovery or troubleshooting. |
 | `example_dq_rule_smoke_test` | Optional smoke-test notebook for DQ rule behavior. |
 
-For notebook responsibilities and editable settings, see [Template Notebooks](../how-fabricops-works/notebook-templates.md).
+For notebook responsibilities and editable settings, see [Template Notebooks](../how-fabricops-works/notebook-templates/index.md).
 
 ## 6. Attach the Environment to notebooks
 

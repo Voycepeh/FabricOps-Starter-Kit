@@ -19,7 +19,20 @@ theme:
 
 nav:
   - Home: index.md
-  - How FabricOps Works: how-fabricops-works/index.md
+  - How FabricOps Works:
+      - Overview: how-fabricops-works/index.md
+      - Template Notebooks:
+          - Overview: how-fabricops-works/notebook-templates/index.md
+          - 00 Environment Configuration: how-fabricops-works/notebook-templates/environment-config.md
+          - 01 Agreement Setup: how-fabricops-works/notebook-templates/agreement-setup.md
+          - 02 Pipeline Execution: how-fabricops-works/notebook-templates/pipeline-execution.md
+          - 03 Governance Review: how-fabricops-works/notebook-templates/governance-review.md
+          - Metadata Dashboard: how-fabricops-works/notebook-templates/metadata-dashboard.md
+      - Guardrails:
+          - Pipeline Guardrails: how-fabricops-works/guardrails/pipeline-guardrails.md
+          - Governed Guardrail Authoring: how-fabricops-works/guardrails/guardrail-authoring.md
+      - API Design:
+          - Template-driven Callable Surface: how-fabricops-works/api/template-driven-api.md
   - Guided Demo:
       - Overview: guided-demo.md
       - Create Wheel: guided-demo/create-wheel.md
@@ -30,7 +43,6 @@ nav:
       - Enrich Metadata: guided-demo/enrich-metadata.md
       - Review Guardrails: guided-demo/review-guardrails.md
       - Explore Metadata Outputs: guided-demo/explore-metadata-outputs.md
-  - Template Notebooks: how-fabricops-works/notebook-templates.md
   - List of Metadata Tables:
       - Overview: reference/metadata-tables/index.md
       - Data Access: reference/metadata-tables/metadata-data-access.md
