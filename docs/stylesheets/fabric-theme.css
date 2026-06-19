@@ -215,3 +215,115 @@
 .glossary-term:hover {
   border-bottom-color: var(--md-accent-fg-color);
 }
+
+/* Product-style docs homepage sections. */
+.md-typeset .fabricops-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.md-typeset .fabricops-roles-image {
+  display: block;
+  width: 100%;
+  max-width: 920px;
+  margin: 1.5rem auto 2.25rem;
+  border-radius: 1rem;
+}
+
+.md-typeset .fabricops-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.5rem 0 2.25rem;
+}
+
+.md-typeset .fabricops-kpi-strip a {
+  display: block;
+  padding: 0.9rem 0.75rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.85rem;
+  text-align: center;
+  text-decoration: none;
+  background: var(--md-default-bg-color);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.md-typeset .fabricops-kpi-strip a:hover,
+.md-typeset .fabricops-kpi-strip a:focus-visible {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.07);
+  transform: translateY(-1px);
+}
+
+.md-typeset .fabricops-kpi-strip strong {
+  display: block;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset .fabricops-kpi-strip span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .fabricops-start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.md-typeset .fabricops-start-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.8rem;
+  text-decoration: none;
+  background: var(--md-default-bg-color);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.md-typeset .fabricops-start-card:hover,
+.md-typeset .fabricops-start-card:focus-visible {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.md-typeset .fabricops-start-card h3 {
+  margin: 0 0 0.25rem;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset .fabricops-start-card p {
+  margin: 0;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .fabricops-start-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: var(--md-code-bg-color);
+  font-size: 1.25rem;
+}
+
+@media screen and (max-width: 760px) {
+  .md-typeset .fabricops-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .md-typeset .fabricops-start-grid {
+    grid-template-columns: 1fr;
+  }
+}
