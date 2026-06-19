@@ -2939,7 +2939,6 @@ def main() -> None:
                 excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
             )
             refactor_signals_manifest[short_name] = refactor_signals
-            function_category = function_category_by_name.get(short_name, "internal-private" if short_name.startswith("_") else "utility")
             function_category_label = _catalogue_classification(short_name)[1]
             call_flow_lines = [
                 '??? info "Maintainer/developer call flow"',

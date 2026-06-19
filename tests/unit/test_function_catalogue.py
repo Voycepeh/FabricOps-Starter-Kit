@@ -239,7 +239,7 @@ def test_format_specific_io_helpers_are_composable_module_functions() -> None:
     ):
         assert f'data-callable-name="{name}"' in page
         assert f'data-callable-name="{name}"' in page and 'data-function-type="composable"' in page
-        assert f'href="../api/modules/fabric_input_output/"' in page
+        assert 'href="../api/modules/fabric_input_output/"' in page
         assert manifest_by_name[name]["function_category"] == "composable"
 
     assert '<strong>Usage source:</strong> Manual/module API' in page
