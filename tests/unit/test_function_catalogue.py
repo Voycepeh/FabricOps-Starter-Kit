@@ -97,9 +97,9 @@ def test_homepage_template_called_function_kpi_matches_reference_count() -> None
     """Verify homepage template-called function KPI matches the reference count."""
     homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
-    assert f'<div class="fabricops-kpi-number">{len(_core_template_called_public())}</div>' in homepage
-    assert '<div class="fabricops-kpi-label">starter-kit-functions</div>' in homepage
-    assert "without counting import-only or lower-level helpers" in homepage
+    assert f"<strong>{len(_core_template_called_public())}</strong>" in homepage
+    assert "<span>starter-kit functions</span>" in homepage
+    assert 'href="reference/index.md"' in homepage
 
 
 def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:

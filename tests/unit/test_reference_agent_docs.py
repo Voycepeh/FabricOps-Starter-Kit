@@ -309,7 +309,39 @@ def test_callable_pages_include_one_top_source_card_and_github_source_link() -> 
 
 
 def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
-    """Verify display_guardrail_results has one linked call-flow tree without duplicate helper chips."""
+    """Verify display guardrail results renders one linked helper call tree."""
+    text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
+    implementation_section = _section_text(text, "Implementation details")
+
+    assert text.count('??? info "Call flow"') == 1
+    assert '??? example "View helper source by area"' not in implementation_section
+    assert '??? example "Source code"' not in implementation_section
+    assert "Internal helper count: 12" in text
+    assert 'class="reference-helper-groups"' in implementation_section
+    assert re.search(
+        r'href="https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline\.py#L\d+(?:-L\d+)?"',
+        implementation_section,
+    )
+
+    for helper_name in [
+        "_rows_for_display",
+        "_guardrail_reason",
+        "_dq_reason",
+        "_freshness_reason",
+        "_profile_behavior_reason",
+        "_result_reason",
+        "_result_status",
+        "_schema_reason",
+        "_next_action",
+        "_result_can_continue",
+        "_table_keys",
+        "_yes_no",
+    ]:
+        assert f"><code>{helper_name}</code></a>" in implementation_section
+
+
+def test_display_guardrail_results_lists_nested_private_helpers() -> None:
+    """Verify nested private helpers appear in callable helper chips."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split('\n<details class="reference-metadata-details">', 1)[0]
 
