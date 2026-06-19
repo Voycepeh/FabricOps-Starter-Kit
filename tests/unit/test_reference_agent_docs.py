@@ -661,18 +661,16 @@ def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> N
 
 
 def test_reference_nav_promotes_catalogue_entry_pages_only() -> None:
-    """Verify reference sidebar promotes catalogue entries without callable page noise."""
+    """Verify reference entries are top-level nav items without callable page noise."""
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    reference_nav = mkdocs_text.split("  - Function & DQ Rules Reference:", 1)[1].split(
-        "\n  - Maintainer Guide:", 1
-    )[0]
 
-    assert "      - List of functions: reference/index.md" in reference_nav
-    assert "      - Glossary: reference/glossary.md" in reference_nav
-    assert "      - List of DQ rules:" in reference_nav
-    assert "          - Overview: reference/dq-rules/index.md" in reference_nav
-    assert "      - DQ Rules:" not in reference_nav
-    assert "api/reference/" not in reference_nav
+    assert "  - List of functions: reference/index.md" in mkdocs_text
+    assert "  - Glossary: reference/glossary.md" in mkdocs_text
+    assert "  - List of DQ rules:" in mkdocs_text
+    assert "      - Overview: reference/dq-rules/index.md" in mkdocs_text
+    assert "  - Function & DQ Rules Reference:" not in mkdocs_text
+    assert "      - DQ Rules:" not in mkdocs_text
+    assert "api/reference/" not in mkdocs_text
 
     missing = [
         name
@@ -683,13 +681,11 @@ def test_reference_nav_promotes_catalogue_entry_pages_only() -> None:
 
 
 def test_module_pages_are_demoted_to_maintainer_appendix() -> None:
-    """Verify module pages are not first-class Function Reference navigation."""
+    """Verify module pages are demoted under the maintainer appendix."""
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    reference_nav = mkdocs_text.split("  - Function & DQ Rules Reference:", 1)[1].split(
-        "\n  - Maintainer Guide:", 1
-    )[0]
-    maintainer_nav = mkdocs_text.split("  - Maintainer Guide:", 1)[1]
 
-    assert "Functions by Modules" not in reference_nav
-    assert "Implementation Appendix" in maintainer_nav
-    assert "api/modules/config.md" in maintainer_nav
+    assert "Functions by Modules" not in mkdocs_text
+    assert "  - Maintainer Guide:" in mkdocs_text
+    assert "      - Implementation Appendix:" in mkdocs_text
+    assert "api/modules/config.md" in mkdocs_text
+    assert "api/reference/" not in mkdocs_text
