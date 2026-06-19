@@ -3791,7 +3791,7 @@
     "related_guides": [
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/pipeline-execution.md"
       },
       {
         "title": "Governance Review",
@@ -11605,7 +11605,7 @@
       },
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/pipeline-execution.md"
       }
     ],
     "preferred_example": "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role=\"source\")",
@@ -11674,7 +11674,7 @@
     "related_guides": [
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/pipeline-execution.md"
       }
     ],
     "preferred_example": "source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)",
@@ -11733,7 +11733,7 @@
       },
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/pipeline-execution.md"
       }
     ],
     "preferred_example": "PIPELINE = start_pipeline_run(notebook_type=\"02_pipeline\", select_agreement=True, register_notebook=True)",
@@ -11897,7 +11897,7 @@
     "related_guides": [
       {
         "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "path": "../../how-fabricops-works/pipeline-execution.md"
       },
       {
         "title": "Metadata Tables",

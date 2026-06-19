@@ -683,13 +683,13 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
 
     related_guides = function_by_name["run_table_guardrails"]["related_guides"]
     assert related_guides == [
-        {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"}
+        {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/pipeline-execution.md"}
     ]
     assert automation_by_name["run_table_guardrails"]["related_guides"] == related_guides
 
     text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
     assert "## See also" in text
-    assert "- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)" in text
+    assert "- [Pipeline Guardrails](../../how-fabricops-works/pipeline-execution.md)" in text
     assert text.index("## Maintainer/developer implementation details") < text.index("## See also")
 
 
@@ -697,7 +697,7 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     """Verify user-guide pages link back to key callable references."""
     environment_config = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates" / "environment-config.md").read_text(encoding="utf-8")
     agreement_setup = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates" / "agreement-setup.md").read_text(encoding="utf-8")
-    pipeline_execution = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates" / "pipeline-execution.md").read_text(encoding="utf-8")
+    pipeline_execution = (ROOT / "docs" / "how-fabricops-works" / "pipeline-execution.md").read_text(encoding="utf-8")
     governance_review = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates" / "governance-review.md").read_text(encoding="utf-8")
     metadata_tables = (ROOT / "docs" / "reference" / "metadata-tables" / "index.md").read_text(encoding="utf-8")
     lineage_table = (
@@ -707,9 +707,9 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     assert "[`setup_notebook`](../../api/reference/setup_notebook.md)" in environment_config
     assert "[`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md)" in environment_config
     assert "[`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)" in agreement_setup
-    assert "[`prepare_pipeline_table_configs`](../../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
+    assert "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
     guardrail_target = "run_table_guardrails"
-    guardrail_link = f"[`guardrail orchestration`](../../api/reference/{guardrail_target}.md)"
+    guardrail_link = f"[`run_table_guardrails`](../api/reference/{guardrail_target}.md)"
     assert guardrail_link in pipeline_execution
     assert "[`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md)" in governance_review
     assert "[`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md)" in governance_review

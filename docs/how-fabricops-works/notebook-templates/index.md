@@ -163,6 +163,10 @@ Provides optional read-only inspection and troubleshooting helpers for metadata,
 
 </div>
 
+## Optional example notebooks
+
+The example notebooks support demos, training, and smoke tests. They are optional and are not part of the required production delivery sequence.
+
 <div class="template-card" markdown="1">
 
 ## [`example_pipeline_demo`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb)
