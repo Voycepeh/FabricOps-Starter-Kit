@@ -20,13 +20,13 @@ Analysts and data scientists consume trusted outputs for BI, AI, and exploration
 
 The shared metadata tables act as the handoff layer. 
 They record what was agreed, what ran, what passed, and what is ready for review. 
-This abstract away the important by tedious work into and a simplified plug and play wofkrflow that will make handover easy even for new team members.
+They abstract the important but tedious work into a simplified plug and play workflow that makes handover easy, even for new team members.
 
 <p class="fabricops-architecture-image">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-<div class="fabricops-cta" markdown="1">
+<div class="fabricops-cta" style="justify-content: center; align-items: center; text-align: center;" markdown="1">
 
 [Start the guided demo](guided-demo.md){ .md-button .md-button--primary }
 [See how it works](how-fabricops-works/index.md){ .md-button }
