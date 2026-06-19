@@ -334,6 +334,8 @@ Demo source tables in the configured source lakehouse.
 
 The guided demo version of `02_pipeline` reads the generated demo source tables.
 
+## Optional example notebooks
+
 ## `example_dq_rule_smoke_test`
 
 [Source notebook](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb)
