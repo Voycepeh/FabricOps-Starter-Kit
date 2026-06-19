@@ -683,13 +683,13 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
 
     related_guides = function_by_name["run_table_guardrails"]["related_guides"]
     assert related_guides == [
-        {"title": "Pipeline Guardrails", "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"}
+        {"title": "Pipeline Execution", "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"}
     ]
     assert automation_by_name["run_table_guardrails"]["related_guides"] == related_guides
 
     text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
     assert "## See also" in text
-    assert "- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)" in text
+    assert "- [Pipeline Execution](../../how-fabricops-works/notebook-templates/pipeline-execution.md)" in text
     assert text.index("## Maintainer/developer implementation details") < text.index("## See also")
 
 

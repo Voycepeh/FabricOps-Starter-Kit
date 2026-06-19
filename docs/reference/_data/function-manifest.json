@@ -2677,8 +2677,8 @@
     ],
     "related_guides": [
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       },
       {
         "title": "Governance Review",
@@ -8119,8 +8119,8 @@
         "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
@@ -8184,8 +8184,8 @@
     ],
     "related_guides": [
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
@@ -8239,8 +8239,8 @@
         "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
@@ -8380,8 +8380,8 @@
     ],
     "related_guides": [
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/guardrails/pipeline-guardrails.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       },
       {
         "title": "Metadata Tables",

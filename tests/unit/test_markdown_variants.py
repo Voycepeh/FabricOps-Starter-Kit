@@ -52,9 +52,6 @@ def test_markdown_variant_hook_preserves_grouped_source_paths(tmp_path: Path) ->
         site_dir / "how-fabricops-works" / "notebook-templates" / "pipeline-execution.md",
         site_dir / "how-fabricops-works" / "notebook-templates" / "governance-review.md",
         site_dir / "how-fabricops-works" / "notebook-templates" / "metadata-dashboard.md",
-        site_dir / "how-fabricops-works" / "guardrails" / "pipeline-guardrails.md",
-        site_dir / "how-fabricops-works" / "guardrails" / "guardrail-authoring.md",
-        site_dir / "how-fabricops-works" / "api" / "template-driven-api.md",
     ]
     stale_flat_paths = [
         site_dir / "how-fabricops-works" / "notebook-templates.md",

@@ -254,4 +254,4 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 ## See also
 
 - [Notebook Templates](../../how-fabricops-works/notebook-templates/index.md)
-- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)
+- [Pipeline Execution](../../how-fabricops-works/notebook-templates/pipeline-execution.md)
