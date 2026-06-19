@@ -30,7 +30,7 @@ Use [`prepare_pipeline_table_configs`](../../api/reference/prepare_pipeline_tabl
 
 Guardrails are part of `02_pipeline`. They are the runtime checks that decide whether a run can continue, continue with warnings, or stop before writing pipeline outputs. They turn agreement and rule expectations into executable checks for schema, freshness, profile behaviour, and data quality.
 
-Use [`run_table_guardrails`](../../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
+Use [`guardrail orchestration`](../../api/reference/run_table_guardrails.md) through `run_table_guardrails` to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
 
 ```python
 source_profile_results = run_table_guardrails(

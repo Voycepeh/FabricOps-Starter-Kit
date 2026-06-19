@@ -301,3 +301,78 @@ def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> N
         "stop_if_failed",
         "write_catalogue_evidence",
     }.isdisjoint(root_exports)
+
+
+def _taxonomy_audit() -> dict[str, object]:
+    """Return generated function taxonomy audit payload."""
+    import json
+
+    audit_path = ROOT / "docs" / "reference" / "_data" / "function-taxonomy-audit.json"
+    return json.loads(audit_path.read_text(encoding="utf-8"))
+
+
+def test_taxonomy_audit_accounts_for_current_public_function_surface() -> None:
+    """Verify taxonomy audit explicitly classifies the current 29 public functions."""
+    audit = _taxonomy_audit()
+    public_functions = audit["public_functions"]
+    names = {str(row["function_name"]) for row in public_functions}
+
+    assert audit["public_function_count"] == 29
+    assert len(public_functions) == 29
+    assert names == _catalogue_row_names()
+    assert {row["proposed_category"] for row in public_functions} <= {
+        "orchestrator_candidate",
+        "utility_candidate",
+    }
+    assert all(row["rationale"] for row in public_functions)
+
+
+def test_taxonomy_audit_keeps_underscore_helpers_off_public_standalone_pages() -> None:
+    """Verify underscore-prefixed helpers are not standalone public pages by default."""
+    audit = _taxonomy_audit()
+    public_functions = audit["public_functions"]
+    helpers = audit["reviewed_internal_helpers"]
+
+    assert all(not str(row["function_name"]).startswith("_") for row in public_functions)
+    assert helpers
+    assert all(str(row["function_name"]).startswith("_") for row in helpers)
+    assert all(row["public_standalone_page"] is False for row in helpers)
+    assert all(row["proposed_category"] == "internal" for row in helpers)
+
+
+def test_repeated_internal_helpers_are_reviewed_not_auto_promoted() -> None:
+    """Verify repeated internal helpers receive decisions without automatic public promotion."""
+    audit = _taxonomy_audit()
+    helpers = {str(row["qualified_name"]): row for row in audit["reviewed_internal_helpers"]}
+
+    for qn in (
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._normalize_path_config",
+        "fabricops_kit.fabric_input_output._normalize_table_name",
+        "fabricops_kit.fabric_input_output._normalize_schema_name",
+        "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
+        "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
+        "fabricops_kit.fabric_input_output._get_spark",
+    ):
+        assert qn in helpers
+        assert helpers[qn]["decision"] == "keep_internal"
+        assert helpers[qn]["public_standalone_page"] is False
+        assert helpers[qn]["called_by_public_functions"]
+
+
+def test_taxonomy_audit_captures_pr_612_utility_examples() -> None:
+    """Verify public IO helpers stay public utility candidates without needing template usage."""
+    audit = _taxonomy_audit()
+    by_name = {str(row["function_name"]): row for row in audit["public_functions"]}
+
+    for name in (
+        "read_lakehouse_table",
+        "write_lakehouse_table",
+        "read_lakehouse_csv",
+        "read_warehouse_table",
+        "write_warehouse_table",
+    ):
+        assert by_name[name]["proposed_category"] == "utility_candidate"
+        assert by_name[name]["public_standalone_page"] is True
+        rationale = str(by_name[name]["rationale"])
+        assert "stable" in rationale or "PR #612" in rationale

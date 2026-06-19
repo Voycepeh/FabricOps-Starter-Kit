@@ -31,6 +31,7 @@ AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
+FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 
@@ -124,6 +125,86 @@ def _is_public_reference_qn(qn: str, node_by_qn: dict[str, dict[str, Any]]) -> b
 def _hide_from_public_relationships(qn: str) -> bool:
     """Return whether an internal helper should be hidden from public relationship chips."""
     return qn in SCHEMA_RUNTIME_INTERNAL_HELPERS
+
+
+# Proposed taxonomy for PR #612-style label cleanup. Keep this audit separate
+# from current generated labels until the user-facing rename is intentionally made.
+TAXONOMY_ORCHESTRATOR_CANDIDATES = {
+    "setup_notebook",
+    "setup_metadata_tables",
+    "read_data",
+    "write_data",
+    "profile_dataframe",
+    "run_table_guardrails",
+    "start_pipeline_run",
+    "write_pipeline_lineage",
+    "write_pipeline_run_summary",
+    "widget_enrich_table_metadata",
+    "widget_author_schema_freshness_profile_rules",
+    "widget_author_dq_rules",
+    "widget_review_guardrail_governance",
+}
+
+TAXONOMY_UTILITY_CANDIDATES = {
+    "widget_render_data_steward",
+    "widget_render_data_agreement",
+    "widget_render_agreement_evidence",
+    "widget_select_agreement",
+    "get_selected_agreement",
+    "get_latest_metadata_catalogue",
+    "display_guardrail_results",
+    "prepare_pipeline_table_configs",
+    "widget_select_guardrail_target",
+    *COMPOSABLE_SUPPORT_FUNCTIONS,
+}
+
+TAXONOMY_RATIONALE = {
+    "setup_notebook": "Coordinates notebook runtime setup, configuration validation, widgets, and user-facing environment readiness checks.",
+    "setup_metadata_tables": "Coordinates metadata table bootstrap and smoke-test readiness across configured metadata storage.",
+    "read_data": "Coordinates agreement-aware source loading for the starter workflow rather than a single storage primitive.",
+    "write_data": "Coordinates target write behavior for the starter workflow rather than a single storage primitive.",
+    "profile_dataframe": "Coordinates profiling, metadata catalogue preparation, and evidence shaping for review workflows.",
+    "run_table_guardrails": "Coordinates approved rule loading, data quality enforcement, result persistence, and pipeline status evidence.",
+    "start_pipeline_run": "Coordinates pipeline run context creation and persisted run metadata.",
+    "write_pipeline_lineage": "Coordinates lineage evidence creation for a pipeline run.",
+    "write_pipeline_run_summary": "Coordinates pipeline run summary persistence for operational handover.",
+    "widget_enrich_table_metadata": "Coordinates interactive enrichment and review state for table metadata.",
+    "widget_author_schema_freshness_profile_rules": "Coordinates interactive authoring of schema, freshness, and profile guardrail intent.",
+    "widget_author_dq_rules": "Coordinates interactive data quality rule authoring against profiling context.",
+    "widget_review_guardrail_governance": "Coordinates governance review decisions and metadata-backed guardrail evidence.",
+    "widget_render_data_steward": "Small display building block for agreement context; intentionally public even though it is UI-focused.",
+    "widget_render_data_agreement": "Small display building block for agreement context; intentionally public even though it is UI-focused.",
+    "widget_render_agreement_evidence": "Small display building block for agreement evidence; intentionally public even though it is UI-focused.",
+    "widget_select_agreement": "Public widget utility that users may call directly to select agreement context outside the full flow.",
+    "get_selected_agreement": "Public state utility for retrieving the selected agreement without rerunning the whole agreement workflow.",
+    "get_latest_metadata_catalogue": "Public metadata lookup utility for direct notebook customization and inspection.",
+    "display_guardrail_results": "Public presentation utility for rendering already-computed guardrail results.",
+    "prepare_pipeline_table_configs": "Public configuration utility for users who need to inspect or customize pipeline table configuration before orchestration.",
+    "widget_select_guardrail_target": "Public widget utility for choosing a guardrail target independently from downstream enforcement.",
+    "read_lakehouse_csv": "Public storage utility with a stable, direct read purpose independent of higher-level workflow orchestration.",
+    "read_lakehouse_excel": "Public storage utility with a stable, direct read purpose independent of higher-level workflow orchestration.",
+    "read_lakehouse_parquet": "Public storage utility with a stable, direct read purpose independent of higher-level workflow orchestration.",
+    "read_lakehouse_table": "Public storage utility for direct metadata and lakehouse table reads; PR #612-style utility rather than hidden internal because users can safely call it directly.",
+    "read_warehouse_table": "Public storage utility with stable parameters for direct warehouse reads.",
+    "write_lakehouse_table": "Public storage utility for direct metadata and lakehouse table writes; PR #612-style utility rather than hidden internal because users can safely call it directly.",
+    "write_warehouse_table": "Public storage utility with stable parameters for direct warehouse writes.",
+}
+
+INTERNAL_HELPER_AUDIT_DECISIONS = {
+    "fabricops_kit.config._get_store": "keep_internal",
+    "fabricops_kit.config._normalize_path_config": "keep_internal",
+    "fabricops_kit.fabric_input_output._normalize_table_name": "keep_internal",
+    "fabricops_kit.fabric_input_output._normalize_schema_name": "keep_internal",
+    "fabricops_kit.fabric_input_output._resolve_lakehouse_schema": "keep_internal",
+    "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path": "keep_internal",
+    "fabricops_kit.fabric_input_output._get_spark": "keep_internal",
+}
+
+INTERNAL_HELPER_AUDIT_RATIONALE = {
+    "keep_internal": "Repeated usage alone is not enough for public utility status; this underscore-prefixed helper exposes implementation plumbing or normalized runtime details rather than a stable user-facing task.",
+    "already_covered_by_existing_public_utility": "The direct user-facing need is already covered by an existing public utility, so the helper should stay private.",
+    "promote_to_public_utility_candidate": "The helper appears to have stable user-facing behavior, understandable parameters, and return values that can be documented without leaking implementation details.",
+}
 
 V1_CALLABLES = {
     "setup_notebook",
@@ -1343,6 +1424,171 @@ def _helper_area_mismatch_signal(helper_name: str, purpose: str, assigned_area: 
     ):
         return assigned_area, name_area, purpose_area
     return None
+
+
+
+def _proposed_taxonomy_category(name: str) -> str:
+    """Return the proposed public taxonomy category for the audit."""
+    if name in TAXONOMY_ORCHESTRATOR_CANDIDATES:
+        return "orchestrator_candidate"
+    if name in TAXONOMY_UTILITY_CANDIDATES:
+        return "utility_candidate"
+    raise RuntimeError(f"Public function is missing taxonomy audit classification: {name}")
+
+
+def _internal_helper_decision(qn: str, helper_name: str, public_utility_qns: set[str]) -> str:
+    """Return the reviewed internal helper taxonomy decision."""
+    if qn in INTERNAL_HELPER_AUDIT_DECISIONS:
+        return INTERNAL_HELPER_AUDIT_DECISIONS[qn]
+    public_equivalent = f"{qn.rsplit('.', 1)[0]}.{helper_name.removeprefix('_')}"
+    if public_equivalent in public_utility_qns:
+        return "already_covered_by_existing_public_utility"
+    return "keep_internal"
+
+
+def _write_function_taxonomy_audit(
+    *,
+    node_by_qn: dict[str, dict[str, Any]],
+    calls_by_qn: dict[str, list[str]],
+    used_by_qn: dict[str, list[str]],
+    function_symbol_map: dict[str, Symbol],
+    module_data: dict[str, dict[str, Any]],
+    function_category_by_name: dict[str, str],
+    template_usage_by_symbol: dict[str, list[str]],
+    refactor_signals_manifest: dict[str, dict[str, Any]],
+) -> None:
+    """Write the PR #612 preparatory public function taxonomy audit."""
+    public_names = set(function_symbol_map) | COMPOSABLE_SUPPORT_FUNCTIONS
+    expected_names = V1_CALLABLES | COMPOSABLE_SUPPORT_FUNCTIONS
+    if public_names != expected_names:
+        raise RuntimeError(
+            "Function taxonomy audit must account for the current standalone public surface. "
+            f"Missing: {sorted(expected_names - public_names)}; extra: {sorted(public_names - expected_names)}"
+        )
+    if len(public_names) != 29:
+        raise RuntimeError(f"Function taxonomy audit expected 29 public functions, found {len(public_names)}")
+
+    qn_by_name: dict[str, str] = {}
+    for name, symbol in function_symbol_map.items():
+        qn_by_name[name] = f"{PACKAGE_NAME}.{symbol.actual_module}.{name}"
+    for name in COMPOSABLE_SUPPORT_FUNCTIONS:
+        module_name = str(module_data.get("fabric_input_output", {}).get("module_name", "fabric_input_output"))
+        qn_by_name[name] = qn_by_name.get(name, f"{PACKAGE_NAME}.{module_name}.{name}")
+
+    public_utility_qns = {qn_by_name[name] for name in public_names if _proposed_taxonomy_category(name) == "utility_candidate"}
+    orchestrator_qns = {qn_by_name[name] for name in public_names if _proposed_taxonomy_category(name) == "orchestrator_candidate"}
+
+    helper_roots_by_qn: dict[str, set[str]] = {}
+    orchestrator_roots_by_qn: dict[str, set[str]] = {}
+    for name in public_names:
+        root_qn = qn_by_name[name]
+        helpers = _collect_internal_helper_descendants(root_qn, calls_by_qn, node_by_qn)
+        for helper_qn in helpers:
+            helper_roots_by_qn.setdefault(helper_qn, set()).add(root_qn)
+            if root_qn in orchestrator_qns:
+                orchestrator_roots_by_qn.setdefault(helper_qn, set()).add(root_qn)
+
+    signalled_helpers = {
+        item["qualified_name"]
+        for signal in refactor_signals_manifest.values()
+        for key in ("repeated_helpers", "single_delegate_helpers")
+        for item in signal.get(key, [])
+        if item.get("qualified_name")
+    }
+    for signal in refactor_signals_manifest.values():
+        for chain in signal.get("deep_call_chains", []):
+            for qn in chain.get("chain", []):
+                if _is_internal_helper_qn(qn, node_by_qn):
+                    signalled_helpers.add(qn)
+
+    reviewed_helper_qns = sorted(
+        qn
+        for qn, callers in helper_roots_by_qn.items()
+        if len(callers) > 1
+        or len(orchestrator_roots_by_qn.get(qn, set())) > 1
+        or qn in signalled_helpers
+        or len(set(used_by_qn.get(qn, []))) > 1
+    )
+
+    helper_audits = []
+    for qn in reviewed_helper_qns:
+        node = node_by_qn[qn]
+        helper_name = node["callable_name"]
+        decision = _internal_helper_decision(qn, helper_name, public_utility_qns)
+        used_by_public = sorted(
+            node_by_qn[root]["callable_name"]
+            for root in helper_roots_by_qn.get(qn, set())
+            if root in node_by_qn
+        )
+        orchestrators = sorted(
+            node_by_qn[root]["callable_name"]
+            for root in orchestrator_roots_by_qn.get(qn, set())
+            if root in node_by_qn
+        )
+        module_name = node["module_name"]
+        helper_audits.append({
+            "function_name": helper_name,
+            "qualified_name": qn,
+            "current_category": "internal-private",
+            "proposed_category": "internal",
+            "decision": decision,
+            "public_standalone_page": False,
+            "template_usage_source": [],
+            "inbound_count": len(set(used_by_qn.get(qn, []))),
+            "outbound_count": len(set(calls_by_qn.get(qn, []))),
+            "called_by_public_functions": used_by_public,
+            "called_by_orchestrators": orchestrators,
+            "appears_in_refactor_signals": qn in signalled_helpers,
+            "rationale": INTERNAL_HELPER_AUDIT_RATIONALE[decision],
+            "summary": module_data[module_name].get("functions", {}).get(helper_name, ""),
+        })
+
+    public_audits = []
+    for name in sorted(public_names, key=str.lower):
+        qn = qn_by_name[name]
+        proposed = _proposed_taxonomy_category(name)
+        current = function_category_by_name.get(name, "utility")
+        helper_candidates = [
+            item for item in helper_audits if name in item["called_by_public_functions"]
+        ]
+        public_audits.append({
+            "function_name": name,
+            "qualified_name": qn,
+            "current_category": current,
+            "proposed_category": proposed,
+            "public_standalone_page": True,
+            "template_usage_source": template_usage_by_symbol.get(name, []),
+            "inbound_count": len(set(used_by_qn.get(qn, []))),
+            "outbound_count": len(set(calls_by_qn.get(qn, []))),
+            "called_by_orchestrators": sorted({
+                node_by_qn[caller]["callable_name"]
+                for caller in used_by_qn.get(qn, [])
+                if caller in orchestrator_qns
+            }),
+            "repeated_internal_helper_candidates": [
+                {
+                    "function_name": item["function_name"],
+                    "qualified_name": item["qualified_name"],
+                    "decision": item["decision"],
+                }
+                for item in helper_candidates
+            ],
+            "rationale": TAXONOMY_RATIONALE[name],
+        })
+
+    payload = {
+        "schema_version": 1,
+        "purpose": "Preparatory audit before renaming Workflow/Composable labels to Orchestrator/Utility.",
+        "public_function_count": len(public_audits),
+        "classification_principles": {
+            "orchestrator_candidate": "Public function that coordinates a larger FabricOps workflow step.",
+            "utility_candidate": "Smaller public building block users may call directly to customize, replace, or decouple part of the standard flow.",
+            "internal": "Underscore-prefixed implementation detail with no standalone public page unless explicitly promoted under a public name.",
+        },
+        "public_functions": public_audits,
+        "reviewed_internal_helpers": helper_audits,
+    }
+    FUNCTION_TAXONOMY_AUDIT_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
 def _collect_refactor_signals(
@@ -3259,6 +3505,16 @@ def main() -> None:
     REFACTOR_SIGNALS_PATH.write_text(
         json.dumps(refactor_signals_manifest, indent=2) + "\n",
         encoding="utf-8",
+    )
+    _write_function_taxonomy_audit(
+        node_by_qn=node_by_qn,
+        calls_by_qn=calls_by_qn,
+        used_by_qn=used_by_qn,
+        function_symbol_map=function_symbol_map,
+        module_data=module_data,
+        function_category_by_name=function_category_by_name,
+        template_usage_by_symbol=template_usage_by_symbol,
+        refactor_signals_manifest=refactor_signals_manifest,
     )
 
 
