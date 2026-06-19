@@ -1,13 +1,13 @@
 # METADATA_DATA_ACCESS
 
-**Purpose:** Public-safe access context used by governance and metadata review workflows.
+**Purpose:** Externally collected access inventory for workspace, object, schema, and table access review.
 
 ## Workflow usage
 
-- **Written by notebook/template:** 03_governance.ipynb
+- **Written by notebook/template:** External access-log inventory collection, not a FabricOps notebook template.
 - **Written by function or widget:** Not currently discoverable.
-- **Read by function or widget:** [`widget_review_table_governance`](../../api/reference/widget_review_table_governance.md)
-- **Related template step:** 03_governance.ipynb
+- **Read by function or widget:** Not currently discoverable.
+- **Related template step:** External inventory ingestion / governance access review.
 
 ## Implemented schema
 
@@ -36,4 +36,4 @@
 
 ## Related function reference
 
-- [`widget_review_table_governance`](../../api/reference/widget_review_table_governance.md)
+- Not currently discoverable.

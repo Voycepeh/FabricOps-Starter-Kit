@@ -1645,7 +1645,7 @@ _METADATA_TABLE_PURPOSES = {
     "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
     "METADATA_DATA_LINEAGE_TABLE": "Source-to-target lineage evidence written by pipeline runs.",
     "METADATA_PIPELINE_RUNS": "Pipeline run summary evidence for execution, guardrail, lineage, and catalogue status.",
-    "METADATA_DATA_ACCESS": "Public-safe access context used by governance and metadata review workflows.",
+    "METADATA_DATA_ACCESS": "Externally collected access inventory for workspace, object, schema, and table access review.",
 }
 
 _METADATA_TABLE_RELATIONSHIPS = {
@@ -1659,7 +1659,7 @@ _METADATA_TABLE_RELATIONSHIPS = {
     "METADATA_GUARDRAIL_RESULTS": {"templates": ["02_pipeline.ipynb"], "written_by": ["run_table_guardrails", "enforce_dq_rules"], "read_by": ["display_guardrail_results", "widget_review_guardrail_governance"]},
     "METADATA_DATA_LINEAGE_TABLE": {"templates": ["02_pipeline.ipynb"], "written_by": ["write_pipeline_lineage"], "read_by": ["widget_review_guardrail_governance"]},
     "METADATA_PIPELINE_RUNS": {"templates": ["02_pipeline.ipynb"], "written_by": ["write_pipeline_run_summary"], "read_by": ["widget_review_guardrail_governance"]},
-    "METADATA_DATA_ACCESS": {"templates": ["03_governance.ipynb"], "written_by": [], "read_by": ["widget_review_table_governance"]},
+    "METADATA_DATA_ACCESS": {"templates": ["External access-log inventory collection, not a FabricOps notebook template."], "written_by": [], "read_by": [], "related_step": "External inventory ingestion / governance access review."},
 }
 
 
@@ -1771,7 +1771,7 @@ def generate_metadata_table_reference() -> None:
     ]
     for table_name in sorted(registry):
         rel = _METADATA_TABLE_RELATIONSHIPS.get(table_name, {})
-        templates = ", ".join(rel.get("templates", [])) or "Not currently discoverable."
+        templates = str(rel.get("related_step") or ", ".join(rel.get("templates", [])) or "Not currently discoverable.")
         purpose = _METADATA_TABLE_PURPOSES.get(table_name, "Implemented metadata table prepared by `00_env_config`.")
         index_lines.append(f"| [`{table_name}`]({_metadata_slug(table_name)}.md) | {purpose} | {templates} |")
 
@@ -1785,7 +1785,7 @@ def generate_metadata_table_reference() -> None:
             f"- **Written by notebook/template:** {', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
             f"- **Written by function or widget:** {_format_symbol_list(rel.get('written_by', []), '../../')}",
             f"- **Read by function or widget:** {_format_symbol_list(rel.get('read_by', []), '../../')}",
-            f"- **Related template step:** {', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
+            f"- **Related template step:** {rel.get('related_step') or ', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
             "",
             "## Implemented schema",
             "",

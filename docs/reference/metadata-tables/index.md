@@ -4,7 +4,7 @@ These pages are generated from the implemented metadata setup schema registry us
 
 | Metadata table | Purpose | Primary template step |
 | --- | --- | --- |
-| [`METADATA_DATA_ACCESS`](metadata-data-access.md) | Public-safe access context used by governance and metadata review workflows. | 03_governance.ipynb |
+| [`METADATA_DATA_ACCESS`](metadata-data-access.md) | Externally collected access inventory for workspace, object, schema, and table access review. | External inventory ingestion / governance access review. |
 | [`METADATA_DATA_AGREEMENT`](metadata-data-agreement.md) | Agreement records that describe approved use, steward, recipient, and lifecycle context. | 01_agreement.ipynb, 02_pipeline.ipynb |
 | [`METADATA_DATA_AGREEMENT_EVIDENCE`](metadata-data-agreement-evidence.md) | Supporting agreement files and evidence metadata captured during agreement intake. | 01_agreement.ipynb |
 | [`METADATA_DATA_CATALOGUE`](metadata-data-catalogue.md) | Observed table and column profile evidence. This is runtime evidence, not approved guardrail intent. | 02_pipeline.ipynb, 03_governance.ipynb, 99_explore.ipynb |
