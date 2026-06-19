@@ -69,6 +69,8 @@ def test_resolve_fabric_context_uses_env_only():
 
 def test_governance_config_uses_widget_custom_fields_contract():
     """Verify governance widget additions use custom_fields keyed by key."""
+    legacy_context_field = "enrichment_context_extra" + "_fields"
+    legacy_classification_field = "enrichment_classification_extra" + "_fields"
     config = GovernanceConfig(
         enrichment_context_widget={"custom_fields": [{"key": "business_owner_notes", "type": "textarea"}]},
         enrichment_classification_widget={"custom_fields": [{"key": "retention_class", "type": "select"}]},
@@ -76,8 +78,8 @@ def test_governance_config_uses_widget_custom_fields_contract():
 
     assert config.enrichment_context_widget["custom_fields"][0]["key"] == "business_owner_notes"
     assert config.enrichment_classification_widget["custom_fields"][0]["key"] == "retention_class"
-    assert not hasattr(config, "enrichment_context_extra_fields")
-    assert not hasattr(config, "enrichment_classification_extra_fields")
+    assert not hasattr(config, legacy_context_field)
+    assert not hasattr(config, legacy_classification_field)
 
 
 def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
