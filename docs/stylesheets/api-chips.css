@@ -927,6 +927,16 @@
   line-height: 1.35;
 }
 
+/* Keep glossary card titles as plain text even if anchor/headerlink helpers
+   decorate nearby elements with generated icons. */
+.md-typeset .glossary-definition-card > .headerlink,
+.md-typeset .glossary-definition-card .glossary-definition-title .headerlink,
+.md-typeset .glossary-definition-card .glossary-definition-title::before,
+.md-typeset .glossary-definition-card .glossary-definition-title::after {
+  display: none;
+  content: none;
+}
+
 .md-typeset .glossary-definition-meta {
   color: var(--md-default-fg-color--light);
   font-size: 0.86rem;
