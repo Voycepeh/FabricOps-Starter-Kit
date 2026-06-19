@@ -459,5 +459,5 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Notebook Templates](../../how-fabricops-works/notebook-templates.md)
+- [Notebook Templates](../../how-fabricops-works/notebook-templates/index.md)
 - [Metadata Tables](../../reference/metadata-tables/index.md)

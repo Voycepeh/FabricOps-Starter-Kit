@@ -68,9 +68,9 @@ Use `enrichment_context_widget` and `enrichment_classification_widget` to config
 
 ## What this notebook does
 
-`00_env_config` uses [`setup_notebook`](../api/reference/setup_notebook.md) to validate the notebook runtime and configured targets.
+`00_env_config` uses [`setup_notebook`](../../api/reference/setup_notebook.md) to validate the notebook runtime and configured targets.
 
-It then uses [`setup_metadata_tables`](../api/reference/setup_metadata_tables.md) to create missing FabricOps metadata tables and validate existing ones in the configured metadata target.
+It then uses [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) to create missing FabricOps metadata tables and validate existing ones in the configured metadata target.
 
 On first run, this prepares the empty metadata structures needed by the rest of the workflow.
 

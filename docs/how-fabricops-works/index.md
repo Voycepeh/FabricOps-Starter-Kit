@@ -48,26 +48,26 @@ FabricOps notebooks do not pass state through notebook memory or informal handov
 <div class="metadata-flow-grid">
 
 <div class="metadata-flow-card">
-<strong><a href="environment-config/"><code>00_env_config</code></a></strong>
+<strong><a href="notebook-templates/environment-config/"><code>00_env_config</code></a></strong>
 <p>Creates the <a href="../reference/metadata-tables/">metadata foundation</a>.</p>
 <p>Writes or validates the 12 <a href="../reference/metadata-tables/">metadata tables</a> used by the workflow.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="agreement-setup/"><code>01_agreement</code></a></strong>
+<strong><a href="notebook-templates/agreement-setup/"><code>01_agreement</code></a></strong>
 <p>Captures <a href="../reference/metadata-tables/metadata-data-agreement/">agreement</a> and <a href="../reference/metadata-tables/metadata-data-steward/">steward context</a>.</p>
 <p>Writes to <a href="../reference/metadata-tables/">agreement metadata tables</a>, including <a href="../reference/metadata-tables/metadata-data-agreement/">agreement records</a>, <a href="../reference/metadata-tables/metadata-data-steward/">steward context</a>, <a href="../reference/metadata-tables/metadata-data-agreement/">approved usage</a>, and supporting <a href="../reference/metadata-tables/metadata-data-agreement-evidence/">agreement evidence</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="pipeline-execution/"><code>02_pipeline</code></a></strong>
+<strong><a href="notebook-templates/pipeline-execution/"><code>02_pipeline</code></a></strong>
 <p>Runs governed source to target delivery.</p>
 <p>Reads <a href="../reference/metadata-tables/metadata-data-agreement/">agreement</a> and configuration metadata.</p>
 <p>Writes <a href="../reference/metadata-tables/metadata-pipeline-runs/">pipeline evidence</a>, <a href="../reference/metadata-tables/metadata-data-catalogue/">schema evidence</a>, <a href="../reference/metadata-tables/metadata-guardrail-results/">DQ results</a>, <a href="../reference/metadata-tables/metadata-guardrail-results/">drift results</a>, <a href="../reference/metadata-tables/metadata-data-lineage-table/">lineage</a>, <a href="../reference/metadata-tables/metadata-data-catalogue/">output table records</a>, and <a href="../reference/metadata-tables/metadata-pipeline-runs/">run status</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="governance-review/"><code>03_governance</code></a></strong>
+<strong><a href="notebook-templates/governance-review/"><code>03_governance</code></a></strong>
 <p>Reviews and approves governed outputs.</p>
 <p>Reads <a href="../reference/metadata-tables/metadata-data-agreement/">agreement</a>, <a href="../reference/metadata-tables/metadata-pipeline-runs/">pipeline evidence</a>, <a href="../reference/metadata-tables/metadata-data-catalogue/">schema evidence</a>, <a href="../reference/metadata-tables/metadata-guardrail-results/">DQ results</a>, <a href="../reference/metadata-tables/metadata-guardrail-results/">drift results</a>, <a href="../reference/metadata-tables/metadata-data-lineage-table/">lineage</a>, and <a href="../reference/metadata-tables/metadata-pipeline-runs/">run status</a>.</p>
 <p>Writes <a href="../reference/metadata-tables/metadata-guardrail-rules/">review decisions</a>, <a href="../reference/metadata-tables/metadata-guardrail-rules/">approval state</a>, <a href="../reference/metadata-tables/metadata-guardrail-rules/">rule outcomes</a>, <a href="../reference/metadata-tables/metadata-enrichment-rules/">enrichment decisions</a>, <a href="../reference/metadata-tables/metadata-enrichment-rules/">lifecycle decisions</a>, and production handover state.</p>

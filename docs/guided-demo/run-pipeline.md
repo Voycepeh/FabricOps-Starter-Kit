@@ -13,4 +13,4 @@ Run `example_pipeline_demo` to seed deterministic demo source tables, then run `
 
 The workflow writes profile evidence, guardrail outcomes, lineage rows, pipeline summary rows, and governed output tables.
 
-See also: [List of Templates](../how-fabricops-works/notebook-templates.md) and [List of DQ Rules](../reference/dq-rules/index.md).
+See also: [List of Templates](../how-fabricops-works/notebook-templates/index.md) and [List of DQ Rules](../reference/dq-rules/index.md).
