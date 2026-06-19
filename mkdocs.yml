@@ -22,6 +22,7 @@ nav:
   - How FabricOps Works: how-fabricops-works/index.md
   - Guided Demo - run the workflow:
       - Overview: guided-demo.md
+      - Create Wheel: guided-demo/create-wheel.md
       - Create Fabric Workspace: guided-demo/create-fabric-workspace.md
       - Create Lakehouses / Warehouse: guided-demo/create-lakehouses-warehouse.md
       - Configure Environment: guided-demo/configure-environment.md
