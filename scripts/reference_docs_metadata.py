@@ -1611,23 +1611,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                               'current runtime.',
                                               'The caller passed a warning result that should not '
                                               'stop execution.']},
- 'run_table_guardrails': {'expanded_purpose': 'Evaluates approved data-quality rules against a '
-                                          'DataFrame and returns guardrail evidence that can block '
-                                          'unsafe writes.',
-                      'when_to_use': 'Use in pipeline guardrails after governance-approved DQ '
-                                     'rules exist for the dataset and table.',
-                      'glossary_terms': ['guardrails',
-                                         'can_continue',
-                                         'evidence',
-                                         'metadata lakehouse'],
-                      'return_interpretation': 'When can_continue is true, active rules passed or '
-                                               'only non-blocking issues were found. When false, '
-                                               'inspect failing rule details before writing the '
-                                               'table.',
-                      'common_failure_causes': ['No approved active DQ rules exist for the table.',
-                                                'Rule parameters are invalid or unsupported.',
-                                                'Required columns are missing from the DataFrame.',
-                                                'The metadata lakehouse cannot be read.']},
  'prepare_pipeline_table_configs': {'expanded_purpose': 'Normalizes source and target table '
                                                         'configuration dictionaries so pipeline '
                                                         'guardrail, write, lineage, and evidence '
@@ -1978,10 +1961,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Notebook Templates',
                                'path': '../../how-fabricops-works/governance-review.md'}],
  'stop_if_failed': [{'title': 'Pipeline Guardrails',
                      'path': '../../how-fabricops-works/pipeline-guardrails.md'}],
- 'run_table_guardrails': [{'title': 'Pipeline Guardrails',
-                       'path': '../../how-fabricops-works/pipeline-guardrails.md'},
-                      {'title': 'Governance Review',
-                       'path': '../../how-fabricops-works/governance-review.md'}],
  'prepare_pipeline_table_configs': [{'title': 'Notebook Templates',
                                      'path': '../../how-fabricops-works/notebook-templates.md'},
                                     {'title': 'Pipeline Guardrails',
