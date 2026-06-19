@@ -868,4 +868,4 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Pipeline Guardrails](../../how-fabricops-works/guardrails/pipeline-guardrails.md)
+- [Pipeline Guardrails](../../how-fabricops-works/pipeline-execution.md)

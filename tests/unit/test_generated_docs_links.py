@@ -64,6 +64,28 @@ def test_generated_docs_local_links_resolve() -> None:
     assert broken == []
 
 
+def test_stale_pipeline_guardrail_links_do_not_return() -> None:
+    """Verify removed pipeline guardrail pages are not linked by source or generated docs."""
+    stale_patterns = [
+        "how-fabricops-works/guardrails/pipeline-guardrails.md",
+        "guardrails/pipeline-guardrails.md",
+        "pipeline-guardrails.md",
+    ]
+    checked_roots = [DOCS, ROOT / "scripts"]
+    offenders: list[str] = []
+
+    for checked_root in checked_roots:
+        for path in sorted(checked_root.rglob("*")):
+            if path.is_dir() or path.suffix not in {".md", ".json", ".py", ".txt", ".yml", ".yaml"}:
+                continue
+            text = path.read_text(encoding="utf-8")
+            for pattern in stale_patterns:
+                if pattern in text:
+                    offenders.append(f"{path.relative_to(ROOT)} -> {pattern}")
+
+    assert offenders == []
+
+
 def test_generated_github_links_use_main_not_local_sha() -> None:
     """Verify generated GitHub links do not point at local commit SHAs."""
     stale_sha_pattern = re.compile(
