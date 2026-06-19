@@ -860,7 +860,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                     'enforce_profile_behavior, or enforce_dq_rules and before write helpers.',
   'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
                      'before passing it to stop_if_failed.',
-  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark)\n'
+  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark)\n'
                        'stop_if_failed(guardrail_result)',
   'related_functions': ['enforce_freshness',
                         'enforce_profile_behavior',
@@ -985,7 +985,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
   'ai_verification': 'Verify stop_on_failure=True is used before transformation or writes when '
                      'blocking guardrails should stop execution.',
   'preferred_example': 'source_guardrail_results = run_table_guardrails(SOURCE_TABLES, '
-                       'config=CONFIG, env=ENV_NAME, run_id=RUN_ID, spark_session=spark, '
+                       'config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, '
                        'stop_on_failure=True)',
   'related_functions': ['prepare_pipeline_table_configs', 'write_catalogue_evidence'],
   'expanded_purpose': 'Coordinates profiling, schema, freshness, profile behavior, DQ, and '

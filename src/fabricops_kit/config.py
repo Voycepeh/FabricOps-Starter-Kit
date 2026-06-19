@@ -30,7 +30,7 @@ def get_default_fabric_context() -> dict[str, Any]:
     -------
     dict[str, Any]
         Active FabricOps runtime context containing at least ``config`` and
-        ``env_name``.
+        ``env``.
 
     Raises
     ------
@@ -41,17 +41,21 @@ def get_default_fabric_context() -> dict[str, Any]:
     Notes
     -----
     The helper first checks the IPython notebook namespace, then ``builtins``.
-    This keeps common notebooks simple while still allowing tests and advanced
-    workflows to inject an explicit context.
+    When ``00_env_config`` is still constructing the active context, it can
+    also assemble the minimal context from ``CONFIG`` and ``ENV`` in the
+    notebook namespace. This keeps common notebooks simple while still
+    allowing tests and advanced workflows to inject an explicit context.
 
     """
     context = None
+    shell_user_ns = None
     try:
         from IPython import get_ipython  # type: ignore
 
         shell = get_ipython()
         if shell is not None:
-            context = shell.user_ns.get("FABRIC_CONTEXT")
+            shell_user_ns = shell.user_ns
+            context = shell_user_ns.get("FABRIC_CONTEXT")
     except Exception:
         context = None
 
@@ -63,14 +67,25 @@ def get_default_fabric_context() -> dict[str, Any]:
         except Exception:
             context = None
 
-    if not isinstance(context, dict) or not context.get("config") or not context.get("env_name"):
+    if context is None and shell_user_ns is not None:
+        shell_config = shell_user_ns.get("CONFIG")
+        shell_env = shell_user_ns.get("ENV")
+        if shell_config is not None and shell_env is not None:
+            context = {"config": shell_config, "env": shell_env}
+            run_context = shell_user_ns.get("RUN_CONTEXT")
+            if run_context is not None:
+                context["workspace_name"] = getattr(run_context, "workspace_name", None)
+                context["runtime_metadata"] = getattr(run_context, "runtime_metadata", None)
+
+    has_environment = isinstance(context, dict) and context.get("env")
+    if not isinstance(context, dict) or not context.get("config") or not has_environment:
         raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
     return context
 
 
 def get_fabric_context(
     *,
-    env_name: str | None = None,
+    env: str | None = None,
     config: Any = None,
     workspace_id: str | None = None,
     lakehouse_id: str | None = None,
@@ -82,7 +97,7 @@ def get_fabric_context(
 
     Parameters
     ----------
-    env_name : str, optional
+    env : str, optional
         Environment key to use. Defaults to the active ``00_env_config`` value.
     config : Any, optional
         FrameworkConfig or compatible config object. Defaults to the active
@@ -104,11 +119,11 @@ def get_fabric_context(
         Fabric context dictionary suitable for helper ``context=`` overrides.
 
     """
-    base: dict[str, Any] = {} if config is not None and env_name is not None else dict(get_default_fabric_context())
+    base: dict[str, Any] = {} if config is not None and env is not None else dict(get_default_fabric_context())
     if config is not None:
         base["config"] = config
-    if env_name is not None:
-        base["env_name"] = env_name
+    if env is not None:
+        base["env"] = env
     for key, value in {
         "workspace_id": workspace_id,
         "lakehouse_id": lakehouse_id,
@@ -118,7 +133,7 @@ def get_fabric_context(
         if value is not None:
             base[key] = value
     base.update(values)
-    if not base.get("config") or not base.get("env_name"):
+    if not base.get("config") or not base.get("env"):
         raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
     return base
 
@@ -126,7 +141,6 @@ def get_fabric_context(
 def resolve_fabric_context(
     *,
     config: Any = None,
-    env_name: str | None = None,
     env: str | None = None,
     context: dict[str, Any] | None = None,
 ) -> tuple[Any, str, dict[str, Any]]:
@@ -134,16 +148,16 @@ def resolve_fabric_context(
     resolved = dict(context or {})
     if config is None:
         config = resolved.get("config")
-    resolved_env = env_name or env or resolved.get("env_name") or resolved.get("env")
+    resolved_env = env or resolved.get("env")
     if config is None or resolved_env is None:
         active = get_default_fabric_context()
         if config is None:
             config = active["config"]
         if resolved_env is None:
-            resolved_env = active["env_name"]
+            resolved_env = active["env"]
         resolved = {**active, **resolved}
     resolved["config"] = config
-    resolved["env_name"] = str(resolved_env)
+    resolved["env"] = str(resolved_env)
     return config, str(resolved_env), resolved
 
 
@@ -283,6 +297,21 @@ class QualityConfig:
         object.__setattr__(self, "quarantine_on_failure", bool(self.quarantine_on_failure))
 
 
+def _normalize_widget_config(widget: dict[str, Any] | None) -> dict[str, Any]:
+    """Return a widget config with validated custom-field dictionaries."""
+    normalized = deepcopy(dict(widget or {}))
+    custom_fields = []
+    for field_definition in normalized.get("custom_fields", []) or []:
+        field_config = deepcopy(dict(field_definition))
+        key = str(field_config.get("key") or "").strip()
+        if not key:
+            raise ValueError("Governance custom fields require a key.")
+        field_config["key"] = key
+        custom_fields.append(field_config)
+    normalized["custom_fields"] = custom_fields
+    return normalized
+
+
 @dataclass(frozen=True)
 class GovernanceConfig:
     """Default governance-policy options for metadata/classification checks.
@@ -298,8 +327,9 @@ class GovernanceConfig:
         Controlled labels rendered by column metadata enrichment widgets.
     pii_classifications : list[str]
         Controlled PII classifications rendered by column metadata enrichment widgets.
-    enrichment_context_extra_fields, enrichment_classification_extra_fields : list[dict[str, Any]]
-        Organization-specific enrichment payload fields stored in ``enrichment_payload_json``.
+    enrichment_context_widget, enrichment_classification_widget : dict[str, Any]
+        Widget definitions for organization-specific enrichment fields. Each
+        widget uses ``custom_fields`` entries keyed by ``key``.
 
     """
 
@@ -307,8 +337,8 @@ class GovernanceConfig:
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
     sensitivity_labels: list[str] = field(default_factory=lambda: ["classified", "restricted", "public"])
     pii_classifications: list[str] = field(default_factory=lambda: ["direct PII", "indirect PII", "none"])
-    enrichment_context_extra_fields: list[dict[str, Any]] = field(default_factory=list)
-    enrichment_classification_extra_fields: list[dict[str, Any]] = field(default_factory=list)
+    enrichment_context_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
+    enrichment_classification_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
@@ -318,8 +348,16 @@ class GovernanceConfig:
         pii = [str(option).strip() for option in (self.pii_classifications or []) if str(option).strip()]
         object.__setattr__(self, "sensitivity_labels", labels or ["classified", "restricted", "public"])
         object.__setattr__(self, "pii_classifications", pii or ["direct PII", "indirect PII", "none"])
-        object.__setattr__(self, "enrichment_context_extra_fields", deepcopy(list(self.enrichment_context_extra_fields or [])))
-        object.__setattr__(self, "enrichment_classification_extra_fields", deepcopy(list(self.enrichment_classification_extra_fields or [])))
+        object.__setattr__(
+            self,
+            "enrichment_context_widget",
+            _normalize_widget_config(self.enrichment_context_widget),
+        )
+        object.__setattr__(
+            self,
+            "enrichment_classification_widget",
+            _normalize_widget_config(self.enrichment_classification_widget),
+        )
 
 
 DEFAULT_STEWARD_ROLE_OPTIONS = [
@@ -585,13 +623,13 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
         raise ValueError("data_agreement_config must be a DataAgreementConfig object.")
     _validate_audit_timezone(normalized.audit_timezone)
 
-    for env_name, targets in normalized.path_config.paths.items():
+    for env, targets in normalized.path_config.paths.items():
         if not isinstance(targets, dict) or not targets:
-            raise ValueError(f"Environment '{env_name}' must contain at least one target.")
+            raise ValueError(f"Environment '{env}' must contain at least one target.")
         for target_name, housepath in targets.items():
             required = ("workspace_id", "item_id", "name", "kind")
             if not all(hasattr(housepath, attr) for attr in required):
-                raise ValueError(f"Target '{env_name}/{target_name}' must provide FabricStore fields: {required}.")
+                raise ValueError(f"Target '{env}/{target_name}' must provide FabricStore fields: {required}.")
 
     return normalized
 
@@ -1084,18 +1122,18 @@ def _setup_metadata_table_registry(
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
+            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env": env}, **read_kwargs)
         except Exception as exc:
             if not _is_table_not_found_error(exc):
                 raise RuntimeError(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc
             empty_df = _create_empty_metadata_dataframe(spark, schema)
-            write_lakehouse_table(empty_df, table_name, target="metadata", schema=metadata_schema, context={"config": config, "env_name": env}, mode="overwrite", options={"overwriteSchema": "true"})
+            write_lakehouse_table(empty_df, table_name, target="metadata", schema=metadata_schema, context={"config": config, "env": env}, mode="overwrite", options={"overwriteSchema": "true"})
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
+            table = read_lakehouse_table(table_name, target="metadata", context={"config": config, "env": env}, **read_kwargs)
             created.append(table_name)
 
         missing = [field for field in _metadata_schema_field_names(schema) if field not in _metadata_table_columns(table)]
@@ -1125,7 +1163,7 @@ def _validate_metadata_table_registration(
             read_kwargs = {"spark_session": spark}
             if resolved_metadata_schema is not None:
                 read_kwargs["schema"] = resolved_metadata_schema
-            read_lakehouse_table(table, target="metadata", context={"config": config, "env_name": env}, **read_kwargs)
+            read_lakehouse_table(table, target="metadata", context={"config": config, "env": env}, **read_kwargs)
         except Exception:
             missing.append(table)
     nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)

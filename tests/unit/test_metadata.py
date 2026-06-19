@@ -35,7 +35,7 @@ def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
     monkeypatch.setattr(
         metadata,
         "write_lakehouse_table",
-        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env_name"], target, table, kwargs)),
+        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     monkeypatch.setattr(
         metadata,
@@ -145,14 +145,14 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     steward_rows = []
 
     def write_table(df, table, *, target, context, **kwargs):
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         assert target == "metadata"
-        writes.append((table, df.rows, context["env_name"], target, kwargs))
+        writes.append((table, df.rows, context["env"], target, kwargs))
         if table == agreement.DATA_STEWARD_TABLE:
             steward_rows.extend(df.rows)
 
     def read_table(table, *, target, context, **kwargs):
-        assert (context["env_name"], target) == ("dev", "metadata")
+        assert (context["env"], target) == ("dev", "metadata")
         if table == agreement.DATA_STEWARD_TABLE:
             return steward_rows
         return []
@@ -163,7 +163,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     steward = agreement._create_or_update_data_steward(
         spark=FakeSpark(),
         config=framework_config(),
-        env_name="dev",
+        env="dev",
         values={
             "steward_name": "Ops Steward",
             "steward_role": "Data Owner",

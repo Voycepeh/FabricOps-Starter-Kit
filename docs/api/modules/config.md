@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 23</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 24</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 7</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>23</td>
+      <td>24</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -193,6 +193,10 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_normalize_widget_config</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_resolve_metadata_schema</code></td>
       <td><a href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
     </tr>
@@ -290,6 +294,9 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 </li>
 <li>
 <span class="reference-chip"><code>_normalize_path_config</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_normalize_widget_config</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_resolve_metadata_schema</code></span>

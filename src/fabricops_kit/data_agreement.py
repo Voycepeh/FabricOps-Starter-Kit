@@ -455,14 +455,14 @@ def _generate_steward_id(values: dict[str, Any]) -> str:
     return f"STEW-{digest}"
 
 
-def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest append-only steward rows from the metadata lakehouse.
 
     Parameters
     ----------
     config : FrameworkConfig or dict
         Metadata lakehouse configuration.
-    env_name : str
+    env : str
         Configured environment key.
     spark_session : pyspark.sql.SparkSession, optional
         Fabric Spark session.
@@ -481,7 +481,7 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
     """
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env_name": env_name})
+        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
     except Exception:
         if missing_ok:
             return []
@@ -490,8 +490,8 @@ def _list_data_stewards(config: Any, env_name: str, *, spark_session: Any = None
     return [row for row in latest if _active_steward(row)] if active_only else latest
 
 
-def _write_row(*, spark: Any, config: Any, env_name: str, table: str, row: dict[str, Any]) -> None:
-    write_lakehouse_table(spark.createDataFrame([row]), table, target="metadata", schema=_configured_lakehouse_schema(config, env_name, "metadata"), context={"config": config, "env_name": env_name}, mode="append")
+def _write_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
+    write_lakehouse_table(spark.createDataFrame([row]), table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
 
 
 def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> str:
@@ -507,7 +507,7 @@ def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> s
         raise ValueError(f"{field_name} must be a valid ISO date (YYYY-MM-DD).") from exc
 
 
-def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, values: dict[str, Any], custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
+def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values: dict[str, Any], custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Append a created or updated steward assignment with runtime audit fields.
 
     Parameters
@@ -516,7 +516,7 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
         Fabric Spark session.
     config : FrameworkConfig or dict
         Metadata configuration.
-    env_name : str
+    env : str
         Configured environment key.
     values : dict[str, Any]
         User-facing steward values. Reusing ``steward_id`` appends an update;
@@ -561,9 +561,9 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env_name: str, va
     else:
         row["is_active"] = "true" if _active_steward({**row, "is_active": row.get("is_active", "")}) else "false"
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
-    row.update(_build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
-    _write_row(spark=spark, config=config, env_name=env_name, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
+    _write_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
     return row
 
 
@@ -601,11 +601,11 @@ def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
     return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
 
 
-def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: Any = None, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def _list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any = None, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_schema or _configured_lakehouse_schema(config, env_name, "metadata"), context={"config": config, "env_name": env_name}, spark_session=spark_session)
+        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
@@ -613,9 +613,9 @@ def _list_all_data_agreement_rows(config: Any, env_name: str, *, spark_session: 
     return _coerce_row_dicts(rows)
 
 
-def _list_data_agreements(config: Any, env_name: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def _list_data_agreements(config: Any, env: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest versioned agreements from the configured metadata lakehouse."""
-    rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark_session, missing_ok=missing_ok, metadata_schema=metadata_schema)
+    rows = _list_all_data_agreement_rows(config, env, spark_session=spark_session, missing_ok=missing_ok, metadata_schema=metadata_schema)
     agreements = _latest_agreement_versions(rows)
     if not active_only:
         return agreements
@@ -640,7 +640,7 @@ def _business_agreement_snapshot(row: dict[str, Any]) -> dict[str, Any]:
     return snapshot
 
 
-def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, values: dict[str, Any], selected_agreement: dict[str, Any] | None = None, custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
+def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, values: dict[str, Any], selected_agreement: dict[str, Any] | None = None, custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Append a new agreement or a new semantic version of an existing one.
 
     Reusing ``selected_agreement`` preserves its stable ``agreement_id`` and
@@ -648,7 +648,7 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
     backend-managed.
     """
     row = {field: values.get(field, "") for field in DATA_AGREEMENT_VISIBLE_FIELDS}
-    existing_rows = _list_all_data_agreement_rows(config, env_name, spark_session=spark, missing_ok=True)
+    existing_rows = _list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
     selected_id = str((selected_agreement or {}).get("agreement_id") or "").strip()
     if selected_id:
         same_agreement = [item for item in existing_rows if str(item.get("agreement_id") or "").strip() == selected_id]
@@ -670,7 +670,7 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
     row["expiry_date"] = _parse_iso_date(row.get("expiry_date"), "expiry_date", required=True)
     if row["expiry_date"] < row["start_date"]:
         raise ValueError("expiry_date must be on or after start_date.")
-    active_steward_ids = {str(item["steward_id"]) for item in _list_data_stewards(config, env_name, spark_session=spark, active_only=True)}
+    active_steward_ids = {str(item["steward_id"]) for item in _list_data_stewards(config, env, spark_session=spark, active_only=True)}
     if str(row["steward_id"]) not in active_steward_ids:
         raise ValueError("steward_id must reference an active data steward.")
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
@@ -681,9 +681,9 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env_name: str, 
             return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
     if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
         raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
-    row.update(_build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
-    _write_row(spark=spark, config=config, env_name=env_name, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
+    _write_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
     return row
 
 
@@ -751,7 +751,7 @@ def _prepare_evidence_file_references(paths_value: Any) -> list[dict[str, str]]:
         raise ValueError("Paste at least one evidence file path before saving.")
     return references
 
-def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, agreement_id: str, contract_version: str, evidence_type: str, evidence_file_paths: Any, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def _save_agreement_evidence_records(*, spark: Any, config: Any, env: str, agreement_id: str, contract_version: str, evidence_type: str, evidence_file_paths: Any, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Append manually uploaded evidence file-reference metadata rows."""
     agreement_id = str(agreement_id or "").strip()
     contract_version = str(contract_version or "").strip()
@@ -761,7 +761,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
         raise ValueError("contract_version is required before saving agreement evidence.")
     evidence_type = str(evidence_type or "Other").strip() or "Other"
     file_references = _prepare_evidence_file_references(evidence_file_paths)
-    audit = _build_runtime_audit_fields(config=config, env=env_name, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
+    audit = _build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
     uploaded_at = audit.get("_committed_at") or _current_audit_timestamp(config=config, drop_microseconds=False)
     uploaded_by = audit.get("_committed_by") or ""
 
@@ -780,7 +780,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env_name: str, 
             "uploaded_by": uploaded_by,
             **audit,
         }
-        _write_row(spark=spark, config=config, env_name=env_name, table=str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)), row=row)
+        _write_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)), row=row)
         rows.append(row)
     return rows
 
@@ -822,17 +822,17 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
 
     global _SELECTED_AGREEMENT
     config = None
-    env_name = None
+    env = None
     if agreement_rows is None:
-        config, env_name, _context = resolve_fabric_context(context=context)
+        config, env, _context = resolve_fabric_context(context=context)
         try:
-            rows = _list_data_agreements(config, env_name, spark_session=spark_session, metadata_schema=metadata_schema)
+            rows = _list_data_agreements(config, env, spark_session=spark_session, metadata_schema=metadata_schema)
         except Exception as exc:
             raise RuntimeError("No agreements found. Run 01_agreement first.") from exc
     else:
         rows = agreement_rows
         if register_notebook:
-            config, env_name, _context = resolve_fabric_context(context=context)
+            config, env, _context = resolve_fabric_context(context=context)
     latest_rows = _latest_agreement_versions(rows)
     if not latest_rows:
         raise ValueError("No agreements found. Save a data agreement in notebook 01_agreement first.")
@@ -903,15 +903,15 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
         registration_status.value = _html_escape(_status_message())
 
     if register_notebook:
-        if config is None or env_name is None or spark_session is None:
+        if config is None or env is None or spark_session is None:
             raise ValueError("widget_select_agreement(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
         active_rows = _current_notebook_active_registrations(
             spark_session,
             config=config,
-            env=env_name,
+            env=env,
             metadata_schema=metadata_schema,
             notebook_type=notebook_type,
-            environment_name=environment_name or env_name,
+            environment_name=environment_name or env,
         )
         active_primary_rows = [row for row in active_rows if str(row.get("registration_role") or "primary") == "primary"]
         registration_status = widgets.HTML(value="")
@@ -959,14 +959,14 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
             new_row = _register_current_notebook(
                 spark_session,
                 config=config,
-                env=env_name,
+                env=env,
                 agreement_id=selected_id,
                 contract_version=selected_version,
                 registration_role=role,
                 registration_status="active",
                 metadata_schema=metadata_schema,
                 notebook_type=notebook_type,
-                environment_name=environment_name or env_name,
+                environment_name=environment_name or env,
                 dataset_name=dataset_name,
                 table_name=table_name,
                 topic=topic,
@@ -978,7 +978,7 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
                     _register_current_notebook(
                         spark_session,
                         config=config,
-                        env=env_name,
+                        env=env,
                         agreement_id=previous.get("agreement_id"),
                         contract_version=previous.get("agreement_contract_version"),
                         registration_role=previous.get("registration_role") or "primary",
@@ -988,7 +988,7 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
                         superseded_at=superseded_at,
                         superseded_by_registration_id=new_row.get("registration_id"),
                         notebook_type=previous.get("notebook_type") or notebook_type,
-                        environment_name=previous.get("environment_name") or environment_name or env_name,
+                        environment_name=previous.get("environment_name") or environment_name or env,
                         dataset_name=previous.get("dataset_name") or dataset_name,
                         table_name=previous.get("table_name") or table_name,
                         topic=previous.get("topic") or topic,
@@ -1072,7 +1072,7 @@ def _agreement_identity_text(row: dict[str, Any] | None) -> str:
     )
 
 
-def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
+def _render_maintenance_widget(*, spark: Any, config: Any, env: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
     widgets = _require_ipywidgets()
     from IPython import display as ip
 
@@ -1087,7 +1087,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
         return str(row.get("steward_id" if is_steward else "agreement_id") or "").strip()
 
     def _existing_rows() -> list[dict[str, Any]]:
-        return _list_data_stewards(config, env_name, spark_session=spark, active_only=False, missing_ok=True) if is_steward else _list_data_agreements(config, env_name, spark_session=spark, missing_ok=True)
+        return _list_data_stewards(config, env, spark_session=spark, active_only=False, missing_ok=True) if is_steward else _list_data_agreements(config, env, spark_session=spark, missing_ok=True)
 
     def _existing_rows_for_selector() -> list[dict[str, Any]]:
         rows = _existing_rows()
@@ -1131,7 +1131,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     steward_field_selector = None
     for field in fields:
         if field == "steward_id" and not is_steward:
-            steward_rows = _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)
+            steward_rows = _list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
             steward_field_selector = _render_searchable_selector(
                 widgets=widgets,
                 label=FIELD_LABELS.get(field, field.replace("_", " ").title()),
@@ -1158,7 +1158,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     def _refresh_steward_dropdown(selected_id: str | None = None) -> None:
         if "steward_id" in form:
             current = selected_id or form["steward_id"].value
-            rows = _list_data_stewards(config, env_name, spark_session=spark, active_only=True, missing_ok=True)
+            rows = _list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
             form["steward_id"].refresh_rows(rows, str(current or ""))
 
     refresh_stewards = None if is_steward else widgets.Button(description="Refresh active stewards")
@@ -1227,14 +1227,14 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
                     if selected.value:
                         values["steward_id"] = selected.value
                         values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
-                    row = _create_or_update_data_steward(spark=spark, config=config, env_name=env_name, values=values, custom_fields=extras)
+                    row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
                     _refresh_existing_options(row["steward_id"])
                     for callback in after_save_callbacks:
                         callback(row)
                     print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
                 else:
                     selected_row = row_lookup.get(selected.value) if selected.value else None
-                    row = _create_or_update_data_agreement(spark=spark, config=config, env_name=env_name, values=values, selected_agreement=selected_row, custom_fields=extras)
+                    row = _create_or_update_data_agreement(spark=spark, config=config, env=env, values=values, selected_agreement=selected_row, custom_fields=extras)
                     if row.get("_fabricops_no_change"):
                         print(row.get("_fabricops_message", "No changes detected. Nothing was appended."))
                     else:
@@ -1283,7 +1283,7 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env_name: str, kind: 
     }
 
 
-def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str, display_widget: bool = True) -> dict[str, Any]:
+def _render_agreement_evidence_widget(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
     widgets = _require_ipywidgets()
     from IPython import display as ip
@@ -1291,7 +1291,7 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
     row_lookup: dict[str, dict[str, Any]] = {}
 
     def _agreement_rows() -> list[dict[str, Any]]:
-        return _list_all_data_agreement_rows(config, env_name, spark_session=spark, missing_ok=True)
+        return _list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
 
     def _version_key(row: dict[str, Any]) -> str:
         agreement_id = str(row.get("agreement_id") or "").strip()
@@ -1367,7 +1367,7 @@ def _render_agreement_evidence_widget(*, spark: Any, config: Any, env_name: str,
                 rows = _save_agreement_evidence_records(
                     spark=spark,
                     config=config,
-                    env_name=env_name,
+                    env=env,
                     agreement_id=str(selected_row.get("agreement_id") or ""),
                     contract_version=str(selected_row.get("contract_version") or ""),
                     evidence_type=str(evidence_type.value or "Other"),
@@ -1432,11 +1432,11 @@ def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | No
     does not read or write binary file content.
 
     """
-    config, env_name, _context = resolve_fabric_context(context=context)
+    config, env, _context = resolve_fabric_context(context=context)
     return _render_agreement_evidence_widget(
         spark=spark,
         config=config,
-        env_name=env_name,
+        env=env,
     )
 
 
@@ -1457,8 +1457,8 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         Rendered widget controls keyed for notebook customization.
 
     """
-    config, env_name, _context = resolve_fabric_context(context=context)
-    return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_steward_widget")
+    config, env, _context = resolve_fabric_context(context=context)
+    return _render_maintenance_widget(spark=spark, config=config, env=env, kind="data_steward_widget")
 
 
 def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -1478,5 +1478,5 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         Rendered controls, including read-only generated-identifier context.
 
     """
-    config, env_name, _context = resolve_fabric_context(context=context)
-    return _render_maintenance_widget(spark=spark, config=config, env_name=env_name, kind="data_agreement_widget")
+    config, env, _context = resolve_fabric_context(context=context)
+    return _render_maintenance_widget(spark=spark, config=config, env=env, kind="data_agreement_widget")

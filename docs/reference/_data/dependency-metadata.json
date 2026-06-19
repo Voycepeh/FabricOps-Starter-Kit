@@ -474,6 +474,21 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config._normalize_widget_config": {
+      "qualified_name": "fabricops_kit.config._normalize_widget_config",
+      "short_name": "_normalize_widget_config",
+      "module": "config",
+      "callable": "_normalize_widget_config",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config._resolve_metadata_schema": {
       "qualified_name": "fabricops_kit.config._resolve_metadata_schema",
       "short_name": "_resolve_metadata_schema",
@@ -5999,7 +6014,7 @@
   "modules": {
     "config": {
       "callable_count": 2,
-      "internal_count": 23,
+      "internal_count": 24,
       "outbound_modules": [
         "data_agreement",
         "fabric_input_output",

@@ -133,7 +133,7 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
 
     def write_table(df, table, *, target, context, **kwargs):
         assert target == "metadata"
-        assert context["env_name"] == "dev"
+        assert context["env"] == "dev"
         writes.append((table, df))
 
     monkeypatch.setattr(gr, "write_lakehouse_table", write_table)

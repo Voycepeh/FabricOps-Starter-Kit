@@ -16,7 +16,7 @@ Most downstream notebooks depend on this configuration. If `00_env_config` is wr
 
 ### Active environment
 
-Set `ENV` / `ENV_NAME` to the environment you are running, such as `dev`, `qat`, or `prd`.
+Set `ENV` to the environment you are running, such as `dev`, `qat`, or `prd`.
 
 This key must exist in `ENV_PATHS`.
 

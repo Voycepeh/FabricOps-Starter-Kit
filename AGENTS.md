@@ -127,9 +127,9 @@ Do not assume attached/default lakehouse for metadata tables.
 
 Always route metadata reads/writes via the `00_env_config` metadata target:
 
-- `read_lakehouse_table(CONFIG, env_name, "metadata", "<metadata_table>")`
-- `write_lakehouse_table(df, CONFIG, env_name, "metadata", "<metadata_table>", mode="append")`
-- `CONFIG.path_config.paths[env_name]["metadata"]` for helpers needing metadata path/store
+- `read_lakehouse_table(CONFIG, env, "metadata", "<metadata_table>")`
+- `write_lakehouse_table(df, CONFIG, env, "metadata", "<metadata_table>", mode="append")`
+- `CONFIG.path_config.paths[env]["metadata"]` for helpers needing metadata path/store
 
 Applies to all `METADATA_*` tables (including future additions).
 
