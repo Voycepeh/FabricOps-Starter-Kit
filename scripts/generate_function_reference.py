@@ -678,9 +678,10 @@ def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, A
         display_term = term_text if "_" in term_text else term_text.capitalize()
         anchor = markdown_anchor(str(entry["term"]))
         lines.append(
-            f'<details class="glossary-chip"><summary>{display_term}</summary>'
-            f'<span>{entry["short_definition"]}</span> '
-            f'<a href="../../../reference/glossary/#{anchor}">Full definition</a></details>'
+            f'<span class="glossary-chip">'
+            f'<span class="glossary-chip-label">{display_term}</span>'
+            f'<span class="glossary-chip-definition">{entry["short_definition"]}</span> '
+            f'<a href="../../../reference/glossary/#{anchor}">Full definition</a></span>'
         )
     lines.extend(["</div>", "", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
     return lines
