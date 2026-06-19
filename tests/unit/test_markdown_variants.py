@@ -38,6 +38,43 @@ def test_markdown_variant_hook_publishes_agent_friendly_entrypoints(tmp_path: Pa
     assert missing_paths == []
 
 
+def test_markdown_variant_hook_preserves_grouped_source_paths(tmp_path: Path) -> None:
+    """Verify grouped docs publish Markdown variants at grouped paths only."""
+    hook = _load_hook_module()
+    site_dir = tmp_path / "site"
+
+    hook.on_post_build({"docs_dir": str(ROOT / "docs"), "site_dir": str(site_dir)})
+
+    expected_grouped_paths = [
+        site_dir / "how-fabricops-works" / "notebook-templates" / "index.md",
+        site_dir / "how-fabricops-works" / "notebook-templates" / "environment-config.md",
+        site_dir / "how-fabricops-works" / "notebook-templates" / "agreement-setup.md",
+        site_dir / "how-fabricops-works" / "notebook-templates" / "pipeline-execution.md",
+        site_dir / "how-fabricops-works" / "notebook-templates" / "governance-review.md",
+        site_dir / "how-fabricops-works" / "notebook-templates" / "metadata-dashboard.md",
+        site_dir / "how-fabricops-works" / "guardrails" / "pipeline-guardrails.md",
+        site_dir / "how-fabricops-works" / "guardrails" / "guardrail-authoring.md",
+        site_dir / "how-fabricops-works" / "api" / "template-driven-api.md",
+    ]
+    stale_flat_paths = [
+        site_dir / "how-fabricops-works" / "notebook-templates.md",
+        site_dir / "how-fabricops-works" / "environment-config.md",
+        site_dir / "how-fabricops-works" / "agreement-setup.md",
+        site_dir / "how-fabricops-works" / "pipeline-execution.md",
+        site_dir / "how-fabricops-works" / "governance-review.md",
+        site_dir / "how-fabricops-works" / "metadata-dashboard.md",
+        site_dir / "how-fabricops-works" / "pipeline-guardrails.md",
+        site_dir / "how-fabricops-works" / "guardrail-authoring.md",
+        site_dir / "how-fabricops-works" / "template-driven-api.md",
+    ]
+
+    missing_grouped_paths = [str(path.relative_to(site_dir)) for path in expected_grouped_paths if not path.exists()]
+    stale_paths = [str(path.relative_to(site_dir)) for path in stale_flat_paths if path.exists()]
+
+    assert missing_grouped_paths == []
+    assert stale_paths == []
+
+
 def test_markdown_variant_hook_publishes_versioned_agent_friendly_entrypoints(tmp_path: Path) -> None:
     """Verify markdown variant hook publishes versioned agent friendly entrypoints."""
     hook = _load_hook_module()

@@ -9,6 +9,9 @@ from typing import Any
 
 EXCLUDED_DIRS = {"assets", "javascripts", "stylesheets"}
 ROOT_TEXT_FILES = {"llms.txt"}
+SKIP_SIBLING_INDEX_VARIANTS = {
+    Path("how-fabricops-works/notebook-templates/index.md"),
+}
 
 
 def _is_public_markdown(path: Path, docs_dir: Path) -> bool:
@@ -26,7 +29,8 @@ def on_post_build(config: Any) -> None:
     original Markdown to ``site/example.md`` gives agents a clean text variant at
     the predictable sibling URL ``/example.md`` while preserving the normal HTML
     documentation site for people. Section index pages are also copied to a
-    sibling path such as ``site/guide.md`` for the HTML URL ``/guide/``.
+    sibling path such as ``site/guide.md`` for the HTML URL ``/guide/`` unless
+    that sibling would preserve a stale pre-reorganization path.
     """
     docs_dir = Path(config["docs_dir"]).resolve()
     site_dir = Path(config["site_dir"]).resolve()
@@ -45,6 +49,10 @@ def on_post_build(config: Any) -> None:
         target_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_path, target_path)
 
-        if relative_path.name == "index.md" and relative_path.parent != Path("."):
+        if (
+            relative_path.name == "index.md"
+            and relative_path.parent != Path(".")
+            and relative_path not in SKIP_SIBLING_INDEX_VARIANTS
+        ):
             sibling_target = site_dir / relative_path.parent.with_suffix(".md")
             shutil.copy2(source_path, sibling_target)
