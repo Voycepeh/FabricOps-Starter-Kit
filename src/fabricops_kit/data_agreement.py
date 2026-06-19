@@ -9,14 +9,16 @@ are append-only and use framework-managed runtime audit columns.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 import hashlib
 import json
 import re
 import sys
-from typing import Any
+from typing import Any, Mapping
+from uuid import uuid4
 
-from .config import DEFAULT_STEWARD_ROLE_OPTIONS, resolve_fabric_context
+from .config import DEFAULT_STEWARD_ROLE_OPTIONS, _current_audit_timestamp, resolve_fabric_context
 from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
@@ -58,6 +60,45 @@ AGREEMENT_EVIDENCE_TYPES = [
     "Signed Agreement", "Email Approval", "Policy Document",
     "Supporting Screenshot", "Other",
 ]
+
+
+@dataclass
+class _AgreementRuntimeContext:
+    """Internal runtime context returned by downstream agreement selection."""
+
+    run_id: str
+    pipeline_started_at: str
+    pipeline_name: str
+    spark_session: Any = None
+    metadata_schema: str = ""
+    notebook_type: str = "02_pipeline"
+    notebook_id: str = ""
+    notebook_registry_id: str = ""
+    agreement_id: str = ""
+    agreement_contract_version: str = ""
+    agreement: dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] | None = None
+    read_only: bool = False
+    source_definitions: dict[str, dict[str, Any]] = field(default_factory=dict)
+    target_definitions: dict[str, dict[str, Any]] = field(default_factory=dict)
+    selector: Any = None
+
+
+def _notebook_global(name: str, default: Any = None) -> Any:
+    """Return an active IPython notebook global when available."""
+    try:
+        ip = get_ipython()  # type: ignore[name-defined]
+    except Exception:
+        return default
+    return getattr(ip, "user_ns", {}).get(name, default) if ip is not None else default
+
+
+def _runtime_metadata_value(run_context: Any, key: str, default: str = "") -> str:
+    """Return one runtime metadata value from ``RUN_CONTEXT``."""
+    metadata = getattr(run_context, "runtime_metadata", {}) or {}
+    if isinstance(metadata, Mapping):
+        return str(metadata.get(key) or default)
+    return default
 
 
 def _require_ipywidgets():
@@ -785,8 +826,8 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env: str, agree
     return rows
 
 
-def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
-    """Render a downstream agreement selector and retain the selected row.
+def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None, read_only: bool = False, run_context: Any = None) -> Any:
+    """Render the downstream agreement selector and return runtime context.
 
     Parameters
     ----------
@@ -796,31 +837,47 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
     context : dict, optional
         Advanced override context. Defaults to the active ``FABRIC_CONTEXT``.
     spark_session : pyspark.sql.SparkSession, optional
-        Fabric Spark session used for configured metadata-table reads.
+        Fabric Spark session. Defaults to the active notebook ``spark`` global.
     metadata_schema : str, optional
-        Explicit metadata Lakehouse schema override. Pass ``METADATA_SCHEMA``
-        from ``00_env_config`` in schema-enabled Lakehouses so agreement reads
-        and notebook registration use the same metadata route.
+        Explicit metadata Lakehouse schema override. Defaults to the active
+        notebook ``METADATA_SCHEMA`` global.
     register_notebook : bool, default=False
-        When True, render registration status and a button that links the
-        current notebook to the selected agreement.
+        When True, render registration controls that link the current notebook
+        to the selected agreement.
     notebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
-        Workflow metadata passed to ``_register_current_notebook`` when
-        ``register_notebook`` is enabled.
+        Workflow metadata used for the returned runtime context and optional
+        notebook registration.
+    read_only : bool, default=False
+        Marks exploratory contexts as read-only.
+    run_context : object, optional
+        ``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook
+        variable named ``RUN_CONTEXT``.
 
     Returns
     -------
-    ipywidgets.Select
-        Displayed searchable latest-version agreement selector control. Its
-        ``value`` remains the stable ``agreement_id`` for existing callers.
-        When registration is enabled, registration widgets are attached as
-        attributes on the selector for advanced notebook automation.
+    Any
+        Internal runtime context object with the selected agreement, selector,
+        run identifiers, Fabric runtime metadata, and optional registration
+        fields for downstream notebook templates.
+
+    Notes
+    -----
+    Agreement selection is the downstream governance anchor. The returned
+    context is intentionally private by type name, but templates may use its
+    documented attributes such as ``run_id``, ``pipeline_name``, ``agreement``,
+    and ``notebook_registry_id``.
 
     """
     widgets = _require_ipywidgets()
     from IPython import display as ip
 
     global _SELECTED_AGREEMENT
+    run_context = run_context if run_context is not None else _notebook_global("RUN_CONTEXT")
+    spark_session = spark_session if spark_session is not None else _notebook_global("spark")
+    metadata_schema = metadata_schema if metadata_schema is not None else _notebook_global("METADATA_SCHEMA", "")
+    resolved_notebook_type = str(notebook_type or "02_pipeline")
+    resolved_pipeline_name = str(pipeline_name or _runtime_metadata_value(run_context, "currentNotebookName", resolved_notebook_type))
+
     config = None
     env = None
     if agreement_rows is None:
@@ -843,27 +900,47 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
         return f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{row.get('contract_version', '')})"
 
     selector_parts = _render_searchable_selector(
-        widgets=widgets,
-        label="Agreement",
-        rows=latest_rows,
-        label_fn=_agreement_label,
-        value_fn=lambda row: str(row.get("agreement_id") or "").strip(),
-        placeholder="Search agreements...",
+        widgets=widgets, label="Agreement", rows=latest_rows, label_fn=_agreement_label,
+        value_fn=lambda row: str(row.get("agreement_id") or "").strip(), placeholder="Search agreements...",
         search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
         context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
     )
     selector = selector_parts["selector"]
+    selected_initial = dict(rows_by_id[str(selector.value)]) if selector.value in rows_by_id else {}
+    _SELECTED_AGREEMENT = dict(selected_initial) if selected_initial else None
+    runtime = _AgreementRuntimeContext(
+        run_id=str(getattr(run_context, "run_id", "") or uuid4()),
+        pipeline_started_at=_current_audit_timestamp(drop_microseconds=False),
+        pipeline_name=resolved_pipeline_name,
+        spark_session=spark_session,
+        metadata_schema=str(metadata_schema or ""),
+        notebook_type=resolved_notebook_type,
+        notebook_id=_runtime_metadata_value(run_context, "currentNotebookId", ""),
+        agreement=dict(selected_initial),
+        agreement_id=str(selected_initial.get("agreement_id", "")),
+        agreement_contract_version=str(selected_initial.get("agreement_contract_version", selected_initial.get("contract_version", ""))),
+        notebook_registry_id=str(selected_initial.get("notebook_registry_id", selected_initial.get("registration_id", ""))),
+        context=context,
+        read_only=bool(read_only),
+        selector=selector,
+    )
+
+    def _apply_selected(row: dict[str, Any]) -> None:
+        global _SELECTED_AGREEMENT
+        _SELECTED_AGREEMENT = dict(row)
+        runtime.agreement = dict(row)
+        runtime.agreement_id = str(row.get("agreement_id", ""))
+        runtime.agreement_contract_version = str(row.get("agreement_contract_version", row.get("contract_version", "")))
+        runtime.notebook_registry_id = str(row.get("notebook_registry_id", row.get("registration_id", runtime.notebook_registry_id)))
+        runtime.notebook_id = str(row.get("notebook_id", runtime.notebook_id))
 
     def _on_change(change: dict[str, Any]) -> None:
-        global _SELECTED_AGREEMENT
         if change.get("name") == "value" and change.get("new") is not None:
             selected_row = rows_by_id.get(str(change["new"]))
             if selected_row is not None:
-                _SELECTED_AGREEMENT = dict(selected_row)
+                _apply_selected(selected_row)
 
     selector.observe(_on_change, names="value")
-    if selector.value in rows_by_id:
-        _SELECTED_AGREEMENT = dict(rows_by_id[str(selector.value)])
     selector.search_box = selector_parts["search"]
     selector.context_html = selector_parts["context"]
 
@@ -898,28 +975,16 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
         return "Registration status: not registered to an active agreement."
 
     def _refresh_registration_status(*_: Any) -> None:
-        if registration_status is None:
-            return
-        registration_status.value = _html_escape(_status_message())
+        if registration_status is not None:
+            registration_status.value = _html_escape(_status_message())
 
     if register_notebook:
         if config is None or env is None or spark_session is None:
             raise ValueError("widget_select_agreement(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
-        active_rows = _current_notebook_active_registrations(
-            spark_session,
-            config=config,
-            env=env,
-            metadata_schema=metadata_schema,
-            notebook_type=notebook_type,
-            environment_name=environment_name or env,
-        )
+        active_rows = _current_notebook_active_registrations(spark_session, config=config, env=env, metadata_schema=metadata_schema, notebook_type=resolved_notebook_type, environment_name=environment_name or env)
         active_primary_rows = [row for row in active_rows if str(row.get("registration_role") or "primary") == "primary"]
         registration_status = widgets.HTML(value="")
-        registration_action = widgets.ToggleButtons(
-            options=["Cancel", "Replace active registration", "Add another agreement link"],
-            value="Cancel",
-            description="If already linked",
-        )
+        registration_action = widgets.ToggleButtons(options=["Cancel", "Replace active registration", "Add another agreement link"], value="Cancel", description="If already linked")
         register_button = widgets.Button(description="Register notebook", button_style="primary")
         registration_output = widgets.Output()
 
@@ -941,7 +1006,6 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
                 if registration_status is not None:
                     registration_status.value = _html_escape(f"Notebook is already registered to {selected_id} version {selected_version} as an active {role} agreement link; no duplicate was created.")
                 return
-
             role = "primary"
             if other:
                 choice = getattr(registration_action, "value", "Cancel")
@@ -951,49 +1015,13 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
                     return
                 if choice == "Add another agreement link":
                     role = "additional"
-                elif choice == "Replace active registration":
-                    role = "primary"
-                else:
-                    return
-
-            new_row = _register_current_notebook(
-                spark_session,
-                config=config,
-                env=env,
-                agreement_id=selected_id,
-                contract_version=selected_version,
-                registration_role=role,
-                registration_status="active",
-                metadata_schema=metadata_schema,
-                notebook_type=notebook_type,
-                environment_name=environment_name or env,
-                dataset_name=dataset_name,
-                table_name=table_name,
-                topic=topic,
-                pipeline_name=pipeline_name,
-            )
+            new_row = _register_current_notebook(spark_session, config=config, env=env, agreement_id=selected_id, contract_version=selected_version, registration_role=role, registration_status="active", metadata_schema=metadata_schema, notebook_type=resolved_notebook_type, environment_name=environment_name or env, dataset_name=dataset_name, table_name=table_name, topic=topic, pipeline_name=resolved_pipeline_name)
+            runtime.notebook_registry_id = str(new_row.get("registration_id", ""))
+            runtime.notebook_id = str(new_row.get("notebook_id", runtime.notebook_id))
             if other and role == "primary":
                 superseded_at = _current_audit_timestamp(config=config, drop_microseconds=False)
                 for previous in other:
-                    _register_current_notebook(
-                        spark_session,
-                        config=config,
-                        env=env,
-                        agreement_id=previous.get("agreement_id"),
-                        contract_version=previous.get("agreement_contract_version"),
-                        registration_role=previous.get("registration_role") or "primary",
-                        registration_status="superseded",
-                        metadata_schema=metadata_schema,
-                        registration_id=previous.get("registration_id"),
-                        superseded_at=superseded_at,
-                        superseded_by_registration_id=new_row.get("registration_id"),
-                        notebook_type=previous.get("notebook_type") or notebook_type,
-                        environment_name=previous.get("environment_name") or environment_name or env,
-                        dataset_name=previous.get("dataset_name") or dataset_name,
-                        table_name=previous.get("table_name") or table_name,
-                        topic=previous.get("topic") or topic,
-                        pipeline_name=previous.get("pipeline_name") or pipeline_name,
-                    )
+                    _register_current_notebook(spark_session, config=config, env=env, agreement_id=previous.get("agreement_id"), contract_version=previous.get("agreement_contract_version"), registration_role=previous.get("registration_role") or "primary", registration_status="superseded", metadata_schema=metadata_schema, registration_id=previous.get("registration_id"), superseded_at=superseded_at, superseded_by_registration_id=new_row.get("registration_id"), notebook_type=previous.get("notebook_type") or resolved_notebook_type, environment_name=previous.get("environment_name") or environment_name or env, dataset_name=previous.get("dataset_name") or dataset_name, table_name=previous.get("table_name") or table_name, topic=previous.get("topic") or topic, pipeline_name=previous.get("pipeline_name") or resolved_pipeline_name)
                 for previous in other:
                     if previous in active_rows:
                         active_rows.remove(previous)
@@ -1021,23 +1049,16 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
     else:
         selector.container = selector_parts["container"]
     ip.display(selector.container)
-    return selector
+    try:
+        from . import pipeline as _pipeline
+        _pipeline._ACTIVE_PIPELINE_CONTEXT = runtime
+    except Exception:
+        pass
+    return runtime
 
 
-def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by :func:`widget_select_agreement`.
-
-    Returns
-    -------
-    dict[str, Any]
-        Selected latest-version agreement row.
-
-    Raises
-    ------
-    RuntimeError
-        If no selector has established a selected agreement.
-
-    """
+def _get_selected_agreement() -> dict[str, Any]:
+    """Return the agreement selected by :func:`widget_select_agreement`."""
     if not _SELECTED_AGREEMENT:
         raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
     return dict(_SELECTED_AGREEMENT)

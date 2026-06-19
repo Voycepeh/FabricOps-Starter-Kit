@@ -82,6 +82,57 @@ def _install_fake_pyspark_functions(monkeypatch):
     monkeypatch.setitem(sys.modules, "pyspark.sql.functions", fake_functions)
 
 
+
+class _FakeWidget:
+    """Minimal widget test double."""
+
+    def __init__(self, **kwargs):
+        """Store widget attributes."""
+        self._observers = []
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def observe(self, callback, names=None):
+        """Record observer callbacks."""
+        self._observers.append((callback, names))
+
+
+class _FakeSelect(_FakeWidget):
+    """Minimal select widget test double."""
+
+    def __init__(self, options=None, **kwargs):
+        """Initialize select widget."""
+        super().__init__(options=options or [], value=None, **kwargs)
+
+
+class _FakeButton(_FakeWidget):
+    """Minimal button widget test double."""
+
+    def on_click(self, callback):
+        """Record click callback."""
+        self._click_callback = callback
+
+
+class _FakeOutput(_FakeWidget):
+    """Minimal output widget test double."""
+
+    def clear_output(self):
+        """Clear output placeholder."""
+
+
+def fake_ipywidgets_module():
+    """Return a minimal ipywidgets module for agreement selector tests."""
+    return types.SimpleNamespace(
+        Text=_FakeWidget,
+        Select=_FakeSelect,
+        HTML=_FakeWidget,
+        ToggleButtons=_FakeWidget,
+        Button=_FakeButton,
+        Output=_FakeOutput,
+        VBox=lambda children: _FakeWidget(children=children),
+        Layout=lambda **kwargs: kwargs,
+    )
+
 def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloaded_dataframe():
     """Verify prepare pipeline table configs source role derives defaults from preloaded dataframe."""
     source_df = FakeDataFrame("source")
@@ -725,24 +776,26 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
     }
 
 
-def test_start_pipeline_run_stores_agreement_context(monkeypatch):
-    """Verify start_pipeline_run stores agreement and runtime defaults."""
+def test_widget_select_agreement_returns_runtime_context(monkeypatch):
+    """Verify widget_select_agreement stores agreement and runtime defaults."""
+    from fabricops_kit import data_agreement
+
     spark = FakeSpark()
     run_context = types.SimpleNamespace(
         run_id="run-123",
         runtime_metadata={"currentNotebookName": "02_pipeline", "currentNotebookId": "notebook-1"},
     )
-    widget_calls = []
-    monkeypatch.setattr(pipeline, "widget_select_agreement", lambda **kwargs: widget_calls.append(kwargs))
-    monkeypatch.setattr(
-        pipeline,
-        "get_selected_agreement",
-        lambda: {"agreement_id": "agreement-1", "contract_version": "2", "registration_id": "registry-1"},
-    )
 
-    result = pipeline.start_pipeline_run(
+    monkeypatch.setattr(data_agreement, "_require_ipywidgets", fake_ipywidgets_module)
+    monkeypatch.setattr(data_agreement, "resolve_fabric_context", lambda context=None: (framework_config(), "dev", context))
+    monkeypatch.setattr(data_agreement, "_current_notebook_active_registrations", lambda *args, **kwargs: [])
+    fake_ipython = types.ModuleType("IPython")
+    fake_ipython.display = types.SimpleNamespace(display=lambda value: None)
+    monkeypatch.setitem(sys.modules, "IPython", fake_ipython)
+
+    result = data_agreement.widget_select_agreement(
+        agreement_rows=[{"agreement_id": "agreement-1", "contract_version": "2", "agreement_name": "Demo"}],
         notebook_type="02_pipeline",
-        select_agreement=True,
         register_notebook=True,
         run_context=run_context,
         spark_session=spark,
@@ -754,18 +807,9 @@ def test_start_pipeline_run_stores_agreement_context(monkeypatch):
     assert result.notebook_id == "notebook-1"
     assert result.agreement_id == "agreement-1"
     assert result.agreement_contract_version == "2"
-    assert result.notebook_registry_id == "registry-1"
-    assert widget_calls == [
-        {
-            "spark_session": spark,
-            "metadata_schema": "metadata_schema",
-            "register_notebook": True,
-            "notebook_type": "02_pipeline",
-            "pipeline_name": "02_pipeline",
-            "context": None,
-        }
-    ]
-
+    assert result.spark_session is spark
+    assert result.metadata_schema == "metadata_schema"
+    assert pipeline._ACTIVE_PIPELINE_CONTEXT is result
 
 def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     """Verify run_table_guardrails derives omitted runtime parameters from context."""

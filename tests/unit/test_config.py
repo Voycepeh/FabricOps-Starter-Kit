@@ -526,9 +526,8 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
 
     pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
     pipeline_helper_source = Path("src/fabricops_kit/pipeline.py").read_text(encoding="utf-8")
-    assert "PIPELINE = start_pipeline_run(" in pipeline_source
+    assert "AGREEMENT = widget_select_agreement(" in pipeline_source
+    assert "start_pipeline_run" not in pipeline_source
     assert "_current_audit_timestamp" not in pipeline_source
     assert "PIPELINE_STARTED_AT" not in pipeline_source
-    assert "pipeline_started_at=_now_iso()" in pipeline_helper_source
-    assert "def _now_iso(config: Any = None) -> str:" in pipeline_helper_source
-    assert "return _current_audit_timestamp(config=config)" in pipeline_helper_source
+    assert "pipeline_started_at" in Path("src/fabricops_kit/data_agreement.py").read_text(encoding="utf-8")

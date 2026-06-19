@@ -121,16 +121,6 @@ Use the finder below to look up exported public functions from active v1 modules
 
   </div>
 </article>
-<article id="pipeline-start_pipeline_run" class="reference-catalogue-item" data-callable-row="true" data-callable-name="start_pipeline_run" data-callable-module="pipeline" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="template-called" data-callable-purpose="Start a guided notebook run and store runtime defaults.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Start a guided notebook run and store runtime defaults.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>get_selected_agreement</code></li><li><code>widget_select_agreement</code></li><li><code>_PipelineRunContext</code></li><li><code>_notebook_global</code></li><li><code>_now_iso</code></li><li><code>_runtime_metadata_value</code></li></ul></details>
-
-  </div>
-</article>
 <article id="governance_review-widget_author_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_author_dq_rules" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="template-called" data-callable-purpose="Render interactive manual DQ guardrail authoring controls.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render interactive manual DQ guardrail authoring controls.</p>
@@ -201,6 +191,16 @@ Use the finder below to look up exported public functions from active v1 modules
 
   </div>
 </article>
+<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline, 99_explore" data-function-type="template-called" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-template-called">Template-called</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 12</span></summary><ul><li><code>_current_audit_timestamp</code></li><li><code>resolve_fabric_context</code></li><li><code>_AgreementRuntimeContext</code></li><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_notebook_global</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_runtime_metadata_value</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
+
+  </div>
+</article>
 <article id="governance_review-widget_select_guardrail_target" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_guardrail_target" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-function-type="template-called" data-callable-purpose="Render an interactive target selector for guardrail authoring and governance review.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render an interactive target selector for guardrail authoring and governance review.</p>
@@ -251,26 +251,6 @@ Use the finder below to look up exported public functions from active v1 modules
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
-<article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-function-type="advanced-public" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the agreement selected by widget_select_agreement.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run</code></li></ul></details>
-  </div>
-</article>
-<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-function-type="advanced-public" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run</code></li></ul></details>
-  </div>
-</article>
 </div>
 
 ## Example-only helpers
@@ -278,11 +258,4 @@ Use the finder below to look up exported public functions from active v1 modules
 These public helpers are directly called only by example notebooks and are not included in the core template-called count.
 
 - [`enforce_dq_rules`](../api/reference/enforce_dq_rules/)
-
-## Advanced public helpers
-
-These exported helpers remain public and documented, but they are not directly called by core starter template code cells and are not included in the core template-called count.
-
-- [`get_selected_agreement`](../api/reference/get_selected_agreement/)
-- [`widget_select_agreement`](../api/reference/widget_select_agreement/)
 

@@ -108,7 +108,7 @@ def get_latest_metadata_catalogue(
     table_name : str
         Source table name to look up in ``METADATA_DATA_CATALOGUE``.
     agreement : mapping, optional
-        Selected agreement context from :func:`get_selected_agreement`. When an
+        Selected agreement context from :func:`widget_select_agreement`. When an
         agreement id or contract version is present, matching catalogue rows are
         preferred.
     metadata_schema : str, optional

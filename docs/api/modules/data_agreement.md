@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Internal helpers: 39</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
 
 ## Module purpose
 
@@ -36,15 +36,15 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>5</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>35</td>
+      <td>39</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
-      <td>2</td>
+      <td>1</td>
     </tr>
     <tr>
       <td>Outbound module count</td>
@@ -52,7 +52,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>External callers</td>
-      <td><code>config</code>, <code>pipeline</code></td>
+      <td><code>config</code></td>
     </tr>
     <tr>
       <td>External callees</td>
@@ -75,13 +75,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td><a href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Return the agreement selected by widget_select_agreement.</td>
-      <td>—</td>
-    </tr>
     <tr>
       <td><a href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
       <td>Callable</td>
@@ -108,7 +101,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Callable</td>
       <td>function</td>
       <td>Render an agreement selector and optionally register the active notebook.</td>
-      <td><code>_html_escape</code> (internal), <code>_latest_agreement_versions</code> (internal), <code>_list_data_agreements</code> (internal), <code>_render_searchable_selector</code> (internal), <code>_require_ipywidgets</code> (internal)</td>
+      <td><code>_html_escape</code> (internal), <code>_latest_agreement_versions</code> (internal), <code>_list_data_agreements</code> (internal), <code>_notebook_global</code> (internal), <code>_render_searchable_selector</code> (internal), <code>_require_ipywidgets</code> (internal), <code>_runtime_metadata_value</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -127,11 +120,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
 <a class="reference-chip" href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
@@ -149,7 +137,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>
+<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_notebook_global</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_runtime_metadata_value</code></span>
 </li>
 </ul>
 </section>
@@ -217,6 +205,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_get_selected_agreement</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_get_widget_visible_fields</code></td>
       <td>—</td>
     </tr>
@@ -249,6 +241,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_notebook_global</code></td>
+      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+    </tr>
+    <tr>
       <td><code>_parse_contract_version</code></td>
       <td>—</td>
     </tr>
@@ -278,6 +274,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_require_ipywidgets</code></td>
+      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_runtime_metadata_value</code></td>
       <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
@@ -363,6 +363,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <span class="reference-chip"><code>_get_notebookutils</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_get_selected_agreement</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_get_widget_visible_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_config_value</code></span>
@@ -401,6 +404,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <span class="reference-chip"><code>_parse_contract_version</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_notebook_global</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_parse_contract_version</code></span>
 </li>
 <li>
@@ -435,6 +441,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <span class="reference-chip"><code>_require_ipywidgets</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_runtime_metadata_value</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_save_agreement_evidence_records</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_config_value</code></span>, <span class="reference-chip"><code>_prepare_evidence_file_references</code></span>, <span class="reference-chip"><code>_write_row</code></span>
@@ -467,13 +476,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 **config**
 <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
-**pipeline**
-<a class="reference-chip" href="../reference/start_pipeline_run/"><code>start_pipeline_run</code></a>
-
 ### External callees
 
 **config**
-<a class="reference-chip" href="config/#resolve_fabric_context"><code>resolve_fabric_context</code></a>
+<a class="reference-chip" href="config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>, <a class="reference-chip" href="config/#resolve_fabric_context"><code>resolve_fabric_context</code></a>
 
 **fabric_input_output**
 <a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>

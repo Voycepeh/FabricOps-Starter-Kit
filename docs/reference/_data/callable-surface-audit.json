@@ -72,18 +72,6 @@
     "decision": "template_called_public"
   },
   {
-    "function": "get_selected_agreement",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run"
-    ],
-    "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
-  },
-  {
     "function": "prepare_pipeline_table_configs",
     "in_root_exports": true,
     "directly_called_in_core_templates": [
@@ -217,19 +205,6 @@
     "decision": "template_called_public"
   },
   {
-    "function": "start_pipeline_run",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "02_pipeline",
-      "99_explore"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
     "function": "stop_if_failed",
     "in_root_exports": false,
     "directly_called_in_core_templates": [],
@@ -332,14 +307,15 @@
   {
     "function": "widget_select_agreement",
     "in_root_exports": true,
-    "directly_called_in_core_templates": [],
+    "directly_called_in_core_templates": [
+      "02_pipeline",
+      "99_explore"
+    ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
+    "decision": "template_called_public"
   },
   {
     "function": "widget_select_guardrail_target",

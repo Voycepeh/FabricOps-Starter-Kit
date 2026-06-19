@@ -6,7 +6,6 @@ from importlib.metadata import PackageNotFoundError, version
 
 from .config import setup_metadata_tables, setup_notebook
 from .data_agreement import (
-    get_selected_agreement,
     widget_render_agreement_evidence,
     widget_render_data_agreement,
     widget_render_data_steward,
@@ -18,7 +17,6 @@ from .pipeline import (
     display_guardrail_results,
     prepare_pipeline_table_configs,
     run_table_guardrails,
-    start_pipeline_run,
     write_pipeline_lineage,
     write_pipeline_run_summary,
 )
@@ -55,7 +53,6 @@ __all__ = [
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
     "widget_select_agreement",
-    "get_selected_agreement",
     "read_data",
     "write_data",
     "profile_dataframe",
@@ -64,7 +61,6 @@ __all__ = [
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "start_pipeline_run",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
