@@ -108,6 +108,14 @@ No additional callable notes are documented.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>get_selected_agreement(...)</code></div>
     </div>
 
+This callable uses 0 internal helpers; `get_selected_agreement` does not have package-local helper descendants in the generated call graph.
+
+<div class="reference-helper-groups">
+  <section class="reference-helper-group reference-helper-group-empty">
+    <h4>No internal helpers detected</h4>
+    <p>This callable does not have package-local helper descendants in the generated call graph.</p>
+  </section>
+</div>
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>

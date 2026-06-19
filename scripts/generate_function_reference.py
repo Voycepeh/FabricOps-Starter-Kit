@@ -1435,17 +1435,17 @@ def _render_helper_group_cards(grouped: dict[str, dict[str, Any]], area_order: l
     return lines
 
 
-def _render_nested_helper_section(
+def _helper_group_summary_lines(
     root_qn: str,
     helper_qns: list[str],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
 ) -> list[str]:
-    """Render a collapsed grouped summary for internal helpers used by a callable."""
+    """Render grouped helper cards for internal helpers used by a callable."""
     root_name = node_by_qn[root_qn]["callable_name"]
     helper_count = len(helper_qns)
     if not helper_qns:
-        body_lines = [
+        return [
             (
                 f"This callable uses 0 internal helpers; `{root_name}` does not have package-local "
                 "helper descendants in the generated call graph."
@@ -1457,11 +1457,6 @@ def _render_nested_helper_section(
             '    <p>This callable does not have package-local helper descendants in the generated call graph.</p>',
             "  </section>",
             "</div>",
-        ]
-        return [
-            '??? info "Internal helpers used: 0"',
-            "",
-            *_indent_markdown(body_lines),
         ]
 
     grouped: dict[str, dict[str, Any]] = {}
@@ -1485,16 +1480,26 @@ def _render_nested_helper_section(
     for area in area_order:
         grouped[area]["helpers"] = sorted(grouped[area]["helpers"], key=lambda item: item["name"].lower())
 
-    body_lines = [
+    return [
         f"This callable uses {helper_count} internal helpers for {_helper_area_purposes(area_order)}.",
         "",
         *_render_helper_group_cards(grouped, area_order),
     ]
+
+
+def _render_nested_helper_section(
+    root_qn: str,
+    helper_qns: list[str],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Render a collapsed grouped summary for internal helpers used by a callable."""
     return [
-        f'??? info "Internal helpers used: {helper_count}"',
+        f'??? info "Internal helpers used: {len(helper_qns)}"',
         "",
-        *_indent_markdown(body_lines),
+        *_indent_markdown(_helper_group_summary_lines(root_qn, helper_qns, node_by_qn, module_data)),
     ]
+
 
 def function_chip_wrap(chips: list[str]) -> str:
     """Return a mobile-friendly chip wrapper for a generated docs table cell."""
@@ -2501,7 +2506,7 @@ def main() -> None:
                 source_ref=source_ref,
                 short_name=short_name,
             )
-            nested_helper_lines: list[str] = []
+            nested_helper_lines = _helper_group_summary_lines(qn, helper_qns, node_by_qn, module_data)
             human_use_when = _documented_text(metadata.get("when_to_use"))
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
             expanded_purpose = _documented_text(metadata.get("expanded_purpose"))

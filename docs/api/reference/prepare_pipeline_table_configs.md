@@ -131,6 +131,20 @@ FabricOps audit columns.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">            └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone(...)</code></a></div>
     </div>
 
+This callable uses 4 internal helpers for audit timestamp.
+
+<div class="reference-helper-groups">
+  <section class="reference-helper-group">
+    <h4>Audit timestamp</h4>
+    <p>Resolve and stamp audit time consistently.</p>
+    <div class="reference-helper-chip-wrap">
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L538-L548"><code>_add_audit_columns</code></a>
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp</code></a>
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a>
+    </div>
+  </section>
+</div>
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>
