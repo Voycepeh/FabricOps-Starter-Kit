@@ -173,3 +173,62 @@
 .md-typeset .metadata-table-grid code {
   white-space: nowrap;
 }
+
+/* Legacy metadata table HTML can remain deployed before MkDocs rebuilds.
+   Render it like the Material card grid so mobile does not show a cramped table. */
+.md-typeset table.metadata-tables-overview {
+  border-collapse: separate;
+  border-spacing: 0;
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.2rem 0 2rem;
+  width: 100%;
+}
+
+.md-typeset table.metadata-tables-overview thead,
+.md-typeset table.metadata-tables-overview colgroup {
+  display: none;
+}
+
+.md-typeset table.metadata-tables-overview tbody {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.md-typeset table.metadata-tables-overview tr {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.35rem;
+  box-shadow: 0 0.08rem 0.24rem rgba(0, 0, 0, 0.06);
+  display: block;
+  padding: 0.8rem;
+}
+
+.md-typeset table.metadata-tables-overview td {
+  border: 0;
+  display: block;
+  padding: 0;
+  width: auto !important;
+}
+
+.md-typeset table.metadata-tables-overview td + td {
+  margin-top: 0.55rem;
+}
+
+.md-typeset table.metadata-tables-overview td:first-child code {
+  font-size: 0.74rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.md-typeset table.metadata-tables-overview td:nth-child(3) {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.72rem;
+}
+
+.md-typeset table.metadata-tables-overview td:nth-child(3)::before {
+  color: var(--md-default-fg-color);
+  content: "Template step: ";
+  font-weight: 700;
+}
