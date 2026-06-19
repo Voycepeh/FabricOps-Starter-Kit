@@ -948,11 +948,9 @@
       "fabricops_kit.fabric_input_output.write_warehouse_table",
       "fabricops_kit.governance_review.get_latest_metadata_catalogue",
       "fabricops_kit.governance_review.widget_author_dq_rules",
-      "fabricops_kit.governance_review.widget_author_guardrail_rules",
       "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
       "fabricops_kit.governance_review.widget_enrich_table_metadata",
       "fabricops_kit.governance_review.widget_review_guardrail_governance",
-      "fabricops_kit.governance_review.widget_review_table_governance",
       "fabricops_kit.governance_review.widget_select_guardrail_target",
       "fabricops_kit.pipeline.run_table_guardrails",
       "fabricops_kit.pipeline.write_pipeline_lineage",
@@ -3207,8 +3205,7 @@
     "classification": "Internal",
     "inbound": [
       "fabricops_kit.governance_review.apply_governance_enrichment_action",
-      "fabricops_kit.governance_review.apply_governance_rule_action",
-      "fabricops_kit.governance_review.widget_review_table_governance"
+      "fabricops_kit.governance_review.apply_governance_rule_action"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -3664,8 +3661,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review._dq_rule_display_rows",
-      "fabricops_kit.governance_review.widget_review_table_governance"
+      "fabricops_kit.governance_review._dq_rule_display_rows"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -4760,8 +4756,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.widget_review_guardrail_governance",
-      "fabricops_kit.governance_review.widget_review_table_governance"
+      "fabricops_kit.governance_review.widget_review_guardrail_governance"
     ],
     "outbound": [
       "fabricops_kit.governance_review._assert_governance_review_context",
@@ -4790,8 +4785,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.widget_review_guardrail_governance",
-      "fabricops_kit.governance_review.widget_review_table_governance"
+      "fabricops_kit.governance_review.widget_review_guardrail_governance"
     ],
     "outbound": [
       "fabricops_kit.governance_review._assert_governance_review_context",
@@ -5036,8 +5030,7 @@
     "module": "governance_review",
     "classification": "Internal",
     "inbound": [
-      "fabricops_kit.governance_review.widget_review_guardrail_governance",
-      "fabricops_kit.governance_review.widget_review_table_governance"
+      "fabricops_kit.governance_review.widget_review_guardrail_governance"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -5164,9 +5157,7 @@
     "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
     "module": "governance_review",
     "classification": "Callable",
-    "inbound": [
-      "fabricops_kit.governance_review.widget_author_guardrail_rules"
-    ],
+    "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
       "fabricops_kit.governance_review._dq_records_from_selection",
@@ -5175,7 +5166,8 @@
       "fabricops_kit.governance_review._write_rule_records"
     ],
     "used_in_templates": [
-      "02_pipeline"
+      "02_pipeline",
+      "03_governance"
     ],
     "glossary_terms": [
       "guardrails",
@@ -5201,50 +5193,12 @@
     "summary": "Render interactive manual DQ guardrail authoring controls."
   },
   {
-    "id": "fabricops_kit.governance_review.widget_author_guardrail_rules",
-    "name": "widget_author_guardrail_rules",
-    "qualified_name": "fabricops_kit.governance_review.widget_author_guardrail_rules",
-    "module": "governance_review",
-    "classification": "Callable",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review.widget_author_dq_rules",
-      "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
-    ],
-    "used_in_templates": [
-      "03_governance"
-    ],
-    "glossary_terms": [
-      "guardrails",
-      "metadata lakehouse",
-      "notebook template"
-    ],
-    "expanded_purpose": "Renders the existing guardrail authoring widgets together so guardrail creation remains separate from formal governance review.",
-    "when_to_use": "Use after selecting a target in 03_governance when governance users need to create guardrail records.",
-    "return_interpretation": "The helper returns child widget states whose saves append guardrail intent to METADATA_GUARDRAIL_RULES.",
-    "common_failure_causes": [
-      "No target state is selected.",
-      "Rule parameters are invalid.",
-      "The metadata target cannot be written."
-    ],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 2676,
-    "source_end_line": 2710,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2676-L2710",
-    "docs_path": "api/reference/widget_author_guardrail_rules.md",
-    "summary": "Render combined guardrail authoring controls for the selected table."
-  },
-  {
     "id": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
     "name": "widget_author_schema_freshness_profile_rules",
     "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
     "module": "governance_review",
     "classification": "Callable",
-    "inbound": [
-      "fabricops_kit.governance_review.widget_author_guardrail_rules"
-    ],
+    "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
       "fabricops_kit.governance_review._latest_rule",
@@ -5253,7 +5207,8 @@
       "fabricops_kit.governance_review._write_rule_records"
     ],
     "used_in_templates": [
-      "02_pipeline"
+      "02_pipeline",
+      "03_governance"
     ],
     "glossary_terms": [
       "guardrails",
@@ -5334,7 +5289,8 @@
       "fabricops_kit.governance_review.load_rule_review_history"
     ],
     "used_in_templates": [
-      "02_pipeline"
+      "02_pipeline",
+      "03_governance"
     ],
     "glossary_terms": [
       "guardrails",
@@ -5352,50 +5308,11 @@
     ],
     "related_guides": [],
     "source_path": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 2916,
-    "source_end_line": 3016,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2916-L3016",
+    "source_start_line": 2677,
+    "source_end_line": 2777,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777",
     "docs_path": "api/reference/widget_review_guardrail_governance.md",
     "summary": "Render interactive controls for reviewing proposed and bypassed guardrail rules."
-  },
-  {
-    "id": "fabricops_kit.governance_review.widget_review_table_governance",
-    "name": "widget_review_table_governance",
-    "qualified_name": "fabricops_kit.governance_review.widget_review_table_governance",
-    "module": "governance_review",
-    "classification": "Callable",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review._assert_governance_review_context",
-      "fabricops_kit.governance_review._dq_rule_parameters_summary",
-      "fabricops_kit.governance_review.apply_governance_enrichment_action",
-      "fabricops_kit.governance_review.apply_governance_rule_action",
-      "fabricops_kit.governance_review.load_rule_review_history"
-    ],
-    "used_in_templates": [
-      "03_governance"
-    ],
-    "glossary_terms": [
-      "guardrails",
-      "metadata lakehouse",
-      "notebook template"
-    ],
-    "expanded_purpose": "Renders the formal review workflow that reads and appends review history in METADATA_ENRICHMENT_RULES and METADATA_GUARDRAIL_RULES.",
-    "when_to_use": "Use only in 03_governance for formal governance review decisions.",
-    "return_interpretation": "The widget returns controls and action helpers that append formal review rows to the enrichment or guardrail rule history tables.",
-    "common_failure_causes": [
-      "The notebook context is not 03_governance.",
-      "No reviewable records are available.",
-      "The metadata target cannot be written."
-    ],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 2713,
-    "source_end_line": 2914,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2713-L2914",
-    "docs_path": "api/reference/widget_review_table_governance.md",
-    "summary": "Render 03-only formal review controls for enrichment and guardrail records."
   },
   {
     "id": "fabricops_kit.governance_review.widget_select_guardrail_target",

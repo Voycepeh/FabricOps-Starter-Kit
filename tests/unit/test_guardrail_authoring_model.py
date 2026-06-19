@@ -791,8 +791,8 @@ def test_enrichment_widget_exposes_required_authoring_actions(monkeypatch):
     assert widget["build_records"](action="apply_now")[0]["review_state"] == "active_pending_governance_review"
 
 
-def test_review_table_governance_sections_actions_and_replace_mapping(monkeypatch):
-    """Verify the formal review widget sections records and uses replace actions."""
+def test_review_guardrail_governance_actions_and_replace_mapping(monkeypatch):
+    """Verify the canonical governance review widget records and uses replace actions."""
     _install_fake_notebook_widgets(monkeypatch)
     state = {
         "environment_name": "dev",
@@ -805,19 +805,10 @@ def test_review_table_governance_sections_actions_and_replace_mapping(monkeypatc
             _rule(rule_id="old", rule_key="old", activation_state="inactive", is_active=False, review_state="superseded", review_status="superseded"),
         ],
     }
-    widget = governance_review.widget_review_table_governance(state)
+    widget = governance_review.widget_review_guardrail_governance(state)
 
-    assert set(widget["sections"]) == {"Needs governance review", "Currently active", "Rejected or inactive", "Superseded history"}
-    assert widget["allowed_actions"]({"review_state": "pending_governance_review"}) == ["approve_and_activate", "reject", "replace", "view_history"]
-    assert widget["buttons"]["replace"].description == "Replace record"
+    assert widget["controls"]["replacement_key"].description == "Supersedes/replacement"
     replaced = widget["save_record_action"]("replace")
     assert len(replaced) == 2
     assert replaced[0]["review_state"] == "superseded"
     assert replaced[1]["review_state"] == "governance_approved"
-
-    try:
-        governance_review.widget_review_table_governance(state, source_notebook_type="02_pipeline")
-    except PermissionError:
-        pass
-    else:
-        raise AssertionError("Formal review widget should block 02_pipeline context")

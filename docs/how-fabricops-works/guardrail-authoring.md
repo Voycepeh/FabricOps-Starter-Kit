@@ -22,7 +22,7 @@ DQ rule authoring is deterministic and reviewer-controlled in the public authori
 
 ## 03 governance review flow
 
-`03_governance` uses `widget_review_table_governance` to review enrichment and guardrail rows from the rule tables, approve pending records, reject records, replace records, deactivate approved records, and view history. Approval activates or confirms the record as `governance_approved`. Rejection, replacement, and deactivation preserve append-only history instead of deleting prior intent.
+`03_governance` uses `widget_review_guardrail_governance` to review enrichment and guardrail rows from the rule tables, approve pending records, reject records, replace records, deactivate approved records, and view history. Approval activates or confirms the record as `governance_approved`. Rejection, replacement, and deactivation preserve append-only history instead of deleting prior intent.
 
 ## Enforcement
 

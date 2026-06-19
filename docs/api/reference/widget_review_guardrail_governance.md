@@ -5,9 +5,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2916`
+`fabricops_kit/governance_review.py:2677`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2916-L3016">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -93,6 +93,7 @@ Not documented yet
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
 - `02_pipeline`
+- `03_governance`
 
 **Side effects:**
 
@@ -182,10 +183,10 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2916`
+- Source line: `2677`
 - Inbound references count: 0
 - Outbound references count: 4
-- Used in templates: 02_pipeline
+- Used in templates: 02_pipeline, 03_governance
 - Glossary terms: guardrails, metadata lakehouse, notebook template
 
 ### Implementation contract
@@ -211,9 +212,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2916-L3016">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2916-L3016</a>
-- Start line: `2916`
-- End line: `3016`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777</a>
+- Start line: `2677`
+- End line: `2777`
 - Signature:
 
 ```python

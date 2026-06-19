@@ -26,6 +26,15 @@ def _code(path: str) -> str:
     return _code_from_notebook(TEMPLATES / path)
 
 
+def _calls_by_name(code: str) -> dict[str, list[ast.Call]]:
+    tree = ast.parse("\n".join(line for line in code.splitlines() if not line.lstrip().startswith("%")))
+    calls: dict[str, list[ast.Call]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            calls.setdefault(node.func.id, []).append(node)
+    return calls
+
+
 def test_production_and_governance_templates_cover_output_summary_and_review_flows():
     """Verify production and governance templates cover output summary and review flows."""
     production = _code("02_pipeline.ipynb")
@@ -46,9 +55,43 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
         assert expected in production
     assert "widget_select_guardrail_target" in governance
     assert "widget_enrich_table_metadata" in governance
-    assert governance.index("widget_select_guardrail_target") < governance.index("widget_enrich_table_metadata") < governance.index("widget_review_table_governance")
+    assert governance.index("widget_select_guardrail_target") < governance.index("widget_enrich_table_metadata") < governance.index("widget_review_guardrail_governance")
     assert "widget_select_governance_" + "profile_target" not in governance
     assert "widget_review_" + "dq_rules" not in governance
+
+
+def test_governance_template_uses_widget_signatures_and_governance_authoring_stamp():
+    """Verify 03_governance uses public widget signatures and governance authorship stamps."""
+    governance = _code("03_governance.ipynb")
+    calls = _calls_by_name(governance)
+    context_only_widgets = [
+        "widget_select_guardrail_target",
+        "widget_enrich_table_metadata",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_author_dq_rules",
+        "widget_review_guardrail_governance",
+    ]
+
+    for widget_name in context_only_widgets:
+        assert widget_name in calls
+        for call in calls[widget_name]:
+            keyword_names = {keyword.arg for keyword in call.keywords}
+            assert "config" not in keyword_names
+            assert "env" not in keyword_names
+
+    for widget_name in [
+        "widget_author_schema_freshness_profile_rules",
+        "widget_author_dq_rules",
+    ]:
+        keyword_values = {
+            keyword.arg: ast.literal_eval(keyword.value)
+            for keyword in calls[widget_name][0].keywords
+            if keyword.arg in {"source_notebook_type", "created_by_role"}
+        }
+        assert keyword_values == {
+            "source_notebook_type": "03_governance",
+            "created_by_role": "governance",
+        }
 
 
 def test_production_template_enforces_guardrails_before_full_dataset_write():

@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 9</span><span class="reference-chip">Internal helpers: 60</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 7</span><span class="reference-chip">Internal helpers: 60</span><span class="reference-chip">Outbound: 4</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>9</td>
+      <td>7</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -97,13 +97,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><code>_dq_records_from_selection</code> (internal), <code>_latest_rule</code> (internal), <code>_rule_params</code> (internal), <code>_write_rule_records</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Render combined guardrail authoring controls for the selected table.</td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
       <td>Callable</td>
       <td>function</td>
@@ -123,13 +116,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>function</td>
       <td>Render interactive controls for reviewing proposed and bypassed guardrail rules.</td>
       <td>—</td>
-    </tr>
-    <tr>
-      <td><a href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Render 03-only formal review controls for enrichment and guardrail records.</td>
-      <td><code>_assert_governance_review_context</code> (internal), <code>_dq_rule_parameters_summary</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
@@ -170,11 +156,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_dq_records_from_selection</code></span>, <span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../reference/widget_author_guardrail_rules/"><code>widget_author_guardrail_rules</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<a class="reference-chip" href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a class="reference-chip" href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>
-</li>
-<li>
 <a class="reference-chip" href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_latest_rule</code></span>, <span class="reference-chip"><code>_rule_params</code></span>, <span class="reference-chip"><code>_schema_freshness_profile_records_from_selection</code></span>, <span class="reference-chip"><code>_write_rule_records</code></span>
@@ -188,11 +169,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <a class="reference-chip" href="../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>apply_governance_enrichment_action</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>load_rule_review_history</code></span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_assert_governance_review_context</code></span>, <span class="reference-chip"><code>_dq_rule_parameters_summary</code></span>, <span class="reference-chip"><code>apply_governance_enrichment_action</code></span>, <span class="reference-chip"><code>apply_governance_rule_action</code></span>, <span class="reference-chip"><code>load_rule_review_history</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
@@ -226,7 +202,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_assert_governance_review_context</code></td>
-      <td><a href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_authoring_lifecycle</code></td>
@@ -294,7 +270,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_dq_rule_parameters_summary</code></td>
-      <td><a href="../reference/widget_review_table_governance/"><code>widget_review_table_governance</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_dq_summary</code></td>

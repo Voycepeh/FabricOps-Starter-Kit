@@ -5,7 +5,7 @@
 ## Workflow usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb, 03_governance.ipynb
-- **Written by function or widget:** [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md), [`widget_author_guardrail_rules`](../../api/reference/widget_author_guardrail_rules.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
+- **Written by function or widget:** [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
 - **Read by function or widget:** [`enforce_dq_rules`](../../api/reference/enforce_dq_rules.md), [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
 - **Related template step:** 02_pipeline.ipynb, 03_governance.ipynb
 
@@ -78,6 +78,5 @@
 - [`enforce_dq_rules`](../../api/reference/enforce_dq_rules.md)
 - [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
 - [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
-- [`widget_author_guardrail_rules`](../../api/reference/widget_author_guardrail_rules.md)
 - [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md)
 - [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
