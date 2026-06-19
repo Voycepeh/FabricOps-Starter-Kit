@@ -142,6 +142,48 @@ not provision Fabric resources or persist metadata.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L526-L560"><code>NotebookSetupContext(...)</code></a></div>
     </div>
 
+This callable uses 8 internal helpers for audit timestamp, metadata loading, validation, rule parsing, and fabric or spark access.
+
+<div class="reference-helper-groups">
+  <section class="reference-helper-group">
+    <h4>Audit timestamp</h4>
+    <p>Resolve and stamp audit time consistently.</p>
+    <div class="reference-helper-chip-wrap">
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a>
+    </div>
+  </section>
+  <section class="reference-helper-group">
+    <h4>Metadata loading</h4>
+    <p>Load and identify the metadata or table context needed by the callable.</p>
+    <div class="reference-helper-chip-wrap">
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1332-L1371"><code>_get_fabric_runtime_metadata</code></a>
+    </div>
+  </section>
+  <section class="reference-helper-group">
+    <h4>Validation</h4>
+    <p>Validate inputs and guard conditions before the workflow continues.</p>
+    <div class="reference-helper-chip-wrap">
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1324-L1329"><code>_check_spark_session</code></a>
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L736-L836"><code>_run_config_smoke_tests</code></a>
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a>
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L722-L733"><code>_validate_notebook_name</code></a>
+    </div>
+  </section>
+  <section class="reference-helper-group">
+    <h4>Rule parsing</h4>
+    <p>Normalize stored or user-provided values before applying rules.</p>
+    <div class="reference-helper-chip-wrap">
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677"><code>_normalize_path_config</code></a>
+    </div>
+  </section>
+  <section class="reference-helper-group">
+    <h4>Fabric or Spark access</h4>
+    <p>Access Fabric or Spark runtime services used by the implementation.</p>
+    <div class="reference-helper-chip-wrap">
+      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a>
+    </div>
+  </section>
+</div>
 
 <details class="reference-metadata-details">
 <summary>Machine-readable metadata / metadata details</summary>

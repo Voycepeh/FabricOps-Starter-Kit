@@ -347,7 +347,7 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
 
     assert implementation_section.count('??? info "Call flow"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
-    assert 'class="reference-helper-groups"' not in implementation_section
+    assert 'class="reference-helper-groups"' in implementation_section
     assert "Unique internal helpers: 12. Repeated calls may appear in multiple branches." in implementation_section
     assert '<div class="reference-call-tree" role="tree">' in implementation_section
     assert "```text" not in implementation_section
