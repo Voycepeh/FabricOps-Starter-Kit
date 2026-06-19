@@ -1,10 +1,20 @@
 # 02 Pipeline Execution
 
-`02_pipeline` is the executable delivery notebook. It selects the agreement context, reads data, prepares source and target table configs, runs guardrails, writes outputs, and records evidence for support and governance review.
+`02_pipeline` is the executable delivery notebook. It starts a guided pipeline context, reads data, prepares source and target table configs, runs guardrails, writes outputs, and records evidence for support and governance review. The notebook flow is intentionally small: establish context once, keep table settings visible, call reduced-API helpers, and let active defaults carry shared run metadata downstream.
 
-## Agreement selection
+## Guided pipeline context startup
 
-Use [`widget_select_agreement`](../api/reference/widget_select_agreement.md) to select the agreement for the notebook run. Then use [`get_selected_agreement`](../api/reference/get_selected_agreement.md) to retrieve the selected agreement values for pipeline metadata and evidence.
+Start each `02_pipeline` run with [`start_pipeline_run`](../api/reference/start_pipeline_run.md):
+
+```python
+PIPELINE = start_pipeline_run(
+    notebook_type="02_pipeline",
+    select_agreement=True,
+    register_notebook=True,
+)
+```
+
+This single startup step captures the run id, audit timestamp, notebook metadata, and selected agreement context. It also stores active defaults for downstream helpers, so later pipeline calls can reuse the same run and agreement metadata without repeating those values in every function call.
 
 ## Source read
 
@@ -18,7 +28,37 @@ Use [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_c
 
 ## Guardrail execution
 
-Use [`run_table_guardrails`](../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Guardrail results are not just UI messages: they are evidence rows and continuation decisions. The dropdowns used during authoring save rule records in `METADATA_GUARDRAIL_RULES`; runtime interprets those saved records later.
+Use [`run_table_guardrails`](../api/reference/run_table_guardrails.md) to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
+
+```python
+source_profile_results = run_table_guardrails(
+    SOURCE_TABLES,
+    table_role="source",
+    mode="profile",
+)
+
+target_profile_results = run_table_guardrails(
+    TARGET_TABLES,
+    table_role="target",
+    mode="profile",
+)
+
+source_enforcement_results = run_table_guardrails(
+    SOURCE_TABLES,
+    table_role="source",
+    mode="enforce",
+)
+
+target_enforcement_results = run_table_guardrails(
+    TARGET_TABLES,
+    table_role="target",
+    mode="enforce",
+)
+```
+
+`mode="profile"` is non-blocking by default, so the notebook can collect catalogue and guardrail visibility without stopping the run. `mode="enforce"` defaults `stop_on_failure=True`, so failed error-severity checks stop before unsafe target publication. Omitted `run_id`, `spark_session`, `pipeline_name`, `notebook_id`, `notebook_registry_id`, `agreement_id`, and `agreement_contract_version` values are resolved from the active pipeline context created by `start_pipeline_run`.
+
+Guardrail results are not just UI messages: they are evidence rows and continuation decisions. The dropdowns used during authoring save rule records in `METADATA_GUARDRAIL_RULES`; runtime interprets those saved records later.
 
 ### Schema mode
 
@@ -48,23 +88,34 @@ DQ does not quarantine rows, write row-level failure metadata, filter invalid ro
 
 ## Target write
 
-Use [`write_data`](../api/reference/write_data.md) after source and target guardrails allow the run to continue. The template keeps write mode and target routing visible so users understand what will be published.
+Use [`write_data`](../api/reference/write_data.md) after enforcement guardrails allow the run to continue. The template keeps write mode and target routing visible so users understand what will be published, while active pipeline defaults keep shared run metadata consistent.
 
 ## Lineage writing
 
-Use [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage.md) to append source-to-target lineage evidence to `METADATA_DATA_LINEAGE_TABLE`.
+Use [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage.md) to append source-to-target lineage evidence to `METADATA_DATA_LINEAGE_TABLE`. The simplified flow writes lineage after successful target writes so the run summary can include lineage status.
 
 ## Pipeline run summary
 
-Use [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary.md) to append run-level status and selected agreement context to `METADATA_PIPELINE_RUNS`.
+Use [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary.md) to append run-level status to `METADATA_PIPELINE_RUNS`:
+
+```python
+runtime_summary_result = write_pipeline_run_summary(
+    source_guardrail_results=source_enforcement_results,
+    target_guardrail_results=target_enforcement_results,
+    target_write_status=target_write_status,
+    lineage_result=lineage_result,
+)
+```
+
+The summary helper derives status, guardrail rollups, target write status, lineage status, and active agreement/run metadata from the result bundles and active pipeline context. Notebook authors should pass the result objects produced by the reduced flow instead of rebuilding summary fields manually.
 
 ## Guardrail result display
 
-Use [`display_guardrail_results`](../api/reference/display_guardrail_results.md) to show guardrail outcomes in `summary`, `detailed`, or `debug` mode. The display mode changes presentation only; the runtime result bundle remains available to the notebook.
+Use [`display_guardrail_results`](../api/reference/display_guardrail_results.md) to show profile or enforcement outcomes in `summary`, `detailed`, or `debug` mode. The display mode changes presentation only; the runtime result bundles remain available for continuation checks and run summary writing.
 
 ## Optional enrichment and guardrail authoring
 
-After profiling evidence exists, `02_pipeline` can use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to pick a profiled table, [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) to author guardrail intent, and [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive enrichment. The current `02_pipeline` template also imports and calls [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md); formal table governance review is still owned by [03 Governance Review](governance-review.md).
+After profiling evidence exists, the simplified `02_pipeline` flow can still use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to pick a profiled table, [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) to author guardrail intent, and [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive enrichment. The template can also call [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md); formal table governance review is still owned by [03 Governance Review](governance-review.md).
 
 ## Guardrail evidence tables
 
@@ -84,6 +135,7 @@ After profiling evidence exists, `02_pipeline` can use [`widget_select_guardrail
 
 ### Implementation guidance
 
+- Start the notebook with [`start_pipeline_run`](../api/reference/start_pipeline_run.md), then rely on active defaults instead of repeating run and agreement metadata in every helper call.
 - Keep source and target table config dictionaries beginner-editable, then let [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md) normalize them for runtime helpers.
 - Treat `append` and `overwrite` as physical write modes only; profile behaviour uses `static_data`, `changing_data`, or `skip`.
 - Use warning DQ rules for observability that should not block writes, and error DQ rules for checks that must stop publication.
