@@ -958,11 +958,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  padding: 0;
+  background: transparent;
   cursor: pointer;
   color: var(--md-primary-fg-color--dark);
   font-weight: 700;
   line-height: 1.45;
   list-style: none;
+}
+
+.md-typeset .glossary-chip[open] > summary {
+  background: transparent;
 }
 
 .md-typeset .glossary-chip > summary::-webkit-details-marker {
