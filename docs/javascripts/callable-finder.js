@@ -51,6 +51,16 @@
     return 0;
   }
 
+  function initRenderedDocLinks() {
+    Array.from(document.querySelectorAll("a[href]")).forEach((anchor) => {
+      const rawHref = anchor.getAttribute("href");
+      if (!rawHref || !rawHref.endsWith(".md") && !rawHref.includes(".md#") && !rawHref.includes(".md?")) return;
+      if (/^(https?:|mailto:|tel:)/i.test(rawHref)) return;
+      const rewritten = rawHref.replace(/\.md(?=([?#]|$))/i, "/");
+      anchor.setAttribute("href", rewritten);
+    });
+  }
+
   function initCallableFinder() {
     const container = document.querySelector("[data-callable-finder]");
     const input = document.getElementById("callable-finder-input");
@@ -140,8 +150,10 @@
     input.addEventListener("input", update);
     update();
   }
+  document.addEventListener("DOMContentLoaded", initRenderedDocLinks);
   document.addEventListener("DOMContentLoaded", initCallableFinder);
   document.addEventListener("DOMContentLoaded", initCallableMapFinder);
+  if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(initRenderedDocLinks);
   if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(initCallableFinder);
   if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(initCallableMapFinder);
 })();
