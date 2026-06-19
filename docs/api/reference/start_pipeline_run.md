@@ -7,7 +7,7 @@ Start a guided notebook run and store runtime defaults.
 
 `fabricops_kit/pipeline.py:63`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L150">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L151">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -40,7 +40,7 @@ def start_pipeline_run(
     metadata_schema: str | None=None,
     pipeline_name: str | None=None,
     context: dict[str, Any] | None=None,
-) -> _PipelineRunContext:
+) -> Any:
 ```
 
 </div>
@@ -71,11 +71,11 @@ PIPELINE = start_pipeline_run(notebook_type="02_pipeline", select_agreement=True
 
 ## Returns
 
-Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults.
+Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults. The concrete context class is internal and not a primary public API.
 
 ### Return interpretation
 
-The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically.
+The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically. The concrete context class is internal and not a primary public API.
 
 ## Raises / Errors
 
@@ -218,7 +218,7 @@ parameters on guardrail and summary helpers for advanced notebooks.
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L195-L198"><code>_html_escape</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L46-L52"><code>_notebook_global</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L44-L53"><code>_notebook_registration_key</code></a>
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L158-L159"><code>_now_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"><code>_now_iso</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L23-L40"><code>_PipelineRunContext</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L276-L395"><code>_register_current_notebook</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L63-L72"><code>_require_ipywidgets</code></a>
@@ -252,7 +252,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 - **required_context:** Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config.
 - **inputs:** notebook_type, select_agreement, register_notebook, read_only, and optional runtime overrides.
-- **output:** Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults.
+- **output:** Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults. The concrete context class is internal and not a primary public API.
 - **side_effects:** Stores active in-memory context for the current notebook session; renders agreement selection when select_agreement=True and registers only when register_notebook=True.
 - **failure_modes:** Not documented yet
 - **verification:** Verify delivery notebooks use register_notebook=True and read-only exploration notebooks use register_notebook=False with read_only=True.
@@ -273,9 +273,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L150">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L150</a>
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L151">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L63-L151</a>
 - Start line: `63`
-- End line: `150`
+- End line: `151`
 - Signature:
 
 ```python
@@ -289,7 +289,7 @@ def start_pipeline_run(
     metadata_schema: str | None=None,
     pipeline_name: str | None=None,
     context: dict[str, Any] | None=None,
-) -> _PipelineRunContext:
+) -> Any:
 ```
 
 ### Internal relationship graph

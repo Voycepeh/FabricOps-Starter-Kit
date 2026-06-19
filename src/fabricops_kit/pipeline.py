@@ -71,7 +71,7 @@ def start_pipeline_run(
     metadata_schema: str | None = None,
     pipeline_name: str | None = None,
     context: dict[str, Any] | None = None,
-) -> _PipelineRunContext:
+) -> Any:
     """Start a guided notebook run and store runtime defaults.
 
     Parameters
@@ -102,10 +102,11 @@ def start_pipeline_run(
 
     Returns
     -------
-    _PipelineRunContext
+    Any
         Internal context object with resolved runtime defaults. Most notebooks
         use it only as ``PIPELINE`` for ``run_id`` and ``pipeline_name`` when
-        preparing target configs or lineage.
+        preparing target configs or lineage. The concrete context class is
+        intentionally internal and not part of the primary public API.
 
     Notes
     -----
