@@ -149,10 +149,6 @@ These notebooks are release-specific validation aids. Optional examples are rele
 | [`templates/notebooks/example_pipeline_demo.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb) | Generates deterministic `demo_` source scenario tables for the real `02_pipeline` template to demonstrate happy path, schema, DQ, freshness, and load-behaviour guardrails. | [`write_data`](../api/reference/write_data.md) |
 | [`templates/notebooks/example_dq_rule_smoke_test.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb) | Demonstrates DQ rule evaluation, warning behavior, and error blocking behavior using smoke-test data and rules. | [`write_data`](../api/reference/write_data.md), [`enforce_dq_rules`](../api/reference/enforce_dq_rules.md) |
 
-![FabricOps workspace setup](../assets/fabric-example-workspace-setup.png)
 
-## Implementation note
-
-The starter notebooks intentionally call shared helper functions instead of hiding workflow behavior in large custom cells. This keeps setup, IO, profiling, guardrails, lineage, and review behavior reusable across notebooks while still letting users inspect the implementation through the generated [Function Reference](../reference/index.md).
 
 Useful starting points include [setup_notebook](../api/reference/setup_notebook.md), [`read_data`](../api/reference/read_data.md), [`profile_dataframe`](../api/reference/profile_dataframe.md), [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md), [`enforce_dq_rules`](../api/reference/enforce_dq_rules.md), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage.md), and [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md).
