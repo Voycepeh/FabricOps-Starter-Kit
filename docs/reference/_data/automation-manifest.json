@@ -3790,8 +3790,8 @@
     "common_failure_causes": "- The DataFrame is empty or missing expected columns.\n- Requested statistics are unsupported for a column type.\n- Spark actions fail while computing counts or summaries.\n- Excluded columns remove fields needed for review.",
     "related_guides": [
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-execution.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       },
       {
         "title": "Governance Review",
@@ -11604,8 +11604,8 @@
         "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-execution.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       }
     ],
     "preferred_example": "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role=\"source\")",
@@ -11673,8 +11673,8 @@
     "common_failure_causes": "- One of the table configs is incomplete.\n- A schema, freshness, profile behavior, or DQ check fails.\n- Approved metadata evidence cannot be read.\n- Spark cannot profile or validate one of the DataFrames.",
     "related_guides": [
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-execution.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       }
     ],
     "preferred_example": "source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)",
@@ -11732,8 +11732,8 @@
         "path": "../../how-fabricops-works/notebook-templates/index.md"
       },
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-execution.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       }
     ],
     "preferred_example": "PIPELINE = start_pipeline_run(notebook_type=\"02_pipeline\", select_agreement=True, register_notebook=True)",
@@ -11896,8 +11896,8 @@
     "common_failure_causes": "- Required run identifiers are missing.\n- Guardrail result structures are malformed.\n- Metadata routing is unavailable.\n- The configured summary table cannot be written.",
     "related_guides": [
       {
-        "title": "Pipeline Guardrails",
-        "path": "../../how-fabricops-works/pipeline-execution.md"
+        "title": "Pipeline Execution",
+        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
       },
       {
         "title": "Metadata Tables",

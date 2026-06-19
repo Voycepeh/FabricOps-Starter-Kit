@@ -393,5 +393,5 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Pipeline Guardrails](../../how-fabricops-works/pipeline-execution.md)
+- [Pipeline Execution](../../how-fabricops-works/notebook-templates/pipeline-execution.md)
 - [Metadata Tables](../../reference/metadata-tables/index.md)
