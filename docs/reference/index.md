@@ -271,7 +271,7 @@ Use the finder below to look up exported public functions from active v1 modules
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>run_table_guardrails</code></li></ul></details>
   </div>
 </article>
-<article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
+<article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-function-type="advanced-public" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return the agreement selected by widget_select_agreement.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
@@ -281,7 +281,7 @@ Use the finder below to look up exported public functions from active v1 modules
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run</code></li></ul></details>
   </div>
 </article>
-<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="—" data-function-type="advanced-public" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
+<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-function-type="advanced-public" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-advanced-public">Advanced public</span><span class="reference-chip">—</span></p>
