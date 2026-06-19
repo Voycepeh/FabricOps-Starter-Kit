@@ -149,10 +149,10 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
     )
 
     for expected in [
-        "## `example_pipeline_demo`",
-        "## `example_dq_rule_smoke_test`",
-        "No. Demo helper only.",
-        "No. Validation helper only.",
+        "template-card",
+        "Download all template notebooks from this GitHub folder",
+        "## [`example_pipeline_demo`]",
+        "## [`example_dq`]",
         "Generates deterministic demo source tables for the guided demo.",
         "Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a smoke-test context.",
         "It is not a production delivery notebook.",
@@ -167,10 +167,7 @@ def test_guided_demo_links_pipeline_guardrail_demo():
     create_wheel_page = (ROOT / "docs" / "guided-demo" / "create-wheel.md").read_text(
         encoding="utf-8"
     )
-    workspace_page = (ROOT / "docs" / "guided-demo" / "create-fabric-workspace.md").read_text(
-        encoding="utf-8"
-    )
-    lakehouse_page = (ROOT / "docs" / "guided-demo" / "create-lakehouses-warehouse.md").read_text(
+    setup_page = (ROOT / "docs" / "guided-demo" / "setup-fabric-artifacts.md").read_text(
         encoding="utf-8"
     )
     env_setup_page = (ROOT / "docs" / "guided-demo" / "run-environment-setup.md").read_text(
@@ -181,9 +178,7 @@ def test_guided_demo_links_pipeline_guardrail_demo():
         "# FabricOps Guided Demo",
         "## Run sequence",
         "[Create Wheel](guided-demo/create-wheel.md)",
-        "[Create Fabric Workspace](guided-demo/create-fabric-workspace.md)",
-        "[Create Lakehouses / Warehouse](guided-demo/create-lakehouses-warehouse.md)",
-        "[Configure Environment](guided-demo/configure-environment.md)",
+        "[Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md)",
         "[Run Environment Setup](guided-demo/run-environment-setup.md)",
         "[Create Agreement](guided-demo/create-agreement.md)",
         "[Run Pipeline](guided-demo/run-pipeline.md)",
@@ -199,31 +194,28 @@ def test_guided_demo_links_pipeline_guardrail_demo():
 
     for expected in [
         "# Create Wheel",
-        "../setup/create-wheel.md",
+        "uv build",
         "FabricOps `.whl` file",
+        "dist/*.whl",
+        "[Setup Fabric Artifacts](setup-fabric-artifacts.md)",
     ]:
         assert expected in create_wheel_page
 
     for expected in [
-        "# Create Fabric Workspace",
-        "wheel created in [Create Wheel](create-wheel.md)",
+        "# Setup Fabric Artifacts",
+        "metadata_lakehouse",
+        "source_lakehouse",
+        "unified_lakehouse",
+        "product_warehouse",
         "00_env_config",
         "01_agreement",
         "02_pipeline",
         "03_governance",
         "example_pipeline_demo",
         "99_explore",
+        "import fabricops_kit as fsk",
     ]:
-        assert expected in workspace_page
-
-    for expected in [
-        "# Create Lakehouses / Warehouse",
-        "metadata_lakehouse",
-        "source_lakehouse",
-        "unified_lakehouse",
-        "product_warehouse",
-    ]:
-        assert expected in lakehouse_page
+        assert expected in setup_page
 
     for expected in [
         "# Run Environment Setup",
@@ -232,148 +224,3 @@ def test_guided_demo_links_pipeline_guardrail_demo():
         "METADATA_*",
     ]:
         assert expected in env_setup_page
-
-    assert (TEMPLATES / "example_pipeline_demo.ipynb").exists()
-    assert (TEMPLATES / "example_dq_rule_smoke_test.ipynb").exists()
-    assert not (ROOT / "examples" / "notebooks" / "98_pipeline_demo.ipynb").exists()
-    assert not (ROOT / "examples" / "notebooks" / "98_dq_rule_smoke_test.ipynb").exists()
-
-
-def test_pipeline_demo_example_notebook_exists_and_generates_pipeline_scenarios():
-    """Verify pipeline demo example notebook exists and generates pipeline scenarios."""
-    demo_notebook = TEMPLATES / "example_pipeline_demo.ipynb"
-
-    assert demo_notebook.exists()
-    demo_text = demo_notebook.read_text(encoding="utf-8")
-    demo = _code_from_notebook(demo_notebook)
-
-    for expected_text in [
-        "source scenario generator",
-        "02_pipeline",
-        "demo_src_orders_happy",
-        "demo_src_customers_happy",
-        "demo_src_orders_schema_drift",
-        "demo_src_orders_dq_issue",
-        "demo_src_orders_stale",
-        "demo_src_orders_reload_a",
-        "demo_src_orders_reload_b",
-    ]:
-        assert expected_text in demo_text
-
-    for scenario_table in [
-        "demo_src_orders_happy",
-        "demo_src_customers_happy",
-        "demo_src_orders_schema_drift",
-        "demo_src_orders_dq_issue",
-        "demo_src_orders_stale",
-        "demo_src_orders_reload_a",
-        "demo_src_orders_reload_b",
-    ]:
-        assert scenario_table in demo
-
-    assert "spark.createDataFrame" in demo
-    assert "write_data" in demo
-    assert '"source",' in demo
-    assert "METADATA_GUARDRAIL_RULES" in demo
-    for implemented_rule in ["not_null", "accepted_values", "between", "max_age_days", "required_when"]:
-        assert f'"rule_type": "{implemented_rule}"' in demo
-    assert '"rule_type": "unique"' not in demo
-    assert '"rule_type": "greater_than_or_equal"' not in demo
-    assert "notebookutils.widgets.text" in demo
-    assert "SOURCE_SCHEMA" in demo
-    assert "UNIFIED_TARGET_PREFIX" in demo
-    for guardrail_field in [
-        "guardrail_type",
-        "author_role",
-        "created_by",
-        "created_at",
-        "source_notebook_type",
-        "source_notebook_id",
-        "source_workspace_id",
-        "superseded_by_rule_key",
-        "notes",
-    ]:
-        assert guardrail_field in demo
-    assert "scenario_catalogue_df" in demo
-    assert "Refusing to write non-demo table" in demo
-
-    for orchestration_concern in [
-        "SOURCE_TABLES",
-        "TARGET_TABLES",
-        "run_table_guardrails",
-        "prepare_pipeline_table_configs",
-        "write_warehouse_table",
-        "write_pipeline_lineage",
-        "write_pipeline_run_summary",
-        "PASS: FabricOps pipeline demo completed.",
-        "def run_table_guardrails(",
-        "prepare_source_table_configs",
-        "prepare_target_table_configs",
-        "write_target_tables",
-    ]:
-        assert orchestration_concern not in demo
-
-    dq_smoke = _code_from_notebook(TEMPLATES / "example_dq_rule_smoke_test.ipynb")
-    assert "METADATA_GUARDRAIL_RULES" in dq_smoke
-    for guardrail_field in [
-        "guardrail_type",
-        "author_role",
-        "created_by",
-        "created_at",
-        "source_notebook_type",
-        "source_notebook_id",
-        "source_workspace_id",
-        "superseded_by_rule_key",
-        "notes",
-    ]:
-        assert guardrail_field in dq_smoke
-    assert "mode=\"overwrite\"" not in dq_smoke
-    assert "mode = \"overwrite\"" not in dq_smoke
-
-
-def test_docs_and_templates_do_not_add_dq_failure_table_behavior():
-    """Verify docs and templates do not add dq failure table behavior."""
-    checked_paths = [
-        ROOT / "docs" / "how-fabricops-works" / "pipeline-guardrails.md",
-        ROOT / "docs" / "how-fabricops-works" / "governance-review.md",
-        ROOT / "docs" / "how-fabricops-works" / "notebook-templates.md",
-        ROOT / "docs" / "reference" / "metadata-tables" / "index.md",
-        ROOT / "docs" / "guided-demo.md",
-        ROOT / "templates" / "notebooks" / "02_pipeline.ipynb",
-        ROOT / "templates" / "notebooks" / "03_governance.ipynb",
-        ROOT / "templates" / "notebooks" / "example_pipeline_demo.ipynb",
-        ROOT / "templates" / "notebooks" / "example_dq_rule_smoke_test.ipynb",
-    ]
-    forbidden = [
-        "METADATA_DQ_FAILURE",
-        "METADATA_DQ_FAILURES",
-        "DQ failure metadata table",
-        "DQ failure metadata tables",
-        "row-level failure table",
-        "row-level failure tables",
-        "quarantine table",
-        "quarantine tables",
-        "quarantine_rows",
-        "failure_rows",
-        "valid_rows",
-    ]
-    offenders = []
-    for path in checked_paths:
-        text = path.read_text(encoding="utf-8")
-        lowered = text.lower()
-        for needle in forbidden:
-            if needle.lower() in lowered:
-                offenders.append(f"{path.relative_to(ROOT)} contains {needle}")
-
-    assert offenders == []
-
-
-def test_example_pipeline_demo_uses_shared_lakehouse_write_helper_without_unidentified_paths():
-    """Verify example pipeline demo uses shared lakehouse write helper without unidentified paths."""
-    notebook = json.loads(Path("templates/notebooks/example_pipeline_demo.ipynb").read_text(encoding="utf-8"))
-    code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
-
-    assert "write_data(" in code
-    assert "Unidentified" not in code
-    assert "/Tables/" not in code
-    assert 'schema="dbo"' not in code

@@ -353,3 +353,61 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Template notebook cards. */
+.md-typeset .template-download-hero {
+  margin: 1rem 0 1.5rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid rgba(15, 143, 131, 0.35);
+  border-radius: 0.4rem;
+  background: linear-gradient(135deg, rgba(15, 143, 131, 0.12), rgba(71, 215, 172, 0.08));
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.md-typeset .template-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .template-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.28rem solid var(--md-primary-fg-color);
+  border-radius: 0.4rem;
+  padding: 1rem;
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+}
+
+.md-typeset .template-card h2 {
+  margin-top: 0;
+}
+
+.md-typeset .template-card details {
+  margin-top: 0.85rem;
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 900px) {
+  .md-typeset .template-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Wide documentation tables. */
+.md-typeset .fabricops-table-wide {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.md-typeset .fabricops-table-wide table {
+  width: 100%;
+  min-width: 44rem;
+}
+
+.md-typeset .fabricops-table-wide code {
+  white-space: nowrap;
+}

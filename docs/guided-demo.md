@@ -24,15 +24,13 @@ Keep the default demo values for your first run so the notebooks and expected me
 | Order | Step | What you do | What you should have afterward |
 | ----- | ---- | ----------- | ------------------------------ |
 | 1 | [Create Wheel](guided-demo/create-wheel.md) | Build the FabricOps wheel locally. | A `.whl` file ready for Fabric Environment upload. |
-| 2 | [Create Fabric Workspace](guided-demo/create-fabric-workspace.md) | Create or choose the Fabric workspace and attach the Fabric Environment that uses the wheel from step 1. | A workspace where copied notebooks can import `fabricops_kit`. |
-| 3 | [Create Lakehouses / Warehouse](guided-demo/create-lakehouses-warehouse.md) | Create the metadata, source, unified, and optional warehouse items used by the demo. | Named runtime targets ready for `00_env_config`. |
-| 4 | [Configure Environment](guided-demo/configure-environment.md) | Edit the user-owned values in `00_env_config`. | Environment, path, metadata routing, runtime validation, and audit settings ready to run. |
-| 5 | [Run Environment Setup](guided-demo/run-environment-setup.md) | Run `00_env_config` setup cells. | Shared `CONFIG` and `ENV` values plus registered metadata tables. |
-| 6 | [Create Agreement](guided-demo/create-agreement.md) | Run `01_agreement` to capture owner, purpose, readiness, and evidence. | Agreement metadata that the pipeline can select. |
-| 7 | [Run Pipeline](guided-demo/run-pipeline.md) | Run `example_pipeline_demo`, then run `02_pipeline`. | Demo source tables, governed outputs, profiles, guardrail outcomes, lineage, and run summaries. |
-| 8 | [Enrich Metadata](guided-demo/enrich-metadata.md) | Add business context, classifications, and notes to observed metadata. | Enrichment records tied to catalogue evidence. |
-| 9 | [Review Guardrails](guided-demo/review-guardrails.md) | Use governance review widgets to approve or update guardrail intent, then rerun the pipeline when needed. | Approved rules and fresh runtime results from active checks. |
-| 10 | [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md) | Inspect generated metadata reference pages or use `99_explore` for troubleshooting. | Traceable answers about agreements, profiles, rules, lineage, and runs. |
+| 2 | [Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md) | Create or choose the Fabric workspace, data items, Environment, wheel install, and copied notebooks. | A workspace where copied notebooks can import `fabricops_kit` and route to named runtime targets. |
+| 3 | [Run Environment Setup](guided-demo/run-environment-setup.md) | Run `00_env_config` setup cells. | Shared `CONFIG` and `ENV` values plus registered metadata tables. |
+| 4 | [Create Agreement](guided-demo/create-agreement.md) | Run `01_agreement` to capture owner, purpose, readiness, and evidence. | Agreement metadata that the pipeline can select. |
+| 5 | [Run Pipeline](guided-demo/run-pipeline.md) | Run `example_pipeline_demo`, then run `02_pipeline`. | Demo source tables, governed outputs, profiles, guardrail outcomes, lineage, and run summaries. |
+| 6 | [Enrich Metadata](guided-demo/enrich-metadata.md) | Add business context, classifications, and notes to observed metadata. | Enrichment records tied to catalogue evidence. |
+| 7 | [Review Guardrails](guided-demo/review-guardrails.md) | Use governance review widgets to approve or update guardrail intent, then rerun the pipeline when needed. | Approved rules and fresh runtime results from active checks. |
+| 8 | [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md) | Inspect generated metadata reference pages or use `99_explore` for troubleshooting. | Traceable answers about agreements, profiles, rules, lineage, and runs. |
 
 ## Success criteria
 
