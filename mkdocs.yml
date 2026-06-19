@@ -22,6 +22,7 @@ nav:
   - How FabricOps Works: how-fabricops-works/index.md
   - Guided Demo:
       - Overview: guided-demo.md
+      - Setup Fabric Workspace: guided-demo/setup-fabric-workspace.md
       - Configure Environment: guided-demo/configure-environment.md
       - Create Agreement: guided-demo/create-agreement.md
       - Run Pipeline: guided-demo/run-pipeline.md
