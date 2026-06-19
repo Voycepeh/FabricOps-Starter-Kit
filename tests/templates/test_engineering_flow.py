@@ -43,12 +43,12 @@ def test_explore_template_is_read_only_context_aware_sequence():
     assert "read-only" in markdown
     assert "does **not** approve" in markdown
     assert "%run 00_env_config" in code
-    assert "PIPELINE = start_pipeline_run(" in code
-    assert "select_agreement=True" in code
+    assert "AGREEMENT_CONTEXT = widget_select_agreement(" in code
+    assert "select_agreement=True" not in code
     assert "register_notebook=False" in code
     assert "read_only=True" in code
     assert 'notebook_type="99_explore"' in code
-    assert "AGREEMENT = PIPELINE.agreement" in code
+    assert "AGREEMENT = AGREEMENT_CONTEXT.agreement" in code
     assert "get_latest_metadata_catalogue(" in code
     assert "latest_catalogue" in code
     assert "RUN_PROFILE = True" in code

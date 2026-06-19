@@ -99,7 +99,7 @@ Use the finder below to look up Workflow and Composable functions from active v1
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-workflow">Workflow</span><span class="reference-chip">02_pipeline, example_dq_rule_smoke_test</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, example_dq_rule_smoke_test</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 18</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>profile_dataframe</code></li><li><code>_run_active_dq_guardrail</code></li><li><code>enforce_freshness</code></li><li><code>enforce_freshness_rule</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>_build_metadata_table_key</code></li><li><code>_write_guardrail_result_row</code></li><li><code>_active_pipeline_context</code></li><li><code>_build_guardrail_blocking_message_from_bundle</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 18</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_active_agreement_context</code></li><li><code>profile_dataframe</code></li><li><code>_run_active_dq_guardrail</code></li><li><code>enforce_freshness</code></li><li><code>enforce_freshness_rule</code></li><li><code>enforce_profile_behavior</code></li><li><code>stop_if_failed</code></li><li><code>_build_metadata_table_key</code></li><li><code>_write_guardrail_result_row</code></li><li><code>_build_guardrail_blocking_message_from_bundle</code></li><li><code>_build_guardrail_evidence_definitions</code></li><li><code>_guardrail_can_continue</code></li><li><code>_table_key</code></li><li><code>_table_name</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li><li><code>write_catalogue_evidence</code></li></ul></details>
 
   </div>
 </article>
@@ -120,16 +120,6 @@ Use the finder below to look up Workflow and Composable functions from active v1
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 00_env_config</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 4</span></summary><ul><li><code>NotebookSetupContext</code></li><li><code>_get_store</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_validate_framework_config</code></li></ul></details>
-
-  </div>
-</article>
-<article id="pipeline-start_pipeline_run" class="reference-catalogue-item" data-callable-row="true" data-callable-name="start_pipeline_run" data-callable-module="pipeline" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="workflow" data-callable-purpose="Start a guided notebook run and store runtime defaults.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Start a guided notebook run and store runtime defaults.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-workflow">Workflow</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 6</span></summary><ul><li><code>get_selected_agreement</code></li><li><code>widget_select_agreement</code></li><li><code>_PipelineRunContext</code></li><li><code>_notebook_global</code></li><li><code>_now_iso</code></li><li><code>_runtime_metadata_value</code></li></ul></details>
 
   </div>
 </article>
@@ -203,6 +193,16 @@ Use the finder below to look up Workflow and Composable functions from active v1
 
   </div>
 </article>
+<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="workflow" data-callable-purpose="Render an agreement selector and establish downstream runtime context.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render an agreement selector and establish downstream runtime context.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-workflow">Workflow</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline, 99_explore</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 11</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_AgreementRuntimeContext</code></li><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_notebook_global</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_runtime_metadata_value</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
+
+  </div>
+</article>
 <article id="governance_review-widget_select_guardrail_target" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_guardrail_target" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="workflow" data-callable-purpose="Render an interactive target selector for guardrail authoring and governance review.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render an interactive target selector for guardrail authoring and governance review.</p>
@@ -239,18 +239,8 @@ Use the finder below to look up Workflow and Composable functions from active v1
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/pipeline/" title="Open pipeline module page" aria-label="Open pipeline module page">pipeline</a><span class="reference-chip reference-chip-type reference-chip-workflow">Workflow</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_active_pipeline_context</code></li><li><code>_definition_name</code></li><li><code>_now_iso</code></li><li><code>_summary_status</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 7</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_active_agreement_context</code></li><li><code>_configured_lakehouse_schema</code></li><li><code>write_lakehouse_table</code></li><li><code>_definition_name</code></li><li><code>_now_iso</code></li><li><code>_summary_status</code></li></ul></details>
 
-  </div>
-</article>
-<article id="data_agreement-get_selected_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_selected_agreement" data-callable-module="data_agreement" data-function-type="composable" data-callable-purpose="Return the agreement selected by widget_select_agreement.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_selected_agreement/"><code>get_selected_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Return the agreement selected by widget_select_agreement.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run</code></li></ul></details>
   </div>
 </article>
 <article id="fabric_input_output-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Read a CSV file from a configured Fabric lakehouse Files path.">
@@ -303,16 +293,6 @@ Use the finder below to look up Workflow and Composable functions from active v1
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>read_data</code></li></ul></details>
   </div>
 </article>
-<article id="data_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-function-type="composable" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/data_agreement/" title="Open data_agreement module page" aria-label="Open data_agreement module page">data_agreement</a><span class="reference-chip reference-chip-type reference-chip-composable">Composable</span><span class="reference-chip">—</span></p>
-
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound 8</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>_html_escape</code></li><li><code>_latest_agreement_versions</code></li><li><code>_list_data_agreements</code></li><li><code>_render_searchable_selector</code></li><li><code>_require_ipywidgets</code></li><li><code>_current_notebook_active_registrations</code></li><li><code>_register_current_notebook</code></li></ul></details>
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound 1</span></summary><ul><li><code>start_pipeline_run</code></li></ul></details>
-  </div>
-</article>
 <article id="fabric_input_output-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="fabric_input_output" data-callable-usage-source="Manual/module API" data-function-type="composable" data-callable-purpose="Write a Spark DataFrame to a Fabric lakehouse Delta table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/modules/fabric_input_output/"><code>write_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a Spark DataFrame to a Fabric lakehouse Delta table.</p>
@@ -339,13 +319,11 @@ Use the finder below to look up Workflow and Composable functions from active v1
 
 These public or module-level functions are standalone building blocks for customization or decoupled notebook authoring. They are not directly called by core starter template code cells and are not included in the Workflow count.
 
-- [`get_selected_agreement`](../api/reference/get_selected_agreement/)
 - [`read_lakehouse_csv`](../api/modules/fabric_input_output/) (module-level composable)
 - [`read_lakehouse_excel`](../api/modules/fabric_input_output/) (module-level composable)
 - [`read_lakehouse_parquet`](../api/modules/fabric_input_output/) (module-level composable)
 - [`read_lakehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
 - [`read_warehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
-- [`widget_select_agreement`](../api/reference/widget_select_agreement/)
 - [`write_lakehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
 - [`write_warehouse_table`](../api/modules/fabric_input_output/) (module-level composable)
 

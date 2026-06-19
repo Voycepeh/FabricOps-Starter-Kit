@@ -56,7 +56,7 @@ latest_catalogue = get_latest_metadata_catalogue(table_name=source_table_name, a
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `table_name` | `str` | Yes | Source table name to look up in ``METADATA_DATA_CATALOGUE``. |
-| `agreement` | `Mapping[str, Any] \| None` | No | Selected agreement context from :func:`get_selected_agreement`. When an agreement id or contract version is present, matching catalogue rows are preferred. |
+| `agreement` | `Mapping[str, Any] \| None` | No | Selected agreement context from :func:`widget_select_agreement`. When an agreement id or contract version is present, matching catalogue rows are preferred. |
 | `metadata_schema` | `str \| None` | No | Explicit metadata Lakehouse schema from ``00_env_config``. When omitted, the configured metadata schema is resolved from the active context. |
 | `spark_session` | `Any` | No | Spark session used to read metadata and return display-friendly rows. |
 | `context` | `dict[str, Any] \| None` | No | Advanced FabricOps context override. Defaults to the active ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |

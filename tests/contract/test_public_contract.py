@@ -22,7 +22,6 @@ APPROVED_V1_CALLABLES = {
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
     "widget_select_agreement",
-    "get_selected_agreement",
     "read_data",
     "write_data",
     "profile_dataframe",
@@ -30,7 +29,6 @@ APPROVED_V1_CALLABLES = {
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "start_pipeline_run",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -40,6 +38,8 @@ APPROVED_V1_CALLABLES = {
     "widget_review_guardrail_governance",
 }
 REMOVED_LEGACY_ALIASES = {
+    "get_selected_agreement",
+    "start_pipeline_run",
     "validate_schema",
     "validate_schema_rule",
     "monitor_data_changes",

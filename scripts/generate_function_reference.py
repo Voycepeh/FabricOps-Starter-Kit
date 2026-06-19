@@ -132,7 +132,6 @@ V1_CALLABLES = {
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
     "widget_select_agreement",
-    "get_selected_agreement",
     "read_data",
     "write_data",
     "profile_dataframe",
@@ -140,7 +139,6 @@ V1_CALLABLES = {
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "start_pipeline_run",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -1840,9 +1838,9 @@ _METADATA_TABLE_PURPOSES = {
 
 _METADATA_TABLE_RELATIONSHIPS = {
     "METADATA_DATA_STEWARD": {"templates": ["01_agreement.ipynb"], "written_by": ["widget_render_data_steward"], "read_by": ["widget_render_data_agreement", "widget_select_agreement"]},
-    "METADATA_DATA_AGREEMENT": {"templates": ["01_agreement.ipynb", "02_pipeline.ipynb"], "written_by": ["widget_render_data_agreement"], "read_by": ["widget_select_agreement", "get_selected_agreement", "write_pipeline_run_summary"]},
+    "METADATA_DATA_AGREEMENT": {"templates": ["01_agreement.ipynb", "02_pipeline.ipynb"], "written_by": ["widget_render_data_agreement"], "read_by": ["widget_select_agreement", "write_pipeline_run_summary"]},
     "METADATA_DATA_AGREEMENT_EVIDENCE": {"templates": ["01_agreement.ipynb"], "written_by": ["widget_render_agreement_evidence"], "read_by": ["widget_select_agreement"]},
-    "METADATA_NOTEBOOK_REGISTRY": {"templates": ["02_pipeline.ipynb"], "written_by": ["widget_select_agreement"], "read_by": ["get_selected_agreement", "write_pipeline_lineage", "write_pipeline_run_summary"]},
+    "METADATA_NOTEBOOK_REGISTRY": {"templates": ["02_pipeline.ipynb"], "written_by": ["widget_select_agreement"], "read_by": ["write_pipeline_lineage", "write_pipeline_run_summary"]},
     "METADATA_DATA_CATALOGUE": {
         "templates": ["02_pipeline.ipynb", "03_governance.ipynb", "99_explore.ipynb"],
         "written_by": ["run_table_guardrails"],

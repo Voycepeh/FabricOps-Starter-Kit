@@ -4,14 +4,15 @@
 
 ## Guided pipeline context startup
 
-Start each `02_pipeline` run with [`start_pipeline_run`](../../api/reference/start_pipeline_run.md):
+Start each `02_pipeline` run with [`widget_select_agreement`](../../api/reference/widget_select_agreement.md):
 
 ```python
-PIPELINE = start_pipeline_run(
+AGREEMENT_CONTEXT = widget_select_agreement(
     notebook_type="02_pipeline",
-    select_agreement=True,
     register_notebook=True,
 )
+
+AGREEMENT = AGREEMENT_CONTEXT.agreement
 ```
 
 This single startup step captures the run id, audit timestamp, notebook metadata, and selected agreement context. It also stores active defaults for downstream helpers, so later pipeline calls can reuse the same run and agreement metadata without repeating those values in every function call.
@@ -56,7 +57,7 @@ target_enforcement_results = run_table_guardrails(
 )
 ```
 
-`mode="profile"` is non-blocking by default, so the notebook can collect catalogue and guardrail visibility without stopping the run. `mode="enforce"` defaults `stop_on_failure=True`, so failed error-severity checks stop before unsafe target publication. Omitted `run_id`, `spark_session`, `pipeline_name`, `notebook_id`, `notebook_registry_id`, `agreement_id`, and `agreement_contract_version` values are resolved from the active pipeline context created by `start_pipeline_run`.
+`mode="profile"` is non-blocking by default, so the notebook can collect catalogue and guardrail visibility without stopping the run. `mode="enforce"` defaults `stop_on_failure=True`, so failed error-severity checks stop before unsafe target publication. Omitted `run_id`, `spark_session`, `pipeline_name`, `notebook_id`, `notebook_registry_id`, `agreement_id`, and `agreement_contract_version` values are resolved from the active agreement context created by `widget_select_agreement`.
 
 Guardrail results are not just UI messages: they are evidence rows and continuation decisions. The dropdowns used during authoring save rule records in `METADATA_GUARDRAIL_RULES`; runtime interprets those saved records later.
 
@@ -135,7 +136,7 @@ After profiling evidence exists, the simplified `02_pipeline` flow can still use
 
 ### Implementation guidance
 
-- Start the notebook with [`start_pipeline_run`](../../api/reference/start_pipeline_run.md), then rely on active defaults instead of repeating run and agreement metadata in every helper call.
+- Start the notebook with [`widget_select_agreement`](../../api/reference/widget_select_agreement.md) using `register_notebook=True`, then rely on active defaults instead of repeating run and agreement metadata in every helper call.
 - Keep source and target table config dictionaries beginner-editable, then let [`prepare_pipeline_table_configs`](../../api/reference/prepare_pipeline_table_configs.md) normalize them for runtime helpers.
 - Treat `append` and `overwrite` as physical write modes only; profile behaviour uses `static_data`, `changing_data`, or `skip`.
 - Use warning DQ rules for observability that should not block writes, and error DQ rules for checks that must stop publication.

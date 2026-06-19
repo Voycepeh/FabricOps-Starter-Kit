@@ -6,7 +6,7 @@
 
 - **Written by notebook/template:** 01_agreement.ipynb, 02_pipeline.ipynb
 - **Written by function or widget:** [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
-- **Read by function or widget:** [`widget_select_agreement`](../../api/reference/widget_select_agreement.md), [`get_selected_agreement`](../../api/reference/get_selected_agreement.md), [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)
+- **Read by function or widget:** [`widget_select_agreement`](../../api/reference/widget_select_agreement.md), [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)
 - **Related template step:** 01_agreement.ipynb, 02_pipeline.ipynb
 
 ## Implemented schema
@@ -35,7 +35,6 @@
 
 ## Related function reference
 
-- [`get_selected_agreement`](../../api/reference/get_selected_agreement.md)
 - [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
 - [`widget_select_agreement`](../../api/reference/widget_select_agreement.md)
 - [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)

@@ -172,7 +172,8 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "setup_notebook" in called
     assert "write_pipeline_run_summary" in called
     assert "get_latest_metadata_catalogue" in called
-    assert "start_pipeline_run" in called
+    assert "widget_select_agreement" in called
+    assert "start_pipeline_run" not in called
     assert "validate_schema" not in called
     assert "validate_schema_rule" not in called
     assert "read_lakehouse_csv" not in called

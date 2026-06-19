@@ -15,7 +15,6 @@ CORE_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
     "widget_select_agreement",
-    "get_selected_agreement",
     "read_data",
     "write_data",
     "profile_dataframe",
@@ -459,14 +458,7 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     ]:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
 
-    assert (
-        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338"'
-        in implementation_section
-    )
-    assert (
-        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L293-L304"'
-        in implementation_section
-    )
+    assert 'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L' in implementation_section
 
 
 def test_removed_aggregate_governance_wrapper_pages_are_absent() -> None:

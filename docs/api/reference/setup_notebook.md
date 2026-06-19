@@ -272,6 +272,7 @@ def setup_notebook(
 ### Public related functions
 
 - <a href="setup_metadata_tables/"><code>fabricops_kit.config.setup_metadata_tables</code></a>
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
 ### Internal implementation summary
 

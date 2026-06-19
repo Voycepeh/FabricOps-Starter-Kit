@@ -103,20 +103,6 @@
       "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": true,
-      "callable_name": "get_selected_agreement",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Agreement selection",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
       "callable_name": "widget_render_agreement_evidence",
       "callable_visibility": "public",
       "callable_type": "callable",
@@ -171,7 +157,10 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Agreement selection",
-      "used_in_templates": []
+      "used_in_templates": [
+        "02_pipeline",
+        "99_explore"
+      ]
     },
     {
       "module_name": "data_profiling",
@@ -372,23 +361,6 @@
       "used_in_templates": [
         "02_pipeline",
         "example_dq_rule_smoke_test"
-      ]
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "start_pipeline_run",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Runtime context setup",
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
       ]
     },
     {

@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 4</span><span class="reference-chip">Internal helpers: 39</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>5</td>
+      <td>4</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>35</td>
+      <td>39</td>
     </tr>
     <tr>
       <td>Inbound module count</td>
@@ -76,13 +76,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
   </thead>
   <tbody>
     <tr>
-      <td><a href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Return the agreement selected by widget_select_agreement.</td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
       <td>Callable</td>
       <td>function</td>
@@ -107,8 +100,8 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Render an agreement selector and optionally register the active notebook.</td>
-      <td><code>_html_escape</code> (internal), <code>_latest_agreement_versions</code> (internal), <code>_list_data_agreements</code> (internal), <code>_render_searchable_selector</code> (internal), <code>_require_ipywidgets</code> (internal)</td>
+      <td>Render an agreement selector and establish downstream runtime context.</td>
+      <td><code>_html_escape</code> (internal), <code>_latest_agreement_versions</code> (internal), <code>_list_data_agreements</code> (internal), <code>_notebook_global</code> (internal), <code>_render_searchable_selector</code> (internal), <code>_require_ipywidgets</code> (internal), <code>_runtime_metadata_value</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -127,11 +120,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
 <a class="reference-chip" href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
@@ -149,7 +137,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>
+<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_notebook_global</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_runtime_metadata_value</code></span>
 </li>
 </ul>
 </section>
@@ -168,6 +156,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td><code>_active_agreement_context</code></td>
+      <td>—</td>
+    </tr>
     <tr>
       <td><code>_active_steward</code></td>
       <td>—</td>
@@ -249,6 +241,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_notebook_global</code></td>
+      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+    </tr>
+    <tr>
       <td><code>_parse_contract_version</code></td>
       <td>—</td>
     </tr>
@@ -278,6 +274,10 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_require_ipywidgets</code></td>
+      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_runtime_metadata_value</code></td>
       <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
     </tr>
     <tr>
@@ -314,6 +314,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<span class="reference-chip"><code>_active_agreement_context</code></span>
+</li>
 <li>
 <span class="reference-chip"><code>_active_steward</code></span>
  <span class="callable-relationship-uses">uses:</span>
@@ -401,6 +404,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <span class="reference-chip"><code>_parse_contract_version</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_notebook_global</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_parse_contract_version</code></span>
 </li>
 <li>
@@ -433,6 +439,9 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 </li>
 <li>
 <span class="reference-chip"><code>_require_ipywidgets</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_runtime_metadata_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_save_agreement_evidence_records</code></span>
@@ -468,7 +477,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../reference/start_pipeline_run/"><code>start_pipeline_run</code></a>
+<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a class="reference-chip" href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a>
 
 ### External callees
 
