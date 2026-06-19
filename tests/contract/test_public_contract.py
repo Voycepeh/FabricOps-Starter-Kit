@@ -27,6 +27,15 @@ APPROVED_V1_CALLABLES = {
     "write_data",
     "profile_dataframe",
     "enforce_dq_rules",
+    "PipelineRunContext",
+    "start_pipeline_run",
+    "start_pipeline_run_with_agreement",
+    "get_active_pipeline_context",
+    "profile_source_tables",
+    "profile_target_tables",
+    "enforce_source_guardrails",
+    "enforce_target_guardrails",
+    "complete_pipeline_run",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
@@ -150,7 +159,7 @@ def test_generated_callable_manifest_matches_approved_v1_list():
     root = Path(__file__).parents[2]
     manifest = json.loads((root / "docs" / "reference" / "_data" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
-    assert manifest_callables == APPROVED_V1_CALLABLES
+    assert manifest_callables == APPROVED_V1_CALLABLES - {"PipelineRunContext"}
 
 
 def test_notebook_templates_call_only_approved_v1_surface():
@@ -190,9 +199,9 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
     called = _template_called_fabricops_functions()
 
-    assert manifest_callables == APPROVED_V1_CALLABLES
+    assert manifest_callables == APPROVED_V1_CALLABLES - {"PipelineRunContext"}
     assert called <= manifest_callables
-    assert {"prepare_pipeline_table_configs", "run_table_guardrails", "write_pipeline_lineage", "write_pipeline_run_summary"} <= called
+    assert {"prepare_pipeline_table_configs", "profile_source_tables", "enforce_target_guardrails", "write_pipeline_lineage", "complete_pipeline_run"} <= called
     for callable_name in manifest_callables:
         canonical_page = root / "docs" / "api" / "reference" / f"{callable_name}.md"
         legacy_page = root / "docs" / "reference" / "callables" / f"{callable_name}.md"

@@ -3126,11 +3126,11 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
-    "inbound": [],
-    "outbound": [],
-    "used_in_templates": [
-      "02_pipeline"
+    "inbound": [
+      "fabricops_kit.pipeline.start_pipeline_run_with_agreement"
     ],
+    "outbound": [],
+    "used_in_templates": [],
     "glossary_terms": [
       "notebook template"
     ],
@@ -3315,7 +3315,9 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.pipeline.start_pipeline_run_with_agreement"
+    ],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
       "fabricops_kit.data_agreement._html_escape",
@@ -3326,9 +3328,7 @@
       "fabricops_kit.metadata._current_notebook_active_registrations",
       "fabricops_kit.metadata._register_current_notebook"
     ],
-    "used_in_templates": [
-      "02_pipeline"
-    ],
+    "used_in_templates": [],
     "glossary_terms": [
       "notebook template"
     ],
@@ -10032,6 +10032,52 @@
     ]
   },
   {
+    "name": "PipelineRunContext",
+    "qualified_name": "fabricops_kit.pipeline.PipelineRunContext",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [
+      "fabricops_kit.pipeline.start_pipeline_run"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Store resolved runtime values for guided pipeline notebook wrappers.",
+    "when_to_use": "Use the object returned by start_pipeline_run_with_agreement when business cells need the run id or pipeline name.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 23,
+    "source_end_line": 64,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L23-L64",
+    "docs_path": "api/reference/PipelineRunContext.md",
+    "summary": "Store resolved runtime values for guided pipeline notebook wrappers.",
+    "use_when": "Use the object returned by start_pipeline_run_with_agreement when business cells need the run id or pipeline name.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "PipelineRunContext with run, pipeline, agreement, notebook, and Spark context.",
+    "return_interpretation": "PipelineRunContext with run, pipeline, agreement, notebook, and Spark context.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
+    ]
+  },
+  {
     "name": "_add_audit_columns",
     "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
     "module": "pipeline",
@@ -10048,9 +10094,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 399,
-    "source_end_line": 409,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L399-L409",
+    "source_start_line": 558,
+    "source_end_line": 568,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L558-L568",
     "docs_path": null,
     "summary": "Return a DataFrame with standard FabricOps target audit columns.",
     "use_when": "Not documented yet",
@@ -10085,9 +10131,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 338,
-    "source_end_line": 349,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L338-L349",
+    "source_start_line": 497,
+    "source_end_line": 508,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L497-L508",
     "docs_path": null,
     "summary": "Return concise blocking failure message for notebook exceptions.",
     "use_when": "Not documented yet",
@@ -10124,9 +10170,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 352,
-    "source_end_line": 358,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L352-L358",
+    "source_start_line": 511,
+    "source_end_line": 517,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L511-L517",
     "docs_path": null,
     "summary": "Build the concise blocking message for a guardrail result bundle.",
     "use_when": "Not documented yet",
@@ -10165,9 +10211,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 515,
-    "source_end_line": 545,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L515-L545",
+    "source_start_line": 674,
+    "source_end_line": 704,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L674-L704",
     "docs_path": null,
     "summary": "Build catalogue evidence definitions for pipeline table guardrails.",
     "use_when": "Not documented yet",
@@ -10203,9 +10249,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 64,
-    "source_end_line": 92,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L64-L92",
+    "source_start_line": 223,
+    "source_end_line": 251,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L223-L251",
     "docs_path": null,
     "summary": "Return profile evidence using lowercase catalogue column names only.",
     "use_when": "Not documented yet",
@@ -10241,9 +10287,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 24,
-    "source_end_line": 25,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L24-L25",
+    "source_start_line": 183,
+    "source_end_line": 184,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L183-L184",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10281,9 +10327,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 202,
-    "source_end_line": 214,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L202-L214",
+    "source_start_line": 361,
+    "source_end_line": 373,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L361-L373",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10321,9 +10367,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 168,
-    "source_end_line": 172,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L168-L172",
+    "source_start_line": 327,
+    "source_end_line": 331,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L327-L331",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10359,9 +10405,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 511,
-    "source_end_line": 512,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L511-L512",
+    "source_start_line": 670,
+    "source_end_line": 671,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L670-L671",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10403,9 +10449,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 217,
-    "source_end_line": 227,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L217-L227",
+    "source_start_line": 376,
+    "source_end_line": 386,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L376-L386",
     "docs_path": null,
     "summary": "Return plain-language reason text for one guardrail.",
     "use_when": "Not documented yet",
@@ -10447,9 +10493,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 140,
-    "source_end_line": 151,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L140-L151",
+    "source_start_line": 299,
+    "source_end_line": 310,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L299-L310",
     "docs_path": null,
     "summary": "Return concise user action guidance for a guardrail result.",
     "use_when": "Not documented yet",
@@ -10484,9 +10530,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 95,
-    "source_end_line": 112,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L95-L112",
+    "source_start_line": 254,
+    "source_end_line": 271,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L254-L271",
     "docs_path": null,
     "summary": "Cast catalogue evidence columns to the persisted metadata table schema.",
     "use_when": "Not documented yet",
@@ -10506,6 +10552,42 @@
     ]
   },
   {
+    "name": "_notebook_global",
+    "qualified_name": "fabricops_kit.pipeline._notebook_global",
+    "module": "pipeline",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.pipeline.start_pipeline_run"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 70,
+    "source_end_line": 76,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L70-L76",
+    "docs_path": null,
+    "summary": "Return a value from the active IPython notebook namespace when present.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "start_pipeline_run"
+    ]
+  },
+  {
     "name": "_now_iso",
     "qualified_name": "fabricops_kit.pipeline._now_iso",
     "module": "pipeline",
@@ -10513,6 +10595,7 @@
     "role": "internal",
     "inbound": [
       "fabricops_kit.pipeline._runtime_audit_fields",
+      "fabricops_kit.pipeline.start_pipeline_run",
       "fabricops_kit.pipeline.write_catalogue_evidence",
       "fabricops_kit.pipeline.write_pipeline_lineage",
       "fabricops_kit.pipeline.write_pipeline_run_summary"
@@ -10525,9 +10608,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 20,
-    "source_end_line": 21,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L20-L21",
+    "source_start_line": 179,
+    "source_end_line": 180,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L179-L180",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10544,10 +10627,47 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_runtime_audit_fields",
+      "start_pipeline_run",
       "write_catalogue_evidence",
       "write_pipeline_lineage",
       "write_pipeline_run_summary",
       "_current_audit_timestamp"
+    ]
+  },
+  {
+    "name": "_pipeline_status_from_results",
+    "qualified_name": "fabricops_kit.pipeline._pipeline_status_from_results",
+    "module": "pipeline",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.pipeline.complete_pipeline_run"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 1026,
+    "source_end_line": 1027,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1026-L1027",
+    "docs_path": null,
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "complete_pipeline_run"
     ]
   },
   {
@@ -10568,9 +10688,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 175,
-    "source_end_line": 199,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L175-L199",
+    "source_start_line": 334,
+    "source_end_line": 358,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L334-L358",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10607,9 +10727,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 126,
-    "source_end_line": 130,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L126-L130",
+    "source_start_line": 285,
+    "source_end_line": 289,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L285-L289",
     "docs_path": null,
     "summary": "Return whether a guardrail result can continue.",
     "use_when": "Not documented yet",
@@ -10647,9 +10767,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 133,
-    "source_end_line": 137,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L133-L137",
+    "source_start_line": 292,
+    "source_end_line": 296,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L292-L296",
     "docs_path": null,
     "summary": "Return the clearest human-readable reason from a result.",
     "use_when": "Not documented yet",
@@ -10690,9 +10810,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 121,
-    "source_end_line": 123,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L121-L123",
+    "source_start_line": 280,
+    "source_end_line": 282,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L280-L282",
     "docs_path": null,
     "summary": "Return a normalized guardrail result status.",
     "use_when": "Not documented yet",
@@ -10730,9 +10850,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 361,
-    "source_end_line": 365,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L361-L365",
+    "source_start_line": 520,
+    "source_end_line": 524,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L520-L524",
     "docs_path": null,
     "summary": "Return Spark DataFrame display rows when a Spark session is available.",
     "use_when": "Not documented yet",
@@ -10749,6 +10869,53 @@
     "verification": "Not documented yet",
     "related_functions": [
       "display_guardrail_results"
+    ]
+  },
+  {
+    "name": "_run_active_table_guardrails",
+    "qualified_name": "fabricops_kit.pipeline._run_active_table_guardrails",
+    "module": "pipeline",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.pipeline.enforce_source_guardrails",
+      "fabricops_kit.pipeline.enforce_target_guardrails",
+      "fabricops_kit.pipeline.profile_source_tables",
+      "fabricops_kit.pipeline.profile_target_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.pipeline.get_active_pipeline_context",
+      "fabricops_kit.pipeline.run_table_guardrails"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 935,
+    "source_end_line": 955,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L935-L955",
+    "docs_path": null,
+    "summary": "Run table guardrails using the active guided pipeline context.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "enforce_source_guardrails",
+      "enforce_target_guardrails",
+      "profile_source_tables",
+      "profile_target_tables",
+      "get_active_pipeline_context",
+      "run_table_guardrails"
     ]
   },
   {
@@ -10770,9 +10937,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 50,
-    "source_end_line": 61,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L50-L61",
+    "source_start_line": 209,
+    "source_end_line": 220,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L209-L220",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10795,6 +10962,45 @@
     ]
   },
   {
+    "name": "_runtime_metadata_value",
+    "qualified_name": "fabricops_kit.pipeline._runtime_metadata_value",
+    "module": "pipeline",
+    "type": "internal",
+    "role": "internal",
+    "inbound": [
+      "fabricops_kit.pipeline.start_pipeline_run"
+    ],
+    "outbound": [
+      "fabricops_kit.metadata.get"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 79,
+    "source_end_line": 83,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L79-L83",
+    "docs_path": null,
+    "summary": "No summary available.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "start_pipeline_run",
+      "get"
+    ]
+  },
+  {
     "name": "_schema_reason",
     "qualified_name": "fabricops_kit.pipeline._schema_reason",
     "module": "pipeline",
@@ -10809,9 +11015,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 154,
-    "source_end_line": 165,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L165",
+    "source_start_line": 313,
+    "source_end_line": 324,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L313-L324",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10845,9 +11051,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 28,
-    "source_end_line": 47,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L28-L47",
+    "source_start_line": 187,
+    "source_end_line": 206,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L187-L206",
     "docs_path": null,
     "summary": "Return a roll-up status for guardrail result mappings.",
     "use_when": "Not documented yet",
@@ -10882,9 +11088,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 503,
-    "source_end_line": 504,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L503-L504",
+    "source_start_line": 662,
+    "source_end_line": 663,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L662-L663",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10920,9 +11126,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 230,
-    "source_end_line": 237,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L230-L237",
+    "source_start_line": 389,
+    "source_end_line": 396,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L389-L396",
     "docs_path": null,
     "summary": "Return stable table keys present in a guardrail result bundle.",
     "use_when": "Not documented yet",
@@ -10958,9 +11164,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 507,
-    "source_end_line": 508,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L507-L508",
+    "source_start_line": 666,
+    "source_end_line": 667,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L666-L667",
     "docs_path": null,
     "summary": "No summary available.",
     "use_when": "Not documented yet",
@@ -10996,9 +11202,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 116,
-    "source_end_line": 118,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L116-L118",
+    "source_start_line": 275,
+    "source_end_line": 277,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L275-L277",
     "docs_path": null,
     "summary": "Return notebook-friendly yes/no text.",
     "use_when": "Not documented yet",
@@ -11041,9 +11247,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 306,
-    "source_end_line": 335,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L306-L335",
+    "source_start_line": 465,
+    "source_end_line": 494,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L465-L494",
     "docs_path": null,
     "summary": "Build per-table, per-guardrail diagnostic rows.",
     "use_when": "Not documented yet",
@@ -11093,9 +11299,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 240,
-    "source_end_line": 303,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L240-L303",
+    "source_start_line": 399,
+    "source_end_line": 462,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L399-L462",
     "docs_path": null,
     "summary": "Build compact one-row-per-table guardrail summary rows.",
     "use_when": "Not documented yet",
@@ -11123,6 +11329,56 @@
     ]
   },
   {
+    "name": "complete_pipeline_run",
+    "qualified_name": "fabricops_kit.pipeline.complete_pipeline_run",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.pipeline._pipeline_status_from_results",
+      "fabricops_kit.pipeline.get_active_pipeline_context",
+      "fabricops_kit.pipeline.write_pipeline_run_summary"
+    ],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Write the guided pipeline run summary from active context and results.",
+    "when_to_use": "Use at the end of guided 02_pipeline after enforcement, writes, and lineage.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 1030,
+    "source_end_line": 1079,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1030-L1079",
+    "docs_path": "api/reference/complete_pipeline_run.md",
+    "summary": "Write the guided pipeline run summary from active context and results.",
+    "use_when": "Use at the end of guided 02_pipeline after enforcement, writes, and lineage.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Summary row returned by write_pipeline_run_summary.",
+    "return_interpretation": "Summary row returned by write_pipeline_run_summary.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
+    ]
+  },
+  {
     "name": "display_guardrail_results",
     "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
     "module": "pipeline",
@@ -11144,9 +11400,9 @@
     "expanded_purpose": "Returns summary, detailed, or debug guardrail display output so Fabric notebooks show readable tables by default while preserving raw result bundles for developers.",
     "when_to_use": "Use in 02_pipeline immediately after run_table_guardrails and before stop_if_failed so users see guardrail outcomes before the notebook stops.",
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 368,
-    "source_end_line": 396,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L368-L396",
+    "source_start_line": 527,
+    "source_end_line": 555,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L527-L555",
     "docs_path": "api/reference/display_guardrail_results.md",
     "summary": "Return summary, detailed, or debug guardrail display output for Fabric notebooks.",
     "use_when": "Use in 02_pipeline immediately after run_table_guardrails and before stop_if_failed so users see guardrail outcomes before the notebook stops.",
@@ -11164,6 +11420,149 @@
     "related_functions": [
       "run_table_guardrails",
       "widget_review_guardrail_governance"
+    ]
+  },
+  {
+    "name": "enforce_source_guardrails",
+    "qualified_name": "fabricops_kit.pipeline.enforce_source_guardrails",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.pipeline._run_active_table_guardrails"
+    ],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Enforce blocking source guardrails using the active pipeline context.",
+    "when_to_use": "Use before target writes in guided 02_pipeline.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 992,
+    "source_end_line": 1006,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L992-L1006",
+    "docs_path": "api/reference/enforce_source_guardrails.md",
+    "summary": "Enforce blocking source guardrails using the active pipeline context.",
+    "use_when": "Use before target writes in guided 02_pipeline.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Guardrail result bundle; blocking failures stop execution.",
+    "return_interpretation": "Guardrail result bundle; blocking failures stop execution.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
+    ]
+  },
+  {
+    "name": "enforce_target_guardrails",
+    "qualified_name": "fabricops_kit.pipeline.enforce_target_guardrails",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.pipeline._run_active_table_guardrails"
+    ],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Enforce blocking target guardrails using the active pipeline context.",
+    "when_to_use": "Use before target writes in guided 02_pipeline.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 1009,
+    "source_end_line": 1023,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1009-L1023",
+    "docs_path": "api/reference/enforce_target_guardrails.md",
+    "summary": "Enforce blocking target guardrails using the active pipeline context.",
+    "use_when": "Use before target writes in guided 02_pipeline.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Guardrail result bundle; blocking failures stop execution.",
+    "return_interpretation": "Guardrail result bundle; blocking failures stop execution.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
+    ]
+  },
+  {
+    "name": "get_active_pipeline_context",
+    "qualified_name": "fabricops_kit.pipeline.get_active_pipeline_context",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [
+      "fabricops_kit.pipeline._run_active_table_guardrails",
+      "fabricops_kit.pipeline.complete_pipeline_run"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Return the active guided pipeline context.",
+    "when_to_use": "Use inside guided wrappers or custom notebook cells that need resolved runtime context.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 159,
+    "source_end_line": 176,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L176",
+    "docs_path": "api/reference/get_active_pipeline_context.md",
+    "summary": "Return the active guided pipeline context.",
+    "use_when": "Use inside guided wrappers or custom notebook cells that need resolved runtime context.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Active PipelineRunContext.",
+    "return_interpretation": "Active PipelineRunContext.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "RuntimeError\n    If no guided pipeline context has been started.",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
     ]
   },
   {
@@ -11188,9 +11587,9 @@
     "expanded_purpose": "Normalizes source and target table configuration dictionaries so pipeline guardrail, write, lineage, and evidence helpers receive consistent fields.",
     "when_to_use": "Use before running table guardrails or writes when notebook-editable table configs need package defaults and derived keys.",
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 412,
-    "source_end_line": 501,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L412-L501",
+    "source_start_line": 571,
+    "source_end_line": 660,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L571-L660",
     "docs_path": "api/reference/prepare_pipeline_table_configs.md",
     "summary": "Prepare source or target table configs for 02_pipeline.",
     "use_when": "Use before running table guardrails or writes when notebook-editable table configs need package defaults and derived keys.",
@@ -11220,12 +11619,110 @@
     ]
   },
   {
+    "name": "profile_source_tables",
+    "qualified_name": "fabricops_kit.pipeline.profile_source_tables",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.pipeline._run_active_table_guardrails"
+    ],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Profile source tables using the active guided pipeline context.",
+    "when_to_use": "Use before transformations in guided 02_pipeline.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 958,
+    "source_end_line": 972,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L958-L972",
+    "docs_path": "api/reference/profile_source_tables.md",
+    "summary": "Profile source tables using the active guided pipeline context.",
+    "use_when": "Use before transformations in guided 02_pipeline.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Guardrail result bundle returned by run_table_guardrails.",
+    "return_interpretation": "Guardrail result bundle returned by run_table_guardrails.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
+    ]
+  },
+  {
+    "name": "profile_target_tables",
+    "qualified_name": "fabricops_kit.pipeline.profile_target_tables",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.pipeline._run_active_table_guardrails"
+    ],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Profile target tables using the active guided pipeline context.",
+    "when_to_use": "Use after transformations and target config preparation in guided 02_pipeline.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 975,
+    "source_end_line": 989,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L975-L989",
+    "docs_path": "api/reference/profile_target_tables.md",
+    "summary": "Profile target tables using the active guided pipeline context.",
+    "use_when": "Use after transformations and target config preparation in guided 02_pipeline.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Guardrail result bundle returned by run_table_guardrails.",
+    "return_interpretation": "Guardrail result bundle returned by run_table_guardrails.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
+    ]
+  },
+  {
     "name": "run_table_guardrails",
     "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.pipeline._run_active_table_guardrails"
+    ],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
       "fabricops_kit.data_profiling.profile_dataframe",
@@ -11245,9 +11742,7 @@
       "fabricops_kit.pipeline.build_guardrail_summary_rows",
       "fabricops_kit.pipeline.write_catalogue_evidence"
     ],
-    "used_in_templates": [
-      "02_pipeline"
-    ],
+    "used_in_templates": [],
     "glossary_terms": [
       "guardrails",
       "can_continue",
@@ -11258,9 +11753,9 @@
     "expanded_purpose": "Coordinates profiling, schema, freshness, profile behavior, DQ, and evidence checks for a group of pipeline table configs.",
     "when_to_use": "Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.",
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 548,
-    "source_end_line": 773,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L548-L773",
+    "source_start_line": 707,
+    "source_end_line": 932,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L707-L932",
     "docs_path": "api/reference/run_table_guardrails.md",
     "summary": "Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.",
     "use_when": "Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.",
@@ -11283,6 +11778,107 @@
     "related_functions": [
       "prepare_pipeline_table_configs",
       "write_catalogue_evidence"
+    ]
+  },
+  {
+    "name": "start_pipeline_run",
+    "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [
+      "fabricops_kit.pipeline.start_pipeline_run_with_agreement"
+    ],
+    "outbound": [
+      "fabricops_kit.pipeline.PipelineRunContext",
+      "fabricops_kit.pipeline._notebook_global",
+      "fabricops_kit.pipeline._now_iso",
+      "fabricops_kit.pipeline._runtime_metadata_value"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Start a guided pipeline run and store active runtime context.",
+    "when_to_use": "Use in advanced guided pipelines that do not need agreement selection.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 86,
+    "source_end_line": 124,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L86-L124",
+    "docs_path": "api/reference/start_pipeline_run.md",
+    "summary": "Start a guided pipeline run and store active runtime context.",
+    "use_when": "Use in advanced guided pipelines that do not need agreement selection.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Active PipelineRunContext.",
+    "return_interpretation": "Active PipelineRunContext.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
+    ]
+  },
+  {
+    "name": "start_pipeline_run_with_agreement",
+    "qualified_name": "fabricops_kit.pipeline.start_pipeline_run_with_agreement",
+    "module": "pipeline",
+    "type": "callable",
+    "role": "callable",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.data_agreement.get_selected_agreement",
+      "fabricops_kit.data_agreement.widget_select_agreement",
+      "fabricops_kit.pipeline.start_pipeline_run"
+    ],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
+    "glossary_terms": [
+      "notebook template",
+      "guardrails",
+      "metadata lakehouse"
+    ],
+    "expanded_purpose": "Start a guided pipeline run and resolve the active agreement selection.",
+    "when_to_use": "Use near the top of guided 02_pipeline notebooks.",
+    "source_file": "src/fabricops_kit/pipeline.py",
+    "source_start_line": 127,
+    "source_end_line": 156,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L127-L156",
+    "docs_path": "api/reference/start_pipeline_run_with_agreement.md",
+    "summary": "Start a guided pipeline run and resolve the active agreement selection.",
+    "use_when": "Use near the top of guided 02_pipeline notebooks.",
+    "do_not_use_when": "Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.",
+    "required_context": "Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.",
+    "inputs": "See the source docstring for optional advanced overrides.",
+    "output": "Active PipelineRunContext populated with selected agreement context.",
+    "return_interpretation": "Active PipelineRunContext populated with selected agreement context.",
+    "side_effects": "May read or store active notebook runtime context for downstream guided wrappers.",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "- No active pipeline context exists.\n- Fabric runtime variables are unavailable.\n- Configured metadata routing is unavailable.",
+    "related_guides": [
+      {
+        "title": "Pipeline Guardrails",
+        "path": "../../how-fabricops-works/pipeline-guardrails.md"
+      }
+    ],
+    "preferred_example": "PIPELINE = start_pipeline_run_with_agreement()",
+    "verification": "Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.",
+    "related_functions": [
+      "run_table_guardrails",
+      "write_pipeline_run_summary"
     ]
   },
   {
@@ -11309,9 +11905,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 776,
-    "source_end_line": 882,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L776-L882",
+    "source_start_line": 1082,
+    "source_end_line": 1188,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1082-L1188",
     "docs_path": null,
     "summary": "Enrich profile rows with guardrail context and write evidence.",
     "use_when": "Not documented yet",
@@ -11359,9 +11955,9 @@
     "expanded_purpose": "Persists lineage records for a pipeline run so source tables, target tables, and transformation steps remain traceable.",
     "when_to_use": "Use near the end of 02_pipeline after transformations and target config resolution have produced lineage-ready records.",
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 884,
-    "source_end_line": 970,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L884-L970",
+    "source_start_line": 1190,
+    "source_end_line": 1276,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1190-L1276",
     "docs_path": "api/reference/write_pipeline_lineage.md",
     "summary": "Write many-to-many source-to-target lineage evidence.",
     "use_when": "Use near the end of 02_pipeline after transformations and target config resolution have produced lineage-ready records.",
@@ -11396,7 +11992,9 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.pipeline.complete_pipeline_run"
+    ],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
       "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
@@ -11405,9 +12003,7 @@
       "fabricops_kit.pipeline._now_iso",
       "fabricops_kit.pipeline._summary_status"
     ],
-    "used_in_templates": [
-      "02_pipeline"
-    ],
+    "used_in_templates": [],
     "glossary_terms": [
       "guardrails",
       "can_continue",
@@ -11417,9 +12013,9 @@
     "expanded_purpose": "Writes a compact run-level summary that ties pipeline name, agreement context, guardrail results, lineage, and write outcomes together.",
     "when_to_use": "Use at the end of 02_pipeline when downstream operators need one metadata record describing the run outcome.",
     "source_file": "src/fabricops_kit/pipeline.py",
-    "source_start_line": 973,
-    "source_end_line": 1087,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L973-L1087",
+    "source_start_line": 1279,
+    "source_end_line": 1393,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1279-L1393",
     "docs_path": "api/reference/write_pipeline_run_summary.md",
     "summary": "Write one pipeline runtime summary row to metadata.",
     "use_when": "Use at the end of 02_pipeline when downstream operators need one metadata record describing the run outcome.",

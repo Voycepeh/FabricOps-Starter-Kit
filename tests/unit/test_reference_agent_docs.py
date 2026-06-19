@@ -564,7 +564,7 @@ def test_template_usage_metadata_renders_from_structured_reference_model() -> No
     function_by_name = {entry["name"]: entry for entry in function_manifest}
     automation_by_name = {entry["name"]: entry for entry in automation_manifest if entry.get("type") == "callable"}
 
-    for callable_name in ("run_table_guardrails", "profile_dataframe"):
+    for callable_name in ("profile_source_tables", "profile_dataframe"):
         assert function_by_name[callable_name]["used_in_templates"]
         assert automation_by_name[callable_name]["used_in_templates"]
         assert f'data-callable-name="{callable_name}"' in reference_index

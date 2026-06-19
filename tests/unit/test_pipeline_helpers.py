@@ -31,6 +31,10 @@ class FakeSpark:
 def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     """Verify public pipeline helpers are exported without wrapper bloat."""
     assert "prepare_pipeline_table_configs" in fabricops_kit.__all__
+    assert "PipelineRunContext" in fabricops_kit.__all__
+    assert "profile_source_tables" in fabricops_kit.__all__
+    assert "enforce_target_guardrails" in fabricops_kit.__all__
+    assert "complete_pipeline_run" in fabricops_kit.__all__
     assert "run_table_guardrails" in fabricops_kit.__all__
     assert "write_catalogue_evidence" not in fabricops_kit.__all__
     assert "write_pipeline_lineage" in fabricops_kit.__all__
@@ -55,6 +59,97 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
 
     for private_source_reader in {"_load_source_dataframe", "_read_source_dataframe", "_source_read_type"}:
         assert not hasattr(fabricops_kit, private_source_reader)
+
+
+def test_guided_guardrail_wrappers_pass_active_runtime_context(monkeypatch):
+    """Verify guided wrappers pass resolved runtime context to lower-level guardrails."""
+    spark = FakeSpark()
+    context = pipeline.PipelineRunContext(
+        run_id="run-123",
+        pipeline_started_at="2026-01-01T00:00:00Z",
+        pipeline_name="demo_pipeline",
+        spark_session=spark,
+        metadata_schema="metadata_schema",
+        notebook_id="notebook-1",
+        notebook_registry_id="registry-1",
+        agreement_id="agreement-1",
+        agreement_contract_version="2",
+        context={"config": "config", "env": "dev"},
+    )
+    monkeypatch.setattr(pipeline, "_ACTIVE_PIPELINE_CONTEXT", context)
+    calls = []
+
+    def fake_run_table_guardrails(table_configs, **kwargs):
+        calls.append((table_configs, kwargs))
+        return {
+            "can_continue": True,
+            "evidence_definitions": {"orders": {"table_name": "orders"}},
+        }
+
+    monkeypatch.setattr(pipeline, "run_table_guardrails", fake_run_table_guardrails)
+
+    source_tables = [{"key": "orders"}]
+    result = pipeline.enforce_source_guardrails(source_tables)
+
+    assert result["can_continue"] is True
+    assert context.source_definitions == {"orders": {"table_name": "orders"}}
+    assert calls == [
+        (
+            source_tables,
+            {
+                "run_id": "run-123",
+                "context": {"config": "config", "env": "dev"},
+                "spark_session": spark,
+                "pipeline_name": "demo_pipeline",
+                "notebook_id": "notebook-1",
+                "notebook_registry_id": "registry-1",
+                "agreement_id": "agreement-1",
+                "agreement_contract_version": "2",
+                "stop_on_failure": True,
+            },
+        )
+    ]
+
+
+def test_complete_pipeline_run_derives_status_and_summary_context(monkeypatch):
+    """Verify guided completion delegates resolved context to summary writer."""
+    spark = FakeSpark()
+    context = pipeline.PipelineRunContext(
+        run_id="run-123",
+        pipeline_started_at="2026-01-01T00:00:00Z",
+        pipeline_name="demo_pipeline",
+        spark_session=spark,
+        notebook_id="notebook-1",
+        notebook_registry_id="registry-1",
+        agreement_id="agreement-1",
+        agreement_contract_version="2",
+        source_definitions={"orders": {"table_name": "orders"}},
+        target_definitions={"curated": {"table_name": "curated"}},
+    )
+    monkeypatch.setattr(pipeline, "_ACTIVE_PIPELINE_CONTEXT", context)
+    captured = {}
+
+    def fake_write_pipeline_run_summary(**kwargs):
+        captured.update(kwargs)
+        return {"status": kwargs["status"]}
+
+    monkeypatch.setattr(pipeline, "write_pipeline_run_summary", fake_write_pipeline_run_summary)
+    source_results = {"can_continue": True, "schema_results": {"orders": {"status": "passed"}}, "catalogue_status": {"orders": "written"}}
+    target_results = {"can_continue": False, "dq_results": {"curated": {"status": "failed"}}, "catalogue_status": {"curated": "written"}}
+
+    assert pipeline.complete_pipeline_run(
+        source_guardrail_results=source_results,
+        target_guardrail_results=target_results,
+        target_write_status={"curated": "written"},
+        lineage_result={"status": "written"},
+    ) == {"status": "failed"}
+    assert captured["spark"] is spark
+    assert captured["run_id"] == "run-123"
+    assert captured["started_at"] == "2026-01-01T00:00:00Z"
+    assert captured["status"] == "failed"
+    assert captured["source_definitions"] == context.source_definitions
+    assert captured["target_definitions"] == context.target_definitions
+    assert captured["lineage_status"] == "written"
 
 
 class FakeDataFrame:

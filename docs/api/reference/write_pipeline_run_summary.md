@@ -5,9 +5,9 @@ Write one pipeline runtime summary row to metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:973`
+`fabricops_kit/pipeline.py:1279`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L973-L1087">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1279-L1393">View on GitHub</a>
 </div>
 
 ## Usage guidance
@@ -118,7 +118,7 @@ Not documented yet
 
 ### Used by
 
-Not documented yet
+- <a href="complete_pipeline_run/"><code>fabricops_kit.pipeline.complete_pipeline_run</code></a>
 
 ### Calls
 
@@ -138,7 +138,7 @@ Not documented yet
 
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
-- `02_pipeline`
+None.
 
 **Side effects:**
 
@@ -209,7 +209,7 @@ evidence never relies on a default attached lakehouse.
         <h4>Rule parsing</h4>
         <p>Normalize stored or user-provided values before applying rules.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L24-L25"><code>_definition_name</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L183-L184"><code>_definition_name</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677"><code>_normalize_path_config</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a>
         </div>
@@ -218,7 +218,7 @@ evidence never relies on a default attached lakehouse.
         <h4>Result summary</h4>
         <p>Build final statuses, counts, and messages for the caller.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L28-L47"><code>_summary_status</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L187-L206"><code>_summary_status</code></a>
         </div>
       </section>
       <section class="reference-helper-group">
@@ -232,7 +232,7 @@ evidence never relies on a default attached lakehouse.
         <h4>Other</h4>
         <p>Support lower-level implementation details that do not fit the main helper areas.</p>
         <div class="reference-helper-chip-wrap">
-          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L20-L21"><code>_now_iso</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L179-L180"><code>_now_iso</code></a>
         </div>
       </section>
     </div>
@@ -250,10 +250,10 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `973`
-- Inbound references count: 0
+- Source line: `1279`
+- Inbound references count: 1
 - Outbound references count: 6
-- Used in templates: 02_pipeline
+- Used in templates: —
 - Glossary terms: guardrails, can_continue, evidence, metadata lakehouse
 
 ### Implementation contract
@@ -267,7 +267,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 ### Inbound references
 
-Not documented yet
+- <a href="complete_pipeline_run/"><code>fabricops_kit.pipeline.complete_pipeline_run</code></a>
 
 ### Outbound references
 
@@ -281,9 +281,9 @@ Not documented yet
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L973-L1087">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L973-L1087</a>
-- Start line: `973`
-- End line: `1087`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1279-L1393">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1279-L1393</a>
+- Start line: `1279`
+- End line: `1393`
 - Signature:
 
 ```python

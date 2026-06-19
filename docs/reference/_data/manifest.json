@@ -109,9 +109,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Agreement selection",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "data_agreement",
@@ -173,9 +171,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Agreement selection",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
+      "used_in_templates": []
     },
     {
       "module_name": "data_profiling",
@@ -364,6 +360,22 @@
       "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
+      "callable_name": "complete_pipeline_run",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
       "callable_name": "display_guardrail_results",
       "callable_visibility": "public",
       "callable_type": "callable",
@@ -373,6 +385,52 @@
       "used_in_templates": [
         "02_pipeline"
       ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "enforce_source_guardrails",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "enforce_target_guardrails",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "get_active_pipeline_context",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
+      "used_in_templates": []
     },
     {
       "module_name": "pipeline",
@@ -396,12 +454,72 @@
       "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
+      "callable_name": "profile_source_tables",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "profile_target_tables",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
       "callable_name": "run_table_guardrails",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Guardrail orchestration",
+      "used_in_templates": []
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "start_pipeline_run",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
+      "used_in_templates": []
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "start_pipeline_run_with_agreement",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guided pipeline context",
       "used_in_templates": [
         "02_pipeline"
       ]
@@ -434,9 +552,7 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
       "template_segment": "Runtime summary",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
+      "used_in_templates": []
     }
   ]
 }

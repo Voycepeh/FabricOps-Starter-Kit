@@ -1,28 +1,28 @@
-# run_table_guardrails
+# enforce_source_guardrails
 
-Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
+Enforce blocking source guardrails using the active pipeline context.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline.py:707`
+`fabricops_kit/pipeline.py:992`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L707-L932">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L992-L1006">View on GitHub</a>
 </div>
 
 ## Usage guidance
 
 ### Use when
 
-- Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.
+- Use before target writes in guided 02_pipeline.
 
 ### Do not use when
 
-- Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.
+- Use lower-level explicit APIs directly when an advanced custom notebook must pass runtime context manually.
 
 ### Additional context
 
-Coordinates profiling, schema, freshness, profile behavior, DQ, and evidence checks for a group of pipeline table configs.
+Enforce blocking source guardrails using the active pipeline context.
 
 
 ## Signature
@@ -30,18 +30,7 @@ Coordinates profiling, schema, freshness, profile behavior, DQ, and evidence che
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def run_table_guardrails(
-    table_configs: list[dict[str, Any]],
-    run_id: str,
-    context: dict[str, Any] | None=None,
-    spark_session: Any,
-    agreement_id: str='',
-    agreement_contract_version: str='',
-    notebook_registry_id: str='',
-    notebook_id: str='',
-    pipeline_name: str='',
-    stop_on_failure: bool=False,
-) -> dict[str, Any]:
+def enforce_source_guardrails(source_tables: list[dict[str, Any]]) -> dict[str, Any]
 ```
 
 </div>
@@ -51,7 +40,7 @@ def run_table_guardrails(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
+PIPELINE = start_pipeline_run_with_agreement()
 ```
 
 </div>
@@ -60,24 +49,15 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_configs` | `list[dict[str, Any]]` | Yes | Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``, ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior. |
-| `run_id` | `str` | Yes | Current pipeline run identifier. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
-| `spark_session` | `Any` | Yes | Spark session used by profile behavior and DQ helpers. |
-| `agreement_id` | `str` | No | Governance context written with catalogue evidence. |
-| `agreement_contract_version` | `str` | No | Not documented yet |
-| `notebook_registry_id` | `str` | No | Not documented yet |
-| `notebook_id` | `str` | No | Not documented yet |
-| `pipeline_name` | `str` | No | Not documented yet |
-| `stop_on_failure` | `bool` | No | When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue. |
+| `source_tables` | `list[dict[str, Any]]` | Yes | Prepared source table configs for the pipeline notebook. |
 
 ## Returns
 
-Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
+Guardrail result bundle; blocking failures stop execution.
 
 ### Return interpretation
 
-The result groups each guardrail outcome and a summary DataFrame. If any blocking result has can_continue false, stop before writing data.
+Guardrail result bundle; blocking failures stop execution.
 
 ## Raises / Errors
 
@@ -85,36 +65,19 @@ Not documented yet
 
 ### Common failure causes
 
-- One of the table configs is incomplete.
-- A schema, freshness, profile behavior, or DQ check fails.
-- Approved metadata evidence cannot be read.
-- Spark cannot profile or validate one of the DataFrames.
+- No active pipeline context exists.
+- Fabric runtime variables are unavailable.
+- Configured metadata routing is unavailable.
 
 ## Relationships
 
 ### Used by
 
-- `fabricops_kit.pipeline._run_active_table_guardrails`
+Not documented yet
 
 ### Calls
 
-- `fabricops_kit.config.resolve_fabric_context`
-- <a href="profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- `fabricops_kit.guardrails.enforce_freshness`
-- `fabricops_kit.guardrails.enforce_freshness_rule`
-- `fabricops_kit.guardrails.enforce_profile_behavior`
-- `fabricops_kit.guardrails.stop_if_failed`
-- `fabricops_kit.metadata._build_metadata_table_key`
-- `fabricops_kit.metadata._write_guardrail_result_row`
-- `fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle`
-- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
-- `fabricops_kit.pipeline._guardrail_can_continue`
-- `fabricops_kit.pipeline._table_key`
-- `fabricops_kit.pipeline._table_name`
-- `fabricops_kit.pipeline.build_guardrail_detail_rows`
-- `fabricops_kit.pipeline.build_guardrail_summary_rows`
-- `fabricops_kit.pipeline.write_catalogue_evidence`
+- `fabricops_kit.pipeline._run_active_table_guardrails`
 
 ## Implementation details
 
@@ -125,19 +88,15 @@ Not documented yet
 
 Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
 
-None.
+- `02_pipeline`
 
 **Side effects:**
 
-Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes evidence, and may update table config DataFrames with DQ annotations.
+May read or store active notebook runtime context for downstream guided wrappers.
 
 **Notes:**
 
-This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
-results before reporting blocking failures. DQ results that return an
-annotated DataFrame update the corresponding table config ``df`` in place
-so downstream writes use the checked DataFrame. Metadata reads and writes
-are routed through the configured metadata target by the called helpers.
+No additional callable notes are documented.
 
 </details>
 
@@ -148,147 +107,16 @@ are routed through the configured metadata target by the called helpers.
     Expanded internal helper tree is available in Implementation details.
 
     ```text
-    run_table_guardrails(...)
-    ├── _build_guardrail_blocking_message_from_bundle(...)
-    │   ├── _blocking_guardrail_message(...)
-    │   └── build_guardrail_summary_rows(...)
-    │       └── …
-    ├── _build_guardrail_evidence_definitions(...)
-    │   ├── _table_key(...)
-    │   └── _table_name(...)
-    ├── _build_metadata_table_key(...)
-    │   └── _stable_metadata_key(...)
-    ├── _check_schema_rule_runtime(...)
-    │   ├── _apply_bypass_post_review_warning(...)
-    │   │   └── …
-    │   ├── _catalogue_value(...)
-    │   ├── _check_schema_runtime(...)
-    │   │   └── …
-    │   ├── _parse_rule_parameters(...)
-    │   │   └── …
-    │   ├── _select_table_guardrail_rule(...)
-    │   │   └── …
-    │   └── _string_value(...)
-    ├── _check_schema_runtime(...)
-    │   ├── _actual_schema(...)
-    │   │   └── …
-    │   └── _normalize_datatype(...)
-    ├── _guardrail_can_continue(...)
-    ├── _table_key(...)
-    ├── _table_name(...)
-    ├── _write_guardrail_result_row(...)
-    │   ├── _build_runtime_audit_fields(...)
-    │   │   └── …
-    │   ├── _configured_lakehouse_schema(...)
-    │   │   └── …
-    │   ├── _now_utc_iso(...)
-    │   │   └── …
-    │   └── write_lakehouse_table(...)
-    │       └── …
-    ├── build_guardrail_detail_rows(...)
-    │   ├── _guardrail_reason(...)
-    │   │   └── …
-    │   ├── _next_action(...)
-    │   ├── _result_can_continue(...)
-    │   ├── _result_status(...)
-    │   ├── _table_keys(...)
-    │   └── _yes_no(...)
-    ├── build_guardrail_summary_rows(...)
-    │   ├── _guardrail_reason(...)
-    │   │   └── …
-    │   ├── _next_action(...)
-    │   ├── _result_can_continue(...)
-    │   ├── _result_status(...)
-    │   ├── _table_keys(...)
-    │   └── _yes_no(...)
-    ├── enforce_dq_rules(...)
-    │   ├── _dq_failed_row_count(...)
-    │   │   └── …
-    │   ├── _dq_summary(...)
-    │   │   └── …
-    │   ├── _dq_tagged_dataframe(...)
-    │   │   └── …
-    │   ├── _load_active_dq_rules(...)
-    │   │   └── …
-    │   ├── _read_guardrail_rule_metadata(...)
-    │   │   └── …
-    │   ├── _run_dq_guardrail_checks(...)
-    │   │   └── …
-    │   ├── _summarize_dq_guardrail(...)
-    │   └── _write_guardrail_result_row(...)
-    │       └── …
-    ├── enforce_freshness(...)
-    │   ├── _coerce_date(...)
-    │   ├── _iso_date_value(...)
-    │   │   └── …
-    │   └── _max_column_value(...)
-    ├── enforce_freshness_rule(...)
-    │   ├── _apply_bypass_post_review_warning(...)
-    │   │   └── …
-    │   ├── _catalogue_value(...)
-    │   ├── _parse_rule_parameters(...)
-    │   │   └── …
-    │   ├── _select_table_guardrail_rule(...)
-    │   │   └── …
-    │   ├── _string_value(...)
-    │   └── enforce_freshness(...)
-    │       └── …
-    ├── enforce_profile_behavior(...)
-    │   ├── _accepted_profile_rows(...)
-    │   │   └── …
-    │   ├── _apply_bypass_post_review_warning(...)
-    │   │   └── …
-    │   ├── _catalogue_value(...)
-    │   ├── _configured_lakehouse_schema(...)
-    │   │   └── …
-    │   ├── _guardrail_exclude_columns(...)
-    │   ├── _is_missing_table_error(...)
-    │   ├── _json_dumps_stable(...)
-    │   ├── _profile_hash(...)
-    │   │   └── …
-    │   ├── _profile_payload_from_profile(...)
-    │   │   └── …
-    │   ├── _select_profile_behavior_rule(...)
-    │   │   └── …
-    │   ├── _string_value(...)
-    │   ├── _write_guardrail_result_row(...)
-    │   │   └── …
-    │   ├── profile_dataframe(...)
-    │   │   └── …
-    │   └── read_lakehouse_table(...)
-    │       └── …
-    ├── profile_dataframe(...)
-    │   ├── _audit_timestamp_expr(...)
-    │   │   └── …
-    │   ├── _build_distribution_summaries(...)
-    │   │   └── …
-    │   ├── _get_audit_timezone(...)
-    │   │   └── …
-    │   ├── _get_profiled_columns(...)
-    │   └── _is_min_max_supported_type(...)
-    ├── resolve_fabric_context(...)
-    │   └── get_default_fabric_context(...)
-    ├── stop_if_failed(...)
-    │   └── SchemaDriftError(...)
-    └── write_catalogue_evidence(...)
-        ├── _build_metadata_table_key(...)
-        │   └── …
-        ├── _canonical_catalogue_profile_df(...)
-        ├── _configured_lakehouse_schema(...)
-        │   └── …
-        ├── _definition_name(...)
-        ├── _normalize_catalogue_evidence_types(...)
-        ├── _now_iso(...)
-        │   └── …
-        ├── _runtime_audit_fields(...)
-        │   └── …
-        └── write_lakehouse_table(...)
+    enforce_source_guardrails(...)
+    └── _run_active_table_guardrails(...)
+        ├── get_active_pipeline_context(...)
+        └── run_table_guardrails(...)
             └── …
     ```
 
-??? info "Internal helpers used: 88"
+??? info "Internal helpers used: 89"
 
-    This callable uses 88 internal helpers for audit timestamp, metadata loading, validation, rule parsing, profile comparison, column handling, rule evaluation, result summary, fabric or spark access, and other.
+    This callable uses 89 internal helpers for audit timestamp, metadata loading, validation, rule parsing, profile comparison, column handling, rule evaluation, result summary, fabric or spark access, and other.
 
     <div class="reference-helper-groups">
       <section class="reference-helper-group">
@@ -322,6 +150,7 @@ are routed through the configured metadata target by the called helpers.
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1481-L1488"><code>_read_guardrail_rule_metadata</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144"><code>_resolve_lakehouse_schema</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154"><code>_resolve_lakehouse_table_path</code></a>
+          <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L935-L955"><code>_run_active_table_guardrails</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L54-L79"><code>_select_table_guardrail_rule</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L75-L77"><code>_stable_metadata_key</code></a>
           <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L662-L663"><code>_table_key</code></a>
@@ -448,95 +277,66 @@ These generated fields are for automation tooling, maintainers, and documentatio
 
 ### Function manifest
 
-- Fully qualified function name: `fabricops_kit.pipeline.run_table_guardrails`
-- Short name: `run_table_guardrails`
+- Fully qualified function name: `fabricops_kit.pipeline.enforce_source_guardrails`
+- Short name: `enforce_source_guardrails`
 - Module: `pipeline`
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
-- Source line: `707`
-- Inbound references count: 1
-- Outbound references count: 17
-- Used in templates: —
-- Glossary terms: guardrails, can_continue, source data, target table, evidence
+- Source line: `992`
+- Inbound references count: 0
+- Outbound references count: 1
+- Used in templates: 02_pipeline
+- Glossary terms: notebook template, guardrails, metadata lakehouse
 
 ### Implementation contract
 
-- **required_context:** Requires CONFIG and env from 00_env_config so metadata operations use the configured metadata target.
-- **inputs:** table_configs plus config, env, run_id, spark_session, and agreement/notebook context.
-- **output:** Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
-- **side_effects:** Profiles DataFrames, reads stability/DQ metadata through configured metadata routing, writes evidence, and may update table config DataFrames with DQ annotations.
+- **required_context:** Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config when available.
+- **inputs:** See the source docstring for optional advanced overrides.
+- **output:** Guardrail result bundle; blocking failures stop execution.
+- **side_effects:** May read or store active notebook runtime context for downstream guided wrappers.
 - **failure_modes:** Not documented yet
-- **verification:** Verify stop_on_failure=True is used before transformation or writes when blocking guardrails should stop execution.
+- **verification:** Verify guided notebooks call start_pipeline_run_with_agreement before profile or enforcement wrappers.
 
 ### Inbound references
 
-- `fabricops_kit.pipeline._run_active_table_guardrails`
+Not documented yet
 
 ### Outbound references
 
-- `fabricops_kit.config.resolve_fabric_context`
-- <a href="profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="enforce_dq_rules/"><code>fabricops_kit.governance_review.enforce_dq_rules</code></a>
-- `fabricops_kit.guardrails.enforce_freshness`
-- `fabricops_kit.guardrails.enforce_freshness_rule`
-- `fabricops_kit.guardrails.enforce_profile_behavior`
-- `fabricops_kit.guardrails.stop_if_failed`
-- `fabricops_kit.metadata._build_metadata_table_key`
-- `fabricops_kit.metadata._write_guardrail_result_row`
-- `fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle`
-- `fabricops_kit.pipeline._build_guardrail_evidence_definitions`
-- `fabricops_kit.pipeline._guardrail_can_continue`
-- `fabricops_kit.pipeline._table_key`
-- `fabricops_kit.pipeline._table_name`
-- `fabricops_kit.pipeline.build_guardrail_detail_rows`
-- `fabricops_kit.pipeline.build_guardrail_summary_rows`
-- `fabricops_kit.pipeline.write_catalogue_evidence`
+- `fabricops_kit.pipeline._run_active_table_guardrails`
 
 ### Raw source metadata
 
 - Source file path: `src/fabricops_kit/pipeline.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L707-L932">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L707-L932</a>
-- Start line: `707`
-- End line: `932`
+- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L992-L1006">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L992-L1006</a>
+- Start line: `992`
+- End line: `1006`
 - Signature:
 
 ```python
-def run_table_guardrails(
-    table_configs: list[dict[str, Any]],
-    run_id: str,
-    context: dict[str, Any] | None=None,
-    spark_session: Any,
-    agreement_id: str='',
-    agreement_contract_version: str='',
-    notebook_registry_id: str='',
-    notebook_id: str='',
-    pipeline_name: str='',
-    stop_on_failure: bool=False,
-) -> dict[str, Any]:
+def enforce_source_guardrails(source_tables: list[dict[str, Any]]) -> dict[str, Any]
 ```
 
 ### Internal relationship graph
 
 ### Public related functions
 
-- <a href="prepare_pipeline_table_configs/"><code>fabricops_kit.pipeline.prepare_pipeline_table_configs</code></a>
-- `fabricops_kit.pipeline.write_catalogue_evidence`
+- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
+- <a href="write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
 
 ### Internal implementation summary
 
-- Internal helper count: 88
+- Internal helper count: 89
 - Grouped helper summary is rendered in the page-level Implementation details section; helper chips link to source.
 
 </details>
 
 ## Glossary
 
+- <details class="glossary-chip"><summary>Notebook template</summary>Reusable starter notebook workflow that shows how to run a FabricOps phase.</details>
 - <details class="glossary-chip"><summary>Guardrails</summary>Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</details>
-- <details class="glossary-chip"><summary>can_continue</summary>Boolean result that tells downstream notebook code whether processing can keep running.</details>
-- <details class="glossary-chip"><summary>Source data</summary>Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</details>
-- <details class="glossary-chip"><summary>Target table</summary>A written table produced by a pipeline output.</details>
-- <details class="glossary-chip"><summary>Evidence</summary>Stored proof that a profile, decision, result, or relationship existed at a point in time.</details>
+- <details class="glossary-chip"><summary>Metadata lakehouse</summary>Configured Fabric Lakehouse target where FabricOps stores metadata tables.</details>
 
 See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 

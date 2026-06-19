@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
 from typing import Any, Mapping
 from uuid import uuid4
 
+from .data_agreement import get_selected_agreement, widget_select_agreement
 from .data_profiling import profile_dataframe
 from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, _check_schema_runtime, _check_schema_rule_runtime
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
@@ -15,6 +17,163 @@ from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _w
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
+
+
+@dataclass
+class PipelineRunContext:
+    """Store resolved runtime values for guided pipeline notebook wrappers.
+
+    Parameters
+    ----------
+    run_id : str
+        Current FabricOps run identifier.
+    pipeline_started_at : str
+        Audit timestamp captured when the guided pipeline run starts.
+    pipeline_name : str
+        Runtime pipeline or notebook name.
+    spark_session : Any
+        Spark session used by downstream guardrail and summary wrappers.
+    metadata_schema : str
+        Configured metadata schema from ``00_env_config`` when available.
+    notebook_id, notebook_registry_id : str, optional
+        Notebook identity and registry values resolved from runtime metadata and
+        agreement registration state.
+    agreement_id, agreement_contract_version : str, optional
+        Selected agreement identity resolved by ``widget_select_agreement``.
+    context : dict, optional
+        Advanced FabricOps context override.
+
+    Notes
+    -----
+    This object is intended for template-facing wrappers. Advanced notebooks can
+    still call lower-level helpers directly with explicit runtime parameters.
+
+    """
+
+    run_id: str
+    pipeline_started_at: str
+    pipeline_name: str
+    spark_session: Any
+    metadata_schema: str = ""
+    notebook_id: str = ""
+    notebook_registry_id: str = ""
+    agreement_id: str = ""
+    agreement_contract_version: str = ""
+    context: dict[str, Any] | None = None
+    source_definitions: dict[str, dict[str, Any]] = field(default_factory=dict)
+    target_definitions: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+
+_ACTIVE_PIPELINE_CONTEXT: PipelineRunContext | None = None
+
+
+def _notebook_global(name: str, default: Any = None) -> Any:
+    """Return a value from the active IPython notebook namespace when present."""
+    try:
+        ip = get_ipython()  # type: ignore[name-defined]
+    except Exception:
+        return default
+    return getattr(ip, "user_ns", {}).get(name, default) if ip is not None else default
+
+
+def _runtime_metadata_value(run_context: Any, key: str, default: str = "") -> str:
+    metadata = getattr(run_context, "runtime_metadata", {}) or {}
+    if isinstance(metadata, Mapping):
+        return str(metadata.get(key) or default)
+    return default
+
+
+def start_pipeline_run(*, run_context: Any = None, spark_session: Any = None, metadata_schema: str | None = None, pipeline_name: str | None = None, context: dict[str, Any] | None = None) -> PipelineRunContext:
+    """Start a guided pipeline run and store active runtime context.
+
+    Parameters
+    ----------
+    run_context : object, optional
+        ``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook
+        variable named ``RUN_CONTEXT``.
+    spark_session : Any, optional
+        Spark session. Defaults to the active notebook variable named ``spark``.
+    metadata_schema : str, optional
+        ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
+    pipeline_name : str, optional
+        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
+    context : dict, optional
+        Advanced FabricOps context override.
+
+    Returns
+    -------
+    PipelineRunContext
+        Active context used by template-facing guardrail and summary wrappers.
+
+    """
+    global _ACTIVE_PIPELINE_CONTEXT
+    run_context = run_context if run_context is not None else _notebook_global("RUN_CONTEXT")
+    spark_session = spark_session if spark_session is not None else _notebook_global("spark")
+    schema = metadata_schema if metadata_schema is not None else _notebook_global("METADATA_SCHEMA", "")
+    run_id = str(getattr(run_context, "run_id", "") or uuid4())
+    resolved_pipeline_name = str(pipeline_name or _runtime_metadata_value(run_context, "currentNotebookName", "02_pipeline"))
+    _ACTIVE_PIPELINE_CONTEXT = PipelineRunContext(
+        run_id=run_id,
+        pipeline_started_at=_now_iso(),
+        pipeline_name=resolved_pipeline_name,
+        spark_session=spark_session,
+        metadata_schema=str(schema or ""),
+        notebook_id=_runtime_metadata_value(run_context, "currentNotebookId", ""),
+        context=context,
+    )
+    return _ACTIVE_PIPELINE_CONTEXT
+
+
+def start_pipeline_run_with_agreement(**kwargs: Any) -> PipelineRunContext:
+    """Start a guided pipeline run and resolve the active agreement selection.
+
+    Parameters
+    ----------
+    **kwargs : Any
+        Optional overrides accepted by :func:`start_pipeline_run`.
+
+    Returns
+    -------
+    PipelineRunContext
+        Active pipeline context populated with agreement and notebook registry
+        identity for downstream guided wrappers.
+
+    """
+    pipeline = start_pipeline_run(**kwargs)
+    widget_select_agreement(
+        spark_session=pipeline.spark_session,
+        metadata_schema=pipeline.metadata_schema or None,
+        register_notebook=True,
+        notebook_type="02_pipeline",
+        pipeline_name=pipeline.pipeline_name,
+        context=pipeline.context,
+    )
+    agreement = get_selected_agreement()
+    pipeline.agreement_id = str(agreement.get("agreement_id", ""))
+    pipeline.agreement_contract_version = str(agreement.get("agreement_contract_version", agreement.get("contract_version", "")))
+    pipeline.notebook_registry_id = str(agreement.get("notebook_registry_id", agreement.get("registration_id", "")))
+    pipeline.notebook_id = str(agreement.get("notebook_id", pipeline.notebook_id))
+    return pipeline
+
+
+def get_active_pipeline_context() -> PipelineRunContext:
+    """Return the active guided pipeline context.
+
+    Returns
+    -------
+    PipelineRunContext
+        Context created by :func:`start_pipeline_run` or
+        :func:`start_pipeline_run_with_agreement`.
+
+    Raises
+    ------
+    RuntimeError
+        If no guided pipeline context has been started.
+
+    """
+    if _ACTIVE_PIPELINE_CONTEXT is None:
+        raise RuntimeError("No active pipeline context. Run start_pipeline_run_with_agreement() first.")
+    return _ACTIVE_PIPELINE_CONTEXT
 
 
 def _now_iso(config: Any = None) -> str:
@@ -771,6 +930,153 @@ def run_table_guardrails(
         )
 
     return result
+
+
+def _run_active_table_guardrails(table_configs: list[dict[str, Any]], *, table_role: str, stop_on_failure: bool = False) -> dict[str, Any]:
+    """Run table guardrails using the active guided pipeline context."""
+    pipeline = get_active_pipeline_context()
+    result = run_table_guardrails(
+        table_configs,
+        run_id=pipeline.run_id,
+        context=pipeline.context,
+        spark_session=pipeline.spark_session,
+        pipeline_name=pipeline.pipeline_name,
+        notebook_id=pipeline.notebook_id,
+        notebook_registry_id=pipeline.notebook_registry_id,
+        agreement_id=pipeline.agreement_id,
+        agreement_contract_version=pipeline.agreement_contract_version,
+        stop_on_failure=stop_on_failure,
+    )
+    definitions = dict(result.get("evidence_definitions") or {})
+    if table_role == "source":
+        pipeline.source_definitions = definitions
+    elif table_role == "target":
+        pipeline.target_definitions = definitions
+    return result
+
+
+def profile_source_tables(source_tables: list[dict[str, Any]]) -> dict[str, Any]:
+    """Profile source tables using the active guided pipeline context.
+
+    Parameters
+    ----------
+    source_tables : list of dict
+        Prepared source table configs for the pipeline notebook.
+
+    Returns
+    -------
+    dict[str, Any]
+        Guardrail result bundle returned by :func:`run_table_guardrails`.
+
+    """
+    return _run_active_table_guardrails(source_tables, table_role="source")
+
+
+def profile_target_tables(target_tables: list[dict[str, Any]]) -> dict[str, Any]:
+    """Profile target tables using the active guided pipeline context.
+
+    Parameters
+    ----------
+    target_tables : list of dict
+        Prepared target table configs for the pipeline notebook.
+
+    Returns
+    -------
+    dict[str, Any]
+        Guardrail result bundle returned by :func:`run_table_guardrails`.
+
+    """
+    return _run_active_table_guardrails(target_tables, table_role="target")
+
+
+def enforce_source_guardrails(source_tables: list[dict[str, Any]]) -> dict[str, Any]:
+    """Enforce blocking source guardrails using the active pipeline context.
+
+    Parameters
+    ----------
+    source_tables : list of dict
+        Prepared source table configs for the pipeline notebook.
+
+    Returns
+    -------
+    dict[str, Any]
+        Guardrail result bundle returned by :func:`run_table_guardrails`.
+
+    """
+    return _run_active_table_guardrails(source_tables, table_role="source", stop_on_failure=True)
+
+
+def enforce_target_guardrails(target_tables: list[dict[str, Any]]) -> dict[str, Any]:
+    """Enforce blocking target guardrails using the active pipeline context.
+
+    Parameters
+    ----------
+    target_tables : list of dict
+        Prepared target table configs for the pipeline notebook.
+
+    Returns
+    -------
+    dict[str, Any]
+        Guardrail result bundle returned by :func:`run_table_guardrails`.
+
+    """
+    return _run_active_table_guardrails(target_tables, table_role="target", stop_on_failure=True)
+
+
+def _pipeline_status_from_results(*results: Mapping[str, Any] | None) -> str:
+    return "succeeded" if all(bool((result or {}).get("can_continue", True)) for result in results) else "failed"
+
+
+def complete_pipeline_run(*, source_guardrail_results: Mapping[str, Any], target_guardrail_results: Mapping[str, Any], target_write_status: Mapping[str, Any] | None = None, lineage_result: Mapping[str, Any] | None = None, message: str = "") -> dict[str, Any]:
+    """Write the guided pipeline run summary from active context and results.
+
+    Parameters
+    ----------
+    source_guardrail_results, target_guardrail_results : mapping
+        Enforcement result bundles returned by :func:`enforce_source_guardrails`
+        and :func:`enforce_target_guardrails`.
+    target_write_status : mapping, optional
+        Target write outcome mapping created by the notebook write step.
+    lineage_result : mapping, optional
+        Lineage write result returned by :func:`write_pipeline_lineage`.
+    message : str, optional
+        Additional runtime summary message.
+
+    Returns
+    -------
+    dict[str, Any]
+        Summary row returned by :func:`write_pipeline_run_summary`.
+
+    """
+    pipeline = get_active_pipeline_context()
+    lineage_status = str((lineage_result or {}).get("status", "not_run"))
+    catalogue_status = "written" if all((result or {}).get("catalogue_status") for result in (source_guardrail_results, target_guardrail_results)) else "not_run"
+    summary_message = message or (json.dumps({"target_write_status": target_write_status or {}}, default=str, sort_keys=True) if target_write_status else "")
+    return write_pipeline_run_summary(
+        spark=pipeline.spark_session,
+        run_id=pipeline.run_id,
+        context=pipeline.context,
+        agreement_id=pipeline.agreement_id,
+        agreement_contract_version=pipeline.agreement_contract_version,
+        notebook_registry_id=pipeline.notebook_registry_id,
+        notebook_id=pipeline.notebook_id,
+        pipeline_name=pipeline.pipeline_name,
+        started_at=pipeline.pipeline_started_at,
+        status=_pipeline_status_from_results(source_guardrail_results, target_guardrail_results),
+        source_definitions=pipeline.source_definitions or dict(source_guardrail_results.get("evidence_definitions") or {}),
+        target_definitions=pipeline.target_definitions or dict(target_guardrail_results.get("evidence_definitions") or {}),
+        source_schema_results=source_guardrail_results.get("schema_results"),
+        target_schema_results=target_guardrail_results.get("schema_results"),
+        source_freshness_results=source_guardrail_results.get("freshness_results"),
+        target_freshness_results=target_guardrail_results.get("freshness_results"),
+        source_stability_results=source_guardrail_results.get("stability_results"),
+        target_stability_results=target_guardrail_results.get("stability_results"),
+        source_dq_results=source_guardrail_results.get("dq_results"),
+        target_dq_results=target_guardrail_results.get("dq_results"),
+        lineage_status=lineage_status,
+        catalogue_status=catalogue_status,
+        message=summary_message,
+    )
 
 
 def write_catalogue_evidence(
