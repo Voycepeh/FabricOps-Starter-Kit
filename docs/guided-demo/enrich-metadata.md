@@ -12,4 +12,4 @@ Use the pipeline or governance widgets to add business context, classifications,
 
 Enrichment rows are appended to the metadata target without overwriting observed catalogue evidence.
 
-See also: [METADATA_ENRICHMENT_RULES](../reference/metadata-tables/metadata-enrichment-rules.md).
+See also: [METADATA_ENRICHMENT_RULES](../reference/metadata/metadata_enrichment_rules.md).

@@ -50,7 +50,7 @@ They abstract the important but tedious work into a simplified plug and play wor
     <span class="fabricops-landing-card__title">23 DQ rule types</span>
     <span class="fabricops-landing-card__body">Governed checks for pipeline guardrails.</span>
   </a>
-  <a class="fabricops-landing-card" href="reference/metadata-tables/">
+  <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title">12 metadata tables</span>
     <span class="fabricops-landing-card__body">Evidence tables for delivery and review.</span>
   </a>

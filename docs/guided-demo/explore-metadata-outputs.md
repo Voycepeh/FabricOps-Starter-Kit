@@ -4,7 +4,7 @@ Use generated reference pages, `99_explore`, or dashboard-internal pages to insp
 
 ## What to do
 
-1. Start with the generated [List of Metadata Tables](../reference/metadata-tables/index.md).
+1. Start with the generated [List of Metadata Tables](../reference/metadata.md).
 2. Open individual metadata table pages to inspect implemented schemas and related functions.
 3. Use `99_explore` for read-only troubleshooting or discovery when you need notebook-side inspection.
 

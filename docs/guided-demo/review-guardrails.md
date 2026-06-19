@@ -13,4 +13,4 @@ Run `03_governance` to review enrichment and guardrail intent before relying on 
 
 Guardrail and enrichment review decisions are appended to their metadata tables, and active rules become available to runtime enforcement.
 
-See also: [METADATA_GUARDRAIL_RULES](../reference/metadata-tables/metadata-guardrail-rules.md) and [List of DQ Rules](../reference/dq-rules/index.md).
+See also: [METADATA_GUARDRAIL_RULES](../reference/metadata/metadata_guardrail_rules.md) and [List of DQ Rules](../reference/dq-rules/index.md).

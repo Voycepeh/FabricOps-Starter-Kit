@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
-from html import escape
 import json
 import os
 from pathlib import Path
@@ -35,7 +34,8 @@ FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.jso
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 
-METADATA_REFERENCE_DIR = ROOT / "docs" / "reference" / "metadata-tables"
+METADATA_REFERENCE_DIR = ROOT / "docs" / "reference" / "metadata"
+METADATA_REFERENCE_OVERVIEW = ROOT / "docs" / "reference" / "metadata.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
@@ -2049,7 +2049,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
 
 def _metadata_slug(table_name: str) -> str:
     """Return a stable markdown filename for a metadata table."""
-    return table_name.lower().replace("_", "-")
+    return table_name.lower()
 
 
 def _default_reference_config() -> Any:
@@ -2212,35 +2212,25 @@ def generate_metadata_table_reference() -> None:
         "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.",
         "",
         '<figure class="metadata-model-image">',
-        '  <img src="../../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />',
+        '  <img src="../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />',
         "</figure>",
         "",
-        '<table class="metadata-tables-overview">',
-        "  <colgroup>",
-        '    <col class="metadata-tables-overview__name" />',
-        '    <col class="metadata-tables-overview__purpose" />',
-        '    <col class="metadata-tables-overview__step" />',
-        "  </colgroup>",
-        "  <thead>",
-        "    <tr>",
-        "      <th>Metadata table</th>",
-        "      <th>Purpose</th>",
-        "      <th>Primary template step</th>",
-        "    </tr>",
-        "  </thead>",
-        "  <tbody>",
+        '<div class="grid cards" markdown>',
+        "",
     ]
     for table_name in sorted(registry):
         rel = _METADATA_TABLE_RELATIONSHIPS.get(table_name, {})
         templates = str(rel.get("related_step") or ", ".join(rel.get("templates", [])) or "Not currently discoverable.")
         purpose = _METADATA_TABLE_PURPOSES.get(table_name, "Implemented metadata table prepared by `00_env_config`.")
+        slug = _metadata_slug(table_name)
         index_lines.extend(
             [
-                "    <tr>",
-                f'      <td><a href="{_metadata_slug(table_name)}.md"><code>{escape(table_name)}</code></a></td>',
-                f"      <td>{escape(purpose)}</td>",
-                f"      <td>{escape(templates)}</td>",
-                "    </tr>",
+                f"-   **[{table_name}](metadata/{slug}.md)**",
+                "",
+                f"    {purpose}",
+                "",
+                f"    `{templates}`",
+                "",
             ]
         )
 
@@ -2269,10 +2259,10 @@ def generate_metadata_table_reference() -> None:
             page.extend(f"- {_function_link(symbol, '../../')}" for symbol in symbols)
         else:
             page.append("- Not currently discoverable.")
-        (METADATA_REFERENCE_DIR / f"{_metadata_slug(table_name)}.md").write_text("\n".join(page) + "\n", encoding="utf-8")
+        (METADATA_REFERENCE_DIR / f"{slug}.md").write_text("\n".join(page) + "\n", encoding="utf-8")
 
-    index_lines.extend(["  </tbody>", "</table>"])
-    (METADATA_REFERENCE_DIR / "index.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
+    index_lines.append("</div>")
+    METADATA_REFERENCE_OVERVIEW.write_text("\n".join(index_lines) + "\n", encoding="utf-8")
 
 def main() -> None:
     """Run the command-line workflow."""

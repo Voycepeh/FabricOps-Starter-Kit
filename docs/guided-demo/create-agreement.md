@@ -13,4 +13,4 @@ Run `01_agreement` after environment setup to capture steward, agreement, and ev
 
 The configured metadata target receives steward, agreement, and agreement evidence rows that later notebooks can select and explain.
 
-See also: [List of Metadata Tables](../reference/metadata-tables/index.md) and [List of Functions](../reference/index.md).
+See also: [List of Metadata Tables](../reference/metadata.md) and [List of Functions](../reference/index.md).

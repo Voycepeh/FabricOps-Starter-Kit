@@ -47,5 +47,5 @@ After the walkthrough, you should be able to answer these questions from metadat
 ## Where to go for details
 
 - Use [Template Notebooks](how-fabricops-works/notebook-templates/index.md) to understand notebook internals, editable settings, advanced options, validations, and downstream dependencies.
-- Use [Metadata Tables](reference/metadata-tables/index.md) to inspect the shape of stored evidence.
+- Use [Metadata Tables](reference/metadata.md) to inspect the shape of stored evidence.
 - Use [Function Reference](reference/index.md) only when you need helper-level API details.
