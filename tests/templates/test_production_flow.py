@@ -162,31 +162,41 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
 
 
 def test_guided_demo_links_pipeline_guardrail_demo():
-    """Verify guided demo links pipeline guardrail milestones."""
+    """Verify guided demo links the step pages for the pipeline guardrail demo."""
     guided_demo = (ROOT / "docs" / "guided-demo.md").read_text(encoding="utf-8")
+    setup_page = (ROOT / "docs" / "guided-demo" / "setup-fabric-workspace.md").read_text(encoding="utf-8")
 
     for expected in [
         "# FabricOps Guided Demo",
-        "## Milestone 3: Generate demo data with `example_pipeline_demo`",
-        "## Milestone 4: Run `02_pipeline` happy path",
-        "## Milestone 5: Review governance in `03_governance`",
-        "## Milestone 6: Rerun `02_pipeline` with active guardrails",
-        "## Milestone 7: Try failure scenarios",
-        "source_lakehouse",
-        "unified_lakehouse",
+        "## Guided demo flow",
+        "[Setup Fabric Workspace](guided-demo/setup-fabric-workspace.md)",
+        "[Configure Environment](guided-demo/configure-environment.md)",
+        "[Create Agreement](guided-demo/create-agreement.md)",
+        "[Run Pipeline](guided-demo/run-pipeline.md)",
+        "[Enrich Metadata](guided-demo/enrich-metadata.md)",
+        "[Review Guardrails](guided-demo/review-guardrails.md)",
+        "[Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md)",
         "METADATA_GUARDRAIL_RULES",
     ]:
         assert expected in guided_demo
 
-    for scenario_table in [
-        "demo_src_orders_happy",
-        "demo_src_orders_schema_drift",
-        "demo_src_orders_dq_issue",
-        "demo_src_orders_stale",
-        "demo_src_orders_reload_a",
-        "demo_src_orders_reload_b",
+    assert "Milestone" not in guided_demo
+    assert "milestone" not in guided_demo
+
+    for expected in [
+        "# Setup Fabric Workspace",
+        "metadata_lakehouse",
+        "source_lakehouse",
+        "unified_lakehouse",
+        "product_warehouse",
+        "00_env_config",
+        "01_agreement",
+        "02_pipeline",
+        "03_governance",
+        "example_pipeline_demo",
+        "99_explore",
     ]:
-        assert scenario_table in guided_demo
+        assert expected in setup_page
 
     assert (TEMPLATES / "example_pipeline_demo.ipynb").exists()
     assert (TEMPLATES / "example_dq_rule_smoke_test.ipynb").exists()
