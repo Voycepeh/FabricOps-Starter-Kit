@@ -8,166 +8,1054 @@ Use this page as a review aid for separation, helper reuse, and refactor plannin
 
 This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.
 
-- [`display_guardrail_results`](../api/reference/display_guardrail_results/) — independent entry point
-- [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/) — independent entry point
-- [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/) — independent entry point
-- [`profile_dataframe`](../api/reference/profile_dataframe/) — independent entry point
-- [`read_data`](../api/reference/read_data/) — independent entry point
-- [`run_table_guardrails`](../api/reference/run_table_guardrails/) → [`profile_dataframe`](../api/reference/profile_dataframe/)
-- [`setup_metadata_tables`](../api/reference/setup_metadata_tables/) — independent entry point
-- [`setup_notebook`](../api/reference/setup_notebook/) — independent entry point
-- [`start_pipeline_run`](../api/reference/start_pipeline_run/) — independent entry point
-- [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/) — independent entry point
-- [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) — independent entry point
-- [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) — independent entry point
-- [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/) — independent entry point
-- [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/) — independent entry point
-- [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) — independent entry point
-- [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/) — independent entry point
-- [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/) — independent entry point
-- [`write_data`](../api/reference/write_data/) — independent entry point
-- [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) — independent entry point
-- [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) — independent entry point
+- [`display_guardrail_results`](../../api/reference/display_guardrail_results/) — independent entry point
+- [`get_latest_metadata_catalogue`](../../api/reference/get_latest_metadata_catalogue/) — independent entry point
+- [`prepare_pipeline_table_configs`](../../api/reference/prepare_pipeline_table_configs/) — independent entry point
+- [`profile_dataframe`](../../api/reference/profile_dataframe/) — independent entry point
+- [`read_data`](../../api/reference/read_data/) — independent entry point
+- [`run_table_guardrails`](../../api/reference/run_table_guardrails/) → [`profile_dataframe`](../../api/reference/profile_dataframe/)
+- [`setup_metadata_tables`](../../api/reference/setup_metadata_tables/) — independent entry point
+- [`setup_notebook`](../../api/reference/setup_notebook/) — independent entry point
+- [`start_pipeline_run`](../../api/reference/start_pipeline_run/) — independent entry point
+- [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules/) — independent entry point
+- [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules/) — independent entry point
+- [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata/) — independent entry point
+- [`widget_render_agreement_evidence`](../../api/reference/widget_render_agreement_evidence/) — independent entry point
+- [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement/) — independent entry point
+- [`widget_render_data_steward`](../../api/reference/widget_render_data_steward/) — independent entry point
+- [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance/) — independent entry point
+- [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target/) — independent entry point
+- [`write_data`](../../api/reference/write_data/) — independent entry point
+- [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage/) — independent entry point
+- [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary/) — independent entry point
 
 ## Callable helper summary
 
-| Public callable | Module | Unique internal helper count | Direct internal helpers | Deepest call chain depth | Repeated helper count | Calls another public callable |
-| --- | --- | ---: | --- | ---: | ---: | --- |
-| [`display_guardrail_results`](../api/reference/display_guardrail_results/) | `pipeline` | 12 | [`_rows_for_display`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L500-L504) | 4 | 11 | No |
-| [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/) | `governance_review` | 10 | [`_configured_lakehouse_schema`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177), [`_catalogue_lookup_value`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L78-L93), [`_coerce_rows`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L62-L67) | 4 | 4 | No |
-| [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/) | `pipeline` | 4 | [`_add_audit_columns`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L538-L548) | 4 | 0 | No |
-| [`profile_dataframe`](../api/reference/profile_dataframe/) | `data_profiling` | 9 | [`_audit_timestamp_expr`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221), [`_get_audit_timezone`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204), [`_build_distribution_summaries`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223), [`_get_profiled_columns`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82), [`_is_min_max_supported_type`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105) | 3 | 2 | No |
-| [`read_data`](../api/reference/read_data/) | `fabric_input_output` | 9 | — | 4 | 5 | No |
-| [`run_table_guardrails`](../api/reference/run_table_guardrails/) | `pipeline` | 87 | [`_run_active_dq_guardrail`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692), [`_check_schema_rule_runtime`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L92-L110), [`_check_schema_runtime`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L313-L408), [`_build_metadata_table_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81), [`_write_guardrail_result_row`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L89-L136), [`_active_pipeline_context`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156), [`_build_guardrail_blocking_message_from_bundle`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L491-L497), [`_build_guardrail_evidence_definitions`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L654-L684), [`_guardrail_can_continue`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L650-L651), [`_table_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L642-L643), [`_table_name`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L646-L647) | 6 | 12 | Yes |
-| [`setup_metadata_tables`](../api/reference/setup_metadata_tables/) | `config` | 32 | [`_get_metadata_table_schema_registry`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1047-L1076), [`_metadata_schema_field_names`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1022-L1026), [`_metadata_tables_from_setup_results`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L981-L992), [`_resolve_metadata_schema`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1103-L1110), [`_setup_metadata_table_registry`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142), [`_validate_framework_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634), [`_validate_metadata_table_registration`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191), [`_list_data_stewards`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490), [`_get_governance_metadata_schemas`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313) | 5 | 12 | No |
-| [`setup_notebook`](../api/reference/setup_notebook/) | `config` | 8 | [`_get_store`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719), [`_run_config_smoke_tests`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L736-L836), [`_validate_framework_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634) | 4 | 2 | No |
-| [`start_pipeline_run`](../api/reference/start_pipeline_run/) | `pipeline` | 34 | [`_notebook_global`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L46-L52), [`_now_iso`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160), [`_PipelineRunContext`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L23-L40), [`_runtime_metadata_value`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L55-L60) | 7 | 12 | No |
-| [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/) | `governance_review` | 26 | [`_dq_records_from_selection`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435), [`_latest_rule`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073), [`_rule_params`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082), [`_write_rule_records`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096) | 8 | 12 | No |
-| [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) | `governance_review` | 26 | [`_latest_rule`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073), [`_rule_params`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082), [`_schema_freshness_profile_records_from_selection`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249), [`_write_rule_records`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096) | 8 | 12 | No |
-| [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | `governance_review` | 33 | [`_collect_enrichment_extra_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L588-L590), [`_enrichment_options`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L555-L564), [`_render_enrichment_extra_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L567-L585), [`_selected_catalogue_rows_for_enrichment`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605), [`_value`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71), [`_write_table_metadata_enrichment_records`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760) | 7 | 12 | No |
-| [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/) | `data_agreement` | 27 | [`_render_agreement_evidence_widget`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404) | 7 | 10 | No |
-| [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/) | `data_agreement` | 46 | [`_render_maintenance_widget`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283) | 7 | 12 | No |
-| [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | `data_agreement` | 46 | [`_render_maintenance_widget`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283) | 7 | 12 | No |
-| [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/) | `governance_review` | 9 | — | 5 | 9 | No |
-| [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/) | `governance_review` | 14 | [`_filter_table_rows`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2043-L2057), [`_read_metadata_table_or_empty`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040), [`_build_metadata_table_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81) | 5 | 5 | No |
-| [`write_data`](../api/reference/write_data/) | `fabric_input_output` | 6 | — | 4 | 3 | No |
-| [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | `pipeline` | 19 | [`_configured_lakehouse_schema`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177), [`_build_metadata_table_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81), [`_definition_name`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164), [`_now_iso`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160), [`_runtime_audit_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L189-L200) | 5 | 9 | No |
-| [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | `pipeline` | 14 | [`_configured_lakehouse_schema`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177), [`_active_pipeline_context`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156), [`_definition_name`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164), [`_now_iso`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160), [`_summary_status`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L167-L186) | 4 | 4 | No |
+<div class="callable-flow-table-wrap" markdown="0">
+<table class="callable-flow-table">
+<thead>
+<tr>
+<th class="flow-cell-name">Public callable</th>
+<th class="flow-cell-module">Module</th>
+<th class="flow-cell-number">Unique internal helper count</th>
+<th class="flow-cell-wide">Direct internal helpers</th>
+<th class="flow-cell-number">Deepest call chain depth</th>
+<th class="flow-cell-number">Repeated helper count</th>
+<th class="flow-cell-flag">Calls another public callable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L500-L504"><code>_rows_for_display</code></a></td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">11</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">10</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L78-L93"><code>_catalogue_lookup_value</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a></td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L538-L548"><code>_add_audit_columns</code></a></td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">0</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221"><code>_audit_timestamp_expr</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82"><code>_get_profiled_columns</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type</code></a></td>
+<td class="flow-cell-number">3</td>
+<td class="flow-cell-number">2</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/read_data/"><code>read_data</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-wide">—</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">87</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692"><code>_run_active_dq_guardrail</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L92-L110"><code>_check_schema_rule_runtime</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L313-L408"><code>_check_schema_runtime</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"><code>_build_metadata_table_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156"><code>_active_pipeline_context</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L491-L497"><code>_build_guardrail_blocking_message_from_bundle</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L654-L684"><code>_build_guardrail_evidence_definitions</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L650-L651"><code>_guardrail_can_continue</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L642-L643"><code>_table_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L646-L647"><code>_table_name</code></a></td>
+<td class="flow-cell-number">6</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">Yes</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-number">32</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1047-L1076"><code>_get_metadata_table_schema_registry</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1022-L1026"><code>_metadata_schema_field_names</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L981-L992"><code>_metadata_tables_from_setup_results</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1103-L1110"><code>_resolve_metadata_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"><code>_setup_metadata_table_registry</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"><code>_validate_metadata_table_registration</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490"><code>_list_data_stewards</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313"><code>_get_governance_metadata_schemas</code></a></td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-number">8</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L736-L836"><code>_run_config_smoke_tests</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a></td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">2</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">34</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L46-L52"><code>_notebook_global</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"><code>_now_iso</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L23-L40"><code>_PipelineRunContext</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L55-L60"><code>_runtime_metadata_value</code></a></td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">26</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435"><code>_dq_records_from_selection</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073"><code>_latest_rule</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082"><code>_rule_params</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096"><code>_write_rule_records</code></a></td>
+<td class="flow-cell-number">8</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">26</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073"><code>_latest_rule</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082"><code>_rule_params</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249"><code>_schema_freshness_profile_records_from_selection</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096"><code>_write_rule_records</code></a></td>
+<td class="flow-cell-number">8</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">33</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L588-L590"><code>_collect_enrichment_extra_fields</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L555-L564"><code>_enrichment_options</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L567-L585"><code>_render_enrichment_extra_fields</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605"><code>_selected_catalogue_rows_for_enrichment</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760"><code>_write_table_metadata_enrichment_records</code></a></td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-number">27</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404"><code>_render_agreement_evidence_widget</code></a></td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">10</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-number">46</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a></td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-number">46</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a></td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-wide">—</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">14</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2043-L2057"><code>_filter_table_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040"><code>_read_metadata_table_or_empty</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"><code>_build_metadata_table_key</code></a></td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/write_data/"><code>write_data</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-number">6</td>
+<td class="flow-cell-wide">—</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">3</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">19</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"><code>_build_metadata_table_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164"><code>_definition_name</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"><code>_now_iso</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L189-L200"><code>_runtime_audit_fields</code></a></td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">14</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156"><code>_active_pipeline_context</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164"><code>_definition_name</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"><code>_now_iso</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L167-L186"><code>_summary_status</code></a></td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-flag">No</td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Shared helper usage
 
 Internal helpers reached by more than one public callable.
 
-| Helper | Qualified name | Module | Public callables that reach it | Public callable count |
-| --- | --- | --- | --- | ---: |
-| [`_get_store`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719) | `fabricops_kit.config._get_store` | `config` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`read_data`](../api/reference/read_data/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`setup_notebook`](../api/reference/setup_notebook/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_data`](../api/reference/write_data/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 16 |
-| [`_normalize_path_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677) | `fabricops_kit.config._normalize_path_config` | `config` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`read_data`](../api/reference/read_data/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`setup_notebook`](../api/reference/setup_notebook/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_data`](../api/reference/write_data/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 16 |
-| [`_normalize_schema_name`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128) | `fabricops_kit.fabric_input_output._normalize_schema_name` | `fabric_input_output` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`read_data`](../api/reference/read_data/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_data`](../api/reference/write_data/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 15 |
-| [`_normalize_table_name`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114) | `fabricops_kit.fabric_input_output._normalize_table_name` | `fabric_input_output` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`read_data`](../api/reference/read_data/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_data`](../api/reference/write_data/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 15 |
-| [`_resolve_lakehouse_schema`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144) | `fabricops_kit.fabric_input_output._resolve_lakehouse_schema` | `fabric_input_output` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`read_data`](../api/reference/read_data/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_data`](../api/reference/write_data/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 15 |
-| [`_resolve_lakehouse_table_path`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154) | `fabricops_kit.fabric_input_output._resolve_lakehouse_table_path` | `fabric_input_output` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`read_data`](../api/reference/read_data/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_data`](../api/reference/write_data/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 15 |
-| [`_validate_audit_timezone`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196) | `fabricops_kit.config._validate_audit_timezone` | `config` | [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/), [`profile_dataframe`](../api/reference/profile_dataframe/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`setup_notebook`](../api/reference/setup_notebook/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 14 |
-| [`_get_audit_timezone`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204) | `fabricops_kit.config._get_audit_timezone` | `config` | [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/), [`profile_dataframe`](../api/reference/profile_dataframe/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 12 |
-| [`_configured_lakehouse_schema`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177) | `fabricops_kit.fabric_input_output._configured_lakehouse_schema` | `fabric_input_output` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 12 |
-| [`_current_audit_timestamp`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213) | `fabricops_kit.config._current_audit_timestamp` | `config` | [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 11 |
-| [`_context_get`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L154-L166) | `fabricops_kit.metadata._context_get` | `metadata` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | 10 |
-| [`_runtime_context`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L173-L197) | `fabricops_kit.metadata._runtime_context` | `metadata` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | 10 |
-| [`_get_spark`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218) | `fabricops_kit.fabric_input_output._get_spark` | `fabric_input_output` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`read_data`](../api/reference/read_data/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/) | 9 |
-| [`_safe_str`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L169-L170) | `fabricops_kit.metadata._safe_str` | `metadata` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | 7 |
-| [`_build_metadata_table_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81) | `fabricops_kit.metadata._build_metadata_table_key` | `metadata` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | 6 |
-| [`_build_runtime_audit_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L200-L273) | `fabricops_kit.metadata._build_runtime_audit_fields` | `metadata` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | 6 |
-| [`_stable_metadata_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L75-L77) | `fabricops_kit.metadata._stable_metadata_key` | `metadata` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | 6 |
-| [`_coerce_row_dicts`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L402-L407) | `fabricops_kit.data_agreement._coerce_row_dicts` | `data_agreement` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 5 |
-| [`_config_value`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L151-L155) | `fabricops_kit.data_agreement._config_value` | `data_agreement` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 5 |
-| [`_now_utc_iso`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L64-L65) | `fabricops_kit.metadata._now_utc_iso` | `metadata` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/) | 5 |
-| [`_html_escape`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L195-L198) | `fabricops_kit.data_agreement._html_escape` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 4 |
-| [`_list_all_data_agreement_rows`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L604-L613) | `fabricops_kit.data_agreement._list_all_data_agreement_rows` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 4 |
-| [`_render_searchable_selector`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L201-L311) | `fabricops_kit.data_agreement._render_searchable_selector` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 4 |
-| [`_require_ipywidgets`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L63-L72) | `fabricops_kit.data_agreement._require_ipywidgets` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 4 |
-| [`_widget_common`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L183-L192) | `fabricops_kit.data_agreement._widget_common` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 4 |
-| [`_resolve_action_by`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L68-L72) | `fabricops_kit.metadata._resolve_action_by` | `metadata` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/), [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/) | 4 |
-| [`_now_iso`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160) | `fabricops_kit.pipeline._now_iso` | `pipeline` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 4 |
-| [`_active_steward`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L438-L448) | `fabricops_kit.data_agreement._active_steward` | `data_agreement` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_latest_agreement_versions`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L585-L601) | `fabricops_kit.data_agreement._latest_agreement_versions` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_latest_by_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L410-L416) | `fabricops_kit.data_agreement._latest_by_key` | `data_agreement` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_list_data_agreements`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L616-L623) | `fabricops_kit.data_agreement._list_data_agreements` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_list_data_stewards`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490) | `fabricops_kit.data_agreement._list_data_stewards` | `data_agreement` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_parse_contract_version`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L570-L576) | `fabricops_kit.data_agreement._parse_contract_version` | `data_agreement` | [`start_pipeline_run`](../api/reference/start_pipeline_run/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_to_bool`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L419-L435) | `fabricops_kit.data_agreement._to_bool` | `data_agreement` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_write_row`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L493-L494) | `fabricops_kit.data_agreement._write_row` | `data_agreement` | [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/), [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 3 |
-| [`_authoring_lifecycle`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806) | `fabricops_kit.governance_review._authoring_lifecycle` | `governance_review` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | 3 |
-| [`_coerce_rows`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L62-L67) | `fabricops_kit.governance_review._coerce_rows` | `governance_review` | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/), [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/) | 3 |
-| [`_is_no_approval_required`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1764-L1766) | `fabricops_kit.governance_review._is_no_approval_required` | `governance_review` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | 3 |
-| [`_lifecycle_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1775-L1791) | `fabricops_kit.governance_review._lifecycle_fields` | `governance_review` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | 3 |
-| [`_build_dq_rule_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L138-L139) | `fabricops_kit.metadata._build_dq_rule_key` | `metadata` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | 3 |
-| [`_build_metadata_column_key`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L84-L85) | `fabricops_kit.metadata._build_metadata_column_key` | `metadata` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/), [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | 3 |
-| [`_definition_name`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164) | `fabricops_kit.pipeline._definition_name` | `pipeline` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 3 |
-| [`_audit_timestamp_expr`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221) | `fabricops_kit.config._audit_timestamp_expr` | `config` | [`profile_dataframe`](../api/reference/profile_dataframe/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_validate_framework_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634) | `fabricops_kit.config._validate_framework_config` | `config` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`setup_notebook`](../api/reference/setup_notebook/) | 2 |
-| [`_agreement_identity_text`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1062-L1072) | `fabricops_kit.data_agreement._agreement_identity_text` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_business_agreement_snapshot`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L636-L640) | `fabricops_kit.data_agreement._business_agreement_snapshot` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_collect_custom_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L366-L399) | `fabricops_kit.data_agreement._collect_custom_fields` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_create_or_update_data_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L643-L687) | `fabricops_kit.data_agreement._create_or_update_data_agreement` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_create_or_update_data_steward`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L510-L567) | `fabricops_kit.data_agreement._create_or_update_data_steward` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_deserialize_custom_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L119-L148) | `fabricops_kit.data_agreement._deserialize_custom_fields` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_generate_agreement_id`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L626-L627) | `fabricops_kit.data_agreement._generate_agreement_id` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_generate_steward_id`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L451-L455) | `fabricops_kit.data_agreement._generate_steward_id` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_get_widget_visible_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L158-L180) | `fabricops_kit.data_agreement._get_widget_visible_fields` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_next_minor_version`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L579-L582) | `fabricops_kit.data_agreement._next_minor_version` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_parse_iso_date`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L497-L507) | `fabricops_kit.data_agreement._parse_iso_date` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_render_custom_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L313-L363) | `fabricops_kit.data_agreement._render_custom_fields` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_render_maintenance_widget`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283) | `fabricops_kit.data_agreement._render_maintenance_widget` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_serialize_custom_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L102-L116) | `fabricops_kit.data_agreement._serialize_custom_fields` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_standard_widget`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1046-L1059) | `fabricops_kit.data_agreement._standard_widget` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_to_iso_date`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L630-L633) | `fabricops_kit.data_agreement._to_iso_date` | `data_agreement` | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/), [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | 2 |
-| [`_build_categorical_distribution`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L153-L190) | `fabricops_kit.data_profiling._build_categorical_distribution` | `data_profiling` | [`profile_dataframe`](../api/reference/profile_dataframe/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_build_distribution_summaries`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223) | `fabricops_kit.data_profiling._build_distribution_summaries` | `data_profiling` | [`profile_dataframe`](../api/reference/profile_dataframe/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_build_numeric_distribution`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L121-L150) | `fabricops_kit.data_profiling._build_numeric_distribution` | `data_profiling` | [`profile_dataframe`](../api/reference/profile_dataframe/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_get_profiled_columns`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82) | `fabricops_kit.data_profiling._get_profiled_columns` | `data_profiling` | [`profile_dataframe`](../api/reference/profile_dataframe/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_is_min_max_supported_type`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105) | `fabricops_kit.data_profiling._is_min_max_supported_type` | `data_profiling` | [`profile_dataframe`](../api/reference/profile_dataframe/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_numeric_bin_edges`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L108-L118) | `fabricops_kit.data_profiling._numeric_bin_edges` | `data_profiling` | [`profile_dataframe`](../api/reference/profile_dataframe/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_base_guardrail_rule_record`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023) | `fabricops_kit.governance_review._base_guardrail_rule_record` | `governance_review` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) | 2 |
-| [`_is_table_not_found_error`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L316-L336) | `fabricops_kit.governance_review._is_table_not_found_error` | `governance_review` | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/), [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/) | 2 |
-| [`_latest_rule`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073) | `fabricops_kit.governance_review._latest_rule` | `governance_review` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) | 2 |
-| [`_rule_params`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082) | `fabricops_kit.governance_review._rule_params` | `governance_review` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) | 2 |
-| [`_write_rule_records`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096) | `fabricops_kit.governance_review._write_rule_records` | `governance_review` | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/), [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) | 2 |
-| [`_active_pipeline_context`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156) | `fabricops_kit.pipeline._active_pipeline_context` | `pipeline` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | 2 |
-| [`_dq_reason`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L341-L353) | `fabricops_kit.pipeline._dq_reason` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_freshness_reason`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L307-L311) | `fabricops_kit.pipeline._freshness_reason` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_guardrail_reason`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366) | `fabricops_kit.pipeline._guardrail_reason` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_next_action`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L279-L290) | `fabricops_kit.pipeline._next_action` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_profile_behavior_reason`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338) | `fabricops_kit.pipeline._profile_behavior_reason` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_result_can_continue`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L265-L269) | `fabricops_kit.pipeline._result_can_continue` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_result_reason`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L272-L276) | `fabricops_kit.pipeline._result_reason` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_result_status`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L260-L262) | `fabricops_kit.pipeline._result_status` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_runtime_audit_fields`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L189-L200) | `fabricops_kit.pipeline._runtime_audit_fields` | `pipeline` | [`run_table_guardrails`](../api/reference/run_table_guardrails/), [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | 2 |
-| [`_schema_reason`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L293-L304) | `fabricops_kit.pipeline._schema_reason` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_table_keys`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L369-L376) | `fabricops_kit.pipeline._table_keys` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
-| [`_yes_no`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L255-L257) | `fabricops_kit.pipeline._yes_no` | `pipeline` | [`display_guardrail_results`](../api/reference/display_guardrail_results/), [`run_table_guardrails`](../api/reference/run_table_guardrails/) | 2 |
+<div class="callable-flow-table-wrap" markdown="0">
+<table class="callable-flow-table">
+<thead>
+<tr>
+<th class="flow-cell-name">Helper</th>
+<th class="flow-cell-qualified">Qualified name</th>
+<th class="flow-cell-module">Module</th>
+<th class="flow-cell-wide">Public callables that reach it</th>
+<th class="flow-cell-number">Public callable count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.config._get_store</code></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">16</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677"><code>_normalize_path_config</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.config._normalize_path_config</code></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">16</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.fabric_input_output._normalize_schema_name</code></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">15</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114"><code>_normalize_table_name</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.fabric_input_output._normalize_table_name</code></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">15</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144"><code>_resolve_lakehouse_schema</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.fabric_input_output._resolve_lakehouse_schema</code></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">15</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154"><code>_resolve_lakehouse_table_path</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.fabric_input_output._resolve_lakehouse_table_path</code></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">15</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.config._validate_audit_timezone</code></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a>, <a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">14</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.config._get_audit_timezone</code></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a>, <a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">12</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.fabric_input_output._configured_lakehouse_schema</code></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">12</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.config._current_audit_timestamp</code></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">11</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._context_get</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-number">10</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._runtime_context</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-number">10</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218"><code>_get_spark</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.fabric_input_output._get_spark</code></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+<td class="flow-cell-number">9</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L169-L170"><code>_safe_str</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._safe_str</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-number">7</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"><code>_build_metadata_table_key</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._build_metadata_table_key</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-number">6</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._build_runtime_audit_fields</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-number">6</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L75-L77"><code>_stable_metadata_key</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._stable_metadata_key</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-number">6</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L402-L407"><code>_coerce_row_dicts</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._coerce_row_dicts</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">5</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L151-L155"><code>_config_value</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._config_value</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">5</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._now_utc_iso</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
+<td class="flow-cell-number">5</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L195-L198"><code>_html_escape</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._html_escape</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L604-L613"><code>_list_all_data_agreement_rows</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._list_all_data_agreement_rows</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L201-L311"><code>_render_searchable_selector</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._render_searchable_selector</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L63-L72"><code>_require_ipywidgets</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._require_ipywidgets</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L183-L192"><code>_widget_common</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._widget_common</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L68-L72"><code>_resolve_action_by</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._resolve_action_by</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"><code>_now_iso</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._now_iso</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L438-L448"><code>_active_steward</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._active_steward</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L585-L601"><code>_latest_agreement_versions</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._latest_agreement_versions</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L410-L416"><code>_latest_by_key</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._latest_by_key</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L616-L623"><code>_list_data_agreements</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._list_data_agreements</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490"><code>_list_data_stewards</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._list_data_stewards</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L570-L576"><code>_parse_contract_version</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._parse_contract_version</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L419-L435"><code>_to_bool</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._to_bool</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L493-L494"><code>_write_row</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._write_row</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806"><code>_authoring_lifecycle</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._authoring_lifecycle</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L62-L67"><code>_coerce_rows</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._coerce_rows</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1764-L1766"><code>_is_no_approval_required</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._is_no_approval_required</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1775-L1791"><code>_lifecycle_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._lifecycle_fields</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L138-L139"><code>_build_dq_rule_key</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._build_dq_rule_key</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L84-L85"><code>_build_metadata_column_key</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.metadata._build_metadata_column_key</code></td>
+<td class="flow-cell-module"><code>metadata</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164"><code>_definition_name</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._definition_name</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">3</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221"><code>_audit_timestamp_expr</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.config._audit_timestamp_expr</code></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.config._validate_framework_config</code></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1062-L1072"><code>_agreement_identity_text</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._agreement_identity_text</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L636-L640"><code>_business_agreement_snapshot</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._business_agreement_snapshot</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L366-L399"><code>_collect_custom_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._collect_custom_fields</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L643-L687"><code>_create_or_update_data_agreement</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._create_or_update_data_agreement</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L510-L567"><code>_create_or_update_data_steward</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._create_or_update_data_steward</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L119-L148"><code>_deserialize_custom_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._deserialize_custom_fields</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L626-L627"><code>_generate_agreement_id</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._generate_agreement_id</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L451-L455"><code>_generate_steward_id</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._generate_steward_id</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L158-L180"><code>_get_widget_visible_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._get_widget_visible_fields</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L579-L582"><code>_next_minor_version</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._next_minor_version</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L497-L507"><code>_parse_iso_date</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._parse_iso_date</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L313-L363"><code>_render_custom_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._render_custom_fields</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._render_maintenance_widget</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L102-L116"><code>_serialize_custom_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._serialize_custom_fields</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1046-L1059"><code>_standard_widget</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._standard_widget</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L630-L633"><code>_to_iso_date</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_agreement._to_iso_date</code></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L153-L190"><code>_build_categorical_distribution</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_profiling._build_categorical_distribution</code></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_profiling._build_distribution_summaries</code></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L121-L150"><code>_build_numeric_distribution</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_profiling._build_numeric_distribution</code></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82"><code>_get_profiled_columns</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_profiling._get_profiled_columns</code></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_profiling._is_min_max_supported_type</code></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L108-L118"><code>_numeric_bin_edges</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.data_profiling._numeric_bin_edges</code></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023"><code>_base_guardrail_rule_record</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._base_guardrail_rule_record</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L316-L336"><code>_is_table_not_found_error</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._is_table_not_found_error</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073"><code>_latest_rule</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._latest_rule</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082"><code>_rule_params</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._rule_params</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096"><code>_write_rule_records</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.governance_review._write_rule_records</code></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156"><code>_active_pipeline_context</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._active_pipeline_context</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L341-L353"><code>_dq_reason</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._dq_reason</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L307-L311"><code>_freshness_reason</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._freshness_reason</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366"><code>_guardrail_reason</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._guardrail_reason</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L279-L290"><code>_next_action</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._next_action</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338"><code>_profile_behavior_reason</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._profile_behavior_reason</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L265-L269"><code>_result_can_continue</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._result_can_continue</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L272-L276"><code>_result_reason</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._result_reason</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L260-L262"><code>_result_status</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._result_status</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L189-L200"><code>_runtime_audit_fields</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._runtime_audit_fields</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L293-L304"><code>_schema_reason</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._schema_reason</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L369-L376"><code>_table_keys</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._table_keys</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L255-L257"><code>_yes_no</code></a></td>
+<td class="flow-cell-qualified"><code>fabricops_kit.pipeline._yes_no</code></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-number">2</td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Refactor hotspot ranking
 
 Ranked review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Higher scores indicate call-tree shapes worth reviewing, not required refactors.
 
-| Rank | Public callable | Module | Score | Unique helpers | Deepest depth | Repeated helpers | Shared helper overlap |
-| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | [`run_table_guardrails`](../api/reference/run_table_guardrails/) | `pipeline` | 91.14 | 87 | 6 | 12 | 38 |
-| 2 | [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/) | `data_agreement` | 78.02 | 46 | 7 | 12 | 46 |
-| 3 | [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | `data_agreement` | 78.02 | 46 | 7 | 12 | 46 |
-| 4 | [`start_pipeline_run`](../api/reference/start_pipeline_run/) | `pipeline` | 65.66 | 34 | 7 | 12 | 25 |
-| 5 | [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/) | `governance_review` | 65.11 | 26 | 8 | 12 | 25 |
-| 6 | [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) | `governance_review` | 65.11 | 26 | 8 | 12 | 25 |
-| 7 | [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | `governance_review` | 64.55 | 33 | 7 | 12 | 23 |
-| 8 | [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/) | `data_agreement` | 58.46 | 27 | 7 | 10 | 23 |
-| 9 | [`setup_metadata_tables`](../api/reference/setup_metadata_tables/) | `config` | 55.56 | 32 | 5 | 12 | 16 |
-| 10 | [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | `pipeline` | 45.56 | 19 | 5 | 9 | 19 |
-| 11 | [`display_guardrail_results`](../api/reference/display_guardrail_results/) | `pipeline` | 39.94 | 12 | 4 | 11 | 11 |
-| 12 | [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/) | `governance_review` | 37.05 | 9 | 5 | 9 | 7 |
-| 13 | [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/) | `governance_review` | 34.31 | 14 | 5 | 5 | 12 |
-| 14 | [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | `pipeline` | 29.84 | 14 | 4 | 4 | 13 |
-| 15 | [`read_data`](../api/reference/read_data/) | `fabric_input_output` | 27.25 | 9 | 4 | 5 | 7 |
-| 16 | [`get_latest_metadata_catalogue`](../api/reference/get_latest_metadata_catalogue/) | `governance_review` | 26.7 | 10 | 4 | 4 | 9 |
-| 17 | [`write_data`](../api/reference/write_data/) | `fabric_input_output` | 22.22 | 6 | 4 | 3 | 6 |
-| 18 | [`setup_notebook`](../api/reference/setup_notebook/) | `config` | 20.82 | 8 | 4 | 2 | 4 |
-| 19 | [`profile_dataframe`](../api/reference/profile_dataframe/) | `data_profiling` | 19.78 | 9 | 3 | 2 | 9 |
-| 20 | [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/) | `pipeline` | 15.32 | 4 | 4 | 0 | 3 |
+<div class="callable-flow-table-wrap" markdown="0">
+<table class="callable-flow-table">
+<thead>
+<tr>
+<th class="flow-cell-number">Rank</th>
+<th class="flow-cell-name">Public callable</th>
+<th class="flow-cell-module">Module</th>
+<th class="flow-cell-number">Score</th>
+<th class="flow-cell-number">Unique helpers</th>
+<th class="flow-cell-number">Deepest depth</th>
+<th class="flow-cell-number">Repeated helpers</th>
+<th class="flow-cell-number">Shared helper overlap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-name"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">91.14</td>
+<td class="flow-cell-number">87</td>
+<td class="flow-cell-number">6</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">38</td>
+</tr>
+<tr>
+<td class="flow-cell-number">2</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-number">78.02</td>
+<td class="flow-cell-number">46</td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">46</td>
+</tr>
+<tr>
+<td class="flow-cell-number">3</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-number">78.02</td>
+<td class="flow-cell-number">46</td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">46</td>
+</tr>
+<tr>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-name"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">65.66</td>
+<td class="flow-cell-number">34</td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">25</td>
+</tr>
+<tr>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">65.11</td>
+<td class="flow-cell-number">26</td>
+<td class="flow-cell-number">8</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">25</td>
+</tr>
+<tr>
+<td class="flow-cell-number">6</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">65.11</td>
+<td class="flow-cell-number">26</td>
+<td class="flow-cell-number">8</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">25</td>
+</tr>
+<tr>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">64.55</td>
+<td class="flow-cell-number">33</td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">23</td>
+</tr>
+<tr>
+<td class="flow-cell-number">8</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-number">58.46</td>
+<td class="flow-cell-number">27</td>
+<td class="flow-cell-number">7</td>
+<td class="flow-cell-number">10</td>
+<td class="flow-cell-number">23</td>
+</tr>
+<tr>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-name"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-number">55.56</td>
+<td class="flow-cell-number">32</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">16</td>
+</tr>
+<tr>
+<td class="flow-cell-number">10</td>
+<td class="flow-cell-name"><a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">45.56</td>
+<td class="flow-cell-number">19</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-number">19</td>
+</tr>
+<tr>
+<td class="flow-cell-number">11</td>
+<td class="flow-cell-name"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">39.94</td>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">11</td>
+<td class="flow-cell-number">11</td>
+</tr>
+<tr>
+<td class="flow-cell-number">12</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">37.05</td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-number">7</td>
+</tr>
+<tr>
+<td class="flow-cell-number">13</td>
+<td class="flow-cell-name"><a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">34.31</td>
+<td class="flow-cell-number">14</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">12</td>
+</tr>
+<tr>
+<td class="flow-cell-number">14</td>
+<td class="flow-cell-name"><a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">29.84</td>
+<td class="flow-cell-number">14</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">13</td>
+</tr>
+<tr>
+<td class="flow-cell-number">15</td>
+<td class="flow-cell-name"><a href="../../api/reference/read_data/"><code>read_data</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-number">27.25</td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">5</td>
+<td class="flow-cell-number">7</td>
+</tr>
+<tr>
+<td class="flow-cell-number">16</td>
+<td class="flow-cell-name"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-number">26.7</td>
+<td class="flow-cell-number">10</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">9</td>
+</tr>
+<tr>
+<td class="flow-cell-number">17</td>
+<td class="flow-cell-name"><a href="../../api/reference/write_data/"><code>write_data</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-number">22.22</td>
+<td class="flow-cell-number">6</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">3</td>
+<td class="flow-cell-number">6</td>
+</tr>
+<tr>
+<td class="flow-cell-number">18</td>
+<td class="flow-cell-name"><a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-number">20.82</td>
+<td class="flow-cell-number">8</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">2</td>
+<td class="flow-cell-number">4</td>
+</tr>
+<tr>
+<td class="flow-cell-number">19</td>
+<td class="flow-cell-name"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
+<td class="flow-cell-module"><code>data_profiling</code></td>
+<td class="flow-cell-number">19.78</td>
+<td class="flow-cell-number">9</td>
+<td class="flow-cell-number">3</td>
+<td class="flow-cell-number">2</td>
+<td class="flow-cell-number">9</td>
+</tr>
+<tr>
+<td class="flow-cell-number">20</td>
+<td class="flow-cell-name"><a href="../../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-number">15.32</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">4</td>
+<td class="flow-cell-number">0</td>
+<td class="flow-cell-number">3</td>
+</tr>
+</tbody>
+</table>
+</div>

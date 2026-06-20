@@ -11,7 +11,7 @@
         "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
         "module": "data_profiling",
         "docs_path": "docs/api/reference/profile_dataframe.md",
-        "docs_url": "../api/reference/profile_dataframe/"
+        "docs_url": "../../api/reference/profile_dataframe/"
       }
     ],
     "setup_metadata_tables": [],
@@ -35,7 +35,7 @@
       "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
       "module": "pipeline",
       "docs_path": "docs/api/reference/display_guardrail_results.md",
-      "docs_url": "../api/reference/display_guardrail_results/",
+      "docs_url": "../../api/reference/display_guardrail_results/",
       "unique_internal_helper_count": 12,
       "direct_internal_helpers": [
         {
@@ -56,7 +56,7 @@
       "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
       "module": "governance_review",
       "docs_path": "docs/api/reference/get_latest_metadata_catalogue.md",
-      "docs_url": "../api/reference/get_latest_metadata_catalogue/",
+      "docs_url": "../../api/reference/get_latest_metadata_catalogue/",
       "unique_internal_helper_count": 10,
       "direct_internal_helpers": [
         {
@@ -89,7 +89,7 @@
       "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
       "module": "pipeline",
       "docs_path": "docs/api/reference/prepare_pipeline_table_configs.md",
-      "docs_url": "../api/reference/prepare_pipeline_table_configs/",
+      "docs_url": "../../api/reference/prepare_pipeline_table_configs/",
       "unique_internal_helper_count": 4,
       "direct_internal_helpers": [
         {
@@ -110,7 +110,7 @@
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "module": "data_profiling",
       "docs_path": "docs/api/reference/profile_dataframe.md",
-      "docs_url": "../api/reference/profile_dataframe/",
+      "docs_url": "../../api/reference/profile_dataframe/",
       "unique_internal_helper_count": 9,
       "direct_internal_helpers": [
         {
@@ -155,7 +155,7 @@
       "qualified_name": "fabricops_kit.fabric_input_output.read_data",
       "module": "fabric_input_output",
       "docs_path": "docs/api/reference/read_data.md",
-      "docs_url": "../api/reference/read_data/",
+      "docs_url": "../../api/reference/read_data/",
       "unique_internal_helper_count": 9,
       "direct_internal_helpers": [],
       "deepest_call_chain_depth": 4,
@@ -169,7 +169,7 @@
       "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
       "module": "pipeline",
       "docs_path": "docs/api/reference/run_table_guardrails.md",
-      "docs_url": "../api/reference/run_table_guardrails/",
+      "docs_url": "../../api/reference/run_table_guardrails/",
       "unique_internal_helper_count": 87,
       "direct_internal_helpers": [
         {
@@ -248,7 +248,7 @@
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
           "docs_path": "docs/api/reference/profile_dataframe.md",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         }
       ],
       "shared_helper_overlap_count": 38
@@ -258,7 +258,7 @@
       "qualified_name": "fabricops_kit.config.setup_metadata_tables",
       "module": "config",
       "docs_path": "docs/api/reference/setup_metadata_tables.md",
-      "docs_url": "../api/reference/setup_metadata_tables/",
+      "docs_url": "../../api/reference/setup_metadata_tables/",
       "unique_internal_helper_count": 32,
       "direct_internal_helpers": [
         {
@@ -327,7 +327,7 @@
       "qualified_name": "fabricops_kit.config.setup_notebook",
       "module": "config",
       "docs_path": "docs/api/reference/setup_notebook.md",
-      "docs_url": "../api/reference/setup_notebook/",
+      "docs_url": "../../api/reference/setup_notebook/",
       "unique_internal_helper_count": 8,
       "direct_internal_helpers": [
         {
@@ -360,7 +360,7 @@
       "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
       "module": "pipeline",
       "docs_path": "docs/api/reference/start_pipeline_run.md",
-      "docs_url": "../api/reference/start_pipeline_run/",
+      "docs_url": "../../api/reference/start_pipeline_run/",
       "unique_internal_helper_count": 34,
       "direct_internal_helpers": [
         {
@@ -399,7 +399,7 @@
       "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
       "module": "governance_review",
       "docs_path": "docs/api/reference/widget_author_dq_rules.md",
-      "docs_url": "../api/reference/widget_author_dq_rules/",
+      "docs_url": "../../api/reference/widget_author_dq_rules/",
       "unique_internal_helper_count": 26,
       "direct_internal_helpers": [
         {
@@ -438,7 +438,7 @@
       "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
       "module": "governance_review",
       "docs_path": "docs/api/reference/widget_author_schema_freshness_profile_rules.md",
-      "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/",
+      "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/",
       "unique_internal_helper_count": 26,
       "direct_internal_helpers": [
         {
@@ -477,7 +477,7 @@
       "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
       "module": "governance_review",
       "docs_path": "docs/api/reference/widget_enrich_table_metadata.md",
-      "docs_url": "../api/reference/widget_enrich_table_metadata/",
+      "docs_url": "../../api/reference/widget_enrich_table_metadata/",
       "unique_internal_helper_count": 33,
       "direct_internal_helpers": [
         {
@@ -528,7 +528,7 @@
       "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
       "module": "data_agreement",
       "docs_path": "docs/api/reference/widget_render_agreement_evidence.md",
-      "docs_url": "../api/reference/widget_render_agreement_evidence/",
+      "docs_url": "../../api/reference/widget_render_agreement_evidence/",
       "unique_internal_helper_count": 27,
       "direct_internal_helpers": [
         {
@@ -549,7 +549,7 @@
       "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
       "module": "data_agreement",
       "docs_path": "docs/api/reference/widget_render_data_agreement.md",
-      "docs_url": "../api/reference/widget_render_data_agreement/",
+      "docs_url": "../../api/reference/widget_render_data_agreement/",
       "unique_internal_helper_count": 46,
       "direct_internal_helpers": [
         {
@@ -570,7 +570,7 @@
       "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
       "module": "data_agreement",
       "docs_path": "docs/api/reference/widget_render_data_steward.md",
-      "docs_url": "../api/reference/widget_render_data_steward/",
+      "docs_url": "../../api/reference/widget_render_data_steward/",
       "unique_internal_helper_count": 46,
       "direct_internal_helpers": [
         {
@@ -591,7 +591,7 @@
       "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
       "module": "governance_review",
       "docs_path": "docs/api/reference/widget_review_guardrail_governance.md",
-      "docs_url": "../api/reference/widget_review_guardrail_governance/",
+      "docs_url": "../../api/reference/widget_review_guardrail_governance/",
       "unique_internal_helper_count": 9,
       "direct_internal_helpers": [],
       "deepest_call_chain_depth": 5,
@@ -605,7 +605,7 @@
       "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
       "module": "governance_review",
       "docs_path": "docs/api/reference/widget_select_guardrail_target.md",
-      "docs_url": "../api/reference/widget_select_guardrail_target/",
+      "docs_url": "../../api/reference/widget_select_guardrail_target/",
       "unique_internal_helper_count": 14,
       "direct_internal_helpers": [
         {
@@ -638,7 +638,7 @@
       "qualified_name": "fabricops_kit.fabric_input_output.write_data",
       "module": "fabric_input_output",
       "docs_path": "docs/api/reference/write_data.md",
-      "docs_url": "../api/reference/write_data/",
+      "docs_url": "../../api/reference/write_data/",
       "unique_internal_helper_count": 6,
       "direct_internal_helpers": [],
       "deepest_call_chain_depth": 4,
@@ -652,7 +652,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
       "module": "pipeline",
       "docs_path": "docs/api/reference/write_pipeline_lineage.md",
-      "docs_url": "../api/reference/write_pipeline_lineage/",
+      "docs_url": "../../api/reference/write_pipeline_lineage/",
       "unique_internal_helper_count": 19,
       "direct_internal_helpers": [
         {
@@ -697,7 +697,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
       "module": "pipeline",
       "docs_path": "docs/api/reference/write_pipeline_run_summary.md",
-      "docs_url": "../api/reference/write_pipeline_run_summary/",
+      "docs_url": "../../api/reference/write_pipeline_run_summary/",
       "unique_internal_helper_count": 14,
       "direct_internal_helpers": [
         {
@@ -749,97 +749,97 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "read_data",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/read_data/"
+          "docs_url": "../../api/reference/read_data/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "setup_notebook",
           "qualified_name": "fabricops_kit.config.setup_notebook",
           "module": "config",
-          "docs_url": "../api/reference/setup_notebook/"
+          "docs_url": "../../api/reference/setup_notebook/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_data",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/write_data/"
+          "docs_url": "../../api/reference/write_data/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 16
@@ -854,97 +854,97 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "read_data",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/read_data/"
+          "docs_url": "../../api/reference/read_data/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "setup_notebook",
           "qualified_name": "fabricops_kit.config.setup_notebook",
           "module": "config",
-          "docs_url": "../api/reference/setup_notebook/"
+          "docs_url": "../../api/reference/setup_notebook/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_data",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/write_data/"
+          "docs_url": "../../api/reference/write_data/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 16
@@ -959,91 +959,91 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "read_data",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/read_data/"
+          "docs_url": "../../api/reference/read_data/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_data",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/write_data/"
+          "docs_url": "../../api/reference/write_data/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 15
@@ -1058,91 +1058,91 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "read_data",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/read_data/"
+          "docs_url": "../../api/reference/read_data/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_data",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/write_data/"
+          "docs_url": "../../api/reference/write_data/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 15
@@ -1157,91 +1157,91 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "read_data",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/read_data/"
+          "docs_url": "../../api/reference/read_data/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_data",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/write_data/"
+          "docs_url": "../../api/reference/write_data/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 15
@@ -1256,91 +1256,91 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "read_data",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/read_data/"
+          "docs_url": "../../api/reference/read_data/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_data",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/write_data/"
+          "docs_url": "../../api/reference/write_data/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 15
@@ -1355,85 +1355,85 @@
           "callable": "prepare_pipeline_table_configs",
           "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
           "module": "pipeline",
-          "docs_url": "../api/reference/prepare_pipeline_table_configs/"
+          "docs_url": "../../api/reference/prepare_pipeline_table_configs/"
         },
         {
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "setup_notebook",
           "qualified_name": "fabricops_kit.config.setup_notebook",
           "module": "config",
-          "docs_url": "../api/reference/setup_notebook/"
+          "docs_url": "../../api/reference/setup_notebook/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_review_guardrail_governance",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+          "docs_url": "../../api/reference/widget_review_guardrail_governance/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 14
@@ -1448,73 +1448,73 @@
           "callable": "prepare_pipeline_table_configs",
           "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
           "module": "pipeline",
-          "docs_url": "../api/reference/prepare_pipeline_table_configs/"
+          "docs_url": "../../api/reference/prepare_pipeline_table_configs/"
         },
         {
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_review_guardrail_governance",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+          "docs_url": "../../api/reference/widget_review_guardrail_governance/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 12
@@ -1529,73 +1529,73 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 12
@@ -1610,67 +1610,67 @@
           "callable": "prepare_pipeline_table_configs",
           "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
           "module": "pipeline",
-          "docs_url": "../api/reference/prepare_pipeline_table_configs/"
+          "docs_url": "../../api/reference/prepare_pipeline_table_configs/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_review_guardrail_governance",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+          "docs_url": "../../api/reference/widget_review_guardrail_governance/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 11
@@ -1685,61 +1685,61 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_review_guardrail_governance",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+          "docs_url": "../../api/reference/widget_review_guardrail_governance/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         }
       ],
       "public_callable_count": 10
@@ -1754,61 +1754,61 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_review_guardrail_governance",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+          "docs_url": "../../api/reference/widget_review_guardrail_governance/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         }
       ],
       "public_callable_count": 10
@@ -1823,55 +1823,55 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "read_data",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
           "module": "fabric_input_output",
-          "docs_url": "../api/reference/read_data/"
+          "docs_url": "../../api/reference/read_data/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         }
       ],
       "public_callable_count": 9
@@ -1886,43 +1886,43 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         }
       ],
       "public_callable_count": 7
@@ -1937,37 +1937,37 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         }
       ],
       "public_callable_count": 6
@@ -1982,37 +1982,37 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         }
       ],
       "public_callable_count": 6
@@ -2027,37 +2027,37 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         }
       ],
       "public_callable_count": 6
@@ -2072,31 +2072,31 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 5
@@ -2111,31 +2111,31 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 5
@@ -2150,31 +2150,31 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_review_guardrail_governance",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+          "docs_url": "../../api/reference/widget_review_guardrail_governance/"
         }
       ],
       "public_callable_count": 5
@@ -2189,25 +2189,25 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 4
@@ -2222,25 +2222,25 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 4
@@ -2255,25 +2255,25 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 4
@@ -2288,25 +2288,25 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 4
@@ -2321,25 +2321,25 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 4
@@ -2354,25 +2354,25 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         },
         {
           "callable": "widget_review_guardrail_governance",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+          "docs_url": "../../api/reference/widget_review_guardrail_governance/"
         }
       ],
       "public_callable_count": 4
@@ -2387,25 +2387,25 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 4
@@ -2420,19 +2420,19 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2447,19 +2447,19 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2474,19 +2474,19 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2501,19 +2501,19 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2528,19 +2528,19 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2555,19 +2555,19 @@
           "callable": "start_pipeline_run",
           "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
           "module": "pipeline",
-          "docs_url": "../api/reference/start_pipeline_run/"
+          "docs_url": "../../api/reference/start_pipeline_run/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2582,19 +2582,19 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2609,19 +2609,19 @@
           "callable": "widget_render_agreement_evidence",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+          "docs_url": "../../api/reference/widget_render_agreement_evidence/"
         },
         {
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 3
@@ -2636,19 +2636,19 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         }
       ],
       "public_callable_count": 3
@@ -2663,19 +2663,19 @@
           "callable": "get_latest_metadata_catalogue",
           "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
           "module": "governance_review",
-          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+          "docs_url": "../../api/reference/get_latest_metadata_catalogue/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         }
       ],
       "public_callable_count": 3
@@ -2690,19 +2690,19 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         }
       ],
       "public_callable_count": 3
@@ -2717,19 +2717,19 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         }
       ],
       "public_callable_count": 3
@@ -2744,19 +2744,19 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         }
       ],
       "public_callable_count": 3
@@ -2771,19 +2771,19 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         },
         {
           "callable": "widget_enrich_table_metadata",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+          "docs_url": "../../api/reference/widget_enrich_table_metadata/"
         }
       ],
       "public_callable_count": 3
@@ -2798,19 +2798,19 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 3
@@ -2825,13 +2825,13 @@
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -2846,13 +2846,13 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "setup_notebook",
           "qualified_name": "fabricops_kit.config.setup_notebook",
           "module": "config",
-          "docs_url": "../api/reference/setup_notebook/"
+          "docs_url": "../../api/reference/setup_notebook/"
         }
       ],
       "public_callable_count": 2
@@ -2867,13 +2867,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -2888,13 +2888,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -2909,13 +2909,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -2930,13 +2930,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -2951,13 +2951,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -2972,13 +2972,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -2993,13 +2993,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3014,13 +3014,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3035,13 +3035,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3056,13 +3056,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3077,13 +3077,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3098,13 +3098,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3119,13 +3119,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3140,13 +3140,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3161,13 +3161,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3182,13 +3182,13 @@
           "callable": "widget_render_data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_agreement/"
+          "docs_url": "../../api/reference/widget_render_data_agreement/"
         },
         {
           "callable": "widget_render_data_steward",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
           "module": "data_agreement",
-          "docs_url": "../api/reference/widget_render_data_steward/"
+          "docs_url": "../../api/reference/widget_render_data_steward/"
         }
       ],
       "public_callable_count": 2
@@ -3203,13 +3203,13 @@
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3224,13 +3224,13 @@
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3245,13 +3245,13 @@
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3266,13 +3266,13 @@
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3287,13 +3287,13 @@
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3308,13 +3308,13 @@
           "callable": "profile_dataframe",
           "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "module": "data_profiling",
-          "docs_url": "../api/reference/profile_dataframe/"
+          "docs_url": "../../api/reference/profile_dataframe/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3329,13 +3329,13 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         }
       ],
       "public_callable_count": 2
@@ -3350,13 +3350,13 @@
           "callable": "setup_metadata_tables",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables",
           "module": "config",
-          "docs_url": "../api/reference/setup_metadata_tables/"
+          "docs_url": "../../api/reference/setup_metadata_tables/"
         },
         {
           "callable": "widget_select_guardrail_target",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_select_guardrail_target/"
+          "docs_url": "../../api/reference/widget_select_guardrail_target/"
         }
       ],
       "public_callable_count": 2
@@ -3371,13 +3371,13 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         }
       ],
       "public_callable_count": 2
@@ -3392,13 +3392,13 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         }
       ],
       "public_callable_count": 2
@@ -3413,13 +3413,13 @@
           "callable": "widget_author_dq_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_dq_rules/"
+          "docs_url": "../../api/reference/widget_author_dq_rules/"
         },
         {
           "callable": "widget_author_schema_freshness_profile_rules",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
-          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+          "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/"
         }
       ],
       "public_callable_count": 2
@@ -3434,13 +3434,13 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "write_pipeline_run_summary",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_run_summary/"
+          "docs_url": "../../api/reference/write_pipeline_run_summary/"
         }
       ],
       "public_callable_count": 2
@@ -3455,13 +3455,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3476,13 +3476,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3497,13 +3497,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3518,13 +3518,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3539,13 +3539,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3560,13 +3560,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3581,13 +3581,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3602,13 +3602,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3623,13 +3623,13 @@
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         },
         {
           "callable": "write_pipeline_lineage",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
           "module": "pipeline",
-          "docs_url": "../api/reference/write_pipeline_lineage/"
+          "docs_url": "../../api/reference/write_pipeline_lineage/"
         }
       ],
       "public_callable_count": 2
@@ -3644,13 +3644,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3665,13 +3665,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3686,13 +3686,13 @@
           "callable": "display_guardrail_results",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
           "module": "pipeline",
-          "docs_url": "../api/reference/display_guardrail_results/"
+          "docs_url": "../../api/reference/display_guardrail_results/"
         },
         {
           "callable": "run_table_guardrails",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
           "module": "pipeline",
-          "docs_url": "../api/reference/run_table_guardrails/"
+          "docs_url": "../../api/reference/run_table_guardrails/"
         }
       ],
       "public_callable_count": 2
@@ -3703,7 +3703,7 @@
       "callable": "run_table_guardrails",
       "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
       "module": "pipeline",
-      "docs_url": "../api/reference/run_table_guardrails/",
+      "docs_url": "../../api/reference/run_table_guardrails/",
       "score": 91.14,
       "unique_internal_helper_count": 87,
       "deepest_call_chain_depth": 6,
@@ -3714,7 +3714,7 @@
       "callable": "widget_render_data_agreement",
       "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
       "module": "data_agreement",
-      "docs_url": "../api/reference/widget_render_data_agreement/",
+      "docs_url": "../../api/reference/widget_render_data_agreement/",
       "score": 78.02,
       "unique_internal_helper_count": 46,
       "deepest_call_chain_depth": 7,
@@ -3725,7 +3725,7 @@
       "callable": "widget_render_data_steward",
       "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
       "module": "data_agreement",
-      "docs_url": "../api/reference/widget_render_data_steward/",
+      "docs_url": "../../api/reference/widget_render_data_steward/",
       "score": 78.02,
       "unique_internal_helper_count": 46,
       "deepest_call_chain_depth": 7,
@@ -3736,7 +3736,7 @@
       "callable": "start_pipeline_run",
       "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
       "module": "pipeline",
-      "docs_url": "../api/reference/start_pipeline_run/",
+      "docs_url": "../../api/reference/start_pipeline_run/",
       "score": 65.66,
       "unique_internal_helper_count": 34,
       "deepest_call_chain_depth": 7,
@@ -3747,7 +3747,7 @@
       "callable": "widget_author_dq_rules",
       "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
       "module": "governance_review",
-      "docs_url": "../api/reference/widget_author_dq_rules/",
+      "docs_url": "../../api/reference/widget_author_dq_rules/",
       "score": 65.11,
       "unique_internal_helper_count": 26,
       "deepest_call_chain_depth": 8,
@@ -3758,7 +3758,7 @@
       "callable": "widget_author_schema_freshness_profile_rules",
       "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
       "module": "governance_review",
-      "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/",
+      "docs_url": "../../api/reference/widget_author_schema_freshness_profile_rules/",
       "score": 65.11,
       "unique_internal_helper_count": 26,
       "deepest_call_chain_depth": 8,
@@ -3769,7 +3769,7 @@
       "callable": "widget_enrich_table_metadata",
       "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
       "module": "governance_review",
-      "docs_url": "../api/reference/widget_enrich_table_metadata/",
+      "docs_url": "../../api/reference/widget_enrich_table_metadata/",
       "score": 64.55,
       "unique_internal_helper_count": 33,
       "deepest_call_chain_depth": 7,
@@ -3780,7 +3780,7 @@
       "callable": "widget_render_agreement_evidence",
       "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
       "module": "data_agreement",
-      "docs_url": "../api/reference/widget_render_agreement_evidence/",
+      "docs_url": "../../api/reference/widget_render_agreement_evidence/",
       "score": 58.46,
       "unique_internal_helper_count": 27,
       "deepest_call_chain_depth": 7,
@@ -3791,7 +3791,7 @@
       "callable": "setup_metadata_tables",
       "qualified_name": "fabricops_kit.config.setup_metadata_tables",
       "module": "config",
-      "docs_url": "../api/reference/setup_metadata_tables/",
+      "docs_url": "../../api/reference/setup_metadata_tables/",
       "score": 55.56,
       "unique_internal_helper_count": 32,
       "deepest_call_chain_depth": 5,
@@ -3802,7 +3802,7 @@
       "callable": "write_pipeline_lineage",
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
       "module": "pipeline",
-      "docs_url": "../api/reference/write_pipeline_lineage/",
+      "docs_url": "../../api/reference/write_pipeline_lineage/",
       "score": 45.56,
       "unique_internal_helper_count": 19,
       "deepest_call_chain_depth": 5,
@@ -3813,7 +3813,7 @@
       "callable": "display_guardrail_results",
       "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
       "module": "pipeline",
-      "docs_url": "../api/reference/display_guardrail_results/",
+      "docs_url": "../../api/reference/display_guardrail_results/",
       "score": 39.94,
       "unique_internal_helper_count": 12,
       "deepest_call_chain_depth": 4,
@@ -3824,7 +3824,7 @@
       "callable": "widget_review_guardrail_governance",
       "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
       "module": "governance_review",
-      "docs_url": "../api/reference/widget_review_guardrail_governance/",
+      "docs_url": "../../api/reference/widget_review_guardrail_governance/",
       "score": 37.05,
       "unique_internal_helper_count": 9,
       "deepest_call_chain_depth": 5,
@@ -3835,7 +3835,7 @@
       "callable": "widget_select_guardrail_target",
       "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
       "module": "governance_review",
-      "docs_url": "../api/reference/widget_select_guardrail_target/",
+      "docs_url": "../../api/reference/widget_select_guardrail_target/",
       "score": 34.31,
       "unique_internal_helper_count": 14,
       "deepest_call_chain_depth": 5,
@@ -3846,7 +3846,7 @@
       "callable": "write_pipeline_run_summary",
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
       "module": "pipeline",
-      "docs_url": "../api/reference/write_pipeline_run_summary/",
+      "docs_url": "../../api/reference/write_pipeline_run_summary/",
       "score": 29.84,
       "unique_internal_helper_count": 14,
       "deepest_call_chain_depth": 4,
@@ -3857,7 +3857,7 @@
       "callable": "read_data",
       "qualified_name": "fabricops_kit.fabric_input_output.read_data",
       "module": "fabric_input_output",
-      "docs_url": "../api/reference/read_data/",
+      "docs_url": "../../api/reference/read_data/",
       "score": 27.25,
       "unique_internal_helper_count": 9,
       "deepest_call_chain_depth": 4,
@@ -3868,7 +3868,7 @@
       "callable": "get_latest_metadata_catalogue",
       "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
       "module": "governance_review",
-      "docs_url": "../api/reference/get_latest_metadata_catalogue/",
+      "docs_url": "../../api/reference/get_latest_metadata_catalogue/",
       "score": 26.7,
       "unique_internal_helper_count": 10,
       "deepest_call_chain_depth": 4,
@@ -3879,7 +3879,7 @@
       "callable": "write_data",
       "qualified_name": "fabricops_kit.fabric_input_output.write_data",
       "module": "fabric_input_output",
-      "docs_url": "../api/reference/write_data/",
+      "docs_url": "../../api/reference/write_data/",
       "score": 22.22,
       "unique_internal_helper_count": 6,
       "deepest_call_chain_depth": 4,
@@ -3890,7 +3890,7 @@
       "callable": "setup_notebook",
       "qualified_name": "fabricops_kit.config.setup_notebook",
       "module": "config",
-      "docs_url": "../api/reference/setup_notebook/",
+      "docs_url": "../../api/reference/setup_notebook/",
       "score": 20.82,
       "unique_internal_helper_count": 8,
       "deepest_call_chain_depth": 4,
@@ -3901,7 +3901,7 @@
       "callable": "profile_dataframe",
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "module": "data_profiling",
-      "docs_url": "../api/reference/profile_dataframe/",
+      "docs_url": "../../api/reference/profile_dataframe/",
       "score": 19.78,
       "unique_internal_helper_count": 9,
       "deepest_call_chain_depth": 3,
@@ -3912,7 +3912,7 @@
       "callable": "prepare_pipeline_table_configs",
       "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
       "module": "pipeline",
-      "docs_url": "../api/reference/prepare_pipeline_table_configs/",
+      "docs_url": "../../api/reference/prepare_pipeline_table_configs/",
       "score": 15.32,
       "unique_internal_helper_count": 4,
       "deepest_call_chain_depth": 4,
