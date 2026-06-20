@@ -3733,7 +3733,6 @@ def main() -> None:
         rel_module = canonical_public_module(module_name)
         metadata_related = list(metadata.get("related_functions", []))
         relationship_related = [*used_by, *deps]
-        related_for_page = metadata_related or relationship_related
         rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
         rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
         rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"))
