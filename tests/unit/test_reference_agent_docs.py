@@ -245,6 +245,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "All recommended actions" in dashboard_text
     assert "Quick signal filters" in dashboard_text
     assert "Easy cleanup" in dashboard_text
+    assert "Needs review" in dashboard_text
+    assert "High review" in dashboard_text
+    assert "Medium review" in dashboard_text
     assert "How signals are classified" in dashboard_text
     assert "Small helpers likely safe to flatten" in dashboard_text
     assert "Function type" in dashboard_text
