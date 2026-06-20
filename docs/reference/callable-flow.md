@@ -7,7 +7,7 @@ Use the dashboard to inspect public API entrypoints, internal helpers, unreachab
 [Open full dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
 
 <iframe
-  src="../assets/callable-functions-dashboard.html"
+  src="../../assets/callable-functions-dashboard.html"
   title="Callable functions dashboard"
   width="100%"
   height="900"

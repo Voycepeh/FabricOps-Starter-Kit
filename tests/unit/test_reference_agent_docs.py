@@ -223,12 +223,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "# Callable Functions Flow" in flow_text
     assert "interactive callable functions dashboard" in flow_text
     assert "Open full dashboard" in flow_text
-    assert "../assets/callable-functions-dashboard.html" in flow_text
+    assert "[Open full dashboard](../assets/callable-functions-dashboard.html)" in flow_text
+    assert 'src="../../assets/callable-functions-dashboard.html"' in flow_text
     assert "<iframe" in flow_text
     assert "## Callable helper summary" not in flow_text
     assert "## Internal helper nesting inventory" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
-    assert "Refactor reason" not in flow_text
+    assert "refactor reason" not in flow_text.lower()
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
     assert "Callable functions dashboard" in dashboard_text
@@ -240,7 +241,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Reset" in dashboard_text
     assert 'id="searchScope"' in dashboard_text
     assert "Recommended action" in dashboard_text
-    assert "Refactor reason" not in dashboard_text
+    assert "refactor reason" not in dashboard_text.lower()
     assert "All recommended actions" in dashboard_text
     assert "Priority indicates review urgency" in dashboard_text
     assert "Total discovered functions are reconciled" in dashboard_text

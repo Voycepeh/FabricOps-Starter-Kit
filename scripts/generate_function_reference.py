@@ -1630,7 +1630,7 @@ ACTION_LEGEND = {
     "Keep / protect": "Healthy helper shape or leaf behavior; keep stable unless source review shows duplication.",
     "Shared helper – preserve carefully": "High reuse or broad inbound reach; refactor only with focused tests and caller review.",
     "Promote candidate": "Potential public API only when metadata and caller evidence support notebook-facing reuse.",
-    "Review manually": "No clear automated refactor reason; inspect intent before changing structure.",
+    "Review manually": "No clear automated recommendation; inspect intent before changing structure.",
 }
 
 
@@ -2276,7 +2276,7 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "[Open full dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }",
             "",
             '<iframe',
-            '  src="../assets/callable-functions-dashboard.html"',
+            '  src="../../assets/callable-functions-dashboard.html"',
             '  title="Callable functions dashboard"',
             '  width="100%"',
             '  height="900"',
