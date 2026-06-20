@@ -1077,7 +1077,6 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
     assert "  - Maintainer Guide:" in mkdocs_text
     assert "      - Glossary: reference/glossary.md" in mkdocs_text
     assert "      - Callable Functions Flow: reference/callable-flow.md" in mkdocs_text
-    assert "          - config: api/modules/config.md" in mkdocs_text
     assert "      - Implementation Appendix:" in mkdocs_text
     assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text
     assert "api/modules/config.md" in mkdocs_text

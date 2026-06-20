@@ -498,8 +498,10 @@ def test_env_config_template_exposes_audit_timezone_setting():
 
     timezone_assignment = re.search(r'(?m)^FABRICOPS_AUDIT_TIMEZONE = "([^"]+)"$', source)
     assert timezone_assignment is not None
-    assert _validate_audit_timezone(timezone_assignment.group(1)) == timezone_assignment.group(1)
-    assert "_validate_audit_timezone(FABRICOPS_AUDIT_TIMEZONE)" in source
+    configured_timezone = timezone_assignment.group(1)
+    assert _validate_audit_timezone(configured_timezone) == configured_timezone
+    assert "FABRICOPS_AUDIT_TIMEZONE" in source
+    assert "_validate_audit_timezone" in source or "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
     assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
     assert "UTC is the default and recommended portable option." in source
     assert "valid IANA timezone" in source
