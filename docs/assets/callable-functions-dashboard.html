@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Callable functions dashboard</title>
+  <style>
+    :root { color-scheme: light; --border:#d8dee9; --muted:#526070; --bg:#f7f9fc; --blue:#2563eb; --red:#dc2626; --yellow:#a16207; --green:#15803d; --grey:#64748b; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1f2937; background: #fff; }
+    header, main { max-width: 1440px; margin: 0 auto; padding: 1.25rem; }
+    header { border-bottom: 1px solid var(--border); }
+    h1 { margin: 0 0 .35rem; } a { color: #0f5db8; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .8rem; margin: 1rem 0; }
+    .card { border: 1px solid var(--border); border-left: .35rem solid var(--blue); border-radius: .8rem; padding: .9rem; background: var(--bg); text-align: left; cursor: pointer; }
+    .card.active { box-shadow: 0 0 0 3px rgba(37, 99, 235, .18); } .card.high { border-left-color: var(--red); } .card.medium { border-left-color: #eab308; } .card.protect { border-left-color: var(--green); }
+    .card strong { display:block; font-size:1.75rem; line-height:1; } .card span { color: var(--muted); font-weight:650; }
+    .helper-text { color: var(--muted); margin: .5rem 0 1rem; }
+    .filter-panel { display: grid; grid-template-columns: minmax(260px, 1.4fr) repeat(5, minmax(180px, 1fr)) auto; gap: .75rem; align-items: end; margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .9rem; background: #fbfcfe; }
+    .filter-field { min-width: 0; display:grid; gap:.25rem; font-weight:700; }
+    .filter-field select, .filter-field input { width:100%; box-sizing:border-box; }
+    small, .hint { color: var(--muted); } input, select, button { font: inherit; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .55rem; background: #fff; } button { cursor:pointer; }
+    .legend { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:.5rem; margin:1rem 0; } .legend div { border:1px solid var(--border); border-radius:.7rem; padding:.65rem; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: .85rem; max-width: 100%; }
+    table { width:100%; border-collapse:separate; border-spacing:0; min-width: 1180px; table-layout: fixed; }
+    th, td { padding:.75rem; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; overflow-wrap:anywhere; } th { background:var(--bg); position:sticky; top:0; z-index:1; font-size:.9rem; } th button { border:0; background:transparent; font-weight:800; padding:0; }
+    th:nth-child(1) { width:5.5rem; } th:nth-child(2) { width:18rem; } th:nth-child(3) { width:8rem; } th:nth-child(4) { width:9rem; } th:nth-child(5) { width:16rem; } th:nth-child(6), th:nth-child(7), th:nth-child(8) { width:6rem; } th:nth-child(9) { width:15rem; }
+    .num { text-align:right; } .tag,.badge { display:inline-flex; margin:.12rem .18rem .12rem 0; padding:.18rem .5rem; border-radius:999px; font-size:.82rem; font-weight:700; line-height:1.2; white-space:normal; }
+    .tag { background:#eef2ff; color:#3730a3; } .badge.high { background:#fee2e2; color:#991b1b; } .badge.medium { background:#fef3c7; color:#92400e; } .badge.protect { background:#dcfce7; color:#166534; } .badge.review { background:#e2e8f0; color:#334155; } .badge.public { background:#dbeafe; color:#1e40af; } .badge.internal { background:#dcfce7; color:#166534; } .badge.unreachable { background:#f1f5f9; color:#475569; }
+    .details td { background:#f8fafc; } .details-panel { border:1px solid var(--border); border-radius:.9rem; background:#fff; padding:1rem; } .details-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:1rem; } .details ul { margin:0; padding-left:1.15rem; } code { white-space:normal; }
+    @media (max-width: 1100px) { .filter-panel { grid-template-columns: repeat(2, minmax(220px, 1fr)); } .filter-field.search { grid-column: 1 / -1; } }
+    @media (max-width: 640px) { header, main { padding:1rem; } .filter-panel { grid-template-columns: 1fr; } .filter-field.search { grid-column:auto; } .cards { grid-template-columns:1fr; } table { min-width: 980px; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Callable functions dashboard</h1>
+  <p>Inspect public API entrypoints, reachable internal helpers, unreachable functions, caller/callee relationships, helper depth, reuse, and refactor review recommendations.</p>
+  <p class="helper-text">Recommended action explains the suggested treatment for the helper, such as inline, merge, protect, promote, or review manually. Priority indicates review urgency.</p>
+  <p><a href="../reference/callable-flow/">Back to Callable Functions Flow</a> · <a href="../reference/_data/callable-flow.json">Open JSON data</a></p>
+</header>
+<main>
+  <section class="cards" aria-label="Function summary" id="summaryCards"></section>
+  <p class="helper-text">Total discovered functions are reconciled into public API entrypoints, reachable internal helpers, and unreachable or unclassified functions.</p>
+  <section class="filter-panel" aria-label="Inventory filters">
+    <label class="filter-field search">Search <input id="searchBox" type="search" placeholder="Search selected scope"><small id="scopeHint">Global search covers function, module, Recommended action, callers, callees, and source.</small></label>
+    <label class="filter-field">Scope <select id="searchScope"><option value="all">All</option><option value="function">Function</option><option value="module">Module</option><option value="action">Recommended action</option><option value="caller">Caller / used by</option><option value="callee">Callee / calls</option><option value="source">Source</option></select></label>
+    <label class="filter-field">Function type <select id="typeFilter"><option value="">All function types</option></select></label>
+    <label class="filter-field">Module <select id="moduleFilter"><option value="">All modules</option></select></label>
+    <label class="filter-field">Recommended action <select id="signalFilter"><option value="">All recommended actions</option></select></label>
+    <label class="filter-field">Priority <select id="priorityFilter"><option value="">All priorities</option></select></label>
+    <button type="button" id="resetFilters">Reset</button>
+  </section>
+  <section class="legend" aria-label="Recommended action legend" id="actionLegend"></section>
+  <p id="resultCount"></p>
+  <section class="table-wrap" aria-label="Combined function inventory"><table><thead><tr><th></th><th><button type="button" data-sort="function_name">Function</button></th><th><button type="button" data-sort="function_type">Function type</button></th><th><button type="button" data-sort="module">Module</button></th><th>Recommended action</th><th><button type="button" data-sort="priority">Priority</button></th><th class="num"><button type="button" data-sort="called_by_count">Called by</button></th><th class="num"><button type="button" data-sort="calls_count">Calls</button></th><th>Source</th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
+</main>
+<script>
+let inventory = []; let summary = {}; const actionLegend = {
+  "Inline candidate": "Small helper used by only one function; consider flattening into its caller after checking readability.",
+  "Merge candidate": "Similar helper shape or adjacent responsibility; consider consolidating with a sibling helper.",
+  "Review abstraction value": "Helper used by only one function; verify the name, boundary, and test value justify keeping it separate.",
+  "Keep / protect": "Healthy helper shape or leaf behavior; keep stable unless source review shows duplication.",
+  "Shared helper \u2013 preserve carefully": "High reuse or broad inbound reach; refactor only with focused tests and caller review.",
+  "Promote candidate": "Potential public API only when metadata and caller evidence support notebook-facing reuse.",
+  "Review manually": "No clear automated refactor reason; inspect intent before changing structure."
+}; const reasonLabels = {
+  "Thin wrapper candidate": "Likely wrapper / inline candidate",
+  "Single-use internal helper": "Used by only one function",
+  "Leaf internal helper": "End-of-chain helper",
+  "High-fanout helper": "Used by many functions"
+};
+const priorityRank = {High:0, Medium:1, Low:2, Review:3, Protect:4}; const state = {search:'', scope:'all', type:'', module:'', signal:'', priority:'', sortKey:'function_type', sortDir:1, expanded:new Set(), activeCard:'all'};
+const $ = (id) => document.getElementById(id); const text = (v) => String(v ?? ''); const esc = (v) => text(v).replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function unique(v) { return [...new Set(v.filter(Boolean))].sort((a,b)=>a.localeCompare(b)); } function option(s,v) { const o=document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }
+function actionText(item) { return [item.recommended_action, ...(item.signals || []).map((s)=>reasonLabels[s] || s)].join(' '); }
+function fields(item) { return {all:[item.function_name,item.qualified_name,item.module,item.function_type,item.priority,actionText(item),item.source_path,...item.callers.map(x=>x.function),...item.callees.map(x=>x.function)].join(' '), function:`${item.function_name} ${item.qualified_name}`, module:item.module, action:actionText(item), caller:item.callers.map(x=>`${x.function} ${x.module}`).join(' '), callee:item.callees.map(x=>`${x.function} ${x.module}`).join(' '), source:`${item.source_path || ''} ${item.source_url || ''}`}; }
+function renderCards() { const cards=[['all','Total functions discovered',summary.total_functions_discovered,'info'],['Public','Public API entrypoints',summary.public_api_entrypoints,'info'],['Internal','Reachable internal helpers',summary.reachable_internal_helpers,'protect'],['Unreachable','Unreachable / unclassified functions',summary.unreachable_or_unclassified_functions,'info'],['High','High priority candidates',summary.high_priority_candidates,'high'],['Medium','Medium priority candidates',summary.medium_priority_candidates,'medium'],['Protect','Protect helpers',summary.protect_helpers,'protect'],['thin','Likely wrapper / inline candidates',summary.thin_wrapper_candidates,'info']]; $('summaryCards').innerHTML=cards.map(([key,label,value,klass])=>`<button type="button" class="card ${klass} ${state.activeCard===key?'active':''}" data-card="${key}"><strong>${esc(value)}</strong><span>${esc(label)}</span></button>`).join(''); }
+function renderLegend() { $('actionLegend').innerHTML=Object.entries(actionLegend).map(([l,d])=>`<div><span class="badge review">${esc(l)}</span><p class="hint">${esc(d)}</p></div>`).join(''); }
+function populateFilters() { ['Public','Internal','Unreachable'].forEach(v=>option($('typeFilter'),v)); unique(inventory.map(i=>i.module)).forEach(v=>option($('moduleFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); ['High','Medium','Low','Review','Protect'].forEach(v=>option($('priorityFilter'),v)); }
+function filteredRows() { const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || fields(i)[state.scope].toLowerCase().includes(q)) && (!state.type || i.function_type===state.type) && (!state.module || i.module===state.module) && (!state.signal || i.recommended_action===state.signal) && (!state.priority || i.priority===state.priority)); }
+function compare(a,b) { const k=state.sortKey; if(k==='priority') return ((priorityRank[a.priority]??9)-(priorityRank[b.priority]??9))*state.sortDir || a.function_name.localeCompare(b.function_name); if(typeof a[k]==='number') return (a[k]-b[k])*state.sortDir; return text(a[k]).localeCompare(text(b[k]))*state.sortDir; }
+function linkedList(items) { return items.length ? `<ul>${items.map(i=>`<li><a href="${esc(i.source_url || '#')}">${esc(i.function)}</a> <small>(${esc(i.module)})</small></li>`).join('')}</ul>` : '<p>—</p>'; }
+function chips(item) { return (item.signals || []).map(s=>`<span class="tag">${esc(reasonLabels[s] || s)}</span>`).join('') || `<span class="badge review">${esc(item.recommended_action)}</span>`; }
+function renderTable() { const rows=filteredRows().sort(compare); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered functions.`; $('inventoryBody').innerHTML=rows.map(i=>{ const id=i.qualified_name, open=state.expanded.has(id), p=text(i.priority).toLowerCase(), t=text(i.function_type).toLowerCase(); return `<tr><td><button type="button" data-toggle="${esc(id)}">${open?'Hide':'Details'}</button></td><td title="${esc(i.qualified_name)}"><a href="${esc(i.source_url || '#')}"><code>${esc(i.function_name)}</code></a><br><small>${esc(i.qualified_name)}</small></td><td><span class="badge ${t}">${esc(i.function_type)}</span></td><td><code>${esc(i.module)}</code></td><td>${chips(i)}</td><td><span class="badge ${p}">${esc(i.priority)}</span></td><td class="num">${esc(i.called_by_count)}</td><td class="num">${esc(i.calls_count)}</td><td><a href="${esc(i.source_url || '#')}">${esc(i.source_path || 'Source unavailable')}</a></td></tr>${open?`<tr class="details"><td colspan="9"><div class="details-panel"><div class="details-grid"><section><h3>Callers</h3>${linkedList(i.callers)}</section><section><h3>Callees</h3>${linkedList(i.callees)}</section><section><h3>Direct internal helpers</h3>${linkedList(i.direct_internal_helpers || [])}</section><section><h3>Metrics</h3><p><strong>Depth:</strong> ${esc(i.deepest_call_chain_depth ?? '—')}</p><p><strong>Repeated helpers:</strong> ${esc(i.repeated_helper_count ?? 0)}</p></section></div></div></td></tr>`:''}`; }).join(''); }
+function update() { renderCards(); renderTable(); } function resetFilters() { state.search=state.type=state.module=state.signal=state.priority=''; state.scope='all'; state.activeCard='all'; ['searchBox','searchScope','typeFilter','moduleFilter','signalFilter','priorityFilter'].forEach(id=>$(id).value=id==='searchScope'?'all':''); update(); }
+function applyCard(key) { resetFilters(); state.activeCard=key; if(['Public','Internal','Unreachable'].includes(key)) state.type=key; if(['High','Medium','Protect'].includes(key)) state.priority=key; if(key==='thin') state.signal='Inline candidate'; $('typeFilter').value=state.type; $('signalFilter').value=state.signal; $('priorityFilter').value=state.priority; update(); }
+$('searchBox').addEventListener('input', e=>{state.search=e.target.value; update();}); $('searchScope').addEventListener('change', e=>{state.scope=e.target.value; $('scopeHint').textContent=e.target.value==='all'?'Global search covers function, module, Recommended action, callers, callees, and source.':`Search scope: ${e.target.selectedOptions[0].textContent}.`; update();});
+$('typeFilter').addEventListener('change', e=>{state.type=e.target.value; update();}); $('moduleFilter').addEventListener('change', e=>{state.module=e.target.value; update();}); $('signalFilter').addEventListener('change', e=>{state.signal=e.target.value; update();}); $('priorityFilter').addEventListener('change', e=>{state.priority=e.target.value; update();}); $('resetFilters').addEventListener('click', resetFilters);
+document.addEventListener('click', e=>{ const sort=e.target.closest('[data-sort]'); if(sort){ const k=sort.dataset.sort; state.sortDir=state.sortKey===k?state.sortDir*-1:1; state.sortKey=k; update(); } const toggle=e.target.closest('[data-toggle]'); if(toggle){ const id=toggle.dataset.toggle; state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id); renderTable(); } const card=e.target.closest('[data-card]'); if(card) applyCard(card.dataset.card); });
+async function loadData() { try { const response=await fetch('../reference/_data/callable-flow.json'); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data=await response.json(); inventory=data.function_inventory || data.refactor_inventory || []; summary=data.summary_counts || {}; renderCards(); renderLegend(); populateFilters(); renderTable(); } catch(error) { $('resultCount').textContent=`Unable to load callable-flow JSON: ${error.message}`; } } loadData();
+</script>
+</body>
+</html>

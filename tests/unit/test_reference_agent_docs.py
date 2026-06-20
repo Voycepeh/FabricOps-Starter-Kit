@@ -214,78 +214,45 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     """Verify global callable flow docs and structured metadata are generated."""
     flow_page = REFERENCE_DIR / "callable-flow.md"
     flow_data_path = REFERENCE_DIR / "_data" / "callable-flow.json"
-    dashboard_path = REFERENCE_DIR / "refactor-dashboard.html"
+    dashboard_path = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
     exported_symbols = set(_exported_symbols())
 
     assert flow_page.exists()
     assert dashboard_path.exists()
     flow_text = flow_page.read_text(encoding="utf-8")
-    assert "# Public callable flow map" in flow_text
-    assert "## Maintainer overview" in flow_text
-    assert "Total internal helpers" in flow_text
-    assert "High priority candidates" in flow_text
-    assert "Medium priority candidates" in flow_text
-    assert "Protect helpers" in flow_text
-    assert "Likely wrapper / inline candidates" in flow_text
-    assert "Refactor reason / priority" in flow_text
-    assert "Likely wrapper / inline candidate" in flow_text
-    assert "Used by only one function" in flow_text
-    assert "End-of-chain helper" in flow_text
-    assert "Used by many functions" in flow_text
-    assert "Thin wrapper candidate" not in flow_text
-    assert "Single-use internal helper" not in flow_text
-    assert "Leaf internal helper" not in flow_text
-    assert "High-fanout helper" not in flow_text
-    assert "Public API entrypoints" in flow_text
-    assert "## Top priority refactor inventory" not in flow_text
-    assert "refactor-dashboard.html" in flow_text
-    assert "_data/callable-flow.json" in flow_text
-    assert "../refactor-dashboard.html" not in flow_text
-    assert "../_data/callable-flow.json" not in flow_text
-    assert "Complete one-row-per-internal-helper inventory" in flow_text
-    assert "Protect helpers are excluded here" not in flow_text
-    assert '??? info "Full searchable inventory"' not in flow_text
-    assert '??? info "Inventory by module"' not in flow_text
-    assert '??? info "Inventory by signal"' not in flow_text
-    assert "modules, refactor reasons, callers" in flow_text
-    assert "## Public callable dependency map" not in flow_text
-    assert "## Callable helper summary" in flow_text
-    assert "## Shared helper usage" not in flow_text
-    assert "## Internal helper nesting inventory" in flow_text
-    assert "## Legacy hotspot summary" not in flow_text
-    assert "## Refactor hotspot ranking" not in flow_text
-    assert "Helper" in flow_text
-    assert "Suggested action" in flow_text
-    assert "../../api/reference/run_table_guardrails/" in flow_text
-    assert "](../api/reference/run_table_guardrails/)" not in flow_text
-    assert '<div class="callable-flow-table-wrap" markdown="0">' in flow_text
-    assert '<td class="flow-cell-name"><a href="../../api/reference/widget_select_guardrail_target/"' in flow_text
-    assert '<td class="flow-cell-number">87</td>' in flow_text
-    assert "independent entry point" not in flow_text
+    assert "# Callable Functions Flow" in flow_text
+    assert "interactive callable functions dashboard" in flow_text
+    assert "Open full dashboard" in flow_text
+    assert "../assets/callable-functions-dashboard.html" in flow_text
+    assert "<iframe" in flow_text
+    assert "## Callable helper summary" not in flow_text
+    assert "## Internal helper nesting inventory" not in flow_text
+    assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
+    assert "Refactor reason" not in flow_text
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
-    assert "FabricOps refactor triage dashboard" in dashboard_text
+    assert "Callable functions dashboard" in dashboard_text
     assert 'id="searchBox"' in dashboard_text
     assert 'id="moduleFilter"' in dashboard_text
+    assert 'id="typeFilter"' in dashboard_text
     assert 'id="signalFilter"' in dashboard_text
     assert 'id="priorityFilter"' in dashboard_text
     assert "Reset" in dashboard_text
     assert 'id="searchScope"' in dashboard_text
-    assert "Refactor reason" in dashboard_text
-    assert "All refactor reasons" in dashboard_text
-    assert "Global search covers helper, module, refactor reason" in dashboard_text
-    assert "Likely wrapper / inline candidate" in dashboard_text
-    assert "Used by only one function" in dashboard_text
-    assert "End-of-chain helper" in dashboard_text
-    assert "Used by many functions" in dashboard_text
-    assert 'data-card="${key}"' in dashboard_text
-    assert 'data-sort="function"' in dashboard_text
-    assert "data-toggle" in dashboard_text
-    assert "callable-flow/" in dashboard_text
-    assert "fetch('_data/callable-flow.json')" in dashboard_text
-    assert "data.refactor_inventory" in dashboard_text
-    assert "Used by" in dashboard_text
-    assert "Calls" in dashboard_text
+    assert "Recommended action" in dashboard_text
+    assert "Refactor reason" not in dashboard_text
+    assert "All recommended actions" in dashboard_text
+    assert "Priority indicates review urgency" in dashboard_text
+    assert "Total discovered functions are reconciled" in dashboard_text
+    assert "Function type" in dashboard_text
+    assert "Unreachable / unclassified functions" in dashboard_text
+    assert ".filter-panel" in dashboard_text
+    assert "grid-template-columns: minmax(260px, 1.4fr)" in dashboard_text
+    assert "@media (max-width: 1100px)" in dashboard_text
+    assert "data.function_inventory" in dashboard_text
+    assert "fetch('../reference/_data/callable-flow.json')" in dashboard_text
+    assert "Callers" in dashboard_text
+    assert "Callees" in dashboard_text
     assert "Source" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
@@ -297,102 +264,68 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "summary_counts",
         "refactor_signals",
         "refactor_inventory",
+        "function_inventory",
     } <= set(flow_data)
     assert set(flow_data["public_callable_dependencies"]) == exported_symbols
 
-    summary_by_callable = {row["callable"]: row for row in flow_data["callable_helper_summary"]}
-    assert set(summary_by_callable) == exported_symbols
-    guardrail_summary = summary_by_callable["run_table_guardrails"]
-    assert guardrail_summary["unique_internal_helper_count"] > 0
-    assert guardrail_summary["unique_internal_helper_count"] == len(guardrail_summary["unique_internal_helpers"])
-    assert guardrail_summary["direct_internal_helpers"]
-    assert guardrail_summary["deepest_call_chain_depth"] > 0
-    assert isinstance(guardrail_summary["calls_public_callable"], bool)
-
-    assert flow_data["shared_helper_usage"]
-    assert all(item["public_callable_count"] > 1 for item in flow_data["shared_helper_usage"])
-    assert flow_data["refactor_hotspots"]
-    assert all(
-        {
-            "score",
-            "unique_internal_helper_count",
-            "deepest_call_chain_depth",
-            "repeated_helper_count",
-            "shared_helper_overlap_count",
-        } <= set(item)
-        for item in flow_data["refactor_hotspots"]
-    )
-
     summary_counts = flow_data["summary_counts"]
     assert {
-        "thin_wrapper_candidates",
-        "single_use_internal_helpers",
-        "leaf_internal_helpers",
-        "high_fanout_helpers",
+        "total_functions_discovered",
         "public_api_entrypoints",
-        "internal_helpers",
+        "reachable_internal_helpers",
+        "unreachable_or_unclassified_functions",
         "high_priority_candidates",
         "medium_priority_candidates",
         "protect_helpers",
+        "thin_wrapper_candidates",
     } <= set(summary_counts)
     assert summary_counts["public_api_entrypoints"] == len(exported_symbols)
-    assert summary_counts["internal_helpers"] > 0
+    assert summary_counts["total_functions_discovered"] == (
+        summary_counts["public_api_entrypoints"]
+        + summary_counts["reachable_internal_helpers"]
+        + summary_counts["unreachable_or_unclassified_functions"]
+    )
+
+    function_inventory = flow_data["function_inventory"]
+    assert len(function_inventory) == summary_counts["total_functions_discovered"]
+    assert {row["qualified_name"] for row in function_inventory}
+    assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
+    assert {"Public", "Internal", "Unreachable"} <= {row["function_type"] for row in function_inventory}
+    assert sum(1 for row in function_inventory if row["function_type"] == "Public") == summary_counts["public_api_entrypoints"]
+    assert sum(1 for row in function_inventory if row["function_type"] == "Internal") == summary_counts["reachable_internal_helpers"]
+    assert sum(1 for row in function_inventory if row["function_type"] == "Unreachable") == summary_counts["unreachable_or_unclassified_functions"]
+    assert all(not row["is_internal_helper"] for row in function_inventory if row["function_type"] == "Public")
+    assert all(row["is_internal_helper"] for row in function_inventory if row["function_type"] == "Internal")
+    assert all(not row["is_reachable"] for row in function_inventory if row["function_type"] == "Unreachable")
+    assert all(row["recommended_action"] for row in function_inventory)
+    assert all(
+        {
+            "function_name",
+            "qualified_name",
+            "module",
+            "function_type",
+            "public_callable",
+            "is_public_api",
+            "is_internal_helper",
+            "is_reachable",
+            "called_by_count",
+            "calls_count",
+            "direct_internal_helpers",
+            "deepest_call_chain_depth",
+            "repeated_helper_count",
+            "recommended_action",
+            "priority",
+            "callers",
+            "callees",
+            "source_path",
+        } <= set(item)
+        for item in function_inventory
+    )
 
     refactor_inventory = flow_data["refactor_inventory"]
     assert refactor_inventory
-    qualified_names = [item["qualified_name"] for item in refactor_inventory]
-    assert len(qualified_names) == len(set(qualified_names))
-    assert any(len(item["signals"]) > 1 for item in refactor_inventory)
-    assert all(item["priority"] for item in refactor_inventory)
-    assert all(item["suggested_action"] for item in refactor_inventory)
-    assert any(
-        item["priority"] == "Protect" and item["suggested_action"] == "Shared helper – preserve carefully"
-        for item in refactor_inventory
-    )
-    assert all(
-        {
-            "function",
-            "module",
-            "qualified_name",
-            "is_internal",
-            "signals",
-            "priority",
-            "suggested_action",
-            "inbound_count",
-            "outbound_project_call_count",
-            "nesting_level",
-            "public_entrypoint_lineage",
-            "used_by",
-            "calls",
-            "source_path",
-            "source_url",
-        } <= set(item)
-        for item in refactor_inventory
-    )
-    priority_order = {"High": 0, "Medium": 1, "Low": 2, "Review": 3, "Protect": 4}
-    assert [
-        (priority_order[item["priority"]], item["module"], item["function"].lower())
-        for item in refactor_inventory
-    ] == sorted(
-        (priority_order[item["priority"]], item["module"], item["function"].lower())
-        for item in refactor_inventory
-    )
-
-    thin_wrapper = next(
-        item for item in refactor_inventory if "Thin wrapper candidate" in item["signals"]
-    )
-    assert thin_wrapper["is_internal"] is True
-    assert thin_wrapper["function"].startswith("_")
-    assert thin_wrapper["inbound_count"] == 1
-    assert thin_wrapper["outbound_project_call_count"] == 1
-    assert thin_wrapper["priority"] == "High"
-    assert thin_wrapper["suggested_action"] == "Inline candidate"
-    assert thin_wrapper["public_entrypoint_lineage"]
-    assert thin_wrapper["used_by"]
-    assert thin_wrapper["calls"]
-
+    assert all(item["recommended_action"] for item in refactor_inventory)
     assert flow_data["refactor_signals"]
-
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
@@ -1143,7 +1076,7 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
     assert "  - Maintainer Guide:" in mkdocs_text
     assert "      - Glossary: reference/glossary.md" in mkdocs_text
     assert "      - Callable Functions Flow: reference/callable-flow.md" in mkdocs_text
-    assert "      - Modules: api/modules/index.md" in mkdocs_text
+    assert "          - config: api/modules/config.md" in mkdocs_text
     assert "      - Implementation Appendix:" in mkdocs_text
     assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text
     assert "api/modules/config.md" in mkdocs_text
