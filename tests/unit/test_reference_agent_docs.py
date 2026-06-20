@@ -262,6 +262,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "safety_constraints" in dashboard_text
     assert "expected_ai_output" in dashboard_text
     assert "planning_only" in dashboard_text
+    assert "compatibility_mode" in dashboard_text
+    assert "compatibility_instruction" in dashboard_text
+    assert "stable_api_safe" in dashboard_text
+    assert "internal_cleanup" in dashboard_text
+    assert "development_breaking_allowed" in dashboard_text
+    assert "Respect the compatibility mode" in dashboard_text
     assert "How signals are classified" in dashboard_text
     assert "Small helpers likely safe to flatten" in dashboard_text
     assert "Function type" in dashboard_text
