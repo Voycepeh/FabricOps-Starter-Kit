@@ -93,8 +93,8 @@ This high-level map shows public callable to public callable calls only. Indepen
 <tr>
 <td class="flow-cell-name"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
 <td class="flow-cell-module"><code>pipeline</code></td>
-<td class="flow-cell-number">87</td>
-<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692"><code>_run_active_dq_guardrail</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L92-L110"><code>_check_schema_rule_runtime</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L313-L408"><code>_check_schema_runtime</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"><code>_build_metadata_table_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156"><code>_active_pipeline_context</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L491-L497"><code>_build_guardrail_blocking_message_from_bundle</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L654-L684"><code>_build_guardrail_evidence_definitions</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L650-L651"><code>_guardrail_can_continue</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L642-L643"><code>_table_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L646-L647"><code>_table_name</code></a></td>
+<td class="flow-cell-number">86</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692"><code>_run_active_dq_guardrail</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L92-L110"><code>_check_schema_rule_runtime</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L310-L405"><code>_check_schema_runtime</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"><code>_build_metadata_table_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L89-L136"><code>_write_guardrail_result_row</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156"><code>_active_pipeline_context</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L491-L497"><code>_build_guardrail_blocking_message_from_bundle</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L654-L684"><code>_build_guardrail_evidence_definitions</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L650-L651"><code>_guardrail_can_continue</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L642-L643"><code>_table_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L646-L647"><code>_table_name</code></a></td>
 <td class="flow-cell-number">6</td>
 <td class="flow-cell-number">12</td>
 <td class="flow-cell-flag">Yes</td>
@@ -861,7 +861,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-name"><a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
 <td class="flow-cell-module"><code>pipeline</code></td>
 <td class="flow-cell-number">91.14</td>
-<td class="flow-cell-number">87</td>
+<td class="flow-cell-number">86</td>
 <td class="flow-cell-number">6</td>
 <td class="flow-cell-number">12</td>
 <td class="flow-cell-number">38</td>
@@ -870,7 +870,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">2</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
 <td class="flow-cell-module"><code>data_agreement</code></td>
-<td class="flow-cell-number">78.02</td>
+<td class="flow-cell-number">78.27</td>
 <td class="flow-cell-number">46</td>
 <td class="flow-cell-number">7</td>
 <td class="flow-cell-number">12</td>
@@ -880,7 +880,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">3</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
 <td class="flow-cell-module"><code>data_agreement</code></td>
-<td class="flow-cell-number">78.02</td>
+<td class="flow-cell-number">78.27</td>
 <td class="flow-cell-number">46</td>
 <td class="flow-cell-number">7</td>
 <td class="flow-cell-number">12</td>
@@ -890,7 +890,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-name"><a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a></td>
 <td class="flow-cell-module"><code>pipeline</code></td>
-<td class="flow-cell-number">65.66</td>
+<td class="flow-cell-number">65.84</td>
 <td class="flow-cell-number">34</td>
 <td class="flow-cell-number">7</td>
 <td class="flow-cell-number">12</td>
@@ -900,7 +900,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">5</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
 <td class="flow-cell-module"><code>governance_review</code></td>
-<td class="flow-cell-number">65.11</td>
+<td class="flow-cell-number">65.25</td>
 <td class="flow-cell-number">26</td>
 <td class="flow-cell-number">8</td>
 <td class="flow-cell-number">12</td>
@@ -910,7 +910,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">6</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></td>
 <td class="flow-cell-module"><code>governance_review</code></td>
-<td class="flow-cell-number">65.11</td>
+<td class="flow-cell-number">65.25</td>
 <td class="flow-cell-number">26</td>
 <td class="flow-cell-number">8</td>
 <td class="flow-cell-number">12</td>
@@ -920,7 +920,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">7</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></td>
 <td class="flow-cell-module"><code>governance_review</code></td>
-<td class="flow-cell-number">64.55</td>
+<td class="flow-cell-number">64.72</td>
 <td class="flow-cell-number">33</td>
 <td class="flow-cell-number">7</td>
 <td class="flow-cell-number">12</td>
@@ -930,7 +930,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">8</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
 <td class="flow-cell-module"><code>data_agreement</code></td>
-<td class="flow-cell-number">58.46</td>
+<td class="flow-cell-number">58.6</td>
 <td class="flow-cell-number">27</td>
 <td class="flow-cell-number">7</td>
 <td class="flow-cell-number">10</td>
@@ -940,7 +940,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">9</td>
 <td class="flow-cell-name"><a href="../../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
 <td class="flow-cell-module"><code>config</code></td>
-<td class="flow-cell-number">55.56</td>
+<td class="flow-cell-number">55.73</td>
 <td class="flow-cell-number">32</td>
 <td class="flow-cell-number">5</td>
 <td class="flow-cell-number">12</td>
@@ -950,7 +950,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">10</td>
 <td class="flow-cell-name"><a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
 <td class="flow-cell-module"><code>pipeline</code></td>
-<td class="flow-cell-number">45.56</td>
+<td class="flow-cell-number">45.66</td>
 <td class="flow-cell-number">19</td>
 <td class="flow-cell-number">5</td>
 <td class="flow-cell-number">9</td>
@@ -960,7 +960,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">11</td>
 <td class="flow-cell-name"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></td>
 <td class="flow-cell-module"><code>pipeline</code></td>
-<td class="flow-cell-number">39.94</td>
+<td class="flow-cell-number">40.0</td>
 <td class="flow-cell-number">12</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">11</td>
@@ -970,7 +970,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">12</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></td>
 <td class="flow-cell-module"><code>governance_review</code></td>
-<td class="flow-cell-number">37.05</td>
+<td class="flow-cell-number">37.09</td>
 <td class="flow-cell-number">9</td>
 <td class="flow-cell-number">5</td>
 <td class="flow-cell-number">9</td>
@@ -980,7 +980,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">13</td>
 <td class="flow-cell-name"><a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></td>
 <td class="flow-cell-module"><code>governance_review</code></td>
-<td class="flow-cell-number">34.31</td>
+<td class="flow-cell-number">34.38</td>
 <td class="flow-cell-number">14</td>
 <td class="flow-cell-number">5</td>
 <td class="flow-cell-number">5</td>
@@ -990,7 +990,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">14</td>
 <td class="flow-cell-name"><a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
 <td class="flow-cell-module"><code>pipeline</code></td>
-<td class="flow-cell-number">29.84</td>
+<td class="flow-cell-number">29.92</td>
 <td class="flow-cell-number">14</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">4</td>
@@ -1000,7 +1000,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">15</td>
 <td class="flow-cell-name"><a href="../../api/reference/read_data/"><code>read_data</code></a></td>
 <td class="flow-cell-module"><code>fabric_input_output</code></td>
-<td class="flow-cell-number">27.25</td>
+<td class="flow-cell-number">27.3</td>
 <td class="flow-cell-number">9</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">5</td>
@@ -1010,7 +1010,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">16</td>
 <td class="flow-cell-name"><a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></td>
 <td class="flow-cell-module"><code>governance_review</code></td>
-<td class="flow-cell-number">26.7</td>
+<td class="flow-cell-number">26.75</td>
 <td class="flow-cell-number">10</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">4</td>
@@ -1020,7 +1020,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">17</td>
 <td class="flow-cell-name"><a href="../../api/reference/write_data/"><code>write_data</code></a></td>
 <td class="flow-cell-module"><code>fabric_input_output</code></td>
-<td class="flow-cell-number">22.22</td>
+<td class="flow-cell-number">22.25</td>
 <td class="flow-cell-number">6</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">3</td>
@@ -1030,7 +1030,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">18</td>
 <td class="flow-cell-name"><a href="../../api/reference/setup_notebook/"><code>setup_notebook</code></a></td>
 <td class="flow-cell-module"><code>config</code></td>
-<td class="flow-cell-number">20.82</td>
+<td class="flow-cell-number">20.86</td>
 <td class="flow-cell-number">8</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">2</td>
@@ -1040,7 +1040,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">19</td>
 <td class="flow-cell-name"><a href="../../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></td>
 <td class="flow-cell-module"><code>data_profiling</code></td>
-<td class="flow-cell-number">19.78</td>
+<td class="flow-cell-number">19.83</td>
 <td class="flow-cell-number">9</td>
 <td class="flow-cell-number">3</td>
 <td class="flow-cell-number">2</td>
@@ -1050,7 +1050,7 @@ Ranked review aid based on unique internal helper count, deepest call chains, re
 <td class="flow-cell-number">20</td>
 <td class="flow-cell-name"><a href="../../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
 <td class="flow-cell-module"><code>pipeline</code></td>
-<td class="flow-cell-number">15.32</td>
+<td class="flow-cell-number">15.34</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">4</td>
 <td class="flow-cell-number">0</td>

@@ -4435,10 +4435,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.guardrails._profile_hash",
         "fabricops_kit.guardrails.enforce_profile_behavior"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4520,27 +4519,6 @@
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.guardrails._catalogue_value"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._profile_hash": {
-      "qualified_name": "fabricops_kit.guardrails._profile_hash",
-      "short_name": "_profile_hash",
-      "module": "guardrails",
-      "callable": "_profile_hash",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._json_dumps_stable"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._json_dumps_stable"
       ],
       "internal_helper_count": 1
     },
@@ -4809,13 +4787,12 @@
         "fabricops_kit.guardrails._guardrail_exclude_columns",
         "fabricops_kit.guardrails._is_missing_table_error",
         "fabricops_kit.guardrails._json_dumps_stable",
-        "fabricops_kit.guardrails._profile_hash",
         "fabricops_kit.guardrails._profile_payload_from_profile",
         "fabricops_kit.guardrails._select_profile_behavior_rule",
         "fabricops_kit.guardrails._string_value",
         "fabricops_kit.metadata._write_guardrail_result_row"
       ],
-      "calls_count": 14,
+      "calls_count": 13,
       "used_by": [
         "fabricops_kit.pipeline.run_table_guardrails"
       ],
@@ -4828,12 +4805,11 @@
         "fabricops_kit.guardrails._guardrail_exclude_columns",
         "fabricops_kit.guardrails._is_missing_table_error",
         "fabricops_kit.guardrails._json_dumps_stable",
-        "fabricops_kit.guardrails._profile_hash",
         "fabricops_kit.guardrails._profile_payload_from_profile",
         "fabricops_kit.guardrails._select_profile_behavior_rule",
         "fabricops_kit.guardrails._string_value"
       ],
-      "internal_helper_count": 10
+      "internal_helper_count": 9
     },
     "fabricops_kit.guardrails.stop_if_failed": {
       "qualified_name": "fabricops_kit.guardrails.stop_if_failed",
@@ -6202,7 +6178,7 @@
     },
     "guardrails": {
       "callable_count": 0,
-      "internal_count": 25,
+      "internal_count": 24,
       "outbound_modules": [
         "data_profiling",
         "fabric_input_output",

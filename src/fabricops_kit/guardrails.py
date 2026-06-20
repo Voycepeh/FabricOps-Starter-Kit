@@ -214,9 +214,6 @@ def _json_dumps_stable(value) -> str:
     return json.dumps(value, default=str, sort_keys=True, separators=(",", ":"))
 
 
-def _profile_hash(payload: dict) -> str:
-    return hashlib.sha256(_json_dumps_stable(payload).encode("utf-8")).hexdigest()
-
 
 def _schema_signature(dataframe) -> list[dict[str, str]]:
     columns, types = _actual_schema(dataframe)
@@ -830,7 +827,8 @@ def enforce_profile_behavior(
             from fabricops_kit.data_profiling import profile_dataframe
             current_profile = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
         payload = _profile_payload_from_profile(current_profile, dataframe=dataframe, watermark_column="", watermark_value="__FULL_TABLE__")
-        evidence_rows.append({"watermark_column": "", "watermark_value": "__FULL_TABLE__", "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
+        profile_payload_json = _json_dumps_stable(payload)
+        evidence_rows.append({"watermark_column": "", "watermark_value": "__FULL_TABLE__", "row_count": payload.get("row_count"), "profile_payload_json": profile_payload_json, "profile_hash": hashlib.sha256(profile_payload_json.encode("utf-8")).hexdigest()})
     else:
         if not watermark_column:
             raise ValueError("watermark_column is required for changing_data profile behavior")
@@ -842,7 +840,8 @@ def enforce_profile_behavior(
             group_df = dataframe.filter(dataframe[watermark_column] == value)
             group_profile = profile_dataframe(group_df, table_name, exclude_columns=effective_exclude_columns, config=config)
             payload = _profile_payload_from_profile(group_profile, dataframe=group_df, watermark_column=watermark_column, watermark_value=_string_value(value))
-            evidence_rows.append({"watermark_column": watermark_column, "watermark_value": _string_value(value), "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
+            profile_payload_json = _json_dumps_stable(payload)
+            evidence_rows.append({"watermark_column": watermark_column, "watermark_value": _string_value(value), "row_count": payload.get("row_count"), "profile_payload_json": profile_payload_json, "profile_hash": hashlib.sha256(profile_payload_json.encode("utf-8")).hexdigest()})
 
     previous = _accepted_profile_rows(catalogue_df, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, watermark_column=("" if mode == "static_data" else watermark_column or ""), exclude_run_id=exclude_run_id or run_id)
     previous_by_wm = {_string_value(_catalogue_value(row, "watermark_value")): row for row in previous}
@@ -872,6 +871,7 @@ def enforce_profile_behavior(
         message = "Profile behavior guardrail passed."
 
     result_payload = {"profile_mode": mode, "differences": differences, "new_watermark_values": new_groups, "profile_evidence_rows": evidence_rows}
+    grouped_profile_hash = hashlib.sha256(_json_dumps_stable({"groups": evidence_rows}).encode("utf-8")).hexdigest()
     result = {
         "status": status,
         "can_continue": can_continue,
@@ -885,7 +885,7 @@ def enforce_profile_behavior(
         "watermark_column": watermark_column or "",
         "watermark_value": "__FULL_TABLE__" if mode == "static_data" else "",
         "row_count": sum(int(row.get("row_count") or 0) for row in evidence_rows),
-        "profile_hash": evidence_rows[0]["profile_hash"] if len(evidence_rows) == 1 else _profile_hash({"groups": evidence_rows}),
+        "profile_hash": evidence_rows[0]["profile_hash"] if len(evidence_rows) == 1 else grouped_profile_hash,
         "profile_payload_json": _json_dumps_stable(result_payload),
         "baseline_run_id": _string_value(_catalogue_value(previous[0], "profile_run_id", "run_id")) if previous else "",
         "baseline_row_count": _catalogue_value(previous[0], "row_count") if len(previous) == 1 else None,

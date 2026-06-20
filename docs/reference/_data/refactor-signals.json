@@ -1988,7 +1988,7 @@
   },
   "run_table_guardrails": {
     "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
-    "unique_internal_helper_count": 87,
+    "unique_internal_helper_count": 86,
     "repeated_helpers": [
       {
         "helper": "_catalogue_value",
@@ -2197,12 +2197,6 @@
         "delegates_to_qualified_name": "fabricops_kit.guardrails._catalogue_value"
       },
       {
-        "helper": "_profile_hash",
-        "qualified_name": "fabricops_kit.guardrails._profile_hash",
-        "delegates_to": "_json_dumps_stable",
-        "delegates_to_qualified_name": "fabricops_kit.guardrails._json_dumps_stable"
-      },
-      {
         "helper": "_profile_row_count",
         "qualified_name": "fabricops_kit.guardrails._profile_row_count",
         "delegates_to": "_normalize_profile",
@@ -2213,6 +2207,12 @@
         "qualified_name": "fabricops_kit.guardrails._schema_signature",
         "delegates_to": "_actual_schema",
         "delegates_to_qualified_name": "fabricops_kit.guardrails._actual_schema"
+      },
+      {
+        "helper": "_build_metadata_table_key",
+        "qualified_name": "fabricops_kit.metadata._build_metadata_table_key",
+        "delegates_to": "_stable_metadata_key",
+        "delegates_to_qualified_name": "fabricops_kit.metadata._stable_metadata_key"
       }
     ],
     "possible_grouping_mismatches": []

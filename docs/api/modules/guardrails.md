@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 25</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 1 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 24</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 1 external modules</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>25</td>
+      <td>24</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -158,10 +158,6 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_profile_hash</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_profile_payload_from_profile</code></td>
       <td>—</td>
     </tr>
@@ -264,11 +260,6 @@ No public exports in this module.
 <span class="reference-chip"><code>_parse_rule_parameters</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_catalogue_value</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_profile_hash</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_json_dumps_stable</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_profile_payload_from_profile</code></span>
