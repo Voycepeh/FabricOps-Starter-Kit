@@ -25,11 +25,10 @@ nav:
       - Create Wheel: guided-demo/create-wheel.md
       - Setup Fabric Artifacts: guided-demo/setup-fabric-artifacts.md
       - Run Environment Setup: guided-demo/run-environment-setup.md
-      - Create Agreement: guided-demo/create-agreement.md
-      - Run Pipeline: guided-demo/run-pipeline.md
-      - Enrich Metadata: guided-demo/enrich-metadata.md
-      - Review Guardrails: guided-demo/review-guardrails.md
-      - Explore Metadata Outputs: guided-demo/explore-metadata-outputs.md
+      - Register Agreement: guided-demo/create-agreement.md
+      - Run Example Pipeline Demo and Pipeline: guided-demo/run-pipeline.md
+      - Review Governance: guided-demo/review-guardrails.md
+      - Explore Metadata: guided-demo/explore-metadata-outputs.md
   - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md
   - List of Metadata Tables:
       - Overview: reference/metadata.md
@@ -74,7 +73,6 @@ nav:
       - Glossary: reference/glossary.md
       - Callable Functions Flow: reference/callable-flow.md
       - Modules: api/modules/index.md
-      - Install: install.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
       - Documentation Versioning: development/docs-versioning.md

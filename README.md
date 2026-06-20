@@ -8,7 +8,7 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
 
 [![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
 [![Guided Demo](https://img.shields.io/badge/Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
-[![Install](https://img.shields.io/badge/Install-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
+[![Create Wheel](https://img.shields.io/badge/Create-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/create-wheel/)
 
 </div>
 
@@ -23,7 +23,8 @@ FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook del
   - [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/schema-and-data-drift/)
   - [Governance Review](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/notebook-templates-implementation-guide/governance-review/)
   - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/notebook-templates-implementation-guide/metadata-dashboard/)
-- [Setup](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/install/)
+- [Create Wheel](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/create-wheel/)
+- [Setup Fabric Artifacts](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/setup-fabric-artifacts/)
 - [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/)
 
 ## Documentation navigation
