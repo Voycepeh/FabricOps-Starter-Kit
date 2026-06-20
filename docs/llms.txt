@@ -32,7 +32,6 @@ Use this file as a concise navigation map for documentation and automation workf
 ## API reference
 
 - [Function Reference](reference.md): Public callable reference generated from source docstrings and metadata.
-- [Functions by Module](api/modules.md): Module-oriented callable index for package users and maintainers.
 - [Automation Manifest](reference/_data/automation-manifest.json): Machine-readable helper metadata for automation tools.
 - [Function Manifest](reference/_data/function-manifest.json): Machine-readable function inventory and dependency metadata.
 
