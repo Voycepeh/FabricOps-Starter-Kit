@@ -26,37 +26,7 @@ They abstract the important but tedious work into a simplified plug and play wor
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-<div class="fabricops-cta" style="justify-content: center; align-items: center; text-align: center;" markdown="1">
-
-[Start the guided demo](guided-demo.md){ .md-button .md-button--primary }
-[See how it works](how-fabricops-works/index.md){ .md-button }
-
-</div>
-
 </section>
-
-## What is included
-
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="how-fabricops-works/notebook-templates/">
-    <span class="fabricops-landing-card__title">5 notebook templates</span>
-    <span class="fabricops-landing-card__body">Reusable notebook workflow templates.</span>
-  </a>
-  <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title">20 public Starter Kit functions</span>
-    <span class="fabricops-landing-card__body">Notebook-facing functions used by the templates.</span>
-  </a>
-  <a class="fabricops-landing-card" href="reference/dq-rules/">
-    <span class="fabricops-landing-card__title">23 DQ rule types</span>
-    <span class="fabricops-landing-card__body">Governed checks for pipeline guardrails.</span>
-  </a>
-  <a class="fabricops-landing-card" href="reference/metadata/">
-    <span class="fabricops-landing-card__title">12 metadata tables</span>
-    <span class="fabricops-landing-card__body">Evidence tables for delivery and review.</span>
-  </a>
-</div>
-
-The function reference currently documents **20 public Starter Kit functions** and tracks **238 supporting internal functions** for maintainer context; see [Function Reference](reference/index.md).
 
 ## Choose where to begin
 
@@ -69,14 +39,30 @@ The function reference currently documents **20 public Starter Kit functions** a
     <span class="fabricops-landing-card__title">How FabricOps Works</span>
     <span class="fabricops-landing-card__body">Understand the operating model and metadata flow.</span>
   </a>
-  <a class="fabricops-landing-card" href="how-fabricops-works/notebook-templates/">
-    <span class="fabricops-landing-card__title">Notebook Templates</span>
-    <span class="fabricops-landing-card__body">Know which notebook to run and what it writes.</span>
-  </a>
-  <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title">Function Reference</span>
-    <span class="fabricops-landing-card__body">Check helper behavior, parameters, and call paths.</span>
-  </a>
 </div>
 
+## What is included
+
+<div class="fabricops-card-grid">
+  <a class="fabricops-landing-card" href="how-fabricops-works/notebook-templates/">
+    <span class="fabricops-landing-card__title">5 notebook templates</span>
+    <span class="fabricops-landing-card__body">Reusable notebook workflow templates.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="reference/">
+    <span class="fabricops-landing-card__title">20 public Starter Kit functions</span>
+    <span class="fabricops-landing-card__body">
+      Tracks the notebook-facing API plus 238 supporting internal functions.
+    </span>
+  </a>
+
+  <a class="fabricops-landing-card" href="reference/dq-rules/">
+    <span class="fabricops-landing-card__title">23 DQ rule types</span>
+    <span class="fabricops-landing-card__body">Governed checks for pipeline guardrails.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="reference/metadata/">
+    <span class="fabricops-landing-card__title">12 metadata tables</span>
+    <span class="fabricops-landing-card__body">Evidence tables for delivery and review.</span>
+  </a>
 </div>
