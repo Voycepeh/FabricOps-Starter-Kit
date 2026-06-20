@@ -14,7 +14,7 @@ The Notebook Templates Implementation Guide is the canonical scan-friendly guide
 
 Centralizes environment, workspace, path, metadata routing, runtime validation, and audit settings so every later notebook uses the same configured targets.
 
-[Environment config guide](environment-config.md){ .md-button }
+[Open Environment Config Guide](environment-config.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
@@ -45,7 +45,7 @@ Centralizes environment, workspace, path, metadata routing, runtime validation, 
 
 Captures business agreement, ownership, purpose, readiness, and supporting evidence before engineering execution begins.
 
-[Agreement setup guide](agreement-setup.md){ .md-button }
+[Open Agreement Setup Guide](agreement-setup.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
@@ -76,7 +76,7 @@ Captures business agreement, ownership, purpose, readiness, and supporting evide
 
 Provides the engineering notebook for data loading, transformation, validation, publishing, lineage, and run evidence.
 
-[Pipeline execution guide](pipeline-execution.md){ .md-button }
+[Open Pipeline Execution Guide](pipeline-execution.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
@@ -107,7 +107,7 @@ Provides the engineering notebook for data loading, transformation, validation, 
 
 Supports metadata enrichment review, guardrail review, lifecycle decisions, and promotion-readiness assessment.
 
-[Governance review guide](governance-review.md){ .md-button }
+[Open Governance Review Guide](governance-review.md){ .md-button }
 
 ??? info "Details"
     **Purpose**

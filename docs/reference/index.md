@@ -15,6 +15,10 @@ Use this page to look up Starter Kit functions used by the template notebooks.
   </section>
 </div>
 
+Use the catalogue on this page before opening individual callable pages. If you need source-level ownership or internal helper relationships, open the module reference first so navigation follows the same hierarchy as the breadcrumbs.
+
+[Open Module Reference](../api/modules/){ .md-button } [Back to Template Notebooks](../notebook-templates-implementation-guide/){ .md-button }
+
 ## Find a function
 
 Use the finder below to look up the 20 public Starter Kit functions. Supporting internal functions stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or internal helper usage.
