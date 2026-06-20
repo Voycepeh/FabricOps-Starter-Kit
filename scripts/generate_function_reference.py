@@ -2212,7 +2212,7 @@ def generate_metadata_table_reference() -> None:
         "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.",
         "",
         '<figure class="metadata-model-image">',
-        '  <img src="../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />',
+        '  <img src="../../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />',
         "</figure>",
         "",
         '<div class="grid cards" markdown>',
