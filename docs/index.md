@@ -50,8 +50,8 @@ They abstract the important but tedious work into a simplified plug and play wor
   </a>
 
   <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title">20 public Starter Kit functions</span>
-    <span class="fabricops-landing-card__body">Supported by 238 supporting internal functions.</span>
+    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT -->20 public Starter Kit functions<!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
+    <span class="fabricops-landing-card__body">Supported by <!-- FABRICOPS_INTERNAL_FUNCTION_COUNT -->252 supporting internal functions<!-- /FABRICOPS_INTERNAL_FUNCTION_COUNT -->.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
@@ -60,7 +60,7 @@ They abstract the important but tedious work into a simplified plug and play wor
   </a>
 
   <a class="fabricops-landing-card" href="reference/metadata/">
-    <span class="fabricops-landing-card__title">12 metadata tables</span>
+    <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT -->11 metadata tables<!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
     <span class="fabricops-landing-card__body">Written by functions and widgets during runtime for enforcement and review.</span>
   </a>
 </div>
