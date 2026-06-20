@@ -1561,6 +1561,130 @@ def _callable_flow_source_link(qn: str, module_data: dict[str, dict[str, Any]]) 
     )
 
 
+REFACTOR_SIGNAL_ORDER = [
+    "Thin wrapper candidate",
+    "Single-use internal helper",
+    "Leaf internal helper",
+    "High-fanout helper",
+]
+
+REFACTOR_SIGNAL_RECOMMENDATIONS = {
+    "Thin wrapper candidate": "Inspect for inline",
+    "Single-use internal helper": "Review purpose",
+    "Leaf internal helper": "Keep if transformation or validation",
+    "High-fanout helper": "Keep stable",
+}
+
+
+def _callable_flow_source_path(qn: str) -> str | None:
+    """Return the repository source path for a package callable."""
+    parts = qn.split(".")
+    if len(parts) < 3:
+        return None
+    return f"src/fabricops_kit/{parts[-2]}.py"
+
+
+def _project_inbound_callers(
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> dict[str, set[str]]:
+    """Return project-local inbound callers for each callable qualified name."""
+    inbound: dict[str, set[str]] = {qn: set() for qn in node_by_qn}
+    for caller_qn, callees in calls_by_qn.items():
+        if caller_qn not in node_by_qn:
+            continue
+        for callee_qn in set(callees):
+            if callee_qn in node_by_qn:
+                inbound.setdefault(callee_qn, set()).add(caller_qn)
+    return inbound
+
+
+def _build_global_refactor_signals(
+    public_qns: list[str],
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> tuple[dict[str, int], list[dict[str, Any]]]:
+    """Build simple call-graph refactor signals for the callable-flow dashboard."""
+    inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
+    signal_rows: list[dict[str, Any]] = []
+
+    def outbound_project_calls(qn: str) -> list[str]:
+        return sorted(
+            {callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn},
+            key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
+        )
+
+    def append_signal(qn: str, signal: str, inbound: list[str], outbound: list[str]) -> None:
+        node = node_by_qn[qn]
+        signal_rows.append(
+            {
+                "function": node["callable_name"],
+                "module": node["module_name"],
+                "qualified_name": qn,
+                "is_internal": _is_internal_helper_qn(qn, node_by_qn),
+                "inbound_count": len(inbound),
+                "outbound_project_call_count": len(outbound),
+                "signal": signal,
+                "recommendation": REFACTOR_SIGNAL_RECOMMENDATIONS[signal],
+                "used_by": [
+                    {
+                        "function": node_by_qn[caller]["callable_name"],
+                        "module": node_by_qn[caller]["module_name"],
+                        "qualified_name": caller,
+                        "source_url": _callable_flow_source_link(caller, module_data),
+                    }
+                    for caller in inbound
+                ],
+                "calls": [
+                    {
+                        "function": node_by_qn[callee]["callable_name"],
+                        "module": node_by_qn[callee]["module_name"],
+                        "qualified_name": callee,
+                        "source_url": _callable_flow_source_link(callee, module_data),
+                    }
+                    for callee in outbound
+                ],
+                "source_path": _callable_flow_source_path(qn),
+                "source_url": _callable_flow_source_link(qn, module_data),
+            }
+        )
+
+    for qn in sorted(
+        node_by_qn,
+        key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
+    ):
+        if not _is_internal_helper_qn(qn, node_by_qn):
+            continue
+        inbound = sorted(
+            inbound_by_qn.get(qn, set()),
+            key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
+        )
+        outbound = outbound_project_calls(qn)
+        inbound_count = len(inbound)
+        outbound_count = len(outbound)
+        if inbound_count == 1 and outbound_count == 1:
+            append_signal(qn, "Thin wrapper candidate", inbound, outbound)
+        if inbound_count == 1:
+            append_signal(qn, "Single-use internal helper", inbound, outbound)
+        if outbound_count == 0:
+            append_signal(qn, "Leaf internal helper", inbound, outbound)
+        if inbound_count >= 5:
+            append_signal(qn, "High-fanout helper", inbound, outbound)
+
+    signal_index = {name: index for index, name in enumerate(REFACTOR_SIGNAL_ORDER)}
+    signal_rows.sort(key=lambda row: (signal_index[row["signal"]], row["module"], row["function"].lower()))
+    summary_counts = {
+        "thin_wrapper_candidates": sum(1 for row in signal_rows if row["signal"] == "Thin wrapper candidate"),
+        "single_use_internal_helpers": sum(1 for row in signal_rows if row["signal"] == "Single-use internal helper"),
+        "leaf_internal_helpers": sum(1 for row in signal_rows if row["signal"] == "Leaf internal helper"),
+        "high_fanout_helpers": sum(1 for row in signal_rows if row["signal"] == "High-fanout helper"),
+        "public_api_entrypoints": len(public_qns),
+        "internal_helpers": sum(1 for qn in node_by_qn if _is_internal_helper_qn(qn, node_by_qn)),
+    }
+    return summary_counts, signal_rows
+
+
 def _build_callable_flow_data(
     public_qns: list[str],
     calls_by_qn: dict[str, list[str]],
@@ -1671,6 +1795,13 @@ def _build_callable_flow_data(
         )
     ]
 
+    refactor_signal_summary, refactor_signals = _build_global_refactor_signals(
+        public_qns,
+        calls_by_qn,
+        node_by_qn,
+        module_data,
+    )
+
     refactor_hotspots = []
     max_unique = max((row["unique_internal_helper_count"] for row in summary), default=0) or 1
     max_depth = max((row["deepest_call_chain_depth"] for row in summary), default=0) or 1
@@ -1703,6 +1834,8 @@ def _build_callable_flow_data(
         "callable_helper_summary": sorted(summary, key=lambda row: row["callable"].lower()),
         "shared_helper_usage": shared_helper_usage,
         "refactor_hotspots": sorted(refactor_hotspots, key=lambda row: (-row["score"], row["callable"].lower())),
+        "summary_counts": refactor_signal_summary,
+        "refactor_signals": refactor_signals,
     }
 
 
@@ -1718,6 +1851,11 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
     if not url:
         return inner
     return f'<a href="{html.escape(url, quote=True)}">{inner}</a>'
+
+
+def _render_refactor_signal_items(items: list[dict[str, Any]]) -> str:
+    """Render compact linked callable names for refactor signal table cells."""
+    return ", ".join(_render_link(item["function"], item.get("source_url")) for item in items) or "—"
 
 
 def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str, str]]]) -> list[str]:
@@ -1748,11 +1886,73 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         "",
         "Use this page as a review aid for separation, helper reuse, and refactor planning; it is not an automatic refactor instruction.",
         "",
-        "## Public callable dependency map",
+        "## Refactor signals",
         "",
-        "This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.",
+        "Simple call graph signals for maintainers. Treat these as review queues, not automatic refactor instructions.",
+        "",
+        "### How to use this page",
+        "",
+        "1. Start with Thin wrapper candidates.",
+        "2. Open the source link.",
+        "3. Inline only if the helper merely delegates.",
+        "4. Keep helpers that add validation, branching, logging, runtime handling, domain meaning, or test isolation.",
+        "5. Refactor one module per PR.",
         "",
     ]
+    summary_counts = flow_data["summary_counts"]
+    card_rows = [
+        ("Thin wrapper candidates", summary_counts["thin_wrapper_candidates"]),
+        ("Single-use internal helpers", summary_counts["single_use_internal_helpers"]),
+        ("Leaf internal helpers", summary_counts["leaf_internal_helpers"]),
+        ("High-fanout helpers", summary_counts["high_fanout_helpers"]),
+        ("Public API entrypoints", summary_counts["public_api_entrypoints"]),
+        ("Internal helpers", summary_counts["internal_helpers"]),
+    ]
+    lines.extend(['<div class="callable-flow-signal-cards" markdown="0">'])
+    for label, value in card_rows:
+        lines.extend(
+            [
+                '<div class="callable-flow-signal-card">',
+                f'<div class="callable-flow-signal-card-value">{value}</div>',
+                f'<div class="callable-flow-signal-card-label">{html.escape(label)}</div>',
+                '</div>',
+            ]
+        )
+    lines.extend(['</div>', "", "### Signal inventory", ""])
+    signal_rows: list[list[tuple[str, str]]] = []
+    for row in flow_data["refactor_signals"]:
+        signal_rows.append(
+            [
+                (html.escape(row["signal"]), "flow-cell-name"),
+                (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
+                (_render_link(row["module"], code=True), "flow-cell-module"),
+                (_render_refactor_signal_items(row["used_by"]), "flow-cell-wide"),
+                (_render_refactor_signal_items(row["calls"]), "flow-cell-wide"),
+                (html.escape(row["recommendation"]), "flow-cell-wide"),
+            ]
+        )
+    lines.extend(
+        _render_flow_table(
+            [
+                ("Signal", "flow-cell-name"),
+                ("Function", "flow-cell-name"),
+                ("Module", "flow-cell-module"),
+                ("Used by", "flow-cell-wide"),
+                ("Calls", "flow-cell-wide"),
+                ("Recommendation", "flow-cell-wide"),
+            ],
+            signal_rows,
+        )
+    )
+    lines.extend(
+        [
+            "",
+            "## Public callable dependency map",
+            "",
+            "This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.",
+            "",
+        ]
+    )
     for callable_name in sorted(flow_data["public_callable_dependencies"]):
         deps = flow_data["public_callable_dependencies"][callable_name]
         callable_link = f"[`{callable_name}`]({_public_callable_docs_url(callable_name)})"

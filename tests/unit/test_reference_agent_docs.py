@@ -219,6 +219,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert flow_page.exists()
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Public callable flow map" in flow_text
+    assert "## Refactor signals" in flow_text
+    assert "### How to use this page" in flow_text
+    assert "Start with Thin wrapper candidates." in flow_text
+    assert "### Signal inventory" in flow_text
+    assert "Thin wrapper candidates" in flow_text
+    assert "Single-use internal helpers" in flow_text
+    assert "Leaf internal helpers" in flow_text
+    assert "High-fanout helpers" in flow_text
+    assert "Public API entrypoints" in flow_text
+    assert "Internal helpers" in flow_text
+    assert "Inspect for inline" in flow_text
+    assert "Keep if transformation or validation" in flow_text
     assert "## Public callable dependency map" in flow_text
     assert "## Callable helper summary" in flow_text
     assert "## Shared helper usage" in flow_text
@@ -236,6 +248,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callable_helper_summary",
         "shared_helper_usage",
         "refactor_hotspots",
+        "summary_counts",
+        "refactor_signals",
     } <= set(flow_data)
     assert set(flow_data["public_callable_dependencies"]) == exported_symbols
 
@@ -260,6 +274,60 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         } <= set(item)
         for item in flow_data["refactor_hotspots"]
     )
+
+    summary_counts = flow_data["summary_counts"]
+    assert {
+        "thin_wrapper_candidates",
+        "single_use_internal_helpers",
+        "leaf_internal_helpers",
+        "high_fanout_helpers",
+        "public_api_entrypoints",
+        "internal_helpers",
+    } <= set(summary_counts)
+    assert summary_counts["public_api_entrypoints"] == len(exported_symbols)
+    assert summary_counts["internal_helpers"] > 0
+
+    signal_order = [
+        "Thin wrapper candidate",
+        "Single-use internal helper",
+        "Leaf internal helper",
+        "High-fanout helper",
+    ]
+    order_index = {signal: index for index, signal in enumerate(signal_order)}
+    refactor_signals = flow_data["refactor_signals"]
+    assert refactor_signals
+    assert [
+        (order_index[item["signal"]], item["module"], item["function"].lower())
+        for item in refactor_signals
+    ] == sorted(
+        (order_index[item["signal"]], item["module"], item["function"].lower())
+        for item in refactor_signals
+    )
+    assert all(
+        {
+            "function",
+            "module",
+            "qualified_name",
+            "is_internal",
+            "inbound_count",
+            "outbound_project_call_count",
+            "signal",
+            "recommendation",
+            "used_by",
+            "calls",
+            "source_path",
+            "source_url",
+        } <= set(item)
+        for item in refactor_signals
+    )
+    thin_wrapper = next(item for item in refactor_signals if item["signal"] == "Thin wrapper candidate")
+    assert thin_wrapper["is_internal"] is True
+    assert thin_wrapper["function"].startswith("_")
+    assert thin_wrapper["inbound_count"] == 1
+    assert thin_wrapper["outbound_project_call_count"] == 1
+    assert thin_wrapper["recommendation"] == "Inspect for inline"
+    assert thin_wrapper["used_by"]
+    assert thin_wrapper["calls"]
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
