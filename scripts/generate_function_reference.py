@@ -32,7 +32,7 @@ FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 CALLABLE_FLOW_PAGE_PATH = ROOT / "docs" / "reference" / "callable-flow.md"
 CALLABLE_FLOW_DATA_PATH = REFERENCE_DATA_DIR / "callable-flow.json"
-REFACTOR_DASHBOARD_PATH = ROOT / "docs" / "reference" / "refactor-dashboard.html"
+REFACTOR_DASHBOARD_PATH = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
@@ -1630,7 +1630,7 @@ ACTION_LEGEND = {
     "Keep / protect": "Healthy helper shape or leaf behavior; keep stable unless source review shows duplication.",
     "Shared helper – preserve carefully": "High reuse or broad inbound reach; refactor only with focused tests and caller review.",
     "Promote candidate": "Potential public API only when metadata and caller evidence support notebook-facing reuse.",
-    "Review manually": "No clear automated refactor reason; inspect intent before changing structure.",
+    "Review manually": "No clear automated recommendation; inspect intent before changing structure.",
 }
 
 
@@ -1751,6 +1751,7 @@ def _build_refactor_inventory(
                 "signals": signals,
                 "priority": priority,
                 "suggested_action": REFACTOR_PRIORITY_ACTIONS[priority],
+                "recommended_action": REFACTOR_PRIORITY_ACTIONS[priority],
                 "inbound_count": inbound_count,
                 "outbound_project_call_count": outbound_count,
                 "nesting_level": helper_depth(qn),
@@ -1822,6 +1823,83 @@ def _build_refactor_inventory(
         "protect_helpers": sum(1 for row in inventory if row["priority"] == "Protect"),
     }
     return summary_counts, inventory, legacy_signal_rows
+
+
+def _build_function_inventory(
+    public_qns: list[str],
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+    callable_summary: list[dict[str, Any]],
+    refactor_inventory: list[dict[str, Any]],
+) -> tuple[dict[str, int], list[dict[str, Any]]]:
+    """Build a reconciled one-row-per-discovered-function dashboard inventory."""
+    public_qn_set = set(public_qns)
+    reachable_non_public = set().union(
+        *(_reachable_callables(public_qn, calls_by_qn, node_by_qn) for public_qn in public_qns)
+    ) - public_qn_set
+    inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
+    refactor_by_qn = {row["qualified_name"]: row for row in refactor_inventory}
+    summary_by_qn = {row["qualified_name"]: row for row in callable_summary}
+
+    def linked(qns: list[str] | set[str]) -> list[dict[str, str]]:
+        return [
+            {
+                "function": node_by_qn[qn]["callable_name"],
+                "module": node_by_qn[qn]["module_name"],
+                "qualified_name": qn,
+                "source_url": _callable_flow_source_link(qn, module_data),
+            }
+            for qn in sorted(qns, key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()))
+            if qn in node_by_qn
+        ]
+
+    inventory: list[dict[str, Any]] = []
+    for qn in sorted(node_by_qn, key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower(), item)):
+        node = node_by_qn[qn]
+        is_public = qn in public_qn_set
+        is_internal = qn in reachable_non_public
+        function_type = "Public" if is_public else "Internal" if is_internal else "Unreachable"
+        refactor = refactor_by_qn.get(qn, {})
+        public_summary = summary_by_qn.get(qn, {})
+        outbound = [callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn]
+        inbound = inbound_by_qn.get(qn, set())
+        direct_helpers = public_summary.get("direct_internal_helpers", [])
+        inventory.append(
+            {
+                "function_name": node["callable_name"],
+                "function": node["callable_name"],
+                "qualified_name": qn,
+                "module": node["module_name"],
+                "function_type": function_type,
+                "public_callable": is_public,
+                "is_public_api": is_public,
+                "is_internal_helper": is_internal,
+                "is_reachable": is_public or is_internal,
+                "called_by_count": len(inbound),
+                "calls_count": len(set(outbound)),
+                "direct_internal_helpers": direct_helpers,
+                "deepest_call_chain_depth": public_summary.get("deepest_call_chain_depth") or refactor.get("nesting_level"),
+                "repeated_helper_count": public_summary.get("repeated_helper_count", 0),
+                "signals": refactor.get("signals", []),
+                "recommended_action": refactor.get("recommended_action") or ("Public API entrypoint" if is_public else "Review manually"),
+                "suggested_action": refactor.get("suggested_action") or ("Public API entrypoint" if is_public else "Review manually"),
+                "priority": refactor.get("priority", "Review"),
+                "callers": linked(inbound),
+                "callees": linked(set(outbound)),
+                "used_by": linked(inbound),
+                "calls": linked(set(outbound)),
+                "source_path": _callable_flow_source_path(qn),
+                "source": _callable_flow_source_path(qn),
+                "source_url": _callable_flow_source_link(qn, module_data),
+            }
+        )
+    counts = {
+        "total_functions_discovered": len(inventory),
+        "reachable_internal_helpers": sum(1 for row in inventory if row["function_type"] == "Internal"),
+        "unreachable_or_unclassified_functions": sum(1 for row in inventory if row["function_type"] == "Unreachable"),
+    }
+    return counts, inventory
 
 
 def _build_callable_flow_data(
@@ -1972,6 +2050,16 @@ def _build_callable_flow_data(
             }
         )
 
+    reconciliation_counts, function_inventory = _build_function_inventory(
+        public_qns,
+        calls_by_qn,
+        node_by_qn,
+        module_data,
+        summary,
+        refactor_inventory,
+    )
+    refactor_signal_summary.update(reconciliation_counts)
+
     return {
         "public_callable_dependencies": public_dependencies,
         "callable_helper_summary": sorted(summary, key=lambda row: row["callable"].lower()),
@@ -1980,6 +2068,7 @@ def _build_callable_flow_data(
         "summary_counts": refactor_signal_summary,
         "refactor_signals": refactor_signals,
         "refactor_inventory": refactor_inventory,
+        "function_inventory": function_inventory,
     }
 
 
@@ -2044,7 +2133,7 @@ def _render_refactor_inventory_table(
         ("Internal helper", "flow-cell-name"),
         ("Module", "flow-cell-module"),
         ("Qualified name", "flow-cell-qualified"),
-        ("Refactor reason / priority", "flow-cell-wide"),
+        ("Recommended action / priority", "flow-cell-wide"),
         ("Called by", "flow-cell-wide"),
         ("Calls", "flow-cell-wide"),
     ]
@@ -2059,7 +2148,7 @@ def _render_refactor_inventory_table(
     headers.extend(
         [
             ("Public entrypoint lineage", "flow-cell-wide"),
-            ("Suggested action", "flow-cell-wide"),
+            ("Recommended action", "flow-cell-wide"),
         ]
     )
     return _render_flow_table(headers, table_rows)
@@ -2085,7 +2174,7 @@ def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str
     return lines
 
 def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
-    """Render the standalone static refactor dashboard HTML page."""
+    """Render the standalone static callable functions dashboard HTML page."""
     del flow_data
     action_legend = json.dumps(ACTION_LEGEND, indent=2)
     reason_labels = json.dumps(REFACTOR_REASON_LABELS, indent=2)
@@ -2094,110 +2183,79 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 <head>
   <meta charset=\"utf-8\">
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-  <title>FabricOps refactor triage dashboard</title>
+  <title>Callable functions dashboard</title>
   <style>
     :root {{ color-scheme: light; --border:#d8dee9; --muted:#526070; --bg:#f7f9fc; --blue:#2563eb; --red:#dc2626; --yellow:#a16207; --green:#15803d; --grey:#64748b; }}
     * {{ box-sizing: border-box; }}
-    body {{ font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1f2937; background: #fff; }}
-    header, main {{ max-width: 1260px; margin: 0 auto; padding: 1.25rem; }}
+    body {{ font-family: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; margin: 0; color: #1f2937; background: #fff; }}
+    header, main {{ max-width: 1440px; margin: 0 auto; padding: 1.25rem; }}
     header {{ border-bottom: 1px solid var(--border); }}
-    h1 {{ margin: 0 0 .35rem; }}
-    a {{ color: #0f5db8; }}
-    .cards {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: .8rem; margin: 1rem 0; }}
-    .card {{ border: 1px solid var(--border); border-left: .35rem solid var(--blue); border-radius: .8rem; padding: .9rem; background: var(--bg); text-align: left; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }}
-    .card:hover, .card:focus-visible {{ transform: translateY(-1px); box-shadow: 0 8px 22px rgba(15, 23, 42, .10); outline: 2px solid transparent; }}
-    .card.active {{ box-shadow: 0 0 0 3px rgba(37, 99, 235, .18); }}
-    .card strong {{ display: block; font-size: 1.75rem; line-height: 1; }}
-    .card span {{ color: var(--muted); font-weight: 650; }}
-    .card.high {{ border-left-color: var(--red); }} .card.medium {{ border-left-color: #eab308; }} .card.protect {{ border-left-color: var(--green); }} .card.info {{ border-left-color: var(--blue); }}
-    .filters {{ display: grid; grid-template-columns: minmax(220px, 2fr) minmax(140px, .8fr) repeat(3, minmax(150px, 1fr)) auto; gap: .75rem; align-items: end; margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .9rem; background: #fbfcfe; }}
-    label {{ display: grid; gap: .25rem; font-weight: 700; }}
-    small, .hint {{ color: var(--muted); }}
-    input, select, button {{ font: inherit; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .55rem; background: #fff; }}
-    button {{ cursor: pointer; }}
-    .legend {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .5rem; margin: 1rem 0; }}
-    .legend div {{ border: 1px solid var(--border); border-radius: .7rem; padding: .65rem; background: #fff; }}
-    .table-wrap {{ overflow-x: auto; border: 1px solid var(--border); border-radius: .85rem; }}
-    table {{ width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1060px; table-layout: fixed; }}
-    th, td {{ padding: .8rem .75rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; overflow-wrap: anywhere; }}
-    th {{ background: var(--bg); position: sticky; top: 0; z-index: 1; font-size: .9rem; }}
-    th:nth-child(1) {{ width: 5.5rem; }} th:nth-child(2) {{ width: 17rem; }} th:nth-child(3) {{ width: 10rem; }} th:nth-child(4) {{ width: 18rem; }} th:nth-child(5) {{ width: 8rem; }} th:nth-child(6), th:nth-child(7) {{ width: 6rem; }} th:nth-child(8) {{ width: 16rem; }}
-    th button {{ border: 0; background: transparent; font-weight: 800; padding: 0; }}
-    .num {{ text-align: right; }}
-    .tag, .badge {{ display: inline-flex; align-items: center; margin: .12rem .18rem .12rem 0; padding: .18rem .5rem; border-radius: 999px; font-size: .82rem; font-weight: 700; line-height: 1.2; white-space: normal; }}
-    .tag {{ background: #eef2ff; color: #3730a3; }} .tag.high, .badge.high {{ background: #fee2e2; color: #991b1b; }} .tag.medium, .badge.medium {{ background: #fef3c7; color: #92400e; }} .tag.protect, .badge.protect {{ background: #dcfce7; color: #166534; }} .badge.review {{ background: #e2e8f0; color: #334155; }}
-    tr.row-high td:first-child {{ border-left: .28rem solid var(--red); }} tr.row-medium td:first-child {{ border-left: .28rem solid #eab308; }} tr.row-protect td:first-child {{ border-left: .28rem solid var(--green); }}
-    .details td {{ background: #f8fafc; padding: .75rem; }}
-    .details-panel {{ border: 1px solid var(--border); border-radius: .9rem; background: #fff; padding: 1rem; box-shadow: inset 0 4px 0 #e2e8f0; }}
-    .details-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }}
-    .details h3 {{ margin: 0 0 .45rem; font-size: .95rem; }}
-    .details ul {{ margin: 0; padding-left: 1.15rem; }}
-    .details li {{ margin: .25rem 0; }}
-    code {{ white-space: normal; }}
-    @media (max-width: 900px) {{ header, main {{ padding: 1rem; }} .filters {{ grid-template-columns: 1fr; }} .cards {{ grid-template-columns: 1fr 1fr; }} table {{ min-width: 900px; }} }}
-    @media (max-width: 560px) {{ .cards {{ grid-template-columns: 1fr; }} }}
+    h1 {{ margin: 0 0 .35rem; }} a {{ color: #0f5db8; }}
+    .cards {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .8rem; margin: 1rem 0; }}
+    .card {{ border: 1px solid var(--border); border-left: .35rem solid var(--blue); border-radius: .8rem; padding: .9rem; background: var(--bg); text-align: left; cursor: pointer; }}
+    .card.active {{ box-shadow: 0 0 0 3px rgba(37, 99, 235, .18); }} .card.high {{ border-left-color: var(--red); }} .card.medium {{ border-left-color: #eab308; }} .card.protect {{ border-left-color: var(--green); }}
+    .card strong {{ display:block; font-size:1.75rem; line-height:1; }} .card span {{ color: var(--muted); font-weight:650; }}
+    .helper-text {{ color: var(--muted); margin: .5rem 0 1rem; }}
+    .filter-panel {{ display: grid; grid-template-columns: minmax(260px, 1.4fr) repeat(5, minmax(180px, 1fr)) auto; gap: .75rem; align-items: end; margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .9rem; background: #fbfcfe; }}
+    .filter-field {{ min-width: 0; display:grid; gap:.25rem; font-weight:700; }}
+    .filter-field select, .filter-field input {{ width:100%; box-sizing:border-box; }}
+    small, .hint {{ color: var(--muted); }} input, select, button {{ font: inherit; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .55rem; background: #fff; }} button {{ cursor:pointer; }}
+    .legend {{ display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:.5rem; margin:1rem 0; }} .legend div {{ border:1px solid var(--border); border-radius:.7rem; padding:.65rem; }}
+    .table-wrap {{ overflow-x: auto; border: 1px solid var(--border); border-radius: .85rem; max-width: 100%; }}
+    table {{ width:100%; border-collapse:separate; border-spacing:0; min-width: 1180px; table-layout: fixed; }}
+    th, td {{ padding:.75rem; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; overflow-wrap:anywhere; }} th {{ background:var(--bg); position:sticky; top:0; z-index:1; font-size:.9rem; }} th button {{ border:0; background:transparent; font-weight:800; padding:0; }}
+    th:nth-child(1) {{ width:5.5rem; }} th:nth-child(2) {{ width:18rem; }} th:nth-child(3) {{ width:8rem; }} th:nth-child(4) {{ width:9rem; }} th:nth-child(5) {{ width:16rem; }} th:nth-child(6), th:nth-child(7), th:nth-child(8) {{ width:6rem; }} th:nth-child(9) {{ width:15rem; }}
+    .num {{ text-align:right; }} .tag,.badge {{ display:inline-flex; margin:.12rem .18rem .12rem 0; padding:.18rem .5rem; border-radius:999px; font-size:.82rem; font-weight:700; line-height:1.2; white-space:normal; }}
+    .tag {{ background:#eef2ff; color:#3730a3; }} .badge.high {{ background:#fee2e2; color:#991b1b; }} .badge.medium {{ background:#fef3c7; color:#92400e; }} .badge.protect {{ background:#dcfce7; color:#166534; }} .badge.review {{ background:#e2e8f0; color:#334155; }} .badge.public {{ background:#dbeafe; color:#1e40af; }} .badge.internal {{ background:#dcfce7; color:#166534; }} .badge.unreachable {{ background:#f1f5f9; color:#475569; }}
+    .details td {{ background:#f8fafc; }} .details-panel {{ border:1px solid var(--border); border-radius:.9rem; background:#fff; padding:1rem; }} .details-grid {{ display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:1rem; }} .details ul {{ margin:0; padding-left:1.15rem; }} code {{ white-space:normal; }}
+    @media (max-width: 1100px) {{ .filter-panel {{ grid-template-columns: repeat(2, minmax(220px, 1fr)); }} .filter-field.search {{ grid-column: 1 / -1; }} }}
+    @media (max-width: 640px) {{ header, main {{ padding:1rem; }} .filter-panel {{ grid-template-columns: 1fr; }} .filter-field.search {{ grid-column:auto; }} .cards {{ grid-template-columns:1fr; }} table {{ min-width: 980px; }} }}
   </style>
 </head>
 <body>
 <header>
-  <h1>FabricOps refactor triage dashboard</h1>
-  <p>Generated maintainer dashboard for finding internal helpers that may need cleanup, flattening, protection, or manual review. The callable-flow JSON remains the source of truth.</p>
-  <p><a href=\"callable-flow/\">Back to callable-flow reference</a> · <a href=\"_data/callable-flow.json\">Open JSON data</a></p>
+  <h1>Callable functions dashboard</h1>
+  <p>Inspect public API entrypoints, reachable internal helpers, unreachable functions, caller/callee relationships, helper depth, reuse, and refactor review recommendations.</p>
+  <p class=\"helper-text\">Recommended action explains the suggested treatment for the helper, such as inline, merge, protect, promote, or review manually. Priority indicates review urgency.</p>
+  <p><a href=\"../reference/callable-flow/\">Back to Callable Functions Flow</a> · <a href=\"../reference/_data/callable-flow.json\">Open JSON data</a></p>
 </header>
 <main>
-  <section class=\"cards\" aria-label=\"Refactor summary\" id=\"summaryCards\"></section>
-  <section class=\"filters\" aria-label=\"Inventory filters\">
-    <label>Search <input id=\"searchBox\" type=\"search\" placeholder=\"Search selected scope\"><small id=\"scopeHint\">Global search covers helper, module, refactor reason, callers, callees, and source.</small></label>
-    <label>Scope <select id=\"searchScope\"><option value=\"all\">All</option><option value=\"helper\">Helper</option><option value=\"module\">Module</option><option value=\"reason\">Refactor reason</option><option value=\"caller\">Caller / used by</option><option value=\"callee\">Callee / calls</option><option value=\"source\">Source</option></select></label>
-    <label>Module <select id=\"moduleFilter\"><option value=\"\">All modules</option></select></label>
-    <label>Refactor reason <select id=\"signalFilter\"><option value=\"\">All refactor reasons</option></select></label>
-    <label>Priority <select id=\"priorityFilter\"><option value=\"\">All priorities</option></select></label>
+  <section class=\"cards\" aria-label=\"Function summary\" id=\"summaryCards\"></section>
+  <p class=\"helper-text\">Total discovered functions are reconciled into public API entrypoints, reachable internal helpers, and unreachable or unclassified functions.</p>
+  <section class=\"filter-panel\" aria-label=\"Inventory filters\">
+    <label class=\"filter-field search\">Search <input id=\"searchBox\" type=\"search\" placeholder=\"Search selected scope\"><small id=\"scopeHint\">Global search covers function, module, Recommended action, callers, callees, and source.</small></label>
+    <label class=\"filter-field\">Scope <select id=\"searchScope\"><option value=\"all\">All</option><option value=\"function\">Function</option><option value=\"module\">Module</option><option value=\"action\">Recommended action</option><option value=\"caller\">Caller / used by</option><option value=\"callee\">Callee / calls</option><option value=\"source\">Source</option></select></label>
+    <label class=\"filter-field\">Function type <select id=\"typeFilter\"><option value=\"\">All function types</option></select></label>
+    <label class=\"filter-field\">Module <select id=\"moduleFilter\"><option value=\"\">All modules</option></select></label>
+    <label class=\"filter-field\">Recommended action <select id=\"signalFilter\"><option value=\"\">All recommended actions</option></select></label>
+    <label class=\"filter-field\">Priority <select id=\"priorityFilter\"><option value=\"\">All priorities</option></select></label>
     <button type=\"button\" id=\"resetFilters\">Reset</button>
   </section>
-  <section class=\"legend\" aria-label=\"Suggested action legend\" id=\"actionLegend\"></section>
+  <section class=\"legend\" aria-label=\"Recommended action legend\" id=\"actionLegend\"></section>
   <p id=\"resultCount\"></p>
-  <section class=\"table-wrap\" aria-label=\"Refactor inventory\">
-    <table>
-      <thead><tr><th></th><th><button type=\"button\" data-sort=\"function\">Helper</button></th><th><button type=\"button\" data-sort=\"module\">Module</button></th><th>Refactor reason</th><th><button type=\"button\" data-sort=\"priority\">Priority</button></th><th class=\"num\"><button type=\"button\" data-sort=\"inbound_count\">Inbound</button></th><th class=\"num\"><button type=\"button\" data-sort=\"outbound_project_call_count\">Outbound</button></th><th>Suggested action</th></tr></thead>
-      <tbody id=\"inventoryBody\"></tbody>
-    </table>
-  </section>
+  <section class=\"table-wrap\" aria-label=\"Combined function inventory\"><table><thead><tr><th></th><th><button type=\"button\" data-sort=\"function_name\">Function</button></th><th><button type=\"button\" data-sort=\"function_type\">Function type</button></th><th><button type=\"button\" data-sort=\"module\">Module</button></th><th>Recommended action</th><th><button type=\"button\" data-sort=\"priority\">Priority</button></th><th class=\"num\"><button type=\"button\" data-sort=\"called_by_count\">Called by</button></th><th class=\"num\"><button type=\"button\" data-sort=\"calls_count\">Calls</button></th><th>Source</th></tr></thead><tbody id=\"inventoryBody\"></tbody></table></section>
 </main>
 <script>
-let inventory = []; let summary = {{}};
-const actionLegend = {action_legend};
-const reasonLabels = {reason_labels};
-const priorityRank = {{High: 0, Medium: 1, Low: 2, Review: 3, Protect: 4}};
-const state = {{search: '', scope: 'all', module: '', signal: '', priority: '', sortKey: 'priority', sortDir: 1, expanded: new Set(), activeCard: 'all'}};
-const $ = (id) => document.getElementById(id);
-const text = (value) => String(value ?? '');
-const esc = (value) => text(value).replace(/[&<>\"']/g, (ch) => ({{'&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'}}[ch]));
-function unique(values) {{ return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b)); }}
-function option(select, value) {{ const opt = document.createElement('option'); opt.value = value; opt.textContent = value; select.appendChild(opt); }}
-function priorityClass(value) {{ return text(value).toLowerCase(); }}
-function reasonLabel(value) {{ return reasonLabels[value] || value; }}
-function reasonText(item) {{ return item.signals.map(reasonLabel).join(' '); }}
-function fields(item) {{ return {{all: [item.function, item.qualified_name, item.module, item.priority, item.suggested_action, item.source_path, reasonText(item), ...item.used_by.map((x) => x.function), ...item.calls.map((x) => x.function)].join(' '), helper: `${{item.function}} ${{item.qualified_name}}`, module: item.module, reason: reasonText(item), caller: item.used_by.map((x) => `${{x.function}} ${{x.module}}`).join(' '), callee: item.calls.map((x) => `${{x.function}} ${{x.module}}`).join(' '), source: `${{item.source_path || ''}} ${{item.source_url || ''}}`}}; }}
-function renderCards() {{
-  const cards = [['all','Total internal helpers',summary.internal_helpers,'info'],['high','High priority candidates',summary.high_priority_candidates,'high'],['medium','Medium priority candidates',summary.medium_priority_candidates,'medium'],['protect','Protect helpers',summary.protect_helpers,'protect'],['thin','Likely wrapper / inline candidates',summary.thin_wrapper_candidates,'info'],['public','Public API entrypoints',summary.public_api_entrypoints,'info']];
-  $('summaryCards').innerHTML = cards.map(([key,label,value,klass]) => `<button type=\"button\" class=\"card ${{klass}} ${{state.activeCard === key ? 'active' : ''}}\" data-card=\"${{key}}\"><strong>${{esc(value)}}</strong><span>${{esc(label)}}</span></button>`).join('');
-}}
-function renderLegend() {{ $('actionLegend').innerHTML = Object.entries(actionLegend).map(([label, desc]) => `<div><span class=\"badge review\">${{esc(label)}}</span><p class=\"hint\">${{esc(desc)}}</p></div>`).join(''); }}
-function populateFilters() {{ unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value)); unique(inventory.flatMap((item) => item.signals)).forEach((value) => {{ const opt = document.createElement('option'); opt.value = value; opt.textContent = reasonLabel(value); $('signalFilter').appendChild(opt); }}); ['High','Medium','Low','Review','Protect'].forEach((value) => option($('priorityFilter'), value)); }}
-function filteredRows() {{ const q = state.search.trim().toLowerCase(); return inventory.filter((item) => (!q || fields(item)[state.scope].toLowerCase().includes(q)) && (!state.module || item.module === state.module) && (!state.signal || item.signals.includes(state.signal)) && (!state.priority || item.priority === state.priority)); }}
-function compare(a, b) {{ const key = state.sortKey; if (key === 'priority') return (priorityRank[a.priority] - priorityRank[b.priority]) * state.sortDir || a.module.localeCompare(b.module) || a.function.localeCompare(b.function); if (typeof a[key] === 'number') return (a[key] - b[key]) * state.sortDir; return text(a[key]).localeCompare(text(b[key])) * state.sortDir; }}
-function linkedList(items) {{ return items.length ? `<ul>${{items.map((item) => `<li><a href=\"${{esc(item.source_url || item.docs_url || '#')}}\">${{esc(item.function || item.callable)}}</a> <small>(${{esc(item.module)}})</small></li>`).join('')}}</ul>` : '<p>—</p>'; }}
-function chips(item) {{ return item.signals.map((signal) => `<span class=\"tag ${{signal.includes('Thin') ? 'high' : signal.includes('Single') ? 'medium' : signal.includes('fanout') ? 'protect' : ''}}\">${{esc(reasonLabel(signal))}}</span>`).join('') || '—'; }}
-function renderTable() {{ const rows = filteredRows().sort(compare); $('resultCount').textContent = `Showing ${{rows.length}} of ${{inventory.length}} helpers.`; $('inventoryBody').innerHTML = rows.map((item) => {{ const id = item.qualified_name; const open = state.expanded.has(id); const klass = priorityClass(item.priority); return `<tr class=\"row-${{klass}}\"><td><button type=\"button\" data-toggle=\"${{esc(id)}}\" aria-expanded=\"${{open}}\">${{open ? 'Hide' : 'Details'}}</button></td><td><a href=\"${{esc(item.source_url || '#')}}\"><code>${{esc(item.function)}}</code></a><br><small>${{esc(item.qualified_name)}}</small></td><td><code>${{esc(item.module)}}</code></td><td>${{chips(item)}}</td><td><span class=\"badge ${{klass}}\">${{esc(item.priority)}}</span></td><td class=\"num\">${{esc(item.inbound_count)}}</td><td class=\"num\">${{esc(item.outbound_project_call_count)}}</td><td><span class=\"badge review\">${{esc(item.suggested_action)}}</span></td></tr>${{open ? `<tr class=\"details\"><td colspan=\"8\"><div class=\"details-panel\"><div class=\"details-grid\"><section><h3>Used by</h3>${{linkedList(item.used_by)}}</section><section><h3>Calls</h3>${{linkedList(item.calls)}}</section><section><h3>Public entrypoint lineage</h3>${{linkedList(item.public_entrypoint_lineage || [])}}</section><section><h3>Source</h3><p><a href=\"${{esc(item.source_url || '#')}}\">${{esc(item.source_path || item.source_url || 'Source unavailable')}}</a></p><p><strong>Depth:</strong> ${{esc(item.nesting_level ?? '—')}}</p></section></div></div></td></tr>` : ''}}`; }}).join(''); }}
-function update() {{ renderCards(); renderTable(); }}
-function resetFilters() {{ state.search = state.module = state.signal = state.priority = ''; state.scope = 'all'; state.activeCard = 'all'; $('searchBox').value = ''; $('searchScope').value = 'all'; $('moduleFilter').value = ''; $('signalFilter').value = ''; $('priorityFilter').value = ''; update(); }}
-function applyCard(key) {{ resetFilters(); state.activeCard = key; if (key === 'high') state.priority = 'High'; if (key === 'medium') state.priority = 'Medium'; if (key === 'protect') state.priority = 'Protect'; if (key === 'thin') state.signal = 'Thin wrapper candidate'; if (key === 'public') document.querySelector('.legend').scrollIntoView({{behavior: 'smooth', block: 'start'}}); $('signalFilter').value = state.signal; $('priorityFilter').value = state.priority; update(); }}
-$('searchBox').addEventListener('input', (event) => {{ state.search = event.target.value; update(); }});
-$('searchScope').addEventListener('change', (event) => {{ state.scope = event.target.value; $('scopeHint').textContent = event.target.value === 'all' ? 'Global search covers helper, module, refactor reason, callers, callees, and source.' : `Search scope: ${{event.target.selectedOptions[0].textContent}}.`; update(); }});
-$('moduleFilter').addEventListener('change', (event) => {{ state.module = event.target.value; update(); }}); $('signalFilter').addEventListener('change', (event) => {{ state.signal = event.target.value; update(); }}); $('priorityFilter').addEventListener('change', (event) => {{ state.priority = event.target.value; update(); }}); $('resetFilters').addEventListener('click', resetFilters);
-document.addEventListener('click', (event) => {{ const sort = event.target.closest('[data-sort]'); if (sort) {{ const key = sort.dataset.sort; state.sortDir = state.sortKey === key ? state.sortDir * -1 : 1; state.sortKey = key; update(); }} const toggle = event.target.closest('[data-toggle]'); if (toggle) {{ const id = toggle.dataset.toggle; state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id); renderTable(); }} const card = event.target.closest('[data-card]'); if (card) applyCard(card.dataset.card); }});
-async function loadData() {{ try {{ const response = await fetch('_data/callable-flow.json'); if (!response.ok) throw new Error(`HTTP ${{response.status}}`); const data = await response.json(); inventory = data.refactor_inventory || []; summary = data.summary_counts || {{}}; renderCards(); renderLegend(); populateFilters(); renderTable(); }} catch (error) {{ $('resultCount').textContent = `Unable to load _data/callable-flow.json: ${{error.message}}`; }} }}
-loadData();
+let inventory = []; let summary = {{}}; const actionLegend = {action_legend}; const reasonLabels = {reason_labels};
+const priorityRank = {{High:0, Medium:1, Low:2, Review:3, Protect:4}}; const state = {{search:'', scope:'all', type:'', module:'', signal:'', priority:'', sortKey:'function_type', sortDir:1, expanded:new Set(), activeCard:'all'}};
+const $ = (id) => document.getElementById(id); const text = (v) => String(v ?? ''); const esc = (v) => text(v).replace(/[&<>\"']/g, (ch) => ({{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}}[ch]));
+function unique(v) {{ return [...new Set(v.filter(Boolean))].sort((a,b)=>a.localeCompare(b)); }} function option(s,v) {{ const o=document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }}
+function actionText(item) {{ return [item.recommended_action, ...(item.signals || []).map((s)=>reasonLabels[s] || s)].join(' '); }}
+function fields(item) {{ return {{all:[item.function_name,item.qualified_name,item.module,item.function_type,item.priority,actionText(item),item.source_path,...item.callers.map(x=>x.function),...item.callees.map(x=>x.function)].join(' '), function:`${{item.function_name}} ${{item.qualified_name}}`, module:item.module, action:actionText(item), caller:item.callers.map(x=>`${{x.function}} ${{x.module}}`).join(' '), callee:item.callees.map(x=>`${{x.function}} ${{x.module}}`).join(' '), source:`${{item.source_path || ''}} ${{item.source_url || ''}}`}}; }}
+function renderCards() {{ const cards=[['all','Total functions discovered',summary.total_functions_discovered,'info'],['Public','Public API entrypoints',summary.public_api_entrypoints,'info'],['Internal','Reachable internal helpers',summary.reachable_internal_helpers,'protect'],['Unreachable','Unreachable / unclassified functions',summary.unreachable_or_unclassified_functions,'info'],['High','High priority candidates',summary.high_priority_candidates,'high'],['Medium','Medium priority candidates',summary.medium_priority_candidates,'medium'],['Protect','Protect helpers',summary.protect_helpers,'protect'],['thin','Likely wrapper / inline candidates',summary.thin_wrapper_candidates,'info']]; $('summaryCards').innerHTML=cards.map(([key,label,value,klass])=>`<button type=\"button\" class=\"card ${{klass}} ${{state.activeCard===key?'active':''}}\" data-card=\"${{key}}\"><strong>${{esc(value)}}</strong><span>${{esc(label)}}</span></button>`).join(''); }}
+function renderLegend() {{ $('actionLegend').innerHTML=Object.entries(actionLegend).map(([l,d])=>`<div><span class=\"badge review\">${{esc(l)}}</span><p class=\"hint\">${{esc(d)}}</p></div>`).join(''); }}
+function populateFilters() {{ ['Public','Internal','Unreachable'].forEach(v=>option($('typeFilter'),v)); unique(inventory.map(i=>i.module)).forEach(v=>option($('moduleFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); ['High','Medium','Low','Review','Protect'].forEach(v=>option($('priorityFilter'),v)); }}
+function filteredRows() {{ const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || fields(i)[state.scope].toLowerCase().includes(q)) && (!state.type || i.function_type===state.type) && (!state.module || i.module===state.module) && (!state.signal || i.recommended_action===state.signal) && (!state.priority || i.priority===state.priority)); }}
+function compare(a,b) {{ const k=state.sortKey; if(k==='priority') return ((priorityRank[a.priority]??9)-(priorityRank[b.priority]??9))*state.sortDir || a.function_name.localeCompare(b.function_name); if(typeof a[k]==='number') return (a[k]-b[k])*state.sortDir; return text(a[k]).localeCompare(text(b[k]))*state.sortDir; }}
+function linkedList(items) {{ return items.length ? `<ul>${{items.map(i=>`<li><a href=\"${{esc(i.source_url || '#')}}\">${{esc(i.function)}}</a> <small>(${{esc(i.module)}})</small></li>`).join('')}}</ul>` : '<p>—</p>'; }}
+function chips(item) {{ return (item.signals || []).map(s=>`<span class=\"tag\">${{esc(reasonLabels[s] || s)}}</span>`).join('') || `<span class=\"badge review\">${{esc(item.recommended_action)}}</span>`; }}
+function renderTable() {{ const rows=filteredRows().sort(compare); $('resultCount').textContent=`Showing ${{rows.length}} of ${{inventory.length}} discovered functions.`; $('inventoryBody').innerHTML=rows.map(i=>{{ const id=i.qualified_name, open=state.expanded.has(id), p=text(i.priority).toLowerCase(), t=text(i.function_type).toLowerCase(); return `<tr><td><button type=\"button\" data-toggle=\"${{esc(id)}}\">${{open?'Hide':'Details'}}</button></td><td title=\"${{esc(i.qualified_name)}}\"><a href=\"${{esc(i.source_url || '#')}}\"><code>${{esc(i.function_name)}}</code></a><br><small>${{esc(i.qualified_name)}}</small></td><td><span class=\"badge ${{t}}\">${{esc(i.function_type)}}</span></td><td><code>${{esc(i.module)}}</code></td><td>${{chips(i)}}</td><td><span class=\"badge ${{p}}\">${{esc(i.priority)}}</span></td><td class=\"num\">${{esc(i.called_by_count)}}</td><td class=\"num\">${{esc(i.calls_count)}}</td><td><a href=\"${{esc(i.source_url || '#')}}\">${{esc(i.source_path || 'Source unavailable')}}</a></td></tr>${{open?`<tr class=\"details\"><td colspan=\"9\"><div class=\"details-panel\"><div class=\"details-grid\"><section><h3>Callers</h3>${{linkedList(i.callers)}}</section><section><h3>Callees</h3>${{linkedList(i.callees)}}</section><section><h3>Direct internal helpers</h3>${{linkedList(i.direct_internal_helpers || [])}}</section><section><h3>Metrics</h3><p><strong>Depth:</strong> ${{esc(i.deepest_call_chain_depth ?? '—')}}</p><p><strong>Repeated helpers:</strong> ${{esc(i.repeated_helper_count ?? 0)}}</p></section></div></div></td></tr>`:''}}`; }}).join(''); }}
+function update() {{ renderCards(); renderTable(); }} function resetFilters() {{ state.search=state.type=state.module=state.signal=state.priority=''; state.scope='all'; state.activeCard='all'; ['searchBox','searchScope','typeFilter','moduleFilter','signalFilter','priorityFilter'].forEach(id=>$(id).value=id==='searchScope'?'all':''); update(); }}
+function applyCard(key) {{ resetFilters(); state.activeCard=key; if(['Public','Internal','Unreachable'].includes(key)) state.type=key; if(['High','Medium','Protect'].includes(key)) state.priority=key; if(key==='thin') state.signal='Inline candidate'; $('typeFilter').value=state.type; $('signalFilter').value=state.signal; $('priorityFilter').value=state.priority; update(); }}
+$('searchBox').addEventListener('input', e=>{{state.search=e.target.value; update();}}); $('searchScope').addEventListener('change', e=>{{state.scope=e.target.value; $('scopeHint').textContent=e.target.value==='all'?'Global search covers function, module, Recommended action, callers, callees, and source.':`Search scope: ${{e.target.selectedOptions[0].textContent}}.`; update();}});
+$('typeFilter').addEventListener('change', e=>{{state.type=e.target.value; update();}}); $('moduleFilter').addEventListener('change', e=>{{state.module=e.target.value; update();}}); $('signalFilter').addEventListener('change', e=>{{state.signal=e.target.value; update();}}); $('priorityFilter').addEventListener('change', e=>{{state.priority=e.target.value; update();}}); $('resetFilters').addEventListener('click', resetFilters);
+document.addEventListener('click', e=>{{ const sort=e.target.closest('[data-sort]'); if(sort){{ const k=sort.dataset.sort; state.sortDir=state.sortKey===k?state.sortDir*-1:1; state.sortKey=k; update(); }} const toggle=e.target.closest('[data-toggle]'); if(toggle){{ const id=toggle.dataset.toggle; state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id); renderTable(); }} const card=e.target.closest('[data-card]'); if(card) applyCard(card.dataset.card); }});
+async function loadData() {{ try {{ const response=await fetch('../reference/_data/callable-flow.json'); if(!response.ok) throw new Error(`HTTP ${{response.status}}`); const data=await response.json(); inventory=data.function_inventory || data.refactor_inventory || []; summary=data.summary_counts || {{}}; renderCards(); renderLegend(); populateFilters(); renderTable(); }} catch(error) {{ $('resultCount').textContent=`Unable to load callable-flow JSON: ${{error.message}}`; }} }} loadData();
 </script>
 </body>
 </html>
@@ -2206,112 +2264,31 @@ loadData();
 
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global callable flow Markdown page."""
-    lines = [
-        "# Public callable flow map",
-        "",
-        "Generated maintainer view of public FabricOps callable entry points, public-to-public dependencies, and nested internal helper usage. It complements the per-callable **Call flow** sections and does not replace them.",
-        "",
-        "Use this page as a review aid for separation, helper reuse, and refactor planning; it is not an automatic refactor instruction.",
-        "",
-        "## Maintainer overview",
-        "",
-        "Bird eye refactor dashboard for internal helper shapes. Helpers appear once in the main inventory with multiple plain-language refactor reasons when more than one rule matches.",
-        "",
-        "Use the interactive dashboard to search helper names, modules, refactor reasons, callers, or callees; the JSON remains the source of truth.",
-        "",
-    ]
-    summary_counts = flow_data["summary_counts"]
-    inventory = flow_data["refactor_inventory"]
-    card_rows = [
-        ("Total internal helpers", summary_counts["internal_helpers"]),
-        ("High priority candidates", summary_counts["high_priority_candidates"]),
-        ("Medium priority candidates", summary_counts["medium_priority_candidates"]),
-        ("Protect helpers", summary_counts["protect_helpers"]),
-        ("Likely wrapper / inline candidates", summary_counts["thin_wrapper_candidates"]),
-        ("Public API entrypoints", summary_counts["public_api_entrypoints"]),
-    ]
-    lines.extend(['<div class="callable-flow-signal-cards" markdown="0">'])
-    card_classes = {
-        "High priority candidates": "is-high",
-        "Medium priority candidates": "is-medium",
-        "Protect helpers": "is-protect",
-        "Likely wrapper / inline candidates": "is-info",
-    }
-    for label, value in card_rows:
-        card_class = card_classes.get(label, "is-neutral")
-        lines.extend(
-            [
-                f'<div class="callable-flow-signal-card {card_class}">',
-                f'<div class="callable-flow-signal-card-value">{value}</div>',
-                f'<div class="callable-flow-signal-card-label">{html.escape(label)}</div>',
-                '</div>',
-            ]
-        )
-    lines.extend(
+    del flow_data
+    return "\n".join(
         [
-            '</div>',
+            "# Callable Functions Flow",
             "",
-            '<p class="callable-flow-cta" markdown="1">',
-            "[Open interactive refactor dashboard](refactor-dashboard.html){ .md-button } [Download callable-flow JSON](_data/callable-flow.json){ .md-button }",
-            "</p>",
+            "This page embeds the interactive callable functions dashboard.",
+            "",
+            "Use the dashboard to inspect public API entrypoints, internal helpers, unreachable functions, caller/callee relationships, helper depth, reuse, and refactor review recommendations.",
+            "",
+            "[Open full dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }",
+            "",
+            '<iframe',
+            '  src="../../assets/callable-functions-dashboard.html"',
+            '  title="Callable functions dashboard"',
+            '  width="100%"',
+            '  height="900"',
+            '  loading="lazy"',
+            '  style="border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.5rem;">',
+            '</iframe>',
+            "",
+            "If the embedded view is too small, open the full dashboard directly.",
+            "",
+            "The dashboard data comes from [`_data/callable-flow.json`](_data/callable-flow.json).",
         ]
     )
-    lines.extend(
-        [
-            "",
-            "## Callable helper summary",
-            "",
-            "Compact public callable summary for spotting entry points with many helper dependencies. Use the inventory below for helper-level cleanup triage.",
-            "",
-        ]
-    )
-    summary_rows: list[list[tuple[str, str]]] = []
-    for row in flow_data["callable_helper_summary"]:
-        direct_helpers = ", ".join(
-            (
-                _render_link(helper["helper"], helper.get("source_url"))
-            )
-            for helper in row["direct_internal_helpers"]
-        ) or "—"
-        calls_public = "Yes" if row["calls_public_callable"] else "No"
-        summary_rows.append(
-            [
-                (_render_link(row["callable"], row["docs_url"]), "flow-cell-name"),
-                (_render_link(row["module"], code=True), "flow-cell-module"),
-                (str(row["unique_internal_helper_count"]), "flow-cell-number"),
-                (direct_helpers, "flow-cell-wide"),
-                (str(row["deepest_call_chain_depth"]), "flow-cell-number"),
-                (str(row["repeated_helper_count"]), "flow-cell-number"),
-                (calls_public, "flow-cell-flag"),
-            ]
-        )
-    lines.extend(
-        _render_flow_table(
-            [
-                ("Public callable", "flow-cell-name"),
-                ("Module", "flow-cell-module"),
-                ("Unique internal helper count", "flow-cell-number"),
-                ("Direct internal helpers", "flow-cell-wide"),
-                ("Deepest call chain depth", "flow-cell-number"),
-                ("Repeated helper count", "flow-cell-number"),
-                ("Calls another public callable", "flow-cell-flag"),
-            ],
-            summary_rows,
-        )
-    )
-
-    lines.extend(
-        [
-            "",
-            "## Internal helper nesting inventory",
-            "",
-            "Complete one-row-per-internal-helper inventory for refactor cleanup. It includes shared helpers and single-use helpers so maintainers can decide whether to flatten, merge, protect, promote, or review each function.",
-            "",
-        ]
-    )
-    lines.extend(_render_refactor_inventory_table(inventory))
-    lines.append("")
-    return "\n".join(lines)
 
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:

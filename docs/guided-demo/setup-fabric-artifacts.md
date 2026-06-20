@@ -78,8 +78,6 @@ For notebook responsibilities and editable settings, see [Template Notebooks](..
 
 A notebook must be attached to the Environment before it can import the custom library. Restart the session after attachment or library changes so the runtime loads the published Environment.
 
-![Fabric workspace setup example](../assets/fabric-example-workspace-setup.png)
-
 ![Fabric notebook Environment selection example](../assets/fabric-example-set-notebook-environment.png)
 
 ## 7. Confirm notebook import works
@@ -106,6 +104,8 @@ If the import fails, check the Fabric setup in this order:
 ## 8. Confirm first runtime readiness
 
 Before you run [Run Environment Setup](run-environment-setup.md), confirm the workspace is ready for the first runtime configuration pass:
+
+![Fabric workspace setup example](../assets/fabric-example-workspace-setup.png)
 
 1. The copied notebooks are saved in the intended workspace.
 2. The Fabric Environment is saved or published with the uploaded wheel.

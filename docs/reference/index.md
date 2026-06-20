@@ -33,6 +33,7 @@ Use the finder below to look up the 20 public Starter Kit functions. Supporting 
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Public callable flow map](callable-flow.md): global public callable dependency view and nested internal helper summary.
+    - [Implementation modules](../api/modules/): source ownership, module-level dependencies, and utility/internal relationships.
     - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.
     - Agent metadata: `_data/automation-manifest.json`.
     - Implementation contracts: expectations maintainers must satisfy before using or changing a function.
