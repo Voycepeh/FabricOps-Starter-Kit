@@ -255,6 +255,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Download JSON" in dashboard_text
     assert "fabricops_function_refactor_packet" in dashboard_text
     assert "signal_reason" in dashboard_text
+    assert "refactor_context" in dashboard_text
+    assert "ai_prompt" in dashboard_text
+    assert "refactor_type" in dashboard_text
+    assert "refactor_guidance" in dashboard_text
+    assert "safety_constraints" in dashboard_text
+    assert "expected_ai_output" in dashboard_text
+    assert "planning_only" in dashboard_text
     assert "How signals are classified" in dashboard_text
     assert "Small helpers likely safe to flatten" in dashboard_text
     assert "Function type" in dashboard_text
