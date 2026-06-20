@@ -14,7 +14,7 @@ The Notebook Templates Implementation Guide is the canonical scan-friendly guide
 
 Centralizes environment, workspace, path, metadata routing, runtime validation, and audit settings so every later notebook uses the same configured targets.
 
-[Implementation reference](../api/reference/setup_notebook.md){ .md-button }
+[Environment config guide](environment-config.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
@@ -138,8 +138,6 @@ Supports metadata enrichment review, guardrail review, lifecycle decisions, and 
 
 Provides optional read-only inspection and troubleshooting helpers for metadata, data context, or helper behavior.
 
-[Metadata dashboard guide](metadata-dashboard.md){ .md-button }
-
 ??? info "Details"
     **Purpose**
 
@@ -177,8 +175,6 @@ The example notebooks support demos, training, and smoke tests. They are optiona
 
 Generates deterministic demo source tables for the guided demo.
 
-[Guided demo](../guided-demo.md){ .md-button }
-
 ??? info "Details"
     **Purpose**
 
@@ -207,8 +203,6 @@ Generates deterministic demo source tables for the guided demo.
 ## [`example_dq`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb)
 
 Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a smoke-test context.
-
-[DQ rule reference](../reference/dq-rules/index.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
