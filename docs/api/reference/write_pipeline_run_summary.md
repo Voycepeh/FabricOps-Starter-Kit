@@ -288,7 +288,6 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.pipeline.write_pipeline_run_summary`
 - Short name: `write_pipeline_run_summary`
 - Module: `pipeline`
-- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`

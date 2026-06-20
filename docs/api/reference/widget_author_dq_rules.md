@@ -314,7 +314,6 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.governance_review.widget_author_dq_rules`
 - Short name: `widget_author_dq_rules`
 - Module: `governance_review`
-- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`

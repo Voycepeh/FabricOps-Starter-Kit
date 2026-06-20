@@ -226,7 +226,6 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
 - Short name: `profile_dataframe`
 - Module: `data_profiling`
-- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`

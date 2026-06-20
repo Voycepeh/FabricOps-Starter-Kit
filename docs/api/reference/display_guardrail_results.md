@@ -243,7 +243,6 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.pipeline.display_guardrail_results`
 - Short name: `display_guardrail_results`
 - Module: `pipeline`
-- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`

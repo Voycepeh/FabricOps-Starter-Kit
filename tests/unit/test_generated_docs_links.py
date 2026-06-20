@@ -110,7 +110,7 @@ def test_generated_reference_includes_every_exported_public_callable_page() -> N
 
     reference_index = (DOCS / "reference" / "index.md").read_text(encoding="utf-8")
     assert 'data-callable-name="display_guardrail_results"' in reference_index
-    assert 'data-function-type-filter="composable" checked' in reference_index
+    assert 'data-function-type-filter' not in reference_index
     assert (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
 
 

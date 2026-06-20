@@ -220,7 +220,6 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.governance_review.get_latest_metadata_catalogue`
 - Short name: `get_latest_metadata_catalogue`
 - Module: `governance_review`
-- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
@@ -275,7 +274,7 @@ def get_latest_metadata_catalogue(
 
 - <a href="read_data/"><code>fabricops_kit.fabric_input_output.read_data</code></a>
 - <a href="profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
-- <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
+- `fabricops_kit.data_agreement.widget_select_agreement`
 
 ### Internal implementation summary
 

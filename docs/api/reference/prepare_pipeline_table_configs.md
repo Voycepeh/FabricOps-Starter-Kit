@@ -180,7 +180,6 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.pipeline.prepare_pipeline_table_configs`
 - Short name: `prepare_pipeline_table_configs`
 - Module: `pipeline`
-- Taxonomy category: Workflow
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`

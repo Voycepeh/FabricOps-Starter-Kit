@@ -2,7 +2,7 @@
 
 **Purpose:** Externally collected access inventory for workspace, object, schema, and table access review.
 
-## Workflow usage
+## Notebook usage
 
 - **Written by notebook/template:** External access-log inventory collection, not a FabricOps notebook template.
 - **Written by function or widget:** Not currently discoverable.

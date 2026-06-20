@@ -45,7 +45,7 @@
     if (entry.name.startsWith(query)) return 80;
     if (entry.name.includes(query)) return 60;
     if (queryMatchesEntry(queryTokens, entry.nameTokens)) return 50;
-    if (entry.module.includes(query) || entry.functionType.includes(query) || entry.starterPath.includes(query) || entry.usageSource.includes(query)) return 40;
+    if (entry.module.includes(query) || entry.starterPath.includes(query) || entry.usageSource.includes(query)) return 40;
     if (queryMatchesEntry(queryTokens, entry.tokens)) return 30;
     if (queryTokens.every((token) => fuzzyTokenMatch(token, entry.tokens))) return 10;
     return 0;
@@ -67,7 +67,6 @@
     const status = document.getElementById("callable-finder-status");
     const empty = document.querySelector("[data-callable-finder-empty]");
     const rows = Array.from(document.querySelectorAll("[data-callable-row='true']"));
-    const typeFilters = Array.from(document.querySelectorAll("[data-function-type-filter]"));
     if (!container || !input || !status || !empty || rows.length === 0) return;
     if (container.dataset.callableFinderInitialized === "true") return;
     container.dataset.callableFinderInitialized = "true";
@@ -75,7 +74,6 @@
       row,
       name: normalize(row.dataset.callableName),
       module: normalize(row.dataset.callableModule),
-      functionType: normalize(row.dataset.functionType),
       starterPath: normalize(row.dataset.callableStarterPath),
       usageSource: normalize(row.dataset.callableUsageSource),
       purpose: normalize(row.dataset.callablePurpose),
@@ -84,7 +82,6 @@
         row.dataset.callableModule,
         row.dataset.callableStarterPath,
         row.dataset.callableUsageSource,
-        row.dataset.functionType,
         row.dataset.callablePurpose,
       ].join(" ")),
     })).map((entry) => ({
@@ -92,19 +89,16 @@
       tokens: tokenize(entry.text),
       nameTokens: tokenize(entry.name),
     }));
-    function enabledTypes() { return new Set(typeFilters.filter((cb) => cb.checked).map((cb) => normalize(cb.dataset.functionTypeFilter))); }
     function update() {
       const query = normalize(input.value);
       const queryTokens = tokenize(query);
-      const types = enabledTypes();
       let matched = 0;
       let total = 0;
       const visibleEntries = [];
       searchable.forEach((entry) => {
-        const typeEnabled = types.has(entry.functionType);
-        if (typeEnabled) total += 1;
+        total += 1;
         const score = scoreEntry(query, queryTokens, entry);
-        const show = typeEnabled && score > 0;
+        const show = score > 0;
         entry.row.hidden = !show;
         if (show) {
           matched += 1;
@@ -120,7 +114,6 @@
       status.textContent = `Showing ${matched} of ${total} functions.`;
     }
     input.addEventListener("input", update);
-    typeFilters.forEach((cb) => cb.addEventListener("change", update));
     update();
   }
   function initCallableMapFinder() {

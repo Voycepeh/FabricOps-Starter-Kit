@@ -2,11 +2,11 @@
 
 **Purpose:** Active and historical data steward records used by agreement intake.
 
-## Workflow usage
+## Notebook usage
 
 - **Written by notebook/template:** 01_agreement.ipynb
 - **Written by function or widget:** [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)
-- **Read by function or widget:** [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), [`widget_select_agreement`](../../api/reference/widget_select_agreement.md)
+- **Read by function or widget:** [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), `widget_select_agreement`
 - **Related template step:** 01_agreement.ipynb
 
 ## Implemented schema
@@ -32,4 +32,4 @@
 
 - [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
 - [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)
-- [`widget_select_agreement`](../../api/reference/widget_select_agreement.md)
+- `widget_select_agreement`

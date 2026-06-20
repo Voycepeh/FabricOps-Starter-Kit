@@ -2,7 +2,7 @@
 
 **Purpose:** Observed table and column profile evidence. This is runtime evidence, not approved guardrail intent.
 
-## Workflow usage
+## Notebook usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb, 03_governance.ipynb, 99_explore.ipynb
 - **Written by function or widget:** [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
