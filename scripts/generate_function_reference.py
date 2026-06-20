@@ -2241,6 +2241,7 @@ def generate_metadata_table_reference() -> int:
     -------
     int
         Number of metadata tables in the implemented schema registry.
+
     """
     try:
         from fabricops_kit.config import _get_metadata_table_schema_registry
