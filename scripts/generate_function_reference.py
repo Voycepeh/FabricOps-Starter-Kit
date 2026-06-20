@@ -2644,8 +2644,8 @@ def main() -> None:
             '<div class="module-summary-cards">'
             f'<span class="reference-chip">Callable count: {callable_count}</span>'
             f'<span class="reference-chip">Internal helpers: {internal_count}</span>'
-            f'<span class="reference-chip">Outbound: {len(outbound_mods)}</span>'
-            f'<span class="reference-chip">Inbound: {len(inbound_mods)}</span>'
+            f'<span class="reference-chip">Uses {len(outbound_mods)} external modules</span>'
+            f'<span class="reference-chip">Used by {len(inbound_mods)} external modules</span>'
             '</div>'
         )
         lines.extend(["## Module overview badges", "", summary_cards, ""])
@@ -2661,10 +2661,10 @@ def main() -> None:
             ["Module purpose", module_purpose or "—"],
             ["Public callable count", str(callable_count)],
             ["Internal helper count", str(internal_count)],
-            ["Inbound module count", str(len(inbound_mods))],
-            ["Outbound module count", str(len(outbound_mods))],
-            ["External callers", ", ".join(f"<code>{m}</code>" for m in inbound_mods) or "—"],
-            ["External callees", ", ".join(f"<code>{m}</code>" for m in outbound_mods) or "—"],
+            ["Used by external module count", str(len(inbound_mods))],
+            ["Uses external module count", str(len(outbound_mods))],
+            ["External modules using this module", ", ".join(f"<code>{m}</code>" for m in inbound_mods) or "—"],
+            ["External modules this module uses", ", ".join(f"<code>{m}</code>" for m in outbound_mods) or "—"],
         ]
         lines.extend(render_html_table(["Field", "Value"], manifest_rows))
         lines.append("")
@@ -3180,8 +3180,46 @@ def main() -> None:
         dependency_meta = dependency_callables.get(qn, {})
         calls = [item for item in dependency_meta.get("calls", []) if not _hide_from_public_relationships(item)]
         used_by = [item for item in dependency_meta.get("used_by", []) if not _hide_from_public_relationships(item)]
-        calls_count = len(calls)
-        used_by_count = len(used_by)
+        called_public = [item for item in calls if node_by_qn.get(item, {}).get("exported")]
+        called_internal = [item for item in calls if not node_by_qn.get(item, {}).get("exported")]
+        public_used_by = [item for item in used_by if node_by_qn.get(item, {}).get("exported")]
+
+        def _catalogue_relationship_list(items: list[str]) -> str:
+            rows = []
+            for item in items:
+                related_node = node_by_qn.get(item, {})
+                short = related_node.get("callable_name") or item.split(".")[-1]
+                if related_node.get("exported"):
+                    href = public_reference_link(short, docs_metadata, context="reference")
+                    rows.append(f'<li><a href="{_esc(href)}"><code>{_esc(short)}</code></a></li>')
+                else:
+                    rows.append(f'<li><code>{_esc(short)}</code></li>')
+            return "<ul>" + "".join(rows) + "</ul>"
+
+        def _catalogue_count_details(singular_label: str, plural_label: str, items: list[str]) -> str:
+            count = len(items)
+            if count == 0:
+                return ""
+            label = singular_label if count == 1 else plural_label
+            return (
+                '    <details class="reference-count-details"><summary>'
+                f'<span class="reference-chip reference-chip-count">{_esc(label.format(count=count))}</span>'
+                "</summary>"
+                + _catalogue_relationship_list(items)
+                + "</details>"
+            )
+
+        notebook_usage_count = len(template_usage_by_symbol.get(name, []))
+        notebook_usage_noun = "notebook" if notebook_usage_count == 1 else "notebooks"
+        notebook_usage_details = (
+            '    <details class="reference-count-details"><summary>'
+            f'<span class="reference-chip reference-chip-count">Used in {_esc(str(notebook_usage_count))} {notebook_usage_noun}</span>'
+            "</summary><ul>"
+            + "".join(f'<li><code>{_esc(notebook)}</code></li>' for notebook in template_usage_by_symbol.get(name, []))
+            + "</ul></details>"
+            if template_usage_by_symbol.get(name)
+            else ""
+        )
         all_items.extend(
             [
                 (
@@ -3203,25 +3241,15 @@ def main() -> None:
                     "</p>"
                 ),
                 (
-                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(usage_source)}</p>'
+                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> {_esc(usage_source)}</p>'
                     if usage_source != "—"
                     else ""
                 ),
                 '  <div class="reference-catalogue-item-counts">',
-                (
-                    f'    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Outbound {_esc(str(calls_count))}</span></summary>'
-                    + ("<ul>" + "".join(f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in calls) + "</ul>" if calls_count > 0 else "")
-                    + "</details>"
-                    if calls_count > 0
-                    else ""
-                ),
-                (
-                    f'    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Inbound {_esc(str(used_by_count))}</span></summary>'
-                    + ("<ul>" + "".join(f'<li><code>{_esc(name.split(".")[-1])}</code></li>' for name in used_by) + "</ul>" if used_by_count > 0 else "")
-                    + "</details>"
-                    if used_by_count > 0
-                    else ""
-                ),
+                notebook_usage_details,
+                _catalogue_count_details("Used by {count} public function", "Used by {count} public functions", public_used_by),
+                _catalogue_count_details("Calls {count} public function", "Calls {count} public functions", called_public),
+                _catalogue_count_details("Calls {count} internal helper", "Calls {count} internal helpers", called_internal),
                 "  </div>",
                 "</article>",
             ]
@@ -3415,8 +3443,8 @@ def main() -> None:
                 f"- Related module: `{rel_module}`",
                 f"- Source file path: `{source_path}`",
                 f"- Source line: `{source_start_line}`",
-                f"- Inbound references count: {len(used_by)}",
-                f"- Outbound references count: {len(deps)}",
+                f"- Used by references count: {len(used_by)}",
+                f"- Calls references count: {len(deps)}",
                 f"- Used in templates: {', '.join(used_in_templates) if used_in_templates else '—'}",
                 f"- Glossary terms: {', '.join(metadata.get('glossary_terms', [])) if metadata.get('glossary_terms') else '—'}",
             ]
@@ -3453,11 +3481,11 @@ def main() -> None:
                 "",
                 rendered_ai_contract,
                 "",
-                "### Inbound references",
+                "### Used by references",
                 "",
                 *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
                 "",
-                "### Outbound references",
+                "### Calls references",
                 "",
                 *(_fmt_links(deps) if deps else [PLACEHOLDER]),
                 "",
@@ -3589,17 +3617,17 @@ def main() -> None:
                 f"- Related module: `{rel_module}`",
                 f"- Source file path: `{source_path}`",
                 f'- Source reference: <a href="{source_ref}">View source on GitHub</a>',
-                f"- Inbound references count: {len(used_by)}",
-                f"- Outbound references count: {len(deps)}",
+                f"- Used by references count: {len(used_by)}",
+                f"- Calls references count: {len(deps)}",
             ])
 
         if not node["exported"]:
             if used_by:
-                lines.extend(["", "## Inbound references", *(_fmt_links(used_by))])
+                lines.extend(["", "## Used by references", *(_fmt_links(used_by))])
             if deps:
-                lines.extend(["", "## Outbound references", *(_fmt_links(deps))])
+                lines.extend(["", "## Calls references", *(_fmt_links(deps))])
             if not used_by and not deps:
-                lines.extend(["", "_No inbound or outbound references detected._"])
+                lines.extend(["", "_No used-by or calls references detected._"])
 
         if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")

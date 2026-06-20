@@ -231,8 +231,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `data_profiling`
 - Source file path: `src/fabricops_kit/data_profiling.py`
 - Source line: `226`
-- Inbound references count: 3
-- Outbound references count: 5
+- Used by references count: 3
+- Calls references count: 5
 - Used in templates: 99_explore
 - Glossary terms: evidence, source data, target table
 
@@ -245,13 +245,13 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 - **verification:** Verify the profile row count matches expected business columns and inspect key schema/profile fields before writing evidence.
 
-### Inbound references
+### Used by references
 
 - `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
 - `fabricops_kit.guardrails.enforce_profile_behavior`
 - <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config._audit_timestamp_expr`
 - `fabricops_kit.config._get_audit_timezone`

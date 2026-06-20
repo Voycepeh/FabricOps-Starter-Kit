@@ -281,8 +281,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
 - Source line: `1062`
-- Inbound references count: 0
-- Outbound references count: 7
+- Used by references count: 0
+- Calls references count: 7
 - Used in templates: 02_pipeline
 - Glossary terms: source data, target table, evidence, metadata lakehouse
 
@@ -295,11 +295,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Not documented yet
 - **verification:** Not documented yet
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`

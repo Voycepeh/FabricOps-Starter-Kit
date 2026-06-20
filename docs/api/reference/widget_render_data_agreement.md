@@ -438,8 +438,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`
 - Source line: `1464`
-- Inbound references count: 0
-- Outbound references count: 2
+- Used by references count: 0
+- Calls references count: 2
 - Used in templates: 01_agreement
 - Glossary terms: notebook template
 
@@ -457,11 +457,11 @@ context : dict[str, Any], optional
 - **failure_modes:** Not documented yet
 - **verification:** Not documented yet
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.data_agreement._render_maintenance_widget`

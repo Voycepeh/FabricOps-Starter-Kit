@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 REFERENCE_DIR = ROOT / "docs" / "reference"
+REFERENCE_INDEX = REFERENCE_DIR / "index.md"
 API_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
 PLACEHOLDER = "Not documented yet"
 CORE_CALLABLES = {
@@ -633,9 +634,25 @@ def test_callable_pages_collapse_ai_machine_metadata() -> None:
         metadata = text[metadata_start:metadata_end]
         assert "### Function manifest" in metadata, page
         assert "### Implementation contract" in metadata, page
-        assert "### Inbound references" in metadata, page
-        assert "### Outbound references" in metadata, page
+        assert "### Used by references" in metadata, page
+        assert "### Calls references" in metadata, page
         assert "### Raw source metadata" in metadata, page
+
+
+def test_function_catalogue_uses_callable_flow_language() -> None:
+    """Verify catalogue cards expose callable flow wording, not graph directions."""
+    text = REFERENCE_INDEX.read_text(encoding="utf-8")
+
+    assert "Inbound" not in text
+    assert "Outbound" not in text
+    assert "incoming" not in text.lower()
+    assert "outgoing" not in text.lower()
+    assert "Used in notebooks:" in text
+    assert "Used in 1 notebook" in text
+    assert "Used by 1 public function" in text
+    assert "Calls 1 public function" in text
+    assert "Calls 5 internal helpers" in text
+    assert '<a href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>' in text
 
 
 def test_setup_notebook_reference_uses_human_first_source_documentation() -> None:

@@ -225,8 +225,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source line: `96`
-- Inbound references count: 0
-- Outbound references count: 5
+- Used by references count: 0
+- Calls references count: 5
 - Used in templates: 99_explore
 - Glossary terms: metadata lakehouse, profile, data agreement
 
@@ -239,11 +239,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Not documented yet
 - **verification:** Verify exploratory notebooks call this helper only for context lookup and do not call write or guardrail helpers.
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output._configured_lakehouse_schema`

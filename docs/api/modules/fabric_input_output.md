@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Outbound: 1</span><span class="reference-chip">Inbound: 6</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Uses 1 external modules</span><span class="reference-chip">Used by 6 external modules</span></div>
 
 ## Module purpose
 
@@ -43,19 +43,19 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
       <td>11</td>
     </tr>
     <tr>
-      <td>Inbound module count</td>
+      <td>Used by external module count</td>
       <td>6</td>
     </tr>
     <tr>
-      <td>Outbound module count</td>
+      <td>Uses external module count</td>
       <td>1</td>
     </tr>
     <tr>
-      <td>External callers</td>
+      <td>External modules using this module</td>
       <td><code>config</code>, <code>data_agreement</code>, <code>governance_review</code>, <code>guardrails</code>, <code>metadata</code>, <code>pipeline</code></td>
     </tr>
     <tr>
-      <td>External callees</td>
+      <td>External modules this module uses</td>
       <td><code>config</code></td>
     </tr>
   </tbody>

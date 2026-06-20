@@ -776,8 +776,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
 - Source line: `687`
-- Inbound references count: 0
-- Outbound references count: 18
+- Used by references count: 0
+- Calls references count: 18
 - Used in templates: 02_pipeline, example_dq_rule_smoke_test
 - Glossary terms: guardrails, can_continue, source data, target table, evidence
 
@@ -790,11 +790,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Not documented yet
 - **verification:** Verify stop_on_failure=True is used before transformation or writes when blocking guardrails should stop execution.
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config.resolve_fabric_context`
 - <a href="profile_dataframe/"><code>fabricops_kit.data_profiling.profile_dataframe</code></a>
