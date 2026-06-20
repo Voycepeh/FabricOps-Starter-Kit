@@ -226,7 +226,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "High priority candidates" in flow_text
     assert "Medium priority candidates" in flow_text
     assert "Protect helpers" in flow_text
-    assert "Thin wrapper candidates" in flow_text
+    assert "Likely wrapper / inline candidates" in flow_text
+    assert "Refactor reason / priority" in flow_text
+    assert "Likely wrapper / inline candidate" in flow_text
+    assert "Used by only one function" in flow_text
+    assert "End-of-chain helper" in flow_text
+    assert "Used by many functions" in flow_text
+    assert "Thin wrapper candidate" not in flow_text
+    assert "Single-use internal helper" not in flow_text
+    assert "Leaf internal helper" not in flow_text
+    assert "High-fanout helper" not in flow_text
     assert "Public API entrypoints" in flow_text
     assert "## Top priority refactor inventory" not in flow_text
     assert "refactor-dashboard.html" in flow_text
@@ -238,6 +247,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '??? info "Full searchable inventory"' not in flow_text
     assert '??? info "Inventory by module"' not in flow_text
     assert '??? info "Inventory by signal"' not in flow_text
+    assert "modules, refactor reasons, callers" in flow_text
     assert "## Public callable dependency map" not in flow_text
     assert "## Callable helper summary" in flow_text
     assert "## Shared helper usage" not in flow_text
@@ -261,6 +271,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert 'id="priorityFilter"' in dashboard_text
     assert "Reset" in dashboard_text
     assert 'id="searchScope"' in dashboard_text
+    assert "Refactor reason" in dashboard_text
+    assert "All refactor reasons" in dashboard_text
+    assert "Global search covers helper, module, refactor reason" in dashboard_text
+    assert "Likely wrapper / inline candidate" in dashboard_text
+    assert "Used by only one function" in dashboard_text
+    assert "End-of-chain helper" in dashboard_text
+    assert "Used by many functions" in dashboard_text
     assert 'data-card="${key}"' in dashboard_text
     assert 'data-sort="function"' in dashboard_text
     assert "data-toggle" in dashboard_text

@@ -1600,6 +1600,13 @@ REFACTOR_SIGNAL_RECOMMENDATIONS = {
     "High-fanout helper": "Shared helper – preserve carefully",
 }
 
+REFACTOR_REASON_LABELS = {
+    "Thin wrapper candidate": "Likely wrapper / inline candidate",
+    "Single-use internal helper": "Used by only one function",
+    "Leaf internal helper": "End-of-chain helper",
+    "High-fanout helper": "Used by many functions",
+}
+
 REFACTOR_PRIORITY_ORDER = {
     "High": 0,
     "Medium": 1,
@@ -1617,13 +1624,13 @@ REFACTOR_PRIORITY_ACTIONS = {
 }
 
 ACTION_LEGEND = {
-    "Inline candidate": "Small single-use wrapper; consider flattening into its caller after checking readability.",
+    "Inline candidate": "Small helper used by only one function; consider flattening into its caller after checking readability.",
     "Merge candidate": "Similar helper shape or adjacent responsibility; consider consolidating with a sibling helper.",
-    "Review abstraction value": "Single-use helper; verify the name, boundary, and test value justify keeping it separate.",
+    "Review abstraction value": "Helper used by only one function; verify the name, boundary, and test value justify keeping it separate.",
     "Keep / protect": "Healthy helper shape or leaf behavior; keep stable unless source review shows duplication.",
     "Shared helper – preserve carefully": "High reuse or broad inbound reach; refactor only with focused tests and caller review.",
     "Promote candidate": "Potential public API only when metadata and caller evidence support notebook-facing reuse.",
-    "Review manually": "No clear automated signal; inspect intent before changing structure.",
+    "Review manually": "No clear automated refactor reason; inspect intent before changing structure.",
 }
 
 
@@ -2010,7 +2017,10 @@ def _render_refactor_inventory_table(
             (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
             (_render_link(row["module"], code=True), "flow-cell-module"),
             (_render_link(row["qualified_name"], code=True), "flow-cell-qualified"),
-            (", ".join(html.escape(signal) for signal in row["signals"]) or "—", "flow-cell-wide"),
+            (
+                ", ".join(html.escape(REFACTOR_REASON_LABELS.get(signal, signal)) for signal in row["signals"]) or "—",
+                "flow-cell-wide",
+            ),
             (_render_refactor_inventory_items(row["used_by"]), "flow-cell-wide"),
             (_render_refactor_inventory_items(row["calls"]), "flow-cell-wide"),
         ]
@@ -2034,7 +2044,7 @@ def _render_refactor_inventory_table(
         ("Internal helper", "flow-cell-name"),
         ("Module", "flow-cell-module"),
         ("Qualified name", "flow-cell-qualified"),
-        ("Signal / priority", "flow-cell-wide"),
+        ("Refactor reason / priority", "flow-cell-wide"),
         ("Called by", "flow-cell-wide"),
         ("Calls", "flow-cell-wide"),
     ]
@@ -2078,6 +2088,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
     """Render the standalone static refactor dashboard HTML page."""
     del flow_data
     action_legend = json.dumps(ACTION_LEGEND, indent=2)
+    reason_labels = json.dumps(REFACTOR_REASON_LABELS, indent=2)
     return f"""<!doctype html>
 <html lang=\"en\">
 <head>
@@ -2136,10 +2147,10 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 <main>
   <section class=\"cards\" aria-label=\"Refactor summary\" id=\"summaryCards\"></section>
   <section class=\"filters\" aria-label=\"Inventory filters\">
-    <label>Search <input id=\"searchBox\" type=\"search\" placeholder=\"Search selected scope\"><small id=\"scopeHint\">Global search covers helper, module, signal, callers, callees, and source.</small></label>
-    <label>Scope <select id=\"searchScope\"><option value=\"all\">All</option><option value=\"helper\">Helper</option><option value=\"module\">Module</option><option value=\"signal\">Signal</option><option value=\"caller\">Caller / used by</option><option value=\"callee\">Callee / calls</option><option value=\"source\">Source</option></select></label>
+    <label>Search <input id=\"searchBox\" type=\"search\" placeholder=\"Search selected scope\"><small id=\"scopeHint\">Global search covers helper, module, refactor reason, callers, callees, and source.</small></label>
+    <label>Scope <select id=\"searchScope\"><option value=\"all\">All</option><option value=\"helper\">Helper</option><option value=\"module\">Module</option><option value=\"reason\">Refactor reason</option><option value=\"caller\">Caller / used by</option><option value=\"callee\">Callee / calls</option><option value=\"source\">Source</option></select></label>
     <label>Module <select id=\"moduleFilter\"><option value=\"\">All modules</option></select></label>
-    <label>Signal <select id=\"signalFilter\"><option value=\"\">All signals</option></select></label>
+    <label>Refactor reason <select id=\"signalFilter\"><option value=\"\">All refactor reasons</option></select></label>
     <label>Priority <select id=\"priorityFilter\"><option value=\"\">All priorities</option></select></label>
     <button type=\"button\" id=\"resetFilters\">Reset</button>
   </section>
@@ -2147,7 +2158,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
   <p id=\"resultCount\"></p>
   <section class=\"table-wrap\" aria-label=\"Refactor inventory\">
     <table>
-      <thead><tr><th></th><th><button type=\"button\" data-sort=\"function\">Helper</button></th><th><button type=\"button\" data-sort=\"module\">Module</button></th><th>Signals</th><th><button type=\"button\" data-sort=\"priority\">Priority</button></th><th class=\"num\"><button type=\"button\" data-sort=\"inbound_count\">Inbound</button></th><th class=\"num\"><button type=\"button\" data-sort=\"outbound_project_call_count\">Outbound</button></th><th>Suggested action</th></tr></thead>
+      <thead><tr><th></th><th><button type=\"button\" data-sort=\"function\">Helper</button></th><th><button type=\"button\" data-sort=\"module\">Module</button></th><th>Refactor reason</th><th><button type=\"button\" data-sort=\"priority\">Priority</button></th><th class=\"num\"><button type=\"button\" data-sort=\"inbound_count\">Inbound</button></th><th class=\"num\"><button type=\"button\" data-sort=\"outbound_project_call_count\">Outbound</button></th><th>Suggested action</th></tr></thead>
       <tbody id=\"inventoryBody\"></tbody>
     </table>
   </section>
@@ -2155,6 +2166,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 <script>
 let inventory = []; let summary = {{}};
 const actionLegend = {action_legend};
+const reasonLabels = {reason_labels};
 const priorityRank = {{High: 0, Medium: 1, Low: 2, Review: 3, Protect: 4}};
 const state = {{search: '', scope: 'all', module: '', signal: '', priority: '', sortKey: 'priority', sortDir: 1, expanded: new Set(), activeCard: 'all'}};
 const $ = (id) => document.getElementById(id);
@@ -2163,23 +2175,25 @@ const esc = (value) => text(value).replace(/[&<>\"']/g, (ch) => ({{'&': '&amp;',
 function unique(values) {{ return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b)); }}
 function option(select, value) {{ const opt = document.createElement('option'); opt.value = value; opt.textContent = value; select.appendChild(opt); }}
 function priorityClass(value) {{ return text(value).toLowerCase(); }}
-function fields(item) {{ return {{all: [item.function, item.qualified_name, item.module, item.priority, item.suggested_action, item.source_path, ...item.signals, ...item.used_by.map((x) => x.function), ...item.calls.map((x) => x.function)].join(' '), helper: `${{item.function}} ${{item.qualified_name}}`, module: item.module, signal: item.signals.join(' '), caller: item.used_by.map((x) => `${{x.function}} ${{x.module}}`).join(' '), callee: item.calls.map((x) => `${{x.function}} ${{x.module}}`).join(' '), source: `${{item.source_path || ''}} ${{item.source_url || ''}}`}}; }}
+function reasonLabel(value) {{ return reasonLabels[value] || value; }}
+function reasonText(item) {{ return item.signals.map(reasonLabel).join(' '); }}
+function fields(item) {{ return {{all: [item.function, item.qualified_name, item.module, item.priority, item.suggested_action, item.source_path, reasonText(item), ...item.used_by.map((x) => x.function), ...item.calls.map((x) => x.function)].join(' '), helper: `${{item.function}} ${{item.qualified_name}}`, module: item.module, reason: reasonText(item), caller: item.used_by.map((x) => `${{x.function}} ${{x.module}}`).join(' '), callee: item.calls.map((x) => `${{x.function}} ${{x.module}}`).join(' '), source: `${{item.source_path || ''}} ${{item.source_url || ''}}`}}; }}
 function renderCards() {{
-  const cards = [['all','Total internal helpers',summary.internal_helpers,'info'],['high','High priority candidates',summary.high_priority_candidates,'high'],['medium','Medium priority candidates',summary.medium_priority_candidates,'medium'],['protect','Protect helpers',summary.protect_helpers,'protect'],['thin','Thin wrapper candidates',summary.thin_wrapper_candidates,'info'],['public','Public API entrypoints',summary.public_api_entrypoints,'info']];
+  const cards = [['all','Total internal helpers',summary.internal_helpers,'info'],['high','High priority candidates',summary.high_priority_candidates,'high'],['medium','Medium priority candidates',summary.medium_priority_candidates,'medium'],['protect','Protect helpers',summary.protect_helpers,'protect'],['thin','Likely wrapper / inline candidates',summary.thin_wrapper_candidates,'info'],['public','Public API entrypoints',summary.public_api_entrypoints,'info']];
   $('summaryCards').innerHTML = cards.map(([key,label,value,klass]) => `<button type=\"button\" class=\"card ${{klass}} ${{state.activeCard === key ? 'active' : ''}}\" data-card=\"${{key}}\"><strong>${{esc(value)}}</strong><span>${{esc(label)}}</span></button>`).join('');
 }}
 function renderLegend() {{ $('actionLegend').innerHTML = Object.entries(actionLegend).map(([label, desc]) => `<div><span class=\"badge review\">${{esc(label)}}</span><p class=\"hint\">${{esc(desc)}}</p></div>`).join(''); }}
-function populateFilters() {{ unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value)); unique(inventory.flatMap((item) => item.signals)).forEach((value) => option($('signalFilter'), value)); ['High','Medium','Low','Review','Protect'].forEach((value) => option($('priorityFilter'), value)); }}
+function populateFilters() {{ unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value)); unique(inventory.flatMap((item) => item.signals)).forEach((value) => {{ const opt = document.createElement('option'); opt.value = value; opt.textContent = reasonLabel(value); $('signalFilter').appendChild(opt); }}); ['High','Medium','Low','Review','Protect'].forEach((value) => option($('priorityFilter'), value)); }}
 function filteredRows() {{ const q = state.search.trim().toLowerCase(); return inventory.filter((item) => (!q || fields(item)[state.scope].toLowerCase().includes(q)) && (!state.module || item.module === state.module) && (!state.signal || item.signals.includes(state.signal)) && (!state.priority || item.priority === state.priority)); }}
 function compare(a, b) {{ const key = state.sortKey; if (key === 'priority') return (priorityRank[a.priority] - priorityRank[b.priority]) * state.sortDir || a.module.localeCompare(b.module) || a.function.localeCompare(b.function); if (typeof a[key] === 'number') return (a[key] - b[key]) * state.sortDir; return text(a[key]).localeCompare(text(b[key])) * state.sortDir; }}
 function linkedList(items) {{ return items.length ? `<ul>${{items.map((item) => `<li><a href=\"${{esc(item.source_url || item.docs_url || '#')}}\">${{esc(item.function || item.callable)}}</a> <small>(${{esc(item.module)}})</small></li>`).join('')}}</ul>` : '<p>—</p>'; }}
-function chips(item) {{ return item.signals.map((signal) => `<span class=\"tag ${{signal.includes('Thin') ? 'high' : signal.includes('Single') ? 'medium' : signal.includes('fanout') ? 'protect' : ''}}\">${{esc(signal)}}</span>`).join('') || '—'; }}
+function chips(item) {{ return item.signals.map((signal) => `<span class=\"tag ${{signal.includes('Thin') ? 'high' : signal.includes('Single') ? 'medium' : signal.includes('fanout') ? 'protect' : ''}}\">${{esc(reasonLabel(signal))}}</span>`).join('') || '—'; }}
 function renderTable() {{ const rows = filteredRows().sort(compare); $('resultCount').textContent = `Showing ${{rows.length}} of ${{inventory.length}} helpers.`; $('inventoryBody').innerHTML = rows.map((item) => {{ const id = item.qualified_name; const open = state.expanded.has(id); const klass = priorityClass(item.priority); return `<tr class=\"row-${{klass}}\"><td><button type=\"button\" data-toggle=\"${{esc(id)}}\" aria-expanded=\"${{open}}\">${{open ? 'Hide' : 'Details'}}</button></td><td><a href=\"${{esc(item.source_url || '#')}}\"><code>${{esc(item.function)}}</code></a><br><small>${{esc(item.qualified_name)}}</small></td><td><code>${{esc(item.module)}}</code></td><td>${{chips(item)}}</td><td><span class=\"badge ${{klass}}\">${{esc(item.priority)}}</span></td><td class=\"num\">${{esc(item.inbound_count)}}</td><td class=\"num\">${{esc(item.outbound_project_call_count)}}</td><td><span class=\"badge review\">${{esc(item.suggested_action)}}</span></td></tr>${{open ? `<tr class=\"details\"><td colspan=\"8\"><div class=\"details-panel\"><div class=\"details-grid\"><section><h3>Used by</h3>${{linkedList(item.used_by)}}</section><section><h3>Calls</h3>${{linkedList(item.calls)}}</section><section><h3>Public entrypoint lineage</h3>${{linkedList(item.public_entrypoint_lineage || [])}}</section><section><h3>Source</h3><p><a href=\"${{esc(item.source_url || '#')}}\">${{esc(item.source_path || item.source_url || 'Source unavailable')}}</a></p><p><strong>Depth:</strong> ${{esc(item.nesting_level ?? '—')}}</p></section></div></div></td></tr>` : ''}}`; }}).join(''); }}
 function update() {{ renderCards(); renderTable(); }}
 function resetFilters() {{ state.search = state.module = state.signal = state.priority = ''; state.scope = 'all'; state.activeCard = 'all'; $('searchBox').value = ''; $('searchScope').value = 'all'; $('moduleFilter').value = ''; $('signalFilter').value = ''; $('priorityFilter').value = ''; update(); }}
 function applyCard(key) {{ resetFilters(); state.activeCard = key; if (key === 'high') state.priority = 'High'; if (key === 'medium') state.priority = 'Medium'; if (key === 'protect') state.priority = 'Protect'; if (key === 'thin') state.signal = 'Thin wrapper candidate'; if (key === 'public') document.querySelector('.legend').scrollIntoView({{behavior: 'smooth', block: 'start'}}); $('signalFilter').value = state.signal; $('priorityFilter').value = state.priority; update(); }}
 $('searchBox').addEventListener('input', (event) => {{ state.search = event.target.value; update(); }});
-$('searchScope').addEventListener('change', (event) => {{ state.scope = event.target.value; $('scopeHint').textContent = event.target.value === 'all' ? 'Global search covers helper, module, signal, callers, callees, and source.' : `Search scope: ${{event.target.selectedOptions[0].textContent}}.`; update(); }});
+$('searchScope').addEventListener('change', (event) => {{ state.scope = event.target.value; $('scopeHint').textContent = event.target.value === 'all' ? 'Global search covers helper, module, refactor reason, callers, callees, and source.' : `Search scope: ${{event.target.selectedOptions[0].textContent}}.`; update(); }});
 $('moduleFilter').addEventListener('change', (event) => {{ state.module = event.target.value; update(); }}); $('signalFilter').addEventListener('change', (event) => {{ state.signal = event.target.value; update(); }}); $('priorityFilter').addEventListener('change', (event) => {{ state.priority = event.target.value; update(); }}); $('resetFilters').addEventListener('click', resetFilters);
 document.addEventListener('click', (event) => {{ const sort = event.target.closest('[data-sort]'); if (sort) {{ const key = sort.dataset.sort; state.sortDir = state.sortKey === key ? state.sortDir * -1 : 1; state.sortKey = key; update(); }} const toggle = event.target.closest('[data-toggle]'); if (toggle) {{ const id = toggle.dataset.toggle; state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id); renderTable(); }} const card = event.target.closest('[data-card]'); if (card) applyCard(card.dataset.card); }});
 async function loadData() {{ try {{ const response = await fetch('_data/callable-flow.json'); if (!response.ok) throw new Error(`HTTP ${{response.status}}`); const data = await response.json(); inventory = data.refactor_inventory || []; summary = data.summary_counts || {{}}; renderCards(); renderLegend(); populateFilters(); renderTable(); }} catch (error) {{ $('resultCount').textContent = `Unable to load _data/callable-flow.json: ${{error.message}}`; }} }}
@@ -2201,9 +2215,9 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         "",
         "## Maintainer overview",
         "",
-        "Bird eye refactor dashboard for internal helper shapes. Helpers appear once in the main inventory with multiple signal tags when more than one rule matches.",
+        "Bird eye refactor dashboard for internal helper shapes. Helpers appear once in the main inventory with multiple plain-language refactor reasons when more than one rule matches.",
         "",
-        "Use the interactive dashboard to search helper names, modules, signals, callers, or callees; the JSON remains the source of truth.",
+        "Use the interactive dashboard to search helper names, modules, refactor reasons, callers, or callees; the JSON remains the source of truth.",
         "",
     ]
     summary_counts = flow_data["summary_counts"]
@@ -2213,7 +2227,7 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         ("High priority candidates", summary_counts["high_priority_candidates"]),
         ("Medium priority candidates", summary_counts["medium_priority_candidates"]),
         ("Protect helpers", summary_counts["protect_helpers"]),
-        ("Thin wrapper candidates", summary_counts["thin_wrapper_candidates"]),
+        ("Likely wrapper / inline candidates", summary_counts["thin_wrapper_candidates"]),
         ("Public API entrypoints", summary_counts["public_api_entrypoints"]),
     ]
     lines.extend(['<div class="callable-flow-signal-cards" markdown="0">'])
@@ -2221,7 +2235,7 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         "High priority candidates": "is-high",
         "Medium priority candidates": "is-medium",
         "Protect helpers": "is-protect",
-        "Thin wrapper candidates": "is-info",
+        "Likely wrapper / inline candidates": "is-info",
     }
     for label, value in card_rows:
         card_class = card_classes.get(label, "is-neutral")
