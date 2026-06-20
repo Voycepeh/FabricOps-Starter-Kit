@@ -2,13 +2,14 @@
 
 Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
-<div class="reference-source-card" markdown="1">
-**Source**
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">Module: <code>governance_review</code></span>
+<span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">03_governance</span>
+</p>
 
-`fabricops_kit/governance_review.py:2677`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777">View on GitHub</a>
-</div>
+**Used in notebooks:** `02_pipeline`, `03_governance`
 
 ## Usage guidance
 
@@ -70,46 +71,7 @@ Not documented yet
 - Unsupported governance action is selected.
 - The metadata target cannot be written.
 
-## Relationships
-
-### Used by
-
-Not documented yet
-
-### Calls
-
-- `fabricops_kit.config.resolve_fabric_context`
-- `fabricops_kit.governance_review.apply_governance_enrichment_action`
-- `fabricops_kit.governance_review.apply_governance_rule_action`
-- `fabricops_kit.governance_review.load_rule_review_history`
-
-## Maintainer/developer implementation details
-
-<details class="reference-implementation-details">
-<summary>Notes, side effects, and template usage</summary>
-
-**Used in templates:**
-
-Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
-
-- `02_pipeline`
-- `03_governance`
-
-**Side effects:**
-
-Not documented yet
-
-**Notes:**
-
-No additional callable notes are documented.
-
-</details>
-
-??? info "Maintainer/developer call flow"
-
-    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
-
-    Unique internal/private helpers: 9. Repeated calls may appear in multiple branches.
+??? info "Uses 9 internal helper functions"
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>widget_review_guardrail_governance(...)</code></div>
@@ -139,140 +101,6 @@ No additional callable notes are documented.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161"><code>resolve_fabric_context(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83"><code>get_default_fabric_context(...)</code></a></div>
     </div>
-
-    ### Refactor signals
-
-    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
-
-    **Helpers appearing in multiple branches**
-
-    - `_context_get` appears in 4 branches.
-    - `_assert_governance_review_context` appears in 2 branches.
-    - `_current_audit_timestamp` appears in 2 branches.
-    - `_get_audit_timezone` appears in 2 branches.
-    - `_now_utc_iso` appears in 2 branches.
-    - `_record_identity` appears in 2 branches.
-    - `_resolve_action_by` appears in 2 branches.
-    - `_runtime_context` appears in 2 branches.
-    - `_validate_audit_timezone` appears in 2 branches.
-
-    **Call chains deeper than 4 levels**
-
-    - `widget_review_guardrail_governance` → `apply_governance_enrichment_action` → `_now_utc_iso` → `_current_audit_timestamp` → `_get_audit_timezone` → `_validate_audit_timezone`
-    - `widget_review_guardrail_governance` → `apply_governance_rule_action` → `_now_utc_iso` → `_current_audit_timestamp` → `_get_audit_timezone` → `_validate_audit_timezone`
-
-    **Helpers that only call one package-local helper**
-
-    - `_current_audit_timestamp` only delegates to `_get_audit_timezone`.
-    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
-    - `_now_utc_iso` only delegates to `_current_audit_timestamp`.
-    - `_runtime_context` only delegates to `_context_get`.
-
-    **Helpers grouped into possibly wrong areas**
-
-    - None detected from helper names, doc summaries, and module placement.
-
-This callable uses 9 internal helpers for audit timestamp, metadata loading, and other.
-
-<div class="reference-helper-groups">
-  <section class="reference-helper-group">
-    <h4>Audit timestamp</h4>
-    <p>Resolve and stamp audit time consistently.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a>
-    </div>
-  </section>
-  <section class="reference-helper-group">
-    <h4>Metadata loading</h4>
-    <p>Load and identify the metadata or table context needed by the callable.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1842-L1844"><code>_record_identity</code></a>
-    </div>
-  </section>
-  <section class="reference-helper-group">
-    <h4>Other</h4>
-    <p>Support lower-level implementation details that do not fit the main helper areas.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1769-L1772"><code>_assert_governance_review_context</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L68-L72"><code>_resolve_action_by</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L173-L197"><code>_runtime_context</code></a>
-    </div>
-  </section>
-</div>
-
-<details class="reference-metadata-details">
-<summary>Machine-readable metadata / metadata details</summary>
-
-These generated fields are for automation tooling, maintainers, and documentation tooling. Skip this block when reading the docs normally.
-
-### Function manifest
-
-- Fully qualified function name: `fabricops_kit.governance_review.widget_review_guardrail_governance`
-- Short name: `widget_review_guardrail_governance`
-- Module: `governance_review`
-- Public surface: Public Starter Kit function
-- Classification: Callable
-- Related module: `governance_review`
-- Source file path: `src/fabricops_kit/governance_review.py`
-- Source line: `2677`
-- Used by references count: 0
-- Calls references count: 4
-- Used in templates: 02_pipeline, 03_governance
-- Glossary terms: guardrails, metadata lakehouse, notebook template
-
-### Implementation contract
-
-- **required_context:** Starter template: `03_governance`; segment: `Governance review`.
-- **inputs:** See the source docstring for the notebook runtime, Spark session, state, and record parameters accepted by this helper.
-- **output:** Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
-- **side_effects:** Not documented yet
-- **failure_modes:** Not documented yet
-- **verification:** Not documented yet
-
-### Used by references
-
-Not documented yet
-
-### Calls references
-
-- `fabricops_kit.config.resolve_fabric_context`
-- `fabricops_kit.governance_review.apply_governance_enrichment_action`
-- `fabricops_kit.governance_review.apply_governance_rule_action`
-- `fabricops_kit.governance_review.load_rule_review_history`
-
-### Raw source metadata
-
-- Source file path: `src/fabricops_kit/governance_review.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777</a>
-- Start line: `2677`
-- End line: `2777`
-- Signature:
-
-```python
-def widget_review_guardrail_governance(
-    state: Mapping[str, Any],
-    spark_session: Any=None,
-    context: dict[str, Any] | None=None,
-) -> dict[str, Any]:
-```
-
-### Maintainer/developer relationship graph
-
-### Public related functions
-
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-- <a href="widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
-
-### Internal implementation summary
-
-- Internal helper count: 9
-- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
-
-</details>
 
 ## Glossary
 

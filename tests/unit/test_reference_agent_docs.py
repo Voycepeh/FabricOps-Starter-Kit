@@ -389,8 +389,8 @@ def test_fabricops_skill_file_exists() -> None:
     assert not (ROOT / ".automation tools" / "skills" / "fabricops" / "SKILL.md").exists()
 
 
-def test_every_callable_page_has_machine_readable_reference_sections() -> None:
-    """Verify every callable page has machine-readable reference sections."""
+def test_every_callable_page_has_curated_public_reference_sections() -> None:
+    """Verify every callable page has curated public reference sections."""
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
@@ -402,15 +402,15 @@ def test_every_callable_page_has_machine_readable_reference_sections() -> None:
         assert "## Raises / Errors" in text, page
         assert "## Example usage" in text, page
         assert "## See also" in text, page
-        assert "**Used in templates:**" in text, page
-        assert "## Relationships" in text, page
-        assert "### Used by" in text, page
-        assert "### Calls" in text, page
-        assert "## Maintainer/developer implementation details" in text, page
+        assert "**Used in notebooks:**" in text, page
+        assert "Public Starter Kit function" in text, page
+        assert "Module: <code>" in text, page
+        assert "## Relationships" not in text, page
+        assert "## Maintainer/developer implementation details" not in text, page
         assert "## Source link" not in text, page
         assert '??? example "Source code"' not in text, page
         assert '??? example "View helper source by area"' not in text, page
-        assert text.count('<div class="reference-source-card" markdown="1">') == 1, page
+        assert '<div class="reference-source-card" markdown="1">' not in text, page
         assert "## Nested helper functions" not in text, page
         assert "\n## Source\n" not in text, page
         assert "\n## What this is for\n" not in text, page
@@ -418,7 +418,9 @@ def test_every_callable_page_has_machine_readable_reference_sections() -> None:
         assert "\n## Raises\n" not in text, page
         assert "\n## Side effects\n" not in text, page
         assert "## AI / machine-readable metadata" not in text, page
-        assert "<summary>Machine-readable metadata / metadata details</summary>" in text, page
+        assert "<summary>Machine-readable metadata / metadata details</summary>" not in text, page
+        assert "### Implementation contract" not in text, page
+        assert "Source file path:" not in text, page
 
 
 def test_core_callable_pages_have_non_placeholder_ai_guidance() -> None:
@@ -474,8 +476,8 @@ def test_standalone_internal_pages_are_not_generated_by_default() -> None:
     assert internal_pages == []
 
 
-def test_callable_pages_embed_public_first_implementation_details() -> None:
-    """Verify callable pages embed public first implementation details."""
+def test_callable_pages_embed_public_first_collapsed_call_flow() -> None:
+    """Verify callable pages keep public sections before collapsed helper flow."""
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
@@ -487,43 +489,31 @@ def test_callable_pages_embed_public_first_implementation_details() -> None:
             "## Parameters",
             "## Returns",
             "## Raises / Errors",
-            "## Relationships",
-            "### Used by",
-            "### Calls",
-            "## Maintainer/developer implementation details",
-            '<summary>Machine-readable metadata / metadata details',
             "## See also",
         ]
         if "### Return interpretation" in text:
             ordered_markers.insert(ordered_markers.index("## Raises / Errors"), "### Return interpretation")
         if "### Common failure causes" in text:
-            ordered_markers.insert(ordered_markers.index("## Relationships"), "### Common failure causes")
+            ordered_markers.insert(ordered_markers.index("## See also"), "### Common failure causes")
         positions = [text.index(marker) for marker in ordered_markers]
         assert positions == sorted(positions), page
-        assert '??? info "Maintainer/developer call flow"' in text, page
-        assert "### Call flow" not in text, page
-        assert "### Internal helpers used by this callable" not in text, page
-        assert "Internal helpers used by this callable" not in text, page
+        assert '??? info "Maintainer/developer call flow"' not in text, page
+        assert "Maintainer/developer implementation details" not in text, page
+        assert "Machine-readable metadata / metadata details" not in text, page
+        assert "### Refactor signals" not in text, page
+        assert "Unique internal/private helpers:" not in text, page
+        assert "Internal/private helpers shown here are implementation details, not public API" not in text, page
         assert '??? info "Nested helper functions:' not in text, page
-        assert "Unique internal/private helpers:" in text, page
-        assert "### Refactor signals" in text, page
-        assert "Internal/private helpers shown here are implementation details, not public API" in text, page
-        assert "Large call graph shown to two levels." not in text, page
-        assert "Tree is truncated to keep the page readable." not in text, page
-        assert 'class="reference-call-tree"' in text, page
-        assert 'class="reference-call-tree-more"' not in text, page
-        assert '```text' not in text.split('??? info "Maintainer/developer call flow"', 1)[1].split("##", 1)[0], page
         assert '??? info "Internal helpers used:' not in text, page
-        source_card_pos = text.index('<div class="reference-source-card" markdown="1">')
-        signature_pos = text.index("## Signature")
-        implementation_pos = text.index("## Maintainer/developer implementation details")
-        call_flow_pos = text.index('??? info "Maintainer/developer call flow"')
-        assert source_card_pos < signature_pos < implementation_pos < call_flow_pos, page
+        assert 'class="reference-helper-groups"' not in text, page
         assert '??? example "View helper source by area"' not in text, page
         assert '??? example "Source code"' not in text, page
         assert "\n### `_" not in text, page
         assert "\n## `_" not in text, page
-        assert implementation_pos < text.index("<summary>Machine-readable metadata / metadata details"), page
+        if 'class="reference-call-tree"' in text:
+            call_flow_pos = text.index('??? info "Uses ')
+            assert text.index("## Raises / Errors") < call_flow_pos < text.index("## See also"), page
+            assert '```text' not in text.split('??? info "Uses ', 1)[1].split("##", 1)[0], page
 
 
 def test_internalized_enforce_profile_behavior_has_no_standalone_page() -> None:
@@ -597,36 +587,30 @@ def test_missing_examples_are_plain_text_not_python_code() -> None:
             assert "```python" not in example, page
 
 
-def test_callable_pages_include_one_top_source_card_and_github_source_link() -> None:
-    """Verify callable pages include one top source card and github source link."""
+def test_callable_pages_hide_source_cards_from_public_reference() -> None:
+    """Verify callable pages hide source cards from the public reference."""
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         assert "## Source link" not in text, page
-        assert text.count('<div class="reference-source-card" markdown="1">') == 1, page
-        source_start = text.index('<div class="reference-source-card" markdown="1">')
-        source_end = text.index("</div>", source_start)
-        source_card = text[source_start:source_end]
-        assert source_start < text.index("## Signature"), page
-        assert "**Source**" in source_card, page
-        assert "View on GitHub" in source_card, page
-        assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/" in source_card, page
-        assert "/src/fabricops_kit/" in source_card, page
-        assert "#L" in source_card, page
+        assert '<div class="reference-source-card" markdown="1">' not in text, page
+        assert "View on GitHub" not in text, page
+        assert "Source file path:" not in text, page
+        assert "GitHub source URL:" not in text, page
 
 
 def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     """Verify display guardrail results renders one linked helper call tree."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
-    implementation_section = _section_text(text, "Maintainer/developer implementation details")
+    implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Maintainer/developer call flow"') == 1
+    assert text.count('??? info "Uses 12 internal helper functions"') == 1
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
-    assert "Internal helper count: 12" in text
-    assert 'class="reference-helper-groups"' in implementation_section
+    assert "Internal helper count: 12" not in text
+    assert 'class="reference-helper-groups"' not in implementation_section
     assert re.search(
         r'href="https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline\.py#L\d+(?:-L\d+)?"',
         implementation_section,
@@ -646,20 +630,20 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
         "_table_keys",
         "_yes_no",
     ]:
-        assert f"><code>{helper_name}</code></a>" in implementation_section
+        assert f"><code>{helper_name}(...)</code></a>" in implementation_section
 
 
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     """Verify nested private helpers appear in callable helper chips."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
-    implementation_section = text.split('\n<details class="reference-metadata-details">', 1)[0]
+    implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Maintainer/developer call flow"') == 1
+    assert implementation_section.count('??? info "Uses 12 internal helper functions"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
-    assert 'class="reference-helper-groups"' in implementation_section
-    assert "Unique internal/private helpers: 12. Repeated calls may appear in multiple branches." in implementation_section
+    assert 'class="reference-helper-groups"' not in implementation_section
+    assert "Unique internal/private helpers: 12. Repeated calls may appear in multiple branches." not in implementation_section
     assert '<div class="reference-call-tree" role="tree">' in implementation_section
-    assert "### Refactor signals" in implementation_section
+    assert "### Refactor signals" not in implementation_section
     assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
@@ -712,8 +696,8 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
         assert f'href="../{slug}/"' not in first_row, page
         assert f"<code>{slug}(...)</code>" in first_row, page
 
-def test_callable_pages_collapse_ai_machine_metadata() -> None:
-    """Verify callable pages collapse machine metadata."""
+def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
+    """Verify callable pages omit machine metadata from public pages."""
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
@@ -723,17 +707,10 @@ def test_callable_pages_collapse_ai_machine_metadata() -> None:
         assert "\n## Implementation contract" not in text, page
         assert "\n## Inbound references" not in text, page
         assert "\n## Outbound references" not in text, page
-        assert "<details" in text, page
-        assert "<details open" not in text, page
-        assert "<summary>Machine-readable metadata / metadata details</summary>" in text, page
-        metadata_start = text.index("<summary>Machine-readable metadata / metadata details")
-        metadata_end = text.index("</details>", metadata_start)
-        metadata = text[metadata_start:metadata_end]
-        assert "### Function manifest" in metadata, page
-        assert "### Implementation contract" in metadata, page
-        assert "### Used by references" in metadata, page
-        assert "### Calls references" in metadata, page
-        assert "### Raw source metadata" in metadata, page
+        assert "<summary>Machine-readable metadata / metadata details</summary>" not in text, page
+        assert "### Function manifest" not in text, page
+        assert "### Implementation contract" not in text, page
+        assert "### Raw source metadata" not in text, page
 
 
 def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
@@ -770,15 +747,14 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     text = (API_REFERENCE_DIR / "setup_notebook.md").read_text(encoding="utf-8")
 
     assert "../../api/modules/config/#setup_notebook" not in text
-    assert "src/fabricops_kit/config.py#L" in text
-    assert "View on GitHub" in text
-    assert text.count('<div class="reference-source-card" markdown="1">') == 1
+    assert "View on GitHub" not in text
+    assert text.count('<div class="reference-source-card" markdown="1">') == 0
     assert "## Example usage" in text
     assert "context = setup_notebook" in _section_text(text, "Example usage")
-    first_metadata = text.index("<summary>Machine-readable metadata / metadata details")
     for marker in ("## Signature", "## Parameters", "## Returns"):
-        assert text.index(marker) < first_metadata
+        assert marker in text
     assert "## AI / machine-readable metadata" not in text
+    assert "Machine-readable metadata / metadata details" not in text
     assert "- Starting a FabricOps notebook from 00_env_config" in text
     assert "- Validating configured environment targets before downstream helpers run" in text
     assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
@@ -800,8 +776,9 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
         assert canonical_page.exists(), name
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
         text = canonical_page.read_text(encoding="utf-8")
-        assert "## Relationships" in text, canonical_page
-        assert "## Maintainer/developer implementation details" in text, canonical_page
+        assert "## Relationships" not in text, canonical_page
+        assert "## Maintainer/developer implementation details" not in text, canonical_page
+        assert "**Used in notebooks:**" in text, canonical_page
 
     generated_pages = sorted(page.stem for page in API_REFERENCE_DIR.glob("*.md"))
     assert generated_pages == public_names
@@ -941,7 +918,8 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
     text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
     assert "## See also" in text
     assert "- [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)" in text
-    assert text.index("## Maintainer/developer implementation details") < text.index("## See also")
+    assert text.index("## Raises / Errors") < text.index("## See also")
+    assert "## Maintainer/developer implementation details" not in text
 
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:

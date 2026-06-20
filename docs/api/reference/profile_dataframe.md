@@ -2,13 +2,13 @@
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
-<div class="reference-source-card" markdown="1">
-**Source**
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">Module: <code>data_profiling</code></span>
+<span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">99_explore</span>
+</p>
 
-`fabricops_kit/data_profiling.py:226`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347">View on GitHub</a>
-</div>
+**Used in notebooks:** `99_explore`
 
 ## Usage guidance
 
@@ -90,50 +90,7 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 - Spark actions fail while computing counts or summaries.
 - Excluded columns remove fields needed for review.
 
-## Relationships
-
-### Used by
-
-- `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
-- `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-
-### Calls
-
-- `fabricops_kit.config._audit_timestamp_expr`
-- `fabricops_kit.config._get_audit_timezone`
-- `fabricops_kit.data_profiling._build_distribution_summaries`
-- `fabricops_kit.data_profiling._get_profiled_columns`
-- `fabricops_kit.data_profiling._is_min_max_supported_type`
-
-## Maintainer/developer implementation details
-
-<details class="reference-implementation-details">
-<summary>Notes, side effects, and template usage</summary>
-
-**Used in templates:**
-
-Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.
-
-- `99_explore`
-
-**Side effects:**
-
-Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
-
-**Notes:**
-
-Distribution profiling only collects aggregated Spark results such as
-quantiles, bucket counts, and grouped category counts. It does not collect
-complete datasets to the driver.
-
-</details>
-
-??? info "Maintainer/developer call flow"
-
-    This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.
-
-    Unique internal/private helpers: 9. Repeated calls may appear in multiple branches.
+??? info "Uses 9 internal helper functions"
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>profile_dataframe(...)</code></div>
@@ -149,152 +106,6 @@ complete datasets to the driver.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82"><code>_get_profiled_columns(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type(...)</code></a></div>
     </div>
-
-    ### Refactor signals
-
-    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
-
-    **Helpers appearing in multiple branches**
-
-    - `_get_audit_timezone` appears in 2 branches.
-    - `_validate_audit_timezone` appears in 2 branches.
-
-    **Call chains deeper than 4 levels**
-
-    - None detected.
-
-    **Helpers that only call one package-local helper**
-
-    - `_audit_timestamp_expr` only delegates to `_get_audit_timezone`.
-    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
-
-    **Helpers grouped into possibly wrong areas**
-
-    - None detected from helper names, doc summaries, and module placement.
-
-This callable uses 9 internal helpers for audit timestamp, column handling, result summary, fabric or spark access, and other.
-
-<div class="reference-helper-groups">
-  <section class="reference-helper-group">
-    <h4>Audit timestamp</h4>
-    <p>Resolve and stamp audit time consistently.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221"><code>_audit_timestamp_expr</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a>
-    </div>
-  </section>
-  <section class="reference-helper-group">
-    <h4>Column handling</h4>
-    <p>Select, exclude, and normalize column names used by the callable.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82"><code>_get_profiled_columns</code></a>
-    </div>
-  </section>
-  <section class="reference-helper-group">
-    <h4>Result summary</h4>
-    <p>Build final statuses, counts, and messages for the caller.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a>
-    </div>
-  </section>
-  <section class="reference-helper-group">
-    <h4>Fabric or Spark access</h4>
-    <p>Access Fabric or Spark runtime services used by the implementation.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type</code></a>
-    </div>
-  </section>
-  <section class="reference-helper-group">
-    <h4>Other</h4>
-    <p>Support lower-level implementation details that do not fit the main helper areas.</p>
-    <div class="reference-helper-chip-wrap">
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L153-L190"><code>_build_categorical_distribution</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L121-L150"><code>_build_numeric_distribution</code></a>
-      <a class="reference-helper-chip" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L108-L118"><code>_numeric_bin_edges</code></a>
-    </div>
-  </section>
-</div>
-
-<details class="reference-metadata-details">
-<summary>Machine-readable metadata / metadata details</summary>
-
-These generated fields are for automation tooling, maintainers, and documentation tooling. Skip this block when reading the docs normally.
-
-### Function manifest
-
-- Fully qualified function name: `fabricops_kit.data_profiling.profile_dataframe`
-- Short name: `profile_dataframe`
-- Module: `data_profiling`
-- Public surface: Public Starter Kit function
-- Classification: Callable
-- Related module: `data_profiling`
-- Source file path: `src/fabricops_kit/data_profiling.py`
-- Source line: `226`
-- Used by references count: 3
-- Calls references count: 5
-- Used in templates: 99_explore
-- Glossary terms: evidence, source data, target table
-
-### Implementation contract
-
-- **required_context:** Use after reading source/target data and before metadata persistence or governance review workflows that need profiles.
-- **inputs:** df, table_name, optional exclude_columns, timezone, distribution options, bin edges, category baselines, and top-N settings.
-- **output:** Spark DataFrame containing one profile row per eligible business column.
-- **side_effects:** Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.
-- **failure_modes:** Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
-- **verification:** Verify the profile row count matches expected business columns and inspect key schema/profile fields before writing evidence.
-
-### Used by references
-
-- `fabricops_kit.governance_review._prepare_dq_profile_input_rows`
-- `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
-
-### Calls references
-
-- `fabricops_kit.config._audit_timestamp_expr`
-- `fabricops_kit.config._get_audit_timezone`
-- `fabricops_kit.data_profiling._build_distribution_summaries`
-- `fabricops_kit.data_profiling._get_profiled_columns`
-- `fabricops_kit.data_profiling._is_min_max_supported_type`
-
-### Raw source metadata
-
-- Source file path: `src/fabricops_kit/data_profiling.py`
-- GitHub source URL: <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347">https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347</a>
-- Start line: `226`
-- End line: `347`
-- Signature:
-
-```python
-def profile_dataframe(
-    df,
-    table_name: str,
-    exclude_columns=None,
-    run_timestamp_timezone: str | None=None,
-    config: Any=None,
-    include_distributions: bool=False,
-    distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None,
-    distribution_bin_edges: dict[str, list[float]] | None=None,
-    categorical_categories: dict[str, list[str]] | None=None,
-    categorical_top_n: int=20,
-):
-```
-
-### Maintainer/developer relationship graph
-
-### Public related functions
-
-- `fabricops_kit.guardrails.enforce_profile_behavior`
-- <a href="widget_review_guardrail_governance/"><code>fabricops_kit.governance_review.widget_review_guardrail_governance</code></a>
-
-### Internal implementation summary
-
-- Internal helper count: 9
-- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; helper chips link to source.
-
-</details>
 
 ## Glossary
 

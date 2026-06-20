@@ -3726,13 +3726,11 @@ def main() -> None:
         rel_module = canonical_public_module(module_name)
         metadata_related = list(metadata.get("related_functions", []))
         relationship_related = [*used_by, *deps]
-        related_for_page = metadata_related or relationship_related
         rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
         rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
         rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"))
         rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
         rendered_common_failure_causes = _documented_text(metadata.get("common_failure_causes"))
-        rendered_notes = _documented_text(doc_sections.get("notes"), "No additional callable notes are documented.")
         rendered_side_effects = _documented_text(metadata.get("side_effects"))
         rendered_fabric_context = _documented_text(
             metadata.get("fabric_context"),
@@ -3741,15 +3739,6 @@ def main() -> None:
             else None,
         )
         rendered_ai_verification = _documented_text(metadata.get("ai_verification"))
-        rendered_ai_contract = _ai_contract_block(
-            required_context=rendered_fabric_context,
-            inputs=rendered_parameters,
-            output=rendered_returns,
-            side_effects=rendered_side_effects,
-            failure_modes=rendered_raises,
-            verification=rendered_ai_verification,
-        )
-
         def _fmt_links(items: list[str]) -> list[str]:
             out = []
             for item in items:
@@ -3769,8 +3758,6 @@ def main() -> None:
         if node["exported"]:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
-            related_public = [item for item in related_for_page if item in docs_metadata or node_by_qn.get(item, {}).get("exported")]
-            related_lines = _related_function_links(related_public, node_by_qn, docs_metadata)
             helper_qns = [
                 helper_qn
                 for helper_qn in _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
@@ -3784,26 +3771,28 @@ def main() -> None:
                 excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
             )
             refactor_signals_manifest[short_name] = refactor_signals
-            call_flow_lines = [
-                '??? info "Maintainer/developer call flow"',
-                "",
-                *_indent_markdown([
-                    "This maintainer/developer view is for source navigation, dependency review, and refactor planning. Internal/private helpers shown here are implementation details, not public API or normal notebook-callable concepts.",
+            used_in_templates = template_usage_by_symbol.get(short_name, [])
+            helper_count = len(helper_qns)
+            helper_word = "function" if helper_count == 1 else "functions"
+            call_flow_lines = (
+                [
+                    f'??? info "Uses {helper_count} internal helper {helper_word}"',
                     "",
-                    f"Unique internal/private helpers: {len(helper_qns)}. Repeated calls may appear in multiple branches.",
-                    "",
-                    *_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data),
-                    "",
-                    *_render_refactor_signals(refactor_signals, node_by_qn),
-                ]),
-            ]
-            source_card_lines = _source_card_lines(
-                source_path=source_path,
-                source_start_line=source_start_line,
-                source_ref=source_ref,
-                short_name=short_name,
+                    *_indent_markdown(_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data)),
+                ]
+                if helper_count
+                else []
             )
-            nested_helper_lines = _helper_group_summary_lines(qn, helper_qns, node_by_qn, module_data)
+            notebook_usage_chips = [
+                f'<span class="reference-chip">{html_escape(template)}</span>' for template in used_in_templates
+            ] or ['<span class="reference-chip">No starter notebook usage detected</span>']
+            page_chip_lines = [
+                '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
+                f'<span class="reference-chip">Module: <code>{html_escape(rel_module)}</code></span>',
+                '<span class="reference-chip">Public Starter Kit function</span>',
+                *notebook_usage_chips,
+                '</p>',
+            ]
             human_use_when = _documented_text(metadata.get("when_to_use"))
             human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
             expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
@@ -3817,8 +3806,6 @@ def main() -> None:
                 usage_guidance_body.extend(["### Additional context", "", expanded_purpose])
             if usage_guidance_body:
                 usage_guidance_lines = ["## Usage guidance", "", *usage_guidance_body, ""]
-            used_in_templates = template_usage_by_symbol.get(short_name, [])
-            used_in_template_lines = [f"- `{template}`" for template in used_in_templates] if used_in_templates else ["None."]
             key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
             glossary_section_lines: list[str] = []
             if key_term_lines:
@@ -3842,94 +3829,19 @@ def main() -> None:
                 if metadata.get("common_failure_causes")
                 else []
             )
-            notes_and_side_effects_lines = markdown_details(
-                "Notes, side effects, and template usage",
-                [
-                    "**Used in templates:**",
-                    "",
-                    "Direct starter notebook code-cell invocations only; import-only, markdown-only, generated metadata, and internal helper calls are not counted.",
-                    "",
-                    *used_in_template_lines,
-                    "",
-                    "**Side effects:**",
-                    "",
-                    rendered_side_effects,
-                    "",
-                    "**Notes:**",
-                    "",
-                    rendered_notes,
-                ],
-                class_name="reference-implementation-details",
-            )
-            function_manifest_lines = [
-                f"- Fully qualified function name: `{qn}`",
-                f"- Short name: `{short_name}`",
-                f"- Module: `{module_name}`",
-                "- Public surface: Public Starter Kit function",
-                "- Classification: Callable",
-                f"- Related module: `{rel_module}`",
-                f"- Source file path: `{source_path}`",
-                f"- Source line: `{source_start_line}`",
-                f"- Used by references count: {len(used_by)}",
-                f"- Calls references count: {len(deps)}",
-                f"- Used in templates: {', '.join(used_in_templates) if used_in_templates else '—'}",
-                f"- Glossary terms: {', '.join(metadata.get('glossary_terms', [])) if metadata.get('glossary_terms') else '—'}",
-            ]
-            raw_source_metadata_lines = [
-                f"- Source file path: `{source_path}`",
-                f'- GitHub source URL: <a href="{source_ref}">{source_ref}</a>',
-                f"- Start line: `{source_start_line}`",
-                f"- End line: `{source_end_line}`",
-                "- Signature:",
-                "",
-                _code_block(_format_api_signature(signature)) if signature else PLACEHOLDER,
-            ]
-            internal_relationship_graph_lines = [
-                "### Public related functions",
-                "",
-                *(related_lines if related_lines else [PLACEHOLDER]),
-                "",
-                "### Internal implementation summary",
-                "",
-                f"- Internal helper count: {len(helper_qns)}",
-                (
-                    "- Grouped helper summary is rendered in the page-level maintainer/developer implementation details section; "
-                    "helper chips link to source."
-                ),
-            ]
-            machine_metadata_lines = [
-                "These generated fields are for automation tooling, maintainers, and documentation tooling. Skip this block when reading the docs normally.",
-                "",
-                "### Function manifest",
-                "",
-                *function_manifest_lines,
-                "",
-                "### Implementation contract",
-                "",
-                rendered_ai_contract,
-                "",
-                "### Used by references",
-                "",
-                *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
-                "",
-                "### Calls references",
-                "",
-                *(_fmt_links(deps) if deps else [PLACEHOLDER]),
-                "",
-                "### Raw source metadata",
-                "",
-                *raw_source_metadata_lines,
-                "",
-                "### Maintainer/developer relationship graph",
-                "",
-                *internal_relationship_graph_lines,
-            ]
             lines = [
                 f"# {short_name}",
                 "",
                 purpose,
                 "",
-                *source_card_lines,
+                *page_chip_lines,
+                "",
+                "**Used in notebooks:** "
+                + (
+                    ", ".join(f"`{template}`" for template in used_in_templates)
+                    if used_in_templates
+                    else "Not currently detected in starter notebooks."
+                ),
                 "",
                 *usage_guidance_lines,
                 "",
@@ -3963,29 +3875,7 @@ def main() -> None:
                 rendered_raises,
                 "",
                 *common_failure_cause_lines,
-                "## Relationships",
-                "",
-                "### Used by",
-                "",
-                *(_fmt_links(used_by) if used_by else [PLACEHOLDER]),
-                "",
-                "### Calls",
-                "",
-                *(_fmt_links(deps) if deps else [PLACEHOLDER]),
-                "",
-                "## Maintainer/developer implementation details",
-                "",
-                *notes_and_side_effects_lines,
-                "",
                 *call_flow_lines,
-                "",
-                *nested_helper_lines,
-                "",
-                *markdown_details(
-                    "Machine-readable metadata / metadata details",
-                    machine_metadata_lines,
-                    class_name="reference-metadata-details",
-                ),
                 "",
                 *glossary_section_lines,
                 *see_also_lines,
