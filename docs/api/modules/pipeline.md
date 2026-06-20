@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Outbound: 7</span><span class="reference-chip">Inbound: 0</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 29</span><span class="reference-chip">Uses 7 external modules</span><span class="reference-chip">Used by 0 external modules</span></div>
 
 ## Module purpose
 
@@ -43,19 +43,19 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
       <td>29</td>
     </tr>
     <tr>
-      <td>Inbound module count</td>
+      <td>Used by external module count</td>
       <td>0</td>
     </tr>
     <tr>
-      <td>Outbound module count</td>
+      <td>Uses external module count</td>
       <td>7</td>
     </tr>
     <tr>
-      <td>External callers</td>
+      <td>External modules using this module</td>
       <td>—</td>
     </tr>
     <tr>
-      <td>External callees</td>
+      <td>External modules this module uses</td>
       <td><code>config</code>, <code>data_agreement</code>, <code>data_profiling</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>guardrails</code>, <code>metadata</code></td>
     </tr>
   </tbody>

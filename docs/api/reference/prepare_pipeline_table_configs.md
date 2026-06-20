@@ -185,8 +185,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
 - Source line: `551`
-- Inbound references count: 0
-- Outbound references count: 1
+- Used by references count: 0
+- Calls references count: 1
 - Used in templates: 02_pipeline
 - Glossary terms: source data, target table, stage, guardrails
 
@@ -200,11 +200,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
     If ``table_role`` is not ``"source"`` or ``"target"``.
 - **verification:** Verify the correct table_role is used and enriched configs are passed to run_table_guardrails before transformation or writes.
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.pipeline._add_audit_columns`
 

@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 25</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 1</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 25</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 1 external modules</span></div>
 
 ## Module purpose
 
@@ -43,19 +43,19 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
       <td>25</td>
     </tr>
     <tr>
-      <td>Inbound module count</td>
+      <td>Used by external module count</td>
       <td>1</td>
     </tr>
     <tr>
-      <td>Outbound module count</td>
+      <td>Uses external module count</td>
       <td>3</td>
     </tr>
     <tr>
-      <td>External callers</td>
+      <td>External modules using this module</td>
       <td><code>pipeline</code></td>
     </tr>
     <tr>
-      <td>External callees</td>
+      <td>External modules this module uses</td>
       <td><code>data_profiling</code>, <code>fabric_input_output</code>, <code>metadata</code></td>
     </tr>
   </tbody>

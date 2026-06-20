@@ -386,8 +386,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source line: `1194`
-- Inbound references count: 0
-- Outbound references count: 10
+- Used by references count: 0
+- Calls references count: 10
 - Used in templates: 00_env_config
 - Glossary terms: metadata lakehouse, evidence
 
@@ -400,11 +400,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.
 - **verification:** Verify metadata setup completes before recommending agreement, profiling, lineage, stability, or governance workflows that persist evidence.
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config._get_metadata_table_schema_registry`
 - `fabricops_kit.config._metadata_schema_field_names`

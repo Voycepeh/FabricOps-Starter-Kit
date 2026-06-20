@@ -357,8 +357,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
 - Source line: `63`
-- Inbound references count: 0
-- Outbound references count: 6
+- Used by references count: 0
+- Calls references count: 6
 - Used in templates: 02_pipeline, 99_explore
 - Glossary terms: notebook template, data agreement, metadata lakehouse
 
@@ -371,11 +371,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Not documented yet
 - **verification:** Verify delivery notebooks use register_notebook=True and read-only exploration notebooks use register_notebook=False with read_only=True.
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.data_agreement.get_selected_agreement`
 - `fabricops_kit.data_agreement.widget_select_agreement`

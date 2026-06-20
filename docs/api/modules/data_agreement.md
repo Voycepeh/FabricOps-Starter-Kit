@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 2 external modules</span></div>
 
 ## Module purpose
 
@@ -43,19 +43,19 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>35</td>
     </tr>
     <tr>
-      <td>Inbound module count</td>
+      <td>Used by external module count</td>
       <td>2</td>
     </tr>
     <tr>
-      <td>Outbound module count</td>
+      <td>Uses external module count</td>
       <td>3</td>
     </tr>
     <tr>
-      <td>External callers</td>
+      <td>External modules using this module</td>
       <td><code>config</code>, <code>pipeline</code></td>
     </tr>
     <tr>
-      <td>External callees</td>
+      <td>External modules this module uses</td>
       <td><code>config</code>, <code>fabric_input_output</code>, <code>metadata</code></td>
     </tr>
   </tbody>

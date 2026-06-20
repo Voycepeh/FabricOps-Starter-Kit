@@ -259,8 +259,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`
 - Source line: `235`
-- Inbound references count: 0
-- Outbound references count: 6
+- Used by references count: 0
+- Calls references count: 6
 - Used in templates: 02_pipeline, 99_explore
 - Glossary terms: notebook template
 
@@ -273,11 +273,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Raises ValueError for unsupported formats or missing table/path/schema inputs.
 - **verification:** Verify target, format, schema, and table/path values are business inputs or come from the active FABRIC_CONTEXT before generating calls.
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.fabric_input_output.read_lakehouse_csv`

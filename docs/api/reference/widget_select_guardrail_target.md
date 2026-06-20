@@ -227,8 +227,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`
 - Source line: `2099`
-- Inbound references count: 0
-- Outbound references count: 5
+- Used by references count: 0
+- Calls references count: 5
 - Used in templates: 02_pipeline, 03_governance
 - Glossary terms: evidence, guardrails, metadata lakehouse, notebook template
 
@@ -241,11 +241,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** Not documented yet
 - **verification:** Not documented yet
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config.resolve_fabric_context`
 - `fabricops_kit.governance_review._filter_table_rows`

@@ -223,8 +223,8 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`
 - Source line: `839`
-- Inbound references count: 0
-- Outbound references count: 4
+- Used by references count: 0
+- Calls references count: 4
 - Used in templates: 00_env_config
 - Glossary terms: notebook template, metadata lakehouse
 
@@ -237,11 +237,11 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - **failure_modes:** ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
 - **verification:** Verify the returned context is ready before generating downstream notebook code and confirm required targets resolve for the selected env.
 
-### Inbound references
+### Used by references
 
 Not documented yet
 
-### Outbound references
+### Calls references
 
 - `fabricops_kit.config.NotebookSetupContext`
 - `fabricops_kit.config._get_store`
