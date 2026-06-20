@@ -232,7 +232,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "refactor reason" not in flow_text.lower()
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
-    assert "Callable functions dashboard" in dashboard_text
+    assert "Function Inventory and Refactor Signals" in dashboard_text
     assert 'id="searchBox"' in dashboard_text
     assert 'id="moduleFilter"' in dashboard_text
     assert 'id="typeFilter"' in dashboard_text
@@ -243,12 +243,37 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Recommended action" in dashboard_text
     assert "refactor reason" not in dashboard_text.lower()
     assert "All recommended actions" in dashboard_text
-    assert "Priority indicates review urgency" in dashboard_text
-    assert "Total discovered functions are reconciled" in dashboard_text
+    assert "Quick signal filters" in dashboard_text
+    assert "Easy cleanup" in dashboard_text
+    assert "Needs review" in dashboard_text
+    assert "High review" in dashboard_text
+    assert "Medium review" in dashboard_text
+    assert "Select visible" in dashboard_text
+    assert "Clear selection" in dashboard_text
+    assert "Copy JSON" in dashboard_text
+    assert "Copy Markdown" in dashboard_text
+    assert "Download JSON" in dashboard_text
+    assert "fabricops_function_refactor_packet" in dashboard_text
+    assert "signal_reason" in dashboard_text
+    assert "refactor_context" in dashboard_text
+    assert "ai_prompt" in dashboard_text
+    assert "refactor_type" in dashboard_text
+    assert "refactor_guidance" in dashboard_text
+    assert "safety_constraints" in dashboard_text
+    assert "expected_ai_output" in dashboard_text
+    assert "planning_only" in dashboard_text
+    assert "compatibility_mode" in dashboard_text
+    assert "compatibility_instruction" in dashboard_text
+    assert "stable_api_safe" in dashboard_text
+    assert "internal_cleanup" in dashboard_text
+    assert "development_breaking_allowed" in dashboard_text
+    assert "Respect the compatibility mode" in dashboard_text
+    assert "How signals are classified" in dashboard_text
+    assert "Small helpers likely safe to flatten" in dashboard_text
     assert "Function type" in dashboard_text
-    assert "Unreachable / unclassified functions" in dashboard_text
+    assert "Unreachable" in dashboard_text
     assert ".filter-panel" in dashboard_text
-    assert "grid-template-columns: minmax(260px, 1.4fr)" in dashboard_text
+    assert "grid-template-columns: minmax(240px, 1.35fr)" in dashboard_text
     assert "@media (max-width: 1100px)" in dashboard_text
     assert "data.function_inventory" in dashboard_text
     assert "fetch('../reference/_data/callable-flow.json')" in dashboard_text
