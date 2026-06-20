@@ -45,13 +45,10 @@ def test_markdown_variant_hook_preserves_grouped_source_paths(tmp_path: Path) ->
 
     hook.on_post_build({"docs_dir": str(ROOT / "docs"), "site_dir": str(site_dir)})
 
+    source_group = ROOT / "docs" / "notebook-templates-implementation-guide"
     expected_grouped_paths = [
-        site_dir / "notebook-templates-implementation-guide" / "index.md",
-        site_dir / "notebook-templates-implementation-guide" / "environment-config.md",
-        site_dir / "notebook-templates-implementation-guide" / "agreement-setup.md",
-        site_dir / "notebook-templates-implementation-guide" / "pipeline-execution.md",
-        site_dir / "notebook-templates-implementation-guide" / "governance-review.md",
-        site_dir / "notebook-templates-implementation-guide" / "metadata-dashboard.md",
+        site_dir / "notebook-templates-implementation-guide" / source_path.name
+        for source_path in sorted(source_group.glob("*.md"))
     ]
     stale_flat_paths = [
         site_dir / "notebook-templates-implementation-guide.md",
