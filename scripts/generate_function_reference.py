@@ -35,6 +35,8 @@ CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
 GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
+LANDING_PAGE_PATH = ROOT / "docs" / "index.md"
+LANDING_STATS_PATH = REFERENCE_DATA_DIR / "landing-stats.json"
 
 METADATA_REFERENCE_DIR = ROOT / "docs" / "reference" / "metadata"
 METADATA_REFERENCE_OVERVIEW = ROOT / "docs" / "reference" / "metadata.md"
@@ -2232,8 +2234,15 @@ def _metadata_registry_without_pyspark() -> dict[str, Any]:
     return _get_metadata_table_schema_registry(_default_reference_config())
 
 
-def generate_metadata_table_reference() -> None:
-    """Generate metadata table reference pages from implemented schema definitions."""
+def generate_metadata_table_reference() -> int:
+    """Generate metadata table reference pages from implemented schema definitions.
+
+    Returns
+    -------
+    int
+        Number of metadata tables in the implemented schema registry.
+
+    """
     try:
         from fabricops_kit.config import _get_metadata_table_schema_registry
 
@@ -2303,6 +2312,59 @@ def generate_metadata_table_reference() -> None:
 
     index_lines.append("</div>")
     METADATA_REFERENCE_OVERVIEW.write_text("\n".join(index_lines) + "\n", encoding="utf-8")
+    return len(registry)
+
+
+def _landing_count_text(count: int, singular: str, plural: str | None = None) -> str:
+    """Return count text with simple singular/plural wording."""
+    label = singular if count == 1 else (plural or f"{singular}s")
+    return f"{count} {label}"
+
+
+def generate_landing_stats(
+    *,
+    public_exports: list[str],
+    function_manifest: list[dict[str, Any]],
+    metadata_table_count: int,
+) -> dict[str, int]:
+    """Write landing-page count data derived from canonical generated sources."""
+    public_names = set(public_exports)
+    public_function_count = len(public_names)
+    supporting_internal_function_count = sum(
+        1
+        for entry in function_manifest
+        if entry.get("qualified_name") and entry.get("name") not in public_names
+    )
+    stats = {
+        "public_function_count": public_function_count,
+        "supporting_internal_function_count": supporting_internal_function_count,
+        "metadata_table_count": metadata_table_count,
+    }
+    LANDING_STATS_PATH.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+    return stats
+
+
+def update_landing_page_counts(stats: dict[str, int]) -> None:
+    """Replace stable landing-page count tokens with generated count text."""
+    text = LANDING_PAGE_PATH.read_text(encoding="utf-8")
+    replacements = {
+        "FABRICOPS_PUBLIC_FUNCTION_COUNT": _landing_count_text(
+            stats["public_function_count"], "public Starter Kit function"
+        ),
+        "FABRICOPS_INTERNAL_FUNCTION_COUNT": _landing_count_text(
+            stats["supporting_internal_function_count"], "supporting internal function"
+        ),
+        "FABRICOPS_METADATA_TABLE_COUNT": _landing_count_text(stats["metadata_table_count"], "metadata table"),
+    }
+    for token_name, value in replacements.items():
+        start = f"<!-- {token_name} -->"
+        end = f"<!-- /{token_name} -->"
+        pattern = re.compile(f"{re.escape(start)}.*?{re.escape(end)}")
+        replacement = f"{start}{value}{end}"
+        text, count = pattern.subn(replacement, text, count=1)
+        if count != 1:
+            raise RuntimeError(f"Landing page is missing generated count token block: {token_name}")
+    LANDING_PAGE_PATH.write_text(text, encoding="utf-8", newline="\n")
 
 def main() -> None:
     """Run the command-line workflow."""
@@ -2318,7 +2380,7 @@ def main() -> None:
     module_docs_metadata = parse_module_docs_metadata()
     glossary = parse_glossary_metadata()
     _render_glossary_page(glossary)
-    generate_metadata_table_reference()
+    metadata_table_count = generate_metadata_table_reference()
 
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
@@ -3475,6 +3537,12 @@ def main() -> None:
         })
     AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
     FUNCTION_MANIFEST_PATH.write_text(json.dumps(function_manifest, indent=2) + "\n", encoding="utf-8")
+    landing_stats = generate_landing_stats(
+        public_exports=public,
+        function_manifest=function_manifest,
+        metadata_table_count=metadata_table_count,
+    )
+    update_landing_page_counts(landing_stats)
     REFACTOR_SIGNALS_PATH.write_text(
         json.dumps(refactor_signals_manifest, indent=2) + "\n",
         encoding="utf-8",

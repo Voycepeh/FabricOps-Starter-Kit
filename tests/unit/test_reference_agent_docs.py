@@ -66,6 +66,46 @@ def _exported_symbols() -> list[str]:
 
 
 
+def _landing_token_text(page_text: str, token_name: str) -> str:
+    """Return generated landing page text wrapped by a count token."""
+    start = f"<!-- {token_name} -->"
+    end = f"<!-- /{token_name} -->"
+    assert start in page_text
+    assert end in page_text
+    return page_text.split(start, 1)[1].split(end, 1)[0]
+
+
+def test_landing_page_counts_match_generated_stats() -> None:
+    """Verify landing-page count text cannot drift from generated data."""
+    stats = json.loads((REFERENCE_DIR / "_data" / "landing-stats.json").read_text(encoding="utf-8"))
+    index_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
+
+    expected = {
+        "FABRICOPS_PUBLIC_FUNCTION_COUNT": f"{stats['public_function_count']} public Starter Kit functions",
+        "FABRICOPS_INTERNAL_FUNCTION_COUNT": f"{stats['supporting_internal_function_count']} supporting internal functions",
+        "FABRICOPS_METADATA_TABLE_COUNT": f"{stats['metadata_table_count']} metadata tables",
+    }
+
+    for token_name, expected_text in expected.items():
+        assert _landing_token_text(index_text, token_name) == expected_text
+
+
+def test_landing_stats_match_reference_sources() -> None:
+    """Verify generated landing stats are derived from canonical reference sources."""
+    stats = json.loads((REFERENCE_DIR / "_data" / "landing-stats.json").read_text(encoding="utf-8"))
+    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
+    metadata_pages = sorted((REFERENCE_DIR / "metadata").glob("*.md"))
+    exported_symbols = set(_exported_symbols())
+
+    assert stats["public_function_count"] == len(exported_symbols)
+    assert stats["supporting_internal_function_count"] == sum(
+        1
+        for entry in function_manifest
+        if entry.get("qualified_name") and entry.get("name") not in exported_symbols
+    )
+    assert stats["metadata_table_count"] == len(metadata_pages)
+
+
 def test_generated_callable_surface_matches_all_exports() -> None:
     """Verify generated callable entries come from package __all__."""
     exported_symbols = set(_exported_symbols())

@@ -92,11 +92,13 @@ def test_finder_searches_public_catalogue_fields_without_type_filters() -> None:
 def test_homepage_template_called_function_kpi_matches_reference_count() -> None:
     """Verify homepage template-called function KPI matches the reference count."""
     homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
-
-    assert (
-        f'<span class="fabricops-landing-card__title">{len(_core_template_called_public())} public Starter Kit functions</span>'
-        in homepage
+    token_match = re.search(
+        r"<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT -->(.*?)<!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->",
+        homepage,
     )
+
+    assert token_match is not None
+    assert token_match.group(1).strip() == f"{len(_core_template_called_public())} public Starter Kit functions"
     assert 'href="reference/"' in homepage
 
 
