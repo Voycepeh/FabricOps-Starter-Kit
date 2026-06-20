@@ -2,7 +2,7 @@
 
 **Purpose:** Source-to-target lineage evidence written by pipeline runs.
 
-## Workflow usage
+## Starter Kit usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb
 - **Written by function or widget:** [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)

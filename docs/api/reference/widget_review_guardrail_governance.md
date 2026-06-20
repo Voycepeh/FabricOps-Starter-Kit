@@ -214,7 +214,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.governance_review.widget_review_guardrail_governance`
 - Short name: `widget_review_guardrail_governance`
 - Module: `governance_review`
-- Taxonomy category: Workflow
+- Public surface: Public Starter Kit function
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`

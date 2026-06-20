@@ -2,7 +2,7 @@
 
 **Purpose:** Runtime guardrail outcomes written by pipeline enforcement.
 
-## Workflow usage
+## Starter Kit usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb
 - **Written by function or widget:** [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)

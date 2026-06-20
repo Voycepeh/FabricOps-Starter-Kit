@@ -85,4 +85,4 @@ The handoff works because `01_agreement` has already written:
 - agreement identity, scope, usage, and steward linkage to [`METADATA_DATA_AGREEMENT`](../../reference/metadata/metadata_data_agreement.md);
 - supporting file-reference evidence to [`METADATA_DATA_AGREEMENT_EVIDENCE`](../../reference/metadata/metadata_data_agreement_evidence.md).
 
-`02_pipeline` then uses [`widget_select_agreement`](../../api/reference/widget_select_agreement.md) and [`get_selected_agreement`](../../api/reference/get_selected_agreement.md) to read the selected agreement context for pipeline metadata and evidence.
+`02_pipeline` then uses [`widget_select_agreement`](../../api/modules/data_agreement.md#widget_select_agreement) and [`get_selected_agreement`](../../api/modules/data_agreement.md#get_selected_agreement) to read the selected agreement context for pipeline metadata and evidence.

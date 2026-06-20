@@ -254,7 +254,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.fabric_input_output.read_data`
 - Short name: `read_data`
 - Module: `fabric_input_output`
-- Taxonomy category: Workflow
+- Public surface: Public Starter Kit function
 - Classification: Callable
 - Related module: `fabric_input_output`
 - Source file path: `src/fabricops_kit/fabric_input_output.py`

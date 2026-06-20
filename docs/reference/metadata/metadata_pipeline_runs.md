@@ -2,7 +2,7 @@
 
 **Purpose:** Pipeline run summary evidence for execution, guardrail, lineage, and catalogue status.
 
-## Workflow usage
+## Starter Kit usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb
 - **Written by function or widget:** [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)

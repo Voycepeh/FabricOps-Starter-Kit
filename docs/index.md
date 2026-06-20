@@ -43,8 +43,8 @@ They abstract the important but tedious work into a simplified plug and play wor
     <span class="fabricops-landing-card__body">Reusable notebook workflow templates.</span>
   </a>
   <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title">20 starter-kit functions</span>
-    <span class="fabricops-landing-card__body">Shared helpers used by the templates.</span>
+    <span class="fabricops-landing-card__title">20 public Starter Kit functions</span>
+    <span class="fabricops-landing-card__body">Notebook-facing functions used by the templates.</span>
   </a>
   <a class="fabricops-landing-card" href="reference/dq-rules/">
     <span class="fabricops-landing-card__title">23 DQ rule types</span>
@@ -56,7 +56,7 @@ They abstract the important but tedious work into a simplified plug and play wor
   </a>
 </div>
 
-The function reference currently documents **20 starter-kit functions**; see [Function Reference](reference/index.md).
+The function reference currently documents **20 public Starter Kit functions** and tracks **238 supporting internal functions** for maintainer context; see [Function Reference](reference/index.md).
 
 ## Choose where to begin
 
