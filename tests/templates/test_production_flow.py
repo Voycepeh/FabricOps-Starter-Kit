@@ -136,7 +136,7 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "_load_source_dataframe" not in production
     assert "_read_source_dataframe" not in production
     assert "read_type" not in production
-    guardrail_docs = (ROOT / "docs" / "how-fabricops-works" / "pipeline-execution.md").read_text(encoding="utf-8")
+    guardrail_docs = (ROOT / "docs" / "notebook-templates-implementation-guide" / "pipeline-execution.md").read_text(encoding="utf-8")
     assert "Warning-severity failure" in guardrail_docs
     assert "Error-severity failure" in guardrail_docs
     assert "blocks before the next critical step" in guardrail_docs
@@ -144,7 +144,7 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
 
 def test_notebook_template_docs_describe_optional_example_notebooks():
     """Verify notebook template docs describe optional example notebooks."""
-    notebook_docs = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates" / "index.md").read_text(
+    notebook_docs = (ROOT / "docs" / "notebook-templates-implementation-guide" / "index.md").read_text(
         encoding="utf-8"
     )
 

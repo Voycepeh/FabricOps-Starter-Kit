@@ -4,7 +4,7 @@ FabricOps supports **23 native DQ rule types** for metadata-driven checks. Revie
 
 FabricOps uses one canonical DQ rule vocabulary. It does **not** require Great Expectations or dbt at runtime, and it does not expose one Python callable per rule. Rules are metadata: choose the rule type, provide the required parameters, approve the row, and let the pipeline load the approved metadata.
 
-For the Governance Review operating model, see [Governance Review](../../how-fabricops-works/notebook-templates/governance-review.md).
+For the Governance Review operating model, see [Governance Review](../../notebook-templates-implementation-guide/governance-review.md).
 
 ## How to read the catalogue
 

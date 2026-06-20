@@ -868,4 +868,4 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Pipeline Execution](../../how-fabricops-works/notebook-templates/pipeline-execution.md)
+- [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)

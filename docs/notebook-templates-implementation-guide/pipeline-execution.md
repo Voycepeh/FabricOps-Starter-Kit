@@ -147,7 +147,7 @@ Guardrail authoring is still part of the pipeline workflow, not a separate publi
 
 For ungoverned tables, engineering-authored saves remain active and non-pending with `review_status="self_approved"`. For governed tables, authors can save drafts, submit rules for governance review, or apply rules immediately as `active_pending_governance_review` when pipeline continuity requires it.
 
-Formal table governance review is still owned by [03 Governance Review](notebook-templates/governance-review.md). `03_governance` uses [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md) to review enrichment and guardrail rows, approve pending records, reject records, replace records, deactivate approved records, and view history.
+Formal table governance review is still owned by [03 Governance Review](governance-review.md). `03_governance` uses [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md) to review enrichment and guardrail rows, approve pending records, reject records, replace records, deactivate approved records, and view history.
 
 ## Target write
 

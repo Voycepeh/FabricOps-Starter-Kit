@@ -13,7 +13,7 @@ pytestmark = pytest.mark.unit
 
 def test_governance_review_page_frames_metadata_control_panel():
     """Verify governance review page preserves the governance flow contract."""
-    text = Path("docs/how-fabricops-works/notebook-templates/governance-review.md").read_text(encoding="utf-8")
+    text = Path("docs/notebook-templates-implementation-guide/governance-review.md").read_text(encoding="utf-8")
     normalized = text.lower()
 
     for required_term in (

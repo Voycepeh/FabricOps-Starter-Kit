@@ -1088,8 +1088,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -1142,8 +1142,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -2263,8 +2263,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -2310,8 +2310,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -2353,8 +2353,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -2654,11 +2654,11 @@
     "related_guides": [
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       },
       {
         "title": "Governance Review",
-        "path": "../../how-fabricops-works/notebook-templates/governance-review.md"
+        "path": "../../notebook-templates-implementation-guide/governance-review.md"
       }
     ],
     "source_path": "src/fabricops_kit/data_profiling.py",
@@ -3056,8 +3056,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
@@ -3270,8 +3270,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
@@ -5279,8 +5279,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "source_path": "src/fabricops_kit/governance_review.py",
@@ -8091,12 +8091,12 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
@@ -8161,7 +8161,7 @@
     "related_guides": [
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
@@ -8211,12 +8211,12 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
@@ -8301,8 +8301,8 @@
     ],
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -8357,7 +8357,7 @@
     "related_guides": [
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       },
       {
         "title": "Metadata Tables",

@@ -4,7 +4,7 @@ This page explains the full local-to-Fabric installation workflow for the
 FabricOps Starter Kit helper wheel.
 Use this when: you want to build the package from this repository and install it
 as a Microsoft Fabric Environment custom library.
-Next read: [Notebook Templates](how-fabricops-works/notebook-templates/index.md), [Guided Demo](guided-demo.md),
+Next read: [Notebook Templates Implementation Guide](notebook-templates-implementation-guide/index.md), [Guided Demo](guided-demo.md),
 [How FabricOps Works](how-fabricops-works/).
 
 The flow is:
@@ -145,7 +145,7 @@ print(f"Available helper count: {len(fsk.__all__)}")
 ```
 
 If the import works, the helper wheel is available to the notebook runtime. You
-can then continue with [Notebook Templates](how-fabricops-works/notebook-templates/index.md) and
+can then continue with [Notebook Templates Implementation Guide](notebook-templates-implementation-guide/index.md) and
 [Guided Demo](guided-demo.md).
 
 If the import fails, the most common cause is that the Environment was uploaded

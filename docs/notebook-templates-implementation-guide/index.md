@@ -1,6 +1,6 @@
-# Template Notebooks
+# Notebook Templates Implementation Guide
 
-Template Notebooks is the canonical scan-friendly guide for what each FabricOps notebook contains and what users normally configure. Use the [Guided Demo](../../guided-demo.md) for the run sequence, and use the [Function Reference](../../reference/index.md) for reusable functions and classes.
+The Notebook Templates Implementation Guide is the canonical scan-friendly guide for what each FabricOps notebook contains and what users normally configure. Use the [Guided Demo](../guided-demo.md) for the run sequence, and use the [Function Reference](../reference/index.md) for reusable functions and classes.
 
 <p class="template-download-hero">
   <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Download all template notebooks from this GitHub folder</a>
@@ -14,7 +14,7 @@ Template Notebooks is the canonical scan-friendly guide for what each FabricOps 
 
 Centralizes environment, workspace, path, metadata routing, runtime validation, and audit settings so every later notebook uses the same configured targets.
 
-[Implementation reference](../../api/reference/setup_notebook.md){ .md-button }
+[Implementation reference](../api/reference/setup_notebook.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
@@ -177,7 +177,7 @@ The example notebooks support demos, training, and smoke tests. They are optiona
 
 Generates deterministic demo source tables for the guided demo.
 
-[Guided demo](../../guided-demo.md){ .md-button }
+[Guided demo](../guided-demo.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
@@ -208,7 +208,7 @@ Generates deterministic demo source tables for the guided demo.
 
 Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a smoke-test context.
 
-[DQ rule reference](../../reference/dq-rules/index.md){ .md-button }
+[DQ rule reference](../reference/dq-rules/index.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
