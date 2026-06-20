@@ -966,23 +966,18 @@ def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> N
     assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
 
 
-def test_reference_nav_groups_user_facing_generated_reference_pages() -> None:
-    """Verify Reference groups user-facing generated reference pages."""
+def test_reference_nav_preserves_existing_user_facing_entries() -> None:
+    """Verify generated reference pages remain in the existing sidebar locations."""
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
-    assert "  - Reference:" in mkdocs_text
-    assert "      - Function Reference: reference/index.md" in mkdocs_text
-    assert "      - Module Reference:" in mkdocs_text
-    assert "          - config: api/modules/config.md" in mkdocs_text
-    assert "      - Template Notebooks: notebook-templates-implementation-guide/index.md" in mkdocs_text
-    assert "      - Metadata Tables:" in mkdocs_text
-    assert "          - Overview: reference/metadata.md" in mkdocs_text
-    assert "      - DQ Rules:" in mkdocs_text
+    assert "  - Reference:" not in mkdocs_text
+    assert "  - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md" in mkdocs_text
+    assert "  - List of Metadata Tables:" in mkdocs_text
+    assert "      - Overview: reference/metadata.md" in mkdocs_text
+    assert "  - List of Functions: reference/index.md" in mkdocs_text
+    assert "  - List of DQ Rules:" in mkdocs_text
     assert "      - Overview: reference/dq-rules/index.md" in mkdocs_text
     assert not re.search(r"^  - Glossary: reference/glossary\.md$", mkdocs_text, re.MULTILINE)
-    assert not re.search(r"^  - List of Functions: reference/index\.md$", mkdocs_text, re.MULTILINE)
-    assert not re.search(r"^  - List of Metadata Tables:$", mkdocs_text, re.MULTILINE)
-    assert not re.search(r"^  - List of DQ Rules:$", mkdocs_text, re.MULTILINE)
     assert not re.search(r"^  - Function & DQ Rules Reference:$", mkdocs_text, re.MULTILINE)
     assert "api/reference/" not in mkdocs_text
 
@@ -1003,7 +998,7 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
     assert "      - Glossary: reference/glossary.md" in mkdocs_text
     assert "      - Callable Functions Flow: reference/callable-flow.md" in mkdocs_text
     assert "      - Modules: api/modules/index.md" in mkdocs_text
-    assert "      - Implementation Appendix:" not in mkdocs_text
-    assert "      - Module Reference:" in mkdocs_text
+    assert "      - Implementation Appendix:" in mkdocs_text
+    assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text
     assert "api/modules/config.md" in mkdocs_text
     assert "api/reference/" not in mkdocs_text

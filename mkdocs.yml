@@ -30,9 +30,56 @@ nav:
       - Enrich Metadata: guided-demo/enrich-metadata.md
       - Review Guardrails: guided-demo/review-guardrails.md
       - Explore Metadata Outputs: guided-demo/explore-metadata-outputs.md
-  - Reference:
-      - Function Reference: reference/index.md
-      - Module Reference:
+  - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md
+  - List of Metadata Tables:
+      - Overview: reference/metadata.md
+      - Data Access: reference/metadata/metadata_data_access.md
+      - Data Agreement: reference/metadata/metadata_data_agreement.md
+      - Data Agreement Evidence: reference/metadata/metadata_data_agreement_evidence.md
+      - Data Catalogue: reference/metadata/metadata_data_catalogue.md
+      - Data Lineage Table: reference/metadata/metadata_data_lineage_table.md
+      - Data Steward: reference/metadata/metadata_data_steward.md
+      - Enrichment Rules: reference/metadata/metadata_enrichment_rules.md
+      - Guardrail Results: reference/metadata/metadata_guardrail_results.md
+      - Guardrail Rules: reference/metadata/metadata_guardrail_rules.md
+      - Notebook Registry: reference/metadata/metadata_notebook_registry.md
+      - Pipeline Runs: reference/metadata/metadata_pipeline_runs.md
+  - List of Functions: reference/index.md
+  - List of DQ Rules:
+      - Overview: reference/dq-rules/index.md
+      - not_null: reference/dq-rules/not-null.md
+      - null_rate_below: reference/dq-rules/null-rate-below.md
+      - non_empty_string: reference/dq-rules/non-empty-string.md
+      - unique: reference/dq-rules/unique.md
+      - unique_combination: reference/dq-rules/unique-combination.md
+      - accepted_values: reference/dq-rules/accepted-values.md
+      - not_in_values: reference/dq-rules/not-in-values.md
+      - between: reference/dq-rules/between.md
+      - greater_than: reference/dq-rules/greater-than.md
+      - greater_than_or_equal: reference/dq-rules/greater-than-or-equal.md
+      - less_than: reference/dq-rules/less-than.md
+      - less_than_or_equal: reference/dq-rules/less-than-or-equal.md
+      - regex_match: reference/dq-rules/regex-match.md
+      - date_not_future: reference/dq-rules/date-not-future.md
+      - date_between: reference/dq-rules/date-between.md
+      - freshness: reference/dq-rules/freshness.md
+      - max_age_days: reference/dq-rules/max-age-days.md
+      - column_pair_equal: reference/dq-rules/column-pair-equal.md
+      - column_a_gte_column_b: reference/dq-rules/column-a-gte-column-b.md
+      - column_a_gt_column_b: reference/dq-rules/column-a-gt-column-b.md
+      - required_when: reference/dq-rules/required-when.md
+      - value_when: reference/dq-rules/value-when.md
+      - expression_true: reference/dq-rules/expression-true.md
+  - Maintainer Guide:
+      - Glossary: reference/glossary.md
+      - Callable Functions Flow: reference/callable-flow.md
+      - Modules: api/modules/index.md
+      - Install: install.md
+      - Release Management: development/release-management.md
+      - Release Traceability: release-info.md
+      - Documentation Versioning: development/docs-versioning.md
+      - Implementation Appendix:
+          # AUTO-GENERATED-MODULES-START
           - config: api/modules/config.md
           - data_agreement: api/modules/data_agreement.md
           - governance_review: api/modules/governance_review.md
@@ -42,53 +89,7 @@ nav:
           - guardrails: api/modules/guardrails.md
           - pipeline: api/modules/pipeline.md
           - metadata: api/modules/metadata.md
-      - Template Notebooks: notebook-templates-implementation-guide/index.md
-      - Metadata Tables:
-          - Overview: reference/metadata.md
-          - Data Access: reference/metadata/metadata_data_access.md
-          - Data Agreement: reference/metadata/metadata_data_agreement.md
-          - Data Agreement Evidence: reference/metadata/metadata_data_agreement_evidence.md
-          - Data Catalogue: reference/metadata/metadata_data_catalogue.md
-          - Data Lineage Table: reference/metadata/metadata_data_lineage_table.md
-          - Data Steward: reference/metadata/metadata_data_steward.md
-          - Enrichment Rules: reference/metadata/metadata_enrichment_rules.md
-          - Guardrail Results: reference/metadata/metadata_guardrail_results.md
-          - Guardrail Rules: reference/metadata/metadata_guardrail_rules.md
-          - Notebook Registry: reference/metadata/metadata_notebook_registry.md
-          - Pipeline Runs: reference/metadata/metadata_pipeline_runs.md
-      - DQ Rules:
-          - Overview: reference/dq-rules/index.md
-          - not_null: reference/dq-rules/not-null.md
-          - null_rate_below: reference/dq-rules/null-rate-below.md
-          - non_empty_string: reference/dq-rules/non-empty-string.md
-          - unique: reference/dq-rules/unique.md
-          - unique_combination: reference/dq-rules/unique-combination.md
-          - accepted_values: reference/dq-rules/accepted-values.md
-          - not_in_values: reference/dq-rules/not-in-values.md
-          - between: reference/dq-rules/between.md
-          - greater_than: reference/dq-rules/greater-than.md
-          - greater_than_or_equal: reference/dq-rules/greater-than-or-equal.md
-          - less_than: reference/dq-rules/less-than.md
-          - less_than_or_equal: reference/dq-rules/less-than-or-equal.md
-          - regex_match: reference/dq-rules/regex-match.md
-          - date_not_future: reference/dq-rules/date-not-future.md
-          - date_between: reference/dq-rules/date-between.md
-          - freshness: reference/dq-rules/freshness.md
-          - max_age_days: reference/dq-rules/max-age-days.md
-          - column_pair_equal: reference/dq-rules/column-pair-equal.md
-          - column_a_gte_column_b: reference/dq-rules/column-a-gte-column-b.md
-          - column_a_gt_column_b: reference/dq-rules/column-a-gt-column-b.md
-          - required_when: reference/dq-rules/required-when.md
-          - value_when: reference/dq-rules/value-when.md
-          - expression_true: reference/dq-rules/expression-true.md
-  - Maintainer Guide:
-      - Glossary: reference/glossary.md
-      - Callable Functions Flow: reference/callable-flow.md
-      - Modules: api/modules/index.md
-      - Install: install.md
-      - Release Management: development/release-management.md
-      - Release Traceability: release-info.md
-      - Documentation Versioning: development/docs-versioning.md
+      # AUTO-GENERATED-MODULES-END
 
 extra:
   version:
