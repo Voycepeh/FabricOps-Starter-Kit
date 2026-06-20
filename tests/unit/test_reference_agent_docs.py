@@ -214,9 +214,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     """Verify global callable flow docs and structured metadata are generated."""
     flow_page = REFERENCE_DIR / "callable-flow.md"
     flow_data_path = REFERENCE_DIR / "_data" / "callable-flow.json"
+    dashboard_path = REFERENCE_DIR / "refactor-dashboard.html"
     exported_symbols = set(_exported_symbols())
 
     assert flow_page.exists()
+    assert dashboard_path.exists()
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Public callable flow map" in flow_text
     assert "## Maintainer overview" in flow_text
@@ -227,10 +229,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Thin wrapper candidates" in flow_text
     assert "Public API entrypoints" in flow_text
     assert "## Top priority refactor inventory" in flow_text
-    assert '??? info "Full searchable inventory"' in flow_text
-    assert '??? info "Inventory by module"' in flow_text
-    assert '??? info "Inventory by signal"' in flow_text
-    assert "Use browser find/page search" in flow_text
+    assert "refactor-dashboard.html" in flow_text
+    assert "_data/callable-flow.json" in flow_text
+    assert "complete searchable and filterable inventory" in flow_text
+    assert '??? info "Full searchable inventory"' not in flow_text
+    assert '??? info "Inventory by module"' not in flow_text
+    assert '??? info "Inventory by signal"' not in flow_text
     assert "## Public callable dependency map" in flow_text
     assert "## Callable helper summary" in flow_text
     assert "## Shared helper usage" in flow_text
@@ -239,14 +243,27 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Helper" in flow_text
     assert "Suggested action" in flow_text
     assert "Keep stable" in flow_text
-    assert "Inspect for inline" in flow_text
-    assert "Keep if transformation or validation" in flow_text
     assert "../../api/reference/run_table_guardrails/" in flow_text
     assert "](../api/reference/run_table_guardrails/)" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' in flow_text
     assert '<td class="flow-cell-name"><a href="../../api/reference/widget_select_guardrail_target/"' in flow_text
     assert '<td class="flow-cell-number">87</td>' in flow_text
     assert "independent entry point" in flow_text
+
+    dashboard_text = dashboard_path.read_text(encoding="utf-8")
+    assert "FabricOps refactor signal dashboard" in dashboard_text
+    assert 'id="searchBox"' in dashboard_text
+    assert 'id="moduleFilter"' in dashboard_text
+    assert 'id="signalFilter"' in dashboard_text
+    assert 'id="priorityFilter"' in dashboard_text
+    assert "Reset filters" in dashboard_text
+    assert 'data-sort="function"' in dashboard_text
+    assert "data-toggle" in dashboard_text
+    assert "fetch('_data/callable-flow.json')" in dashboard_text
+    assert "data.refactor_inventory" in dashboard_text
+    assert "Used by" in dashboard_text
+    assert "Calls" in dashboard_text
+    assert "Source" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
     assert {

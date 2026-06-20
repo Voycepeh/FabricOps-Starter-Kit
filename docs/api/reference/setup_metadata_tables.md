@@ -250,230 +250,47 @@ migrate user data automatically.
 
     ### Refactor signals
 
-    <div class="callable-flow-table-wrap" markdown="0">
-    <table class="callable-flow-table">
-    <thead>
-    <tr>
-    <th class="flow-cell-name">Helper</th>
-    <th class="flow-cell-module">Module</th>
-    <th class="flow-cell-wide">Signals</th>
-    <th class="flow-cell-wide">Used by</th>
-    <th class="flow-cell-wide">Calls</th>
-    <th class="flow-cell-wide">Suggested action</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">High-fanout helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L995-L1019"><code>_detect_nested_metadata_delta_folders</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1103-L1110"><code>_resolve_metadata_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L736-L836"><code>_run_config_smoke_tests</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"><code>_validate_metadata_table_registration</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L839-L949"><code>setup_notebook</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594"><code>read_lakehouse_csv</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000"><code>read_lakehouse_excel</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910"><code>read_lakehouse_parquet</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435"><code>read_lakehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659"><code>read_warehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548"><code>write_lakehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L662-L727"><code>write_warehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677"><code>_normalize_path_config</code></a></td>
-    <td class="flow-cell-wide">Keep stable</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">High-fanout helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L952-L978"><code>_get_active_metadata_tables</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1047-L1076"><code>_get_metadata_table_schema_registry</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"><code>_validate_metadata_table_registration</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1194-L1321"><code>setup_metadata_tables</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L839-L949"><code>setup_notebook</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L471-L513"><code>FrameworkConfig</code></a></td>
-    <td class="flow-cell-wide">Keep stable</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L151-L155"><code>_config_value</code></a></td>
-    <td class="flow-cell-module"><code>data_agreement</code></td>
-    <td class="flow-cell-wide">Leaf internal helper, High-fanout helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L643-L687"><code>_create_or_update_data_agreement</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L510-L567"><code>_create_or_update_data_steward</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L158-L180"><code>_get_widget_visible_fields</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L604-L613"><code>_list_all_data_agreement_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490"><code>_list_data_stewards</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L754-L785"><code>_save_agreement_evidence_records</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep stable</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L419-L435"><code>_to_bool</code></a></td>
-    <td class="flow-cell-module"><code>data_agreement</code></td>
-    <td class="flow-cell-wide">Leaf internal helper, High-fanout helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L438-L448"><code>_active_steward</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L510-L567"><code>_create_or_update_data_steward</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L313-L363"><code>_render_custom_fields</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1046-L1059"><code>_standard_widget</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep stable</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218"><code>_get_spark</code></a></td>
-    <td class="flow-cell-module"><code>fabric_input_output</code></td>
-    <td class="flow-cell-wide">Leaf internal helper, High-fanout helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594"><code>read_lakehouse_csv</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000"><code>read_lakehouse_excel</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910"><code>read_lakehouse_parquet</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435"><code>read_lakehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659"><code>read_warehouse_table</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep stable</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114"><code>_normalize_table_name</code></a></td>
-    <td class="flow-cell-module"><code>fabric_input_output</code></td>
-    <td class="flow-cell-wide">Leaf internal helper, High-fanout helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L135"><code>_qualified_table_name</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L157-L161"><code>_resolve_lakehouse_table_identifier</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154"><code>_resolve_lakehouse_table_path</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435"><code>read_lakehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548"><code>write_lakehouse_table</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep stable</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L995-L1019"><code>_detect_nested_metadata_delta_folders</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"><code>_validate_metadata_table_registration</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a></td>
-    <td class="flow-cell-wide">Inspect for inline</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1088-L1094"><code>_metadata_table_columns</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"><code>_setup_metadata_table_registry</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1079-L1085"><code>_coerce_row_dicts</code></a></td>
-    <td class="flow-cell-wide">Inspect for inline</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677"><code>_normalize_path_config</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L225-L246"><code>PathConfig</code></a></td>
-    <td class="flow-cell-wide">Inspect for inline</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L410-L416"><code>_latest_by_key</code></a></td>
-    <td class="flow-cell-module"><code>data_agreement</code></td>
-    <td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490"><code>_list_data_stewards</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L402-L407"><code>_coerce_row_dicts</code></a></td>
-    <td class="flow-cell-wide">Inspect for inline</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1079-L1085"><code>_coerce_row_dicts</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1088-L1094"><code>_metadata_table_columns</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1097-L1099"><code>_create_empty_metadata_dataframe</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"><code>_setup_metadata_table_registry</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L952-L978"><code>_get_active_metadata_tables</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"><code>_validate_metadata_table_registration</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313"><code>_get_governance_metadata_schemas</code></a></td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1047-L1076"><code>_get_metadata_table_schema_registry</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1194-L1321"><code>setup_metadata_tables</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1029-L1044"><code>_string_metadata_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313"><code>_get_governance_metadata_schemas</code></a></td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L981-L992"><code>_metadata_tables_from_setup_results</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1194-L1321"><code>setup_metadata_tables</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"><code>_setup_metadata_table_registry</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1194-L1321"><code>setup_metadata_tables</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1097-L1099"><code>_create_empty_metadata_dataframe</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1022-L1026"><code>_metadata_schema_field_names</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1088-L1094"><code>_metadata_table_columns</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435"><code>read_lakehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548"><code>write_lakehouse_table</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L316-L336"><code>_is_table_not_found_error</code></a></td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1029-L1044"><code>_string_metadata_schema</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1047-L1076"><code>_get_metadata_table_schema_registry</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"><code>_validate_metadata_table_registration</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1194-L1321"><code>setup_metadata_tables</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L995-L1019"><code>_detect_nested_metadata_delta_folders</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L952-L978"><code>_get_active_metadata_tables</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1103-L1110"><code>_resolve_metadata_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435"><code>read_lakehouse_table</code></a></td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L237-L263"><code>_check_metadata_schema_field_names</code></a></td>
-    <td class="flow-cell-module"><code>governance_review</code></td>
-    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L266-L269"><code>_schema</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L266-L269"><code>_schema</code></a></td>
-    <td class="flow-cell-module"><code>governance_review</code></td>
-    <td class="flow-cell-wide">Single-use internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313"><code>_get_governance_metadata_schemas</code></a></td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L237-L263"><code>_check_metadata_schema_field_names</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L228-L234"><code>_spark_types</code></a></td>
-    <td class="flow-cell-wide">Review purpose</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1022-L1026"><code>_metadata_schema_field_names</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"><code>_setup_metadata_table_registry</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1194-L1321"><code>setup_metadata_tables</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep if transformation or validation</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a></td>
-    <td class="flow-cell-module"><code>config</code></td>
-    <td class="flow-cell-wide">Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep if transformation or validation</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L402-L407"><code>_coerce_row_dicts</code></a></td>
-    <td class="flow-cell-module"><code>data_agreement</code></td>
-    <td class="flow-cell-wide">Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L585-L601"><code>_latest_agreement_versions</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L410-L416"><code>_latest_by_key</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L604-L613"><code>_list_all_data_agreement_rows</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep if transformation or validation</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128"><code>_normalize_schema_name</code></a></td>
-    <td class="flow-cell-module"><code>fabric_input_output</code></td>
-    <td class="flow-cell-wide">Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"><code>_configured_lakehouse_schema</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L135"><code>_qualified_table_name</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144"><code>_resolve_lakehouse_schema</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep if transformation or validation</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L316-L336"><code>_is_table_not_found_error</code></a></td>
-    <td class="flow-cell-module"><code>governance_review</code></td>
-    <td class="flow-cell-wide">Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"><code>_setup_metadata_table_registry</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040"><code>_read_metadata_table_or_empty</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep if transformation or validation</td>
-    </tr>
-    <tr>
-    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L228-L234"><code>_spark_types</code></a></td>
-    <td class="flow-cell-module"><code>governance_review</code></td>
-    <td class="flow-cell-wide">Leaf internal helper</td>
-    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313"><code>_get_governance_metadata_schemas</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L266-L269"><code>_schema</code></a></td>
-    <td class="flow-cell-wide">—</td>
-    <td class="flow-cell-wide">Keep if transformation or validation</td>
-    </tr>
-    </tbody>
-    </table>
-    </div>
+    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
+
+    **Helpers appearing in multiple branches**
+
+    - `_get_store` appears in 8 branches.
+    - `_normalize_path_config` appears in 8 branches.
+    - `_normalize_table_name` appears in 8 branches.
+    - `_spark_types` appears in 6 branches.
+    - `_normalize_schema_name` appears in 4 branches.
+    - `_resolve_lakehouse_schema` appears in 4 branches.
+    - `_resolve_lakehouse_table_path` appears in 4 branches.
+    - `_validate_audit_timezone` appears in 4 branches.
+    - `_validate_framework_config` appears in 4 branches.
+    - `_check_metadata_schema_field_names` appears in 3 branches.
+    - `_get_governance_metadata_schemas` appears in 3 branches.
+    - `_get_spark` appears in 3 branches.
+
+    **Call chains deeper than 4 levels**
+
+    - `setup_metadata_tables` → `_list_data_stewards` → `read_lakehouse_table` → `_get_store` → `_normalize_path_config` → `PathConfig`
+    - `setup_metadata_tables` → `_list_data_stewards` → `read_lakehouse_table` → `_resolve_lakehouse_table_path` → `_resolve_lakehouse_schema` → `_normalize_schema_name`
+    - `setup_metadata_tables` → `_setup_metadata_table_registry` → `read_lakehouse_table` → `_get_store` → `_normalize_path_config` → `PathConfig`
+    - `setup_metadata_tables` → `_setup_metadata_table_registry` → `read_lakehouse_table` → `_resolve_lakehouse_table_path` → `_resolve_lakehouse_schema` → `_normalize_schema_name`
+    - `setup_metadata_tables` → `_setup_metadata_table_registry` → `write_lakehouse_table` → `_get_store` → `_normalize_path_config` → `PathConfig`
+    - `setup_metadata_tables` → `_setup_metadata_table_registry` → `write_lakehouse_table` → `_resolve_lakehouse_table_path` → `_resolve_lakehouse_schema` → `_normalize_schema_name`
+    - `setup_metadata_tables` → `_validate_metadata_table_registration` → `_detect_nested_metadata_delta_folders` → `_get_store` → `_normalize_path_config` → `PathConfig`
+    - `setup_metadata_tables` → `_validate_metadata_table_registration` → `_get_active_metadata_tables` → `_get_governance_metadata_schemas` → `_schema` → `_check_metadata_schema_field_names`
+
+    **Helpers that only call one package-local helper**
+
+    - `_detect_nested_metadata_delta_folders` only delegates to `_get_store`.
+    - `_get_store` only delegates to `_normalize_path_config`.
+    - `_metadata_table_columns` only delegates to `_coerce_row_dicts`.
+    - `_resolve_metadata_schema` only delegates to `_get_store`.
+    - `_active_steward` only delegates to `_to_bool`.
+    - `_latest_by_key` only delegates to `_coerce_row_dicts`.
+    - `_resolve_lakehouse_schema` only delegates to `_normalize_schema_name`.
+
+    **Helpers grouped into possibly wrong areas**
+
+    - None detected from helper names, doc summaries, and module placement.
 
 This callable uses 32 internal helpers for audit timestamp, metadata loading, validation, rule parsing, rule evaluation, fabric or spark access, and other.
 
