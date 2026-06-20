@@ -1,0 +1,3923 @@
+{
+  "public_callable_dependencies": {
+    "display_guardrail_results": [],
+    "get_latest_metadata_catalogue": [],
+    "prepare_pipeline_table_configs": [],
+    "profile_dataframe": [],
+    "read_data": [],
+    "run_table_guardrails": [
+      {
+        "callable": "profile_dataframe",
+        "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+        "module": "data_profiling",
+        "docs_path": "docs/api/reference/profile_dataframe.md",
+        "docs_url": "../api/reference/profile_dataframe/"
+      }
+    ],
+    "setup_metadata_tables": [],
+    "setup_notebook": [],
+    "start_pipeline_run": [],
+    "widget_author_dq_rules": [],
+    "widget_author_schema_freshness_profile_rules": [],
+    "widget_enrich_table_metadata": [],
+    "widget_render_agreement_evidence": [],
+    "widget_render_data_agreement": [],
+    "widget_render_data_steward": [],
+    "widget_review_guardrail_governance": [],
+    "widget_select_guardrail_target": [],
+    "write_data": [],
+    "write_pipeline_lineage": [],
+    "write_pipeline_run_summary": []
+  },
+  "callable_helper_summary": [
+    {
+      "callable": "display_guardrail_results",
+      "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+      "module": "pipeline",
+      "docs_path": "docs/api/reference/display_guardrail_results.md",
+      "docs_url": "../api/reference/display_guardrail_results/",
+      "unique_internal_helper_count": 12,
+      "direct_internal_helpers": [
+        {
+          "helper": "_rows_for_display",
+          "qualified_name": "fabricops_kit.pipeline._rows_for_display",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L500-L504"
+        }
+      ],
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 11,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 11
+    },
+    {
+      "callable": "get_latest_metadata_catalogue",
+      "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+      "module": "governance_review",
+      "docs_path": "docs/api/reference/get_latest_metadata_catalogue.md",
+      "docs_url": "../api/reference/get_latest_metadata_catalogue/",
+      "unique_internal_helper_count": 10,
+      "direct_internal_helpers": [
+        {
+          "helper": "_configured_lakehouse_schema",
+          "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
+          "module": "fabric_input_output",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"
+        },
+        {
+          "helper": "_catalogue_lookup_value",
+          "qualified_name": "fabricops_kit.governance_review._catalogue_lookup_value",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L78-L93"
+        },
+        {
+          "helper": "_coerce_rows",
+          "qualified_name": "fabricops_kit.governance_review._coerce_rows",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L62-L67"
+        }
+      ],
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 4,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 9
+    },
+    {
+      "callable": "prepare_pipeline_table_configs",
+      "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+      "module": "pipeline",
+      "docs_path": "docs/api/reference/prepare_pipeline_table_configs.md",
+      "docs_url": "../api/reference/prepare_pipeline_table_configs/",
+      "unique_internal_helper_count": 4,
+      "direct_internal_helpers": [
+        {
+          "helper": "_add_audit_columns",
+          "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L538-L548"
+        }
+      ],
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 0,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 3
+    },
+    {
+      "callable": "profile_dataframe",
+      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+      "module": "data_profiling",
+      "docs_path": "docs/api/reference/profile_dataframe.md",
+      "docs_url": "../api/reference/profile_dataframe/",
+      "unique_internal_helper_count": 9,
+      "direct_internal_helpers": [
+        {
+          "helper": "_audit_timestamp_expr",
+          "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221"
+        },
+        {
+          "helper": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config._get_audit_timezone",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"
+        },
+        {
+          "helper": "_build_distribution_summaries",
+          "qualified_name": "fabricops_kit.data_profiling._build_distribution_summaries",
+          "module": "data_profiling",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"
+        },
+        {
+          "helper": "_get_profiled_columns",
+          "qualified_name": "fabricops_kit.data_profiling._get_profiled_columns",
+          "module": "data_profiling",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82"
+        },
+        {
+          "helper": "_is_min_max_supported_type",
+          "qualified_name": "fabricops_kit.data_profiling._is_min_max_supported_type",
+          "module": "data_profiling",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105"
+        }
+      ],
+      "deepest_call_chain_depth": 3,
+      "repeated_helper_count": 2,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 9
+    },
+    {
+      "callable": "read_data",
+      "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+      "module": "fabric_input_output",
+      "docs_path": "docs/api/reference/read_data.md",
+      "docs_url": "../api/reference/read_data/",
+      "unique_internal_helper_count": 9,
+      "direct_internal_helpers": [],
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 5,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 7
+    },
+    {
+      "callable": "run_table_guardrails",
+      "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+      "module": "pipeline",
+      "docs_path": "docs/api/reference/run_table_guardrails.md",
+      "docs_url": "../api/reference/run_table_guardrails/",
+      "unique_internal_helper_count": 87,
+      "direct_internal_helpers": [
+        {
+          "helper": "_run_active_dq_guardrail",
+          "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692"
+        },
+        {
+          "helper": "_check_schema_rule_runtime",
+          "qualified_name": "fabricops_kit.guardrails._check_schema_rule_runtime",
+          "module": "guardrails",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L92-L110"
+        },
+        {
+          "helper": "_check_schema_runtime",
+          "qualified_name": "fabricops_kit.guardrails._check_schema_runtime",
+          "module": "guardrails",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L313-L408"
+        },
+        {
+          "helper": "_build_metadata_table_key",
+          "qualified_name": "fabricops_kit.metadata._build_metadata_table_key",
+          "module": "metadata",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"
+        },
+        {
+          "helper": "_write_guardrail_result_row",
+          "qualified_name": "fabricops_kit.metadata._write_guardrail_result_row",
+          "module": "metadata",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L89-L136"
+        },
+        {
+          "helper": "_active_pipeline_context",
+          "qualified_name": "fabricops_kit.pipeline._active_pipeline_context",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156"
+        },
+        {
+          "helper": "_build_guardrail_blocking_message_from_bundle",
+          "qualified_name": "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L491-L497"
+        },
+        {
+          "helper": "_build_guardrail_evidence_definitions",
+          "qualified_name": "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L654-L684"
+        },
+        {
+          "helper": "_guardrail_can_continue",
+          "qualified_name": "fabricops_kit.pipeline._guardrail_can_continue",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L650-L651"
+        },
+        {
+          "helper": "_table_key",
+          "qualified_name": "fabricops_kit.pipeline._table_key",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L642-L643"
+        },
+        {
+          "helper": "_table_name",
+          "qualified_name": "fabricops_kit.pipeline._table_name",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L646-L647"
+        }
+      ],
+      "deepest_call_chain_depth": 6,
+      "repeated_helper_count": 12,
+      "calls_public_callable": true,
+      "public_callables_called": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_path": "docs/api/reference/profile_dataframe.md",
+          "docs_url": "../api/reference/profile_dataframe/"
+        }
+      ],
+      "shared_helper_overlap_count": 38
+    },
+    {
+      "callable": "setup_metadata_tables",
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+      "module": "config",
+      "docs_path": "docs/api/reference/setup_metadata_tables.md",
+      "docs_url": "../api/reference/setup_metadata_tables/",
+      "unique_internal_helper_count": 32,
+      "direct_internal_helpers": [
+        {
+          "helper": "_get_metadata_table_schema_registry",
+          "qualified_name": "fabricops_kit.config._get_metadata_table_schema_registry",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1047-L1076"
+        },
+        {
+          "helper": "_metadata_schema_field_names",
+          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1022-L1026"
+        },
+        {
+          "helper": "_metadata_tables_from_setup_results",
+          "qualified_name": "fabricops_kit.config._metadata_tables_from_setup_results",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L981-L992"
+        },
+        {
+          "helper": "_resolve_metadata_schema",
+          "qualified_name": "fabricops_kit.config._resolve_metadata_schema",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1103-L1110"
+        },
+        {
+          "helper": "_setup_metadata_table_registry",
+          "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"
+        },
+        {
+          "helper": "_validate_framework_config",
+          "qualified_name": "fabricops_kit.config._validate_framework_config",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"
+        },
+        {
+          "helper": "_validate_metadata_table_registration",
+          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"
+        },
+        {
+          "helper": "_list_data_stewards",
+          "qualified_name": "fabricops_kit.data_agreement._list_data_stewards",
+          "module": "data_agreement",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490"
+        },
+        {
+          "helper": "_get_governance_metadata_schemas",
+          "qualified_name": "fabricops_kit.governance_review._get_governance_metadata_schemas",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313"
+        }
+      ],
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 12,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 16
+    },
+    {
+      "callable": "setup_notebook",
+      "qualified_name": "fabricops_kit.config.setup_notebook",
+      "module": "config",
+      "docs_path": "docs/api/reference/setup_notebook.md",
+      "docs_url": "../api/reference/setup_notebook/",
+      "unique_internal_helper_count": 8,
+      "direct_internal_helpers": [
+        {
+          "helper": "_get_store",
+          "qualified_name": "fabricops_kit.config._get_store",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"
+        },
+        {
+          "helper": "_run_config_smoke_tests",
+          "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L736-L836"
+        },
+        {
+          "helper": "_validate_framework_config",
+          "qualified_name": "fabricops_kit.config._validate_framework_config",
+          "module": "config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"
+        }
+      ],
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 2,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 4
+    },
+    {
+      "callable": "start_pipeline_run",
+      "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+      "module": "pipeline",
+      "docs_path": "docs/api/reference/start_pipeline_run.md",
+      "docs_url": "../api/reference/start_pipeline_run/",
+      "unique_internal_helper_count": 34,
+      "direct_internal_helpers": [
+        {
+          "helper": "_notebook_global",
+          "qualified_name": "fabricops_kit.pipeline._notebook_global",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L46-L52"
+        },
+        {
+          "helper": "_now_iso",
+          "qualified_name": "fabricops_kit.pipeline._now_iso",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"
+        },
+        {
+          "helper": "_PipelineRunContext",
+          "qualified_name": "fabricops_kit.pipeline._PipelineRunContext",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L23-L40"
+        },
+        {
+          "helper": "_runtime_metadata_value",
+          "qualified_name": "fabricops_kit.pipeline._runtime_metadata_value",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L55-L60"
+        }
+      ],
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 25
+    },
+    {
+      "callable": "widget_author_dq_rules",
+      "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+      "module": "governance_review",
+      "docs_path": "docs/api/reference/widget_author_dq_rules.md",
+      "docs_url": "../api/reference/widget_author_dq_rules/",
+      "unique_internal_helper_count": 26,
+      "direct_internal_helpers": [
+        {
+          "helper": "_dq_records_from_selection",
+          "qualified_name": "fabricops_kit.governance_review._dq_records_from_selection",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435"
+        },
+        {
+          "helper": "_latest_rule",
+          "qualified_name": "fabricops_kit.governance_review._latest_rule",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073"
+        },
+        {
+          "helper": "_rule_params",
+          "qualified_name": "fabricops_kit.governance_review._rule_params",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082"
+        },
+        {
+          "helper": "_write_rule_records",
+          "qualified_name": "fabricops_kit.governance_review._write_rule_records",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096"
+        }
+      ],
+      "deepest_call_chain_depth": 8,
+      "repeated_helper_count": 12,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 25
+    },
+    {
+      "callable": "widget_author_schema_freshness_profile_rules",
+      "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+      "module": "governance_review",
+      "docs_path": "docs/api/reference/widget_author_schema_freshness_profile_rules.md",
+      "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/",
+      "unique_internal_helper_count": 26,
+      "direct_internal_helpers": [
+        {
+          "helper": "_latest_rule",
+          "qualified_name": "fabricops_kit.governance_review._latest_rule",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073"
+        },
+        {
+          "helper": "_rule_params",
+          "qualified_name": "fabricops_kit.governance_review._rule_params",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082"
+        },
+        {
+          "helper": "_schema_freshness_profile_records_from_selection",
+          "qualified_name": "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249"
+        },
+        {
+          "helper": "_write_rule_records",
+          "qualified_name": "fabricops_kit.governance_review._write_rule_records",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096"
+        }
+      ],
+      "deepest_call_chain_depth": 8,
+      "repeated_helper_count": 12,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 25
+    },
+    {
+      "callable": "widget_enrich_table_metadata",
+      "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+      "module": "governance_review",
+      "docs_path": "docs/api/reference/widget_enrich_table_metadata.md",
+      "docs_url": "../api/reference/widget_enrich_table_metadata/",
+      "unique_internal_helper_count": 33,
+      "direct_internal_helpers": [
+        {
+          "helper": "_collect_enrichment_extra_fields",
+          "qualified_name": "fabricops_kit.governance_review._collect_enrichment_extra_fields",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L588-L590"
+        },
+        {
+          "helper": "_enrichment_options",
+          "qualified_name": "fabricops_kit.governance_review._enrichment_options",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L555-L564"
+        },
+        {
+          "helper": "_render_enrichment_extra_fields",
+          "qualified_name": "fabricops_kit.governance_review._render_enrichment_extra_fields",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L567-L585"
+        },
+        {
+          "helper": "_selected_catalogue_rows_for_enrichment",
+          "qualified_name": "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605"
+        },
+        {
+          "helper": "_value",
+          "qualified_name": "fabricops_kit.governance_review._value",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71"
+        },
+        {
+          "helper": "_write_table_metadata_enrichment_records",
+          "qualified_name": "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760"
+        }
+      ],
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 23
+    },
+    {
+      "callable": "widget_render_agreement_evidence",
+      "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+      "module": "data_agreement",
+      "docs_path": "docs/api/reference/widget_render_agreement_evidence.md",
+      "docs_url": "../api/reference/widget_render_agreement_evidence/",
+      "unique_internal_helper_count": 27,
+      "direct_internal_helpers": [
+        {
+          "helper": "_render_agreement_evidence_widget",
+          "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "module": "data_agreement",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404"
+        }
+      ],
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 10,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 23
+    },
+    {
+      "callable": "widget_render_data_agreement",
+      "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+      "module": "data_agreement",
+      "docs_path": "docs/api/reference/widget_render_data_agreement.md",
+      "docs_url": "../api/reference/widget_render_data_agreement/",
+      "unique_internal_helper_count": 46,
+      "direct_internal_helpers": [
+        {
+          "helper": "_render_maintenance_widget",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget",
+          "module": "data_agreement",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"
+        }
+      ],
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 46
+    },
+    {
+      "callable": "widget_render_data_steward",
+      "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+      "module": "data_agreement",
+      "docs_path": "docs/api/reference/widget_render_data_steward.md",
+      "docs_url": "../api/reference/widget_render_data_steward/",
+      "unique_internal_helper_count": 46,
+      "direct_internal_helpers": [
+        {
+          "helper": "_render_maintenance_widget",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget",
+          "module": "data_agreement",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"
+        }
+      ],
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 46
+    },
+    {
+      "callable": "widget_review_guardrail_governance",
+      "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+      "module": "governance_review",
+      "docs_path": "docs/api/reference/widget_review_guardrail_governance.md",
+      "docs_url": "../api/reference/widget_review_guardrail_governance/",
+      "unique_internal_helper_count": 9,
+      "direct_internal_helpers": [],
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 9,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 7
+    },
+    {
+      "callable": "widget_select_guardrail_target",
+      "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+      "module": "governance_review",
+      "docs_path": "docs/api/reference/widget_select_guardrail_target.md",
+      "docs_url": "../api/reference/widget_select_guardrail_target/",
+      "unique_internal_helper_count": 14,
+      "direct_internal_helpers": [
+        {
+          "helper": "_filter_table_rows",
+          "qualified_name": "fabricops_kit.governance_review._filter_table_rows",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2043-L2057"
+        },
+        {
+          "helper": "_read_metadata_table_or_empty",
+          "qualified_name": "fabricops_kit.governance_review._read_metadata_table_or_empty",
+          "module": "governance_review",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040"
+        },
+        {
+          "helper": "_build_metadata_table_key",
+          "qualified_name": "fabricops_kit.metadata._build_metadata_table_key",
+          "module": "metadata",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"
+        }
+      ],
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 5,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 12
+    },
+    {
+      "callable": "write_data",
+      "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+      "module": "fabric_input_output",
+      "docs_path": "docs/api/reference/write_data.md",
+      "docs_url": "../api/reference/write_data/",
+      "unique_internal_helper_count": 6,
+      "direct_internal_helpers": [],
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 3,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 6
+    },
+    {
+      "callable": "write_pipeline_lineage",
+      "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+      "module": "pipeline",
+      "docs_path": "docs/api/reference/write_pipeline_lineage.md",
+      "docs_url": "../api/reference/write_pipeline_lineage/",
+      "unique_internal_helper_count": 19,
+      "direct_internal_helpers": [
+        {
+          "helper": "_configured_lakehouse_schema",
+          "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
+          "module": "fabric_input_output",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"
+        },
+        {
+          "helper": "_build_metadata_table_key",
+          "qualified_name": "fabricops_kit.metadata._build_metadata_table_key",
+          "module": "metadata",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81"
+        },
+        {
+          "helper": "_definition_name",
+          "qualified_name": "fabricops_kit.pipeline._definition_name",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164"
+        },
+        {
+          "helper": "_now_iso",
+          "qualified_name": "fabricops_kit.pipeline._now_iso",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"
+        },
+        {
+          "helper": "_runtime_audit_fields",
+          "qualified_name": "fabricops_kit.pipeline._runtime_audit_fields",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L189-L200"
+        }
+      ],
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 9,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 19
+    },
+    {
+      "callable": "write_pipeline_run_summary",
+      "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+      "module": "pipeline",
+      "docs_path": "docs/api/reference/write_pipeline_run_summary.md",
+      "docs_url": "../api/reference/write_pipeline_run_summary/",
+      "unique_internal_helper_count": 14,
+      "direct_internal_helpers": [
+        {
+          "helper": "_configured_lakehouse_schema",
+          "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
+          "module": "fabric_input_output",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177"
+        },
+        {
+          "helper": "_active_pipeline_context",
+          "qualified_name": "fabricops_kit.pipeline._active_pipeline_context",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156"
+        },
+        {
+          "helper": "_definition_name",
+          "qualified_name": "fabricops_kit.pipeline._definition_name",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164"
+        },
+        {
+          "helper": "_now_iso",
+          "qualified_name": "fabricops_kit.pipeline._now_iso",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"
+        },
+        {
+          "helper": "_summary_status",
+          "qualified_name": "fabricops_kit.pipeline._summary_status",
+          "module": "pipeline",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L167-L186"
+        }
+      ],
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 4,
+      "calls_public_callable": false,
+      "public_callables_called": [],
+      "shared_helper_overlap_count": 13
+    }
+  ],
+  "shared_helper_usage": [
+    {
+      "helper": "_get_store",
+      "qualified_name": "fabricops_kit.config._get_store",
+      "module": "config",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "read_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/read_data/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "setup_notebook",
+          "qualified_name": "fabricops_kit.config.setup_notebook",
+          "module": "config",
+          "docs_url": "../api/reference/setup_notebook/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/write_data/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 16
+    },
+    {
+      "helper": "_normalize_path_config",
+      "qualified_name": "fabricops_kit.config._normalize_path_config",
+      "module": "config",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "read_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/read_data/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "setup_notebook",
+          "qualified_name": "fabricops_kit.config.setup_notebook",
+          "module": "config",
+          "docs_url": "../api/reference/setup_notebook/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/write_data/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 16
+    },
+    {
+      "helper": "_normalize_schema_name",
+      "qualified_name": "fabricops_kit.fabric_input_output._normalize_schema_name",
+      "module": "fabric_input_output",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "read_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/read_data/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/write_data/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 15
+    },
+    {
+      "helper": "_normalize_table_name",
+      "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
+      "module": "fabric_input_output",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "read_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/read_data/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/write_data/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 15
+    },
+    {
+      "helper": "_resolve_lakehouse_schema",
+      "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
+      "module": "fabric_input_output",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "read_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/read_data/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/write_data/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 15
+    },
+    {
+      "helper": "_resolve_lakehouse_table_path",
+      "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
+      "module": "fabric_input_output",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "read_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/read_data/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/write_data/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 15
+    },
+    {
+      "helper": "_validate_audit_timezone",
+      "qualified_name": "fabricops_kit.config._validate_audit_timezone",
+      "module": "config",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196",
+      "public_callables": [
+        {
+          "callable": "prepare_pipeline_table_configs",
+          "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+          "module": "pipeline",
+          "docs_url": "../api/reference/prepare_pipeline_table_configs/"
+        },
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "setup_notebook",
+          "qualified_name": "fabricops_kit.config.setup_notebook",
+          "module": "config",
+          "docs_url": "../api/reference/setup_notebook/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_review_guardrail_governance",
+          "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 14
+    },
+    {
+      "helper": "_get_audit_timezone",
+      "qualified_name": "fabricops_kit.config._get_audit_timezone",
+      "module": "config",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204",
+      "public_callables": [
+        {
+          "callable": "prepare_pipeline_table_configs",
+          "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+          "module": "pipeline",
+          "docs_url": "../api/reference/prepare_pipeline_table_configs/"
+        },
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_review_guardrail_governance",
+          "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 12
+    },
+    {
+      "helper": "_configured_lakehouse_schema",
+      "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
+      "module": "fabric_input_output",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 12
+    },
+    {
+      "helper": "_current_audit_timestamp",
+      "qualified_name": "fabricops_kit.config._current_audit_timestamp",
+      "module": "config",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213",
+      "public_callables": [
+        {
+          "callable": "prepare_pipeline_table_configs",
+          "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+          "module": "pipeline",
+          "docs_url": "../api/reference/prepare_pipeline_table_configs/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_review_guardrail_governance",
+          "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 11
+    },
+    {
+      "helper": "_context_get",
+      "qualified_name": "fabricops_kit.metadata._context_get",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L154-L166",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_review_guardrail_governance",
+          "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        }
+      ],
+      "public_callable_count": 10
+    },
+    {
+      "helper": "_runtime_context",
+      "qualified_name": "fabricops_kit.metadata._runtime_context",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L173-L197",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_review_guardrail_governance",
+          "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        }
+      ],
+      "public_callable_count": 10
+    },
+    {
+      "helper": "_get_spark",
+      "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
+      "module": "fabric_input_output",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "read_data",
+          "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+          "module": "fabric_input_output",
+          "docs_url": "../api/reference/read_data/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        }
+      ],
+      "public_callable_count": 9
+    },
+    {
+      "helper": "_safe_str",
+      "qualified_name": "fabricops_kit.metadata._safe_str",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L169-L170",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        }
+      ],
+      "public_callable_count": 7
+    },
+    {
+      "helper": "_build_metadata_table_key",
+      "qualified_name": "fabricops_kit.metadata._build_metadata_table_key",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L80-L81",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        }
+      ],
+      "public_callable_count": 6
+    },
+    {
+      "helper": "_build_runtime_audit_fields",
+      "qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L200-L273",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        }
+      ],
+      "public_callable_count": 6
+    },
+    {
+      "helper": "_stable_metadata_key",
+      "qualified_name": "fabricops_kit.metadata._stable_metadata_key",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L75-L77",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        }
+      ],
+      "public_callable_count": 6
+    },
+    {
+      "helper": "_coerce_row_dicts",
+      "qualified_name": "fabricops_kit.data_agreement._coerce_row_dicts",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L402-L407",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 5
+    },
+    {
+      "helper": "_config_value",
+      "qualified_name": "fabricops_kit.data_agreement._config_value",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L151-L155",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 5
+    },
+    {
+      "helper": "_now_utc_iso",
+      "qualified_name": "fabricops_kit.metadata._now_utc_iso",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L64-L65",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_review_guardrail_governance",
+          "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+        }
+      ],
+      "public_callable_count": 5
+    },
+    {
+      "helper": "_html_escape",
+      "qualified_name": "fabricops_kit.data_agreement._html_escape",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L195-L198",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 4
+    },
+    {
+      "helper": "_list_all_data_agreement_rows",
+      "qualified_name": "fabricops_kit.data_agreement._list_all_data_agreement_rows",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L604-L613",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 4
+    },
+    {
+      "helper": "_render_searchable_selector",
+      "qualified_name": "fabricops_kit.data_agreement._render_searchable_selector",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L201-L311",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 4
+    },
+    {
+      "helper": "_require_ipywidgets",
+      "qualified_name": "fabricops_kit.data_agreement._require_ipywidgets",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L63-L72",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 4
+    },
+    {
+      "helper": "_widget_common",
+      "qualified_name": "fabricops_kit.data_agreement._widget_common",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L183-L192",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 4
+    },
+    {
+      "helper": "_resolve_action_by",
+      "qualified_name": "fabricops_kit.metadata._resolve_action_by",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L68-L72",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        },
+        {
+          "callable": "widget_review_guardrail_governance",
+          "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_review_guardrail_governance/"
+        }
+      ],
+      "public_callable_count": 4
+    },
+    {
+      "helper": "_now_iso",
+      "qualified_name": "fabricops_kit.pipeline._now_iso",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 4
+    },
+    {
+      "helper": "_active_steward",
+      "qualified_name": "fabricops_kit.data_agreement._active_steward",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L438-L448",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_latest_agreement_versions",
+      "qualified_name": "fabricops_kit.data_agreement._latest_agreement_versions",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L585-L601",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_latest_by_key",
+      "qualified_name": "fabricops_kit.data_agreement._latest_by_key",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L410-L416",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_list_data_agreements",
+      "qualified_name": "fabricops_kit.data_agreement._list_data_agreements",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L616-L623",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_list_data_stewards",
+      "qualified_name": "fabricops_kit.data_agreement._list_data_stewards",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_parse_contract_version",
+      "qualified_name": "fabricops_kit.data_agreement._parse_contract_version",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L570-L576",
+      "public_callables": [
+        {
+          "callable": "start_pipeline_run",
+          "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+          "module": "pipeline",
+          "docs_url": "../api/reference/start_pipeline_run/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_to_bool",
+      "qualified_name": "fabricops_kit.data_agreement._to_bool",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L419-L435",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_write_row",
+      "qualified_name": "fabricops_kit.data_agreement._write_row",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L493-L494",
+      "public_callables": [
+        {
+          "callable": "widget_render_agreement_evidence",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_agreement_evidence/"
+        },
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_authoring_lifecycle",
+      "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_coerce_rows",
+      "qualified_name": "fabricops_kit.governance_review._coerce_rows",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L62-L67",
+      "public_callables": [
+        {
+          "callable": "get_latest_metadata_catalogue",
+          "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "module": "governance_review",
+          "docs_url": "../api/reference/get_latest_metadata_catalogue/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_is_no_approval_required",
+      "qualified_name": "fabricops_kit.governance_review._is_no_approval_required",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1764-L1766",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_lifecycle_fields",
+      "qualified_name": "fabricops_kit.governance_review._lifecycle_fields",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1775-L1791",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_build_dq_rule_key",
+      "qualified_name": "fabricops_kit.metadata._build_dq_rule_key",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L138-L139",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_build_metadata_column_key",
+      "qualified_name": "fabricops_kit.metadata._build_metadata_column_key",
+      "module": "metadata",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L84-L85",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        },
+        {
+          "callable": "widget_enrich_table_metadata",
+          "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_enrich_table_metadata/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_definition_name",
+      "qualified_name": "fabricops_kit.pipeline._definition_name",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L163-L164",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 3
+    },
+    {
+      "helper": "_audit_timestamp_expr",
+      "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
+      "module": "config",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221",
+      "public_callables": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_validate_framework_config",
+      "qualified_name": "fabricops_kit.config._validate_framework_config",
+      "module": "config",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "setup_notebook",
+          "qualified_name": "fabricops_kit.config.setup_notebook",
+          "module": "config",
+          "docs_url": "../api/reference/setup_notebook/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_agreement_identity_text",
+      "qualified_name": "fabricops_kit.data_agreement._agreement_identity_text",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1062-L1072",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_business_agreement_snapshot",
+      "qualified_name": "fabricops_kit.data_agreement._business_agreement_snapshot",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L636-L640",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_collect_custom_fields",
+      "qualified_name": "fabricops_kit.data_agreement._collect_custom_fields",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L366-L399",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_create_or_update_data_agreement",
+      "qualified_name": "fabricops_kit.data_agreement._create_or_update_data_agreement",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L643-L687",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_create_or_update_data_steward",
+      "qualified_name": "fabricops_kit.data_agreement._create_or_update_data_steward",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L510-L567",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_deserialize_custom_fields",
+      "qualified_name": "fabricops_kit.data_agreement._deserialize_custom_fields",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L119-L148",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_generate_agreement_id",
+      "qualified_name": "fabricops_kit.data_agreement._generate_agreement_id",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L626-L627",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_generate_steward_id",
+      "qualified_name": "fabricops_kit.data_agreement._generate_steward_id",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L451-L455",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_get_widget_visible_fields",
+      "qualified_name": "fabricops_kit.data_agreement._get_widget_visible_fields",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L158-L180",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_next_minor_version",
+      "qualified_name": "fabricops_kit.data_agreement._next_minor_version",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L579-L582",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_parse_iso_date",
+      "qualified_name": "fabricops_kit.data_agreement._parse_iso_date",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L497-L507",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_render_custom_fields",
+      "qualified_name": "fabricops_kit.data_agreement._render_custom_fields",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L313-L363",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_render_maintenance_widget",
+      "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_serialize_custom_fields",
+      "qualified_name": "fabricops_kit.data_agreement._serialize_custom_fields",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L102-L116",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_standard_widget",
+      "qualified_name": "fabricops_kit.data_agreement._standard_widget",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1046-L1059",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_to_iso_date",
+      "qualified_name": "fabricops_kit.data_agreement._to_iso_date",
+      "module": "data_agreement",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L630-L633",
+      "public_callables": [
+        {
+          "callable": "widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_agreement/"
+        },
+        {
+          "callable": "widget_render_data_steward",
+          "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+          "module": "data_agreement",
+          "docs_url": "../api/reference/widget_render_data_steward/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_build_categorical_distribution",
+      "qualified_name": "fabricops_kit.data_profiling._build_categorical_distribution",
+      "module": "data_profiling",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L153-L190",
+      "public_callables": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_build_distribution_summaries",
+      "qualified_name": "fabricops_kit.data_profiling._build_distribution_summaries",
+      "module": "data_profiling",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223",
+      "public_callables": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_build_numeric_distribution",
+      "qualified_name": "fabricops_kit.data_profiling._build_numeric_distribution",
+      "module": "data_profiling",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L121-L150",
+      "public_callables": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_get_profiled_columns",
+      "qualified_name": "fabricops_kit.data_profiling._get_profiled_columns",
+      "module": "data_profiling",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82",
+      "public_callables": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_is_min_max_supported_type",
+      "qualified_name": "fabricops_kit.data_profiling._is_min_max_supported_type",
+      "module": "data_profiling",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105",
+      "public_callables": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_numeric_bin_edges",
+      "qualified_name": "fabricops_kit.data_profiling._numeric_bin_edges",
+      "module": "data_profiling",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L108-L118",
+      "public_callables": [
+        {
+          "callable": "profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "module": "data_profiling",
+          "docs_url": "../api/reference/profile_dataframe/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_base_guardrail_rule_record",
+      "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_is_table_not_found_error",
+      "qualified_name": "fabricops_kit.governance_review._is_table_not_found_error",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L316-L336",
+      "public_callables": [
+        {
+          "callable": "setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "module": "config",
+          "docs_url": "../api/reference/setup_metadata_tables/"
+        },
+        {
+          "callable": "widget_select_guardrail_target",
+          "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_select_guardrail_target/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_latest_rule",
+      "qualified_name": "fabricops_kit.governance_review._latest_rule",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_rule_params",
+      "qualified_name": "fabricops_kit.governance_review._rule_params",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_write_rule_records",
+      "qualified_name": "fabricops_kit.governance_review._write_rule_records",
+      "module": "governance_review",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+      "public_callables": [
+        {
+          "callable": "widget_author_dq_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_dq_rules/"
+        },
+        {
+          "callable": "widget_author_schema_freshness_profile_rules",
+          "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "module": "governance_review",
+          "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_active_pipeline_context",
+      "qualified_name": "fabricops_kit.pipeline._active_pipeline_context",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L154-L156",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "write_pipeline_run_summary",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_run_summary/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_dq_reason",
+      "qualified_name": "fabricops_kit.pipeline._dq_reason",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L341-L353",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_freshness_reason",
+      "qualified_name": "fabricops_kit.pipeline._freshness_reason",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L307-L311",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_guardrail_reason",
+      "qualified_name": "fabricops_kit.pipeline._guardrail_reason",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_next_action",
+      "qualified_name": "fabricops_kit.pipeline._next_action",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L279-L290",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_profile_behavior_reason",
+      "qualified_name": "fabricops_kit.pipeline._profile_behavior_reason",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_result_can_continue",
+      "qualified_name": "fabricops_kit.pipeline._result_can_continue",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L265-L269",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_result_reason",
+      "qualified_name": "fabricops_kit.pipeline._result_reason",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L272-L276",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_result_status",
+      "qualified_name": "fabricops_kit.pipeline._result_status",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L260-L262",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_runtime_audit_fields",
+      "qualified_name": "fabricops_kit.pipeline._runtime_audit_fields",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L189-L200",
+      "public_callables": [
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        },
+        {
+          "callable": "write_pipeline_lineage",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "module": "pipeline",
+          "docs_url": "../api/reference/write_pipeline_lineage/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_schema_reason",
+      "qualified_name": "fabricops_kit.pipeline._schema_reason",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L293-L304",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_table_keys",
+      "qualified_name": "fabricops_kit.pipeline._table_keys",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L369-L376",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    },
+    {
+      "helper": "_yes_no",
+      "qualified_name": "fabricops_kit.pipeline._yes_no",
+      "module": "pipeline",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L255-L257",
+      "public_callables": [
+        {
+          "callable": "display_guardrail_results",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "module": "pipeline",
+          "docs_url": "../api/reference/display_guardrail_results/"
+        },
+        {
+          "callable": "run_table_guardrails",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "module": "pipeline",
+          "docs_url": "../api/reference/run_table_guardrails/"
+        }
+      ],
+      "public_callable_count": 2
+    }
+  ],
+  "refactor_hotspots": [
+    {
+      "callable": "run_table_guardrails",
+      "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+      "module": "pipeline",
+      "docs_url": "../api/reference/run_table_guardrails/",
+      "score": 91.14,
+      "unique_internal_helper_count": 87,
+      "deepest_call_chain_depth": 6,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 38
+    },
+    {
+      "callable": "widget_render_data_agreement",
+      "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
+      "module": "data_agreement",
+      "docs_url": "../api/reference/widget_render_data_agreement/",
+      "score": 78.02,
+      "unique_internal_helper_count": 46,
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 46
+    },
+    {
+      "callable": "widget_render_data_steward",
+      "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
+      "module": "data_agreement",
+      "docs_url": "../api/reference/widget_render_data_steward/",
+      "score": 78.02,
+      "unique_internal_helper_count": 46,
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 46
+    },
+    {
+      "callable": "start_pipeline_run",
+      "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
+      "module": "pipeline",
+      "docs_url": "../api/reference/start_pipeline_run/",
+      "score": 65.66,
+      "unique_internal_helper_count": 34,
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 25
+    },
+    {
+      "callable": "widget_author_dq_rules",
+      "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
+      "module": "governance_review",
+      "docs_url": "../api/reference/widget_author_dq_rules/",
+      "score": 65.11,
+      "unique_internal_helper_count": 26,
+      "deepest_call_chain_depth": 8,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 25
+    },
+    {
+      "callable": "widget_author_schema_freshness_profile_rules",
+      "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+      "module": "governance_review",
+      "docs_url": "../api/reference/widget_author_schema_freshness_profile_rules/",
+      "score": 65.11,
+      "unique_internal_helper_count": 26,
+      "deepest_call_chain_depth": 8,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 25
+    },
+    {
+      "callable": "widget_enrich_table_metadata",
+      "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
+      "module": "governance_review",
+      "docs_url": "../api/reference/widget_enrich_table_metadata/",
+      "score": 64.55,
+      "unique_internal_helper_count": 33,
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 23
+    },
+    {
+      "callable": "widget_render_agreement_evidence",
+      "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
+      "module": "data_agreement",
+      "docs_url": "../api/reference/widget_render_agreement_evidence/",
+      "score": 58.46,
+      "unique_internal_helper_count": 27,
+      "deepest_call_chain_depth": 7,
+      "repeated_helper_count": 10,
+      "shared_helper_overlap_count": 23
+    },
+    {
+      "callable": "setup_metadata_tables",
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+      "module": "config",
+      "docs_url": "../api/reference/setup_metadata_tables/",
+      "score": 55.56,
+      "unique_internal_helper_count": 32,
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 12,
+      "shared_helper_overlap_count": 16
+    },
+    {
+      "callable": "write_pipeline_lineage",
+      "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+      "module": "pipeline",
+      "docs_url": "../api/reference/write_pipeline_lineage/",
+      "score": 45.56,
+      "unique_internal_helper_count": 19,
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 9,
+      "shared_helper_overlap_count": 19
+    },
+    {
+      "callable": "display_guardrail_results",
+      "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+      "module": "pipeline",
+      "docs_url": "../api/reference/display_guardrail_results/",
+      "score": 39.94,
+      "unique_internal_helper_count": 12,
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 11,
+      "shared_helper_overlap_count": 11
+    },
+    {
+      "callable": "widget_review_guardrail_governance",
+      "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
+      "module": "governance_review",
+      "docs_url": "../api/reference/widget_review_guardrail_governance/",
+      "score": 37.05,
+      "unique_internal_helper_count": 9,
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 9,
+      "shared_helper_overlap_count": 7
+    },
+    {
+      "callable": "widget_select_guardrail_target",
+      "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
+      "module": "governance_review",
+      "docs_url": "../api/reference/widget_select_guardrail_target/",
+      "score": 34.31,
+      "unique_internal_helper_count": 14,
+      "deepest_call_chain_depth": 5,
+      "repeated_helper_count": 5,
+      "shared_helper_overlap_count": 12
+    },
+    {
+      "callable": "write_pipeline_run_summary",
+      "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+      "module": "pipeline",
+      "docs_url": "../api/reference/write_pipeline_run_summary/",
+      "score": 29.84,
+      "unique_internal_helper_count": 14,
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 4,
+      "shared_helper_overlap_count": 13
+    },
+    {
+      "callable": "read_data",
+      "qualified_name": "fabricops_kit.fabric_input_output.read_data",
+      "module": "fabric_input_output",
+      "docs_url": "../api/reference/read_data/",
+      "score": 27.25,
+      "unique_internal_helper_count": 9,
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 5,
+      "shared_helper_overlap_count": 7
+    },
+    {
+      "callable": "get_latest_metadata_catalogue",
+      "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+      "module": "governance_review",
+      "docs_url": "../api/reference/get_latest_metadata_catalogue/",
+      "score": 26.7,
+      "unique_internal_helper_count": 10,
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 4,
+      "shared_helper_overlap_count": 9
+    },
+    {
+      "callable": "write_data",
+      "qualified_name": "fabricops_kit.fabric_input_output.write_data",
+      "module": "fabric_input_output",
+      "docs_url": "../api/reference/write_data/",
+      "score": 22.22,
+      "unique_internal_helper_count": 6,
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 3,
+      "shared_helper_overlap_count": 6
+    },
+    {
+      "callable": "setup_notebook",
+      "qualified_name": "fabricops_kit.config.setup_notebook",
+      "module": "config",
+      "docs_url": "../api/reference/setup_notebook/",
+      "score": 20.82,
+      "unique_internal_helper_count": 8,
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 2,
+      "shared_helper_overlap_count": 4
+    },
+    {
+      "callable": "profile_dataframe",
+      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+      "module": "data_profiling",
+      "docs_url": "../api/reference/profile_dataframe/",
+      "score": 19.78,
+      "unique_internal_helper_count": 9,
+      "deepest_call_chain_depth": 3,
+      "repeated_helper_count": 2,
+      "shared_helper_overlap_count": 9
+    },
+    {
+      "callable": "prepare_pipeline_table_configs",
+      "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+      "module": "pipeline",
+      "docs_url": "../api/reference/prepare_pipeline_table_configs/",
+      "score": 15.32,
+      "unique_internal_helper_count": 4,
+      "deepest_call_chain_depth": 4,
+      "repeated_helper_count": 0,
+      "shared_helper_overlap_count": 3
+    }
+  ]
+}
