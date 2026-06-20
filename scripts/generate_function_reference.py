@@ -1991,29 +1991,6 @@ def _build_callable_flow_data(
             }
         )
 
-    shared_helper_usage = [
-        {
-            "helper": node_by_qn[helper_qn]["callable_name"],
-            "qualified_name": helper_qn,
-            "module": node_by_qn[helper_qn]["module_name"],
-            "source_url": _callable_flow_source_link(helper_qn, module_data),
-            "public_callables": [
-                {
-                    "callable": node_by_qn[public_qn]["callable_name"],
-                    "qualified_name": public_qn,
-                    "module": node_by_qn[public_qn]["module_name"],
-                    "docs_url": _public_callable_docs_url(node_by_qn[public_qn]['callable_name']),
-                }
-                for public_qn in sorted(helper_users[helper_qn], key=lambda qn: node_by_qn[qn]["callable_name"].lower())
-            ],
-            "public_callable_count": len(helper_users[helper_qn]),
-        }
-        for helper_qn in sorted(
-            shared_helper_qns,
-            key=lambda qn: (-len(helper_users[qn]), node_by_qn[qn]["module_name"], node_by_qn[qn]["callable_name"].lower()),
-        )
-    ]
-
     _, refactor_inventory, _ = _build_refactor_inventory(
         public_qns,
         calls_by_qn,
