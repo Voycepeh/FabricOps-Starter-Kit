@@ -241,10 +241,56 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.md-typeset .callable-flow-signal-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.md-typeset .callable-flow-signal-card {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.35rem solid var(--md-accent-fg-color);
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+}
+
+.md-typeset .callable-flow-signal-card.is-high {
+  border-left-color: #dc2626;
+}
+
+.md-typeset .callable-flow-signal-card.is-medium {
+  border-left-color: #eab308;
+}
+
+.md-typeset .callable-flow-signal-card.is-protect {
+  border-left-color: #16a34a;
+}
+
+.md-typeset .callable-flow-signal-card-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.md-typeset .callable-flow-signal-card-label {
+  color: var(--md-default-fg-color--light);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 0.35rem;
+}
+
+.md-typeset .callable-flow-cta {
+  text-align: center;
+}
+
 .md-typeset .callable-flow-table {
   border-collapse: collapse;
   display: table;
-  min-width: 58rem;
+  min-width: 88rem;
   width: 100%;
 }
 

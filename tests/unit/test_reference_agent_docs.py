@@ -226,22 +226,33 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "High priority candidates" in flow_text
     assert "Medium priority candidates" in flow_text
     assert "Protect helpers" in flow_text
-    assert "Thin wrapper candidates" in flow_text
+    assert "Likely wrapper / inline candidates" in flow_text
+    assert "Refactor reason / priority" in flow_text
+    assert "Likely wrapper / inline candidate" in flow_text
+    assert "Used by only one function" in flow_text
+    assert "End-of-chain helper" in flow_text
+    assert "Used by many functions" in flow_text
+    assert "Thin wrapper candidate" not in flow_text
+    assert "Single-use internal helper" not in flow_text
+    assert "Leaf internal helper" not in flow_text
+    assert "High-fanout helper" not in flow_text
     assert "Public API entrypoints" in flow_text
-    assert "## Top priority refactor inventory" in flow_text
+    assert "## Top priority refactor inventory" not in flow_text
     assert "refactor-dashboard.html" in flow_text
     assert "_data/callable-flow.json" in flow_text
     assert "../refactor-dashboard.html" not in flow_text
     assert "../_data/callable-flow.json" not in flow_text
-    assert "full one-row-per-helper inventory" in flow_text
-    assert "Protect helpers are excluded here" in flow_text
+    assert "Complete one-row-per-internal-helper inventory" in flow_text
+    assert "Protect helpers are excluded here" not in flow_text
     assert '??? info "Full searchable inventory"' not in flow_text
     assert '??? info "Inventory by module"' not in flow_text
     assert '??? info "Inventory by signal"' not in flow_text
-    assert "## Public callable dependency map" in flow_text
+    assert "modules, refactor reasons, callers" in flow_text
+    assert "## Public callable dependency map" not in flow_text
     assert "## Callable helper summary" in flow_text
-    assert "## Shared helper usage" in flow_text
-    assert "## Legacy hotspot summary" in flow_text
+    assert "## Shared helper usage" not in flow_text
+    assert "## Internal helper nesting inventory" in flow_text
+    assert "## Legacy hotspot summary" not in flow_text
     assert "## Refactor hotspot ranking" not in flow_text
     assert "Helper" in flow_text
     assert "Suggested action" in flow_text
@@ -250,15 +261,24 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<div class="callable-flow-table-wrap" markdown="0">' in flow_text
     assert '<td class="flow-cell-name"><a href="../../api/reference/widget_select_guardrail_target/"' in flow_text
     assert '<td class="flow-cell-number">87</td>' in flow_text
-    assert "independent entry point" in flow_text
+    assert "independent entry point" not in flow_text
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
-    assert "FabricOps refactor signal dashboard" in dashboard_text
+    assert "FabricOps refactor triage dashboard" in dashboard_text
     assert 'id="searchBox"' in dashboard_text
     assert 'id="moduleFilter"' in dashboard_text
     assert 'id="signalFilter"' in dashboard_text
     assert 'id="priorityFilter"' in dashboard_text
-    assert "Reset filters" in dashboard_text
+    assert "Reset" in dashboard_text
+    assert 'id="searchScope"' in dashboard_text
+    assert "Refactor reason" in dashboard_text
+    assert "All refactor reasons" in dashboard_text
+    assert "Global search covers helper, module, refactor reason" in dashboard_text
+    assert "Likely wrapper / inline candidate" in dashboard_text
+    assert "Used by only one function" in dashboard_text
+    assert "End-of-chain helper" in dashboard_text
+    assert "Used by many functions" in dashboard_text
+    assert 'data-card="${key}"' in dashboard_text
     assert 'data-sort="function"' in dashboard_text
     assert "data-toggle" in dashboard_text
     assert "callable-flow/" in dashboard_text
@@ -326,7 +346,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(item["priority"] for item in refactor_inventory)
     assert all(item["suggested_action"] for item in refactor_inventory)
     assert any(
-        item["priority"] == "Protect" and item["suggested_action"] == "Keep stable"
+        item["priority"] == "Protect" and item["suggested_action"] == "Shared helper – preserve carefully"
         for item in refactor_inventory
     )
     assert all(
@@ -340,6 +360,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
             "suggested_action",
             "inbound_count",
             "outbound_project_call_count",
+            "nesting_level",
+            "public_entrypoint_lineage",
             "used_by",
             "calls",
             "source_path",
@@ -364,7 +386,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert thin_wrapper["inbound_count"] == 1
     assert thin_wrapper["outbound_project_call_count"] == 1
     assert thin_wrapper["priority"] == "High"
-    assert thin_wrapper["suggested_action"] == "Inspect for inline"
+    assert thin_wrapper["suggested_action"] == "Inline candidate"
+    assert thin_wrapper["public_entrypoint_lineage"]
     assert thin_wrapper["used_by"]
     assert thin_wrapper["calls"]
 
