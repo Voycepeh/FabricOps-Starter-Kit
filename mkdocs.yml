@@ -32,18 +32,18 @@ nav:
       - Explore Metadata Outputs: guided-demo/explore-metadata-outputs.md
   - Template Notebooks: how-fabricops-works/notebook-templates/index.md
   - List of Metadata Tables:
-      - Overview: reference/metadata-tables/index.md
-      - Data Access: reference/metadata-tables/metadata-data-access.md
-      - Data Agreement: reference/metadata-tables/metadata-data-agreement.md
-      - Data Agreement Evidence: reference/metadata-tables/metadata-data-agreement-evidence.md
-      - Data Catalogue: reference/metadata-tables/metadata-data-catalogue.md
-      - Data Lineage Table: reference/metadata-tables/metadata-data-lineage-table.md
-      - Data Steward: reference/metadata-tables/metadata-data-steward.md
-      - Enrichment Rules: reference/metadata-tables/metadata-enrichment-rules.md
-      - Guardrail Results: reference/metadata-tables/metadata-guardrail-results.md
-      - Guardrail Rules: reference/metadata-tables/metadata-guardrail-rules.md
-      - Notebook Registry: reference/metadata-tables/metadata-notebook-registry.md
-      - Pipeline Runs: reference/metadata-tables/metadata-pipeline-runs.md
+      - Overview: reference/metadata.md
+      - Data Access: reference/metadata/metadata_data_access.md
+      - Data Agreement: reference/metadata/metadata_data_agreement.md
+      - Data Agreement Evidence: reference/metadata/metadata_data_agreement_evidence.md
+      - Data Catalogue: reference/metadata/metadata_data_catalogue.md
+      - Data Lineage Table: reference/metadata/metadata_data_lineage_table.md
+      - Data Steward: reference/metadata/metadata_data_steward.md
+      - Enrichment Rules: reference/metadata/metadata_enrichment_rules.md
+      - Guardrail Results: reference/metadata/metadata_guardrail_results.md
+      - Guardrail Rules: reference/metadata/metadata_guardrail_rules.md
+      - Notebook Registry: reference/metadata/metadata_notebook_registry.md
+      - Pipeline Runs: reference/metadata/metadata_pipeline_runs.md
   - List of Functions: reference/index.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md

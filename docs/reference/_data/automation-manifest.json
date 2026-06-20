@@ -1576,7 +1576,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "preferred_example": "setup_metadata_tables(\n    spark=spark,\n    config=CONFIG,\n    env=\"Sandbox\",\n)",
@@ -1635,7 +1635,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "preferred_example": "context = setup_notebook(CONFIG, env=\"Sandbox\", required_targets=[\"Source\", \"Unified\"], notebook_name=\"00_env_config\")",
@@ -3279,7 +3279,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "preferred_example": "Not documented yet",
@@ -11841,7 +11841,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "preferred_example": "Not documented yet",
@@ -11901,7 +11901,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "preferred_example": "Not documented yet",

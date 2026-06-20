@@ -1093,7 +1093,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "source_path": "src/fabricops_kit/config.py",
@@ -1147,7 +1147,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "source_path": "src/fabricops_kit/config.py",
@@ -2280,7 +2280,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "source_path": "src/fabricops_kit/data_agreement.py",
@@ -8330,7 +8330,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",
@@ -8385,7 +8385,7 @@
       },
       {
         "title": "Metadata Tables",
-        "path": "../../reference/metadata-tables/index.md"
+        "path": "../../reference/metadata.md"
       }
     ],
     "source_path": "src/fabricops_kit/pipeline.py",

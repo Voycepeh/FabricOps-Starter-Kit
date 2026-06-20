@@ -13,7 +13,7 @@ Use this file as a concise navigation map for documentation and automation workf
 ## Architecture
 
 - [How FabricOps Works](how-fabricops-works.md): Overview of the governed Fabric notebook operating model.
-- [List of Metadata Tables](reference/metadata-tables/index.md): Metadata table responsibilities and governance evidence model.
+- [List of Metadata Tables](reference/metadata.md): Metadata table responsibilities and governance evidence model.
 - [Pipeline Execution](how-fabricops-works/notebook-templates/pipeline-execution.md): Runtime pipeline flow, guardrails, DQ enforcement, and profile behaviour.
 - [Metadata Dashboard](how-fabricops-works/notebook-templates/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
 

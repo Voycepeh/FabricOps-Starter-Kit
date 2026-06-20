@@ -699,9 +699,9 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     agreement_setup = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates" / "agreement-setup.md").read_text(encoding="utf-8")
     pipeline_execution = (ROOT / "docs" / "how-fabricops-works" / "pipeline-execution.md").read_text(encoding="utf-8")
     governance_review = (ROOT / "docs" / "how-fabricops-works" / "notebook-templates" / "governance-review.md").read_text(encoding="utf-8")
-    metadata_tables = (ROOT / "docs" / "reference" / "metadata-tables" / "index.md").read_text(encoding="utf-8")
+    metadata_tables = (ROOT / "docs" / "reference" / "metadata.md").read_text(encoding="utf-8")
     lineage_table = (
-        ROOT / "docs" / "reference" / "metadata-tables" / "metadata-data-lineage-table.md"
+        ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage_table.md"
     ).read_text(encoding="utf-8")
 
     assert "[`setup_notebook`](../../api/reference/setup_notebook.md)" in environment_config
@@ -831,7 +831,7 @@ def test_reference_nav_promotes_catalogue_entry_pages_only() -> None:
 
     assert "  - List of Functions: reference/index.md" in mkdocs_text
     assert "  - List of Metadata Tables:" in mkdocs_text
-    assert "      - Overview: reference/metadata-tables/index.md" in mkdocs_text
+    assert "      - Overview: reference/metadata.md" in mkdocs_text
     assert "  - Glossary: reference/glossary.md" in mkdocs_text
     assert "  - List of DQ Rules:" in mkdocs_text
     assert "      - Overview: reference/dq-rules/index.md" in mkdocs_text
