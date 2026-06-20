@@ -152,33 +152,110 @@ No additional callable notes are documented.
 
     ### Refactor signals
 
-    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
-
-    **Helpers appearing in multiple branches**
-
-    - `_result_reason` appears in 8 branches.
-    - `_result_status` appears in 8 branches.
-    - `_dq_reason` appears in 2 branches.
-    - `_freshness_reason` appears in 2 branches.
-    - `_guardrail_reason` appears in 2 branches.
-    - `_next_action` appears in 2 branches.
-    - `_profile_behavior_reason` appears in 2 branches.
-    - `_result_can_continue` appears in 2 branches.
-    - `_schema_reason` appears in 2 branches.
-    - `_table_keys` appears in 2 branches.
-    - `_yes_no` appears in 2 branches.
-
-    **Call chains deeper than 4 levels**
-
-    - None detected.
-
-    **Helpers that only call one package-local helper**
-
-    - `_dq_reason` only delegates to `_result_reason`.
-
-    **Helpers grouped into possibly wrong areas**
-
-    - None detected from helper names, doc summaries, and module placement.
+    <div class="callable-flow-table-wrap" markdown="0">
+    <table class="callable-flow-table">
+    <thead>
+    <tr>
+    <th class="flow-cell-name">Helper</th>
+    <th class="flow-cell-module">Module</th>
+    <th class="flow-cell-wide">Signals</th>
+    <th class="flow-cell-wide">Used by</th>
+    <th class="flow-cell-wide">Calls</th>
+    <th class="flow-cell-wide">Suggested action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L260-L262"><code>_result_status</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Leaf internal helper, High-fanout helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L307-L311"><code>_freshness_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366"><code>_guardrail_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338"><code>_profile_behavior_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L445-L474"><code>build_guardrail_detail_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L379-L442"><code>build_guardrail_summary_rows</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep stable</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L341-L353"><code>_dq_reason</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366"><code>_guardrail_reason</code></a></td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L272-L276"><code>_result_reason</code></a></td>
+    <td class="flow-cell-wide">Inspect for inline</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L307-L311"><code>_freshness_reason</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Single-use internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366"><code>_guardrail_reason</code></a></td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L272-L276"><code>_result_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L260-L262"><code>_result_status</code></a></td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338"><code>_profile_behavior_reason</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Single-use internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366"><code>_guardrail_reason</code></a></td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L272-L276"><code>_result_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L260-L262"><code>_result_status</code></a></td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L500-L504"><code>_rows_for_display</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L507-L535"><code>display_guardrail_results</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L293-L304"><code>_schema_reason</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366"><code>_guardrail_reason</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L279-L290"><code>_next_action</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L445-L474"><code>build_guardrail_detail_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L379-L442"><code>build_guardrail_summary_rows</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep if transformation or validation</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L265-L269"><code>_result_can_continue</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L445-L474"><code>build_guardrail_detail_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L379-L442"><code>build_guardrail_summary_rows</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep if transformation or validation</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L272-L276"><code>_result_reason</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L341-L353"><code>_dq_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L307-L311"><code>_freshness_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L356-L366"><code>_guardrail_reason</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338"><code>_profile_behavior_reason</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep if transformation or validation</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L369-L376"><code>_table_keys</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L445-L474"><code>build_guardrail_detail_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L379-L442"><code>build_guardrail_summary_rows</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep if transformation or validation</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L255-L257"><code>_yes_no</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L445-L474"><code>build_guardrail_detail_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L379-L442"><code>build_guardrail_summary_rows</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep if transformation or validation</td>
+    </tr>
+    </tbody>
+    </table>
+    </div>
 
 This callable uses 12 internal helpers for metadata loading, rule parsing, rule evaluation, result summary, fabric or spark access, and other.
 

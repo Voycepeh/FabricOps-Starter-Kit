@@ -1575,6 +1575,22 @@ REFACTOR_SIGNAL_RECOMMENDATIONS = {
     "High-fanout helper": "Keep stable",
 }
 
+REFACTOR_PRIORITY_ORDER = {
+    "Protect": 0,
+    "High": 1,
+    "Medium": 2,
+    "Low": 3,
+    "Review": 4,
+}
+
+REFACTOR_PRIORITY_ACTIONS = {
+    "Protect": "Keep stable",
+    "High": "Inspect for inline",
+    "Medium": "Review purpose",
+    "Low": "Keep if transformation or validation",
+    "Review": "Inspect manually",
+}
+
 
 def _callable_flow_source_path(qn: str) -> str | None:
     """Return the repository source path for a package callable."""
@@ -1599,34 +1615,69 @@ def _project_inbound_callers(
     return inbound
 
 
-def _build_global_refactor_signals(
+def _refactor_priority(signals: list[str]) -> str:
+    """Return the dashboard priority for an aggregated helper signal list."""
+    if "High-fanout helper" in signals:
+        return "Protect"
+    if "Thin wrapper candidate" in signals:
+        return "High"
+    if "Single-use internal helper" in signals:
+        return "Medium"
+    if "Leaf internal helper" in signals:
+        return "Low"
+    return "Review"
+
+
+def _build_refactor_inventory(
     public_qns: list[str],
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
-) -> tuple[dict[str, int], list[dict[str, Any]]]:
-    """Build simple call-graph refactor signals for the callable-flow dashboard."""
+) -> tuple[dict[str, int], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Build one aggregated refactor inventory row per internal helper."""
     inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
-    signal_rows: list[dict[str, Any]] = []
+    signal_index = {name: index for index, name in enumerate(REFACTOR_SIGNAL_ORDER)}
+    inventory: list[dict[str, Any]] = []
 
-    def outbound_project_calls(qn: str) -> list[str]:
+    def sorted_qns(qns: set[str]) -> list[str]:
         return sorted(
-            {callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn},
+            qns,
             key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
         )
 
-    def append_signal(qn: str, signal: str, inbound: list[str], outbound: list[str]) -> None:
+    def outbound_project_calls(qn: str) -> list[str]:
+        return sorted_qns({callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn})
+
+    for qn in sorted_qns(set(node_by_qn)):
+        if not _is_internal_helper_qn(qn, node_by_qn):
+            continue
+        inbound = sorted_qns(inbound_by_qn.get(qn, set()))
+        outbound = outbound_project_calls(qn)
+        inbound_count = len(inbound)
+        outbound_count = len(outbound)
+        signals: list[str] = []
+        if inbound_count == 1 and outbound_count == 1:
+            signals.append("Thin wrapper candidate")
+        if inbound_count == 1:
+            signals.append("Single-use internal helper")
+        if outbound_count == 0:
+            signals.append("Leaf internal helper")
+        if inbound_count >= 5:
+            signals.append("High-fanout helper")
+        signals.sort(key=lambda signal: signal_index[signal])
+        priority = _refactor_priority(signals)
         node = node_by_qn[qn]
-        signal_rows.append(
+        inventory.append(
             {
                 "function": node["callable_name"],
                 "module": node["module_name"],
                 "qualified_name": qn,
-                "is_internal": _is_internal_helper_qn(qn, node_by_qn),
-                "inbound_count": len(inbound),
-                "outbound_project_call_count": len(outbound),
-                "signal": signal,
-                "recommendation": REFACTOR_SIGNAL_RECOMMENDATIONS[signal],
+                "is_internal": True,
+                "signals": signals,
+                "priority": priority,
+                "suggested_action": REFACTOR_PRIORITY_ACTIONS[priority],
+                "inbound_count": inbound_count,
+                "outbound_project_call_count": outbound_count,
                 "used_by": [
                     {
                         "function": node_by_qn[caller]["callable_name"],
@@ -1650,39 +1701,50 @@ def _build_global_refactor_signals(
             }
         )
 
-    for qn in sorted(
-        node_by_qn,
-        key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
-    ):
-        if not _is_internal_helper_qn(qn, node_by_qn):
-            continue
-        inbound = sorted(
-            inbound_by_qn.get(qn, set()),
-            key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
+    inventory.sort(
+        key=lambda row: (REFACTOR_PRIORITY_ORDER[row["priority"]], row["module"], row["function"].lower())
+    )
+    legacy_signal_rows = [
+        {
+            "function": row["function"],
+            "module": row["module"],
+            "qualified_name": row["qualified_name"],
+            "is_internal": row["is_internal"],
+            "inbound_count": row["inbound_count"],
+            "outbound_project_call_count": row["outbound_project_call_count"],
+            "signal": signal,
+            "recommendation": REFACTOR_SIGNAL_RECOMMENDATIONS[signal],
+            "used_by": row["used_by"],
+            "calls": row["calls"],
+            "source_path": row["source_path"],
+            "source_url": row["source_url"],
+        }
+        for row in inventory
+        for signal in row["signals"]
+    ]
+    legacy_signal_rows.sort(
+        key=lambda row: (
+            signal_index[row["signal"]],
+            row["module"],
+            row["function"].lower(),
         )
-        outbound = outbound_project_calls(qn)
-        inbound_count = len(inbound)
-        outbound_count = len(outbound)
-        if inbound_count == 1 and outbound_count == 1:
-            append_signal(qn, "Thin wrapper candidate", inbound, outbound)
-        if inbound_count == 1:
-            append_signal(qn, "Single-use internal helper", inbound, outbound)
-        if outbound_count == 0:
-            append_signal(qn, "Leaf internal helper", inbound, outbound)
-        if inbound_count >= 5:
-            append_signal(qn, "High-fanout helper", inbound, outbound)
-
-    signal_index = {name: index for index, name in enumerate(REFACTOR_SIGNAL_ORDER)}
-    signal_rows.sort(key=lambda row: (signal_index[row["signal"]], row["module"], row["function"].lower()))
+    )
     summary_counts = {
-        "thin_wrapper_candidates": sum(1 for row in signal_rows if row["signal"] == "Thin wrapper candidate"),
-        "single_use_internal_helpers": sum(1 for row in signal_rows if row["signal"] == "Single-use internal helper"),
-        "leaf_internal_helpers": sum(1 for row in signal_rows if row["signal"] == "Leaf internal helper"),
-        "high_fanout_helpers": sum(1 for row in signal_rows if row["signal"] == "High-fanout helper"),
+        "thin_wrapper_candidates": sum(
+            1 for row in inventory if "Thin wrapper candidate" in row["signals"]
+        ),
+        "single_use_internal_helpers": sum(
+            1 for row in inventory if "Single-use internal helper" in row["signals"]
+        ),
+        "leaf_internal_helpers": sum(1 for row in inventory if "Leaf internal helper" in row["signals"]),
+        "high_fanout_helpers": sum(1 for row in inventory if "High-fanout helper" in row["signals"]),
         "public_api_entrypoints": len(public_qns),
-        "internal_helpers": sum(1 for qn in node_by_qn if _is_internal_helper_qn(qn, node_by_qn)),
+        "internal_helpers": len(inventory),
+        "high_priority_candidates": sum(1 for row in inventory if row["priority"] == "High"),
+        "medium_priority_candidates": sum(1 for row in inventory if row["priority"] == "Medium"),
+        "protect_helpers": sum(1 for row in inventory if row["priority"] == "Protect"),
     }
-    return summary_counts, signal_rows
+    return summary_counts, inventory, legacy_signal_rows
 
 
 def _build_callable_flow_data(
@@ -1795,7 +1857,7 @@ def _build_callable_flow_data(
         )
     ]
 
-    refactor_signal_summary, refactor_signals = _build_global_refactor_signals(
+    refactor_signal_summary, refactor_inventory, refactor_signals = _build_refactor_inventory(
         public_qns,
         calls_by_qn,
         node_by_qn,
@@ -1836,6 +1898,7 @@ def _build_callable_flow_data(
         "refactor_hotspots": sorted(refactor_hotspots, key=lambda row: (-row["score"], row["callable"].lower())),
         "summary_counts": refactor_signal_summary,
         "refactor_signals": refactor_signals,
+        "refactor_inventory": refactor_inventory,
     }
 
 
@@ -1853,9 +1916,52 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
     return f'<a href="{html.escape(url, quote=True)}">{inner}</a>'
 
 
-def _render_refactor_signal_items(items: list[dict[str, Any]]) -> str:
-    """Render compact linked callable names for refactor signal table cells."""
+def _render_refactor_inventory_items(items: list[dict[str, Any]]) -> str:
+    """Render compact linked callable names for refactor inventory table cells."""
     return ", ".join(_render_link(item["function"], item.get("source_url")) for item in items) or "—"
+
+
+def _render_refactor_inventory_table(
+    rows: list[dict[str, Any]],
+    *,
+    include_counts: bool = True,
+) -> list[str]:
+    """Render refactor inventory rows for dashboard and collapsible sections."""
+    table_rows: list[list[tuple[str, str]]] = []
+    for row in rows:
+        cells = [
+            (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
+            (_render_link(row["module"], code=True), "flow-cell-module"),
+            (", ".join(html.escape(signal) for signal in row["signals"]) or "—", "flow-cell-wide"),
+            (_render_refactor_inventory_items(row["used_by"]), "flow-cell-wide"),
+            (_render_refactor_inventory_items(row["calls"]), "flow-cell-wide"),
+        ]
+        if include_counts:
+            cells.extend(
+                [
+                    (str(row["inbound_count"]), "flow-cell-number"),
+                    (str(row["outbound_project_call_count"]), "flow-cell-number"),
+                ]
+            )
+        cells.append((html.escape(row["suggested_action"]), "flow-cell-wide"))
+        table_rows.append(cells)
+
+    headers = [
+        ("Helper", "flow-cell-name"),
+        ("Module", "flow-cell-module"),
+        ("Signals", "flow-cell-wide"),
+        ("Used by", "flow-cell-wide"),
+        ("Calls", "flow-cell-wide"),
+    ]
+    if include_counts:
+        headers.extend(
+            [
+                ("Inbound", "flow-cell-number"),
+                ("Outbound", "flow-cell-number"),
+            ]
+        )
+    headers.append(("Suggested action", "flow-cell-wide"))
+    return _render_flow_table(headers, table_rows)
 
 
 def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str, str]]]) -> list[str]:
@@ -1886,27 +1992,22 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         "",
         "Use this page as a review aid for separation, helper reuse, and refactor planning; it is not an automatic refactor instruction.",
         "",
-        "## Refactor signals",
+        "## Maintainer overview",
         "",
-        "Simple call graph signals for maintainers. Treat these as review queues, not automatic refactor instructions.",
+        "Bird eye refactor dashboard for internal helper shapes. Helpers appear once in the main inventory with multiple signal tags when more than one rule matches.",
         "",
-        "### How to use this page",
-        "",
-        "1. Start with Thin wrapper candidates.",
-        "2. Open the source link.",
-        "3. Inline only if the helper merely delegates.",
-        "4. Keep helpers that add validation, branching, logging, runtime handling, domain meaning, or test isolation.",
-        "5. Refactor one module per PR.",
+        "Use browser find/page search inside the expandable inventories to search helper names, modules, signals, callers, or callees.",
         "",
     ]
     summary_counts = flow_data["summary_counts"]
+    inventory = flow_data["refactor_inventory"]
     card_rows = [
+        ("Total internal helpers", summary_counts["internal_helpers"]),
+        ("High priority candidates", summary_counts["high_priority_candidates"]),
+        ("Medium priority candidates", summary_counts["medium_priority_candidates"]),
+        ("Protect helpers", summary_counts["protect_helpers"]),
         ("Thin wrapper candidates", summary_counts["thin_wrapper_candidates"]),
-        ("Single-use internal helpers", summary_counts["single_use_internal_helpers"]),
-        ("Leaf internal helpers", summary_counts["leaf_internal_helpers"]),
-        ("High-fanout helpers", summary_counts["high_fanout_helpers"]),
         ("Public API entrypoints", summary_counts["public_api_entrypoints"]),
-        ("Internal helpers", summary_counts["internal_helpers"]),
     ]
     lines.extend(['<div class="callable-flow-signal-cards" markdown="0">'])
     for label, value in card_rows:
@@ -1918,32 +2019,71 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
                 '</div>',
             ]
         )
-    lines.extend(['</div>', "", "### Signal inventory", ""])
-    signal_rows: list[list[tuple[str, str]]] = []
-    for row in flow_data["refactor_signals"]:
-        signal_rows.append(
+
+    top_inventory = inventory[:20]
+    lines.extend(
+        [
+            '</div>',
+            "",
+            "## Top priority refactor inventory",
+            "",
+            "Top 20 internal helpers sorted by priority, then module, then function name.",
+            "",
+        ]
+    )
+    lines.extend(_render_refactor_inventory_table(top_inventory))
+
+    lines.extend(
+        [
+            "",
+            '??? info "Full searchable inventory"',
+            "",
+            *_indent_markdown(
+                [
+                    "Every internal helper appears once in this full inventory. Use browser find/page search to search helper names, modules, signals, callers, or callees.",
+                    "",
+                    *_render_refactor_inventory_table(inventory),
+                ]
+            ),
+            "",
+            '??? info "Inventory by module"',
+            "",
+        ]
+    )
+    module_lines: list[str] = []
+    modules = sorted({row["module"] for row in inventory})
+    for module in modules:
+        module_rows = [row for row in inventory if row["module"] == module]
+        module_lines.extend(
             [
-                (html.escape(row["signal"]), "flow-cell-name"),
-                (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
-                (_render_link(row["module"], code=True), "flow-cell-module"),
-                (_render_refactor_signal_items(row["used_by"]), "flow-cell-wide"),
-                (_render_refactor_signal_items(row["calls"]), "flow-cell-wide"),
-                (html.escape(row["recommendation"]), "flow-cell-wide"),
+                f'??? info "{module}"',
+                "",
+                *_indent_markdown(_render_refactor_inventory_table(module_rows, include_counts=False)),
+                "",
             ]
         )
+    lines.extend(_indent_markdown(module_lines))
+
     lines.extend(
-        _render_flow_table(
-            [
-                ("Signal", "flow-cell-name"),
-                ("Function", "flow-cell-name"),
-                ("Module", "flow-cell-module"),
-                ("Used by", "flow-cell-wide"),
-                ("Calls", "flow-cell-wide"),
-                ("Recommendation", "flow-cell-wide"),
-            ],
-            signal_rows,
-        )
+        [
+            "",
+            '??? info "Inventory by signal"',
+            "",
+        ]
     )
+    signal_lines: list[str] = []
+    for signal in REFACTOR_SIGNAL_ORDER:
+        signal_rows = [row for row in inventory if signal in row["signals"]]
+        signal_lines.extend(
+            [
+                f'??? info "{signal}"',
+                "",
+                *_indent_markdown(_render_refactor_inventory_table(signal_rows, include_counts=False)),
+                "",
+            ]
+        )
+    lines.extend(_indent_markdown(signal_lines))
+
     lines.extend(
         [
             "",
@@ -2055,9 +2195,9 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "## Refactor hotspot ranking",
+            "## Legacy hotspot summary",
             "",
-            "Ranked review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Higher scores indicate call-tree shapes worth reviewing, not required refactors.",
+            "Legacy callable-level review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Use the maintainer inventory above as the primary refactor dashboard.",
             "",
         ]
     )
@@ -3557,6 +3697,23 @@ def main() -> None:
                 excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
             )
             refactor_signals_manifest[short_name] = refactor_signals
+            _, full_refactor_inventory, _ = _build_refactor_inventory(
+                [],
+                calls_by_qn,
+                node_by_qn,
+                module_data,
+            )
+            helper_qn_set = set(helper_qns)
+            local_refactor_inventory = [
+                item
+                for item in full_refactor_inventory
+                if item["qualified_name"] in helper_qn_set and item["signals"]
+            ]
+            local_refactor_lines = (
+                _render_refactor_inventory_table(local_refactor_inventory, include_counts=False)
+                if local_refactor_inventory
+                else ["No refactor signals detected."]
+            )
             call_flow_lines = [
                 '??? info "Maintainer/developer call flow"',
                 "",
@@ -3567,7 +3724,9 @@ def main() -> None:
                     "",
                     *_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data),
                     "",
-                    *_render_refactor_signals(refactor_signals, node_by_qn),
+                    "### Refactor signals",
+                    "",
+                    *local_refactor_lines,
                 ]),
             ]
             source_card_lines = _source_card_lines(

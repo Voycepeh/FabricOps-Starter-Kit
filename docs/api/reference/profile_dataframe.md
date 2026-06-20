@@ -152,25 +152,86 @@ complete datasets to the driver.
 
     ### Refactor signals
 
-    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
-
-    **Helpers appearing in multiple branches**
-
-    - `_get_audit_timezone` appears in 2 branches.
-    - `_validate_audit_timezone` appears in 2 branches.
-
-    **Call chains deeper than 4 levels**
-
-    - None detected.
-
-    **Helpers that only call one package-local helper**
-
-    - `_audit_timestamp_expr` only delegates to `_get_audit_timezone`.
-    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
-
-    **Helpers grouped into possibly wrong areas**
-
-    - None detected from helper names, doc summaries, and module placement.
+    <div class="callable-flow-table-wrap" markdown="0">
+    <table class="callable-flow-table">
+    <thead>
+    <tr>
+    <th class="flow-cell-name">Helper</th>
+    <th class="flow-cell-module">Module</th>
+    <th class="flow-cell-wide">Signals</th>
+    <th class="flow-cell-wide">Used by</th>
+    <th class="flow-cell-wide">Calls</th>
+    <th class="flow-cell-wide">Suggested action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221"><code>_audit_timestamp_expr</code></a></td>
+    <td class="flow-cell-module"><code>config</code></td>
+    <td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347"><code>profile_dataframe</code></a></td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a></td>
+    <td class="flow-cell-wide">Inspect for inline</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L153-L190"><code>_build_categorical_distribution</code></a></td>
+    <td class="flow-cell-module"><code>data_profiling</code></td>
+    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a></td>
+    <td class="flow-cell-module"><code>data_profiling</code></td>
+    <td class="flow-cell-wide">Single-use internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347"><code>profile_dataframe</code></a></td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L153-L190"><code>_build_categorical_distribution</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L121-L150"><code>_build_numeric_distribution</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L108-L118"><code>_numeric_bin_edges</code></a></td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L121-L150"><code>_build_numeric_distribution</code></a></td>
+    <td class="flow-cell-module"><code>data_profiling</code></td>
+    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L59-L82"><code>_get_profiled_columns</code></a></td>
+    <td class="flow-cell-module"><code>data_profiling</code></td>
+    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347"><code>profile_dataframe</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L85-L105"><code>_is_min_max_supported_type</code></a></td>
+    <td class="flow-cell-module"><code>data_profiling</code></td>
+    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347"><code>profile_dataframe</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L108-L118"><code>_numeric_bin_edges</code></a></td>
+    <td class="flow-cell-module"><code>data_profiling</code></td>
+    <td class="flow-cell-wide">Single-use internal helper, Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L193-L223"><code>_build_distribution_summaries</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Review purpose</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a></td>
+    <td class="flow-cell-module"><code>config</code></td>
+    <td class="flow-cell-wide">Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep if transformation or validation</td>
+    </tr>
+    </tbody>
+    </table>
+    </div>
 
 This callable uses 9 internal helpers for audit timestamp, column handling, result summary, fabric or spark access, and other.
 

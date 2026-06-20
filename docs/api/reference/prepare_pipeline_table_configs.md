@@ -135,25 +135,46 @@ FabricOps audit columns.
 
     ### Refactor signals
 
-    These generated hints point maintainers to call-tree shapes worth reviewing; they are not automatic refactor requirements.
-
-    **Helpers appearing in multiple branches**
-
-    - None detected in the reachable package-local call tree.
-
-    **Call chains deeper than 4 levels**
-
-    - None detected.
-
-    **Helpers that only call one package-local helper**
-
-    - `_current_audit_timestamp` only delegates to `_get_audit_timezone`.
-    - `_get_audit_timezone` only delegates to `_validate_audit_timezone`.
-    - `_add_audit_columns` only delegates to `_current_audit_timestamp`.
-
-    **Helpers grouped into possibly wrong areas**
-
-    - None detected from helper names, doc summaries, and module placement.
+    <div class="callable-flow-table-wrap" markdown="0">
+    <table class="callable-flow-table">
+    <thead>
+    <tr>
+    <th class="flow-cell-name">Helper</th>
+    <th class="flow-cell-module">Module</th>
+    <th class="flow-cell-wide">Signals</th>
+    <th class="flow-cell-wide">Used by</th>
+    <th class="flow-cell-wide">Calls</th>
+    <th class="flow-cell-wide">Suggested action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp</code></a></td>
+    <td class="flow-cell-module"><code>config</code></td>
+    <td class="flow-cell-wide">High-fanout helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L45-L93"><code>_build_lineage_records</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1561-L1576"><code>_dq_summary</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1695-L1719"><code>_prepare_dq_profile_input_rows</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L200-L273"><code>_build_runtime_audit_fields</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L64-L65"><code>_now_utc_iso</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L276-L395"><code>_register_current_notebook</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L538-L548"><code>_add_audit_columns</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L159-L160"><code>_now_iso</code></a></td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a></td>
+    <td class="flow-cell-wide">Keep stable</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L538-L548"><code>_add_audit_columns</code></a></td>
+    <td class="flow-cell-module"><code>pipeline</code></td>
+    <td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L551-L640"><code>prepare_pipeline_table_configs</code></a></td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp</code></a></td>
+    <td class="flow-cell-wide">Inspect for inline</td>
+    </tr>
+    <tr>
+    <td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone</code></a></td>
+    <td class="flow-cell-module"><code>config</code></td>
+    <td class="flow-cell-wide">Leaf internal helper</td>
+    <td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a>, <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L563-L634"><code>_validate_framework_config</code></a></td>
+    <td class="flow-cell-wide">—</td>
+    <td class="flow-cell-wide">Keep if transformation or validation</td>
+    </tr>
+    </tbody>
+    </table>
+    </div>
 
 This callable uses 4 internal helpers for audit timestamp.
 
