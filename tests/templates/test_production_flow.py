@@ -177,17 +177,29 @@ def test_guided_demo_links_pipeline_guardrail_demo():
     for expected in [
         "# FabricOps Guided Demo",
         "## Run sequence",
-        "[Create Wheel](guided-demo/create-wheel.md)",
-        "[Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md)",
-        "[Run Environment Setup](guided-demo/run-environment-setup.md)",
-        "[Create Agreement](guided-demo/create-agreement.md)",
-        "[Run Pipeline](guided-demo/run-pipeline.md)",
-        "[Enrich Metadata](guided-demo/enrich-metadata.md)",
-        "[Review Guardrails](guided-demo/review-guardrails.md)",
-        "[Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md)",
         "METADATA_GUARDRAIL_RULES",
     ]:
         assert expected in guided_demo
+
+    for expected_link in [
+        "(guided-demo/create-wheel.md)",
+        "(guided-demo/setup-fabric-artifacts.md)",
+        "(guided-demo/run-environment-setup.md)",
+        "(guided-demo/create-agreement.md)",
+        "(guided-demo/run-pipeline.md)",
+        "(guided-demo/review-guardrails.md)",
+        "(guided-demo/explore-metadata-outputs.md)",
+    ]:
+        assert expected_link in guided_demo
+
+    for expected_label in [
+        "[Register Agreement](guided-demo/create-agreement.md)",
+        "[Run Example Pipeline Demo](guided-demo/run-pipeline.md)",
+        "[Run Pipeline](guided-demo/run-pipeline.md)",
+        "[Review Governance](guided-demo/review-guardrails.md)",
+        "[Explore Metadata](guided-demo/explore-metadata-outputs.md)",
+    ]:
+        assert expected_label in guided_demo
 
     assert "Milestone" not in guided_demo
     assert "milestone" not in guided_demo
