@@ -4,6 +4,271 @@ Generated maintainer view of public FabricOps callable entry points, public-to-p
 
 Use this page as a review aid for separation, helper reuse, and refactor planning; it is not an automatic refactor instruction.
 
+## Maintainer overview
+
+Bird eye refactor dashboard for internal helper shapes. Helpers appear once in the main inventory with multiple signal tags when more than one rule matches.
+
+Use the interactive dashboard to search helper names, modules, signals, callers, or callees; the JSON remains the source of truth.
+
+<div class="callable-flow-signal-cards" markdown="0">
+<div class="callable-flow-signal-card">
+<div class="callable-flow-signal-card-value">210</div>
+<div class="callable-flow-signal-card-label">Total internal helpers</div>
+</div>
+<div class="callable-flow-signal-card">
+<div class="callable-flow-signal-card-value">21</div>
+<div class="callable-flow-signal-card-label">High priority candidates</div>
+</div>
+<div class="callable-flow-signal-card">
+<div class="callable-flow-signal-card-value">83</div>
+<div class="callable-flow-signal-card-label">Medium priority candidates</div>
+</div>
+<div class="callable-flow-signal-card">
+<div class="callable-flow-signal-card-value">22</div>
+<div class="callable-flow-signal-card-label">Protect helpers</div>
+</div>
+<div class="callable-flow-signal-card">
+<div class="callable-flow-signal-card-value">21</div>
+<div class="callable-flow-signal-card-label">Thin wrapper candidates</div>
+</div>
+<div class="callable-flow-signal-card">
+<div class="callable-flow-signal-card-value">20</div>
+<div class="callable-flow-signal-card-label">Public API entrypoints</div>
+</div>
+</div>
+
+[Open interactive refactor dashboard](../refactor-dashboard.html){ .md-button } [Download callable-flow JSON](../_data/callable-flow.json){ .md-button }
+
+## Top priority refactor inventory
+
+Top 20 actionable internal helpers sorted by priority, then module, then function name. Protect helpers are excluded here because they should stay stable; use the dashboard priority filter to review them.
+
+<div class="callable-flow-table-wrap" markdown="0">
+<table class="callable-flow-table">
+<thead>
+<tr>
+<th class="flow-cell-name">Helper</th>
+<th class="flow-cell-module">Module</th>
+<th class="flow-cell-wide">Signals</th>
+<th class="flow-cell-wide">Used by</th>
+<th class="flow-cell-wide">Calls</th>
+<th class="flow-cell-number">Inbound</th>
+<th class="flow-cell-number">Outbound</th>
+<th class="flow-cell-wide">Suggested action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L221"><code>_audit_timestamp_expr</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L226-L347"><code>profile_dataframe</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204"><code>_get_audit_timezone</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L995-L1019"><code>_detect_nested_metadata_delta_folders</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1145-L1191"><code>_validate_metadata_table_registration</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1088-L1094"><code>_metadata_table_columns</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1112-L1142"><code>_setup_metadata_table_registry</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1079-L1085"><code>_coerce_row_dicts</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L637-L677"><code>_normalize_path_config</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L680-L719"><code>_get_store</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L225-L246"><code>PathConfig</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1062-L1072"><code>_agreement_identity_text</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L579-L582"><code>_next_minor_version</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L366-L399"><code>_collect_custom_fields</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L630-L633"><code>_to_iso_date</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L158-L180"><code>_get_widget_visible_fields</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283"><code>_render_maintenance_widget</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L151-L155"><code>_config_value</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L410-L416"><code>_latest_by_key</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490"><code>_list_data_stewards</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L402-L407"><code>_coerce_row_dicts</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L702-L752"><code>_prepare_evidence_file_references</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L754-L785"><code>_save_agreement_evidence_records</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L690-L699"><code>_get_notebookutils</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435"><code>_dq_records_from_selection</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2438-L2606"><code>widget_author_dq_rules</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023"><code>_base_guardrail_rule_record</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L341-L347"><code>_first_present</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L360-L380"><code>_catalogue_physical_identity</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1309-L1330"><code>_latest_dq_rule_versions</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380"><code>_load_active_dq_rules</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232"><code>_spark_sql_helpers</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L950-L954"><code>_latest_row</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111"><code>_evaluate_governance_readiness</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249"><code>_schema_freshness_profile_records_from_selection</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397"><code>widget_author_schema_freshness_profile_rules</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023"><code>_base_guardrail_rule_record</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605"><code>_selected_catalogue_rows_for_enrichment</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897"><code>widget_enrich_table_metadata</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71"><code>_value</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L567-L569"><code>_iso_date_value</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L572-L670"><code>enforce_freshness</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L547-L564"><code>_coerce_date</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L217-L218"><code>_profile_hash</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L691-L913"><code>enforce_profile_behavior</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L213-L214"><code>_json_dumps_stable</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L499-L511"><code>_profile_row_count</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L226-L247"><code>_profile_payload_from_profile</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L411-L479"><code>_normalize_profile</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L221-L223"><code>_schema_signature</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L226-L247"><code>_profile_payload_from_profile</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L194-L209"><code>_actual_schema</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L538-L548"><code>_add_audit_columns</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide">Thin wrapper candidate, Single-use internal helper</td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L551-L640"><code>prepare_pipeline_table_configs</code></a></td>
+<td class="flow-cell-wide"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L213"><code>_current_audit_timestamp</code></a></td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-number">1</td>
+<td class="flow-cell-wide">Inspect for inline</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+## Interactive dashboard
+
+The generated static dashboard contains the full one-row-per-helper inventory with search, module, signal, priority filters, sortable columns, and expandable row details.
+
+- [Open the interactive refactor dashboard](../refactor-dashboard.html)
+- [Open the source JSON data](../_data/callable-flow.json)
+
 ## Public callable dependency map
 
 This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.
@@ -837,9 +1102,9 @@ Internal helpers reached by more than one public callable.
 </table>
 </div>
 
-## Refactor hotspot ranking
+## Legacy hotspot summary
 
-Ranked review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Higher scores indicate call-tree shapes worth reviewing, not required refactors.
+Legacy callable-level review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Use the maintainer inventory above as the primary refactor dashboard.
 
 <div class="callable-flow-table-wrap" markdown="0">
 <table class="callable-flow-table">

@@ -32,6 +32,7 @@ FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 CALLABLE_FLOW_PAGE_PATH = ROOT / "docs" / "reference" / "callable-flow.md"
 CALLABLE_FLOW_DATA_PATH = REFERENCE_DATA_DIR / "callable-flow.json"
+REFACTOR_DASHBOARD_PATH = ROOT / "docs" / "reference" / "refactor-dashboard.html"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
@@ -1566,23 +1567,190 @@ def _callable_flow_source_link(qn: str, module_data: dict[str, dict[str, Any]]) 
     )
 
 
-def _callable_flow_internal_helper_qns(
-    public_qn: str,
+REFACTOR_SIGNAL_ORDER = [
+    "Thin wrapper candidate",
+    "Single-use internal helper",
+    "Leaf internal helper",
+    "High-fanout helper",
+]
+
+REFACTOR_SIGNAL_RECOMMENDATIONS = {
+    "Thin wrapper candidate": "Inspect for inline",
+    "Single-use internal helper": "Review purpose",
+    "Leaf internal helper": "Keep if transformation or validation",
+    "High-fanout helper": "Keep stable",
+}
+
+REFACTOR_PRIORITY_ORDER = {
+    "High": 0,
+    "Medium": 1,
+    "Low": 2,
+    "Review": 3,
+    "Protect": 4,
+}
+
+REFACTOR_PRIORITY_ACTIONS = {
+    "Protect": "Keep stable",
+    "High": "Inspect for inline",
+    "Medium": "Review purpose",
+    "Low": "Keep if transformation or validation",
+    "Review": "Inspect manually",
+}
+
+
+def _callable_flow_source_path(qn: str) -> str | None:
+    """Return the repository source path for a package callable."""
+    parts = qn.split(".")
+    if len(parts) < 3:
+        return None
+    return f"src/fabricops_kit/{parts[-2]}.py"
+
+
+def _project_inbound_callers(
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
-) -> list[str]:
-    """Return unique nested internal/helper functions reachable from a public callable."""
-    public_name = node_by_qn[public_qn]["callable_name"]
-    excluded_helpers = INTERNAL_HELPER_EXCLUSIONS.get(public_name, set())
-    reachable = _reachable_callables(public_qn, calls_by_qn, node_by_qn)
-    return sorted(
-        (
-            qn
-            for qn in reachable
-            if qn not in excluded_helpers and _is_internal_helper_qn(qn, node_by_qn)
-        ),
-        key=lambda qn: (node_by_qn[qn]["module_name"], node_by_qn[qn]["callable_name"].lower()),
+) -> dict[str, set[str]]:
+    """Return project-local inbound callers for each callable qualified name."""
+    inbound: dict[str, set[str]] = {qn: set() for qn in node_by_qn}
+    for caller_qn, callees in calls_by_qn.items():
+        if caller_qn not in node_by_qn:
+            continue
+        for callee_qn in set(callees):
+            if callee_qn in node_by_qn:
+                inbound.setdefault(callee_qn, set()).add(caller_qn)
+    return inbound
+
+
+def _refactor_priority(signals: list[str]) -> str:
+    """Return the dashboard priority for an aggregated helper signal list."""
+    if "High-fanout helper" in signals:
+        return "Protect"
+    if "Thin wrapper candidate" in signals:
+        return "High"
+    if "Single-use internal helper" in signals:
+        return "Medium"
+    if "Leaf internal helper" in signals:
+        return "Low"
+    return "Review"
+
+
+def _build_refactor_inventory(
+    public_qns: list[str],
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> tuple[dict[str, int], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Build one aggregated refactor inventory row per internal helper."""
+    inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
+    signal_index = {name: index for index, name in enumerate(REFACTOR_SIGNAL_ORDER)}
+    inventory: list[dict[str, Any]] = []
+
+    def sorted_qns(qns: set[str]) -> list[str]:
+        return sorted(
+            qns,
+            key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
+        )
+
+    def outbound_project_calls(qn: str) -> list[str]:
+        return sorted_qns({callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn})
+
+    for qn in sorted_qns(set(node_by_qn)):
+        if not _is_internal_helper_qn(qn, node_by_qn):
+            continue
+        inbound = sorted_qns(inbound_by_qn.get(qn, set()))
+        outbound = outbound_project_calls(qn)
+        inbound_count = len(inbound)
+        outbound_count = len(outbound)
+        signals: list[str] = []
+        if inbound_count == 1 and outbound_count == 1:
+            signals.append("Thin wrapper candidate")
+        if inbound_count == 1:
+            signals.append("Single-use internal helper")
+        if outbound_count == 0:
+            signals.append("Leaf internal helper")
+        if inbound_count >= 5:
+            signals.append("High-fanout helper")
+        signals.sort(key=lambda signal: signal_index[signal])
+        priority = _refactor_priority(signals)
+        node = node_by_qn[qn]
+        inventory.append(
+            {
+                "function": node["callable_name"],
+                "module": node["module_name"],
+                "qualified_name": qn,
+                "is_internal": True,
+                "signals": signals,
+                "priority": priority,
+                "suggested_action": REFACTOR_PRIORITY_ACTIONS[priority],
+                "inbound_count": inbound_count,
+                "outbound_project_call_count": outbound_count,
+                "used_by": [
+                    {
+                        "function": node_by_qn[caller]["callable_name"],
+                        "module": node_by_qn[caller]["module_name"],
+                        "qualified_name": caller,
+                        "source_url": _callable_flow_source_link(caller, module_data),
+                    }
+                    for caller in inbound
+                ],
+                "calls": [
+                    {
+                        "function": node_by_qn[callee]["callable_name"],
+                        "module": node_by_qn[callee]["module_name"],
+                        "qualified_name": callee,
+                        "source_url": _callable_flow_source_link(callee, module_data),
+                    }
+                    for callee in outbound
+                ],
+                "source_path": _callable_flow_source_path(qn),
+                "source_url": _callable_flow_source_link(qn, module_data),
+            }
+        )
+
+    inventory.sort(
+        key=lambda row: (REFACTOR_PRIORITY_ORDER[row["priority"]], row["module"], row["function"].lower())
     )
+    legacy_signal_rows = [
+        {
+            "function": row["function"],
+            "module": row["module"],
+            "qualified_name": row["qualified_name"],
+            "is_internal": row["is_internal"],
+            "inbound_count": row["inbound_count"],
+            "outbound_project_call_count": row["outbound_project_call_count"],
+            "signal": signal,
+            "recommendation": REFACTOR_SIGNAL_RECOMMENDATIONS[signal],
+            "used_by": row["used_by"],
+            "calls": row["calls"],
+            "source_path": row["source_path"],
+            "source_url": row["source_url"],
+        }
+        for row in inventory
+        for signal in row["signals"]
+    ]
+    legacy_signal_rows.sort(
+        key=lambda row: (
+            signal_index[row["signal"]],
+            row["module"],
+            row["function"].lower(),
+        )
+    )
+    summary_counts = {
+        "thin_wrapper_candidates": sum(
+            1 for row in inventory if "Thin wrapper candidate" in row["signals"]
+        ),
+        "single_use_internal_helpers": sum(
+            1 for row in inventory if "Single-use internal helper" in row["signals"]
+        ),
+        "leaf_internal_helpers": sum(1 for row in inventory if "Leaf internal helper" in row["signals"]),
+        "high_fanout_helpers": sum(1 for row in inventory if "High-fanout helper" in row["signals"]),
+        "public_api_entrypoints": len(public_qns),
+        "internal_helpers": len(inventory),
+        "high_priority_candidates": sum(1 for row in inventory if row["priority"] == "High"),
+        "medium_priority_candidates": sum(1 for row in inventory if row["priority"] == "Medium"),
+        "protect_helpers": sum(1 for row in inventory if row["priority"] == "Protect"),
+    }
+    return summary_counts, inventory, legacy_signal_rows
 
 
 def _build_callable_flow_data(
@@ -1699,6 +1867,13 @@ def _build_callable_flow_data(
         )
     ]
 
+    refactor_signal_summary, refactor_inventory, refactor_signals = _build_refactor_inventory(
+        public_qns,
+        calls_by_qn,
+        node_by_qn,
+        module_data,
+    )
+
     refactor_hotspots = []
     max_unique = max((row["unique_internal_helper_count"] for row in summary), default=0) or 1
     max_depth = max((row["deepest_call_chain_depth"] for row in summary), default=0) or 1
@@ -1731,6 +1906,9 @@ def _build_callable_flow_data(
         "callable_helper_summary": sorted(summary, key=lambda row: row["callable"].lower()),
         "shared_helper_usage": shared_helper_usage,
         "refactor_hotspots": sorted(refactor_hotspots, key=lambda row: (-row["score"], row["callable"].lower())),
+        "summary_counts": refactor_signal_summary,
+        "refactor_signals": refactor_signals,
+        "refactor_inventory": refactor_inventory,
     }
 
 
@@ -1746,6 +1924,54 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
     if not url:
         return inner
     return f'<a href="{html.escape(url, quote=True)}">{inner}</a>'
+
+
+def _render_refactor_inventory_items(items: list[dict[str, Any]]) -> str:
+    """Render compact linked callable names for refactor inventory table cells."""
+    return ", ".join(_render_link(item["function"], item.get("source_url")) for item in items) or "—"
+
+
+def _render_refactor_inventory_table(
+    rows: list[dict[str, Any]],
+    *,
+    include_counts: bool = True,
+) -> list[str]:
+    """Render refactor inventory rows for dashboard and collapsible sections."""
+    table_rows: list[list[tuple[str, str]]] = []
+    for row in rows:
+        cells = [
+            (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
+            (_render_link(row["module"], code=True), "flow-cell-module"),
+            (", ".join(html.escape(signal) for signal in row["signals"]) or "—", "flow-cell-wide"),
+            (_render_refactor_inventory_items(row["used_by"]), "flow-cell-wide"),
+            (_render_refactor_inventory_items(row["calls"]), "flow-cell-wide"),
+        ]
+        if include_counts:
+            cells.extend(
+                [
+                    (str(row["inbound_count"]), "flow-cell-number"),
+                    (str(row["outbound_project_call_count"]), "flow-cell-number"),
+                ]
+            )
+        cells.append((html.escape(row["suggested_action"]), "flow-cell-wide"))
+        table_rows.append(cells)
+
+    headers = [
+        ("Helper", "flow-cell-name"),
+        ("Module", "flow-cell-module"),
+        ("Signals", "flow-cell-wide"),
+        ("Used by", "flow-cell-wide"),
+        ("Calls", "flow-cell-wide"),
+    ]
+    if include_counts:
+        headers.extend(
+            [
+                ("Inbound", "flow-cell-number"),
+                ("Outbound", "flow-cell-number"),
+            ]
+        )
+    headers.append(("Suggested action", "flow-cell-wide"))
+    return _render_flow_table(headers, table_rows)
 
 
 def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str, str]]]) -> list[str]:
@@ -1767,6 +1993,164 @@ def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str
     lines.extend(['</tbody>', '</table>', '</div>'])
     return lines
 
+def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
+    """Render the standalone static refactor dashboard HTML page."""
+    del flow_data
+    return """<!doctype html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+  <title>FabricOps refactor signal dashboard</title>
+  <style>
+    :root { color-scheme: light; --border: #d8dee9; --muted: #526070; --bg: #f7f9fc; --chip: #edf2ff; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1f2937; background: #fff; }
+    header, main { max-width: 1180px; margin: 0 auto; padding: 1.25rem; }
+    header { border-bottom: 1px solid var(--border); }
+    h1 { margin-bottom: .25rem; }
+    a { color: #0f5db8; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin: 1rem 0; }
+    .card { border: 1px solid var(--border); border-radius: .75rem; padding: 1rem; background: var(--bg); }
+    .card strong { display: block; font-size: 1.75rem; }
+    .filters { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(160px, 1fr)) auto; gap: .75rem; align-items: end; margin: 1rem 0; }
+    label { display: grid; gap: .25rem; font-weight: 600; }
+    input, select, button { font: inherit; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .5rem; background: #fff; }
+    button { cursor: pointer; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: .75rem; }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--bg); position: sticky; top: 0; z-index: 1; }
+    th button { border: 0; background: transparent; font-weight: 700; padding: 0; }
+    .num { text-align: right; }
+    .tag { display: inline-block; margin: .1rem .15rem .1rem 0; padding: .15rem .45rem; border-radius: 999px; background: var(--chip); font-size: .85rem; }
+    .priority { font-weight: 700; }
+    .details { background: #fbfcfe; color: var(--muted); }
+    .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .details ul { margin-top: .25rem; padding-left: 1.25rem; }
+    @media (max-width: 850px) { .filters { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>FabricOps refactor signal dashboard</h1>
+  <p>Generated static dashboard for maintainers. The JSON data remains the source of truth.</p>
+  <p><a href=\"callable-flow/\">Back to callable-flow reference</a> · <a href=\"_data/callable-flow.json\">Open JSON data</a></p>
+</header>
+<main>
+  <section class=\"cards\" aria-label=\"Refactor summary\" id=\"summaryCards\"></section>
+  <section class=\"filters\" aria-label=\"Inventory filters\">
+    <label>Search <input id=\"searchBox\" type=\"search\" placeholder=\"Helper, module, signal, caller, callee\"></label>
+    <label>Module <select id=\"moduleFilter\"><option value=\"\">All modules</option></select></label>
+    <label>Signal <select id=\"signalFilter\"><option value=\"\">All signals</option></select></label>
+    <label>Priority <select id=\"priorityFilter\"><option value=\"\">All priorities</option></select></label>
+    <button type=\"button\" id=\"resetFilters\">Reset filters</button>
+  </section>
+  <p id=\"resultCount\"></p>
+  <section class=\"table-wrap\" aria-label=\"Refactor inventory\">
+    <table>
+      <thead><tr>
+        <th></th>
+        <th><button type=\"button\" data-sort=\"function\">Helper</button></th>
+        <th><button type=\"button\" data-sort=\"module\">Module</button></th>
+        <th>Signals</th>
+        <th><button type=\"button\" data-sort=\"priority\">Priority</button></th>
+        <th class=\"num\"><button type=\"button\" data-sort=\"inbound_count\">Inbound</button></th>
+        <th class=\"num\"><button type=\"button\" data-sort=\"outbound_project_call_count\">Outbound</button></th>
+        <th>Suggested action</th>
+      </tr></thead>
+      <tbody id=\"inventoryBody\"></tbody>
+    </table>
+  </section>
+</main>
+<script>
+let inventory = [];
+let summary = {};
+const priorityRank = {High: 0, Medium: 1, Low: 2, Review: 3, Protect: 4};
+const state = {search: '', module: '', signal: '', priority: '', sortKey: 'priority', sortDir: 1, expanded: new Set()};
+const $ = (id) => document.getElementById(id);
+const text = (value) => String(value ?? '');
+const esc = (value) => text(value).replace(/[&<>\"']/g, (ch) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'}[ch]));
+const itemText = (item) => [item.function, item.module, item.priority, item.suggested_action, ...item.signals, ...item.used_by.map((x) => x.function), ...item.calls.map((x) => x.function)].join(' ').toLowerCase();
+function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b)); }
+function option(select, value) { const opt = document.createElement('option'); opt.value = value; opt.textContent = value; select.appendChild(opt); }
+function renderCards() {
+  const cards = [
+    ['Total internal helpers', summary.internal_helpers],
+    ['High priority candidates', summary.high_priority_candidates],
+    ['Medium priority candidates', summary.medium_priority_candidates],
+    ['Protect helpers', summary.protect_helpers],
+    ['Thin wrapper candidates', summary.thin_wrapper_candidates],
+    ['Public API entrypoints', summary.public_api_entrypoints],
+  ];
+  $('summaryCards').innerHTML = cards.map(([label, value]) => `<article class=\"card\"><strong>${esc(value)}</strong><span>${esc(label)}</span></article>`).join('');
+}
+function populateFilters() {
+  unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value));
+  unique(inventory.flatMap((item) => item.signals)).forEach((value) => option($('signalFilter'), value));
+  ['High', 'Medium', 'Low', 'Review', 'Protect'].forEach((value) => option($('priorityFilter'), value));
+}
+function filteredRows() {
+  const q = state.search.trim().toLowerCase();
+  return inventory.filter((item) => (!q || itemText(item).includes(q)) && (!state.module || item.module === state.module) && (!state.signal || item.signals.includes(state.signal)) && (!state.priority || item.priority === state.priority));
+}
+function compare(a, b) {
+  const key = state.sortKey;
+  if (key === 'priority') return (priorityRank[a.priority] - priorityRank[b.priority]) * state.sortDir || a.module.localeCompare(b.module) || a.function.localeCompare(b.function);
+  if (typeof a[key] === 'number') return (a[key] - b[key]) * state.sortDir;
+  return text(a[key]).localeCompare(text(b[key])) * state.sortDir;
+}
+function linkedList(items) {
+  return items.length ? `<ul>${items.map((item) => `<li><a href=\"${esc(item.source_url || '#')}\">${esc(item.function)}</a> <small>(${esc(item.module)})</small></li>`).join('')}</ul>` : '<p>—</p>';
+}
+function renderTable() {
+  const rows = filteredRows().sort(compare);
+  $('resultCount').textContent = `Showing ${rows.length} of ${inventory.length} helpers.`;
+  $('inventoryBody').innerHTML = rows.map((item) => {
+    const id = item.qualified_name;
+    const open = state.expanded.has(id);
+    return `<tr>
+      <td><button type=\"button\" data-toggle=\"${esc(id)}\" aria-expanded=\"${open}\">${open ? 'Hide' : 'Details'}</button></td>
+      <td><a href=\"${esc(item.source_url || '#')}\"><code>${esc(item.function)}</code></a></td>
+      <td><code>${esc(item.module)}</code></td>
+      <td>${item.signals.map((signal) => `<span class=\"tag\">${esc(signal)}</span>`).join('') || '—'}</td>
+      <td class=\"priority\">${esc(item.priority)}</td>
+      <td class=\"num\">${esc(item.inbound_count)}</td>
+      <td class=\"num\">${esc(item.outbound_project_call_count)}</td>
+      <td>${esc(item.suggested_action)}</td>
+    </tr>${open ? `<tr class=\"details\"><td colspan=\"8\"><div class=\"details-grid\"><section><strong>Used by</strong>${linkedList(item.used_by)}</section><section><strong>Calls</strong>${linkedList(item.calls)}</section><section><strong>Source</strong><p><a href=\"${esc(item.source_url || '#')}\">${esc(item.source_path || item.source_url || 'Source unavailable')}</a></p></section></div></td></tr>` : ''}`;
+  }).join('');
+}
+function update() { renderTable(); }
+$('searchBox').addEventListener('input', (event) => { state.search = event.target.value; update(); });
+$('moduleFilter').addEventListener('change', (event) => { state.module = event.target.value; update(); });
+$('signalFilter').addEventListener('change', (event) => { state.signal = event.target.value; update(); });
+$('priorityFilter').addEventListener('change', (event) => { state.priority = event.target.value; update(); });
+$('resetFilters').addEventListener('click', () => { state.search = state.module = state.signal = state.priority = ''; $('searchBox').value = ''; $('moduleFilter').value = ''; $('signalFilter').value = ''; $('priorityFilter').value = ''; update(); });
+document.addEventListener('click', (event) => {
+  const sort = event.target.closest('[data-sort]');
+  if (sort) { const key = sort.dataset.sort; state.sortDir = state.sortKey === key ? state.sortDir * -1 : 1; state.sortKey = key; update(); }
+  const toggle = event.target.closest('[data-toggle]');
+  if (toggle) { const id = toggle.dataset.toggle; state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id); update(); }
+});
+async function loadData() {
+  try {
+    const response = await fetch('_data/callable-flow.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    inventory = data.refactor_inventory || [];
+    summary = data.summary_counts || {};
+    renderCards(); populateFilters(); renderTable();
+  } catch (error) {
+    $('resultCount').textContent = `Unable to load _data/callable-flow.json: ${error.message}`;
+  }
+}
+loadData();
+</script>
+</body>
+</html>
+"""
+
+
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global callable flow Markdown page."""
     lines = [
@@ -1776,11 +2160,65 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         "",
         "Use this page as a review aid for separation, helper reuse, and refactor planning; it is not an automatic refactor instruction.",
         "",
-        "## Public callable dependency map",
+        "## Maintainer overview",
         "",
-        "This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.",
+        "Bird eye refactor dashboard for internal helper shapes. Helpers appear once in the main inventory with multiple signal tags when more than one rule matches.",
+        "",
+        "Use the interactive dashboard to search helper names, modules, signals, callers, or callees; the JSON remains the source of truth.",
         "",
     ]
+    summary_counts = flow_data["summary_counts"]
+    inventory = flow_data["refactor_inventory"]
+    card_rows = [
+        ("Total internal helpers", summary_counts["internal_helpers"]),
+        ("High priority candidates", summary_counts["high_priority_candidates"]),
+        ("Medium priority candidates", summary_counts["medium_priority_candidates"]),
+        ("Protect helpers", summary_counts["protect_helpers"]),
+        ("Thin wrapper candidates", summary_counts["thin_wrapper_candidates"]),
+        ("Public API entrypoints", summary_counts["public_api_entrypoints"]),
+    ]
+    lines.extend(['<div class="callable-flow-signal-cards" markdown="0">'])
+    for label, value in card_rows:
+        lines.extend(
+            [
+                '<div class="callable-flow-signal-card">',
+                f'<div class="callable-flow-signal-card-value">{value}</div>',
+                f'<div class="callable-flow-signal-card-label">{html.escape(label)}</div>',
+                '</div>',
+            ]
+        )
+
+    top_inventory = [row for row in inventory if row["priority"] != "Protect"][:20]
+    lines.extend(
+        [
+            '</div>',
+            "",
+            "[Open interactive refactor dashboard](../refactor-dashboard.html){ .md-button } [Download callable-flow JSON](../_data/callable-flow.json){ .md-button }",
+            "",
+            "## Top priority refactor inventory",
+            "",
+            "Top 20 actionable internal helpers sorted by priority, then module, then function name. Protect helpers are excluded here because they should stay stable; use the dashboard priority filter to review them.",
+            "",
+        ]
+    )
+    lines.extend(_render_refactor_inventory_table(top_inventory))
+
+    lines.extend(
+        [
+            "",
+            "## Interactive dashboard",
+            "",
+            "The generated static dashboard contains the full one-row-per-helper inventory with search, module, signal, priority filters, sortable columns, and expandable row details.",
+            "",
+            "- [Open the interactive refactor dashboard](../refactor-dashboard.html)",
+            "- [Open the source JSON data](../_data/callable-flow.json)",
+            "",
+            "## Public callable dependency map",
+            "",
+            "This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.",
+            "",
+        ]
+    )
     for callable_name in sorted(flow_data["public_callable_dependencies"]):
         deps = flow_data["public_callable_dependencies"][callable_name]
         callable_link = f"[`{callable_name}`]({_public_callable_docs_url(callable_name)})"
@@ -1883,9 +2321,9 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "## Refactor hotspot ranking",
+            "## Legacy hotspot summary",
             "",
-            "Ranked review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Higher scores indicate call-tree shapes worth reviewing, not required refactors.",
+            "Legacy callable-level review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Use the maintainer inventory above as the primary refactor dashboard.",
             "",
         ]
     )
@@ -3699,6 +4137,7 @@ def main() -> None:
     callable_flow_data = _build_callable_flow_data(public_flow_qns, calls_by_qn, node_by_qn, module_data)
     CALLABLE_FLOW_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
     CALLABLE_FLOW_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
+    REFACTOR_DASHBOARD_PATH.write_text(_render_refactor_dashboard_html(callable_flow_data), encoding="utf-8", newline="\n")
     _remove_stale_function_taxonomy_audit()
 
 

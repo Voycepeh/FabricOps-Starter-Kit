@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FabricOps refactor signal dashboard</title>
+  <style>
+    :root { color-scheme: light; --border: #d8dee9; --muted: #526070; --bg: #f7f9fc; --chip: #edf2ff; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1f2937; background: #fff; }
+    header, main { max-width: 1180px; margin: 0 auto; padding: 1.25rem; }
+    header { border-bottom: 1px solid var(--border); }
+    h1 { margin-bottom: .25rem; }
+    a { color: #0f5db8; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin: 1rem 0; }
+    .card { border: 1px solid var(--border); border-radius: .75rem; padding: 1rem; background: var(--bg); }
+    .card strong { display: block; font-size: 1.75rem; }
+    .filters { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(160px, 1fr)) auto; gap: .75rem; align-items: end; margin: 1rem 0; }
+    label { display: grid; gap: .25rem; font-weight: 600; }
+    input, select, button { font: inherit; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .5rem; background: #fff; }
+    button { cursor: pointer; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: .75rem; }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--bg); position: sticky; top: 0; z-index: 1; }
+    th button { border: 0; background: transparent; font-weight: 700; padding: 0; }
+    .num { text-align: right; }
+    .tag { display: inline-block; margin: .1rem .15rem .1rem 0; padding: .15rem .45rem; border-radius: 999px; background: var(--chip); font-size: .85rem; }
+    .priority { font-weight: 700; }
+    .details { background: #fbfcfe; color: var(--muted); }
+    .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .details ul { margin-top: .25rem; padding-left: 1.25rem; }
+    @media (max-width: 850px) { .filters { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>FabricOps refactor signal dashboard</h1>
+  <p>Generated static dashboard for maintainers. The JSON data remains the source of truth.</p>
+  <p><a href="callable-flow/">Back to callable-flow reference</a> · <a href="_data/callable-flow.json">Open JSON data</a></p>
+</header>
+<main>
+  <section class="cards" aria-label="Refactor summary" id="summaryCards"></section>
+  <section class="filters" aria-label="Inventory filters">
+    <label>Search <input id="searchBox" type="search" placeholder="Helper, module, signal, caller, callee"></label>
+    <label>Module <select id="moduleFilter"><option value="">All modules</option></select></label>
+    <label>Signal <select id="signalFilter"><option value="">All signals</option></select></label>
+    <label>Priority <select id="priorityFilter"><option value="">All priorities</option></select></label>
+    <button type="button" id="resetFilters">Reset filters</button>
+  </section>
+  <p id="resultCount"></p>
+  <section class="table-wrap" aria-label="Refactor inventory">
+    <table>
+      <thead><tr>
+        <th></th>
+        <th><button type="button" data-sort="function">Helper</button></th>
+        <th><button type="button" data-sort="module">Module</button></th>
+        <th>Signals</th>
+        <th><button type="button" data-sort="priority">Priority</button></th>
+        <th class="num"><button type="button" data-sort="inbound_count">Inbound</button></th>
+        <th class="num"><button type="button" data-sort="outbound_project_call_count">Outbound</button></th>
+        <th>Suggested action</th>
+      </tr></thead>
+      <tbody id="inventoryBody"></tbody>
+    </table>
+  </section>
+</main>
+<script>
+let inventory = [];
+let summary = {};
+const priorityRank = {High: 0, Medium: 1, Low: 2, Review: 3, Protect: 4};
+const state = {search: '', module: '', signal: '', priority: '', sortKey: 'priority', sortDir: 1, expanded: new Set()};
+const $ = (id) => document.getElementById(id);
+const text = (value) => String(value ?? '');
+const esc = (value) => text(value).replace(/[&<>"']/g, (ch) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch]));
+const itemText = (item) => [item.function, item.module, item.priority, item.suggested_action, ...item.signals, ...item.used_by.map((x) => x.function), ...item.calls.map((x) => x.function)].join(' ').toLowerCase();
+function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b)); }
+function option(select, value) { const opt = document.createElement('option'); opt.value = value; opt.textContent = value; select.appendChild(opt); }
+function renderCards() {
+  const cards = [
+    ['Total internal helpers', summary.internal_helpers],
+    ['High priority candidates', summary.high_priority_candidates],
+    ['Medium priority candidates', summary.medium_priority_candidates],
+    ['Protect helpers', summary.protect_helpers],
+    ['Thin wrapper candidates', summary.thin_wrapper_candidates],
+    ['Public API entrypoints', summary.public_api_entrypoints],
+  ];
+  $('summaryCards').innerHTML = cards.map(([label, value]) => `<article class="card"><strong>${esc(value)}</strong><span>${esc(label)}</span></article>`).join('');
+}
+function populateFilters() {
+  unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value));
+  unique(inventory.flatMap((item) => item.signals)).forEach((value) => option($('signalFilter'), value));
+  ['High', 'Medium', 'Low', 'Review', 'Protect'].forEach((value) => option($('priorityFilter'), value));
+}
+function filteredRows() {
+  const q = state.search.trim().toLowerCase();
+  return inventory.filter((item) => (!q || itemText(item).includes(q)) && (!state.module || item.module === state.module) && (!state.signal || item.signals.includes(state.signal)) && (!state.priority || item.priority === state.priority));
+}
+function compare(a, b) {
+  const key = state.sortKey;
+  if (key === 'priority') return (priorityRank[a.priority] - priorityRank[b.priority]) * state.sortDir || a.module.localeCompare(b.module) || a.function.localeCompare(b.function);
+  if (typeof a[key] === 'number') return (a[key] - b[key]) * state.sortDir;
+  return text(a[key]).localeCompare(text(b[key])) * state.sortDir;
+}
+function linkedList(items) {
+  return items.length ? `<ul>${items.map((item) => `<li><a href="${esc(item.source_url || '#')}">${esc(item.function)}</a> <small>(${esc(item.module)})</small></li>`).join('')}</ul>` : '<p>—</p>';
+}
+function renderTable() {
+  const rows = filteredRows().sort(compare);
+  $('resultCount').textContent = `Showing ${rows.length} of ${inventory.length} helpers.`;
+  $('inventoryBody').innerHTML = rows.map((item) => {
+    const id = item.qualified_name;
+    const open = state.expanded.has(id);
+    return `<tr>
+      <td><button type="button" data-toggle="${esc(id)}" aria-expanded="${open}">${open ? 'Hide' : 'Details'}</button></td>
+      <td><a href="${esc(item.source_url || '#')}"><code>${esc(item.function)}</code></a></td>
+      <td><code>${esc(item.module)}</code></td>
+      <td>${item.signals.map((signal) => `<span class="tag">${esc(signal)}</span>`).join('') || '—'}</td>
+      <td class="priority">${esc(item.priority)}</td>
+      <td class="num">${esc(item.inbound_count)}</td>
+      <td class="num">${esc(item.outbound_project_call_count)}</td>
+      <td>${esc(item.suggested_action)}</td>
+    </tr>${open ? `<tr class="details"><td colspan="8"><div class="details-grid"><section><strong>Used by</strong>${linkedList(item.used_by)}</section><section><strong>Calls</strong>${linkedList(item.calls)}</section><section><strong>Source</strong><p><a href="${esc(item.source_url || '#')}">${esc(item.source_path || item.source_url || 'Source unavailable')}</a></p></section></div></td></tr>` : ''}`;
+  }).join('');
+}
+function update() { renderTable(); }
+$('searchBox').addEventListener('input', (event) => { state.search = event.target.value; update(); });
+$('moduleFilter').addEventListener('change', (event) => { state.module = event.target.value; update(); });
+$('signalFilter').addEventListener('change', (event) => { state.signal = event.target.value; update(); });
+$('priorityFilter').addEventListener('change', (event) => { state.priority = event.target.value; update(); });
+$('resetFilters').addEventListener('click', () => { state.search = state.module = state.signal = state.priority = ''; $('searchBox').value = ''; $('moduleFilter').value = ''; $('signalFilter').value = ''; $('priorityFilter').value = ''; update(); });
+document.addEventListener('click', (event) => {
+  const sort = event.target.closest('[data-sort]');
+  if (sort) { const key = sort.dataset.sort; state.sortDir = state.sortKey === key ? state.sortDir * -1 : 1; state.sortKey = key; update(); }
+  const toggle = event.target.closest('[data-toggle]');
+  if (toggle) { const id = toggle.dataset.toggle; state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id); update(); }
+});
+async function loadData() {
+  try {
+    const response = await fetch('_data/callable-flow.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    inventory = data.refactor_inventory || [];
+    summary = data.summary_counts || {};
+    renderCards(); populateFilters(); renderTable();
+  } catch (error) {
+    $('resultCount').textContent = `Unable to load _data/callable-flow.json: ${error.message}`;
+  }
+}
+loadData();
+</script>
+</body>
+</html>
