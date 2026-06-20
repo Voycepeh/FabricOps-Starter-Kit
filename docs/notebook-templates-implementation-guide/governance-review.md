@@ -2,30 +2,30 @@
 
 `03_governance` is the formal review layer that records governance decisions. It is where governance users review table enrichment and guardrail intent after pipeline profiling and authoring have produced metadata evidence.
 
-![FabricOps governance review](../../assets/fabricops-goverance-review.png)
+![FabricOps governance review](../assets/fabricops-goverance-review.png)
 
 ## Selecting a guardrail target
 
-Use [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md) to select a table target from `METADATA_DATA_CATALOGUE`. The selector uses successful table profiles so review starts from observed evidence rather than free-text table names.
+Use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to select a table target from `METADATA_DATA_CATALOGUE`. The selector uses successful table profiles so review starts from observed evidence rather than free-text table names.
 
 ## Authoring combined guardrail rules
 
-Use [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) in `03_governance` to render the split guardrail authoring workflow. The split flow returns two widget states:
+Use [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) in `03_governance` to render the split guardrail authoring workflow. The split flow returns two widget states:
 
-- `schema_freshness_profile` from [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md);
-- `dq` from [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md).
+- `schema_freshness_profile` from [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md);
+- `dq` from [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md).
 
 Guardrail records are appended to `METADATA_GUARDRAIL_RULES`. Schema, freshness, profile, and DQ behaviour is described in [02 Pipeline Execution](pipeline-execution.md) because runtime interpretation and enforcement happen when `02_pipeline` executes checks.
 
-`METADATA_GUARDRAIL_RULES` contains authored rule intent and lifecycle state. `METADATA_GUARDRAIL_RESULTS` contains runtime outcomes written by pipeline execution. Review users can inspect runtime evidence from `METADATA_GUARDRAIL_RESULTS` alongside `METADATA_GUARDRAIL_RULES` and `METADATA_ENRICHMENT_RULES`; [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md) can show runtime result context for guardrail records where matching results exist.
+`METADATA_GUARDRAIL_RULES` contains authored rule intent and lifecycle state. `METADATA_GUARDRAIL_RESULTS` contains runtime outcomes written by pipeline execution. Review users can inspect runtime evidence from `METADATA_GUARDRAIL_RESULTS` alongside `METADATA_GUARDRAIL_RULES` and `METADATA_ENRICHMENT_RULES`; [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md) can show runtime result context for guardrail records where matching results exist.
 
 ## Enrichment
 
-Use [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md) to author descriptive table and column enrichment. Enrichment intent is appended to `METADATA_ENRICHMENT_RULES`; it is separate from observed evidence in `METADATA_DATA_CATALOGUE` and separate from guardrail intent in `METADATA_GUARDRAIL_RULES`.
+Use [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive table and column enrichment. Enrichment intent is appended to `METADATA_ENRICHMENT_RULES`; it is separate from observed evidence in `METADATA_DATA_CATALOGUE` and separate from guardrail intent in `METADATA_GUARDRAIL_RULES`.
 
 ## Formal review
 
-Use [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md) for formal governance review. Governance users can inspect records that need review, currently active records, rejected or inactive records, and superseded history. Formal review can approve, approve and activate, reject, replace, deactivate, or view history depending on record state.
+Use [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md) for formal governance review. Governance users can inspect records that need review, currently active records, rejected or inactive records, and superseded history. Formal review can approve, approve and activate, reject, replace, deactivate, or view history depending on record state.
 
 ## Authoring lifecycle behaviour
 
@@ -53,7 +53,7 @@ Governance review should not rewrite runtime outcome evidence in `METADATA_GUARD
 
 ### Implementation guidance
 
-- Start from [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md) so review is anchored to profiled evidence.
-- Use [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md) for formal approve/reject/replace/deactivate/history workflows.
+- Start from [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) so review is anchored to profiled evidence.
+- Use [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md) for formal approve/reject/replace/deactivate/history workflows.
 - Keep enrichment separate from executable checks: enrichment describes business context; guardrail rules drive enforcement.
 - Use runtime result context to explain why a rule needs review, but write decisions to rule/enrichment metadata, not result rows.

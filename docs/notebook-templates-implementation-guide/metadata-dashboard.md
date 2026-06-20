@@ -2,7 +2,7 @@
 
 The metadata dashboard is the visibility layer over the FabricOps metadata handshake. It helps users see the current governed state without opening every notebook or querying every metadata table manually.
 
-![FabricOps metadata dashboard](../../assets/fabricops-metadata-dashboard.png)
+![FabricOps metadata dashboard](../assets/fabricops-metadata-dashboard.png)
 
 *Figure: dashboard-style view over the same metadata tables written by the notebook handshake.*
 

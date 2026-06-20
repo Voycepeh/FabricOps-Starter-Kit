@@ -14,4 +14,4 @@ Run `00_env_config` after editing the demo settings.
 
 The configured metadata lakehouse contains the implemented `METADATA_*` tables, and downstream notebooks can use the same `CONFIG` and `ENV` values.
 
-For all editable and advanced `00_env_config` settings, see [Template Notebooks](../how-fabricops-works/notebook-templates/index.md#00_env_config).
+For all editable and advanced `00_env_config` settings, see [Template Notebooks](../notebook-templates-implementation-guide/index.md#00_env_config).

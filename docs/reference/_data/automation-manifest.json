@@ -1571,8 +1571,8 @@
     "common_failure_causes": "- The configured metadata lakehouse ABFSS path is missing or invalid.\n- Spark cannot create or inspect metadata tables through the configured ABFSS paths.\n- The selected environment does not include metadata routing.\n- The caller lacks permission to create or update metadata tables.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -1630,8 +1630,8 @@
     "common_failure_causes": "- The environment name is not present in CONFIG.\n- Required targets are missing from path configuration.\n- Fabric runtime metadata is unavailable and no local fallback was provided.\n- Configured lakehouse or warehouse targets cannot be resolved.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -3267,8 +3267,8 @@
     "common_failure_causes": "- Evidence details are incomplete.\n- File or URL references are malformed.\n- Widget state is reset before saving.\n- The configured metadata target is not writable.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -3319,8 +3319,8 @@
     "common_failure_causes": "- ipywidgets is not available in the runtime.\n- Required agreement fields are missing.\n- Agreement identifiers conflict with existing metadata.\n- The metadata target cannot be written.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "preferred_example": "Not documented yet",
@@ -3367,8 +3367,8 @@
     "common_failure_causes": "- ipywidgets is not available in the runtime.\n- Required steward fields are left blank.\n- Widget state is cleared by rerunning cells out of order.\n- Metadata routing is unavailable when the widget tries to persist records.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "preferred_example": "Not documented yet",
@@ -3777,11 +3777,11 @@
     "related_guides": [
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       },
       {
         "title": "Governance Review",
-        "path": "../../how-fabricops-works/notebook-templates/governance-review.md"
+        "path": "../../notebook-templates-implementation-guide/governance-review.md"
       }
     ],
     "preferred_example": "profile_rows_df = profile_dataframe(df, table_name=\"orders\", include_distributions=True, distribution_columns=[\"status\"] )",
@@ -4351,8 +4351,8 @@
     "common_failure_causes": "- Unsupported format value.\n- Missing table, relative_path, or schema for the selected format.\n- Target kind does not match the selected format.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "preferred_example": "df_orders = read_data(\"orders\", target=\"source\", schema=SOURCE_SCHEMA, spark_session=spark)",
@@ -4647,8 +4647,8 @@
     "common_failure_causes": "- Unsupported format value.\n- Missing table or schema for the selected format.\n- Target kind does not match the selected format.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "preferred_example": "write_data(df_orders, \"orders_clean\", target=\"unified\", schema=UNIFIED_SCHEMA, mode=\"overwrite\")",
@@ -7584,8 +7584,8 @@
     "common_failure_causes": "- The metadata catalogue table does not exist yet.\n- No profile has been written for the selected table.\n- The metadata lakehouse cannot be read.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       }
     ],
     "preferred_example": "latest_catalogue = get_latest_metadata_catalogue(table_name=source_table_name, agreement=AGREEMENT, metadata_schema=METADATA_SCHEMA, spark_session=spark)",
@@ -11586,12 +11586,12 @@
     "common_failure_causes": "- A table config is missing key or table_name fields.\n- Stage or write settings are inconsistent.\n- Source and target config shapes differ from expected dictionaries.\n- Defaults in CONFIG do not match the notebook environment.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       }
     ],
     "preferred_example": "SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role=\"source\")",
@@ -11660,7 +11660,7 @@
     "related_guides": [
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       }
     ],
     "preferred_example": "source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)",
@@ -11714,12 +11714,12 @@
     "common_failure_causes": "- RUN_CONTEXT is unavailable.\n- spark is unavailable.\n- No agreement exists when select_agreement=True.\n- The user has not selected an agreement.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       }
     ],
     "preferred_example": "PIPELINE = start_pipeline_run(notebook_type=\"02_pipeline\", select_agreement=True, register_notebook=True)",
@@ -11822,8 +11822,8 @@
     "common_failure_causes": "- Lineage records are empty or malformed.\n- run_id, source, or target identifiers are missing.\n- The metadata table cannot be written.\n- Audit fields cannot be resolved from configuration.",
     "related_guides": [
       {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
+        "title": "Notebook Templates Implementation Guide",
+        "path": "../../notebook-templates-implementation-guide/index.md"
       },
       {
         "title": "Metadata Tables",
@@ -11883,7 +11883,7 @@
     "related_guides": [
       {
         "title": "Pipeline Execution",
-        "path": "../../how-fabricops-works/notebook-templates/pipeline-execution.md"
+        "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"
       },
       {
         "title": "Metadata Tables",

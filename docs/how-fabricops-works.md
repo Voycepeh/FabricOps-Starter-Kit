@@ -2,11 +2,11 @@
 
 FabricOps Starter Kit is a lightweight Microsoft Fabric operating model for reusable notebook delivery, shared metadata evidence, and governed pipeline execution.
 
-This overview explains how the system works: the workspace operating model, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Template Notebooks user guide](notebook-templates/).
+This overview explains how the system works: the workspace operating model, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Notebook Templates Implementation Guide](notebook-templates-implementation-guide/).
 
 ## Workspace Operating Model
 
-![FabricOps operating model overview](../assets/fabricops-operating-model-overview.png)
+![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
 *Figure: FabricOps operates as a governed notebook workflow across workspace configuration, Lakehouse/Warehouse targets, shared metadata, runtime guardrails, and review.*
 
@@ -25,7 +25,7 @@ The model is intentionally notebook-first for handover. Junior engineers can ope
 
 ## Role workflow
 
-![FabricOps role workflow](../assets/fabricops-role-workflow.png)
+![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
 The role workflow keeps implementation and review responsibilities clear without requiring every user to understand every notebook line by line:
 
@@ -36,8 +36,8 @@ The role workflow keeps implementation and review responsibilities clear without
 5. Dashboard and reference pages read shared metadata and source-generated docs so current state, history, and implementation details remain visible.
 
 <div class="cta-center">
-  <a class="md-button md-button--primary" href="notebook-templates/">
-    Open the Template Notebooks user guide
+  <a class="md-button md-button--primary" href="notebook-templates-implementation-guide/">
+    Open the Notebook Templates Implementation Guide
   </a>
 </div>
 
@@ -48,29 +48,29 @@ FabricOps notebooks do not pass state through notebook memory or informal handov
 <div class="metadata-flow-grid">
 
 <div class="metadata-flow-card">
-<strong><a href="notebook-templates/environment-config/"><code>00_env_config</code></a></strong>
-<p>Creates the <a href="../reference/metadata/">metadata foundation</a>.</p>
-<p>Writes or validates the 12 <a href="../reference/metadata/">metadata tables</a> used by the workflow.</p>
+<strong><a href="notebook-templates-implementation-guide/environment-config/"><code>00_env_config</code></a></strong>
+<p>Creates the <a href="reference/metadata/">metadata foundation</a>.</p>
+<p>Writes or validates the 12 <a href="reference/metadata/">metadata tables</a> used by the workflow.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="notebook-templates/agreement-setup/"><code>01_agreement</code></a></strong>
-<p>Captures <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and <a href="../reference/metadata/metadata_data_steward/">steward context</a>.</p>
-<p>Writes to <a href="../reference/metadata/">agreement metadata tables</a>, including <a href="../reference/metadata/metadata_data_agreement/">agreement records</a>, <a href="../reference/metadata/metadata_data_steward/">steward context</a>, <a href="../reference/metadata/metadata_data_agreement/">approved usage</a>, and supporting <a href="../reference/metadata/metadata_data_agreement_evidence/">agreement evidence</a>.</p>
+<strong><a href="notebook-templates-implementation-guide/agreement-setup/"><code>01_agreement</code></a></strong>
+<p>Captures <a href="reference/metadata/metadata_data_agreement/">agreement</a> and <a href="reference/metadata/metadata_data_steward/">steward context</a>.</p>
+<p>Writes to <a href="reference/metadata/">agreement metadata tables</a>, including <a href="reference/metadata/metadata_data_agreement/">agreement records</a>, <a href="reference/metadata/metadata_data_steward/">steward context</a>, <a href="reference/metadata/metadata_data_agreement/">approved usage</a>, and supporting <a href="reference/metadata/metadata_data_agreement_evidence/">agreement evidence</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="notebook-templates/pipeline-execution/"><code>02_pipeline</code></a></strong>
+<strong><a href="notebook-templates-implementation-guide/pipeline-execution/"><code>02_pipeline</code></a></strong>
 <p>Runs governed source to target delivery.</p>
-<p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and configuration metadata.</p>
-<p>Writes <a href="../reference/metadata/metadata_pipeline_runs/">pipeline evidence</a>, <a href="../reference/metadata/metadata_data_catalogue/">schema evidence</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, <a href="../reference/metadata/metadata_data_catalogue/">output table records</a>, and <a href="../reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
+<p>Reads <a href="reference/metadata/metadata_data_agreement/">agreement</a> and configuration metadata.</p>
+<p>Writes <a href="reference/metadata/metadata_pipeline_runs/">pipeline evidence</a>, <a href="reference/metadata/metadata_data_catalogue/">schema evidence</a>, <a href="reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="reference/metadata/metadata_data_lineage_table/">lineage</a>, <a href="reference/metadata/metadata_data_catalogue/">output table records</a>, and <a href="reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="notebook-templates/governance-review/"><code>03_governance</code></a></strong>
+<strong><a href="notebook-templates-implementation-guide/governance-review/"><code>03_governance</code></a></strong>
 <p>Reviews and approves governed outputs.</p>
-<p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a>, <a href="../reference/metadata/metadata_pipeline_runs/">pipeline evidence</a>, <a href="../reference/metadata/metadata_data_catalogue/">schema evidence</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, and <a href="../reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
-<p>Writes <a href="../reference/metadata/metadata_guardrail_rules/">review decisions</a>, <a href="../reference/metadata/metadata_guardrail_rules/">approval state</a>, <a href="../reference/metadata/metadata_guardrail_rules/">rule outcomes</a>, <a href="../reference/metadata/metadata_enrichment_rules/">enrichment decisions</a>, <a href="../reference/metadata/metadata_enrichment_rules/">lifecycle decisions</a>, and production handover state.</p>
+<p>Reads <a href="reference/metadata/metadata_data_agreement/">agreement</a>, <a href="reference/metadata/metadata_pipeline_runs/">pipeline evidence</a>, <a href="reference/metadata/metadata_data_catalogue/">schema evidence</a>, <a href="reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="reference/metadata/metadata_data_lineage_table/">lineage</a>, and <a href="reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
+<p>Writes <a href="reference/metadata/metadata_guardrail_rules/">review decisions</a>, <a href="reference/metadata/metadata_guardrail_rules/">approval state</a>, <a href="reference/metadata/metadata_guardrail_rules/">rule outcomes</a>, <a href="reference/metadata/metadata_enrichment_rules/">enrichment decisions</a>, <a href="reference/metadata/metadata_enrichment_rules/">lifecycle decisions</a>, and production handover state.</p>
 </div>
 
 </div>

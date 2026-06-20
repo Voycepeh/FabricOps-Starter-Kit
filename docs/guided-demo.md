@@ -2,7 +2,7 @@
 
 Use this walkthrough to run the FabricOps Starter Kit demo from workspace setup through metadata inspection. It focuses on the user journey: what to open, what to run, and what evidence to expect.
 
-For the detailed contents and configurable settings inside each notebook, use [Template Notebooks](how-fabricops-works/notebook-templates/index.md). The [API Reference](reference/index.md) remains the source for reusable functions and classes.
+For the detailed contents and configurable settings inside each notebook, use [Template Notebooks](notebook-templates-implementation-guide/index.md). The [API Reference](reference/index.md) remains the source for reusable functions and classes.
 
 ## Overview
 
@@ -46,6 +46,6 @@ After the walkthrough, you should be able to answer these questions from metadat
 
 ## Where to go for details
 
-- Use [Template Notebooks](how-fabricops-works/notebook-templates/index.md) to understand notebook internals, editable settings, advanced options, validations, and downstream dependencies.
+- Use [Template Notebooks](notebook-templates-implementation-guide/index.md) to understand notebook internals, editable settings, advanced options, validations, and downstream dependencies.
 - Use [Metadata Tables](reference/metadata.md) to inspect the shape of stored evidence.
 - Use [Function Reference](reference/index.md) only when you need helper-level API details.

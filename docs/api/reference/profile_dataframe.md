@@ -308,5 +308,5 @@ See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
 
 ## See also
 
-- [Pipeline Execution](../../how-fabricops-works/notebook-templates/pipeline-execution.md)
-- [Governance Review](../../how-fabricops-works/notebook-templates/governance-review.md)
+- [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
+- [Governance Review](../../notebook-templates-implementation-guide/governance-review.md)

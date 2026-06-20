@@ -10,7 +10,7 @@ from typing import Any
 EXCLUDED_DIRS = {"assets", "javascripts", "stylesheets"}
 ROOT_TEXT_FILES = {"llms.txt"}
 SKIP_SIBLING_INDEX_VARIANTS = {
-    Path("how-fabricops-works/notebook-templates/index.md"),
+    Path("notebook-templates-implementation-guide/index.md"),
 }
 
 

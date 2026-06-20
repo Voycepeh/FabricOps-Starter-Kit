@@ -44,7 +44,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 ## What is included
 
 <div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="how-fabricops-works/notebook-templates/">
+  <a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
     <span class="fabricops-landing-card__title">5 main notebook templates</span>
     <span class="fabricops-landing-card__body">With step by step guide in guide in implementation guide.</span>
   </a>
