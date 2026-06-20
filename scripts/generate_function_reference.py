@@ -1594,10 +1594,10 @@ REFACTOR_SIGNAL_ORDER = [
 ]
 
 REFACTOR_SIGNAL_RECOMMENDATIONS = {
-    "Thin wrapper candidate": "Inspect for inline",
-    "Single-use internal helper": "Review purpose",
-    "Leaf internal helper": "Keep if transformation or validation",
-    "High-fanout helper": "Keep stable",
+    "Thin wrapper candidate": "Inline candidate",
+    "Single-use internal helper": "Review abstraction value",
+    "Leaf internal helper": "Keep / protect",
+    "High-fanout helper": "Shared helper – preserve carefully",
 }
 
 REFACTOR_PRIORITY_ORDER = {
@@ -1609,11 +1609,21 @@ REFACTOR_PRIORITY_ORDER = {
 }
 
 REFACTOR_PRIORITY_ACTIONS = {
-    "Protect": "Keep stable",
-    "High": "Inspect for inline",
-    "Medium": "Review purpose",
-    "Low": "Keep if transformation or validation",
-    "Review": "Inspect manually",
+    "Protect": "Shared helper – preserve carefully",
+    "High": "Inline candidate",
+    "Medium": "Review abstraction value",
+    "Low": "Keep / protect",
+    "Review": "Review manually",
+}
+
+ACTION_LEGEND = {
+    "Inline candidate": "Small single-use wrapper; consider flattening into its caller after checking readability.",
+    "Merge candidate": "Similar helper shape or adjacent responsibility; consider consolidating with a sibling helper.",
+    "Review abstraction value": "Single-use helper; verify the name, boundary, and test value justify keeping it separate.",
+    "Keep / protect": "Healthy helper shape or leaf behavior; keep stable unless source review shows duplication.",
+    "Shared helper – preserve carefully": "High reuse or broad inbound reach; refactor only with focused tests and caller review.",
+    "Promote candidate": "Potential public API only when metadata and caller evidence support notebook-facing reuse.",
+    "Review manually": "No clear automated signal; inspect intent before changing structure.",
 }
 
 
@@ -1673,6 +1683,39 @@ def _build_refactor_inventory(
     def outbound_project_calls(qn: str) -> list[str]:
         return sorted_qns({callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn})
 
+    def public_lineage(qn: str) -> list[dict[str, str]]:
+        lineage: list[dict[str, str]] = []
+        for public_qn in public_qns:
+            if qn not in _reachable_callables(public_qn, calls_by_qn, node_by_qn):
+                continue
+            callable_name = node_by_qn[public_qn]["callable_name"]
+            lineage.append(
+                {
+                    "callable": callable_name,
+                    "qualified_name": public_qn,
+                    "module": node_by_qn[public_qn]["module_name"],
+                    "docs_url": _public_callable_docs_url(callable_name),
+                }
+            )
+        return sorted(lineage, key=lambda item: item["callable"].lower())
+
+    def helper_depth(qn: str) -> int | None:
+        depths: list[int] = []
+        for public_qn in public_qns:
+            queue: list[tuple[str, int]] = [(public_qn, 0)]
+            seen = {public_qn}
+            while queue:
+                current_qn, depth = queue.pop(0)
+                if current_qn == qn:
+                    depths.append(depth)
+                    break
+                for callee_qn in calls_by_qn.get(current_qn, []):
+                    if callee_qn not in node_by_qn or callee_qn in seen:
+                        continue
+                    seen.add(callee_qn)
+                    queue.append((callee_qn, depth + 1))
+        return min(depths) if depths else None
+
     for qn in sorted_qns(set(node_by_qn)):
         if not _is_internal_helper_qn(qn, node_by_qn):
             continue
@@ -1703,6 +1746,8 @@ def _build_refactor_inventory(
                 "suggested_action": REFACTOR_PRIORITY_ACTIONS[priority],
                 "inbound_count": inbound_count,
                 "outbound_project_call_count": outbound_count,
+                "nesting_level": helper_depth(qn),
+                "public_entrypoint_lineage": public_lineage(qn),
                 "used_by": [
                     {
                         "function": node_by_qn[caller]["callable_name"],
@@ -1947,7 +1992,10 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
 
 def _render_refactor_inventory_items(items: list[dict[str, Any]]) -> str:
     """Render compact linked callable names for refactor inventory table cells."""
-    return ", ".join(_render_link(item["function"], item.get("source_url")) for item in items) or "—"
+    return ", ".join(
+        _render_link(item.get("function") or item.get("callable", "—"), item.get("source_url") or item.get("docs_url"))
+        for item in items
+    ) or "—"
 
 
 def _render_refactor_inventory_table(
@@ -1961,6 +2009,7 @@ def _render_refactor_inventory_table(
         cells = [
             (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
             (_render_link(row["module"], code=True), "flow-cell-module"),
+            (_render_link(row["qualified_name"], code=True), "flow-cell-qualified"),
             (", ".join(html.escape(signal) for signal in row["signals"]) or "—", "flow-cell-wide"),
             (_render_refactor_inventory_items(row["used_by"]), "flow-cell-wide"),
             (_render_refactor_inventory_items(row["calls"]), "flow-cell-wide"),
@@ -1970,16 +2019,23 @@ def _render_refactor_inventory_table(
                 [
                     (str(row["inbound_count"]), "flow-cell-number"),
                     (str(row["outbound_project_call_count"]), "flow-cell-number"),
+                    ("—" if row.get("nesting_level") is None else str(row["nesting_level"]), "flow-cell-number"),
                 ]
             )
-        cells.append((html.escape(row["suggested_action"]), "flow-cell-wide"))
+        cells.extend(
+            [
+                (_render_refactor_inventory_items(row.get("public_entrypoint_lineage", [])), "flow-cell-wide"),
+                (html.escape(row["suggested_action"]), "flow-cell-wide"),
+            ]
+        )
         table_rows.append(cells)
 
     headers = [
-        ("Helper", "flow-cell-name"),
+        ("Internal helper", "flow-cell-name"),
         ("Module", "flow-cell-module"),
-        ("Signals", "flow-cell-wide"),
-        ("Used by", "flow-cell-wide"),
+        ("Qualified name", "flow-cell-qualified"),
+        ("Signal / priority", "flow-cell-wide"),
+        ("Called by", "flow-cell-wide"),
         ("Calls", "flow-cell-wide"),
     ]
     if include_counts:
@@ -1987,9 +2043,15 @@ def _render_refactor_inventory_table(
             [
                 ("Inbound", "flow-cell-number"),
                 ("Outbound", "flow-cell-number"),
+                ("Depth", "flow-cell-number"),
             ]
         )
-    headers.append(("Suggested action", "flow-cell-wide"))
+    headers.extend(
+        [
+            ("Public entrypoint lineage", "flow-cell-wide"),
+            ("Suggested action", "flow-cell-wide"),
+        ]
+    )
     return _render_flow_table(headers, table_rows)
 
 
@@ -2015,154 +2077,112 @@ def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str
 def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
     """Render the standalone static refactor dashboard HTML page."""
     del flow_data
-    return """<!doctype html>
+    action_legend = json.dumps(ACTION_LEGEND, indent=2)
+    return f"""<!doctype html>
 <html lang=\"en\">
 <head>
   <meta charset=\"utf-8\">
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-  <title>FabricOps refactor signal dashboard</title>
+  <title>FabricOps refactor triage dashboard</title>
   <style>
-    :root { color-scheme: light; --border: #d8dee9; --muted: #526070; --bg: #f7f9fc; --chip: #edf2ff; }
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1f2937; background: #fff; }
-    header, main { max-width: 1180px; margin: 0 auto; padding: 1.25rem; }
-    header { border-bottom: 1px solid var(--border); }
-    h1 { margin-bottom: .25rem; }
-    a { color: #0f5db8; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin: 1rem 0; }
-    .card { border: 1px solid var(--border); border-radius: .75rem; padding: 1rem; background: var(--bg); }
-    .card strong { display: block; font-size: 1.75rem; }
-    .filters { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(160px, 1fr)) auto; gap: .75rem; align-items: end; margin: 1rem 0; }
-    label { display: grid; gap: .25rem; font-weight: 600; }
-    input, select, button { font: inherit; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .5rem; background: #fff; }
-    button { cursor: pointer; }
-    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: .75rem; }
-    table { width: 100%; border-collapse: collapse; min-width: 980px; }
-    th, td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-    th { background: var(--bg); position: sticky; top: 0; z-index: 1; }
-    th button { border: 0; background: transparent; font-weight: 700; padding: 0; }
-    .num { text-align: right; }
-    .tag { display: inline-block; margin: .1rem .15rem .1rem 0; padding: .15rem .45rem; border-radius: 999px; background: var(--chip); font-size: .85rem; }
-    .priority { font-weight: 700; }
-    .details { background: #fbfcfe; color: var(--muted); }
-    .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
-    .details ul { margin-top: .25rem; padding-left: 1.25rem; }
-    @media (max-width: 850px) { .filters { grid-template-columns: 1fr; } }
+    :root {{ color-scheme: light; --border:#d8dee9; --muted:#526070; --bg:#f7f9fc; --blue:#2563eb; --red:#dc2626; --yellow:#a16207; --green:#15803d; --grey:#64748b; }}
+    * {{ box-sizing: border-box; }}
+    body {{ font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1f2937; background: #fff; }}
+    header, main {{ max-width: 1260px; margin: 0 auto; padding: 1.25rem; }}
+    header {{ border-bottom: 1px solid var(--border); }}
+    h1 {{ margin: 0 0 .35rem; }}
+    a {{ color: #0f5db8; }}
+    .cards {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: .8rem; margin: 1rem 0; }}
+    .card {{ border: 1px solid var(--border); border-left: .35rem solid var(--blue); border-radius: .8rem; padding: .9rem; background: var(--bg); text-align: left; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }}
+    .card:hover, .card:focus-visible {{ transform: translateY(-1px); box-shadow: 0 8px 22px rgba(15, 23, 42, .10); outline: 2px solid transparent; }}
+    .card.active {{ box-shadow: 0 0 0 3px rgba(37, 99, 235, .18); }}
+    .card strong {{ display: block; font-size: 1.75rem; line-height: 1; }}
+    .card span {{ color: var(--muted); font-weight: 650; }}
+    .card.high {{ border-left-color: var(--red); }} .card.medium {{ border-left-color: #eab308; }} .card.protect {{ border-left-color: var(--green); }} .card.info {{ border-left-color: var(--blue); }}
+    .filters {{ display: grid; grid-template-columns: minmax(220px, 2fr) minmax(140px, .8fr) repeat(3, minmax(150px, 1fr)) auto; gap: .75rem; align-items: end; margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .9rem; background: #fbfcfe; }}
+    label {{ display: grid; gap: .25rem; font-weight: 700; }}
+    small, .hint {{ color: var(--muted); }}
+    input, select, button {{ font: inherit; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .55rem; background: #fff; }}
+    button {{ cursor: pointer; }}
+    .legend {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .5rem; margin: 1rem 0; }}
+    .legend div {{ border: 1px solid var(--border); border-radius: .7rem; padding: .65rem; background: #fff; }}
+    .table-wrap {{ overflow-x: auto; border: 1px solid var(--border); border-radius: .85rem; }}
+    table {{ width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1060px; table-layout: fixed; }}
+    th, td {{ padding: .8rem .75rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; overflow-wrap: anywhere; }}
+    th {{ background: var(--bg); position: sticky; top: 0; z-index: 1; font-size: .9rem; }}
+    th:nth-child(1) {{ width: 5.5rem; }} th:nth-child(2) {{ width: 17rem; }} th:nth-child(3) {{ width: 10rem; }} th:nth-child(4) {{ width: 18rem; }} th:nth-child(5) {{ width: 8rem; }} th:nth-child(6), th:nth-child(7) {{ width: 6rem; }} th:nth-child(8) {{ width: 16rem; }}
+    th button {{ border: 0; background: transparent; font-weight: 800; padding: 0; }}
+    .num {{ text-align: right; }}
+    .tag, .badge {{ display: inline-flex; align-items: center; margin: .12rem .18rem .12rem 0; padding: .18rem .5rem; border-radius: 999px; font-size: .82rem; font-weight: 700; line-height: 1.2; white-space: normal; }}
+    .tag {{ background: #eef2ff; color: #3730a3; }} .tag.high, .badge.high {{ background: #fee2e2; color: #991b1b; }} .tag.medium, .badge.medium {{ background: #fef3c7; color: #92400e; }} .tag.protect, .badge.protect {{ background: #dcfce7; color: #166534; }} .badge.review {{ background: #e2e8f0; color: #334155; }}
+    tr.row-high td:first-child {{ border-left: .28rem solid var(--red); }} tr.row-medium td:first-child {{ border-left: .28rem solid #eab308; }} tr.row-protect td:first-child {{ border-left: .28rem solid var(--green); }}
+    .details td {{ background: #f8fafc; padding: .75rem; }}
+    .details-panel {{ border: 1px solid var(--border); border-radius: .9rem; background: #fff; padding: 1rem; box-shadow: inset 0 4px 0 #e2e8f0; }}
+    .details-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }}
+    .details h3 {{ margin: 0 0 .45rem; font-size: .95rem; }}
+    .details ul {{ margin: 0; padding-left: 1.15rem; }}
+    .details li {{ margin: .25rem 0; }}
+    code {{ white-space: normal; }}
+    @media (max-width: 900px) {{ header, main {{ padding: 1rem; }} .filters {{ grid-template-columns: 1fr; }} .cards {{ grid-template-columns: 1fr 1fr; }} table {{ min-width: 900px; }} }}
+    @media (max-width: 560px) {{ .cards {{ grid-template-columns: 1fr; }} }}
   </style>
 </head>
 <body>
 <header>
-  <h1>FabricOps refactor signal dashboard</h1>
-  <p>Generated static dashboard for maintainers. The JSON data remains the source of truth.</p>
+  <h1>FabricOps refactor triage dashboard</h1>
+  <p>Generated maintainer dashboard for finding internal helpers that may need cleanup, flattening, protection, or manual review. The callable-flow JSON remains the source of truth.</p>
   <p><a href=\"callable-flow/\">Back to callable-flow reference</a> · <a href=\"_data/callable-flow.json\">Open JSON data</a></p>
 </header>
 <main>
   <section class=\"cards\" aria-label=\"Refactor summary\" id=\"summaryCards\"></section>
   <section class=\"filters\" aria-label=\"Inventory filters\">
-    <label>Search <input id=\"searchBox\" type=\"search\" placeholder=\"Helper, module, signal, caller, callee\"></label>
+    <label>Search <input id=\"searchBox\" type=\"search\" placeholder=\"Search selected scope\"><small id=\"scopeHint\">Global search covers helper, module, signal, callers, callees, and source.</small></label>
+    <label>Scope <select id=\"searchScope\"><option value=\"all\">All</option><option value=\"helper\">Helper</option><option value=\"module\">Module</option><option value=\"signal\">Signal</option><option value=\"caller\">Caller / used by</option><option value=\"callee\">Callee / calls</option><option value=\"source\">Source</option></select></label>
     <label>Module <select id=\"moduleFilter\"><option value=\"\">All modules</option></select></label>
     <label>Signal <select id=\"signalFilter\"><option value=\"\">All signals</option></select></label>
     <label>Priority <select id=\"priorityFilter\"><option value=\"\">All priorities</option></select></label>
-    <button type=\"button\" id=\"resetFilters\">Reset filters</button>
+    <button type=\"button\" id=\"resetFilters\">Reset</button>
   </section>
+  <section class=\"legend\" aria-label=\"Suggested action legend\" id=\"actionLegend\"></section>
   <p id=\"resultCount\"></p>
   <section class=\"table-wrap\" aria-label=\"Refactor inventory\">
     <table>
-      <thead><tr>
-        <th></th>
-        <th><button type=\"button\" data-sort=\"function\">Helper</button></th>
-        <th><button type=\"button\" data-sort=\"module\">Module</button></th>
-        <th>Signals</th>
-        <th><button type=\"button\" data-sort=\"priority\">Priority</button></th>
-        <th class=\"num\"><button type=\"button\" data-sort=\"inbound_count\">Inbound</button></th>
-        <th class=\"num\"><button type=\"button\" data-sort=\"outbound_project_call_count\">Outbound</button></th>
-        <th>Suggested action</th>
-      </tr></thead>
+      <thead><tr><th></th><th><button type=\"button\" data-sort=\"function\">Helper</button></th><th><button type=\"button\" data-sort=\"module\">Module</button></th><th>Signals</th><th><button type=\"button\" data-sort=\"priority\">Priority</button></th><th class=\"num\"><button type=\"button\" data-sort=\"inbound_count\">Inbound</button></th><th class=\"num\"><button type=\"button\" data-sort=\"outbound_project_call_count\">Outbound</button></th><th>Suggested action</th></tr></thead>
       <tbody id=\"inventoryBody\"></tbody>
     </table>
   </section>
 </main>
 <script>
-let inventory = [];
-let summary = {};
-const priorityRank = {High: 0, Medium: 1, Low: 2, Review: 3, Protect: 4};
-const state = {search: '', module: '', signal: '', priority: '', sortKey: 'priority', sortDir: 1, expanded: new Set()};
+let inventory = []; let summary = {{}};
+const actionLegend = {action_legend};
+const priorityRank = {{High: 0, Medium: 1, Low: 2, Review: 3, Protect: 4}};
+const state = {{search: '', scope: 'all', module: '', signal: '', priority: '', sortKey: 'priority', sortDir: 1, expanded: new Set(), activeCard: 'all'}};
 const $ = (id) => document.getElementById(id);
 const text = (value) => String(value ?? '');
-const esc = (value) => text(value).replace(/[&<>\"']/g, (ch) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'}[ch]));
-const itemText = (item) => [item.function, item.module, item.priority, item.suggested_action, ...item.signals, ...item.used_by.map((x) => x.function), ...item.calls.map((x) => x.function)].join(' ').toLowerCase();
-function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b)); }
-function option(select, value) { const opt = document.createElement('option'); opt.value = value; opt.textContent = value; select.appendChild(opt); }
-function renderCards() {
-  const cards = [
-    ['Total internal helpers', summary.internal_helpers],
-    ['High priority candidates', summary.high_priority_candidates],
-    ['Medium priority candidates', summary.medium_priority_candidates],
-    ['Protect helpers', summary.protect_helpers],
-    ['Thin wrapper candidates', summary.thin_wrapper_candidates],
-    ['Public API entrypoints', summary.public_api_entrypoints],
-  ];
-  $('summaryCards').innerHTML = cards.map(([label, value]) => `<article class=\"card\"><strong>${esc(value)}</strong><span>${esc(label)}</span></article>`).join('');
-}
-function populateFilters() {
-  unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value));
-  unique(inventory.flatMap((item) => item.signals)).forEach((value) => option($('signalFilter'), value));
-  ['High', 'Medium', 'Low', 'Review', 'Protect'].forEach((value) => option($('priorityFilter'), value));
-}
-function filteredRows() {
-  const q = state.search.trim().toLowerCase();
-  return inventory.filter((item) => (!q || itemText(item).includes(q)) && (!state.module || item.module === state.module) && (!state.signal || item.signals.includes(state.signal)) && (!state.priority || item.priority === state.priority));
-}
-function compare(a, b) {
-  const key = state.sortKey;
-  if (key === 'priority') return (priorityRank[a.priority] - priorityRank[b.priority]) * state.sortDir || a.module.localeCompare(b.module) || a.function.localeCompare(b.function);
-  if (typeof a[key] === 'number') return (a[key] - b[key]) * state.sortDir;
-  return text(a[key]).localeCompare(text(b[key])) * state.sortDir;
-}
-function linkedList(items) {
-  return items.length ? `<ul>${items.map((item) => `<li><a href=\"${esc(item.source_url || '#')}\">${esc(item.function)}</a> <small>(${esc(item.module)})</small></li>`).join('')}</ul>` : '<p>—</p>';
-}
-function renderTable() {
-  const rows = filteredRows().sort(compare);
-  $('resultCount').textContent = `Showing ${rows.length} of ${inventory.length} helpers.`;
-  $('inventoryBody').innerHTML = rows.map((item) => {
-    const id = item.qualified_name;
-    const open = state.expanded.has(id);
-    return `<tr>
-      <td><button type=\"button\" data-toggle=\"${esc(id)}\" aria-expanded=\"${open}\">${open ? 'Hide' : 'Details'}</button></td>
-      <td><a href=\"${esc(item.source_url || '#')}\"><code>${esc(item.function)}</code></a></td>
-      <td><code>${esc(item.module)}</code></td>
-      <td>${item.signals.map((signal) => `<span class=\"tag\">${esc(signal)}</span>`).join('') || '—'}</td>
-      <td class=\"priority\">${esc(item.priority)}</td>
-      <td class=\"num\">${esc(item.inbound_count)}</td>
-      <td class=\"num\">${esc(item.outbound_project_call_count)}</td>
-      <td>${esc(item.suggested_action)}</td>
-    </tr>${open ? `<tr class=\"details\"><td colspan=\"8\"><div class=\"details-grid\"><section><strong>Used by</strong>${linkedList(item.used_by)}</section><section><strong>Calls</strong>${linkedList(item.calls)}</section><section><strong>Source</strong><p><a href=\"${esc(item.source_url || '#')}\">${esc(item.source_path || item.source_url || 'Source unavailable')}</a></p></section></div></td></tr>` : ''}`;
-  }).join('');
-}
-function update() { renderTable(); }
-$('searchBox').addEventListener('input', (event) => { state.search = event.target.value; update(); });
-$('moduleFilter').addEventListener('change', (event) => { state.module = event.target.value; update(); });
-$('signalFilter').addEventListener('change', (event) => { state.signal = event.target.value; update(); });
-$('priorityFilter').addEventListener('change', (event) => { state.priority = event.target.value; update(); });
-$('resetFilters').addEventListener('click', () => { state.search = state.module = state.signal = state.priority = ''; $('searchBox').value = ''; $('moduleFilter').value = ''; $('signalFilter').value = ''; $('priorityFilter').value = ''; update(); });
-document.addEventListener('click', (event) => {
-  const sort = event.target.closest('[data-sort]');
-  if (sort) { const key = sort.dataset.sort; state.sortDir = state.sortKey === key ? state.sortDir * -1 : 1; state.sortKey = key; update(); }
-  const toggle = event.target.closest('[data-toggle]');
-  if (toggle) { const id = toggle.dataset.toggle; state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id); update(); }
-});
-async function loadData() {
-  try {
-    const response = await fetch('_data/callable-flow.json');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    inventory = data.refactor_inventory || [];
-    summary = data.summary_counts || {};
-    renderCards(); populateFilters(); renderTable();
-  } catch (error) {
-    $('resultCount').textContent = `Unable to load _data/callable-flow.json: ${error.message}`;
-  }
-}
+const esc = (value) => text(value).replace(/[&<>\"']/g, (ch) => ({{'&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'}}[ch]));
+function unique(values) {{ return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b)); }}
+function option(select, value) {{ const opt = document.createElement('option'); opt.value = value; opt.textContent = value; select.appendChild(opt); }}
+function priorityClass(value) {{ return text(value).toLowerCase(); }}
+function fields(item) {{ return {{all: [item.function, item.qualified_name, item.module, item.priority, item.suggested_action, item.source_path, ...item.signals, ...item.used_by.map((x) => x.function), ...item.calls.map((x) => x.function)].join(' '), helper: `${{item.function}} ${{item.qualified_name}}`, module: item.module, signal: item.signals.join(' '), caller: item.used_by.map((x) => `${{x.function}} ${{x.module}}`).join(' '), callee: item.calls.map((x) => `${{x.function}} ${{x.module}}`).join(' '), source: `${{item.source_path || ''}} ${{item.source_url || ''}}`}}; }}
+function renderCards() {{
+  const cards = [['all','Total internal helpers',summary.internal_helpers,'info'],['high','High priority candidates',summary.high_priority_candidates,'high'],['medium','Medium priority candidates',summary.medium_priority_candidates,'medium'],['protect','Protect helpers',summary.protect_helpers,'protect'],['thin','Thin wrapper candidates',summary.thin_wrapper_candidates,'info'],['public','Public API entrypoints',summary.public_api_entrypoints,'info']];
+  $('summaryCards').innerHTML = cards.map(([key,label,value,klass]) => `<button type=\"button\" class=\"card ${{klass}} ${{state.activeCard === key ? 'active' : ''}}\" data-card=\"${{key}}\"><strong>${{esc(value)}}</strong><span>${{esc(label)}}</span></button>`).join('');
+}}
+function renderLegend() {{ $('actionLegend').innerHTML = Object.entries(actionLegend).map(([label, desc]) => `<div><span class=\"badge review\">${{esc(label)}}</span><p class=\"hint\">${{esc(desc)}}</p></div>`).join(''); }}
+function populateFilters() {{ unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value)); unique(inventory.flatMap((item) => item.signals)).forEach((value) => option($('signalFilter'), value)); ['High','Medium','Low','Review','Protect'].forEach((value) => option($('priorityFilter'), value)); }}
+function filteredRows() {{ const q = state.search.trim().toLowerCase(); return inventory.filter((item) => (!q || fields(item)[state.scope].toLowerCase().includes(q)) && (!state.module || item.module === state.module) && (!state.signal || item.signals.includes(state.signal)) && (!state.priority || item.priority === state.priority)); }}
+function compare(a, b) {{ const key = state.sortKey; if (key === 'priority') return (priorityRank[a.priority] - priorityRank[b.priority]) * state.sortDir || a.module.localeCompare(b.module) || a.function.localeCompare(b.function); if (typeof a[key] === 'number') return (a[key] - b[key]) * state.sortDir; return text(a[key]).localeCompare(text(b[key])) * state.sortDir; }}
+function linkedList(items) {{ return items.length ? `<ul>${{items.map((item) => `<li><a href=\"${{esc(item.source_url || item.docs_url || '#')}}\">${{esc(item.function || item.callable)}}</a> <small>(${{esc(item.module)}})</small></li>`).join('')}}</ul>` : '<p>—</p>'; }}
+function chips(item) {{ return item.signals.map((signal) => `<span class=\"tag ${{signal.includes('Thin') ? 'high' : signal.includes('Single') ? 'medium' : signal.includes('fanout') ? 'protect' : ''}}\">${{esc(signal)}}</span>`).join('') || '—'; }}
+function renderTable() {{ const rows = filteredRows().sort(compare); $('resultCount').textContent = `Showing ${{rows.length}} of ${{inventory.length}} helpers.`; $('inventoryBody').innerHTML = rows.map((item) => {{ const id = item.qualified_name; const open = state.expanded.has(id); const klass = priorityClass(item.priority); return `<tr class=\"row-${{klass}}\"><td><button type=\"button\" data-toggle=\"${{esc(id)}}\" aria-expanded=\"${{open}}\">${{open ? 'Hide' : 'Details'}}</button></td><td><a href=\"${{esc(item.source_url || '#')}}\"><code>${{esc(item.function)}}</code></a><br><small>${{esc(item.qualified_name)}}</small></td><td><code>${{esc(item.module)}}</code></td><td>${{chips(item)}}</td><td><span class=\"badge ${{klass}}\">${{esc(item.priority)}}</span></td><td class=\"num\">${{esc(item.inbound_count)}}</td><td class=\"num\">${{esc(item.outbound_project_call_count)}}</td><td><span class=\"badge review\">${{esc(item.suggested_action)}}</span></td></tr>${{open ? `<tr class=\"details\"><td colspan=\"8\"><div class=\"details-panel\"><div class=\"details-grid\"><section><h3>Used by</h3>${{linkedList(item.used_by)}}</section><section><h3>Calls</h3>${{linkedList(item.calls)}}</section><section><h3>Public entrypoint lineage</h3>${{linkedList(item.public_entrypoint_lineage || [])}}</section><section><h3>Source</h3><p><a href=\"${{esc(item.source_url || '#')}}\">${{esc(item.source_path || item.source_url || 'Source unavailable')}}</a></p><p><strong>Depth:</strong> ${{esc(item.nesting_level ?? '—')}}</p></section></div></div></td></tr>` : ''}}`; }}).join(''); }}
+function update() {{ renderCards(); renderTable(); }}
+function resetFilters() {{ state.search = state.module = state.signal = state.priority = ''; state.scope = 'all'; state.activeCard = 'all'; $('searchBox').value = ''; $('searchScope').value = 'all'; $('moduleFilter').value = ''; $('signalFilter').value = ''; $('priorityFilter').value = ''; update(); }}
+function applyCard(key) {{ resetFilters(); state.activeCard = key; if (key === 'high') state.priority = 'High'; if (key === 'medium') state.priority = 'Medium'; if (key === 'protect') state.priority = 'Protect'; if (key === 'thin') state.signal = 'Thin wrapper candidate'; if (key === 'public') document.querySelector('.legend').scrollIntoView({{behavior: 'smooth', block: 'start'}}); $('signalFilter').value = state.signal; $('priorityFilter').value = state.priority; update(); }}
+$('searchBox').addEventListener('input', (event) => {{ state.search = event.target.value; update(); }});
+$('searchScope').addEventListener('change', (event) => {{ state.scope = event.target.value; $('scopeHint').textContent = event.target.value === 'all' ? 'Global search covers helper, module, signal, callers, callees, and source.' : `Search scope: ${{event.target.selectedOptions[0].textContent}}.`; update(); }});
+$('moduleFilter').addEventListener('change', (event) => {{ state.module = event.target.value; update(); }}); $('signalFilter').addEventListener('change', (event) => {{ state.signal = event.target.value; update(); }}); $('priorityFilter').addEventListener('change', (event) => {{ state.priority = event.target.value; update(); }}); $('resetFilters').addEventListener('click', resetFilters);
+document.addEventListener('click', (event) => {{ const sort = event.target.closest('[data-sort]'); if (sort) {{ const key = sort.dataset.sort; state.sortDir = state.sortKey === key ? state.sortDir * -1 : 1; state.sortKey = key; update(); }} const toggle = event.target.closest('[data-toggle]'); if (toggle) {{ const id = toggle.dataset.toggle; state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id); renderTable(); }} const card = event.target.closest('[data-card]'); if (card) applyCard(card.dataset.card); }});
+async function loadData() {{ try {{ const response = await fetch('_data/callable-flow.json'); if (!response.ok) throw new Error(`HTTP ${{response.status}}`); const data = await response.json(); inventory = data.refactor_inventory || []; summary = data.summary_counts || {{}}; renderCards(); renderLegend(); populateFilters(); renderTable(); }} catch (error) {{ $('resultCount').textContent = `Unable to load _data/callable-flow.json: ${{error.message}}`; }} }}
 loadData();
 </script>
 </body>
@@ -2197,60 +2217,37 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         ("Public API entrypoints", summary_counts["public_api_entrypoints"]),
     ]
     lines.extend(['<div class="callable-flow-signal-cards" markdown="0">'])
+    card_classes = {
+        "High priority candidates": "is-high",
+        "Medium priority candidates": "is-medium",
+        "Protect helpers": "is-protect",
+        "Thin wrapper candidates": "is-info",
+    }
     for label, value in card_rows:
+        card_class = card_classes.get(label, "is-neutral")
         lines.extend(
             [
-                '<div class="callable-flow-signal-card">',
+                f'<div class="callable-flow-signal-card {card_class}">',
                 f'<div class="callable-flow-signal-card-value">{value}</div>',
                 f'<div class="callable-flow-signal-card-label">{html.escape(label)}</div>',
                 '</div>',
             ]
         )
-
-    top_inventory = [row for row in inventory if row["priority"] != "Protect"][:20]
     lines.extend(
         [
             '</div>',
             "",
+            '<p class="callable-flow-cta" markdown="1">',
             "[Open interactive refactor dashboard](refactor-dashboard.html){ .md-button } [Download callable-flow JSON](_data/callable-flow.json){ .md-button }",
-            "",
-            "## Top priority refactor inventory",
-            "",
-            "Top 20 actionable internal helpers sorted by priority, then module, then function name. Protect helpers are excluded here because they should stay stable; use the dashboard priority filter to review them.",
-            "",
+            "</p>",
         ]
     )
-    lines.extend(_render_refactor_inventory_table(top_inventory))
-
-    lines.extend(
-        [
-            "",
-            "## Interactive dashboard",
-            "",
-            "The generated static dashboard contains the full one-row-per-helper inventory with search, module, signal, priority filters, sortable columns, and expandable row details.",
-            "",
-            "- [Open the interactive refactor dashboard](refactor-dashboard.html)",
-            "- [Open the source JSON data](_data/callable-flow.json)",
-            "",
-            "## Public callable dependency map",
-            "",
-            "This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.",
-            "",
-        ]
-    )
-    for callable_name in sorted(flow_data["public_callable_dependencies"]):
-        deps = flow_data["public_callable_dependencies"][callable_name]
-        callable_link = f"[`{callable_name}`]({_public_callable_docs_url(callable_name)})"
-        if deps:
-            dep_links = ", ".join(f"[`{item['callable']}`]({item['docs_url']})" for item in deps)
-            lines.append(f"- {callable_link} → {dep_links}")
-        else:
-            lines.append(f"- {callable_link} — independent entry point")
-
     lines.extend(
         [
             "",
             "## Callable helper summary",
+            "",
+            "Compact public callable summary for spotting entry points with many helper dependencies. Use the inventory below for helper-level cleanup triage.",
             "",
         ]
     )
@@ -2292,89 +2289,13 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "## Shared helper usage",
+            "## Internal helper nesting inventory",
             "",
-            "Internal helpers reached by more than one public callable.",
-            "",
-        ]
-    )
-    shared_rows: list[list[tuple[str, str]]] = []
-    if flow_data["shared_helper_usage"]:
-        for row in flow_data["shared_helper_usage"]:
-            helper = _render_link(row["helper"], row.get("source_url"))
-            public_callables = ", ".join(
-                _render_link(item["callable"], item["docs_url"]) for item in row["public_callables"]
-            )
-            shared_rows.append(
-                [
-                    (helper, "flow-cell-name"),
-                    (_render_link(row["qualified_name"], code=True), "flow-cell-qualified"),
-                    (_render_link(row["module"], code=True), "flow-cell-module"),
-                    (public_callables, "flow-cell-wide"),
-                    (str(row["public_callable_count"]), "flow-cell-number"),
-                ]
-            )
-    else:
-        shared_rows.append(
-            [
-                ("—", "flow-cell-name"),
-                ("—", "flow-cell-qualified"),
-                ("—", "flow-cell-module"),
-                ("No shared internal helper usage detected.", "flow-cell-wide"),
-                ("0", "flow-cell-number"),
-            ]
-        )
-    lines.extend(
-        _render_flow_table(
-            [
-                ("Helper", "flow-cell-name"),
-                ("Qualified name", "flow-cell-qualified"),
-                ("Module", "flow-cell-module"),
-                ("Public callables that reach it", "flow-cell-wide"),
-                ("Public callable count", "flow-cell-number"),
-            ],
-            shared_rows,
-        )
-    )
-
-    lines.extend(
-        [
-            "",
-            "## Legacy hotspot summary",
-            "",
-            "Legacy callable-level review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Use the maintainer inventory above as the primary refactor dashboard.",
+            "Complete one-row-per-internal-helper inventory for refactor cleanup. It includes shared helpers and single-use helpers so maintainers can decide whether to flatten, merge, protect, promote, or review each function.",
             "",
         ]
     )
-    hotspot_rows: list[list[tuple[str, str]]] = []
-    for rank, row in enumerate(flow_data["refactor_hotspots"], start=1):
-        hotspot_rows.append(
-            [
-                (str(rank), "flow-cell-number"),
-                (_render_link(row["callable"], row["docs_url"]), "flow-cell-name"),
-                (_render_link(row["module"], code=True), "flow-cell-module"),
-                (str(row["score"]), "flow-cell-number"),
-                (str(row["unique_internal_helper_count"]), "flow-cell-number"),
-                (str(row["deepest_call_chain_depth"]), "flow-cell-number"),
-                (str(row["repeated_helper_count"]), "flow-cell-number"),
-                (str(row["shared_helper_overlap_count"]), "flow-cell-number"),
-            ]
-        )
-    lines.extend(
-        _render_flow_table(
-            [
-                ("Rank", "flow-cell-number"),
-                ("Public callable", "flow-cell-name"),
-                ("Module", "flow-cell-module"),
-                ("Score", "flow-cell-number"),
-                ("Unique helpers", "flow-cell-number"),
-                ("Deepest depth", "flow-cell-number"),
-                ("Repeated helpers", "flow-cell-number"),
-                ("Shared helper overlap", "flow-cell-number"),
-            ],
-            hotspot_rows,
-        )
-    )
+    lines.extend(_render_refactor_inventory_table(inventory))
     lines.append("")
     return "\n".join(lines)
 
