@@ -1,22 +1,19 @@
 # Function Reference
 
-Use this page as a function lookup after you understand the notebook flow. The generated public function reference exposes 20 public Starter Kit functions and tracks 238 supporting internal functions for maintainers.
+Use this page to look up Starter Kit functions used by the template notebooks.
 
-- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.
-- Use the [Public callable flow map](callable-flow.md) for the global public callable dependency view and nested internal helper summary.
-- Use the Function catalogue below to browse the 20 public Starter Kit functions called by starter templates. Supporting internal functions remain source-level implementation details, not standalone public API.
-- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.
-
-## How to use this reference
-
-- **Public Starter Kit functions:** 20 notebook-facing entry points used by the starter templates.
-- **Supporting internal functions:** 238 implementation functions tracked for maintainers without standalone public callable pages.
-- **Internal/private functions** are implementation details, usually underscore-prefixed, and are shown only in maintainer/source-navigation views such as call flow.
-- **Implementation modules** show source ownership, module-level dependencies, and utility/internal relationships for maintainers.
-- **Function manifests** (`_data/manifest.json` and `_data/function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.
-- **Agent/automation metadata** (`_data/automation-manifest.json`) adds automation-oriented execution fields for planning, side-effect checks, and verification.
-- **Implementation contracts** on callable pages summarize expectations maintainers must satisfy before using or changing a function.
-- **Skill file** (`.agents/skills/fabricops/SKILL.md`) gives contributors repo-specific rules and points them to these generated references.
+<div class="reference-kpi-grid" aria-label="Function reference summary">
+  <section class="reference-kpi-card">
+    <p class="reference-kpi-value">20</p>
+    <h2 class="reference-kpi-title">Public functions</h2>
+    <p class="reference-kpi-note">Notebook-facing entry points used by starter templates.</p>
+  </section>
+  <section class="reference-kpi-card">
+    <p class="reference-kpi-value">238</p>
+    <h2 class="reference-kpi-title">Supporting internal functions</h2>
+    <p class="reference-kpi-note">Maintainer helpers tracked for source navigation.</p>
+  </section>
+</div>
 
 ## Find a function
 
@@ -30,6 +27,17 @@ Use the finder below to look up the 20 public Starter Kit functions. Supporting 
   <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 20 public Starter Kit functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>
 </div>
+
+??? info "Maintainer tools"
+    Use these links and notes when maintaining the reference system.
+
+    - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
+    - [Public callable flow map](callable-flow.md): global public callable dependency view and nested internal helper summary.
+    - [Implementation modules](../api/modules/): source ownership, module-level dependencies, and utility/internal relationships.
+    - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.
+    - Agent metadata: `_data/automation-manifest.json`.
+    - Implementation contracts: expectations maintainers must satisfy before using or changing a function.
+    - Skill file: `.agents/skills/fabricops/SKILL.md`.
 
 ## Function catalogue
 
