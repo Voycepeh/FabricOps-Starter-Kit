@@ -70,9 +70,9 @@ nav:
       - value_when: reference/dq-rules/value-when.md
       - expression_true: reference/dq-rules/expression-true.md
   - Maintainer Guide:
+      - Overview: reference/maintainer-guide.md
       - Glossary: reference/glossary.md
       - Callable Functions Flow: reference/callable-flow.md
-      - Modules: api/modules/index.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
       - Documentation Versioning: development/docs-versioning.md
