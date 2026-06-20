@@ -1245,6 +1245,25 @@ def _collect_internal_helper_descendants(
     return helpers
 
 
+def _callable_flow_internal_helper_qns(
+    root_qn: str,
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Return sorted internal helper qualified names for callable-flow output."""
+    root_name = node_by_qn.get(root_qn, {}).get("callable_name", "")
+    excluded_helpers = INTERNAL_HELPER_EXCLUSIONS.get(root_name, set())
+    helper_qns = {
+        helper_qn
+        for helper_qn in _collect_internal_helper_descendants(root_qn, calls_by_qn, node_by_qn)
+        if helper_qn not in excluded_helpers
+    }
+    return sorted(
+        helper_qns,
+        key=lambda qn: (node_by_qn[qn]["module_name"], node_by_qn[qn]["callable_name"].lower(), qn),
+    )
+
+
 def _call_tree_link(
     qn: str,
     root_qn: str,
@@ -2193,7 +2212,7 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         [
             '</div>',
             "",
-            "[Open interactive refactor dashboard](../refactor-dashboard.html){ .md-button } [Download callable-flow JSON](../_data/callable-flow.json){ .md-button }",
+            "[Open interactive refactor dashboard](refactor-dashboard.html){ .md-button } [Download callable-flow JSON](_data/callable-flow.json){ .md-button }",
             "",
             "## Top priority refactor inventory",
             "",
@@ -2210,8 +2229,8 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "",
             "The generated static dashboard contains the full one-row-per-helper inventory with search, module, signal, priority filters, sortable columns, and expandable row details.",
             "",
-            "- [Open the interactive refactor dashboard](../refactor-dashboard.html)",
-            "- [Open the source JSON data](../_data/callable-flow.json)",
+            "- [Open the interactive refactor dashboard](refactor-dashboard.html)",
+            "- [Open the source JSON data](_data/callable-flow.json)",
             "",
             "## Public callable dependency map",
             "",

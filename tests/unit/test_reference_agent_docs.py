@@ -229,8 +229,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Thin wrapper candidates" in flow_text
     assert "Public API entrypoints" in flow_text
     assert "## Top priority refactor inventory" in flow_text
-    assert "../refactor-dashboard.html" in flow_text
-    assert "../_data/callable-flow.json" in flow_text
+    assert "refactor-dashboard.html" in flow_text
+    assert "_data/callable-flow.json" in flow_text
+    assert "../refactor-dashboard.html" not in flow_text
+    assert "../_data/callable-flow.json" not in flow_text
     assert "full one-row-per-helper inventory" in flow_text
     assert "Protect helpers are excluded here" in flow_text
     assert '??? info "Full searchable inventory"' not in flow_text

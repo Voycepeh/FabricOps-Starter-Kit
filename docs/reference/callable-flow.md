@@ -37,7 +37,7 @@ Use the interactive dashboard to search helper names, modules, signals, callers,
 </div>
 </div>
 
-[Open interactive refactor dashboard](../refactor-dashboard.html){ .md-button } [Download callable-flow JSON](../_data/callable-flow.json){ .md-button }
+[Open interactive refactor dashboard](refactor-dashboard.html){ .md-button } [Download callable-flow JSON](_data/callable-flow.json){ .md-button }
 
 ## Top priority refactor inventory
 
@@ -266,8 +266,8 @@ Top 20 actionable internal helpers sorted by priority, then module, then functio
 
 The generated static dashboard contains the full one-row-per-helper inventory with search, module, signal, priority filters, sortable columns, and expandable row details.
 
-- [Open the interactive refactor dashboard](../refactor-dashboard.html)
-- [Open the source JSON data](../_data/callable-flow.json)
+- [Open the interactive refactor dashboard](refactor-dashboard.html)
+- [Open the source JSON data](_data/callable-flow.json)
 
 ## Public callable dependency map
 
