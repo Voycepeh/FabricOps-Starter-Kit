@@ -164,6 +164,43 @@
   word-break: normal;
 }
 
+.reference-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.reference-kpi-card {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, rgb(99, 102, 241) 24%, var(--md-default-fg-color--lightest));
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, rgb(99, 102, 241) 8%, var(--md-default-bg-color));
+  box-shadow: 0 1px 0 color-mix(in srgb, rgb(99, 102, 241) 18%, transparent);
+}
+
+.reference-kpi-value {
+  margin: 0;
+  color: var(--md-primary-fg-color);
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.reference-kpi-title {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.reference-kpi-note {
+  margin: 0.3rem 0 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .callable-finder {
   box-sizing: border-box;
   max-width: 100%;
