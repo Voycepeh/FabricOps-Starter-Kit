@@ -3832,6 +3832,8 @@ def main() -> None:
             lines = [
                 f"# {short_name}",
                 "",
+                *call_flow_lines,
+                "",
                 purpose,
                 "",
                 *page_chip_lines,
@@ -3875,8 +3877,6 @@ def main() -> None:
                 rendered_raises,
                 "",
                 *common_failure_cause_lines,
-                *call_flow_lines,
-                "",
                 *glossary_section_lines,
                 *see_also_lines,
             ]

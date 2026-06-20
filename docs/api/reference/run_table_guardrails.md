@@ -1,100 +1,5 @@
 # run_table_guardrails
 
-Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
-
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>pipeline</code></span>
-<span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02_pipeline</span>
-<span class="reference-chip">example_dq_rule_smoke_test</span>
-</p>
-
-**Used in notebooks:** `02_pipeline`, `example_dq_rule_smoke_test`
-
-## Usage guidance
-
-### Use when
-
-- Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.
-
-### Do not use when
-
-- Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.
-
-### Additional context
-
-Coordinates profiling, schema, freshness, profile behavior, DQ, and evidence checks for a group of pipeline table configs.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def run_table_guardrails(
-    table_configs: list[dict[str, Any]],
-    run_id: str | None=None,
-    context: dict[str, Any] | None=None,
-    spark_session: Any | None=None,
-    agreement_id: str='',
-    agreement_contract_version: str='',
-    notebook_registry_id: str='',
-    notebook_id: str='',
-    pipeline_name: str='',
-    table_role: str='',
-    mode: str='profile',
-    stop_on_failure: bool | None=None,
-) -> dict[str, Any]:
-```
-
-</div>
-
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
-```
-
-</div>
-
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `table_configs` | `list[dict[str, Any]]` | Yes | Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``, ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior. |
-| `run_id` | `str \| None` | No | Current pipeline run identifier. When omitted, the active context from :func:`start_pipeline_run` is used. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
-| `spark_session` | `Any \| None` | No | Spark session used by profile behavior and DQ helpers. When omitted, the active context from :func:`start_pipeline_run` is used. |
-| `agreement_id` | `str` | No | Governance context written with catalogue evidence. Omitted values are resolved from the active context when available. |
-| `agreement_contract_version` | `str` | No | Not documented yet |
-| `notebook_registry_id` | `str` | No | Not documented yet |
-| `notebook_id` | `str` | No | Not documented yet |
-| `pipeline_name` | `str` | No | Not documented yet |
-| `table_role` | `str` | No | Template-facing table role used to retain source and target definitions in the active context for summary defaults. |
-| `mode` | `str` | No | Template-facing mode. ``profile`` defaults to non-blocking display, and ``enforce`` defaults to ``stop_on_failure=True``. |
-| `stop_on_failure` | `bool \| None` | No | When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue. When omitted, the default is derived from ``mode``. |
-
-## Returns
-
-Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
-
-### Return interpretation
-
-The result groups each guardrail outcome and a summary DataFrame. If any blocking result has can_continue false, stop before writing data.
-
-## Raises / Errors
-
-Not documented yet
-
-### Common failure causes
-
-- One of the table configs is incomplete.
-- A schema, freshness, profile behavior, or DQ check fails.
-- Approved metadata evidence cannot be read.
-- Spark cannot profile or validate one of the DataFrames.
-
 ??? info "Uses 87 internal helper functions"
 
     <div class="reference-call-tree" role="tree">
@@ -503,6 +408,101 @@ Not documented yet
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161"><code>resolve_fabric_context(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">            └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83"><code>get_default_fabric_context(...)</code></a></div>
     </div>
+
+Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">Module: <code>pipeline</code></span>
+<span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">example_dq_rule_smoke_test</span>
+</p>
+
+**Used in notebooks:** `02_pipeline`, `example_dq_rule_smoke_test`
+
+## Usage guidance
+
+### Use when
+
+- Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.
+
+### Do not use when
+
+- Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.
+
+### Additional context
+
+Coordinates profiling, schema, freshness, profile behavior, DQ, and evidence checks for a group of pipeline table configs.
+
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def run_table_guardrails(
+    table_configs: list[dict[str, Any]],
+    run_id: str | None=None,
+    context: dict[str, Any] | None=None,
+    spark_session: Any | None=None,
+    agreement_id: str='',
+    agreement_contract_version: str='',
+    notebook_registry_id: str='',
+    notebook_id: str='',
+    pipeline_name: str='',
+    table_role: str='',
+    mode: str='profile',
+    stop_on_failure: bool | None=None,
+) -> dict[str, Any]:
+```
+
+</div>
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
+```
+
+</div>
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `table_configs` | `list[dict[str, Any]]` | Yes | Source or target table configs. Each config must contain ``key``, ``df``, and ``expected_schema``. Optional keys such as ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``, ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``, ``distribution_columns``, and ``exclude_columns`` control the guardrail behavior. |
+| `run_id` | `str \| None` | No | Current pipeline run identifier. When omitted, the active context from :func:`start_pipeline_run` is used. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
+| `spark_session` | `Any \| None` | No | Spark session used by profile behavior and DQ helpers. When omitted, the active context from :func:`start_pipeline_run` is used. |
+| `agreement_id` | `str` | No | Governance context written with catalogue evidence. Omitted values are resolved from the active context when available. |
+| `agreement_contract_version` | `str` | No | Not documented yet |
+| `notebook_registry_id` | `str` | No | Not documented yet |
+| `notebook_id` | `str` | No | Not documented yet |
+| `pipeline_name` | `str` | No | Not documented yet |
+| `table_role` | `str` | No | Template-facing table role used to retain source and target definitions in the active context for summary defaults. |
+| `mode` | `str` | No | Template-facing mode. ``profile`` defaults to non-blocking display, and ``enforce`` defaults to ``stop_on_failure=True``. |
+| `stop_on_failure` | `bool \| None` | No | When True, collect all guardrail results and catalogue evidence, then stop notebook execution via the standard guardrail stopper if any table cannot continue. When omitted, the default is derived from ``mode``. |
+
+## Returns
+
+Guardrail result bundle with profiles, schema results, freshness results, stability results, DQ results, catalogue status, evidence definitions, summary, can_continue, and failed_tables.
+
+### Return interpretation
+
+The result groups each guardrail outcome and a summary DataFrame. If any blocking result has can_continue false, stop before writing data.
+
+## Raises / Errors
+
+Not documented yet
+
+### Common failure causes
+
+- One of the table configs is incomplete.
+- A schema, freshness, profile behavior, or DQ check fails.
+- Approved metadata evidence cannot be read.
+- Spark cannot profile or validate one of the DataFrames.
 
 ## Glossary
 
