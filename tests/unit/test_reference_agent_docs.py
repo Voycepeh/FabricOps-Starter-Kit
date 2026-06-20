@@ -130,12 +130,12 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     assert automation_callables == exported_symbols
     assert function_callables == exported_symbols
     assert page_callables == exported_symbols
-    assert set(callable_flow["public_callable_dependencies"]) == exported_symbols
-    assert {row["callable"] for row in callable_flow["callable_helper_summary"]} == exported_symbols
+    public_inventory = {row["function_name"] for row in callable_flow["function_inventory"] if row["function_type"] == "Public"}
+    assert public_inventory == exported_symbols
     assert not (removed_symbols & automation_callables)
     assert not (removed_symbols & function_callables)
     assert not (removed_symbols & page_callables)
-    assert not (removed_symbols & set(callable_flow["public_callable_dependencies"]))
+    assert not (removed_symbols & public_inventory)
 
 def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
     """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
@@ -251,8 +251,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup." in dashboard_text
     assert "Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified." in dashboard_text
     assert "Most flexible: breaking changes are allowed when they simplify new or experimental code." in dashboard_text
-    assert "High review" in dashboard_text
-    assert "Medium review" in dashboard_text
+    assert "High review" not in dashboard_text
+    assert "Medium review" not in dashboard_text
+    assert 'id="summaryTree"' in dashboard_text
+    assert "Function summary tree" in dashboard_text
+    assert "Function inventory" in dashboard_text
+    assert "Total functions" in dashboard_text
     assert "Select visible" in dashboard_text
     assert "Clear selection" in dashboard_text
     assert "Copy JSON" in dashboard_text
@@ -274,60 +278,45 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "development_breaking_allowed" in dashboard_text
     assert "Respect the compatibility mode" in dashboard_text
     assert "How signals are classified" in dashboard_text
-    assert "Small helpers likely safe to flatten" in dashboard_text
+    assert "Small helper used by only one function" in dashboard_text
     assert "Function type" in dashboard_text
     assert "Unreachable" in dashboard_text
     assert ".filter-panel" in dashboard_text
     assert "grid-template-columns: minmax(260px, 1.4fr)" in dashboard_text
     assert "@media (max-width: 1100px)" in dashboard_text
     assert "data.function_inventory" in dashboard_text
+    assert "renderTreeSummary" in dashboard_text
+    assert "data-tree" in dashboard_text
+    assert "Cleanup opportunities" not in dashboard_text
+    assert "Hygiene signals" not in dashboard_text
+    assert "Inventory and stability" not in dashboard_text
     assert "fetch('../reference/_data/callable-flow.json')" in dashboard_text
     assert "Callers" in dashboard_text
     assert "Callees" in dashboard_text
     assert "Source" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert {
-        "public_callable_dependencies",
-        "callable_helper_summary",
-        "shared_helper_usage",
-        "refactor_hotspots",
-        "summary_counts",
-        "refactor_signals",
-        "refactor_inventory",
-        "function_inventory",
-    } <= set(flow_data)
-    assert set(flow_data["public_callable_dependencies"]) == exported_symbols
+    assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
 
     summary_counts = flow_data["summary_counts"]
-    assert {
-        "total_functions_discovered",
-        "public_api_entrypoints",
-        "reachable_internal_helpers",
-        "unreachable_or_unclassified_functions",
-        "high_priority_candidates",
-        "medium_priority_candidates",
-        "protect_helpers",
-        "thin_wrapper_candidates",
-    } <= set(summary_counts)
-    assert summary_counts["public_api_entrypoints"] == len(exported_symbols)
-    assert summary_counts["total_functions_discovered"] == (
-        summary_counts["public_api_entrypoints"]
-        + summary_counts["reachable_internal_helpers"]
-        + summary_counts["unreachable_or_unclassified_functions"]
-    )
+    assert set(summary_counts) == {"total_functions", "function_type", "recommended_action"}
+    assert set(summary_counts["function_type"]) == {"Public", "Internal", "Unreachable"}
+    assert summary_counts["function_type"]["Public"] == len(exported_symbols)
+    assert summary_counts["total_functions"] == sum(summary_counts["function_type"].values())
 
     function_inventory = flow_data["function_inventory"]
-    assert len(function_inventory) == summary_counts["total_functions_discovered"]
+    assert len(function_inventory) == summary_counts["total_functions"]
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
     assert {"Public", "Internal", "Unreachable"} <= {row["function_type"] for row in function_inventory}
-    assert sum(1 for row in function_inventory if row["function_type"] == "Public") == summary_counts["public_api_entrypoints"]
-    assert sum(1 for row in function_inventory if row["function_type"] == "Internal") == summary_counts["reachable_internal_helpers"]
-    assert sum(1 for row in function_inventory if row["function_type"] == "Unreachable") == summary_counts["unreachable_or_unclassified_functions"]
-    assert all(not row["is_internal_helper"] for row in function_inventory if row["function_type"] == "Public")
-    assert all(row["is_internal_helper"] for row in function_inventory if row["function_type"] == "Internal")
-    assert all(not row["is_reachable"] for row in function_inventory if row["function_type"] == "Unreachable")
+    assert sum(1 for row in function_inventory if row["function_type"] == "Public") == summary_counts["function_type"]["Public"]
+    assert sum(1 for row in function_inventory if row["function_type"] == "Internal") == summary_counts["function_type"]["Internal"]
+    assert sum(1 for row in function_inventory if row["function_type"] == "Unreachable") == summary_counts["function_type"]["Unreachable"]
+    assert {row["function_name"] for row in function_inventory if row["function_type"] == "Public"} == exported_symbols
+    assert summary_counts["recommended_action"] == {
+        action: sum(1 for row in function_inventory if row["recommended_action"] == action)
+        for action in sorted({row["recommended_action"] for row in function_inventory})
+    }
     assert all(row["recommended_action"] for row in function_inventory)
     assert all(
         {
@@ -335,10 +324,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
             "qualified_name",
             "module",
             "function_type",
-            "public_callable",
-            "is_public_api",
-            "is_internal_helper",
-            "is_reachable",
             "called_by_count",
             "calls_count",
             "direct_internal_helpers",
@@ -352,11 +337,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         } <= set(item)
         for item in function_inventory
     )
-
-    refactor_inventory = flow_data["refactor_inventory"]
-    assert refactor_inventory
-    assert all(item["recommended_action"] for item in refactor_inventory)
-    assert flow_data["refactor_signals"]
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
@@ -716,10 +696,6 @@ def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
 def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     """Verify catalogue cards expose simplified callable flow chips."""
     text = REFERENCE_INDEX.read_text(encoding="utf-8")
-    callable_flow = json.loads((REFERENCE_DIR / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
-    summary_by_callable = {row["callable"]: row for row in callable_flow["callable_helper_summary"]}
-    guardrail_nested_count = summary_by_callable["run_table_guardrails"]["unique_internal_helper_count"]
-
     assert "Inbound" not in text
     assert "Outbound" not in text
     assert "incoming" not in text.lower()
@@ -729,7 +705,7 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "Used by 1 public function" not in text
     assert "internal helpers" not in text
     assert "Calls 1 public function" in text
-    assert f"Calls {guardrail_nested_count} nested helper functions" in text
+    assert "nested helper functions" in text
     assert '<a href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>' in text
 
 
