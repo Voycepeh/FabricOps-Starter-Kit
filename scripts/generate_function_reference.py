@@ -2111,13 +2111,6 @@ def main() -> None:
         name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
         for name in symbol_map
     }
-    template_called_function_names = {name for name, usage in core_template_usage_by_symbol.items() if usage}
-    example_only_function_names = {
-        name
-        for name, usage in example_template_usage_by_symbol.items()
-        if usage and not core_template_usage_by_symbol.get(name)
-    }
-
     def _is_callable_edge(edge: dict[str, Any]) -> bool:
         callee = edge.get("callee_qualified_name")
         if not callee:
