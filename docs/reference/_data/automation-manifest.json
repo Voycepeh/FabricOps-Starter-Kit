@@ -1531,7 +1531,7 @@
     "module": "config",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._get_metadata_table_schema_registry",
@@ -1592,7 +1592,7 @@
     "module": "config",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.NotebookSetupContext",
@@ -3196,26 +3196,24 @@
     "name": "get_selected_agreement",
     "qualified_name": "fabricops_kit.data_agreement.get_selected_agreement",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "callable",
-    "function_category": "composable",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline.start_pipeline_run"
     ],
     "outbound": [],
     "used_in_templates": [],
-    "glossary_terms": [
-      "notebook template"
-    ],
-    "expanded_purpose": "Returns the agreement chosen by widget_select_agreement so downstream cells can pass consistent agreement identifiers to pipeline helpers.",
-    "when_to_use": "Use after rendering and completing widget_select_agreement when code needs the selected agreement values.",
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
     "source_file": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 1027,
     "source_end_line": 1043,
     "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1027-L1043",
-    "docs_path": "api/reference/get_selected_agreement.md",
+    "docs_path": null,
     "summary": "Return the agreement selected by widget_select_agreement.",
-    "use_when": "Use after rendering and completing widget_select_agreement when code needs the selected agreement values.",
+    "use_when": "Not documented yet",
     "do_not_use_when": "Do not use before rendering and completing widget_select_agreement, or as a substitute for querying all agreement metadata.",
     "required_context": "Depends on a prior widget_select_agreement call in the same notebook session and agreement metadata loaded via 00_env_config routing.",
     "inputs": "No required parameters; reads the current in-memory widget selection state.",
@@ -3224,12 +3222,7 @@
     "side_effects": "Reads session/widget state only; it does not write metadata, tables, or files.",
     "failure_modes": "Raises an error when no agreement has been selected in the current session.",
     "common_failure_causes": "- widget_select_agreement has not been run.\n- The user has not selected an agreement.\n- Notebook state was reset.\n- The selected row is no longer present in metadata.",
-    "related_guides": [
-      {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
-      }
-    ],
+    "related_guides": [],
     "preferred_example": "agreement = get_selected_agreement()\ndataset_name = agreement[\"dataset_name\"]",
     "verification": "Verify the returned agreement has the expected dataset/table identifiers before using it to drive reads, writes, or governance evidence.",
     "related_functions": [
@@ -3242,7 +3235,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -3295,7 +3288,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -3343,7 +3336,7 @@
     "module": "data_agreement",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -3389,9 +3382,9 @@
     "name": "widget_select_agreement",
     "qualified_name": "fabricops_kit.data_agreement.widget_select_agreement",
     "module": "data_agreement",
-    "type": "callable",
-    "role": "callable",
-    "function_category": "composable",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.pipeline.start_pipeline_run"
     ],
@@ -3406,18 +3399,16 @@
       "fabricops_kit.metadata._register_current_notebook"
     ],
     "used_in_templates": [],
-    "glossary_terms": [
-      "notebook template"
-    ],
-    "expanded_purpose": "Displays an agreement selector and stores the chosen agreement so pipeline and exploration notebooks can bind work to approved business context.",
-    "when_to_use": "Use near the start of 02_pipeline or 99_explore before reads, profiling, lineage, or governance evidence need an agreement id.",
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
     "source_file": "src/fabricops_kit/data_agreement.py",
     "source_start_line": 788,
     "source_end_line": 1024,
     "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024",
-    "docs_path": "api/reference/widget_select_agreement.md",
+    "docs_path": null,
     "summary": "Render an agreement selector and optionally register the active notebook.",
-    "use_when": "Use near the start of 02_pipeline or 99_explore before reads, profiling, lineage, or governance evidence need an agreement id.",
+    "use_when": "Not documented yet",
     "do_not_use_when": "Do not use for guardrail target selection; use widget_select_guardrail_target for catalogue-backed guardrail authoring and review targets.",
     "required_context": "Requires agreement metadata created through 01_agreement and metadata routing from 00_env_config.",
     "inputs": "config, env, optional spark_session, and notebook registration options for loading agreement choices from metadata.",
@@ -3426,12 +3417,7 @@
     "side_effects": "Displays an IPython widget and may register the active notebook selection in metadata when requested.",
     "failure_modes": "Raises metadata read, widget dependency, or configuration errors when agreement metadata cannot be loaded.",
     "common_failure_causes": "- No agreement metadata rows are available.\n- The user has not selected an agreement.\n- Notebook registration metadata cannot be written.\n- The configured metadata lakehouse cannot be read.",
-    "related_guides": [
-      {
-        "title": "Notebook Templates",
-        "path": "../../how-fabricops-works/notebook-templates/index.md"
-      }
-    ],
+    "related_guides": [],
     "preferred_example": "widget_select_agreement(spark_session=spark)\nagreement = get_selected_agreement()",
     "verification": "Verify the user selected an agreement and call get_selected_agreement before generating pipeline code that depends on agreement context.",
     "related_functions": [
@@ -3750,7 +3736,7 @@
     "module": "data_profiling",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [
       "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
       "fabricops_kit.guardrails.enforce_profile_behavior",
@@ -4329,7 +4315,7 @@
     "module": "fabric_input_output",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -4382,7 +4368,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "composable",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4426,7 +4412,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "composable",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4470,7 +4456,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "composable",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4515,7 +4501,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "composable",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.config._validate_metadata_table_registration",
@@ -4585,7 +4571,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "composable",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.read_data"
     ],
@@ -4627,7 +4613,7 @@
     "module": "fabric_input_output",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -4678,7 +4664,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "composable",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
       "fabricops_kit.data_agreement._write_row",
@@ -4744,7 +4730,7 @@
     "module": "fabric_input_output",
     "type": "internal",
     "role": "internal",
-    "function_category": "composable",
+    "function_category": "utility",
     "inbound": [
       "fabricops_kit.fabric_input_output.write_data"
     ],
@@ -7562,7 +7548,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7910,7 +7896,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -7960,7 +7946,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -8010,7 +7996,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -8062,7 +8048,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -8110,7 +8096,7 @@
     "module": "governance_review",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -11522,7 +11508,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.pipeline._rows_for_display",
@@ -11567,7 +11553,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.pipeline._add_audit_columns"
@@ -11621,7 +11607,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -11690,7 +11676,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.data_agreement.get_selected_agreement",
@@ -11797,7 +11783,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
@@ -11857,7 +11843,7 @@
     "module": "pipeline",
     "type": "callable",
     "role": "callable",
-    "function_category": "workflow",
+    "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",

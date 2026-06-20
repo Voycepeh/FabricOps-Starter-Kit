@@ -433,7 +433,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.data_agreement.widget_render_data_steward`
 - Short name: `widget_render_data_steward`
 - Module: `data_agreement`
-- Taxonomy category: Workflow
+- Public surface: Public Starter Kit function
 - Classification: Callable
 - Related module: `data_agreement`
 - Source file path: `src/fabricops_kit/data_agreement.py`

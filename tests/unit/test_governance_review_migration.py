@@ -30,8 +30,6 @@ EXPECTED_V1_CALLABLES = [
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
-    "widget_select_agreement",
-    "get_selected_agreement",
     "read_data",
     "write_data",
     "profile_dataframe",
@@ -52,6 +50,8 @@ EXPECTED_V1_CALLABLES = [
 def test_public_callable_list_includes_guardrail_authoring_widgets():
     """Verify public callable list includes guardrail authoring widgets."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
+    assert len(fabricops_kit.__all__) == 20
+    assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)
 
 
 def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callables():

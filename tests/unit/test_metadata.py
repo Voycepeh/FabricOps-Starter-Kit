@@ -213,14 +213,12 @@ def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
 
 def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadata_cleanup():
     """Verify public callable list includes guardrail authoring helpers."""
-    assert fabricops_kit.__all__ == [
+    expected_public_callables = [
         "setup_notebook",
         "setup_metadata_tables",
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_render_agreement_evidence",
-        "widget_select_agreement",
-        "get_selected_agreement",
         "read_data",
         "write_data",
         "profile_dataframe",
@@ -237,3 +235,6 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "widget_author_dq_rules",
         "widget_review_guardrail_governance",
     ]
+    assert fabricops_kit.__all__ == expected_public_callables
+    assert len(fabricops_kit.__all__) == 20
+    assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)

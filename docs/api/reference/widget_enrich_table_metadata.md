@@ -329,7 +329,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.governance_review.widget_enrich_table_metadata`
 - Short name: `widget_enrich_table_metadata`
 - Module: `governance_review`
-- Taxonomy category: Workflow
+- Public surface: Public Starter Kit function
 - Classification: Callable
 - Related module: `governance_review`
 - Source file path: `src/fabricops_kit/governance_review.py`

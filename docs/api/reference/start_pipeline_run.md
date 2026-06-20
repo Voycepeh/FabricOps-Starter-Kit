@@ -96,8 +96,8 @@ Not documented yet
 
 ### Calls
 
-- <a href="get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
-- <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
+- `fabricops_kit.data_agreement.get_selected_agreement`
+- `fabricops_kit.data_agreement.widget_select_agreement`
 - `fabricops_kit.pipeline._PipelineRunContext`
 - `fabricops_kit.pipeline._notebook_global`
 - `fabricops_kit.pipeline._now_iso`
@@ -141,8 +141,8 @@ parameters on guardrail and summary helpers for advanced notebooks.
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│           └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196"><code>_validate_audit_timezone(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L23-L40"><code>_PipelineRunContext(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L55-L60"><code>_runtime_metadata_value(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="../get_selected_agreement/"><code>get_selected_agreement(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="../widget_select_agreement/"><code>widget_select_agreement(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1027-L1043"><code>get_selected_agreement(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024"><code>widget_select_agreement(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L451-L507"><code>_current_notebook_active_registrations(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L154-L166"><code>_context_get(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L398-L448"><code>_load_notebook_registry(...)</code></a></div>
@@ -352,7 +352,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.pipeline.start_pipeline_run`
 - Short name: `start_pipeline_run`
 - Module: `pipeline`
-- Taxonomy category: Workflow
+- Public surface: Public Starter Kit function
 - Classification: Callable
 - Related module: `pipeline`
 - Source file path: `src/fabricops_kit/pipeline.py`
@@ -377,8 +377,8 @@ Not documented yet
 
 ### Outbound references
 
-- <a href="get_selected_agreement/"><code>fabricops_kit.data_agreement.get_selected_agreement</code></a>
-- <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
+- `fabricops_kit.data_agreement.get_selected_agreement`
+- `fabricops_kit.data_agreement.widget_select_agreement`
 - `fabricops_kit.pipeline._PipelineRunContext`
 - `fabricops_kit.pipeline._notebook_global`
 - `fabricops_kit.pipeline._now_iso`
@@ -412,7 +412,7 @@ def start_pipeline_run(
 
 - <a href="run_table_guardrails/"><code>fabricops_kit.pipeline.run_table_guardrails</code></a>
 - <a href="write_pipeline_run_summary/"><code>fabricops_kit.pipeline.write_pipeline_run_summary</code></a>
-- <a href="widget_select_agreement/"><code>fabricops_kit.data_agreement.widget_select_agreement</code></a>
+- `fabricops_kit.data_agreement.widget_select_agreement`
 
 ### Internal implementation summary
 

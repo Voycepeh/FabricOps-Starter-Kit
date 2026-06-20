@@ -2,11 +2,11 @@
 
 **Purpose:** Supporting agreement files and evidence metadata captured during agreement intake.
 
-## Workflow usage
+## Starter Kit usage
 
 - **Written by notebook/template:** 01_agreement.ipynb
 - **Written by function or widget:** [`widget_render_agreement_evidence`](../../api/reference/widget_render_agreement_evidence.md)
-- **Read by function or widget:** [`widget_select_agreement`](../../api/reference/widget_select_agreement.md)
+- **Read by function or widget:** [`widget_select_agreement`](../../api/modules/data_agreement.md#widgetselectagreement)
 - **Related template step:** 01_agreement.ipynb
 
 ## Implemented schema
@@ -32,4 +32,4 @@
 ## Related function reference
 
 - [`widget_render_agreement_evidence`](../../api/reference/widget_render_agreement_evidence.md)
-- [`widget_select_agreement`](../../api/reference/widget_select_agreement.md)
+- [`widget_select_agreement`](../../api/modules/data_agreement.md#widgetselectagreement)

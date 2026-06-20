@@ -41,21 +41,6 @@ DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
 CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
 
-# Public module-level building blocks that users may call intentionally when they
-# customize or decouple from the guided workflow. These are not root exports, but
-# they should remain discoverable as Composable functions rather than hidden as
-# maintainer-only Utility functions.
-COMPOSABLE_SUPPORT_FUNCTIONS = {
-    "read_lakehouse_csv",
-    "read_lakehouse_excel",
-    "read_lakehouse_parquet",
-    "read_lakehouse_table",
-    "read_warehouse_table",
-    "write_lakehouse_table",
-    "write_warehouse_table",
-}
-
-
 def markdown_anchor(value: str) -> str:
     """Return a Material for MkDocs-compatible heading anchor."""
     anchor = re.sub(r"[^a-z0-9 -]", "", value.lower())
@@ -127,69 +112,6 @@ def _hide_from_public_relationships(qn: str) -> bool:
     return qn in SCHEMA_RUNTIME_INTERNAL_HELPERS
 
 
-# Proposed taxonomy for PR #612-style label cleanup. Keep this audit separate
-# from current generated labels until the user-facing rename is intentionally made.
-TAXONOMY_ORCHESTRATOR_CANDIDATES = {
-    "setup_notebook",
-    "setup_metadata_tables",
-    "read_data",
-    "write_data",
-    "profile_dataframe",
-    "run_table_guardrails",
-    "start_pipeline_run",
-    "write_pipeline_lineage",
-    "write_pipeline_run_summary",
-    "widget_enrich_table_metadata",
-    "widget_author_schema_freshness_profile_rules",
-    "widget_author_dq_rules",
-    "widget_review_guardrail_governance",
-}
-
-TAXONOMY_UTILITY_CANDIDATES = {
-    "widget_render_data_steward",
-    "widget_render_data_agreement",
-    "widget_render_agreement_evidence",
-    "widget_select_agreement",
-    "get_selected_agreement",
-    "get_latest_metadata_catalogue",
-    "display_guardrail_results",
-    "prepare_pipeline_table_configs",
-    "widget_select_guardrail_target",
-    *COMPOSABLE_SUPPORT_FUNCTIONS,
-}
-
-TAXONOMY_RATIONALE = {
-    "setup_notebook": "Coordinates notebook runtime setup, configuration validation, widgets, and user-facing environment readiness checks.",
-    "setup_metadata_tables": "Coordinates metadata table bootstrap and smoke-test readiness across configured metadata storage.",
-    "read_data": "Coordinates agreement-aware source loading for the starter workflow rather than a single storage primitive.",
-    "write_data": "Coordinates target write behavior for the starter workflow rather than a single storage primitive.",
-    "profile_dataframe": "Coordinates profiling, metadata catalogue preparation, and evidence shaping for review workflows.",
-    "run_table_guardrails": "Coordinates approved rule loading, data quality enforcement, result persistence, and pipeline status evidence.",
-    "start_pipeline_run": "Coordinates pipeline run context creation and persisted run metadata.",
-    "write_pipeline_lineage": "Coordinates lineage evidence creation for a pipeline run.",
-    "write_pipeline_run_summary": "Coordinates pipeline run summary persistence for operational handover.",
-    "widget_enrich_table_metadata": "Coordinates interactive enrichment and review state for table metadata.",
-    "widget_author_schema_freshness_profile_rules": "Coordinates interactive authoring of schema, freshness, and profile guardrail intent.",
-    "widget_author_dq_rules": "Coordinates interactive data quality rule authoring against profiling context.",
-    "widget_review_guardrail_governance": "Coordinates governance review decisions and metadata-backed guardrail evidence.",
-    "widget_render_data_steward": "Small display building block for agreement context; intentionally public even though it is UI-focused.",
-    "widget_render_data_agreement": "Small display building block for agreement context; intentionally public even though it is UI-focused.",
-    "widget_render_agreement_evidence": "Small display building block for agreement evidence; intentionally public even though it is UI-focused.",
-    "widget_select_agreement": "Public widget utility that users may call directly to select agreement context outside the full flow.",
-    "get_selected_agreement": "Public state utility for retrieving the selected agreement without rerunning the whole agreement workflow.",
-    "get_latest_metadata_catalogue": "Public metadata lookup utility for direct notebook customization and inspection.",
-    "display_guardrail_results": "Public presentation utility for rendering already-computed guardrail results.",
-    "prepare_pipeline_table_configs": "Public configuration utility for users who need to inspect or customize pipeline table configuration before orchestration.",
-    "widget_select_guardrail_target": "Public widget utility for choosing a guardrail target independently from downstream enforcement.",
-    "read_lakehouse_csv": "Public storage utility with a stable, direct read purpose independent of higher-level workflow orchestration.",
-    "read_lakehouse_excel": "Public storage utility with a stable, direct read purpose independent of higher-level workflow orchestration.",
-    "read_lakehouse_parquet": "Public storage utility with a stable, direct read purpose independent of higher-level workflow orchestration.",
-    "read_lakehouse_table": "Public storage utility for direct metadata and lakehouse table reads; PR #612-style utility rather than hidden internal because users can safely call it directly.",
-    "read_warehouse_table": "Public storage utility with stable parameters for direct warehouse reads.",
-    "write_lakehouse_table": "Public storage utility for direct metadata and lakehouse table writes; PR #612-style utility rather than hidden internal because users can safely call it directly.",
-    "write_warehouse_table": "Public storage utility with stable parameters for direct warehouse writes.",
-}
-
 INTERNAL_HELPER_AUDIT_DECISIONS = {
     "fabricops_kit.config._get_store": "keep_internal",
     "fabricops_kit.config._normalize_path_config": "keep_internal",
@@ -212,8 +134,6 @@ V1_CALLABLES = {
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
-    "widget_select_agreement",
-    "get_selected_agreement",
     "read_data",
     "write_data",
     "profile_dataframe",
@@ -1427,168 +1347,9 @@ def _helper_area_mismatch_signal(helper_name: str, purpose: str, assigned_area: 
 
 
 
-def _proposed_taxonomy_category(name: str) -> str:
-    """Return the proposed public taxonomy category for the audit."""
-    if name in TAXONOMY_ORCHESTRATOR_CANDIDATES:
-        return "orchestrator_candidate"
-    if name in TAXONOMY_UTILITY_CANDIDATES:
-        return "utility_candidate"
-    raise RuntimeError(f"Public function is missing taxonomy audit classification: {name}")
-
-
-def _internal_helper_decision(qn: str, helper_name: str, public_utility_qns: set[str]) -> str:
-    """Return the reviewed internal helper taxonomy decision."""
-    if qn in INTERNAL_HELPER_AUDIT_DECISIONS:
-        return INTERNAL_HELPER_AUDIT_DECISIONS[qn]
-    public_equivalent = f"{qn.rsplit('.', 1)[0]}.{helper_name.removeprefix('_')}"
-    if public_equivalent in public_utility_qns:
-        return "already_covered_by_existing_public_utility"
-    return "keep_internal"
-
-
-def _write_function_taxonomy_audit(
-    *,
-    node_by_qn: dict[str, dict[str, Any]],
-    calls_by_qn: dict[str, list[str]],
-    used_by_qn: dict[str, list[str]],
-    function_symbol_map: dict[str, Symbol],
-    module_data: dict[str, dict[str, Any]],
-    function_category_by_name: dict[str, str],
-    template_usage_by_symbol: dict[str, list[str]],
-    refactor_signals_manifest: dict[str, dict[str, Any]],
-) -> None:
-    """Write the PR #612 preparatory public function taxonomy audit."""
-    public_names = set(function_symbol_map) | COMPOSABLE_SUPPORT_FUNCTIONS
-    expected_names = V1_CALLABLES | COMPOSABLE_SUPPORT_FUNCTIONS
-    if public_names != expected_names:
-        raise RuntimeError(
-            "Function taxonomy audit must account for the current standalone public surface. "
-            f"Missing: {sorted(expected_names - public_names)}; extra: {sorted(public_names - expected_names)}"
-        )
-    if len(public_names) != 29:
-        raise RuntimeError(f"Function taxonomy audit expected 29 public functions, found {len(public_names)}")
-
-    qn_by_name: dict[str, str] = {}
-    for name, symbol in function_symbol_map.items():
-        qn_by_name[name] = f"{PACKAGE_NAME}.{symbol.actual_module}.{name}"
-    for name in COMPOSABLE_SUPPORT_FUNCTIONS:
-        module_name = str(module_data.get("fabric_input_output", {}).get("module_name", "fabric_input_output"))
-        qn_by_name[name] = qn_by_name.get(name, f"{PACKAGE_NAME}.{module_name}.{name}")
-
-    public_utility_qns = {qn_by_name[name] for name in public_names if _proposed_taxonomy_category(name) == "utility_candidate"}
-    orchestrator_qns = {qn_by_name[name] for name in public_names if _proposed_taxonomy_category(name) == "orchestrator_candidate"}
-
-    helper_roots_by_qn: dict[str, set[str]] = {}
-    orchestrator_roots_by_qn: dict[str, set[str]] = {}
-    for name in public_names:
-        root_qn = qn_by_name[name]
-        helpers = _collect_internal_helper_descendants(root_qn, calls_by_qn, node_by_qn)
-        for helper_qn in helpers:
-            helper_roots_by_qn.setdefault(helper_qn, set()).add(root_qn)
-            if root_qn in orchestrator_qns:
-                orchestrator_roots_by_qn.setdefault(helper_qn, set()).add(root_qn)
-
-    signalled_helpers = {
-        item["qualified_name"]
-        for signal in refactor_signals_manifest.values()
-        for key in ("repeated_helpers", "single_delegate_helpers")
-        for item in signal.get(key, [])
-        if item.get("qualified_name")
-    }
-    for signal in refactor_signals_manifest.values():
-        for chain in signal.get("deep_call_chains", []):
-            for qn in chain.get("chain", []):
-                if _is_internal_helper_qn(qn, node_by_qn):
-                    signalled_helpers.add(qn)
-
-    reviewed_helper_qns = sorted(
-        qn
-        for qn, callers in helper_roots_by_qn.items()
-        if len(callers) > 1
-        or len(orchestrator_roots_by_qn.get(qn, set())) > 1
-        or qn in signalled_helpers
-        or len(set(used_by_qn.get(qn, []))) > 1
-    )
-
-    helper_audits = []
-    for qn in reviewed_helper_qns:
-        node = node_by_qn[qn]
-        helper_name = node["callable_name"]
-        decision = _internal_helper_decision(qn, helper_name, public_utility_qns)
-        used_by_public = sorted(
-            node_by_qn[root]["callable_name"]
-            for root in helper_roots_by_qn.get(qn, set())
-            if root in node_by_qn
-        )
-        orchestrators = sorted(
-            node_by_qn[root]["callable_name"]
-            for root in orchestrator_roots_by_qn.get(qn, set())
-            if root in node_by_qn
-        )
-        module_name = node["module_name"]
-        helper_audits.append({
-            "function_name": helper_name,
-            "qualified_name": qn,
-            "current_category": "internal-private",
-            "proposed_category": "internal",
-            "decision": decision,
-            "public_standalone_page": False,
-            "template_usage_source": [],
-            "inbound_count": len(set(used_by_qn.get(qn, []))),
-            "outbound_count": len(set(calls_by_qn.get(qn, []))),
-            "called_by_public_functions": used_by_public,
-            "called_by_orchestrators": orchestrators,
-            "appears_in_refactor_signals": qn in signalled_helpers,
-            "rationale": INTERNAL_HELPER_AUDIT_RATIONALE[decision],
-            "summary": module_data[module_name].get("functions", {}).get(helper_name, ""),
-        })
-
-    public_audits = []
-    for name in sorted(public_names, key=str.lower):
-        qn = qn_by_name[name]
-        proposed = _proposed_taxonomy_category(name)
-        current = function_category_by_name.get(name, "utility")
-        helper_candidates = [
-            item for item in helper_audits if name in item["called_by_public_functions"]
-        ]
-        public_audits.append({
-            "function_name": name,
-            "qualified_name": qn,
-            "current_category": current,
-            "proposed_category": proposed,
-            "public_standalone_page": True,
-            "template_usage_source": template_usage_by_symbol.get(name, []),
-            "inbound_count": len(set(used_by_qn.get(qn, []))),
-            "outbound_count": len(set(calls_by_qn.get(qn, []))),
-            "called_by_orchestrators": sorted({
-                node_by_qn[caller]["callable_name"]
-                for caller in used_by_qn.get(qn, [])
-                if caller in orchestrator_qns
-            }),
-            "repeated_internal_helper_candidates": [
-                {
-                    "function_name": item["function_name"],
-                    "qualified_name": item["qualified_name"],
-                    "decision": item["decision"],
-                }
-                for item in helper_candidates
-            ],
-            "rationale": TAXONOMY_RATIONALE[name],
-        })
-
-    payload = {
-        "schema_version": 1,
-        "purpose": "Preparatory audit before renaming Workflow/Composable labels to Orchestrator/Utility.",
-        "public_function_count": len(public_audits),
-        "classification_principles": {
-            "orchestrator_candidate": "Public function that coordinates a larger FabricOps workflow step.",
-            "utility_candidate": "Smaller public building block users may call directly to customize, replace, or decouple part of the standard flow.",
-            "internal": "Underscore-prefixed implementation detail with no standalone public page unless explicitly promoted under a public name.",
-        },
-        "public_functions": public_audits,
-        "reviewed_internal_helpers": helper_audits,
-    }
-    FUNCTION_TAXONOMY_AUDIT_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+def _remove_stale_function_taxonomy_audit() -> None:
+    """Remove the retired taxonomy audit generated for the old public model."""
+    FUNCTION_TAXONOMY_AUDIT_PATH.unlink(missing_ok=True)
 
 
 def _collect_refactor_signals(
@@ -2109,8 +1870,12 @@ _METADATA_TABLE_RELATIONSHIPS = {
 
 
 def _function_link(symbol: str, relative_prefix: str = "../") -> str:
-    """Return a markdown link to a generated function reference page."""
-    return f"[`{symbol}`]({relative_prefix}api/reference/{symbol}.md)"
+    """Return a markdown link to a public page or module anchor for internal support."""
+    if symbol in V1_CALLABLES:
+        return f"[`{symbol}`]({relative_prefix}api/reference/{symbol}.md)"
+    metadata = parse_docs_metadata().get(symbol, {})
+    module_name = canonical_public_module(str(metadata.get("module") or "data_agreement"))
+    return f"[`{symbol}`]({relative_prefix}api/modules/{module_name}.md#{markdown_anchor(symbol)})"
 
 
 def _format_symbol_list(symbols: list[str], relative_prefix: str = "../") -> str:
@@ -2239,7 +2004,7 @@ def generate_metadata_table_reference() -> None:
             "",
             f"**Purpose:** {purpose}",
             "",
-            "## Workflow usage",
+            "## Starter Kit usage",
             "",
             f"- **Written by notebook/template:** {', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
             f"- **Written by function or widget:** {_format_symbol_list(rel.get('written_by', []), '../../')}",
@@ -2346,13 +2111,6 @@ def main() -> None:
         name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
         for name in symbol_map
     }
-    template_called_function_names = {name for name, usage in core_template_usage_by_symbol.items() if usage}
-    example_only_function_names = {
-        name
-        for name, usage in example_template_usage_by_symbol.items()
-        if usage and not core_template_usage_by_symbol.get(name)
-    }
-
     def _is_callable_edge(edge: dict[str, Any]) -> bool:
         callee = edge.get("callee_qualified_name")
         if not callee:
@@ -2636,7 +2394,7 @@ def main() -> None:
     for row in module_sidebar_rows:
         module_name = row["module_name"]
         if module_name not in discovered_set:
-            raise RuntimeError(f"Workflow sidebar module is missing in src/fabricops_kit: {module_name}")
+            raise RuntimeError(f"Template sidebar module is missing in src/fabricops_kit: {module_name}")
         module_sidebar_groups.setdefault(row["sidebar_group"], []).append(module_name)
 
     mkdocs_text = MKDOCS_PATH.read_text(encoding="utf-8")
@@ -2897,20 +2655,24 @@ def main() -> None:
             f'title="Open {module} module page" aria-label="Open {module} module page">{_esc(module)}</a>'
         )
 
+    supporting_internal_count = len([
+        node for node in node_by_qn.values()
+        if not node.get("exported") and node["callable_name"] in module_data[node["module_name"]]["functions"]
+    ])
+
     ref = [
         "# Function Reference",
         "",
-        "Use this page as a function lookup after you understand the notebook flow. The normal catalogue emphasizes Workflow functions and Composable functions as the public API; maintainer/developer views keep implementation call flow, utility support, and refactor signals available without presenting every helper as a user-facing concept.",
+        f"Use this page as a function lookup after you understand the notebook flow. The generated public function reference exposes {len(function_symbol_map)} public Starter Kit functions and tracks {supporting_internal_count} supporting internal functions for maintainers.",
         "",
         "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
-        "- Use the Function catalogue below to browse Workflow and Composable functions. Internal/private helpers are source-level implementation details shown only for maintainer source navigation, not public API.",
+        "- Use the Function catalogue below to browse the 20 public Starter Kit functions called by starter templates. Supporting internal functions remain source-level implementation details, not standalone public API.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
         "## How to use this reference",
         "",
-        "- **Workflow functions** are guided end-to-end notebook entry points that users normally call from starter templates.",
-        "- **Composable functions** are public standalone building blocks for notebook authors customizing or decoupling from the guided workflow.",
-        "- **Utility functions** are reusable framework support for contributors and maintainers; they are not highlighted as normal user-facing API.",
+        f"- **Public Starter Kit functions:** {len(function_symbol_map)} notebook-facing entry points used by the starter templates.",
+        f"- **Supporting internal functions:** {supporting_internal_count} implementation functions tracked for maintainers without standalone public callable pages.",
         "- **Internal/private functions** are implementation details, usually underscore-prefixed, and are shown only in maintainer/source-navigation views such as call flow.",
         "- **Implementation modules** show source ownership, module-level dependencies, and utility/internal relationships for maintainers.",
         "- **Function manifests** (`_data/manifest.json` and `_data/function-manifest.json`) provide machine-readable callable/module inventory for checks and automation.",
@@ -2924,21 +2686,14 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            "Use the finder below to look up Workflow and Composable functions from active v1 modules. Developer/maintainer filters can reveal Utility support functions when present, but internal/private helpers stay out of the normal catalogue. For private helper behavior, open a public function page and expand the maintainer/developer call flow. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example-only usage, or internal/private helper usage.",
+            "Use the finder below to look up the 20 public Starter Kit functions. Supporting internal functions stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or internal helper usage.",
             "",
             '<div class="callable-finder" data-callable-finder>',
             '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
-            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
-            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, taxonomy category, starter path, usage source, or description.</p>',
-            '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">csv</span> <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">quarantine</span></p>',
-            '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing Workflow and Composable functions.</p>',
-            '  <fieldset class="callable-type-filters">',
-            '    <legend>Function taxonomy filters</legend>',
-            '    <label><input type="checkbox" data-function-type-filter="workflow" checked> Workflow</label>',
-            '    <label><input type="checkbox" data-function-type-filter="composable" checked> Composable</label>',
-            '    <label class="reference-maintainer-filter"><input type="checkbox" data-function-type-filter="utility"> Utility (maintainer)</label>',
-            '    <p class="callable-type-note"><strong>Workflow</strong>: guided end-to-end notebook entry points. <strong>Composable</strong>: public standalone building blocks for customization. <strong>Utility</strong>: developer/maintainer support, not normal notebook API. Example-only usage is tracked as source metadata instead of a function type.</p>',
-            '  </fieldset>',
+            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
+            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>',
+            '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>',
+            '  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 20 public Starter Kit functions.</p>',
             '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
             "</div>",
             "",
@@ -2949,69 +2704,32 @@ def main() -> None:
         ]
     )
     all_items: list[str] = []
-    def _catalogue_classification(name: str) -> tuple[str, str]:
-        if name.startswith("_"):
-            return "internal-private", "Internal/private"
-        if name in template_called_function_names:
-            return "workflow", "Workflow"
-        if name in function_symbol_map or name in COMPOSABLE_SUPPORT_FUNCTIONS:
-            return "composable", "Composable"
-        return "utility", "Utility"
-
-    function_category_by_name = {
-        name: _catalogue_classification(name)[0]
-        for name in set(function_symbol_map) | COMPOSABLE_SUPPORT_FUNCTIONS
-    }
+    function_category_by_name = {name: "public_starter_kit" for name in function_symbol_map}
 
     catalogue_nodes = sorted(
         [
             n
             for n in node_by_qn.values()
-            if (n["exported"] or n["callable_name"] in COMPOSABLE_SUPPORT_FUNCTIONS)
-            and n["callable_name"] in module_data[n["module_name"]]["functions"]
+            if n["exported"] and n["callable_name"] in module_data[n["module_name"]]["functions"]
         ],
-        key=lambda n: (
-            0 if _catalogue_classification(n["callable_name"])[0] == "workflow" else 1 if _catalogue_classification(n["callable_name"])[0] == "composable" else 2,
-            n["callable_name"].lower(),
-            n["module_name"],
-        ),
+        key=lambda n: (n["callable_name"].lower(), n["module_name"]),
     )
     for node in catalogue_nodes:
         name = node["callable_name"]
         module_name = node["module_name"]
-        function_type, classification_label = _catalogue_classification(name)
-        symbol = function_symbol_map.get(name)
-        if node["exported"] and symbol:
-            symbol_link = public_reference_link(name, docs_metadata, context="reference")
-            starter_path = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
-            usage_source = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
-            purpose = symbol.purpose or symbol.summary or "—"
-            display_module = symbol.public_module
-        elif name in COMPOSABLE_SUPPORT_FUNCTIONS:
-            display_module = canonical_public_module(module_name)
-            symbol_link = f"../api/modules/{_esc(display_module)}/"
-            starter_path = "—"
-            usage_source = "Manual/module API"
-            purpose = (
-                docs_metadata.get(name, {}).get("purpose")
-                or docs_metadata.get(name, {}).get("summary_override")
-                or module_data[module_name]["functions"].get(name)
-                or "Composable module-level building block."
-            )
-        else:
-            symbol_link = f"internal/{_esc(module_name)}_{_esc(name)}/"
-            starter_path = "—"
-            usage_source = "—"
-            purpose = module_data[module_name]["functions"].get(name) or "Internal helper used by the package."
-            display_module = canonical_public_module(module_name)
+        function_type = "public-starter-kit"
+        symbol = function_symbol_map[name]
+        symbol_link = public_reference_link(name, docs_metadata, context="reference")
+        starter_path = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
+        usage_source = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
+        purpose = symbol.purpose or symbol.summary or "—"
+        display_module = symbol.public_module
         starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
         usage_source_attribute = f' data-callable-usage-source="{_esc(usage_source)}"' if usage_source != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
-        raw_calls = dependency_meta.get("calls", [])
-        raw_used_by = dependency_meta.get("used_by", [])
-        calls = [item for item in raw_calls if not _hide_from_public_relationships(item)] if node["exported"] else raw_calls
-        used_by = [item for item in raw_used_by if not _hide_from_public_relationships(item)] if node["exported"] else raw_used_by
+        calls = [item for item in dependency_meta.get("calls", []) if not _hide_from_public_relationships(item)]
+        used_by = [item for item in dependency_meta.get("used_by", []) if not _hide_from_public_relationships(item)]
         calls_count = len(calls)
         used_by_count = len(used_by)
         all_items.extend(
@@ -3030,16 +2748,12 @@ def main() -> None:
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_module_link(display_module)}'
-                    f'<span class="reference-chip reference-chip-type reference-chip-{_esc(function_type)}">{_esc(classification_label)}</span>'
+                    f'<span class="reference-chip">Public Starter Kit function</span>'
                     f'<span class="reference-chip">{_esc(usage_source)}</span>'
                     "</p>"
                 ),
                 (
-                    (
-                        f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(usage_source)}</p>'
-                        if starter_path != "—"
-                        else f'  <p class="reference-catalogue-item-used-in"><strong>Usage source:</strong> {_esc(usage_source)}</p>'
-                    )
+                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in:</strong> {_esc(usage_source)}</p>'
                     if usage_source != "—"
                     else ""
                 ),
@@ -3063,16 +2777,6 @@ def main() -> None:
             ]
         )
     ref.extend(['<div class="reference-catalogue-list">', *all_items, "</div>"])
-    composable_names = sorted((set(function_symbol_map) - template_called_function_names) | COMPOSABLE_SUPPORT_FUNCTIONS, key=str.lower)
-    if composable_names:
-        ref.extend(["", "## Composable functions", "", "These public or module-level functions are standalone building blocks for customization or decoupled notebook authoring. They are not directly called by core starter template code cells and are not included in the Workflow count.", ""])
-        for name in composable_names:
-            usage_note = " (example usage source)" if name in example_only_function_names else ""
-            if name in COMPOSABLE_SUPPORT_FUNCTIONS:
-                module_name = canonical_public_module(str(docs_metadata.get(name, {}).get("module", "fabric_input_output")))
-                ref.append(f"- [`{name}`](../api/modules/{_esc(module_name)}/) (module-level composable)")
-            else:
-                ref.append(f"- [`{name}`]({_esc(public_reference_link(name, docs_metadata, context='reference'))}){usage_note}")
 
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -3175,7 +2879,6 @@ def main() -> None:
                 excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
             )
             refactor_signals_manifest[short_name] = refactor_signals
-            function_category_label = _catalogue_classification(short_name)[1]
             call_flow_lines = [
                 '??? info "Maintainer/developer call flow"',
                 "",
@@ -3257,7 +2960,7 @@ def main() -> None:
                 f"- Fully qualified function name: `{qn}`",
                 f"- Short name: `{short_name}`",
                 f"- Module: `{module_name}`",
-                f"- Taxonomy category: {function_category_label}",
+                "- Public surface: Public Starter Kit function",
                 "- Classification: Callable",
                 f"- Related module: `{rel_module}`",
                 f"- Source file path: `{source_path}`",
@@ -3496,16 +3199,8 @@ def main() -> None:
         json.dumps(refactor_signals_manifest, indent=2) + "\n",
         encoding="utf-8",
     )
-    _write_function_taxonomy_audit(
-        node_by_qn=node_by_qn,
-        calls_by_qn=calls_by_qn,
-        used_by_qn=used_by_qn,
-        function_symbol_map=function_symbol_map,
-        module_data=module_data,
-        function_category_by_name=function_category_by_name,
-        template_usage_by_symbol=template_usage_by_symbol,
-        refactor_signals_manifest=refactor_signals_manifest,
-    )
+    _remove_stale_function_taxonomy_audit()
+
 
 
 if __name__ == "__main__":

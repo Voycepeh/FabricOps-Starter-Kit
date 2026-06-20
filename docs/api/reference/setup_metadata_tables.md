@@ -381,7 +381,7 @@ These generated fields are for automation tooling, maintainers, and documentatio
 - Fully qualified function name: `fabricops_kit.config.setup_metadata_tables`
 - Short name: `setup_metadata_tables`
 - Module: `config`
-- Taxonomy category: Workflow
+- Public surface: Public Starter Kit function
 - Classification: Callable
 - Related module: `config`
 - Source file path: `src/fabricops_kit/config.py`

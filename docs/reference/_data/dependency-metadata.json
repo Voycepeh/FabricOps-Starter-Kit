@@ -1636,8 +1636,8 @@
       "short_name": "get_selected_agreement",
       "module": "data_agreement",
       "callable": "get_selected_agreement",
-      "docs_url": "/FabricOps-Starter-Kit/reference/get_selected_agreement/",
-      "classification": "callable",
+      "docs_url": null,
+      "classification": "internal",
       "calls": [],
       "calls_count": 0,
       "used_by": [
@@ -1719,8 +1719,8 @@
       "short_name": "widget_select_agreement",
       "module": "data_agreement",
       "callable": "widget_select_agreement",
-      "docs_url": "/FabricOps-Starter-Kit/reference/widget_select_agreement/",
-      "classification": "callable",
+      "docs_url": null,
+      "classification": "internal",
       "calls": [
         "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.data_agreement._html_escape",
@@ -6129,7 +6129,7 @@
       "inbound_count": 7
     },
     "data_agreement": {
-      "callable_count": 5,
+      "callable_count": 3,
       "internal_count": 35,
       "outbound_modules": [
         "config",

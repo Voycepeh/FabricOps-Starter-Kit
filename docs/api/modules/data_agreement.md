@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 5</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 3</span><span class="reference-chip">Internal helpers: 35</span><span class="reference-chip">Outbound: 3</span><span class="reference-chip">Inbound: 2</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>5</td>
+      <td>3</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -76,13 +76,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
   </thead>
   <tbody>
     <tr>
-      <td><a href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Return the agreement selected by widget_select_agreement.</td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><a href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
       <td>Callable</td>
       <td>function</td>
@@ -103,13 +96,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Render the standalone data-steward intake widget.</td>
       <td><code>_render_maintenance_widget</code> (internal)</td>
     </tr>
-    <tr>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
-      <td>Callable</td>
-      <td>function</td>
-      <td>Render an agreement selector and optionally register the active notebook.</td>
-      <td><code>_html_escape</code> (internal), <code>_latest_agreement_versions</code> (internal), <code>_list_data_agreements</code> (internal), <code>_render_searchable_selector</code> (internal), <code>_require_ipywidgets</code> (internal)</td>
-    </tr>
   </tbody>
 </table>
 </div>
@@ -127,11 +113,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../reference/get_selected_agreement/"><code>get_selected_agreement</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
 <a class="reference-chip" href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
@@ -145,11 +126,6 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_render_maintenance_widget</code></span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_html_escape</code></span>, <span class="reference-chip"><code>_latest_agreement_versions</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>
 </li>
 </ul>
 </section>
@@ -222,11 +198,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_html_escape</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_latest_agreement_versions</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_latest_by_key</code></td>
@@ -238,7 +214,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_list_data_agreements</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_list_data_stewards</code></td>
@@ -274,11 +250,11 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td><code>_render_searchable_selector</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_require_ipywidgets</code></td>
-      <td><a href="../reference/widget_select_agreement/"><code>widget_select_agreement</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_save_agreement_evidence_records</code></td>

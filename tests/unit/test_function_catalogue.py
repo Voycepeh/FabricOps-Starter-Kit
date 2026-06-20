@@ -18,22 +18,18 @@ def _finder_js() -> str:
     return CALLABLE_FINDER_JS.read_text(encoding="utf-8")
 
 
-def test_function_catalogue_uses_workflow_composable_filters() -> None:
-    """Verify function catalogue uses workflow and composable taxonomy filters."""
+def test_function_catalogue_uses_public_starter_kit_finder() -> None:
+    """Verify function catalogue searches only public Starter Kit functions."""
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to look up Workflow and Composable functions from active v1 modules." in page
+    assert "Use the finder below to look up the 20 public Starter Kit functions." in page
     assert "Search functions" in page
-    assert 'placeholder="Search functions"' in page
-    assert "Function taxonomy filters" in page
-    assert 'data-function-type-filter="workflow" checked' in page
-    assert 'data-function-type-filter="composable" checked' in page
-    assert 'data-function-type-filter="utility"> Utility (maintainer)' in page
-    assert 'data-function-type-filter="example-only"' not in page
-    assert 'data-function-type-filter="internal"> Internal' not in page
-    assert "Composable" in page
-    assert "For private helper behavior, open a public function page and expand the maintainer/developer call flow." in page
+    assert 'placeholder="Search public functions"' in page
+    assert "Function taxonomy filters" not in page
+    assert 'data-function-type-filter=' not in page
+    assert "Workflow" not in page
+    assert "Composable" not in page
 
 
 def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
@@ -50,33 +46,33 @@ def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
     assert "Find a callable" not in page
 
 
-def test_callable_is_default_and_internal_is_opt_in() -> None:
-    """Verify callable is default and internal is opt in."""
+def test_public_starter_kit_rows_are_rendered_without_taxonomy_filters() -> None:
+    """Verify the catalogue has public rows without taxonomy filters."""
     page = _reference_index()
 
-    assert re.search(r'data-function-type-filter="workflow"\s+checked', page)
-    assert re.search(r'data-function-type-filter="composable"\s+checked', page)
-    assert not re.search(r'data-function-type-filter="example-only"\s+checked', page)
-    assert not re.search(r'data-function-type-filter="internal"\s+checked', page)
+    assert 'data-function-type="public-starter-kit"' in page
+    assert 'data-function-type-filter=' not in page
+    assert 'data-function-type="example-only"' not in page
+    assert 'data-function-type="internal"' not in page
 
 
 def test_internal_functions_are_not_indexed_for_normal_catalogue_search() -> None:
     """Verify internal functions are not indexed for normal catalogue search."""
     page = _reference_index()
 
-    assert 'data-function-type="workflow"' in page
+    assert 'data-function-type="public-starter-kit"' in page
     assert 'data-function-type="internal"' not in page
     assert 'class="reference-chip reference-chip-type reference-chip-internal">Internal</span>' not in page
     assert "reference/internal/" not in page
 
 
-def test_finder_filters_by_function_type_and_searches_all_catalogue_fields() -> None:
-    """Verify finder filters by function type and searches all catalogue fields."""
+def test_finder_searches_public_catalogue_fields_without_type_filters() -> None:
+    """Verify finder searches public catalogue fields without taxonomy filters."""
     script = _finder_js()
 
-    assert "[data-function-type-filter]" in script
-    assert "dataset.functionTypeFilter" in script
-    assert "types.has(entry.functionType)" in script
+    assert "[data-function-type-filter]" not in script
+    assert "dataset.functionTypeFilter" not in script
+    assert "types.has(entry.functionType)" not in script
     assert "[data-role-filter]" not in script
 
     for field in (
@@ -84,13 +80,11 @@ def test_finder_filters_by_function_type_and_searches_all_catalogue_fields() -> 
         "row.dataset.callableModule",
         "row.dataset.callableStarterPath",
         "row.dataset.callableUsageSource",
-        "row.dataset.functionType",
         "row.dataset.callablePurpose",
     ):
         assert field in script
 
     assert "entry.module.includes(query)" in script
-    assert "entry.functionType.includes(query)" in script
     assert "entry.starterPath.includes(query)" in script
     assert "queryMatchesEntry(queryTokens, entry.tokens)" in script
 
@@ -100,7 +94,7 @@ def test_homepage_template_called_function_kpi_matches_reference_count() -> None
     homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
     assert (
-        f'<span class="fabricops-landing-card__title">{len(_core_template_called_public())} starter-kit functions</span>'
+        f'<span class="fabricops-landing-card__title">{len(_core_template_called_public())} public Starter Kit functions</span>'
         in homepage
     )
     assert 'href="reference/"' in homepage
@@ -111,7 +105,7 @@ def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:
     page = _reference_index()
 
     assert "“Used in” means direct starter notebook code-cell invocation" in page
-    assert "not import-only, markdown-only, generated metadata, example-only usage, or internal/private helper usage" in page
+    assert "not import-only, markdown-only, generated metadata, example usage, or internal helper usage" in page
 
 
 def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:
@@ -180,21 +174,13 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "write_warehouse_table" not in called
 
 
-def test_reference_catalogue_rows_include_public_api_and_module_composables() -> None:
-    """Verify catalogue rows keep root public functions and approved module composables."""
+def test_reference_catalogue_rows_include_only_public_root_exports() -> None:
+    """Verify catalogue rows expose only the public root export functions."""
     exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
-    module_composables = {
-        "read_lakehouse_csv",
-        "read_lakehouse_excel",
-        "read_lakehouse_parquet",
-        "read_lakehouse_table",
-        "read_warehouse_table",
-        "write_lakehouse_table",
-        "write_warehouse_table",
-    }
 
     assert _core_template_called_public() <= _catalogue_row_names()
-    assert _catalogue_row_names() == exported_names | module_composables
+    assert _catalogue_row_names() == exported_names
+    assert len(_catalogue_row_names()) == 20
 
 
 def test_root_exported_catalogue_functions_have_standalone_pages() -> None:
@@ -220,13 +206,9 @@ def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
 
 
 
-def test_format_specific_io_helpers_are_composable_module_functions() -> None:
-    """Verify format-specific IO helpers stay discoverable as composable module functions."""
+def test_format_specific_io_helpers_are_internal_support_functions() -> None:
+    """Verify format-specific IO helpers are not public catalogue functions."""
     page = _reference_index()
-    function_manifest = __import__("json").loads(
-        (ROOT / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
-    )
-    manifest_by_name = {entry["name"]: entry for entry in function_manifest}
 
     for name in (
         "read_lakehouse_csv",
@@ -237,12 +219,7 @@ def test_format_specific_io_helpers_are_composable_module_functions() -> None:
         "write_lakehouse_table",
         "write_warehouse_table",
     ):
-        assert f'data-callable-name="{name}"' in page
-        assert f'data-callable-name="{name}"' in page and 'data-function-type="composable"' in page
-        assert 'href="../api/modules/fabric_input_output/"' in page
-        assert manifest_by_name[name]["function_category"] == "composable"
-
-    assert '<strong>Usage source:</strong> Manual/module API' in page
+        assert f'data-callable-name="{name}"' not in page
 
 
 def test_functions_with_blank_starter_path_are_not_counted() -> None:
@@ -268,20 +245,16 @@ def test_convert_to_internal_audit_rows_are_not_root_exports() -> None:
     assert internal_names.isdisjoint(set(fabricops_kit.__all__))
 
 
-def test_example_only_helpers_do_not_inflate_core_count() -> None:
-    """Verify example-only helpers are tracked outside the core count."""
-    example_only = {
+def test_example_template_only_helpers_do_not_inflate_public_catalogue() -> None:
+    """Verify example-template-only helpers stay out of the public catalogue."""
+    example_template_only = {
         str(row["function"])
         for row in _audit_rows()
         if row["directly_called_in_example_templates"] and not row["directly_called_in_core_templates"]
     }
 
-    assert example_only.isdisjoint(_core_template_called_public())
-    assert example_only <= _catalogue_row_names()
-    page = _reference_index()
-    for name in example_only:
-        assert f'data-callable-name="{name}"' in page
-        assert 'data-function-type="example-only"' in page
+    assert example_template_only.isdisjoint(_core_template_called_public())
+    assert example_template_only.isdisjoint(_catalogue_row_names())
 
 
 def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> None:
@@ -303,76 +276,6 @@ def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> N
     }.isdisjoint(root_exports)
 
 
-def _taxonomy_audit() -> dict[str, object]:
-    """Return generated function taxonomy audit payload."""
-    import json
-
-    audit_path = ROOT / "docs" / "reference" / "_data" / "function-taxonomy-audit.json"
-    return json.loads(audit_path.read_text(encoding="utf-8"))
-
-
-def test_taxonomy_audit_accounts_for_current_public_function_surface() -> None:
-    """Verify taxonomy audit explicitly classifies the current 29 public functions."""
-    audit = _taxonomy_audit()
-    public_functions = audit["public_functions"]
-    names = {str(row["function_name"]) for row in public_functions}
-
-    assert audit["public_function_count"] == 29
-    assert len(public_functions) == 29
-    assert names == _catalogue_row_names()
-    assert {row["proposed_category"] for row in public_functions} <= {
-        "orchestrator_candidate",
-        "utility_candidate",
-    }
-    assert all(row["rationale"] for row in public_functions)
-
-
-def test_taxonomy_audit_keeps_underscore_helpers_off_public_standalone_pages() -> None:
-    """Verify underscore-prefixed helpers are not standalone public pages by default."""
-    audit = _taxonomy_audit()
-    public_functions = audit["public_functions"]
-    helpers = audit["reviewed_internal_helpers"]
-
-    assert all(not str(row["function_name"]).startswith("_") for row in public_functions)
-    assert helpers
-    assert all(str(row["function_name"]).startswith("_") for row in helpers)
-    assert all(row["public_standalone_page"] is False for row in helpers)
-    assert all(row["proposed_category"] == "internal" for row in helpers)
-
-
-def test_repeated_internal_helpers_are_reviewed_not_auto_promoted() -> None:
-    """Verify repeated internal helpers receive decisions without automatic public promotion."""
-    audit = _taxonomy_audit()
-    helpers = {str(row["qualified_name"]): row for row in audit["reviewed_internal_helpers"]}
-
-    for qn in (
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._normalize_path_config",
-        "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._normalize_schema_name",
-        "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
-        "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
-        "fabricops_kit.fabric_input_output._get_spark",
-    ):
-        assert qn in helpers
-        assert helpers[qn]["decision"] == "keep_internal"
-        assert helpers[qn]["public_standalone_page"] is False
-        assert helpers[qn]["called_by_public_functions"]
-
-
-def test_taxonomy_audit_captures_pr_612_utility_examples() -> None:
-    """Verify public IO helpers stay public utility candidates without needing template usage."""
-    audit = _taxonomy_audit()
-    by_name = {str(row["function_name"]): row for row in audit["public_functions"]}
-
-    for name in (
-        "read_lakehouse_table",
-        "write_lakehouse_table",
-        "read_lakehouse_csv",
-        "read_warehouse_table",
-        "write_warehouse_table",
-    ):
-        assert by_name[name]["proposed_category"] == "utility_candidate"
-        assert by_name[name]["public_standalone_page"] is True
-        rationale = str(by_name[name]["rationale"])
-        assert "stable" in rationale or "PR #612" in rationale
+def test_retired_function_taxonomy_audit_is_removed() -> None:
+    """Verify the old taxonomy audit artifact is no longer generated."""
+    assert not (ROOT / "docs" / "reference" / "_data" / "function-taxonomy-audit.json").exists()
