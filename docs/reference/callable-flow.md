@@ -12,8 +12,20 @@ Use the interactive dashboard to search helper names, modules, refactor reasons,
 
 <div class="callable-flow-signal-cards" markdown="0">
 <div class="callable-flow-signal-card is-neutral">
+<div class="callable-flow-signal-card-value">238</div>
+<div class="callable-flow-signal-card-label">All discovered internal functions</div>
+</div>
+<div class="callable-flow-signal-card is-neutral">
 <div class="callable-flow-signal-card-value">210</div>
-<div class="callable-flow-signal-card-label">Total internal helpers</div>
+<div class="callable-flow-signal-card-label">Public-flow helper nodes</div>
+</div>
+<div class="callable-flow-signal-card is-neutral">
+<div class="callable-flow-signal-card-value">208</div>
+<div class="callable-flow-signal-card-label">Reachable internal functions</div>
+</div>
+<div class="callable-flow-signal-card is-neutral">
+<div class="callable-flow-signal-card-value">30</div>
+<div class="callable-flow-signal-card-label">Outside public flow</div>
 </div>
 <div class="callable-flow-signal-card is-high">
 <div class="callable-flow-signal-card-value">21</div>
@@ -42,6 +54,8 @@ Use the interactive dashboard to search helper names, modules, refactor reasons,
 </p>
 
 ## Callable helper summary
+
+Count wording: **all discovered internal functions** is the full internal function inventory. **Public-flow helper nodes** is the historical callable-flow helper-node count, which can include reachable internal classes used like helpers. **Reachable internal functions** counts only internal functions reached by walking exported public callable entry points in the static call graph. **Outside public flow** counts discovered internal functions that are not reached by that public-entrypoint walk and are audited separately below.
 
 Compact public callable summary for spotting entry points with many helper dependencies. Use the inventory below for helper-level cleanup triage.
 
@@ -2994,6 +3008,236 @@ Complete one-row-per-internal-helper inventory for refactor cleanup. It includes
 <td class="flow-cell-number">2</td>
 <td class="flow-cell-wide"><a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
 <td class="flow-cell-wide">Shared helper – preserve carefully</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+## Internal functions outside public callable flow
+
+Generated audit of discovered internal functions that are absent from the public callable-flow helper inventory. These functions may still be valid internal APIs, template-facing advanced helpers, test/docs support, dynamically referenced functions, or maintainer-review candidates.
+
+<div class="callable-flow-table-wrap" markdown="0">
+<table class="callable-flow-table">
+<thead>
+<tr>
+<th class="flow-cell-name">Function</th>
+<th class="flow-cell-module">Module</th>
+<th class="flow-cell-wide">Reason excluded from public flow</th>
+<th class="flow-cell-wide">Detected usage</th>
+<th class="flow-cell-wide">Suggested action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83"><code>get_default_fabric_context</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>get_fabric_context</code>, <code>resolve_fabric_context</code><br><strong>Tests:</strong> tests/unit/test_config.py<br><strong>Dynamic/text refs:</strong> docs/api/reference/get_latest_metadata_catalogue.md, docs/api/reference/read_data.md, docs/api/reference/run_table_guardrails.md, docs/api/reference/setup_metadata_tables.md, docs/api/reference/start_pipeline_run.md, docs/api/reference/widget_author_dq_rules.md, docs/api/reference/widget_author_schema_freshness_profile_rules.md, docs/api/reference/widget_enrich_table_metadata.md, docs/api/reference/widget_render_agreement_evidence.md, docs/api/reference/widget_render_data_agreement.md, docs/api/reference/widget_render_data_steward.md, docs/api/reference/widget_review_guardrail_governance.md, docs/api/reference/widget_select_guardrail_target.md, docs/api/reference/write_data.md, docs/api/reference/write_pipeline_lineage.md, docs/api/reference/write_pipeline_run_summary.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Keep internal</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L86-L138"><code>get_fabric_context</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Tests:</strong> tests/unit/test_config.py<br><strong>Dynamic/text refs:</strong> docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Needs maintainer review</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161"><code>resolve_fabric_context</code></a></td>
+<td class="flow-cell-module"><code>config</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>widget_select_agreement</code>, <code>read_lakehouse_csv</code>, <code>read_lakehouse_excel</code>, <code>read_lakehouse_parquet</code>, <code>read_lakehouse_table</code>, <code>read_warehouse_table</code>, <code>write_lakehouse_table</code>, <code>write_warehouse_table</code><br><strong>Public callers:</strong> <a href="../../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a href="../../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a href="../../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a href="../../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>, <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a><br><strong>Tests:</strong> tests/unit/test_config.py, tests/unit/test_governance_review_migration.py, tests/unit/test_metadata.py, tests/unit/test_pipeline_helpers.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/data_agreement.md, docs/api/modules/fabric_input_output.md, docs/api/modules/governance_review.md, docs/api/modules/pipeline.md, docs/api/reference/get_latest_metadata_catalogue.md, docs/api/reference/read_data.md, docs/api/reference/run_table_guardrails.md, docs/api/reference/setup_metadata_tables.md, docs/api/reference/start_pipeline_run.md, docs/api/reference/widget_author_dq_rules.md, docs/api/reference/widget_author_schema_freshness_profile_rules.md, docs/api/reference/widget_enrich_table_metadata.md, docs/api/reference/widget_render_agreement_evidence.md, docs/api/reference/widget_render_data_agreement.md, docs/api/reference/widget_render_data_steward.md, docs/api/reference/widget_review_guardrail_governance.md, docs/api/reference/widget_select_guardrail_target.md, docs/api/reference/write_data.md, docs/api/reference/write_pipeline_lineage.md, docs/api/reference/write_pipeline_run_summary.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1027-L1043"><code>get_selected_agreement</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a><br><strong>Tests:</strong> tests/unit/test_governance_review_migration.py, tests/unit/test_metadata.py, tests/unit/test_pipeline_helpers.py, tests/unit/test_reference_agent_docs.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/pipeline.md, docs/api/reference/get_latest_metadata_catalogue.md, docs/api/reference/start_pipeline_run.md, docs/notebook-templates-implementation-guide/agreement-setup.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, docs/reference/metadata/metadata_data_agreement.md, docs/reference/metadata/metadata_notebook_registry.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024"><code>widget_select_agreement</code></a></td>
+<td class="flow-cell-module"><code>data_agreement</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a><br><strong>Tests:</strong> tests/unit/test_governance_review_migration.py, tests/unit/test_metadata.py, tests/unit/test_pipeline_helpers.py, tests/unit/test_reference_agent_docs.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/metadata.md, docs/api/modules/pipeline.md, docs/api/reference/get_latest_metadata_catalogue.md, docs/api/reference/start_pipeline_run.md, docs/notebook-templates-implementation-guide/agreement-setup.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md, docs/reference/metadata/metadata_data_agreement.md, docs/reference/metadata/metadata_data_agreement_evidence.md, docs/reference/metadata/metadata_data_steward.md, docs/reference/metadata/metadata_notebook_registry.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594"><code>read_lakehouse_csv</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/read_data/"><code>read_data</code></a><br><strong>Tests:</strong> tests/integration/test_storage_io.py, tests/templates/test_pipeline_thin_orchestration.py, tests/templates/test_production_flow.py, tests/unit/test_fabric_input_output_routing.py, tests/unit/test_function_catalogue.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/fabric_input_output.md, docs/api/reference/read_data.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000"><code>read_lakehouse_excel</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/read_data/"><code>read_data</code></a><br><strong>Tests:</strong> tests/integration/test_storage_io.py, tests/templates/test_pipeline_thin_orchestration.py, tests/templates/test_production_flow.py, tests/unit/test_fabric_input_output_routing.py, tests/unit/test_function_catalogue.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/fabric_input_output.md, docs/api/reference/read_data.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910"><code>read_lakehouse_parquet</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/read_data/"><code>read_data</code></a><br><strong>Tests:</strong> tests/integration/test_storage_io.py, tests/templates/test_pipeline_thin_orchestration.py, tests/templates/test_production_flow.py, tests/unit/test_fabric_input_output_routing.py, tests/unit/test_function_catalogue.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/fabric_input_output.md, docs/api/reference/read_data.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435"><code>read_lakehouse_table</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>_setup_metadata_table_registry</code>, <code>_validate_metadata_table_registration</code>, <code>_list_all_data_agreement_rows</code>, <code>_list_data_stewards</code>, <code>_read_guardrail_rule_metadata</code>, <code>_read_metadata_rows</code>, <code>_read_metadata_table_or_empty</code>, <code>load_catalogue_profile_rows</code>, <code>enforce_profile_behavior</code>, <code>_load_notebook_registry</code><br><strong>Public callers:</strong> <a href="../../api/reference/read_data/"><code>read_data</code></a>, <a href="../../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a><br><strong>Tests:</strong> tests/integration/test_metadata_persistence.py, tests/integration/test_spark_flows.py, tests/integration/test_storage_io.py, tests/templates/test_pipeline_thin_orchestration.py, tests/templates/test_production_flow.py, tests/unit/test_config.py, tests/unit/test_core_transforms.py, tests/unit/test_dq_rules.py, tests/unit/test_fabric_input_output_routing.py, tests/unit/test_function_catalogue.py, tests/unit/test_governance_review_migration.py, tests/unit/test_metadata.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/data_agreement.md, docs/api/modules/fabric_input_output.md, docs/api/modules/governance_review.md, docs/api/modules/guardrails.md, docs/api/modules/metadata.md, docs/api/reference/get_latest_metadata_catalogue.md, docs/api/reference/read_data.md, docs/api/reference/run_table_guardrails.md, docs/api/reference/setup_metadata_tables.md, docs/api/reference/start_pipeline_run.md, docs/api/reference/widget_render_agreement_evidence.md, docs/api/reference/widget_render_data_agreement.md, docs/api/reference/widget_render_data_steward.md, docs/api/reference/widget_select_guardrail_target.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659"><code>read_warehouse_table</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/read_data/"><code>read_data</code></a><br><strong>Tests:</strong> tests/integration/test_storage_io.py, tests/templates/test_pipeline_thin_orchestration.py, tests/templates/test_production_flow.py, tests/unit/test_fabric_input_output_routing.py, tests/unit/test_function_catalogue.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/fabric_input_output.md, docs/api/reference/read_data.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548"><code>write_lakehouse_table</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>_setup_metadata_table_registry</code>, <code>_write_row</code>, <code>_write_rule_records</code>, <code>_write_table_metadata_enrichment_records</code>, <code>record_table_governance</code>, <code>_register_current_notebook</code>, <code>_write_guardrail_result_row</code>, <code>write_catalogue_evidence</code><br><strong>Public callers:</strong> <a href="../../api/reference/write_data/"><code>write_data</code></a>, <a href="../../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a><br><strong>Tests:</strong> tests/integration/test_metadata_persistence.py, tests/integration/test_spark_flows.py, tests/integration/test_storage_io.py, tests/templates/test_engineering_flow.py, tests/templates/test_pipeline_thin_orchestration.py, tests/unit/test_config.py, tests/unit/test_core_transforms.py, tests/unit/test_fabric_input_output_routing.py, tests/unit/test_function_catalogue.py, tests/unit/test_governance_review_migration.py, tests/unit/test_guardrail_authoring_model.py, tests/unit/test_metadata.py, tests/unit/test_metadata_writer_ownership.py, tests/unit/test_pipeline_helpers.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/data_agreement.md, docs/api/modules/fabric_input_output.md, docs/api/modules/governance_review.md, docs/api/modules/metadata.md, docs/api/modules/pipeline.md, docs/api/reference/run_table_guardrails.md, docs/api/reference/setup_metadata_tables.md, docs/api/reference/start_pipeline_run.md, docs/api/reference/widget_author_dq_rules.md, docs/api/reference/widget_author_schema_freshness_profile_rules.md, docs/api/reference/widget_enrich_table_metadata.md, docs/api/reference/widget_render_agreement_evidence.md, docs/api/reference/widget_render_data_agreement.md, docs/api/reference/widget_render_data_steward.md, docs/api/reference/write_data.md, docs/api/reference/write_pipeline_lineage.md, docs/api/reference/write_pipeline_run_summary.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L662-L727"><code>write_warehouse_table</code></a></td>
+<td class="flow-cell-module"><code>fabric_input_output</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/write_data/"><code>write_data</code></a><br><strong>Tests:</strong> tests/integration/test_storage_io.py, tests/templates/test_pipeline_thin_orchestration.py, tests/unit/test_fabric_input_output_routing.py, tests/unit/test_function_catalogue.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/config.md, docs/api/modules/fabric_input_output.md, docs/api/reference/setup_metadata_tables.md, docs/api/reference/write_data.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1900-L1953"><code>apply_governance_enrichment_action</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a><br><strong>Dynamic/text refs:</strong> docs/api/modules/governance_review.md, docs/api/modules/metadata.md, docs/api/reference/widget_review_guardrail_governance.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1847-L1898"><code>apply_governance_rule_action</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a><br><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_guardrail_authoring_model.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/governance_review.md, docs/api/modules/metadata.md, docs/api/reference/widget_review_guardrail_governance.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747"><code>build_enrichment_rule_records</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>record_table_governance</code><br><strong>Public callers:</strong> <a href="../../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a><br><strong>Tests:</strong> tests/unit/test_core_transforms.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/governance_review.md, docs/api/modules/metadata.md, docs/api/reference/widget_enrich_table_metadata.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2608-L2662"><code>build_table_governance_policy_record</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>mark_table_governed</code>, <code>mark_table_ungoverned</code><br><strong>Tests:</strong> tests/contract/test_public_contract.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/metadata.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Keep internal</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1808-L1840"><code>guardrail_authoring_status</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>_base_guardrail_rule_record</code>, <code>build_enrichment_rule_records</code><br><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_guardrail_authoring_model.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/governance_review.md, docs/api/reference/widget_author_dq_rules.md, docs/api/reference/widget_author_schema_freshness_profile_rules.md, docs/api/reference/widget_enrich_table_metadata.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Keep internal</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457"><code>load_catalogue_profile_rows</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>_evaluate_governance_readiness</code><br><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_core_transforms.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/fabric_input_output.md, docs/api/modules/governance_review.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Keep internal</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1955-L2000"><code>load_rule_review_history</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a><br><strong>Tests:</strong> tests/unit/test_core_transforms.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/governance_review.md, docs/api/reference/widget_review_guardrail_governance.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2665-L2667"><code>mark_table_governed</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_guardrail_authoring_model.py<br><strong>Dynamic/text refs:</strong> docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Needs maintainer review</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2670-L2672"><code>mark_table_ungoverned</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_guardrail_authoring_model.py<br><strong>Dynamic/text refs:</strong> docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Needs maintainer review</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224"><code>record_table_governance</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/integration/test_spark_flows.py, tests/unit/test_core_transforms.py, tests/unit/test_guardrail_authoring_model.py, tests/unit/test_metadata_writer_ownership.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/fabric_input_output.md, docs/api/modules/metadata.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Needs maintainer review</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1722-L1760"><code>resolve_table_governance_policy</code></a></td>
+<td class="flow-cell-module"><code>governance_review</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a><br><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_guardrail_authoring_model.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/governance_review.md, docs/api/reference/widget_select_guardrail_target.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L572-L670"><code>enforce_freshness</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>enforce_freshness_rule</code><br><strong>Public callers:</strong> <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><br><strong>Tests:</strong> tests/unit/test_guardrail_authoring_model.py, tests/unit/test_pipeline_helpers.py, tests/unit/test_reference_agent_docs.py, tests/unit/test_validation.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/pipeline.md, docs/api/reference/run_table_guardrails.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L113-L131"><code>enforce_freshness_rule</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><br><strong>Tests:</strong> tests/unit/test_guardrail_authoring_model.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/pipeline.md, docs/api/reference/run_table_guardrails.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L691-L913"><code>enforce_profile_behavior</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><br><strong>Tests:</strong> tests/unit/test_guardrail_authoring_model.py, tests/unit/test_metadata_writer_ownership.py, tests/unit/test_pipeline_helpers.py, tests/unit/test_reference_agent_docs.py, tests/unit/test_validation.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/data_profiling.md, docs/api/modules/fabric_input_output.md, docs/api/modules/metadata.md, docs/api/modules/pipeline.md, docs/api/reference/profile_dataframe.md, docs/api/reference/run_table_guardrails.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/guardrails.py#L921-L941"><code>stop_if_failed</code></a></td>
+<td class="flow-cell-module"><code>guardrails</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><br><strong>Tests:</strong> tests/integration/test_spark_flows.py, tests/unit/test_function_catalogue.py, tests/unit/test_pipeline_helpers.py, tests/unit/test_validation.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/pipeline.md, docs/api/reference/display_guardrail_results.md, docs/api/reference/run_table_guardrails.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L445-L474"><code>build_guardrail_detail_rows</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><br><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_generated_docs_links.py, tests/unit/test_guardrail_display_modes.py, tests/unit/test_reference_agent_docs.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/pipeline.md, docs/api/reference/display_guardrail_results.md, docs/api/reference/run_table_guardrails.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L379-L442"><code>build_guardrail_summary_rows</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Internal callers:</strong> <code>_build_guardrail_blocking_message_from_bundle</code><br><strong>Public callers:</strong> <a href="../../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a>, <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><br><strong>Tests:</strong> tests/contract/test_public_contract.py, tests/unit/test_generated_docs_links.py, tests/unit/test_guardrail_display_modes.py, tests/unit/test_reference_agent_docs.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/pipeline.md, docs/api/reference/display_guardrail_results.md, docs/api/reference/run_table_guardrails.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/_data/refactor-signals.json, docs/reference/callable-flow.md</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
+</tr>
+<tr>
+<td class="flow-cell-name"><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L953-L1060"><code>write_catalogue_evidence</code></a></td>
+<td class="flow-cell-module"><code>pipeline</code></td>
+<td class="flow-cell-wide">Not reachable from exported public callable entry points in the generated static call graph.</td>
+<td class="flow-cell-wide"><strong>Public callers:</strong> <a href="../../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a><br><strong>Tests:</strong> tests/integration/test_spark_flows.py, tests/unit/test_function_catalogue.py, tests/unit/test_metadata_writer_ownership.py, tests/unit/test_pipeline_helpers.py<br><strong>Docs/scripts:</strong> scripts/generate_function_reference.py, scripts/reference_docs_metadata.py<br><strong>Dynamic/text refs:</strong> docs/api/modules/fabric_input_output.md, docs/api/modules/metadata.md, docs/api/modules/pipeline.md, docs/api/reference/run_table_guardrails.md, docs/api/reference/write_pipeline_lineage.md, docs/api/reference/write_pipeline_run_summary.md, docs/reference/_data/automation-manifest.json, docs/reference/_data/callable-flow.json, docs/reference/_data/callable-surface-audit.json, docs/reference/_data/dependency-metadata.json, docs/reference/_data/function-manifest.json, docs/reference/callable-flow.md, scripts/generate_function_reference.py, scripts/reference_docs_metadata.py</td>
+<td class="flow-cell-wide">Add explicit graph edge</td>
 </tr>
 </tbody>
 </table>

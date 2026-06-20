@@ -461,6 +461,7 @@ def build_callable_graph(
                         "role": role if exported else "internal",
                         "exported": exported,
                         "is_underscore": callable_name.startswith("_"),
+                        "object_type": "function" if callable_name in functions else "class",
                     }
                 )
 
@@ -1829,9 +1830,13 @@ def _build_callable_flow_data(
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
+    used_by_qn: dict[str, list[str]] | None = None,
+    template_usage_by_symbol: dict[str, list[str]] | None = None,
 ) -> dict[str, Any]:
     """Build the global public callable flow map from existing call graph data."""
     public_qn_set = set(public_qns)
+    used_by_qn = used_by_qn or {}
+    template_usage_by_symbol = template_usage_by_symbol or {}
     reachable_by_public: dict[str, set[str]] = {}
     helpers_by_public: dict[str, set[str]] = {}
     public_dependencies: dict[str, list[dict[str, str]]] = {}
@@ -1861,6 +1866,7 @@ def _build_callable_flow_data(
             for dep_qn in public_deps
         ]
 
+    reachable_helper_qns = set(helper_users)
     shared_helper_qns = {helper_qn for helper_qn, users in helper_users.items() if len(users) > 1}
     for public_qn in public_qns:
         public_name = node_by_qn[public_qn]["callable_name"]
@@ -1945,6 +1951,27 @@ def _build_callable_flow_data(
         module_data,
     )
 
+    outside_public_flow = _build_non_public_flow_internal_helpers(
+        calls_by_qn=calls_by_qn,
+        used_by_qn=used_by_qn,
+        node_by_qn=node_by_qn,
+        module_data=module_data,
+        reachable_helper_qns={row["qualified_name"] for row in refactor_inventory},
+        public_qn_set=public_qn_set,
+        template_usage_by_symbol=template_usage_by_symbol,
+    )
+    reachable_internal_function_count = sum(
+        1
+        for row in refactor_inventory
+        if node_by_qn.get(row["qualified_name"], {}).get("object_type") == "function"
+    )
+    refactor_signal_summary["internal_helper_nodes_in_public_flow"] = refactor_signal_summary["internal_helpers"]
+    refactor_signal_summary["internal_helpers_reachable_from_public_flow"] = reachable_internal_function_count
+    refactor_signal_summary["internal_functions_outside_public_callable_flow"] = len(outside_public_flow)
+    refactor_signal_summary["all_discovered_internal_functions"] = (
+        reachable_internal_function_count + len(outside_public_flow)
+    )
+
     refactor_hotspots = []
     max_unique = max((row["unique_internal_helper_count"] for row in summary), default=0) or 1
     max_depth = max((row["deepest_call_chain_depth"] for row in summary), default=0) or 1
@@ -1980,8 +2007,110 @@ def _build_callable_flow_data(
         "summary_counts": refactor_signal_summary,
         "refactor_signals": refactor_signals,
         "refactor_inventory": refactor_inventory,
+        "internal_functions_outside_public_callable_flow": outside_public_flow,
     }
 
+
+
+def _repo_text_usage(symbol: str, folders: Iterable[str]) -> list[str]:
+    """Return repo-relative files in selected folders that mention a symbol."""
+    matches: list[str] = []
+    for folder in folders:
+        root = ROOT / folder
+        if not root.exists():
+            continue
+        for path in root.rglob("*"):
+            if path.is_file() and path.suffix in {".py", ".md", ".ipynb", ".json", ".yml", ".yaml"}:
+                try:
+                    if symbol in path.read_text(encoding="utf-8"):
+                        matches.append(str(path.relative_to(ROOT)))
+                except UnicodeDecodeError:
+                    continue
+    return sorted(set(matches))
+
+
+def _build_non_public_flow_internal_helpers(
+    *,
+    calls_by_qn: dict[str, list[str]],
+    used_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+    reachable_helper_qns: set[str],
+    public_qn_set: set[str],
+    template_usage_by_symbol: dict[str, list[str]],
+) -> list[dict[str, Any]]:
+    """Build audit rows for internal functions outside public callable flow."""
+    rows: list[dict[str, Any]] = []
+    function_qns = {
+        f"{PACKAGE_NAME}.{module}.{name}"
+        for module, info in module_data.items()
+        for name in info.get("functions", {})
+    }
+    all_internal_function_qns = {
+        qn
+        for qn, node in node_by_qn.items()
+        if qn in function_qns
+        and qn not in public_qn_set
+        and not node.get("exported")
+        and node.get("object_type") == "function"
+        and node.get("role") == "internal"
+    }
+    for qn in sorted(
+        all_internal_function_qns - reachable_helper_qns,
+        key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
+    ):
+        node = node_by_qn[qn]
+        name = node["callable_name"]
+        inbound = sorted(set(used_by_qn.get(qn, [])))
+        public_callers = [caller for caller in inbound if caller in public_qn_set]
+        internal_callers = [caller for caller in inbound if caller in node_by_qn and caller not in public_qn_set]
+        tests = _repo_text_usage(name, ["tests"])
+        docs_scripts = _repo_text_usage(name, ["scripts"])
+        docs = _repo_text_usage(name, ["docs"])
+        dynamic_refs = [path for path in sorted(set(docs_scripts + docs)) if path.endswith((".json", ".py", ".md", ".ipynb"))]
+        templates = template_usage_by_symbol.get(name, [])
+        detected_usage: list[str] = []
+        if internal_callers:
+            detected_usage.append("called by internal function")
+        if public_callers:
+            detected_usage.append("called by public function")
+        if templates:
+            detected_usage.append("used by template notebooks")
+        if tests:
+            detected_usage.append("used by tests")
+        if docs_scripts:
+            detected_usage.append("used by docs generation scripts")
+        if dynamic_refs:
+            detected_usage.append("text/dynamic reference")
+        if not detected_usage:
+            detected_usage.append("no usage detected")
+
+        if public_callers:
+            suggested_action = "Add explicit graph edge"
+        elif templates or internal_callers:
+            suggested_action = "Keep internal"
+        elif tests or docs_scripts or dynamic_refs:
+            suggested_action = "Needs maintainer review"
+        else:
+            suggested_action = "Needs maintainer review"
+
+        reason = "Not reachable from exported public callable entry points in the generated static call graph."
+        rows.append({
+            "function": name,
+            "qualified_name": qn,
+            "module": node["module_name"],
+            "reason_excluded_from_public_flow": reason,
+            "detected_usage": detected_usage,
+            "called_by_internal_functions": [{"function": node_by_qn[x]["callable_name"], "qualified_name": x, "module": node_by_qn[x]["module_name"]} for x in internal_callers if x in node_by_qn],
+            "called_by_public_functions": [{"callable": node_by_qn[x]["callable_name"], "qualified_name": x, "module": node_by_qn[x]["module_name"], "docs_url": _public_callable_docs_url(node_by_qn[x]["callable_name"])} for x in public_callers if x in node_by_qn],
+            "used_by_template_notebooks": templates,
+            "used_by_tests": tests,
+            "used_by_docs_generation_scripts": docs_scripts,
+            "dynamic_references": dynamic_refs,
+            "suggested_action": suggested_action,
+            "source_url": _callable_flow_source_link(qn, module_data),
+        })
+    return rows
 
 def _public_callable_docs_url(callable_name: str) -> str:
     """Return the callable-flow relative URL for a public API reference page."""
@@ -1996,6 +2125,46 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
         return inner
     return f'<a href="{html.escape(url, quote=True)}">{inner}</a>'
 
+
+
+def _render_outside_public_flow_table(rows: list[dict[str, Any]]) -> list[str]:
+    """Render internal functions excluded from public callable-flow reachability."""
+    table_rows: list[list[tuple[str, str]]] = []
+    for row in rows:
+        usage_bits = []
+        for key, label in [
+            ("called_by_internal_functions", "Internal callers"),
+            ("called_by_public_functions", "Public callers"),
+            ("used_by_template_notebooks", "Templates"),
+            ("used_by_tests", "Tests"),
+            ("used_by_docs_generation_scripts", "Docs/scripts"),
+            ("dynamic_references", "Dynamic/text refs"),
+        ]:
+            value = row.get(key) or []
+            if value:
+                if isinstance(value[0], dict):
+                    rendered = _render_refactor_inventory_items(value)
+                else:
+                    rendered = ", ".join(html.escape(str(item)) for item in value)
+                usage_bits.append(f"<strong>{html.escape(label)}:</strong> {rendered}")
+        detected_usage = "<br>".join(usage_bits) or html.escape(", ".join(row.get("detected_usage", [])) or "No usage detected")
+        table_rows.append([
+            (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
+            (_render_link(row["module"], code=True), "flow-cell-module"),
+            (html.escape(row["reason_excluded_from_public_flow"]), "flow-cell-wide"),
+            (detected_usage, "flow-cell-wide"),
+            (html.escape(row["suggested_action"]), "flow-cell-wide"),
+        ])
+    return _render_flow_table(
+        [
+            ("Function", "flow-cell-name"),
+            ("Module", "flow-cell-module"),
+            ("Reason excluded from public flow", "flow-cell-wide"),
+            ("Detected usage", "flow-cell-wide"),
+            ("Suggested action", "flow-cell-wide"),
+        ],
+        table_rows,
+    )
 
 def _render_refactor_inventory_items(items: list[dict[str, Any]]) -> str:
     """Render compact linked callable names for refactor inventory table cells."""
@@ -2223,7 +2392,10 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     summary_counts = flow_data["summary_counts"]
     inventory = flow_data["refactor_inventory"]
     card_rows = [
-        ("Total internal helpers", summary_counts["internal_helpers"]),
+        ("All discovered internal functions", summary_counts.get("all_discovered_internal_functions", summary_counts["internal_helpers"])),
+        ("Public-flow helper nodes", summary_counts.get("internal_helper_nodes_in_public_flow", summary_counts["internal_helpers"])),
+        ("Reachable internal functions", summary_counts.get("internal_helpers_reachable_from_public_flow", summary_counts["internal_helpers"])),
+        ("Outside public flow", summary_counts.get("internal_functions_outside_public_callable_flow", 0)),
         ("High priority candidates", summary_counts["high_priority_candidates"]),
         ("Medium priority candidates", summary_counts["medium_priority_candidates"]),
         ("Protect helpers", summary_counts["protect_helpers"]),
@@ -2260,6 +2432,8 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         [
             "",
             "## Callable helper summary",
+            "",
+            "Count wording: **all discovered internal functions** is the full internal function inventory. **Public-flow helper nodes** is the historical callable-flow helper-node count, which can include reachable internal classes used like helpers. **Reachable internal functions** counts only internal functions reached by walking exported public callable entry points in the static call graph. **Outside public flow** counts discovered internal functions that are not reached by that public-entrypoint walk and are audited separately below.",
             "",
             "Compact public callable summary for spotting entry points with many helper dependencies. Use the inventory below for helper-level cleanup triage.",
             "",
@@ -2310,6 +2484,14 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
         ]
     )
     lines.extend(_render_refactor_inventory_table(inventory))
+    lines.extend([
+        "",
+        "## Internal functions outside public callable flow",
+        "",
+        "Generated audit of discovered internal functions that are absent from the public callable-flow helper inventory. These functions may still be valid internal APIs, template-facing advanced helpers, test/docs support, dynamically referenced functions, or maintainer-review candidates.",
+        "",
+    ])
+    lines.extend(_render_outside_public_flow_table(flow_data.get("internal_functions_outside_public_callable_flow", [])))
     lines.append("")
     return "\n".join(lines)
 
@@ -2848,7 +3030,7 @@ def generate_landing_stats(
     supporting_internal_function_count = sum(
         1
         for entry in function_manifest
-        if entry.get("qualified_name") and entry.get("name") not in public_names
+        if entry.get("qualified_name") and entry.get("name") not in public_names and entry.get("object_type", "function") == "function"
     )
     stats = {
         "public_function_count": public_function_count,
@@ -4038,7 +4220,7 @@ def main() -> None:
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
         record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
         manifest_category = function_category_by_name.get(short_name, "internal-private" if short_name.startswith("_") else "utility")
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "function_category": manifest_category, "usage_sources": record_used_in_templates, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
+        function_manifest.append({"id": qn, "name": short_name, "object_type": node.get("object_type", "function"), "qualified_name": qn, "module": module_name, "classification": classification, "function_category": manifest_category, "usage_sources": record_used_in_templates, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
         agent_manifest.append({
             "name": short_name,
             "qualified_name": qn,
@@ -4088,7 +4270,7 @@ def main() -> None:
         [qn for qn, node in node_by_qn.items() if node.get("exported")],
         key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
     )
-    callable_flow_data = _build_callable_flow_data(public_flow_qns, calls_by_qn, node_by_qn, module_data)
+    callable_flow_data = _build_callable_flow_data(public_flow_qns, calls_by_qn, node_by_qn, module_data, used_by_qn, template_usage_by_symbol)
     CALLABLE_FLOW_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
     CALLABLE_FLOW_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
     REFACTOR_DASHBOARD_PATH.write_text(_render_refactor_dashboard_html(callable_flow_data), encoding="utf-8", newline="\n")

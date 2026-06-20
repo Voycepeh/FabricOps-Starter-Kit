@@ -102,7 +102,9 @@ def test_landing_stats_match_reference_sources() -> None:
     assert stats["supporting_internal_function_count"] == sum(
         1
         for entry in function_manifest
-        if entry.get("qualified_name") and entry.get("name") not in exported_symbols
+        if entry.get("qualified_name")
+        and entry.get("name") not in exported_symbols
+        and entry.get("object_type", "function") == "function"
     )
     assert stats["metadata_table_count"] == len(metadata_pages)
 
@@ -222,11 +224,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Public callable flow map" in flow_text
     assert "## Maintainer overview" in flow_text
-    assert "Total internal helpers" in flow_text
+    assert "Public-flow helper nodes" in flow_text
     assert "High priority candidates" in flow_text
     assert "Medium priority candidates" in flow_text
     assert "Protect helpers" in flow_text
     assert "Likely wrapper / inline candidates" in flow_text
+    assert "Internal functions outside public callable flow" in flow_text
     assert "Refactor reason / priority" in flow_text
     assert "Likely wrapper / inline candidate" in flow_text
     assert "Used by only one function" in flow_text
