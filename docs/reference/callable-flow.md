@@ -2,7 +2,9 @@
 
 This page embeds the interactive callable functions dashboard.
 
-Use the dashboard to inspect public API entrypoints, internal helpers, unreachable functions, caller/callee relationships, helper depth, reuse, and refactor review recommendations.
+Use the dashboard to inspect public API entrypoints, internal helpers, utilities, unreachable callables, caller/callee relationships, helper depth, reuse, and refactor review recommendations.
+
+FabricOps callables are organized into three dependency layers: public API callables, internal helpers, and utilities. Public callables form the supported user-facing API and may depend on internal helpers or utilities. Internal helpers may depend only on utilities. Utilities should be leaf callables and should not depend on other project callables. Same-layer calls and upward calls are flagged for review so the callable graph stays directional and safer to refactor.
 
 [Open full dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
 

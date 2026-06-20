@@ -130,7 +130,7 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     assert automation_callables == exported_symbols
     assert function_callables == exported_symbols
     assert page_callables == exported_symbols
-    public_inventory = {row["function_name"] for row in callable_flow["function_inventory"] if row["function_type"] == "Public"}
+    public_inventory = {row["function_name"] for row in callable_flow["function_inventory"] if row["layer"] == "public"}
     assert public_inventory == exported_symbols
     assert not (removed_symbols & automation_callables)
     assert not (removed_symbols & function_callables)
@@ -232,7 +232,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "refactor reason" not in flow_text.lower()
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
-    assert "Function Inventory and Refactor Signals" in dashboard_text
+    assert "Callable Inventory and Refactor Signals" in dashboard_text
     assert 'id="searchBox"' in dashboard_text
     assert 'id="typeFilter"' in dashboard_text
     assert 'id="signalFilter"' in dashboard_text
@@ -240,7 +240,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert 'id="priorityFilter"' not in dashboard_text
     assert 'id="searchScope"' not in dashboard_text
     assert 'id="quickFilters"' not in dashboard_text
-    assert "Search function name" in dashboard_text
+    assert "Search callable name" in dashboard_text
     assert "Search matches function names only. Use the filters below for function type and recommended action." not in dashboard_text
     assert "Recommended action" in dashboard_text
     assert "Reset" in dashboard_text
@@ -255,14 +255,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Medium review" not in dashboard_text
     assert 'id="summaryTree"' in dashboard_text
     assert "Function summary tree" in dashboard_text
-    assert "Function inventory" in dashboard_text
-    assert "Total functions" in dashboard_text
+    assert "Callable inventory" in dashboard_text
+    assert "Total callables" in dashboard_text
     assert "Select visible" in dashboard_text
     assert "Clear selection" in dashboard_text
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
     assert "Download JSON" in dashboard_text
-    assert "fabricops_function_refactor_packet" in dashboard_text
+    assert "fabricops_callable_refactor_packet" in dashboard_text
     assert "signal_reason" in dashboard_text
     assert "refactor_context" in dashboard_text
     assert "ai_prompt" in dashboard_text
@@ -278,8 +278,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "development_breaking_allowed" in dashboard_text
     assert "Respect the compatibility mode" in dashboard_text
     assert "How signals are classified" in dashboard_text
-    assert "Small helper used by only one function" in dashboard_text
-    assert "Function type" in dashboard_text
+    assert "Small helper or single-use utility" in dashboard_text
+    assert "Callable layer" in dashboard_text
     assert "Unreachable" in dashboard_text
     assert ".filter-panel" in dashboard_text
     assert "grid-template-columns: minmax(260px, 1.4fr)" in dashboard_text
@@ -299,20 +299,20 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
 
     summary_counts = flow_data["summary_counts"]
-    assert set(summary_counts) == {"total_functions", "function_type", "recommended_action"}
-    assert set(summary_counts["function_type"]) == {"Public", "Internal", "Unreachable"}
-    assert summary_counts["function_type"]["Public"] == len(exported_symbols)
-    assert summary_counts["total_functions"] == sum(summary_counts["function_type"].values())
+    assert {"total_callables", "total_functions", "function_type", "layer", "callable_kind", "recommended_action"} <= set(summary_counts)
+    assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility", "Unclassified", "Unreachable"}
+    assert summary_counts["layer"]["public"] == len(exported_symbols)
+    assert summary_counts["total_callables"] == sum(summary_counts["function_type"].values())
 
     function_inventory = flow_data["function_inventory"]
-    assert len(function_inventory) == summary_counts["total_functions"]
+    assert len(function_inventory) == summary_counts["total_callables"]
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
-    assert {"Public", "Internal", "Unreachable"} <= {row["function_type"] for row in function_inventory}
-    assert sum(1 for row in function_inventory if row["function_type"] == "Public") == summary_counts["function_type"]["Public"]
-    assert sum(1 for row in function_inventory if row["function_type"] == "Internal") == summary_counts["function_type"]["Internal"]
-    assert sum(1 for row in function_inventory if row["function_type"] == "Unreachable") == summary_counts["function_type"]["Unreachable"]
-    assert {row["function_name"] for row in function_inventory if row["function_type"] == "Public"} == exported_symbols
+    assert {"Public API", "Internal helper", "Utility", "Unreachable"} <= {row["function_type"] for row in function_inventory}
+    assert sum(1 for row in function_inventory if row["layer"] == "public") == summary_counts["layer"]["public"]
+    assert sum(1 for row in function_inventory if row["layer"] == "internal") == summary_counts["layer"]["internal"]
+    assert sum(1 for row in function_inventory if row["layer"] == "unreachable") == summary_counts["layer"]["unreachable"]
+    assert {row["function_name"] for row in function_inventory if row["layer"] == "public"} == exported_symbols
     assert summary_counts["recommended_action"] == {
         action: sum(1 for row in function_inventory if row["recommended_action"] == action)
         for action in sorted({row["recommended_action"] for row in function_inventory})
@@ -324,6 +324,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
             "qualified_name",
             "module",
             "function_type",
+            "layer",
+            "callable_kind",
+            "visibility",
             "called_by_count",
             "calls_count",
             "direct_internal_helpers",
@@ -1088,3 +1091,19 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
     assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text
     assert "api/modules/config.md" in mkdocs_text
     assert "api/reference/" not in mkdocs_text
+
+
+def test_callable_layer_dependency_rule_matrix() -> None:
+    """Verify callable layer dependency rules match the architecture matrix."""
+    from scripts.generate_function_reference import _architecture_dependency_signals
+
+    assert _architecture_dependency_signals("public", "internal") == []
+    assert _architecture_dependency_signals("public", "utility") == []
+    assert _architecture_dependency_signals("public", "public") == ["public_calls_public"]
+    assert _architecture_dependency_signals("internal", "utility") == []
+    assert _architecture_dependency_signals("internal", "public") == ["internal_calls_public"]
+    assert _architecture_dependency_signals("internal", "internal") == ["internal_calls_internal"]
+    assert _architecture_dependency_signals("utility", "public") == ["utility_calls_project_callable"]
+    assert _architecture_dependency_signals("utility", "internal") == ["utility_calls_project_callable"]
+    assert _architecture_dependency_signals("utility", "utility") == ["utility_calls_project_callable"]
+    assert _architecture_dependency_signals("public", "unclassified") == ["unknown_layer_dependency"]

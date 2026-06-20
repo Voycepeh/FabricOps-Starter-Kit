@@ -32,6 +32,21 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.DataAgreementConfig.__post_init__": {
+      "qualified_name": "fabricops_kit.config.DataAgreementConfig.__post_init__",
+      "short_name": "DataAgreementConfig.__post_init__",
+      "module": "config",
+      "callable": "DataAgreementConfig.__post_init__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config.FrameworkConfig": {
       "qualified_name": "fabricops_kit.config.FrameworkConfig",
       "short_name": "FrameworkConfig",
@@ -49,6 +64,25 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.FrameworkConfig.__post_init__": {
+      "qualified_name": "fabricops_kit.config.FrameworkConfig.__post_init__",
+      "short_name": "FrameworkConfig.__post_init__",
+      "module": "config",
+      "callable": "FrameworkConfig.__post_init__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._validate_audit_timezone"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.config._validate_audit_timezone"
+      ],
+      "internal_helper_count": 1
+    },
     "fabricops_kit.config.GovernanceConfig": {
       "qualified_name": "fabricops_kit.config.GovernanceConfig",
       "short_name": "GovernanceConfig",
@@ -63,6 +97,25 @@
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.config.GovernanceConfig.__post_init__": {
+      "qualified_name": "fabricops_kit.config.GovernanceConfig.__post_init__",
+      "short_name": "GovernanceConfig.__post_init__",
+      "module": "config",
+      "callable": "GovernanceConfig.__post_init__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._normalize_widget_config"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.config._normalize_widget_config"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.config.LineageConfig": {
       "qualified_name": "fabricops_kit.config.LineageConfig",
@@ -79,11 +132,41 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.LineageConfig.__post_init__": {
+      "qualified_name": "fabricops_kit.config.LineageConfig.__post_init__",
+      "short_name": "LineageConfig.__post_init__",
+      "module": "config",
+      "callable": "LineageConfig.__post_init__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config.NotebookRuntimeConfig": {
       "qualified_name": "fabricops_kit.config.NotebookRuntimeConfig",
       "short_name": "NotebookRuntimeConfig",
       "module": "config",
       "callable": "NotebookRuntimeConfig",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.NotebookRuntimeConfig.__post_init__": {
+      "qualified_name": "fabricops_kit.config.NotebookRuntimeConfig.__post_init__",
+      "short_name": "NotebookRuntimeConfig.__post_init__",
+      "module": "config",
+      "callable": "NotebookRuntimeConfig.__post_init__",
       "docs_url": null,
       "classification": "internal",
       "calls": [],
@@ -128,11 +211,41 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.PathConfig.__post_init__": {
+      "qualified_name": "fabricops_kit.config.PathConfig.__post_init__",
+      "short_name": "PathConfig.__post_init__",
+      "module": "config",
+      "callable": "PathConfig.__post_init__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config.QualityConfig": {
       "qualified_name": "fabricops_kit.config.QualityConfig",
       "short_name": "QualityConfig",
       "module": "config",
       "callable": "QualityConfig",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.QualityConfig.__post_init__": {
+      "qualified_name": "fabricops_kit.config.QualityConfig.__post_init__",
+      "short_name": "QualityConfig.__post_init__",
+      "module": "config",
+      "callable": "QualityConfig.__post_init__",
       "docs_url": null,
       "classification": "internal",
       "calls": [],
@@ -483,8 +596,10 @@
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
+      "used_by": [
+        "fabricops_kit.config.GovernanceConfig.__post_init__"
+      ],
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -594,10 +709,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.config.FrameworkConfig.__post_init__",
         "fabricops_kit.config._get_audit_timezone",
         "fabricops_kit.config._validate_framework_config"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -1939,11 +2055,56 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.fabric_input_output.FabricStore.__post_init__": {
+      "qualified_name": "fabricops_kit.fabric_input_output.FabricStore.__post_init__",
+      "short_name": "FabricStore.__post_init__",
+      "module": "fabric_input_output",
+      "callable": "FabricStore.__post_init__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output.FabricStore.root": {
+      "qualified_name": "fabricops_kit.fabric_input_output.FabricStore.root",
+      "short_name": "FabricStore.root",
+      "module": "fabric_input_output",
+      "callable": "FabricStore.root",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.fabric_input_output._PandasProxy": {
       "qualified_name": "fabricops_kit.fabric_input_output._PandasProxy",
       "short_name": "_PandasProxy",
       "module": "fabric_input_output",
       "callable": "_PandasProxy",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._PandasProxy.__getattr__": {
+      "qualified_name": "fabricops_kit.fabric_input_output._PandasProxy.__getattr__",
+      "short_name": "_PandasProxy.__getattr__",
+      "module": "fabric_input_output",
+      "callable": "_PandasProxy.__getattr__",
       "docs_url": null,
       "classification": "internal",
       "calls": [],
@@ -6117,6 +6278,8 @@
         "governance_review"
       ],
       "inbound_modules": [
+        "FrameworkConfig",
+        "GovernanceConfig",
         "data_agreement",
         "data_lineage",
         "data_profiling",
@@ -6126,7 +6289,7 @@
         "pipeline"
       ],
       "outbound_count": 3,
-      "inbound_count": 7
+      "inbound_count": 9
     },
     "data_agreement": {
       "callable_count": 3,
@@ -6169,7 +6332,7 @@
     },
     "fabric_input_output": {
       "callable_count": 2,
-      "internal_count": 11,
+      "internal_count": 12,
       "outbound_modules": [
         "config"
       ],

@@ -296,6 +296,31 @@ def parse_module(path: Path) -> dict[str, Any]:
             sections = _docstring_sections(doc)
             doc_sections[node.name] = sections
             source_locations[node.name] = {"start_line": node.lineno, "end_line": getattr(node, "end_lineno", node.lineno)}
+            for child in node.body:
+                if not isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                method_name = f"{node.name}.{child.name}"
+                method_doc = ast.get_docstring(child)
+                functions[method_name] = first_sentence(method_doc)
+                signatures[method_name] = _signature_from_node(child)
+                method_sections = _docstring_sections(method_doc)
+                doc_sections[method_name] = method_sections
+                source_locations[method_name] = {
+                    "start_line": child.lineno,
+                    "end_line": getattr(child, "end_lineno", child.lineno),
+                }
+                parameters[method_name] = _parameter_rows_from_node(child, method_sections.get("parameters", ""))
+                called = set()
+                for grandchild in ast.walk(child):
+                    if isinstance(grandchild, ast.Call):
+                        if isinstance(grandchild.func, ast.Name):
+                            called.add(grandchild.func.id)
+                        elif isinstance(grandchild.func, ast.Attribute):
+                            if isinstance(grandchild.func.value, ast.Name) and grandchild.func.value.id in {"self", "cls"}:
+                                called.add(f"{node.name}.{grandchild.func.attr}")
+                            else:
+                                called.add(grandchild.func.attr)
+                calls[method_name] = called
         elif isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id.isupper():
@@ -343,7 +368,7 @@ def parse_import_aliases(nodes: list[ast.stmt]) -> tuple[dict[str, str], dict[st
 
 
 def collect_function_calls(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[dict[str, str]]:
-    """Collect function calls."""
+    """Collect function and callable object calls."""
     calls: list[dict[str, str]] = []
     for child in ast.walk(node):
         if not isinstance(child, ast.Call):
@@ -461,14 +486,29 @@ def build_callable_graph(
                         "qualified_name": qualified_name,
                         "role": role if exported else "internal",
                         "exported": exported,
-                        "is_underscore": callable_name.startswith("_"),
+                        "is_underscore": callable_name.split(".")[-1].startswith("_"),
+                        "callable_kind": (
+                            "class"
+                            if callable_name in classes
+                            else "callable_object"
+                            if callable_name.endswith(".__call__")
+                            else "method"
+                            if "." in callable_name
+                            else "function"
+                        ),
                     }
                 )
 
+        callable_nodes: list[tuple[str, ast.FunctionDef | ast.AsyncFunctionDef]] = []
         for node in module_tree.body:
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
-            caller_qn = f"{PACKAGE_NAME}.{module}.{node.name}"
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                callable_nodes.append((node.name, node))
+            elif isinstance(node, ast.ClassDef):
+                for child in node.body:
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        callable_nodes.append((f"{node.name}.{child.name}", child))
+        for caller_name, node in callable_nodes:
+            caller_qn = f"{PACKAGE_NAME}.{module}.{caller_name}"
             local_module_aliases, local_symbol_aliases = parse_import_aliases(
                 [n for n in ast.walk(node) if isinstance(n, (ast.Import, ast.ImportFrom))]
             )
@@ -476,6 +516,8 @@ def build_callable_graph(
             merged_symbol_aliases = {**symbol_aliases, **local_symbol_aliases}
             for call in collect_function_calls(node):
                 raw_name = call["raw_name"]
+                if raw_name.startswith(("self.", "cls.")) and "." in caller_name:
+                    raw_name = f"{caller_name.rsplit('.', 1)[0]}.{raw_name.split('.', 1)[1]}"
                 resolved_qn, edge_type, callee_kind = resolve_call_target(
                     module, raw_name, merged_module_aliases, merged_symbol_aliases, same_module_names, symbol_map, package_modules
                 )
@@ -488,7 +530,7 @@ def build_callable_graph(
                 }
                 edges.append(edge)
                 if resolved_qn and edge_type in {"same_module", "cross_module"}:
-                    callee_module = resolved_qn.split(".")[-2]
+                    callee_module = resolved_qn.split(".")[1] if resolved_qn.startswith(f"{PACKAGE_NAME}.") else resolved_qn.split(".")[-2]
                     if callee_module != module:
                         calls_modules[module].add(callee_module)
                         called_by_modules[callee_module].add(module)
@@ -1575,8 +1617,9 @@ def _deepest_call_chain_depth(
 
 def _callable_flow_source_link(qn: str, module_data: dict[str, dict[str, Any]]) -> str | None:
     """Return a source URL for a callable flow node when source metadata exists."""
-    module_name = qn.split(".")[-2]
-    callable_name = qn.split(".")[-1]
+    parts = qn.split(".")
+    module_name = parts[1] if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
+    callable_name = ".".join(parts[2:]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-1]
     source_location = module_data.get(module_name, {}).get("source_locations", {}).get(callable_name, {})
     if not source_location:
         return None
@@ -1597,8 +1640,8 @@ REFACTOR_SIGNAL_ORDER = [
 REFACTOR_SIGNAL_RECOMMENDATIONS = {
     "Thin wrapper candidate": "Inline candidate",
     "Single-use internal helper": "Review abstraction value",
-    "Leaf internal helper": "Keep / protect",
-    "High-fanout helper": "Shared helper – preserve carefully",
+    "Leaf internal helper": "Stable utility",
+    "High-fanout helper": "Shared internal helper",
 }
 
 REFACTOR_REASON_LABELS = {
@@ -1606,6 +1649,11 @@ REFACTOR_REASON_LABELS = {
     "Single-use internal helper": "Used by only one function",
     "Leaf internal helper": "End-of-chain helper",
     "High-fanout helper": "Used by many functions",
+    "public_calls_public": "Public calls public",
+    "internal_calls_public": "Internal calls public",
+    "internal_calls_internal": "Internal calls internal",
+    "utility_calls_project_callable": "Utility calls project callable",
+    "unknown_layer_dependency": "Unknown layer dependency",
 }
 
 REFACTOR_PRIORITY_ORDER = {
@@ -1617,21 +1665,22 @@ REFACTOR_PRIORITY_ORDER = {
 }
 
 REFACTOR_PRIORITY_ACTIONS = {
-    "Protect": "Shared helper – preserve carefully",
+    "Protect": "Shared internal helper",
     "High": "Inline candidate",
     "Medium": "Review abstraction value",
-    "Low": "Keep / protect",
+    "Low": "Stable utility",
     "Review": "Review manually",
 }
 
 ACTION_LEGEND = {
-    "Inline candidate": "Small helper used by only one function; consider flattening into its caller after checking readability.",
-    "Merge candidate": "Similar helper shape or adjacent responsibility; consider consolidating with a sibling helper.",
+    "Public API entrypoint": "Supported user-facing API surface; no inbound project calls are required.",
+    "Shared internal helper": "Internal implementation helper used by multiple public or internal callers; protect with focused tests before changing.",
+    "Stable utility": "Low-level leaf helper with multiple inbound callers; keep generic and project-callable free.",
+    "Inline candidate": "Small helper or single-use utility; consider flattening into its caller after checking readability.",
     "Review abstraction value": "Helper used by only one function; verify the name, boundary, and test value justify keeping it separate.",
-    "Keep / protect": "Healthy helper shape or leaf behavior; keep stable unless source review shows duplication.",
-    "Shared helper – preserve carefully": "High reuse or broad inbound reach; refactor only with focused tests and caller review.",
-    "Promote candidate": "Potential public API only when metadata and caller evidence support notebook-facing reuse.",
     "Review manually": "No clear automated recommendation; inspect intent before changing structure.",
+    "Architecture violation": "Callable dependency direction breaks the public → internal → utility layer rule.",
+    "Orphaned callable": "Private callable with no reachable public lineage; remove or reconnect if still needed.",
 }
 
 
@@ -1640,7 +1689,8 @@ def _callable_flow_source_path(qn: str) -> str | None:
     parts = qn.split(".")
     if len(parts) < 3:
         return None
-    return f"src/fabricops_kit/{parts[-2]}.py"
+    module_name = parts[1] if parts[0] == PACKAGE_NAME else parts[-2]
+    return f"src/fabricops_kit/{module_name}.py"
 
 
 def _project_inbound_callers(
@@ -1826,6 +1876,55 @@ def _build_refactor_inventory(
     return summary_counts, inventory, legacy_signal_rows
 
 
+CALLABLE_LAYER_LABELS = {
+    "public": "Public API",
+    "internal": "Internal helper",
+    "utility": "Utility",
+    "unclassified": "Unclassified",
+    "unreachable": "Unreachable",
+}
+
+ARCHITECTURE_VIOLATION_ACTION = "Architecture violation"
+
+
+def _callable_layer(
+    qn: str,
+    public_qn_set: set[str],
+    reachable_non_public: set[str],
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> str:
+    """Classify a project callable into the generated dependency layer model."""
+    if qn in public_qn_set:
+        return "public"
+    node = node_by_qn[qn]
+    if qn not in reachable_non_public and not node.get("is_underscore"):
+        return "unclassified"
+    if qn not in reachable_non_public:
+        return "unreachable"
+    outbound_project = {callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn}
+    if node.get("is_underscore") and not outbound_project:
+        return "utility"
+    return "internal"
+
+
+def _architecture_dependency_signals(caller_layer: str, callee_layer: str) -> list[str]:
+    """Return callable-layer dependency violation signals for a project-local edge."""
+    if callee_layer in {"unclassified", "unreachable"}:
+        return ["unknown_layer_dependency"]
+    if caller_layer == "public" and callee_layer == "public":
+        return ["public_calls_public"]
+    if caller_layer == "internal" and callee_layer == "public":
+        return ["internal_calls_public"]
+    if caller_layer == "internal" and callee_layer == "internal":
+        return ["internal_calls_internal"]
+    if caller_layer == "utility" and callee_layer in {"public", "internal", "utility"}:
+        return ["utility_calls_project_callable"]
+    if caller_layer == callee_layer and caller_layer in {"public", "internal", "utility"}:
+        return ["unknown_layer_dependency"]
+    return []
+
+
 def _build_function_inventory(
     public_qns: list[str],
     calls_by_qn: dict[str, list[str]],
@@ -1834,7 +1933,7 @@ def _build_function_inventory(
     callable_summary: list[dict[str, Any]],
     refactor_inventory: list[dict[str, Any]],
 ) -> tuple[dict[str, int], list[dict[str, Any]]]:
-    """Build a reconciled one-row-per-discovered-function dashboard inventory."""
+    """Build a reconciled one-row-per-discovered-callable dashboard inventory."""
     public_qn_set = set(public_qns)
     reachable_non_public = set().union(
         *(_reachable_callables(public_qn, calls_by_qn, node_by_qn) for public_qn in public_qns)
@@ -1842,6 +1941,10 @@ def _build_function_inventory(
     inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
     refactor_by_qn = {row["qualified_name"]: row for row in refactor_inventory}
     summary_by_qn = {row["qualified_name"]: row for row in callable_summary}
+    layer_by_qn = {
+        qn: _callable_layer(qn, public_qn_set, reachable_non_public, calls_by_qn, node_by_qn)
+        for qn in node_by_qn
+    }
 
     def linked(qns: list[str] | set[str]) -> list[dict[str, str]]:
         return [
@@ -1850,6 +1953,8 @@ def _build_function_inventory(
                 "module": node_by_qn[qn]["module_name"],
                 "qualified_name": qn,
                 "source_url": _callable_flow_source_link(qn, module_data),
+                "layer": layer_by_qn.get(qn, "unclassified"),
+                "callable_kind": node_by_qn[qn].get("callable_kind", "unknown"),
             }
             for qn in sorted(qns, key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()))
             if qn in node_by_qn
@@ -1858,23 +1963,50 @@ def _build_function_inventory(
     inventory: list[dict[str, Any]] = []
     for qn in sorted(node_by_qn, key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower(), item)):
         node = node_by_qn[qn]
-        is_public = qn in public_qn_set
-        is_internal = qn in reachable_non_public
-        function_type = "Public" if is_public else "Internal" if is_internal else "Unreachable"
+        layer = layer_by_qn[qn]
+        function_type = CALLABLE_LAYER_LABELS[layer]
         refactor = refactor_by_qn.get(qn, {})
         public_summary = summary_by_qn.get(qn, {})
         outbound = [callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn]
         inbound = inbound_by_qn.get(qn, set())
         direct_helper_qns = {item["qualified_name"] for item in public_summary.get("direct_internal_helpers", [])}
+        architecture_signals = sorted({
+            signal
+            for callee in outbound
+            for signal in _architecture_dependency_signals(layer, layer_by_qn.get(callee, "unclassified"))
+        })
+        signals = [*architecture_signals, *refactor.get("signals", [])]
+        if architecture_signals:
+            recommended_action = ARCHITECTURE_VIOLATION_ACTION
+            priority = "High"
+        elif layer == "public":
+            recommended_action = "Public API entrypoint"
+            priority = refactor.get("priority", "Review")
+        elif layer == "internal":
+            recommended_action = "Shared internal helper" if len(inbound) > 1 else refactor.get("recommended_action", "Review manually")
+            priority = refactor.get("priority", "Review")
+        elif layer == "utility":
+            recommended_action = "Stable utility" if len(inbound) > 1 else "Inline candidate"
+            priority = refactor.get("priority", "Low")
+        elif layer == "unreachable":
+            recommended_action = "Orphaned callable"
+            priority = "Medium"
+        else:
+            recommended_action = "Review manually"
+            priority = "Review"
         inventory.append(
             {
                 "function_name": node["callable_name"],
                 "qualified_name": qn,
                 "module": node["module_name"],
                 "function_type": function_type,
-                "recommended_action": refactor.get("recommended_action") or ("Public API entrypoint" if is_public else "Review manually"),
-                "priority": refactor.get("priority", "Review"),
-                "signals": refactor.get("signals", []),
+                "layer": layer,
+                "callable_kind": node.get("callable_kind", "unknown"),
+                "visibility": "public" if qn in public_qn_set else "private" if node.get("is_underscore") else "internal",
+                "recommended_action": recommended_action,
+                "priority": priority,
+                "signals": signals,
+                "architecture_signals": architecture_signals,
                 "called_by_count": len(inbound),
                 "calls_count": len(set(outbound)),
                 "callers": linked(inbound),
@@ -1887,10 +2019,19 @@ def _build_function_inventory(
             }
         )
     summary_counts = {
+        "total_callables": len(inventory),
         "total_functions": len(inventory),
         "function_type": {
             label: sum(1 for row in inventory if row["function_type"] == label)
-            for label in ("Public", "Internal", "Unreachable")
+            for label in CALLABLE_LAYER_LABELS.values()
+        },
+        "layer": {
+            layer: sum(1 for row in inventory if row["layer"] == layer)
+            for layer in CALLABLE_LAYER_LABELS
+        },
+        "callable_kind": {
+            label: sum(1 for row in inventory if row["callable_kind"] == label)
+            for label in sorted({row["callable_kind"] for row in inventory})
         },
         "recommended_action": {
             label: sum(1 for row in inventory if row["recommended_action"] == label)
@@ -1898,7 +2039,6 @@ def _build_function_inventory(
         },
     }
     return summary_counts, inventory
-
 
 def _build_callable_flow_data(
     public_qns: list[str],
@@ -2123,7 +2263,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Function Inventory and Refactor Signals</title>
+  <title>Callable Inventory and Refactor Signals</title>
   <style>
     :root { color-scheme: light; --border:#e2e8f0; --muted:#526070; --bg:#f8fafc; --blue:#2563eb; --red:#dc2626; --yellow:#a16207; --green:#15803d; --grey:#64748b; --soft:#ffffff; }
     * { box-sizing: border-box; }
@@ -2157,21 +2297,21 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 </head>
 <body>
 <header>
-  <h1>Function Inventory and Refactor Signals</h1>
-  <p>Browse discovered functions, filter cleanup candidates, inspect orphaned helpers, and identify stable helpers that should be protected.</p>
+  <h1>Callable Inventory and Refactor Signals</h1>
+  <p>Browse discovered callables, filter cleanup candidates, inspect orphaned helpers, and identify stable utilities and architecture violations.</p>
   <p><a href="../reference/callable-flow/">Back to Callable Functions Flow</a> · <a href="../reference/_data/callable-flow.json">Open JSON data</a></p>
 </header>
 <main>
   <section id="summaryTree" class="summary-tree" aria-label="Function summary tree"></section>
   <section class="filter-panel" aria-label="Inventory filters">
-    <label class="filter-field search">Search function name <input id="searchBox" type="search" placeholder="Search function names"></label>
-    <label class="filter-field">Function type <select id="typeFilter"><option value="">All function types</option></select></label>
+    <label class="filter-field search">Search callable name <input id="searchBox" type="search" placeholder="Search callable names"></label>
+    <label class="filter-field">Callable layer <select id="typeFilter"><option value="">All callable layers</option></select></label>
     <label class="filter-field">Recommended action <select id="signalFilter"><option value="">All recommended actions</option></select></label>
     <button type="button" id="resetFilters">Reset</button>
   </section>
   <details class="legend" id="actionLegend"><summary>How signals are classified</summary><div class="legend-grid" id="actionLegendGrid"></div></details>
   <section class="export-toolbar" aria-label="Refactor packet export controls">
-    <strong id="selectedCount">Selected: 0 functions</strong>
+    <strong id="selectedCount">Selected: 0 callables</strong>
     <label class="compat-field">Compatibility mode <select id="compatibilityMode"><option value="stable_api_safe">Stable API safe</option><option value="internal_cleanup" selected>Internal cleanup</option><option value="development_breaking_allowed">Development, breaking changes allowed</option></select></label>
     <small id="compatibilityHelp" class="compat-help">Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified.</small>
     <button type="button" id="selectVisible">Select visible</button>
@@ -2179,42 +2319,50 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
     <button type="button" id="copyJson" disabled>Copy JSON</button>
     <button type="button" id="copyMarkdown" disabled>Copy Markdown</button>
     <button type="button" id="downloadJson" disabled>Download JSON</button>
-    <small id="exportStatus" role="status" aria-live="polite">Select at least one function to export.</small>
+    <small id="exportStatus" role="status" aria-live="polite">Select at least one callable to export.</small>
     <textarea id="manualCopy" class="manual-copy" hidden readonly aria-label="Manual copy refactor packet"></textarea>
   </section>
   <p id="resultCount"></p>
-  <section class="table-wrap" aria-label="Combined function inventory"><table><thead><tr><th><input id="selectAllVisible" type="checkbox" aria-label="Select all visible rows"></th><th></th><th><button type="button" data-sort="function_name">Function</button></th><th><button type="button" data-sort="function_type">Function type</button></th><th><button type="button" data-sort="module">Module</button></th><th>Signal</th><th>Recommended action</th><th class="num"><button type="button" data-sort="called_by_count">Called by</button></th><th class="num"><button type="button" data-sort="calls_count">Calls</button></th><th>Source</th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
+  <section class="table-wrap" aria-label="Combined callable inventory"><table><thead><tr><th><input id="selectAllVisible" type="checkbox" aria-label="Select all visible rows"></th><th></th><th><button type="button" data-sort="function_name">Callable</button></th><th><button type="button" data-sort="function_type">Callable layer</button></th><th><button type="button" data-sort="module">Module</button></th><th>Signal</th><th>Recommended action</th><th class="num"><button type="button" data-sort="called_by_count">Called by</button></th><th class="num"><button type="button" data-sort="calls_count">Calls</button></th><th>Source</th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
 </main>
 <script>
 let inventory = []; let summary = {}; const actionLegend = {
-  "Inline candidate": "Small helper used by only one function; consider flattening into its caller after checking readability.",
-  "Merge candidate": "Similar helper shape or adjacent responsibility; consider consolidating with a sibling helper.",
+  "Public API entrypoint": "Supported user-facing API surface; no inbound project calls are required.",
+  "Shared internal helper": "Internal implementation helper used by multiple public or internal callers; protect with focused tests before changing.",
+  "Stable utility": "Low-level leaf helper with multiple inbound callers; keep generic and project-callable free.",
+  "Inline candidate": "Small helper or single-use utility; consider flattening into its caller after checking readability.",
   "Review abstraction value": "Helper used by only one function; verify the name, boundary, and test value justify keeping it separate.",
-  "Keep / protect": "Healthy helper shape or leaf behavior; keep stable unless source review shows duplication.",
-  "Shared helper – preserve carefully": "Broad reuse. Protect and refactor only with focused tests.",
-  "Promote candidate": "Potential public API only when metadata and caller evidence support notebook-facing reuse.",
-  "Review manually": "No clear automated recommendation; inspect intent before changing structure."
+  "Review manually": "No clear automated recommendation; inspect intent before changing structure.",
+  "Architecture violation": "Callable dependency direction breaks the public → internal → utility layer rule.",
+  "Orphaned callable": "Private callable with no reachable public lineage; remove or reconnect if still needed."
 }; const reasonLabels = {
   "Thin wrapper candidate": "Likely wrapper / inline candidate",
   "Single-use internal helper": "Used by only one function",
   "Leaf internal helper": "End-of-chain helper",
-  "High-fanout helper": "Used by many functions"
+  "High-fanout helper": "Used by many functions",
+  "public_calls_public": "Public calls public",
+  "internal_calls_public": "Internal calls public",
+  "internal_calls_internal": "Internal calls internal",
+  "utility_calls_project_callable": "Utility calls project callable",
+  "unknown_layer_dependency": "Unknown layer dependency"
 };
 
-const AI_PROMPT = 'You are reviewing a FabricOps function refactor packet. Use the selected functions and call graph metadata to plan a safe cleanup. Group functions by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Always call out tests required before changes.';
+const AI_PROMPT = 'You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Always call out tests required before changes.';
 const refactorGuidance = {
   'Inline candidate': ['inline_candidate', 'Likely small helper or wrapper. Consider inlining only if it improves readability and does not duplicate validation logic.'],
   'Merge candidate': ['merge_candidate', 'Likely adjacent helper responsibility. Review whether this should be consolidated with related helpers.'],
   'Review abstraction value': ['abstraction_review', 'Single-use helper. Check whether the boundary improves naming, testing, validation, or readability.'],
   'Review manually': ['manual_review', 'Automated signal is inconclusive. Inspect intent, callers, and tests before recommending changes.'],
-  'Keep / protect': ['protect', 'Stable helper. Do not treat as low hanging refactor work. Preserve unless there is strong evidence.'],
-  'Shared helper – preserve carefully': ['shared_helper', 'Broad reuse. Refactor only with focused tests and caller review.'],
-  'Promote candidate': ['promote_candidate', 'May deserve public API treatment. Validate notebook-facing reuse before promotion.']
+  'Public API entrypoint': ['public_entrypoint', 'Supported public API. Preserve notebook-facing behavior and avoid hidden orchestration chains.'],
+  'Stable utility': ['stable_utility', 'Leaf utility. Keep generic and free of project-callable dependencies.'],
+  'Shared internal helper': ['shared_internal_helper', 'Shared implementation helper. Refactor only with focused tests and caller review.'],
+  'Architecture violation': ['architecture_violation', 'Dependency direction breaks the public → internal → utility rule. Review before cleanup.'],
+  'Orphaned callable': ['orphaned_callable', 'No public lineage. Remove or reconnect if still needed.']
 };
 const compatibilityModes = {
   stable_api_safe: {label:'Stable API safe', description:'Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup.', instruction:'Preserve public API compatibility. Any breaking change must be called out as a migration risk.', safety_constraints:['Preserve public API compatibility','Call out any breaking change as a migration risk','Avoid changing notebook facing behavior without explicit approval']},
   internal_cleanup: {label:'Internal cleanup', description:'Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified.', instruction:'Preserve notebook facing and external behavior, but internal helper signatures, names, and module boundaries can change if justified.', safety_constraints:['Preserve external behavior','Internal helper names, signatures, and module boundaries may change if justified','Identify impacted callers before recommending changes']},
-  development_breaking_allowed: {label:'Development, breaking changes allowed', description:'Most flexible: breaking changes are allowed when they simplify new or experimental code.', instruction:'Selected functions are new, experimental, or not live yet. Breaking changes are allowed when they simplify the design, improve naming, remove weak abstractions, or make the API cleaner.', safety_constraints:['Breaking changes are allowed if they simplify the design','Prefer cleaner names, simpler boundaries, and fewer weak abstractions','Still call out affected callers and tests']}
+  development_breaking_allowed: {label:'Development, breaking changes allowed', description:'Most flexible: breaking changes are allowed when they simplify new or experimental code.', instruction:'Selected callables are new, experimental, or not live yet. Breaking changes are allowed when they simplify the design, improve naming, remove weak abstractions, or make the API cleaner.', safety_constraints:['Breaking changes are allowed if they simplify the design','Prefer cleaner names, simpler boundaries, and fewer weak abstractions','Still call out affected callers and tests']}
 };
 const priorityRank = {High:0, Medium:1, Low:2, Review:3, Protect:4}; const state = {search:'', type:'', signal:'', compatibility_mode:'internal_cleanup', sortKey:'function_type', sortDir:1, expanded:new Set(), selected:new Set(), activeTree:''};
 const $ = (id) => document.getElementById(id); const text = (v) => String(v ?? ''); const esc = (v) => text(v).replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -2223,9 +2371,9 @@ function countBy(predicate) { return inventory.filter(predicate).length; }
 function summaryCount(group, label, predicate) { return inventory.length ? countBy(predicate) : (summary[group]?.[label] ?? 0); }
 function syncTreeActive() { if(!state.type && !state.signal) state.activeTree = state.activeTree === 'total' ? 'total' : ''; else if(state.type && !state.signal) state.activeTree = `type:${state.type}`; else if(state.signal && !state.type) state.activeTree = `action:${state.signal}`; else state.activeTree = ''; }
 function treeButton(key, label, value) { return `<li><button type="button" class="tree-row ${state.activeTree===key?'active':''}" data-tree="${esc(key)}"><span>${esc(label)}</span><strong>${esc(value ?? 0)}</strong></button></li>`; }
-function renderTreeSummary() { const actionLabels=unique([...Object.keys(summary.recommended_action || {}), ...inventory.map(i=>i.recommended_action)]); const typeRows=['Public','Internal','Unreachable'].map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label))).join(''); const actionRows=actionLabels.map(label=>treeButton(`action:${label}`, label, summaryCount('recommended_action', label, i=>i.recommended_action===label))).join(''); $('summaryTree').innerHTML=`<h2>Function inventory</h2><ul>${treeButton('total','Total functions', inventory.length || summary.total_functions || 0)}</ul><h3>Function type</h3><ul>${typeRows}</ul><h3>Recommended action</h3><ul>${actionRows}</ul>`; }
+function renderTreeSummary() { const actionLabels=unique([...Object.keys(summary.recommended_action || {}), ...inventory.map(i=>i.recommended_action)]); const layers=['Public API','Internal helper','Utility','Unreachable','Unclassified']; const typeRows=layers.map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label))).join(''); const kindRows=unique([...Object.keys(summary.callable_kind || {}), ...inventory.map(i=>i.callable_kind)]).map(label=>treeButton(`kind:${label}`, label, summaryCount('callable_kind', label, i=>i.callable_kind===label))).join(''); const actionRows=actionLabels.map(label=>treeButton(`action:${label}`, label, summaryCount('recommended_action', label, i=>i.recommended_action===label))).join(''); $('summaryTree').innerHTML=`<h2>Callable inventory</h2><ul>${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul><h3>Callable layer</h3><ul>${typeRows}</ul><h3>Callable kind</h3><ul>${kindRows}</ul><h3>Recommended action</h3><ul>${actionRows}</ul>`; }
 function renderLegend() { $('actionLegendGrid').innerHTML=Object.entries(actionLegend).map(([l,d])=>`<div><span class="badge review">${esc(l)}</span><p class="hint">${esc(d)}</p></div>`).join(''); }
-function populateFilters() { ['Public','Internal','Unreachable'].forEach(v=>option($('typeFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); }
+function populateFilters() { ['Public API','Internal helper','Utility','Unreachable','Unclassified'].forEach(v=>option($('typeFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); }
 function filteredRows() { const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || text(i.function_name).toLowerCase().includes(q)) && (!state.type || i.function_type===state.type) && (!state.signal || i.recommended_action===state.signal)); }
 function signalReason(i) { const signals=(i.signals || []).map(s=>reasonLabels[s] || s); if(i.recommended_action && actionLegend[i.recommended_action]) return `${i.recommended_action}: ${actionLegend[i.recommended_action]}`; if(signals.length) return signals.join(', '); return 'No automated signal reason is available yet.'; }
 function compare(a,b) { const k=state.sortKey; if(k==='priority') return ((priorityRank[a.priority]??9)-(priorityRank[b.priority]??9))*state.sortDir || a.function_name.localeCompare(b.function_name); if(typeof a[k]==='number') return (a[k]-b[k])*state.sortDir; return text(a[k]).localeCompare(text(b[k]))*state.sortDir; }
@@ -2233,18 +2381,18 @@ function linkedList(items) { return items.length ? `<ul>${items.map(i=>`<li><a h
 function chips(item) { const content=(item.signals || []).map(s=>`<span class="tag" title="${esc(reasonLabels[s] || s)}">${esc(reasonLabels[s] || s)}</span>`).join('') || `<span class="badge review" title="${esc(item.recommended_action)}">${esc(item.recommended_action)}</span>`; return `<span class="chip-wrap">${content}</span>`; }
 function exportFilters() { return {search_function_name:state.search, function_type:state.type, recommended_action:state.signal}; }
 function guidanceFor(action) { return refactorGuidance[action] || ['manual_review', 'Automated signal is inconclusive. Inspect intent, callers, and tests before recommending changes.']; }
-function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, called_by_count:i.called_by_count, calls_count:i.calls_count, callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
+function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, layer:i.layer, callable_kind:i.callable_kind, visibility:i.visibility, architecture_signals:i.architecture_signals || [], recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, called_by_count:i.called_by_count, calls_count:i.calls_count, callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
 function selectedItems() { const byId=new Map(inventory.map(i=>[i.qualified_name,i])); return [...state.selected].map(id=>byId.get(id)).filter(Boolean); }
 function compatibilityContext() { return compatibilityModes[state.compatibility_mode] || compatibilityModes.internal_cleanup; }
-function refactorContext(functions) { const compatibility=compatibilityContext(); return {selected_function_types:unique(functions.map(fn=>fn.recommended_action)), refactor_intent:'Plan safe cleanup for selected FabricOps helper functions.', refactor_mode:'planning_only', compatibility_mode:state.compatibility_mode, compatibility_instruction:compatibility.instruction, likely_refactor_actions:['Inline thin wrappers where readability improves','Merge adjacent helpers with overlapping responsibility','Keep helpers separate when naming, validation boundaries, or tests justify the abstraction'], safety_constraints:compatibility.safety_constraints, expected_ai_output:['Group selected functions by refactor type','Explain which functions are safe cleanup candidates','Identify functions that should not be refactored yet','Propose an ordered refactor plan','List risks and required tests','Do not produce code changes unless explicitly requested']}; }
-function refactorPacket() { const functions=selectedItems().map(exportItem); return {export_type:'fabricops_function_refactor_packet', generated_from:'Function Inventory and Refactor Signals', selected_count:functions.length, filters:exportFilters(), refactor_context:refactorContext(functions), ai_prompt:AI_PROMPT, functions}; }
+function refactorContext(functions) { const compatibility=compatibilityContext(); return {selected_callable_actions:unique(functions.map(fn=>fn.recommended_action)), refactor_intent:'Plan safe cleanup for selected FabricOps helper callables.', refactor_mode:'planning_only', compatibility_mode:state.compatibility_mode, compatibility_instruction:compatibility.instruction, likely_refactor_actions:['Inline thin wrappers where readability improves','Merge adjacent helpers with overlapping responsibility','Keep helpers separate when naming, validation boundaries, or tests justify the abstraction'], safety_constraints:compatibility.safety_constraints, expected_ai_output:['Group selected callables by refactor type','Explain which callables are safe cleanup candidates','Identify callables that should not be refactored yet','Propose an ordered refactor plan','List risks and required tests','Do not produce code changes unless explicitly requested']}; }
+function refactorPacket() { const functions=selectedItems().map(exportItem); return {export_type:'fabricops_callable_refactor_packet', generated_from:'Callable Inventory and Refactor Signals', selected_count:functions.length, filters:exportFilters(), refactor_context:refactorContext(functions), ai_prompt:AI_PROMPT, functions}; }
 function markdownList(label, items) { return [label, ...items.map(item=>`- ${item}`)]; }
-function markdownPacket() { const packet=refactorPacket(), ctx=packet.refactor_context; const lines=['FabricOps function refactor packet','','Prompt for AI','',packet.ai_prompt,'','Refactor context','',`Intent: ${ctx.refactor_intent}`,'','Mode: Planning only.','',`Compatibility mode: ${compatibilityContext().label}`,'','Compatibility instruction:',ctx.compatibility_instruction,'',...markdownList('Selected function types:', ctx.selected_function_types), '', ...markdownList('Likely refactor actions:', ctx.likely_refactor_actions), '', ...markdownList('Safety constraints:', ctx.safety_constraints), '', ...markdownList('Expected AI output:', ctx.expected_ai_output), '', 'Selected functions', '']; packet.functions.forEach((fn,idx)=>{ lines.push(`Function ${idx+1}: ${fn.function_name}`,'',`Qualified name: ${fn.qualified_name}`,`Module: ${fn.module}`,`Function type: ${fn.function_type}`,`Recommended action: ${fn.recommended_action}`,`Priority: ${fn.priority}`,`Refactor type: ${fn.refactor_type}`,`Refactor guidance: ${fn.refactor_guidance}`,`Signal reason: ${fn.signal_reason}`,`Caller count: ${fn.called_by_count}`,`Callee count: ${fn.calls_count}`,'','Callers:',...(fn.callers.length?fn.callers.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Callees:',...(fn.callees.length?fn.callees.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Direct internal helpers:',...(fn.direct_internal_helpers.length?fn.direct_internal_helpers.map(h=>`- ${h.function} (${h.module}) ${h.source_path || ''}`):['- —']),'',`Source path: ${fn.source_path || 'Source unavailable'}`,`Source URL: ${fn.source_url || 'Source unavailable'}`,''); }); return lines.join('\n'); }
+function markdownPacket() { const packet=refactorPacket(), ctx=packet.refactor_context; const lines=['FabricOps callable refactor packet','','Prompt for AI','',packet.ai_prompt,'','Refactor context','',`Intent: ${ctx.refactor_intent}`,'','Mode: Planning only.','',`Compatibility mode: ${compatibilityContext().label}`,'','Compatibility instruction:',ctx.compatibility_instruction,'',...markdownList('Selected callable actions:', ctx.selected_callable_actions), '', ...markdownList('Likely refactor actions:', ctx.likely_refactor_actions), '', ...markdownList('Safety constraints:', ctx.safety_constraints), '', ...markdownList('Expected AI output:', ctx.expected_ai_output), '', 'Selected callables', '']; packet.functions.forEach((fn,idx)=>{ lines.push(`Callable ${idx+1}: ${fn.function_name}`,'',`Qualified name: ${fn.qualified_name}`,`Module: ${fn.module}`,`Callable layer: ${fn.function_type}`,`Recommended action: ${fn.recommended_action}`,`Priority: ${fn.priority}`,`Refactor type: ${fn.refactor_type}`,`Refactor guidance: ${fn.refactor_guidance}`,`Signal reason: ${fn.signal_reason}`,`Caller count: ${fn.called_by_count}`,`Callee count: ${fn.calls_count}`,'','Callers:',...(fn.callers.length?fn.callers.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Callees:',...(fn.callees.length?fn.callees.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Direct internal helpers:',...(fn.direct_internal_helpers.length?fn.direct_internal_helpers.map(h=>`- ${h.function} (${h.module}) ${h.source_path || ''}`):['- —']),'',`Source path: ${fn.source_path || 'Source unavailable'}`,`Source URL: ${fn.source_url || 'Source unavailable'}`,''); }); return lines.join('\n'); }
 function showManualCopy(textValue) { const area=$('manualCopy'); area.hidden=false; area.value=textValue; area.focus(); area.select(); }
-async function copyExport(format) { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one function to export.'; return; } const output=format==='json'?JSON.stringify(refactorPacket(), null, 2):markdownPacket(); if(navigator.clipboard?.writeText){ await navigator.clipboard.writeText(output); $('manualCopy').hidden=true; $('exportStatus').textContent=`Copied ${format.toUpperCase()} for ${items.length} functions.`; } else { showManualCopy(output); $('exportStatus').textContent='Clipboard unavailable. Copy the refactor packet from the text box.'; } }
-function downloadJson() { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one function to export.'; return; } const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/T/,'_').slice(0,15); const blob=new Blob([JSON.stringify(refactorPacket(), null, 2)], {type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fabricops_refactor_packet_${stamp}.json`; link.click(); URL.revokeObjectURL(link.href); $('exportStatus').textContent=`Downloaded JSON for ${items.length} functions.`; }
-function renderExportToolbar(rows) { const selected=selectedItems().length, visible=rows.filter(i=>state.selected.has(i.qualified_name)).length; $('selectedCount').textContent=`Selected: ${selected} functions${selected && visible!==selected?`, ${visible} visible`:''}`; ['copyJson','copyMarkdown','downloadJson'].forEach(id=>$(id).disabled=!selected); const allVisible=rows.length>0 && rows.every(i=>state.selected.has(i.qualified_name)); const selectAll=$('selectAllVisible'); selectAll.checked=allVisible; selectAll.indeterminate=!allVisible && rows.some(i=>state.selected.has(i.qualified_name)); }
-function renderTable() { const rows=filteredRows().sort(compare); renderExportToolbar(rows); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered functions.`; $('inventoryBody').innerHTML=rows.map(i=>{ const id=i.qualified_name, open=state.expanded.has(id), t=text(i.function_type).toLowerCase(); return `<tr><td><input type="checkbox" data-select-row="${esc(id)}" aria-label="Select ${esc(i.function_name)}" ${state.selected.has(id)?'checked':''}></td><td><button type="button" class="action-cell" data-toggle="${esc(id)}" aria-expanded="${open}">${open?'Hide':'View'}</button></td><td class="function-name" title="${esc(i.qualified_name)}"><a href="${esc(i.source_url || '#')}"><code>${esc(i.function_name)}</code></a><br><small>${esc(i.qualified_name)}</small></td><td><span class="badge ${t}">${esc(i.function_type)}</span></td><td><code>${esc(i.module)}</code></td><td>${chips(i)}</td><td><span class="chip-wrap"><span class="badge review" title="${esc(i.recommended_action)}">${esc(i.recommended_action)}</span></span></td><td class="num">${esc(i.called_by_count)}</td><td class="num">${esc(i.calls_count)}</td><td class="source-cell"><a class="source-link" href="${esc(i.source_url || '#')}">${esc(i.source_path || 'Source unavailable')}</a></td></tr>${open?`<tr class="details"><td colspan="10"><div class="details-panel"><p class="signal-reason"><strong>Why flagged:</strong> ${esc(signalReason(i))}</p><div class="details-grid"><section><h3>Callers</h3>${linkedList(i.callers)}</section><section><h3>Callees</h3>${linkedList(i.callees)}</section><section><h3>Direct internal helpers</h3>${linkedList(i.direct_internal_helpers || [])}</section><section><h3>Metrics</h3><p><strong>Depth:</strong> ${esc(i.deepest_call_chain_depth ?? '—')}</p><p><strong>Repeated helpers:</strong> ${esc(i.repeated_helper_count ?? 0)}</p></section></div></div></td></tr>`:''}`; }).join(''); }
+async function copyExport(format) { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const output=format==='json'?JSON.stringify(refactorPacket(), null, 2):markdownPacket(); if(navigator.clipboard?.writeText){ await navigator.clipboard.writeText(output); $('manualCopy').hidden=true; $('exportStatus').textContent=`Copied ${format.toUpperCase()} for ${items.length} callables.`; } else { showManualCopy(output); $('exportStatus').textContent='Clipboard unavailable. Copy the refactor packet from the text box.'; } }
+function downloadJson() { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/T/,'_').slice(0,15); const blob=new Blob([JSON.stringify(refactorPacket(), null, 2)], {type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fabricops_refactor_packet_${stamp}.json`; link.click(); URL.revokeObjectURL(link.href); $('exportStatus').textContent=`Downloaded JSON for ${items.length} callables.`; }
+function renderExportToolbar(rows) { const selected=selectedItems().length, visible=rows.filter(i=>state.selected.has(i.qualified_name)).length; $('selectedCount').textContent=`Selected: ${selected} callables${selected && visible!==selected?`, ${visible} visible`:''}`; ['copyJson','copyMarkdown','downloadJson'].forEach(id=>$(id).disabled=!selected); const allVisible=rows.length>0 && rows.every(i=>state.selected.has(i.qualified_name)); const selectAll=$('selectAllVisible'); selectAll.checked=allVisible; selectAll.indeterminate=!allVisible && rows.some(i=>state.selected.has(i.qualified_name)); }
+function renderTable() { const rows=filteredRows().sort(compare); renderExportToolbar(rows); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered callables.`; $('inventoryBody').innerHTML=rows.map(i=>{ const id=i.qualified_name, open=state.expanded.has(id), t=text(i.function_type).toLowerCase(); return `<tr><td><input type="checkbox" data-select-row="${esc(id)}" aria-label="Select ${esc(i.function_name)}" ${state.selected.has(id)?'checked':''}></td><td><button type="button" class="action-cell" data-toggle="${esc(id)}" aria-expanded="${open}">${open?'Hide':'View'}</button></td><td class="function-name" title="${esc(i.qualified_name)}"><a href="${esc(i.source_url || '#')}"><code>${esc(i.function_name)}</code></a><br><small>${esc(i.qualified_name)}</small></td><td><span class="badge ${t}">${esc(i.function_type)}</span></td><td><code>${esc(i.module)}</code></td><td>${chips(i)}</td><td><span class="chip-wrap"><span class="badge review" title="${esc(i.recommended_action)}">${esc(i.recommended_action)}</span></span></td><td class="num">${esc(i.called_by_count)}</td><td class="num">${esc(i.calls_count)}</td><td class="source-cell"><a class="source-link" href="${esc(i.source_url || '#')}">${esc(i.source_path || 'Source unavailable')}</a></td></tr>${open?`<tr class="details"><td colspan="10"><div class="details-panel"><p class="signal-reason"><strong>Why flagged:</strong> ${esc(signalReason(i))}</p><div class="details-grid"><section><h3>Callers</h3>${linkedList(i.callers)}</section><section><h3>Callees</h3>${linkedList(i.callees)}</section><section><h3>Direct internal helpers</h3>${linkedList(i.direct_internal_helpers || [])}</section><section><h3>Metrics</h3><p><strong>Depth:</strong> ${esc(i.deepest_call_chain_depth ?? '—')}</p><p><strong>Repeated helpers:</strong> ${esc(i.repeated_helper_count ?? 0)}</p></section></div></div></td></tr>`:''}`; }).join(''); }
 function updateCompatibilityHelp() { $('compatibilityHelp').textContent=compatibilityContext().description; }
 function update() { syncTreeActive(); renderTreeSummary(); renderTable(); } function resetFilters() { state.search=state.type=state.signal=''; state.activeTree=''; ['searchBox','typeFilter','signalFilter'].forEach(id=>$(id).value=''); update(); }
 function applyTree(key) { state.search=''; state.type=''; state.signal=''; state.activeTree=key; $('searchBox').value=''; if(key.startsWith('type:')) state.type=key.slice(5); if(key.startsWith('action:')) state.signal=key.slice(7); $('typeFilter').value=state.type; $('signalFilter').value=state.signal; update(); }
@@ -2267,7 +2415,9 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "",
             "This page embeds the interactive callable functions dashboard.",
             "",
-            "Use the dashboard to inspect public API entrypoints, internal helpers, unreachable functions, caller/callee relationships, helper depth, reuse, and refactor review recommendations.",
+            "Use the dashboard to inspect public API entrypoints, internal helpers, utilities, unreachable callables, caller/callee relationships, helper depth, reuse, and refactor review recommendations.",
+            "",
+            "FabricOps callables are organized into three dependency layers: public API callables, internal helpers, and utilities. Public callables form the supported user-facing API and may depend on internal helpers or utilities. Internal helpers may depend only on utilities. Utilities should be leaf callables and should not depend on other project callables. Same-layer calls and upward calls are flagged for review so the callable graph stays directional and safer to refactor.",
             "",
             "[Open full dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }",
             "",
@@ -2958,7 +3108,8 @@ def main() -> None:
         return qn.split(".")[-1]
 
     def _module_name(qn: str) -> str:
-        return qn.split(".")[-2]
+        parts = qn.split(".")
+        return parts[1] if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     for generated_page in MODULE_DIR.glob("*.md"):
         if generated_page.name != "index.md" and generated_page.stem not in MAJOR_IMPLEMENTATION_MODULES:
