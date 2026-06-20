@@ -4,7 +4,7 @@ Create or choose the Microsoft Fabric runtime artifacts that the guided demo use
 
 ## What you prepare
 
-This page consolidates workspace, lakehouse, warehouse, Environment, wheel upload, and notebook-copy setup into one practical sequence.
+This page consolidates workspace, lakehouse, warehouse, Environment, wheel upload, and notebook-copy setup into one practical Fabric-side sequence.
 
 By the end, your copied notebooks can import `fabricops_kit`, and `00_env_config` can point every `METADATA_*` operation at the configured metadata lakehouse rather than an attached default lakehouse.
 
@@ -29,6 +29,9 @@ Create or select the Fabric data items that the demo will route through `00_env_
 
 Record the workspace, lakehouse, warehouse, and schema names so you can enter them in `00_env_config` during [Run Environment Setup](run-environment-setup.md).
 
+!!! note "Metadata target routing"
+    Metadata reads and writes should use the configured `metadata_lakehouse` target from `00_env_config`. Do not rely on the attached or default lakehouse for `METADATA_*` tables.
+
 ## 3. Create or select a Fabric Environment
 
 1. In the target Fabric workspace, create a new Fabric Environment or open the Environment that should run the guided demo notebooks.
@@ -46,6 +49,9 @@ Use the `.whl` file built in [Create Wheel](create-wheel.md).
 5. Restart notebook sessions after changing the Environment if Fabric prompts you or if sessions were already running.
 
 ![Fabric custom wheel install example](../assets/fabric-example-install-custom-whl.png)
+
+!!! tip "Use the wheel artifact"
+    Upload `dist/*.whl`, not a `.zip`, the `.tar.gz` source distribution, `uv.lock`, or the repository folder.
 
 ## 5. Copy template notebooks
 
@@ -70,6 +76,8 @@ For notebook responsibilities and editable settings, see [Template Notebooks](..
 3. Save the notebook after selecting the Environment.
 4. Restart the notebook session if the session was already running.
 
+A notebook must be attached to the Environment before it can import the custom library. Restart the session after attachment or library changes so the runtime loads the published Environment.
+
 ![Fabric workspace setup example](../assets/fabric-example-workspace-setup.png)
 
 ![Fabric notebook Environment selection example](../assets/fabric-example-set-notebook-environment.png)
@@ -84,6 +92,26 @@ import fabricops_kit as fsk
 print(f"FabricOps Starter Kit version: {fsk.__version__}")
 print(f"Available helper count: {len(fsk.__all__)}")
 ```
+
+Use the module name `fabricops_kit`, not the package distribution name `fabricops-kit`.
+
+If the import fails, check the Fabric setup in this order:
+
+1. The uploaded file is the generated `.whl` from `dist/`.
+2. The Environment has been saved or published after the upload.
+3. The notebook is attached to that Environment.
+4. The notebook session was restarted after attaching or updating the Environment.
+5. The notebook import uses `fabricops_kit`.
+
+## 8. Confirm first runtime readiness
+
+Before you run [Run Environment Setup](run-environment-setup.md), confirm the workspace is ready for the first runtime configuration pass:
+
+1. The copied notebooks are saved in the intended workspace.
+2. The Fabric Environment is saved or published with the uploaded wheel.
+3. At least one copied notebook can run `import fabricops_kit as fsk` successfully.
+4. The `metadata_lakehouse`, `source_lakehouse`, `unified_lakehouse`, and optional `product_warehouse` names are recorded for `00_env_config`.
+5. The metadata target is planned for configured `metadata` routing rather than default-lakehouse reads or writes.
 
 ## Expected result
 

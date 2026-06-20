@@ -33,7 +33,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="guided-demo/">
     <span class="fabricops-landing-card__title">Guided Demo</span>
-    <span class="fabricops-landing-card__body">Install, copy templates, and run the first smoke test.</span>
+    <span class="fabricops-landing-card__body">Build the wheel, set up Fabric artifacts, and run the first smoke test.</span>
   </a>
   <a class="fabricops-landing-card" href="how-fabricops-works/">
     <span class="fabricops-landing-card__title">How FabricOps Works</span>
