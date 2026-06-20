@@ -65,6 +65,37 @@ def _exported_symbols() -> list[str]:
     raise AssertionError("Could not parse __all__")
 
 
+
+def test_generated_callable_surface_matches_all_exports() -> None:
+    """Verify generated callable entries come from package __all__."""
+    exported_symbols = set(_exported_symbols())
+    removed_symbols = {
+        "enforce_dq_rules",
+        "get_selected_agreement",
+        "widget_select_agreement",
+    }
+    automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
+    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
+    callable_flow = json.loads((REFERENCE_DIR / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
+
+    automation_callables = {entry["name"] for entry in automation_manifest if entry.get("type") == "callable"}
+    function_callables = {
+        entry["name"]
+        for entry in function_manifest
+        if entry.get("classification") == "Callable" and entry.get("docs_path", "").startswith("api/reference/")
+    }
+    page_callables = {path.stem for path in API_REFERENCE_DIR.glob("*.md")}
+
+    assert automation_callables == exported_symbols
+    assert function_callables == exported_symbols
+    assert page_callables == exported_symbols
+    assert set(callable_flow["public_callable_dependencies"]) == exported_symbols
+    assert {row["callable"] for row in callable_flow["callable_helper_summary"]} == exported_symbols
+    assert not (removed_symbols & automation_callables)
+    assert not (removed_symbols & function_callables)
+    assert not (removed_symbols & page_callables)
+    assert not (removed_symbols & set(callable_flow["public_callable_dependencies"]))
+
 def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
     """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
     from scripts.generate_function_reference import _collect_refactor_signals, _render_refactor_signals
