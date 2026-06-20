@@ -3,6 +3,7 @@
 Use this page as a function lookup after you understand the notebook flow. The generated public function reference exposes 20 public Starter Kit functions and tracks 238 supporting internal functions for maintainers.
 
 - Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.
+- Use the [Public callable flow map](callable-flow.md) for the global public callable dependency view and nested internal helper summary.
 - Use the Function catalogue below to browse the 20 public Starter Kit functions called by starter templates. Supporting internal functions remain source-level implementation details, not standalone public API.
 - Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.
 

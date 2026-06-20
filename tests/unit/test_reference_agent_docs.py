@@ -126,13 +126,64 @@ def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
     automation_manifest = REFERENCE_DIR / "_data" / "automation-manifest.json"
     function_manifest = REFERENCE_DIR / "_data" / "function-manifest.json"
     refactor_signals = REFERENCE_DIR / "_data" / "refactor-signals.json"
+    callable_flow = REFERENCE_DIR / "_data" / "callable-flow.json"
 
     assert automation_manifest.exists()
     assert function_manifest.exists()
     assert refactor_signals.exists()
+    assert callable_flow.exists()
     assert json.loads(automation_manifest.read_text(encoding="utf-8"))
     assert json.loads(function_manifest.read_text(encoding="utf-8"))
     assert json.loads(refactor_signals.read_text(encoding="utf-8"))
+    assert json.loads(callable_flow.read_text(encoding="utf-8"))
+
+
+def test_callable_flow_page_and_json_cover_public_surface() -> None:
+    """Verify global callable flow docs and structured metadata are generated."""
+    flow_page = REFERENCE_DIR / "callable-flow.md"
+    flow_data_path = REFERENCE_DIR / "_data" / "callable-flow.json"
+    exported_symbols = set(_exported_symbols())
+
+    assert flow_page.exists()
+    flow_text = flow_page.read_text(encoding="utf-8")
+    assert "# Public callable flow map" in flow_text
+    assert "## Public callable dependency map" in flow_text
+    assert "## Callable helper summary" in flow_text
+    assert "## Shared helper usage" in flow_text
+    assert "## Refactor hotspot ranking" in flow_text
+    assert "../api/reference/run_table_guardrails/" in flow_text
+    assert "independent entry point" in flow_text
+
+    flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
+    assert {
+        "public_callable_dependencies",
+        "callable_helper_summary",
+        "shared_helper_usage",
+        "refactor_hotspots",
+    } <= set(flow_data)
+    assert set(flow_data["public_callable_dependencies"]) == exported_symbols
+
+    summary_by_callable = {row["callable"]: row for row in flow_data["callable_helper_summary"]}
+    assert set(summary_by_callable) == exported_symbols
+    guardrail_summary = summary_by_callable["run_table_guardrails"]
+    assert guardrail_summary["unique_internal_helper_count"] > 0
+    assert guardrail_summary["direct_internal_helpers"]
+    assert guardrail_summary["deepest_call_chain_depth"] > 0
+    assert isinstance(guardrail_summary["calls_public_callable"], bool)
+
+    assert flow_data["shared_helper_usage"]
+    assert all(item["public_callable_count"] > 1 for item in flow_data["shared_helper_usage"])
+    assert flow_data["refactor_hotspots"]
+    assert all(
+        {
+            "score",
+            "unique_internal_helper_count",
+            "deepest_call_chain_depth",
+            "repeated_helper_count",
+            "shared_helper_overlap_count",
+        } <= set(item)
+        for item in flow_data["refactor_hotspots"]
+    )
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:

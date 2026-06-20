@@ -29,6 +29,8 @@ MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
 AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
+CALLABLE_FLOW_PAGE_PATH = ROOT / "docs" / "reference" / "callable-flow.md"
+CALLABLE_FLOW_DATA_PATH = REFERENCE_DATA_DIR / "callable-flow.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
@@ -1522,6 +1524,296 @@ def _render_refactor_signals(
     return lines
 
 
+def _reachable_callables(
+    root_qn: str,
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> set[str]:
+    """Return package-local callable qualified names reachable from a root."""
+    reachable: set[str] = set()
+
+    def visit(qn: str, ancestors: set[str]) -> None:
+        for child in sorted(set(calls_by_qn.get(qn, []))):
+            if child not in node_by_qn or child in ancestors:
+                continue
+            reachable.add(child)
+            visit(child, ancestors | {child})
+
+    visit(root_qn, {root_qn})
+    return reachable
+
+
+def _deepest_call_chain_depth(
+    root_qn: str,
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+) -> int:
+    """Return the deepest package-local call-chain depth below the root."""
+
+    def depth(qn: str, ancestors: set[str]) -> int:
+        child_depths = [
+            1 + depth(child, ancestors | {child})
+            for child in sorted(set(calls_by_qn.get(qn, [])))
+            if child in node_by_qn and child not in ancestors
+        ]
+        return max(child_depths, default=0)
+
+    return depth(root_qn, {root_qn})
+
+
+def _callable_flow_source_link(qn: str, module_data: dict[str, dict[str, Any]]) -> str | None:
+    """Return a source URL for a callable flow node when source metadata exists."""
+    module_name = qn.split(".")[-2]
+    callable_name = qn.split(".")[-1]
+    source_location = module_data.get(module_name, {}).get("source_locations", {}).get(callable_name, {})
+    if not source_location:
+        return None
+    return github_source_url(
+        f"src/fabricops_kit/{module_name}.py",
+        source_location.get("start_line"),
+        source_location.get("end_line"),
+    )
+
+
+def _build_callable_flow_data(
+    public_qns: list[str],
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Build the global public callable flow map from existing call graph data."""
+    public_qn_set = set(public_qns)
+    reachable_by_public: dict[str, set[str]] = {}
+    helpers_by_public: dict[str, set[str]] = {}
+    public_dependencies: dict[str, list[dict[str, str]]] = {}
+    helper_users: dict[str, set[str]] = {}
+    summary: list[dict[str, Any]] = []
+
+    for public_qn in public_qns:
+        public_name = node_by_qn[public_qn]["callable_name"]
+        excluded_helpers = INTERNAL_HELPER_EXCLUSIONS.get(public_name, set())
+        reachable = _reachable_callables(public_qn, calls_by_qn, node_by_qn)
+        reachable_by_public[public_qn] = reachable
+        helper_qns = {
+            qn
+            for qn in reachable
+            if qn not in excluded_helpers and _is_internal_helper_qn(qn, node_by_qn)
+        }
+        helpers_by_public[public_qn] = helper_qns
+        for helper_qn in helper_qns:
+            helper_users.setdefault(helper_qn, set()).add(public_qn)
+        public_deps = sorted(
+            (qn for qn in reachable if qn in public_qn_set and qn != public_qn),
+            key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
+        )
+        public_dependencies[public_name] = [
+            {
+                "callable": node_by_qn[dep_qn]["callable_name"],
+                "qualified_name": dep_qn,
+                "module": node_by_qn[dep_qn]["module_name"],
+                "docs_path": f"docs/api/reference/{node_by_qn[dep_qn]['callable_name']}.md",
+                "docs_url": f"../api/reference/{node_by_qn[dep_qn]['callable_name']}/",
+            }
+            for dep_qn in public_deps
+        ]
+
+    shared_helper_qns = {helper_qn for helper_qn, users in helper_users.items() if len(users) > 1}
+    for public_qn in public_qns:
+        public_name = node_by_qn[public_qn]["callable_name"]
+        direct_helpers = sorted(
+            {
+                qn
+                for qn in calls_by_qn.get(public_qn, [])
+                if qn in node_by_qn
+                and qn not in INTERNAL_HELPER_EXCLUSIONS.get(public_name, set())
+                and _is_internal_helper_qn(qn, node_by_qn)
+            },
+            key=lambda qn: (node_by_qn[qn]["module_name"], node_by_qn[qn]["callable_name"].lower()),
+        )
+        refactor_signals = _collect_refactor_signals(
+            public_qn,
+            calls_by_qn,
+            node_by_qn,
+            module_data,
+            excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(public_name, set()),
+        )
+        summary.append(
+            {
+                "callable": public_name,
+                "qualified_name": public_qn,
+                "module": node_by_qn[public_qn]["module_name"],
+                "docs_path": f"docs/api/reference/{public_name}.md",
+                "docs_url": f"../api/reference/{public_name}/",
+                "unique_internal_helper_count": len(helpers_by_public[public_qn]),
+                "direct_internal_helpers": [
+                    {
+                        "helper": node_by_qn[helper_qn]["callable_name"],
+                        "qualified_name": helper_qn,
+                        "module": node_by_qn[helper_qn]["module_name"],
+                        "source_url": _callable_flow_source_link(helper_qn, module_data),
+                    }
+                    for helper_qn in direct_helpers
+                ],
+                "deepest_call_chain_depth": _deepest_call_chain_depth(public_qn, calls_by_qn, node_by_qn),
+                "repeated_helper_count": len(refactor_signals["repeated_helpers"]),
+                "calls_public_callable": bool(public_dependencies[public_name]),
+                "public_callables_called": public_dependencies[public_name],
+                "shared_helper_overlap_count": len(helpers_by_public[public_qn] & shared_helper_qns),
+            }
+        )
+
+    shared_helper_usage = [
+        {
+            "helper": node_by_qn[helper_qn]["callable_name"],
+            "qualified_name": helper_qn,
+            "module": node_by_qn[helper_qn]["module_name"],
+            "source_url": _callable_flow_source_link(helper_qn, module_data),
+            "public_callables": [
+                {
+                    "callable": node_by_qn[public_qn]["callable_name"],
+                    "qualified_name": public_qn,
+                    "module": node_by_qn[public_qn]["module_name"],
+                    "docs_url": f"../api/reference/{node_by_qn[public_qn]['callable_name']}/",
+                }
+                for public_qn in sorted(helper_users[helper_qn], key=lambda qn: node_by_qn[qn]["callable_name"].lower())
+            ],
+            "public_callable_count": len(helper_users[helper_qn]),
+        }
+        for helper_qn in sorted(
+            shared_helper_qns,
+            key=lambda qn: (-len(helper_users[qn]), node_by_qn[qn]["module_name"], node_by_qn[qn]["callable_name"].lower()),
+        )
+    ]
+
+    refactor_hotspots = []
+    max_unique = max((row["unique_internal_helper_count"] for row in summary), default=0) or 1
+    max_depth = max((row["deepest_call_chain_depth"] for row in summary), default=0) or 1
+    max_repeated = max((row["repeated_helper_count"] for row in summary), default=0) or 1
+    max_shared = max((row["shared_helper_overlap_count"] for row in summary), default=0) or 1
+    for row in summary:
+        score = round(
+            (row["unique_internal_helper_count"] / max_unique * 40)
+            + (row["deepest_call_chain_depth"] / max_depth * 25)
+            + (row["repeated_helper_count"] / max_repeated * 20)
+            + (row["shared_helper_overlap_count"] / max_shared * 15),
+            2,
+        )
+        refactor_hotspots.append(
+            {
+                "callable": row["callable"],
+                "qualified_name": row["qualified_name"],
+                "module": row["module"],
+                "docs_url": row["docs_url"],
+                "score": score,
+                "unique_internal_helper_count": row["unique_internal_helper_count"],
+                "deepest_call_chain_depth": row["deepest_call_chain_depth"],
+                "repeated_helper_count": row["repeated_helper_count"],
+                "shared_helper_overlap_count": row["shared_helper_overlap_count"],
+            }
+        )
+
+    return {
+        "public_callable_dependencies": public_dependencies,
+        "callable_helper_summary": sorted(summary, key=lambda row: row["callable"].lower()),
+        "shared_helper_usage": shared_helper_usage,
+        "refactor_hotspots": sorted(refactor_hotspots, key=lambda row: (-row["score"], row["callable"].lower())),
+    }
+
+
+def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
+    """Render the global callable flow Markdown page."""
+    lines = [
+        "# Public callable flow map",
+        "",
+        "Generated maintainer view of public FabricOps callable entry points, public-to-public dependencies, and nested internal helper usage. It complements the per-callable **Call flow** sections and does not replace them.",
+        "",
+        "Use this page as a review aid for separation, helper reuse, and refactor planning; it is not an automatic refactor instruction.",
+        "",
+        "## Public callable dependency map",
+        "",
+        "This high-level map shows public callable to public callable calls only. Independent entry points are shown even when they do not call another public callable.",
+        "",
+    ]
+    for callable_name in sorted(flow_data["public_callable_dependencies"]):
+        deps = flow_data["public_callable_dependencies"][callable_name]
+        callable_link = f"[`{callable_name}`](../api/reference/{callable_name}/)"
+        if deps:
+            dep_links = ", ".join(f"[`{item['callable']}`]({item['docs_url']})" for item in deps)
+            lines.append(f"- {callable_link} → {dep_links}")
+        else:
+            lines.append(f"- {callable_link} — independent entry point")
+
+    lines.extend(
+        [
+            "",
+            "## Callable helper summary",
+            "",
+            "| Public callable | Module | Unique internal helper count | Direct internal helpers | Deepest call chain depth | Repeated helper count | Calls another public callable |",
+            "| --- | --- | ---: | --- | ---: | ---: | --- |",
+        ]
+    )
+    for row in flow_data["callable_helper_summary"]:
+        direct_helpers = ", ".join(
+            (
+                f"[`{helper['helper']}`]({helper['source_url']})"
+                if helper.get("source_url")
+                else f"`{helper['helper']}`"
+            )
+            for helper in row["direct_internal_helpers"]
+        ) or "—"
+        calls_public = "Yes" if row["calls_public_callable"] else "No"
+        lines.append(
+            f"| [`{row['callable']}`]({row['docs_url']}) | `{row['module']}` | "
+            f"{row['unique_internal_helper_count']} | {direct_helpers} | "
+            f"{row['deepest_call_chain_depth']} | {row['repeated_helper_count']} | {calls_public} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Shared helper usage",
+            "",
+            "Internal helpers reached by more than one public callable.",
+            "",
+            "| Helper | Qualified name | Module | Public callables that reach it | Public callable count |",
+            "| --- | --- | --- | --- | ---: |",
+        ]
+    )
+    if flow_data["shared_helper_usage"]:
+        for row in flow_data["shared_helper_usage"]:
+            helper = f"[`{row['helper']}`]({row['source_url']})" if row.get("source_url") else f"`{row['helper']}`"
+            public_callables = ", ".join(
+                f"[`{item['callable']}`]({item['docs_url']})" for item in row["public_callables"]
+            )
+            lines.append(
+                f"| {helper} | `{row['qualified_name']}` | `{row['module']}` | "
+                f"{public_callables} | {row['public_callable_count']} |"
+            )
+    else:
+        lines.append("| — | — | — | No shared internal helper usage detected. | 0 |")
+
+    lines.extend(
+        [
+            "",
+            "## Refactor hotspot ranking",
+            "",
+            "Ranked review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Higher scores indicate call-tree shapes worth reviewing, not required refactors.",
+            "",
+            "| Rank | Public callable | Module | Score | Unique helpers | Deepest depth | Repeated helpers | Shared helper overlap |",
+            "| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for rank, row in enumerate(flow_data["refactor_hotspots"], start=1):
+        lines.append(
+            f"| {rank} | [`{row['callable']}`]({row['docs_url']}) | `{row['module']}` | "
+            f"{row['score']} | {row['unique_internal_helper_count']} | "
+            f"{row['deepest_call_chain_depth']} | {row['repeated_helper_count']} | "
+            f"{row['shared_helper_overlap_count']} |"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
     """Indent every physical Markdown line for MkDocs Material blocks."""
     prefix = " " * spaces
@@ -2666,6 +2958,7 @@ def main() -> None:
         f"Use this page as a function lookup after you understand the notebook flow. The generated public function reference exposes {len(function_symbol_map)} public Starter Kit functions and tracks {supporting_internal_count} supporting internal functions for maintainers.",
         "",
         "- Use the [Glossary](glossary.md) for simple definitions of repeated FabricOps terms used on callable pages.",
+        "- Use the [Public callable flow map](callable-flow.md) for the global public callable dependency view and nested internal helper summary.",
         "- Use the Function catalogue below to browse the 20 public Starter Kit functions called by starter templates. Supporting internal functions remain source-level implementation details, not standalone public API.",
         "- Use Implementation Modules only when debugging or maintaining current major source boundaries; they do not document every `.py` file.",
         "",
@@ -3199,6 +3492,13 @@ def main() -> None:
         json.dumps(refactor_signals_manifest, indent=2) + "\n",
         encoding="utf-8",
     )
+    public_flow_qns = sorted(
+        [qn for qn, node in node_by_qn.items() if node.get("exported")],
+        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
+    )
+    callable_flow_data = _build_callable_flow_data(public_flow_qns, calls_by_qn, node_by_qn, module_data)
+    CALLABLE_FLOW_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
+    CALLABLE_FLOW_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
     _remove_stale_function_taxonomy_audit()
 
 
