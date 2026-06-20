@@ -1,79 +1,5 @@
 # widget_enrich_table_metadata
 
-Render a consolidated column enrichment widget.
-
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>governance_review</code></span>
-<span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02_pipeline</span>
-<span class="reference-chip">03_governance</span>
-</p>
-
-**Used in notebooks:** `02_pipeline`, `03_governance`
-
-## Usage guidance
-
-### Use when
-
-- Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.
-
-### Do not use when
-
-- Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.
-
-### Additional context
-
-Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def widget_enrich_table_metadata(
-    guardrail_state: Mapping[str, Any],
-    spark_session: Any,
-    context: dict[str, Any] | None=None,
-    source_notebook_type: str='02_pipeline',
-    created_by_role: str='engineering',
-) -> dict[str, Any]:
-```
-
-</div>
-
-## Example usage
-
-Example usage not documented yet.
-
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `guardrail_state` | `Mapping[str, Any]` | Yes | Target handover state returned by :func:`widget_select_guardrail_target`. |
-| `spark_session` | `Any` | Yes | Spark session used to create write DataFrames. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
-| `source_notebook_type` | `str` | No | Notebook type stamped on authored records. |
-| `created_by_role` | `str` | No | Role stamped on authored records. |
-
-## Returns
-
-Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.
-
-### Return interpretation
-
-The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT_RULES.
-
-## Raises / Errors
-
-Not documented yet
-
-### Common failure causes
-
-- The selected guardrail target has no column-level evidence.
-- Configured custom fields omit a field name.
-- Metadata lakehouse writes cannot be routed through 00_env_config.
-
 ??? info "Uses 33 internal helper functions"
 
     <div class="reference-call-tree" role="tree">
@@ -149,6 +75,80 @@ Not documented yet
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161"><code>resolve_fabric_context(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83"><code>get_default_fabric_context(...)</code></a></div>
     </div>
+
+Render a consolidated column enrichment widget.
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">Module: <code>governance_review</code></span>
+<span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">03_governance</span>
+</p>
+
+**Used in notebooks:** `02_pipeline`, `03_governance`
+
+## Usage guidance
+
+### Use when
+
+- Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.
+
+### Do not use when
+
+- Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.
+
+### Additional context
+
+Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.
+
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def widget_enrich_table_metadata(
+    guardrail_state: Mapping[str, Any],
+    spark_session: Any,
+    context: dict[str, Any] | None=None,
+    source_notebook_type: str='02_pipeline',
+    created_by_role: str='engineering',
+) -> dict[str, Any]:
+```
+
+</div>
+
+## Example usage
+
+Example usage not documented yet.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `guardrail_state` | `Mapping[str, Any]` | Yes | Target handover state returned by :func:`widget_select_guardrail_target`. |
+| `spark_session` | `Any` | Yes | Spark session used to create write DataFrames. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
+| `source_notebook_type` | `str` | No | Notebook type stamped on authored records. |
+| `created_by_role` | `str` | No | Role stamped on authored records. |
+
+## Returns
+
+Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.
+
+### Return interpretation
+
+The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT_RULES.
+
+## Raises / Errors
+
+Not documented yet
+
+### Common failure causes
+
+- The selected guardrail target has no column-level evidence.
+- Configured custom fields omit a field name.
+- Metadata lakehouse writes cannot be routed through 00_env_config.
 
 ## Glossary
 

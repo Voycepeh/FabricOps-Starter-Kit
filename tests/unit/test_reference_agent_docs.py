@@ -476,8 +476,8 @@ def test_standalone_internal_pages_are_not_generated_by_default() -> None:
     assert internal_pages == []
 
 
-def test_callable_pages_embed_public_first_collapsed_call_flow() -> None:
-    """Verify callable pages keep public sections before collapsed helper flow."""
+def test_callable_pages_embed_title_first_collapsed_call_flow() -> None:
+    """Verify callable pages keep the collapsed helper flow immediately after the title."""
     callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
 
     assert callable_pages
@@ -512,7 +512,16 @@ def test_callable_pages_embed_public_first_collapsed_call_flow() -> None:
         assert "\n## `_" not in text, page
         if 'class="reference-call-tree"' in text:
             call_flow_pos = text.index('??? info "Uses ')
-            assert text.index("## Raises / Errors") < call_flow_pos < text.index("## See also"), page
+            first_description_pos = min(
+                position
+                for marker in (
+                    '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
+                    "**Used in notebooks:**",
+                    "## Signature",
+                )
+                for position in [text.index(marker)]
+            )
+            assert text.index("# ") < call_flow_pos < first_description_pos, page
             assert '```text' not in text.split('??? info "Uses ', 1)[1].split("##", 1)[0], page
 
 
@@ -695,6 +704,20 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
         assert f'href="{slug}/"' not in match.group("body"), page
         assert f'href="../{slug}/"' not in first_row, page
         assert f"<code>{slug}(...)</code>" in first_row, page
+
+
+def test_public_callable_call_tree_renders_before_description() -> None:
+    """Verify public callable helper trees appear directly below the title."""
+    text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
+    title_index = text.index("# prepare_pipeline_table_configs")
+    call_tree_index = text.index('??? info "Uses 4 internal helper functions"')
+    description_index = text.index("Prepare source or target table configs for 02_pipeline.")
+    chips_index = text.index('<span class="reference-chip">Module: <code>pipeline</code></span>')
+    usage_index = text.index("**Used in notebooks:** `02_pipeline`")
+
+    assert title_index < call_tree_index < description_index < chips_index < usage_index
+    assert text.count('??? info "Uses 4 internal helper functions"') == 1
+
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
     """Verify callable pages omit machine metadata from public pages."""
