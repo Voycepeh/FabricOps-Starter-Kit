@@ -47,6 +47,11 @@ DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
 CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
 
+def plural_word(count: int, singular: str, plural: str) -> str:
+    """Return singular or plural text for a count."""
+    return singular if count == 1 else plural
+
+
 def markdown_anchor(value: str) -> str:
     """Return a Material for MkDocs-compatible heading anchor."""
     anchor = re.sub(r"[^a-z0-9 -]", "", value.lower())
@@ -1764,14 +1769,9 @@ def _build_callable_flow_data(
 
     for public_qn in public_qns:
         public_name = node_by_qn[public_qn]["callable_name"]
-        excluded_helpers = INTERNAL_HELPER_EXCLUSIONS.get(public_name, set())
         reachable = _reachable_callables(public_qn, calls_by_qn, node_by_qn)
         reachable_by_public[public_qn] = reachable
-        helper_qns = {
-            qn
-            for qn in reachable
-            if qn not in excluded_helpers and _is_internal_helper_qn(qn, node_by_qn)
-        }
+        helper_qns = set(_callable_flow_internal_helper_qns(public_qn, calls_by_qn, node_by_qn))
         helpers_by_public[public_qn] = helper_qns
         for helper_qn in helper_qns:
             helper_users.setdefault(helper_qn, set()).add(public_qn)
@@ -1818,6 +1818,15 @@ def _build_callable_flow_data(
                 "docs_path": f"docs/api/reference/{public_name}.md",
                 "docs_url": _public_callable_docs_url(public_name),
                 "unique_internal_helper_count": len(helpers_by_public[public_qn]),
+                "unique_internal_helpers": [
+                    {
+                        "helper": node_by_qn[helper_qn]["callable_name"],
+                        "qualified_name": helper_qn,
+                        "module": node_by_qn[helper_qn]["module_name"],
+                        "source_url": _callable_flow_source_link(helper_qn, module_data),
+                    }
+                    for helper_qn in _callable_flow_internal_helper_qns(public_qn, calls_by_qn, node_by_qn)
+                ],
                 "direct_internal_helpers": [
                     {
                         "helper": node_by_qn[helper_qn]["callable_name"],
@@ -3101,8 +3110,8 @@ def main() -> None:
             '<div class="module-summary-cards">'
             f'<span class="reference-chip">Callable count: {callable_count}</span>'
             f'<span class="reference-chip">Internal helpers: {internal_count}</span>'
-            f'<span class="reference-chip">Uses {len(outbound_mods)} external modules</span>'
-            f'<span class="reference-chip">Used by {len(inbound_mods)} external modules</span>'
+            f'<span class="reference-chip">Uses {len(outbound_mods)} external {plural_word(len(outbound_mods), "module", "modules")}</span>'
+            f'<span class="reference-chip">Used by {len(inbound_mods)} external {plural_word(len(inbound_mods), "module", "modules")}</span>'
             '</div>'
         )
         lines.extend(["## Module overview badges", "", summary_cards, ""])
@@ -3572,10 +3581,6 @@ def main() -> None:
         '  </section>',
         '</div>',
         "",
-        "Use the catalogue on this page before opening individual callable pages. If you need source-level ownership or internal helper relationships, open the module reference first so navigation follows the same hierarchy as the breadcrumbs.",
-        "",
-        "[Open Module Reference](../api/modules/){ .md-button } [Back to Template Notebooks](../notebook-templates-implementation-guide/){ .md-button }",
-        "",
     ]
 
     ref.extend(
@@ -3636,10 +3641,8 @@ def main() -> None:
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         dependency_meta = dependency_callables.get(qn, {})
         calls = [item for item in dependency_meta.get("calls", []) if not _hide_from_public_relationships(item)]
-        used_by = [item for item in dependency_meta.get("used_by", []) if not _hide_from_public_relationships(item)]
         called_public = [item for item in calls if node_by_qn.get(item, {}).get("exported")]
-        called_internal = [item for item in calls if not node_by_qn.get(item, {}).get("exported")]
-        public_used_by = [item for item in used_by if node_by_qn.get(item, {}).get("exported")]
+        nested_internal_helpers = _callable_flow_internal_helper_qns(qn, calls_by_qn, node_by_qn)
 
         def _catalogue_relationship_list(items: list[str]) -> str:
             rows = []
@@ -3666,17 +3669,6 @@ def main() -> None:
                 + "</details>"
             )
 
-        notebook_usage_count = len(template_usage_by_symbol.get(name, []))
-        notebook_usage_noun = "notebook" if notebook_usage_count == 1 else "notebooks"
-        notebook_usage_details = (
-            '    <details class="reference-count-details"><summary>'
-            f'<span class="reference-chip reference-chip-count">Used in {_esc(str(notebook_usage_count))} {notebook_usage_noun}</span>'
-            "</summary><ul>"
-            + "".join(f'<li><code>{_esc(notebook)}</code></li>' for notebook in template_usage_by_symbol.get(name, []))
-            + "</ul></details>"
-            if template_usage_by_symbol.get(name)
-            else ""
-        )
         all_items.extend(
             [
                 (
@@ -3703,10 +3695,8 @@ def main() -> None:
                     else ""
                 ),
                 '  <div class="reference-catalogue-item-counts">',
-                notebook_usage_details,
-                _catalogue_count_details("Used by {count} public function", "Used by {count} public functions", public_used_by),
                 _catalogue_count_details("Calls {count} public function", "Calls {count} public functions", called_public),
-                _catalogue_count_details("Calls {count} internal helper", "Calls {count} internal helpers", called_internal),
+                _catalogue_count_details("Calls {count} nested helper function", "Calls {count} nested helper functions", nested_internal_helpers),
                 "  </div>",
                 "</article>",
             ]
