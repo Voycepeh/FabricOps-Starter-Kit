@@ -3115,6 +3115,10 @@ def main() -> None:
         '  </section>',
         '</div>',
         "",
+        "Use the catalogue on this page before opening individual callable pages. If you need source-level ownership or internal helper relationships, open the module reference first so navigation follows the same hierarchy as the breadcrumbs.",
+        "",
+        "[Open Module Reference](../api/modules/){ .md-button } [Back to Template Notebooks](../notebook-templates-implementation-guide/){ .md-button }",
+        "",
     ]
 
     ref.extend(

@@ -193,3 +193,9 @@ Use [`display_guardrail_results`](../api/reference/display_guardrail_results.md)
 - Treat `append` and `overwrite` as physical write modes only; profile behaviour uses `static_data`, `changing_data`, or `skip`.
 - Use warning DQ rules for observability that should not block writes, and error DQ rules for checks that must stop publication.
 - Do not reset baselines silently in `02_pipeline`; intentional changes should be reviewed by governance or represented by superseding rule/evidence history.
+
+## Related navigation
+
+Use the Function Reference when you need callable-level details for pipeline helpers; the inline links above remain direct because they sit next to the notebook step that invokes each function.
+
+[Back to Template Notebooks](index.md){ .md-button } [View Function Reference](../reference/index.md){ .md-button }

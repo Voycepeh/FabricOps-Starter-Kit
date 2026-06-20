@@ -89,3 +89,9 @@ After this notebook runs successfully:
 - source, unified, product, and metadata targets are validated;
 - FabricOps metadata tables exist in the configured metadata target;
 - downstream notebooks can safely write agreement, catalogue, guardrail, lineage, pipeline, governance, and enrichment evidence.
+
+## Related navigation
+
+Use the Function Reference when you need callable-level details for `setup_notebook` or `setup_metadata_tables`; the inline links above remain direct because this page is already explaining those exact setup calls.
+
+[Back to Template Notebooks](index.md){ .md-button } [View Function Reference](../reference/index.md){ .md-button }

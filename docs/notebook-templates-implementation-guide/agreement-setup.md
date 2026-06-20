@@ -86,3 +86,9 @@ The handoff works because `01_agreement` has already written:
 - supporting file-reference evidence to [`METADATA_DATA_AGREEMENT_EVIDENCE`](../reference/metadata/metadata_data_agreement_evidence.md).
 
 `02_pipeline` then uses [`widget_select_agreement`](../api/modules/data_agreement.md#widget_select_agreement) and [`get_selected_agreement`](../api/modules/data_agreement.md#get_selected_agreement) to read the selected agreement context for pipeline metadata and evidence.
+
+## Related navigation
+
+Use the Function Reference when you need callable-level details for agreement widgets; the inline widget links above remain direct because each section explains the exact function used at that notebook step.
+
+[Back to Template Notebooks](index.md){ .md-button } [View Function Reference](../reference/index.md){ .md-button }

@@ -57,3 +57,9 @@ Governance review should not rewrite runtime outcome evidence in `METADATA_GUARD
 - Use [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md) for formal approve/reject/replace/deactivate/history workflows.
 - Keep enrichment separate from executable checks: enrichment describes business context; guardrail rules drive enforcement.
 - Use runtime result context to explain why a rule needs review, but write decisions to rule/enrichment metadata, not result rows.
+
+## Related navigation
+
+Use the Function Reference when you need callable-level details for governance widgets; the inline links above remain direct because each section explains the review or authoring workflow that uses the function.
+
+[Back to Template Notebooks](index.md){ .md-button } [View Function Reference](../reference/index.md){ .md-button }
