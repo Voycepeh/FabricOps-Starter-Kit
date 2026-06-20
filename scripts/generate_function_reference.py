@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
+import html
 import json
 import os
 from pathlib import Path
@@ -1597,7 +1598,7 @@ def _build_callable_flow_data(
                 "qualified_name": dep_qn,
                 "module": node_by_qn[dep_qn]["module_name"],
                 "docs_path": f"docs/api/reference/{node_by_qn[dep_qn]['callable_name']}.md",
-                "docs_url": f"../api/reference/{node_by_qn[dep_qn]['callable_name']}/",
+                "docs_url": _public_callable_docs_url(node_by_qn[dep_qn]['callable_name']),
             }
             for dep_qn in public_deps
         ]
@@ -1628,7 +1629,7 @@ def _build_callable_flow_data(
                 "qualified_name": public_qn,
                 "module": node_by_qn[public_qn]["module_name"],
                 "docs_path": f"docs/api/reference/{public_name}.md",
-                "docs_url": f"../api/reference/{public_name}/",
+                "docs_url": _public_callable_docs_url(public_name),
                 "unique_internal_helper_count": len(helpers_by_public[public_qn]),
                 "direct_internal_helpers": [
                     {
@@ -1658,7 +1659,7 @@ def _build_callable_flow_data(
                     "callable": node_by_qn[public_qn]["callable_name"],
                     "qualified_name": public_qn,
                     "module": node_by_qn[public_qn]["module_name"],
-                    "docs_url": f"../api/reference/{node_by_qn[public_qn]['callable_name']}/",
+                    "docs_url": _public_callable_docs_url(node_by_qn[public_qn]['callable_name']),
                 }
                 for public_qn in sorted(helper_users[helper_qn], key=lambda qn: node_by_qn[qn]["callable_name"].lower())
             ],
@@ -1705,6 +1706,39 @@ def _build_callable_flow_data(
     }
 
 
+def _public_callable_docs_url(callable_name: str) -> str:
+    """Return the callable-flow relative URL for a public API reference page."""
+    return f"../../api/reference/{callable_name}/"
+
+
+def _render_link(label: str, url: str | None = None, *, code: bool = True) -> str:
+    """Render an HTML link or code span for generated callable-flow tables."""
+    text = html.escape(label)
+    inner = f"<code>{text}</code>" if code else text
+    if not url:
+        return inner
+    return f'<a href="{html.escape(url, quote=True)}">{inner}</a>'
+
+
+def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str, str]]]) -> list[str]:
+    """Render a horizontally scrollable callable-flow table."""
+    lines = [
+        '<div class="callable-flow-table-wrap" markdown="0">',
+        '<table class="callable-flow-table">',
+        '<thead>',
+        '<tr>',
+    ]
+    for label, class_name in headers:
+        lines.append(f'<th class="{class_name}">{html.escape(label)}</th>')
+    lines.extend(['</tr>', '</thead>', '<tbody>'])
+    for row in rows:
+        lines.append('<tr>')
+        for value, class_name in row:
+            lines.append(f'<td class="{class_name}">{value}</td>')
+        lines.extend(['</tr>'])
+    lines.extend(['</tbody>', '</table>', '</div>'])
+    return lines
+
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global callable flow Markdown page."""
     lines = [
@@ -1721,7 +1755,7 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     ]
     for callable_name in sorted(flow_data["public_callable_dependencies"]):
         deps = flow_data["public_callable_dependencies"][callable_name]
-        callable_link = f"[`{callable_name}`](../api/reference/{callable_name}/)"
+        callable_link = f"[`{callable_name}`]({_public_callable_docs_url(callable_name)})"
         if deps:
             dep_links = ", ".join(f"[`{item['callable']}`]({item['docs_url']})" for item in deps)
             lines.append(f"- {callable_link} → {dep_links}")
@@ -1733,25 +1767,42 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "",
             "## Callable helper summary",
             "",
-            "| Public callable | Module | Unique internal helper count | Direct internal helpers | Deepest call chain depth | Repeated helper count | Calls another public callable |",
-            "| --- | --- | ---: | --- | ---: | ---: | --- |",
         ]
     )
+    summary_rows: list[list[tuple[str, str]]] = []
     for row in flow_data["callable_helper_summary"]:
         direct_helpers = ", ".join(
             (
-                f"[`{helper['helper']}`]({helper['source_url']})"
-                if helper.get("source_url")
-                else f"`{helper['helper']}`"
+                _render_link(helper["helper"], helper.get("source_url"))
             )
             for helper in row["direct_internal_helpers"]
         ) or "—"
         calls_public = "Yes" if row["calls_public_callable"] else "No"
-        lines.append(
-            f"| [`{row['callable']}`]({row['docs_url']}) | `{row['module']}` | "
-            f"{row['unique_internal_helper_count']} | {direct_helpers} | "
-            f"{row['deepest_call_chain_depth']} | {row['repeated_helper_count']} | {calls_public} |"
+        summary_rows.append(
+            [
+                (_render_link(row["callable"], row["docs_url"]), "flow-cell-name"),
+                (_render_link(row["module"], code=True), "flow-cell-module"),
+                (str(row["unique_internal_helper_count"]), "flow-cell-number"),
+                (direct_helpers, "flow-cell-wide"),
+                (str(row["deepest_call_chain_depth"]), "flow-cell-number"),
+                (str(row["repeated_helper_count"]), "flow-cell-number"),
+                (calls_public, "flow-cell-flag"),
+            ]
         )
+    lines.extend(
+        _render_flow_table(
+            [
+                ("Public callable", "flow-cell-name"),
+                ("Module", "flow-cell-module"),
+                ("Unique internal helper count", "flow-cell-number"),
+                ("Direct internal helpers", "flow-cell-wide"),
+                ("Deepest call chain depth", "flow-cell-number"),
+                ("Repeated helper count", "flow-cell-number"),
+                ("Calls another public callable", "flow-cell-flag"),
+            ],
+            summary_rows,
+        )
+    )
 
     lines.extend(
         [
@@ -1760,22 +1811,46 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "",
             "Internal helpers reached by more than one public callable.",
             "",
-            "| Helper | Qualified name | Module | Public callables that reach it | Public callable count |",
-            "| --- | --- | --- | --- | ---: |",
         ]
     )
+    shared_rows: list[list[tuple[str, str]]] = []
     if flow_data["shared_helper_usage"]:
         for row in flow_data["shared_helper_usage"]:
-            helper = f"[`{row['helper']}`]({row['source_url']})" if row.get("source_url") else f"`{row['helper']}`"
+            helper = _render_link(row["helper"], row.get("source_url"))
             public_callables = ", ".join(
-                f"[`{item['callable']}`]({item['docs_url']})" for item in row["public_callables"]
+                _render_link(item["callable"], item["docs_url"]) for item in row["public_callables"]
             )
-            lines.append(
-                f"| {helper} | `{row['qualified_name']}` | `{row['module']}` | "
-                f"{public_callables} | {row['public_callable_count']} |"
+            shared_rows.append(
+                [
+                    (helper, "flow-cell-name"),
+                    (_render_link(row["qualified_name"], code=True), "flow-cell-qualified"),
+                    (_render_link(row["module"], code=True), "flow-cell-module"),
+                    (public_callables, "flow-cell-wide"),
+                    (str(row["public_callable_count"]), "flow-cell-number"),
+                ]
             )
     else:
-        lines.append("| — | — | — | No shared internal helper usage detected. | 0 |")
+        shared_rows.append(
+            [
+                ("—", "flow-cell-name"),
+                ("—", "flow-cell-qualified"),
+                ("—", "flow-cell-module"),
+                ("No shared internal helper usage detected.", "flow-cell-wide"),
+                ("0", "flow-cell-number"),
+            ]
+        )
+    lines.extend(
+        _render_flow_table(
+            [
+                ("Helper", "flow-cell-name"),
+                ("Qualified name", "flow-cell-qualified"),
+                ("Module", "flow-cell-module"),
+                ("Public callables that reach it", "flow-cell-wide"),
+                ("Public callable count", "flow-cell-number"),
+            ],
+            shared_rows,
+        )
+    )
 
     lines.extend(
         [
@@ -1784,17 +1859,37 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "",
             "Ranked review aid based on unique internal helper count, deepest call chains, repeated helpers, and shared helper overlap. Higher scores indicate call-tree shapes worth reviewing, not required refactors.",
             "",
-            "| Rank | Public callable | Module | Score | Unique helpers | Deepest depth | Repeated helpers | Shared helper overlap |",
-            "| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |",
         ]
     )
+    hotspot_rows: list[list[tuple[str, str]]] = []
     for rank, row in enumerate(flow_data["refactor_hotspots"], start=1):
-        lines.append(
-            f"| {rank} | [`{row['callable']}`]({row['docs_url']}) | `{row['module']}` | "
-            f"{row['score']} | {row['unique_internal_helper_count']} | "
-            f"{row['deepest_call_chain_depth']} | {row['repeated_helper_count']} | "
-            f"{row['shared_helper_overlap_count']} |"
+        hotspot_rows.append(
+            [
+                (str(rank), "flow-cell-number"),
+                (_render_link(row["callable"], row["docs_url"]), "flow-cell-name"),
+                (_render_link(row["module"], code=True), "flow-cell-module"),
+                (str(row["score"]), "flow-cell-number"),
+                (str(row["unique_internal_helper_count"]), "flow-cell-number"),
+                (str(row["deepest_call_chain_depth"]), "flow-cell-number"),
+                (str(row["repeated_helper_count"]), "flow-cell-number"),
+                (str(row["shared_helper_overlap_count"]), "flow-cell-number"),
+            ]
         )
+    lines.extend(
+        _render_flow_table(
+            [
+                ("Rank", "flow-cell-number"),
+                ("Public callable", "flow-cell-name"),
+                ("Module", "flow-cell-module"),
+                ("Score", "flow-cell-number"),
+                ("Unique helpers", "flow-cell-number"),
+                ("Deepest depth", "flow-cell-number"),
+                ("Repeated helpers", "flow-cell-number"),
+                ("Shared helper overlap", "flow-cell-number"),
+            ],
+            hotspot_rows,
+        )
+    )
     lines.append("")
     return "\n".join(lines)
 

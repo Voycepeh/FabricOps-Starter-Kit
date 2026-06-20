@@ -222,7 +222,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## Callable helper summary" in flow_text
     assert "## Shared helper usage" in flow_text
     assert "## Refactor hotspot ranking" in flow_text
-    assert "../api/reference/run_table_guardrails/" in flow_text
+    assert "../../api/reference/run_table_guardrails/" in flow_text
+    assert "](../api/reference/run_table_guardrails/)" not in flow_text
+    assert '<div class="callable-flow-table-wrap" markdown="0">' in flow_text
+    assert '<td class="flow-cell-name"><a href="../../api/reference/widget_select_guardrail_target/"' in flow_text
+    assert '<td class="flow-cell-number">87</td>' in flow_text
     assert "independent entry point" in flow_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))

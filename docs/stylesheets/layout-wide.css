@@ -232,3 +232,70 @@
   content: "Template step: ";
   font-weight: 700;
 }
+
+/* Generated public callable flow tables. */
+.md-typeset .callable-flow-table-wrap {
+  margin: 1rem 0 1.5rem;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.md-typeset .callable-flow-table {
+  border-collapse: collapse;
+  display: table;
+  min-width: 58rem;
+  width: 100%;
+}
+
+.md-typeset .callable-flow-table th,
+.md-typeset .callable-flow-table td {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  padding: 0.55rem 0.7rem;
+  vertical-align: top;
+}
+
+.md-typeset .callable-flow-table th {
+  background: var(--md-default-fg-color--lightest);
+  font-weight: 700;
+}
+
+.md-typeset .callable-flow-table code,
+.md-typeset .callable-flow-table a {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.md-typeset .callable-flow-table .flow-cell-name,
+.md-typeset .callable-flow-table .flow-cell-module,
+.md-typeset .callable-flow-table .flow-cell-qualified,
+.md-typeset .callable-flow-table .flow-cell-flag {
+  white-space: nowrap;
+}
+
+.md-typeset .callable-flow-table .flow-cell-name {
+  min-width: 14rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-module {
+  min-width: 8rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-qualified {
+  min-width: 22rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-wide {
+  min-width: 28rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-number {
+  min-width: 5.5rem;
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.md-typeset .callable-flow-table .flow-cell-flag {
+  min-width: 7rem;
+}
