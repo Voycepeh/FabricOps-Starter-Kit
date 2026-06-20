@@ -239,14 +239,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert 'id="moduleFilter"' not in dashboard_text
     assert 'id="priorityFilter"' not in dashboard_text
     assert 'id="searchScope"' not in dashboard_text
+    assert 'id="quickFilters"' not in dashboard_text
     assert "Search function name" in dashboard_text
-    assert "Search matches function names only" in dashboard_text
+    assert "Search matches function names only. Use the filters below for function type and recommended action." not in dashboard_text
     assert "Recommended action" in dashboard_text
     assert "Reset" in dashboard_text
     assert "refactor reason" not in dashboard_text.lower()
     assert "All recommended actions" in dashboard_text
-    assert "Quick signal filters" in dashboard_text
-    assert "Easy cleanup" in dashboard_text
+    assert "Quick signal filters" not in dashboard_text
+    assert "Easy cleanup" not in dashboard_text
+    assert "Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup." in dashboard_text
+    assert "Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified." in dashboard_text
+    assert "Most flexible: breaking changes are allowed when they simplify new or experimental code." in dashboard_text
     assert "High review" in dashboard_text
     assert "Medium review" in dashboard_text
     assert "Select visible" in dashboard_text
