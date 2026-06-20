@@ -76,9 +76,10 @@ MAJOR_IMPLEMENTATION_MODULES = set(MAJOR_IMPLEMENTATION_MODULE_ORDER)
 INTERNAL_MODULE_BLACKLIST = {"_utils"}
 INTERNAL_ALIAS_MODULES = {}
 
-# Callable reference pages are intentionally curated for v1. A callable is a
-# notebook-template function that users actively call, not every public helper in
-# the Python package. Keep this list in sync with src/fabricops_kit/__init__.py.
+# Callable reference pages are generated from src/fabricops_kit/__init__.py::__all__.
+# Keep __all__ as the canonical notebook-facing public callable surface;
+# PUBLIC_SYMBOL_DOCS supplies metadata for those exports and may retain extra
+# internal helper metadata for relationship details.
 
 # Internal helper chips should mirror the generated package-local call tree.
 # Exclude reachable private helpers only when a callable has an explicit deny
@@ -128,29 +129,6 @@ INTERNAL_HELPER_AUDIT_RATIONALE = {
     "keep_internal": "Repeated usage alone is not enough for public utility status; this underscore-prefixed helper exposes implementation plumbing or normalized runtime details rather than a stable user-facing task.",
     "already_covered_by_existing_public_utility": "The direct user-facing need is already covered by an existing public utility, so the helper should stay private.",
     "promote_to_public_utility_candidate": "The helper appears to have stable user-facing behavior, understandable parameters, and return values that can be documented without leaking implementation details.",
-}
-
-V1_CALLABLES = {
-    "setup_notebook",
-    "setup_metadata_tables",
-    "widget_render_data_steward",
-    "widget_render_data_agreement",
-    "widget_render_agreement_evidence",
-    "read_data",
-    "write_data",
-    "profile_dataframe",
-    "get_latest_metadata_catalogue",
-    "display_guardrail_results",
-    "prepare_pipeline_table_configs",
-    "run_table_guardrails",
-    "start_pipeline_run",
-    "write_pipeline_lineage",
-    "write_pipeline_run_summary",
-    "widget_select_guardrail_target",
-    "widget_enrich_table_metadata",
-    "widget_author_schema_freshness_profile_rules",
-    "widget_author_dq_rules",
-    "widget_review_guardrail_governance",
 }
 
 @dataclass
@@ -528,6 +506,11 @@ def parse_public_exports() -> list[str]:
                 return [elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)]
     raise RuntimeError("Could not parse __all__ from __init__.py")
 
+
+
+def public_callable_names() -> set[str]:
+    """Return notebook-facing public callables from canonical __all__ exports."""
+    return set(parse_public_exports())
 
 
 def parse_docs_metadata() -> dict[str, dict[str, Any]]:
@@ -946,7 +929,7 @@ def callable_docs_link(
     source_module: str | None = None,
 ) -> str:
     """Return a safe docs link for a public callable."""
-    if symbol_name in docs_metadata and symbol_name in V1_CALLABLES:
+    if symbol_name in docs_metadata and symbol_name in public_callable_names():
         return public_reference_link(symbol_name, docs_metadata, context=context)
     if context == "module":
         if source_module and module != source_module:
@@ -1214,7 +1197,7 @@ def _related_function_links(
         elif node:
             rows.append(f"- `{label}`")
             continue
-        elif item in docs_metadata and item in V1_CALLABLES:
+        elif item in docs_metadata and item in public_callable_names():
             href = f"../{item}/"
             label = item
         else:
@@ -2163,7 +2146,7 @@ _METADATA_TABLE_RELATIONSHIPS = {
 
 def _function_link(symbol: str, relative_prefix: str = "../") -> str:
     """Return a markdown link to a public page or module anchor for internal support."""
-    if symbol in V1_CALLABLES:
+    if symbol in public_callable_names():
         return f"[`{symbol}`]({relative_prefix}api/reference/{symbol}.md)"
     metadata = parse_docs_metadata().get(symbol, {})
     module_name = canonical_public_module(str(metadata.get("module") or "data_agreement"))
@@ -2325,10 +2308,6 @@ def main() -> None:
     """Run the command-line workflow."""
     REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
     public = parse_public_exports()
-    if set(public) != V1_CALLABLES:
-        missing = sorted(V1_CALLABLES - set(public))
-        extra = sorted(set(public) - V1_CALLABLES)
-        raise RuntimeError(f"__all__ must match curated V1_CALLABLES. Missing: {missing}; extra: {extra}")
     module_data = {p.stem: parse_module(p) for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
 
     source_modules = {p.stem for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
@@ -2343,7 +2322,15 @@ def main() -> None:
 
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
-        raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for exported symbols: " + ", ".join(missing_metadata))
+        raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for __all__ exports: " + ", ".join(missing_metadata))
+    non_callable_exports = sorted(
+        name for name in public if str(docs_metadata[name].get("function_type", "")).lower() != "callable"
+    )
+    if non_callable_exports:
+        raise RuntimeError(
+            "__all__ is the canonical callable surface; exported symbols must have "
+            "PUBLIC_SYMBOL_DOCS function_type=callable: " + ", ".join(non_callable_exports)
+        )
     unknown_glossary_terms = sorted(
         {term for metadata in docs_metadata.values() for term in metadata.get("glossary_terms", []) if term.lower() not in glossary}
     )
