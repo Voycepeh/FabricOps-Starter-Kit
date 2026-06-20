@@ -243,6 +243,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert set(summary_by_callable) == exported_symbols
     guardrail_summary = summary_by_callable["run_table_guardrails"]
     assert guardrail_summary["unique_internal_helper_count"] > 0
+    assert guardrail_summary["unique_internal_helper_count"] == len(guardrail_summary["unique_internal_helpers"])
     assert guardrail_summary["direct_internal_helpers"]
     assert guardrail_summary["deepest_call_chain_depth"] > 0
     assert isinstance(guardrail_summary["calls_public_callable"], bool)
@@ -639,20 +640,33 @@ def test_callable_pages_collapse_ai_machine_metadata() -> None:
         assert "### Raw source metadata" in metadata, page
 
 
-def test_function_catalogue_uses_callable_flow_language() -> None:
-    """Verify catalogue cards expose callable flow wording, not graph directions."""
+def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
+    """Verify catalogue cards expose simplified callable flow chips."""
     text = REFERENCE_INDEX.read_text(encoding="utf-8")
+    callable_flow = json.loads((REFERENCE_DIR / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
+    summary_by_callable = {row["callable"]: row for row in callable_flow["callable_helper_summary"]}
+    guardrail_nested_count = summary_by_callable["run_table_guardrails"]["unique_internal_helper_count"]
 
     assert "Inbound" not in text
     assert "Outbound" not in text
     assert "incoming" not in text.lower()
     assert "outgoing" not in text.lower()
     assert "Used in notebooks:" in text
-    assert "Used in 1 notebook" in text
-    assert "Used by 1 public function" in text
+    assert "Used in 1 notebook" not in text
+    assert "Used by 1 public function" not in text
+    assert "internal helpers" not in text
     assert "Calls 1 public function" in text
-    assert "Calls 5 internal helpers" in text
-    assert '<a href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a>' in text
+    assert f"Calls {guardrail_nested_count} nested helper functions" in text
+    assert '<a href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>' in text
+
+
+def test_module_badges_pluralize_external_module_counts() -> None:
+    """Verify module overview badges use singular labels for one external module."""
+    module_text = (ROOT / "docs" / "api" / "modules" / "guardrails.md").read_text(encoding="utf-8")
+
+    assert "Used by 1 external module" in module_text
+    assert "Used by 1 external modules" not in module_text
+    assert "Uses 3 external modules" in module_text
 
 
 def test_setup_notebook_reference_uses_human_first_source_documentation() -> None:
