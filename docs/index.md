@@ -12,6 +12,10 @@ It gives teams a standardized operating model for configuration, notebook execut
 
 ## How FabricOps connects delivery teams { #fabricops-delivery-model-heading }
 
+<p class="fabricops-architecture-image">
+  <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
+</p>
+
 FabricOps helps governance, engineering, and analytics teams work from the same notebook flow.
 
 Governance captures agreement, enrichment, and pipeline guardrail evidence. 
@@ -21,10 +25,6 @@ Analysts and data scientists consume trusted outputs for BI, AI, and exploration
 The shared metadata tables act as the handoff layer. 
 They record what was agreed, what ran, what passed, and what is ready for review. 
 They abstract the important but tedious work into a simplified plug and play workflow that makes handover easy, even for new team members.
-
-<p class="fabricops-architecture-image">
-  <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
-</p>
 
 </section>
 
@@ -45,24 +45,22 @@ They abstract the important but tedious work into a simplified plug and play wor
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="how-fabricops-works/notebook-templates/">
-    <span class="fabricops-landing-card__title">5 notebook templates</span>
-    <span class="fabricops-landing-card__body">Reusable notebook workflow templates.</span>
+    <span class="fabricops-landing-card__title">5 main notebook templates</span>
+    <span class="fabricops-landing-card__body">With step by step guide in guide in implementation guide.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title">20 public Starter Kit functions</span>
-    <span class="fabricops-landing-card__body">
-      Tracks the notebook-facing API plus 238 supporting internal functions.
-    </span>
+    <span class="fabricops-landing-card__body">Supported by 238 supporting internal functions.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
-    <span class="fabricops-landing-card__title">23 DQ rule types</span>
-    <span class="fabricops-landing-card__body">Governed checks for pipeline guardrails.</span>
+    <span class="fabricops-landing-card__title">23 Data quality rule types</span>
+    <span class="fabricops-landing-card__body">Suggested by AI and enforced in pipeline guardrails.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title">12 metadata tables</span>
-    <span class="fabricops-landing-card__body">Evidence tables for delivery and review.</span>
+    <span class="fabricops-landing-card__body">Written by functions and widgets during runtime for enforcement and review.</span>
   </a>
 </div>
