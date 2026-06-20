@@ -1653,7 +1653,8 @@ REFACTOR_REASON_LABELS = {
     "internal_calls_public": "Internal calls public",
     "internal_calls_internal": "Internal calls internal",
     "utility_calls_project_callable": "Utility calls project callable",
-    "unknown_layer_dependency": "Unknown layer dependency",
+    "callee_classification_pending": "Callee classification pending",
+    "callee_unreachable": "Callee unreachable",
 }
 
 REFACTOR_PRIORITY_ORDER = {
@@ -1880,38 +1881,38 @@ CALLABLE_LAYER_LABELS = {
     "public": "Public API",
     "internal": "Internal helper",
     "utility": "Utility",
-    "unclassified": "Unclassified",
+}
+
+REVIEW_STATUS_LABELS = {
+    "classified": "Classified",
+    "classification_pending": "Classification pending",
     "unreachable": "Unreachable",
 }
 
 ARCHITECTURE_VIOLATION_ACTION = "Architecture violation"
 
 
-def _callable_layer(
+def _callable_classification(
     qn: str,
     public_qn_set: set[str],
     reachable_non_public: set[str],
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
-) -> str:
-    """Classify a project callable into the generated dependency layer model."""
+) -> tuple[str, str]:
+    """Return architecture layer and review status for a project callable."""
     if qn in public_qn_set:
-        return "public"
+        return "public", "classified"
     node = node_by_qn[qn]
-    if qn not in reachable_non_public and not node.get("is_underscore"):
-        return "unclassified"
-    if qn not in reachable_non_public:
-        return "unreachable"
     outbound_project = {callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn}
-    if node.get("is_underscore") and not outbound_project:
-        return "utility"
-    return "internal"
+    layer = "utility" if node.get("is_underscore") and not outbound_project else "internal"
+    if qn not in reachable_non_public:
+        review_status = "unreachable" if node.get("is_underscore") else "classification_pending"
+        return layer, review_status
+    return layer, "classified"
 
 
 def _architecture_dependency_signals(caller_layer: str, callee_layer: str) -> list[str]:
-    """Return callable-layer dependency violation signals for a project-local edge."""
-    if callee_layer in {"unclassified", "unreachable"}:
-        return ["unknown_layer_dependency"]
+    """Return callable-layer dependency violation signals for a classified project-local edge."""
     if caller_layer == "public" and callee_layer == "public":
         return ["public_calls_public"]
     if caller_layer == "internal" and callee_layer == "public":
@@ -1920,8 +1921,15 @@ def _architecture_dependency_signals(caller_layer: str, callee_layer: str) -> li
         return ["internal_calls_internal"]
     if caller_layer == "utility" and callee_layer in {"public", "internal", "utility"}:
         return ["utility_calls_project_callable"]
-    if caller_layer == callee_layer and caller_layer in {"public", "internal", "utility"}:
-        return ["unknown_layer_dependency"]
+    return []
+
+
+def _dependency_review_signals(callee_review_status: str) -> list[str]:
+    """Return review-only signals for edges into pending or unreachable callables."""
+    if callee_review_status == "classification_pending":
+        return ["callee_classification_pending"]
+    if callee_review_status == "unreachable":
+        return ["callee_unreachable"]
     return []
 
 
@@ -1941,10 +1949,12 @@ def _build_function_inventory(
     inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
     refactor_by_qn = {row["qualified_name"]: row for row in refactor_inventory}
     summary_by_qn = {row["qualified_name"]: row for row in callable_summary}
-    layer_by_qn = {
-        qn: _callable_layer(qn, public_qn_set, reachable_non_public, calls_by_qn, node_by_qn)
+    classification_by_qn = {
+        qn: _callable_classification(qn, public_qn_set, reachable_non_public, calls_by_qn, node_by_qn)
         for qn in node_by_qn
     }
+    layer_by_qn = {qn: classification[0] for qn, classification in classification_by_qn.items()}
+    review_status_by_qn = {qn: classification[1] for qn, classification in classification_by_qn.items()}
 
     def linked(qns: list[str] | set[str]) -> list[dict[str, str]]:
         return [
@@ -1953,7 +1963,8 @@ def _build_function_inventory(
                 "module": node_by_qn[qn]["module_name"],
                 "qualified_name": qn,
                 "source_url": _callable_flow_source_link(qn, module_data),
-                "layer": layer_by_qn.get(qn, "unclassified"),
+                "layer": layer_by_qn.get(qn, "internal"),
+                "review_status": review_status_by_qn.get(qn, "classification_pending"),
                 "callable_kind": node_by_qn[qn].get("callable_kind", "unknown"),
             }
             for qn in sorted(qns, key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()))
@@ -1970,15 +1981,28 @@ def _build_function_inventory(
         outbound = [callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn]
         inbound = inbound_by_qn.get(qn, set())
         direct_helper_qns = {item["qualified_name"] for item in public_summary.get("direct_internal_helpers", [])}
+        review_status = review_status_by_qn[qn]
         architecture_signals = sorted({
             signal
             for callee in outbound
-            for signal in _architecture_dependency_signals(layer, layer_by_qn.get(callee, "unclassified"))
+            if review_status_by_qn.get(callee, "classification_pending") == "classified"
+            for signal in _architecture_dependency_signals(layer, layer_by_qn.get(callee, "internal"))
         })
-        signals = [*architecture_signals, *refactor.get("signals", [])]
+        review_signals = sorted({
+            signal
+            for callee in outbound
+            for signal in _dependency_review_signals(review_status_by_qn.get(callee, "classification_pending"))
+        })
+        signals = [*architecture_signals, *review_signals, *refactor.get("signals", [])]
         if architecture_signals:
             recommended_action = ARCHITECTURE_VIOLATION_ACTION
             priority = "High"
+        elif review_status == "unreachable":
+            recommended_action = "Orphaned callable"
+            priority = "Medium"
+        elif review_status == "classification_pending":
+            recommended_action = "Review manually"
+            priority = "Review"
         elif layer == "public":
             recommended_action = "Public API entrypoint"
             priority = refactor.get("priority", "Review")
@@ -1988,12 +2012,6 @@ def _build_function_inventory(
         elif layer == "utility":
             recommended_action = "Stable utility" if len(inbound) > 1 else "Inline candidate"
             priority = refactor.get("priority", "Low")
-        elif layer == "unreachable":
-            recommended_action = "Orphaned callable"
-            priority = "Medium"
-        else:
-            recommended_action = "Review manually"
-            priority = "Review"
         inventory.append(
             {
                 "function_name": node["callable_name"],
@@ -2001,12 +2019,15 @@ def _build_function_inventory(
                 "module": node["module_name"],
                 "function_type": function_type,
                 "layer": layer,
+                "review_status": review_status,
+                "review_status_label": REVIEW_STATUS_LABELS[review_status],
                 "callable_kind": node.get("callable_kind", "unknown"),
                 "visibility": "public" if qn in public_qn_set else "private" if node.get("is_underscore") else "internal",
                 "recommended_action": recommended_action,
                 "priority": priority,
                 "signals": signals,
                 "architecture_signals": architecture_signals,
+                "review_signals": review_signals,
                 "called_by_count": len(inbound),
                 "calls_count": len(set(outbound)),
                 "callers": linked(inbound),
@@ -2028,6 +2049,10 @@ def _build_function_inventory(
         "layer": {
             layer: sum(1 for row in inventory if row["layer"] == layer)
             for layer in CALLABLE_LAYER_LABELS
+        },
+        "review_status": {
+            status: sum(1 for row in inventory if row["review_status"] == status)
+            for status in REVIEW_STATUS_LABELS
         },
         "callable_kind": {
             label: sum(1 for row in inventory if row["callable_kind"] == label)
@@ -2277,7 +2302,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
     .tree-row { width:100%; display:flex; justify-content:space-between; gap:1rem; padding:.32rem .45rem; border:0; border-radius:.5rem; background:transparent; text-align:left; }
     .tree-row:hover, .tree-row.active { background:#e2e8f0; } .tree-row strong { font-weight:800; }
     .helper-text { color: var(--muted); margin: .5rem 0 1rem; }
-    .filter-panel { display: grid; grid-template-columns: minmax(260px, 1.4fr) minmax(170px, .8fr) minmax(220px, 1fr) auto; gap: .55rem; align-items: end; margin: .75rem 0 1rem; padding: .75rem; border: 1px solid var(--border); border-radius: .9rem; background: #f1f5f9; }
+    .filter-panel { display: grid; grid-template-columns: minmax(240px, 1.3fr) minmax(160px, .75fr) minmax(190px, .85fr) minmax(210px, 1fr) auto; gap: .55rem; align-items: end; margin: .75rem 0 1rem; padding: .75rem; border: 1px solid var(--border); border-radius: .9rem; background: #f1f5f9; }
     .filter-field { min-width: 0; display:grid; gap:.25rem; font-weight:700; }
     .filter-field select, .filter-field input { width:100%; box-sizing:border-box; }
     small, .hint { color: var(--muted); } input, select, button { font: inherit; padding: .48rem .6rem; border: 1px solid var(--border); border-radius: .55rem; background: #fff; } button { cursor:pointer; }
@@ -2285,7 +2310,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
     .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: .85rem; max-width: 100%; }
     table { width:100%; border-collapse:separate; border-spacing:0; min-width: 1320px; table-layout: fixed; }
     th, td { min-width:0; padding:.62rem .65rem; border-bottom:1px solid var(--border); text-align:left; vertical-align:middle; overflow:hidden; overflow-wrap:normal; } th { background:var(--bg); position:sticky; top:0; z-index:1; font-size:.88rem; } th button { border:0; background:transparent; font-weight:800; padding:0; }
-    th:nth-child(1) { width:3rem; } th:nth-child(2) { width:4.75rem; } th:nth-child(3) { width:17rem; } th:nth-child(4) { width:8rem; } th:nth-child(5) { width:9rem; } th:nth-child(6) { width:13rem; } th:nth-child(7) { width:12rem; } th:nth-child(8), th:nth-child(9) { width:4.75rem; } th:nth-child(10) { width:22rem; }
+    th:nth-child(1) { width:3rem; } th:nth-child(2) { width:4.75rem; } th:nth-child(3) { width:17rem; } th:nth-child(4) { width:8rem; } th:nth-child(5) { width:10rem; } th:nth-child(6) { width:9rem; } th:nth-child(7) { width:13rem; } th:nth-child(8) { width:12rem; } th:nth-child(9), th:nth-child(10) { width:4.75rem; } th:nth-child(11) { width:22rem; }
     .num { min-width:4.75rem; text-align:center; font-variant-numeric: tabular-nums; } td.num { text-align:right; }
     .chip-wrap { display:flex; flex-wrap:wrap; align-items:center; gap:.18rem .22rem; min-width:0; max-width:100%; }
     .tag,.badge { display:inline-flex; align-items:center; max-width:11rem; min-width:0; margin:0; padding:.12rem .36rem; border-radius:999px; font-size:.72rem; font-weight:700; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; }
@@ -2306,6 +2331,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
   <section class="filter-panel" aria-label="Inventory filters">
     <label class="filter-field search">Search callable name <input id="searchBox" type="search" placeholder="Search callable names"></label>
     <label class="filter-field">Callable layer <select id="typeFilter"><option value="">All callable layers</option></select></label>
+    <label class="filter-field">Review status <select id="reviewStatusFilter"><option value="">All review statuses</option></select></label>
     <label class="filter-field">Recommended action <select id="signalFilter"><option value="">All recommended actions</option></select></label>
     <button type="button" id="resetFilters">Reset</button>
   </section>
@@ -2323,7 +2349,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
     <textarea id="manualCopy" class="manual-copy" hidden readonly aria-label="Manual copy refactor packet"></textarea>
   </section>
   <p id="resultCount"></p>
-  <section class="table-wrap" aria-label="Combined callable inventory"><table><thead><tr><th><input id="selectAllVisible" type="checkbox" aria-label="Select all visible rows"></th><th></th><th><button type="button" data-sort="function_name">Callable</button></th><th><button type="button" data-sort="function_type">Callable layer</button></th><th><button type="button" data-sort="module">Module</button></th><th>Signal</th><th>Recommended action</th><th class="num"><button type="button" data-sort="called_by_count">Called by</button></th><th class="num"><button type="button" data-sort="calls_count">Calls</button></th><th>Source</th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
+  <section class="table-wrap" aria-label="Combined callable inventory"><table><thead><tr><th><input id="selectAllVisible" type="checkbox" aria-label="Select all visible rows"></th><th></th><th><button type="button" data-sort="function_name">Callable</button></th><th><button type="button" data-sort="function_type">Callable layer</button></th><th><button type="button" data-sort="review_status_label">Review status</button></th><th><button type="button" data-sort="module">Module</button></th><th>Signal</th><th>Recommended action</th><th class="num"><button type="button" data-sort="called_by_count">Called by</button></th><th class="num"><button type="button" data-sort="calls_count">Calls</button></th><th>Source</th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
 </main>
 <script>
 let inventory = []; let summary = {}; const actionLegend = {
@@ -2344,7 +2370,8 @@ let inventory = []; let summary = {}; const actionLegend = {
   "internal_calls_public": "Internal calls public",
   "internal_calls_internal": "Internal calls internal",
   "utility_calls_project_callable": "Utility calls project callable",
-  "unknown_layer_dependency": "Unknown layer dependency"
+  "callee_classification_pending": "Callee classification pending",
+  "callee_unreachable": "Callee unreachable"
 };
 
 const AI_PROMPT = 'You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Always call out tests required before changes.';
@@ -2364,40 +2391,40 @@ const compatibilityModes = {
   internal_cleanup: {label:'Internal cleanup', description:'Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified.', instruction:'Preserve notebook facing and external behavior, but internal helper signatures, names, and module boundaries can change if justified.', safety_constraints:['Preserve external behavior','Internal helper names, signatures, and module boundaries may change if justified','Identify impacted callers before recommending changes']},
   development_breaking_allowed: {label:'Development, breaking changes allowed', description:'Most flexible: breaking changes are allowed when they simplify new or experimental code.', instruction:'Selected callables are new, experimental, or not live yet. Breaking changes are allowed when they simplify the design, improve naming, remove weak abstractions, or make the API cleaner.', safety_constraints:['Breaking changes are allowed if they simplify the design','Prefer cleaner names, simpler boundaries, and fewer weak abstractions','Still call out affected callers and tests']}
 };
-const priorityRank = {High:0, Medium:1, Low:2, Review:3, Protect:4}; const state = {search:'', type:'', signal:'', compatibility_mode:'internal_cleanup', sortKey:'function_type', sortDir:1, expanded:new Set(), selected:new Set(), activeTree:''};
+const priorityRank = {High:0, Medium:1, Low:2, Review:3, Protect:4}; const state = {search:'', type:'', review_status:'', signal:'', compatibility_mode:'internal_cleanup', sortKey:'function_type', sortDir:1, expanded:new Set(), selected:new Set(), activeTree:''};
 const $ = (id) => document.getElementById(id); const text = (v) => String(v ?? ''); const esc = (v) => text(v).replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function unique(v) { return [...new Set(v.filter(Boolean))].sort((a,b)=>a.localeCompare(b)); } function option(s,v) { const o=document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }
 function countBy(predicate) { return inventory.filter(predicate).length; }
 function summaryCount(group, label, predicate) { return inventory.length ? countBy(predicate) : (summary[group]?.[label] ?? 0); }
-function syncTreeActive() { if(!state.type && !state.signal) state.activeTree = state.activeTree === 'total' ? 'total' : ''; else if(state.type && !state.signal) state.activeTree = `type:${state.type}`; else if(state.signal && !state.type) state.activeTree = `action:${state.signal}`; else state.activeTree = ''; }
+function syncTreeActive() { if(!state.type && !state.review_status && !state.signal) state.activeTree = state.activeTree === 'total' ? 'total' : ''; else if(state.type && !state.review_status && !state.signal) state.activeTree = `type:${state.type}`; else if(state.review_status && !state.type && !state.signal) state.activeTree = `review:${state.review_status}`; else if(state.signal && !state.type && !state.review_status) state.activeTree = `action:${state.signal}`; else state.activeTree = ''; }
 function treeButton(key, label, value) { return `<li><button type="button" class="tree-row ${state.activeTree===key?'active':''}" data-tree="${esc(key)}"><span>${esc(label)}</span><strong>${esc(value ?? 0)}</strong></button></li>`; }
-function renderTreeSummary() { const actionLabels=unique([...Object.keys(summary.recommended_action || {}), ...inventory.map(i=>i.recommended_action)]); const layers=['Public API','Internal helper','Utility','Unreachable','Unclassified']; const typeRows=layers.map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label))).join(''); const kindRows=unique([...Object.keys(summary.callable_kind || {}), ...inventory.map(i=>i.callable_kind)]).map(label=>treeButton(`kind:${label}`, label, summaryCount('callable_kind', label, i=>i.callable_kind===label))).join(''); const actionRows=actionLabels.map(label=>treeButton(`action:${label}`, label, summaryCount('recommended_action', label, i=>i.recommended_action===label))).join(''); $('summaryTree').innerHTML=`<h2>Callable inventory</h2><ul>${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul><h3>Callable layer</h3><ul>${typeRows}</ul><h3>Callable kind</h3><ul>${kindRows}</ul><h3>Recommended action</h3><ul>${actionRows}</ul>`; }
+function renderTreeSummary() { const actionLabels=unique([...Object.keys(summary.recommended_action || {}), ...inventory.map(i=>i.recommended_action)]); const layers=['Public API','Internal helper','Utility']; const statuses=['Classified','Classification pending','Unreachable']; const typeRows=layers.map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label))).join(''); const statusRows=statuses.map(label=>treeButton(`review:${label}`, label, summaryCount('review_status', label.toLowerCase().replaceAll(' ', '_'), i=>i.review_status_label===label))).join(''); const kindRows=unique([...Object.keys(summary.callable_kind || {}), ...inventory.map(i=>i.callable_kind)]).map(label=>treeButton(`kind:${label}`, label, summaryCount('callable_kind', label, i=>i.callable_kind===label))).join(''); const actionRows=actionLabels.map(label=>treeButton(`action:${label}`, label, summaryCount('recommended_action', label, i=>i.recommended_action===label))).join(''); $('summaryTree').innerHTML=`<h2>Callable inventory</h2><ul>${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul><h3>Architecture layer</h3><ul>${typeRows}</ul><h3>Review status</h3><ul>${statusRows}</ul><h3>Callable kind</h3><ul>${kindRows}</ul><h3>Recommended action</h3><ul>${actionRows}</ul>`; }
 function renderLegend() { $('actionLegendGrid').innerHTML=Object.entries(actionLegend).map(([l,d])=>`<div><span class="badge review">${esc(l)}</span><p class="hint">${esc(d)}</p></div>`).join(''); }
-function populateFilters() { ['Public API','Internal helper','Utility','Unreachable','Unclassified'].forEach(v=>option($('typeFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); }
-function filteredRows() { const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || text(i.function_name).toLowerCase().includes(q)) && (!state.type || i.function_type===state.type) && (!state.signal || i.recommended_action===state.signal)); }
+function populateFilters() { ['Public API','Internal helper','Utility'].forEach(v=>option($('typeFilter'),v)); ['Classified','Classification pending','Unreachable'].forEach(v=>option($('reviewStatusFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); }
+function filteredRows() { const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || text(i.function_name).toLowerCase().includes(q)) && (!state.type || i.function_type===state.type) && (!state.review_status || i.review_status_label===state.review_status) && (!state.signal || i.recommended_action===state.signal)); }
 function signalReason(i) { const signals=(i.signals || []).map(s=>reasonLabels[s] || s); if(i.recommended_action && actionLegend[i.recommended_action]) return `${i.recommended_action}: ${actionLegend[i.recommended_action]}`; if(signals.length) return signals.join(', '); return 'No automated signal reason is available yet.'; }
 function compare(a,b) { const k=state.sortKey; if(k==='priority') return ((priorityRank[a.priority]??9)-(priorityRank[b.priority]??9))*state.sortDir || a.function_name.localeCompare(b.function_name); if(typeof a[k]==='number') return (a[k]-b[k])*state.sortDir; return text(a[k]).localeCompare(text(b[k]))*state.sortDir; }
 function linkedList(items) { return items.length ? `<ul>${items.map(i=>`<li><a href="${esc(i.source_url || '#')}">${esc(i.function)}</a> <small>(${esc(i.module)})</small></li>`).join('')}</ul>` : '<p>—</p>'; }
 function chips(item) { const content=(item.signals || []).map(s=>`<span class="tag" title="${esc(reasonLabels[s] || s)}">${esc(reasonLabels[s] || s)}</span>`).join('') || `<span class="badge review" title="${esc(item.recommended_action)}">${esc(item.recommended_action)}</span>`; return `<span class="chip-wrap">${content}</span>`; }
-function exportFilters() { return {search_function_name:state.search, function_type:state.type, recommended_action:state.signal}; }
+function exportFilters() { return {search_function_name:state.search, callable_layer:state.type, review_status:state.review_status, recommended_action:state.signal}; }
 function guidanceFor(action) { return refactorGuidance[action] || ['manual_review', 'Automated signal is inconclusive. Inspect intent, callers, and tests before recommending changes.']; }
-function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, layer:i.layer, callable_kind:i.callable_kind, visibility:i.visibility, architecture_signals:i.architecture_signals || [], recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, called_by_count:i.called_by_count, calls_count:i.calls_count, callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
+function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, layer:i.layer, callable_kind:i.callable_kind, visibility:i.visibility, architecture_signals:i.architecture_signals || [], review_signals:i.review_signals || [], review_status:i.review_status, review_status_label:i.review_status_label, recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, called_by_count:i.called_by_count, calls_count:i.calls_count, callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
 function selectedItems() { const byId=new Map(inventory.map(i=>[i.qualified_name,i])); return [...state.selected].map(id=>byId.get(id)).filter(Boolean); }
 function compatibilityContext() { return compatibilityModes[state.compatibility_mode] || compatibilityModes.internal_cleanup; }
 function refactorContext(functions) { const compatibility=compatibilityContext(); return {selected_callable_actions:unique(functions.map(fn=>fn.recommended_action)), refactor_intent:'Plan safe cleanup for selected FabricOps helper callables.', refactor_mode:'planning_only', compatibility_mode:state.compatibility_mode, compatibility_instruction:compatibility.instruction, likely_refactor_actions:['Inline thin wrappers where readability improves','Merge adjacent helpers with overlapping responsibility','Keep helpers separate when naming, validation boundaries, or tests justify the abstraction'], safety_constraints:compatibility.safety_constraints, expected_ai_output:['Group selected callables by refactor type','Explain which callables are safe cleanup candidates','Identify callables that should not be refactored yet','Propose an ordered refactor plan','List risks and required tests','Do not produce code changes unless explicitly requested']}; }
 function refactorPacket() { const functions=selectedItems().map(exportItem); return {export_type:'fabricops_callable_refactor_packet', generated_from:'Callable Inventory and Refactor Signals', selected_count:functions.length, filters:exportFilters(), refactor_context:refactorContext(functions), ai_prompt:AI_PROMPT, functions}; }
 function markdownList(label, items) { return [label, ...items.map(item=>`- ${item}`)]; }
-function markdownPacket() { const packet=refactorPacket(), ctx=packet.refactor_context; const lines=['FabricOps callable refactor packet','','Prompt for AI','',packet.ai_prompt,'','Refactor context','',`Intent: ${ctx.refactor_intent}`,'','Mode: Planning only.','',`Compatibility mode: ${compatibilityContext().label}`,'','Compatibility instruction:',ctx.compatibility_instruction,'',...markdownList('Selected callable actions:', ctx.selected_callable_actions), '', ...markdownList('Likely refactor actions:', ctx.likely_refactor_actions), '', ...markdownList('Safety constraints:', ctx.safety_constraints), '', ...markdownList('Expected AI output:', ctx.expected_ai_output), '', 'Selected callables', '']; packet.functions.forEach((fn,idx)=>{ lines.push(`Callable ${idx+1}: ${fn.function_name}`,'',`Qualified name: ${fn.qualified_name}`,`Module: ${fn.module}`,`Callable layer: ${fn.function_type}`,`Recommended action: ${fn.recommended_action}`,`Priority: ${fn.priority}`,`Refactor type: ${fn.refactor_type}`,`Refactor guidance: ${fn.refactor_guidance}`,`Signal reason: ${fn.signal_reason}`,`Caller count: ${fn.called_by_count}`,`Callee count: ${fn.calls_count}`,'','Callers:',...(fn.callers.length?fn.callers.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Callees:',...(fn.callees.length?fn.callees.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Direct internal helpers:',...(fn.direct_internal_helpers.length?fn.direct_internal_helpers.map(h=>`- ${h.function} (${h.module}) ${h.source_path || ''}`):['- —']),'',`Source path: ${fn.source_path || 'Source unavailable'}`,`Source URL: ${fn.source_url || 'Source unavailable'}`,''); }); return lines.join('\n'); }
+function markdownPacket() { const packet=refactorPacket(), ctx=packet.refactor_context; const lines=['FabricOps callable refactor packet','','Prompt for AI','',packet.ai_prompt,'','Refactor context','',`Intent: ${ctx.refactor_intent}`,'','Mode: Planning only.','',`Compatibility mode: ${compatibilityContext().label}`,'','Compatibility instruction:',ctx.compatibility_instruction,'',...markdownList('Selected callable actions:', ctx.selected_callable_actions), '', ...markdownList('Likely refactor actions:', ctx.likely_refactor_actions), '', ...markdownList('Safety constraints:', ctx.safety_constraints), '', ...markdownList('Expected AI output:', ctx.expected_ai_output), '', 'Selected callables', '']; packet.functions.forEach((fn,idx)=>{ lines.push(`Callable ${idx+1}: ${fn.function_name}`,'',`Qualified name: ${fn.qualified_name}`,`Module: ${fn.module}`,`Callable layer: ${fn.function_type}`,`Review status: ${fn.review_status_label || fn.review_status}` ,`Recommended action: ${fn.recommended_action}`,`Priority: ${fn.priority}`,`Refactor type: ${fn.refactor_type}`,`Refactor guidance: ${fn.refactor_guidance}`,`Signal reason: ${fn.signal_reason}`,`Caller count: ${fn.called_by_count}`,`Callee count: ${fn.calls_count}`,'','Callers:',...(fn.callers.length?fn.callers.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Callees:',...(fn.callees.length?fn.callees.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Direct internal helpers:',...(fn.direct_internal_helpers.length?fn.direct_internal_helpers.map(h=>`- ${h.function} (${h.module}) ${h.source_path || ''}`):['- —']),'',`Source path: ${fn.source_path || 'Source unavailable'}`,`Source URL: ${fn.source_url || 'Source unavailable'}`,''); }); return lines.join('\n'); }
 function showManualCopy(textValue) { const area=$('manualCopy'); area.hidden=false; area.value=textValue; area.focus(); area.select(); }
 async function copyExport(format) { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const output=format==='json'?JSON.stringify(refactorPacket(), null, 2):markdownPacket(); if(navigator.clipboard?.writeText){ await navigator.clipboard.writeText(output); $('manualCopy').hidden=true; $('exportStatus').textContent=`Copied ${format.toUpperCase()} for ${items.length} callables.`; } else { showManualCopy(output); $('exportStatus').textContent='Clipboard unavailable. Copy the refactor packet from the text box.'; } }
 function downloadJson() { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/T/,'_').slice(0,15); const blob=new Blob([JSON.stringify(refactorPacket(), null, 2)], {type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fabricops_refactor_packet_${stamp}.json`; link.click(); URL.revokeObjectURL(link.href); $('exportStatus').textContent=`Downloaded JSON for ${items.length} callables.`; }
 function renderExportToolbar(rows) { const selected=selectedItems().length, visible=rows.filter(i=>state.selected.has(i.qualified_name)).length; $('selectedCount').textContent=`Selected: ${selected} callables${selected && visible!==selected?`, ${visible} visible`:''}`; ['copyJson','copyMarkdown','downloadJson'].forEach(id=>$(id).disabled=!selected); const allVisible=rows.length>0 && rows.every(i=>state.selected.has(i.qualified_name)); const selectAll=$('selectAllVisible'); selectAll.checked=allVisible; selectAll.indeterminate=!allVisible && rows.some(i=>state.selected.has(i.qualified_name)); }
-function renderTable() { const rows=filteredRows().sort(compare); renderExportToolbar(rows); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered callables.`; $('inventoryBody').innerHTML=rows.map(i=>{ const id=i.qualified_name, open=state.expanded.has(id), t=text(i.function_type).toLowerCase(); return `<tr><td><input type="checkbox" data-select-row="${esc(id)}" aria-label="Select ${esc(i.function_name)}" ${state.selected.has(id)?'checked':''}></td><td><button type="button" class="action-cell" data-toggle="${esc(id)}" aria-expanded="${open}">${open?'Hide':'View'}</button></td><td class="function-name" title="${esc(i.qualified_name)}"><a href="${esc(i.source_url || '#')}"><code>${esc(i.function_name)}</code></a><br><small>${esc(i.qualified_name)}</small></td><td><span class="badge ${t}">${esc(i.function_type)}</span></td><td><code>${esc(i.module)}</code></td><td>${chips(i)}</td><td><span class="chip-wrap"><span class="badge review" title="${esc(i.recommended_action)}">${esc(i.recommended_action)}</span></span></td><td class="num">${esc(i.called_by_count)}</td><td class="num">${esc(i.calls_count)}</td><td class="source-cell"><a class="source-link" href="${esc(i.source_url || '#')}">${esc(i.source_path || 'Source unavailable')}</a></td></tr>${open?`<tr class="details"><td colspan="10"><div class="details-panel"><p class="signal-reason"><strong>Why flagged:</strong> ${esc(signalReason(i))}</p><div class="details-grid"><section><h3>Callers</h3>${linkedList(i.callers)}</section><section><h3>Callees</h3>${linkedList(i.callees)}</section><section><h3>Direct internal helpers</h3>${linkedList(i.direct_internal_helpers || [])}</section><section><h3>Metrics</h3><p><strong>Depth:</strong> ${esc(i.deepest_call_chain_depth ?? '—')}</p><p><strong>Repeated helpers:</strong> ${esc(i.repeated_helper_count ?? 0)}</p></section></div></div></td></tr>`:''}`; }).join(''); }
+function renderTable() { const rows=filteredRows().sort(compare); renderExportToolbar(rows); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered callables.`; $('inventoryBody').innerHTML=rows.map(i=>{ const id=i.qualified_name, open=state.expanded.has(id), t=text(i.function_type).toLowerCase(); return `<tr><td><input type="checkbox" data-select-row="${esc(id)}" aria-label="Select ${esc(i.function_name)}" ${state.selected.has(id)?'checked':''}></td><td><button type="button" class="action-cell" data-toggle="${esc(id)}" aria-expanded="${open}">${open?'Hide':'View'}</button></td><td class="function-name" title="${esc(i.qualified_name)}"><a href="${esc(i.source_url || '#')}"><code>${esc(i.function_name)}</code></a><br><small>${esc(i.qualified_name)}</small></td><td><span class="badge ${t}">${esc(i.function_type)}</span></td><td><span class="badge review">${esc(i.review_status_label || i.review_status)}</span></td><td><code>${esc(i.module)}</code></td><td>${chips(i)}</td><td><span class="chip-wrap"><span class="badge review" title="${esc(i.recommended_action)}">${esc(i.recommended_action)}</span></span></td><td class="num">${esc(i.called_by_count)}</td><td class="num">${esc(i.calls_count)}</td><td class="source-cell"><a class="source-link" href="${esc(i.source_url || '#')}">${esc(i.source_path || 'Source unavailable')}</a></td></tr>${open?`<tr class="details"><td colspan="11"><div class="details-panel"><p class="signal-reason"><strong>Why flagged:</strong> ${esc(signalReason(i))}</p><div class="details-grid"><section><h3>Callers</h3>${linkedList(i.callers)}</section><section><h3>Callees</h3>${linkedList(i.callees)}</section><section><h3>Direct internal helpers</h3>${linkedList(i.direct_internal_helpers || [])}</section><section><h3>Metrics</h3><p><strong>Depth:</strong> ${esc(i.deepest_call_chain_depth ?? '—')}</p><p><strong>Repeated helpers:</strong> ${esc(i.repeated_helper_count ?? 0)}</p></section></div></div></td></tr>`:''}`; }).join(''); }
 function updateCompatibilityHelp() { $('compatibilityHelp').textContent=compatibilityContext().description; }
-function update() { syncTreeActive(); renderTreeSummary(); renderTable(); } function resetFilters() { state.search=state.type=state.signal=''; state.activeTree=''; ['searchBox','typeFilter','signalFilter'].forEach(id=>$(id).value=''); update(); }
-function applyTree(key) { state.search=''; state.type=''; state.signal=''; state.activeTree=key; $('searchBox').value=''; if(key.startsWith('type:')) state.type=key.slice(5); if(key.startsWith('action:')) state.signal=key.slice(7); $('typeFilter').value=state.type; $('signalFilter').value=state.signal; update(); }
+function update() { syncTreeActive(); renderTreeSummary(); renderTable(); } function resetFilters() { state.search=state.type=state.review_status=state.signal=''; state.activeTree=''; ['searchBox','typeFilter','reviewStatusFilter','signalFilter'].forEach(id=>$(id).value=''); update(); }
+function applyTree(key) { state.search=''; state.type=''; state.review_status=''; state.signal=''; state.activeTree=key; $('searchBox').value=''; if(key.startsWith('type:')) state.type=key.slice(5); if(key.startsWith('review:')) state.review_status=key.slice(7); if(key.startsWith('action:')) state.signal=key.slice(7); $('typeFilter').value=state.type; $('reviewStatusFilter').value=state.review_status; $('signalFilter').value=state.signal; update(); }
 $('searchBox').addEventListener('input', e=>{state.search=e.target.value; update();});
-$('typeFilter').addEventListener('change', e=>{state.type=e.target.value; state.activeTree=''; update();}); $('compatibilityMode').addEventListener('change', e=>{state.compatibility_mode=e.target.value; updateCompatibilityHelp();}); $('selectVisible').addEventListener('click', ()=>{filteredRows().forEach(i=>state.selected.add(i.qualified_name)); renderTable();}); $('clearSelected').addEventListener('click', ()=>{state.selected.clear(); renderTable(); $('exportStatus').textContent='Selection cleared.';}); $('copyJson').addEventListener('click', ()=>copyExport('json').catch(e=>{$('exportStatus').textContent=`Unable to copy JSON: ${e.message}`;})); $('copyMarkdown').addEventListener('click', ()=>copyExport('markdown').catch(e=>{$('exportStatus').textContent=`Unable to copy Markdown: ${e.message}`;})); $('downloadJson').addEventListener('click', downloadJson); $('selectAllVisible').addEventListener('change', e=>{const rows=filteredRows(); rows.forEach(i=>e.target.checked?state.selected.add(i.qualified_name):state.selected.delete(i.qualified_name)); renderTable();}); $('signalFilter').addEventListener('change', e=>{state.signal=e.target.value; state.activeTree=''; update();}); $('resetFilters').addEventListener('click', resetFilters);
+$('typeFilter').addEventListener('change', e=>{state.type=e.target.value; state.activeTree=''; update();}); $('reviewStatusFilter').addEventListener('change', e=>{state.review_status=e.target.value; state.activeTree=''; update();}); $('compatibilityMode').addEventListener('change', e=>{state.compatibility_mode=e.target.value; updateCompatibilityHelp();}); $('selectVisible').addEventListener('click', ()=>{filteredRows().forEach(i=>state.selected.add(i.qualified_name)); renderTable();}); $('clearSelected').addEventListener('click', ()=>{state.selected.clear(); renderTable(); $('exportStatus').textContent='Selection cleared.';}); $('copyJson').addEventListener('click', ()=>copyExport('json').catch(e=>{$('exportStatus').textContent=`Unable to copy JSON: ${e.message}`;})); $('copyMarkdown').addEventListener('click', ()=>copyExport('markdown').catch(e=>{$('exportStatus').textContent=`Unable to copy Markdown: ${e.message}`;})); $('downloadJson').addEventListener('click', downloadJson); $('selectAllVisible').addEventListener('change', e=>{const rows=filteredRows(); rows.forEach(i=>e.target.checked?state.selected.add(i.qualified_name):state.selected.delete(i.qualified_name)); renderTable();}); $('signalFilter').addEventListener('change', e=>{state.signal=e.target.value; state.activeTree=''; update();}); $('resetFilters').addEventListener('click', resetFilters);
 document.addEventListener('click', e=>{ const sort=e.target.closest('[data-sort]'); if(sort){ const k=sort.dataset.sort; state.sortDir=state.sortKey===k?state.sortDir*-1:1; state.sortKey=k; update(); } const toggle=e.target.closest('[data-toggle]'); if(toggle){ const id=toggle.dataset.toggle; state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id); renderTable(); } const rowSelect=e.target.closest('[data-select-row]'); if(rowSelect){ rowSelect.checked?state.selected.add(rowSelect.dataset.selectRow):state.selected.delete(rowSelect.dataset.selectRow); renderTable(); } const tree=e.target.closest('[data-tree]'); if(tree) applyTree(tree.dataset.tree); });
 async function loadData() { try { const response=await fetch('../reference/_data/callable-flow.json'); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data=await response.json(); inventory=data.function_inventory || data.refactor_inventory || []; summary=data.summary_counts || {}; renderTreeSummary(); renderLegend(); updateCompatibilityHelp(); populateFilters(); renderTable(); } catch(error) { $('resultCount').textContent=`Unable to load callable-flow JSON: ${error.message}`; } } loadData();
 </script>
@@ -2417,7 +2444,7 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "",
             "Use the dashboard to inspect public API entrypoints, internal helpers, utilities, unreachable callables, caller/callee relationships, helper depth, reuse, and refactor review recommendations.",
             "",
-            "FabricOps callables are organized into three dependency layers: public API callables, internal helpers, and utilities. Public callables form the supported user-facing API and may depend on internal helpers or utilities. Internal helpers may depend only on utilities. Utilities should be leaf callables and should not depend on other project callables. Same-layer calls and upward calls are flagged for review so the callable graph stays directional and safer to refactor.",
+            "FabricOps callables are organized into three dependency layers: public API callables, internal helpers, and utilities. Public callables form the supported user-facing API and may depend on internal helpers or utilities. Internal helpers may depend only on utilities. Utilities should be leaf callables and should not depend on other project callables. Same-layer calls and upward calls between classified callables are flagged as architecture violations; calls to classification-pending or unreachable callees are review signals instead of layer violations.",
             "",
             "[Open full dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }",
             "",
