@@ -229,9 +229,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Thin wrapper candidates" in flow_text
     assert "Public API entrypoints" in flow_text
     assert "## Top priority refactor inventory" in flow_text
-    assert "refactor-dashboard.html" in flow_text
-    assert "_data/callable-flow.json" in flow_text
-    assert "complete searchable and filterable inventory" in flow_text
+    assert "../refactor-dashboard.html" in flow_text
+    assert "../_data/callable-flow.json" in flow_text
+    assert "full one-row-per-helper inventory" in flow_text
+    assert "Protect helpers are excluded here" in flow_text
     assert '??? info "Full searchable inventory"' not in flow_text
     assert '??? info "Inventory by module"' not in flow_text
     assert '??? info "Inventory by signal"' not in flow_text
@@ -242,7 +243,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## Refactor hotspot ranking" not in flow_text
     assert "Helper" in flow_text
     assert "Suggested action" in flow_text
-    assert "Keep stable" in flow_text
     assert "../../api/reference/run_table_guardrails/" in flow_text
     assert "](../api/reference/run_table_guardrails/)" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' in flow_text
@@ -259,6 +259,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Reset filters" in dashboard_text
     assert 'data-sort="function"' in dashboard_text
     assert "data-toggle" in dashboard_text
+    assert "callable-flow/" in dashboard_text
     assert "fetch('_data/callable-flow.json')" in dashboard_text
     assert "data.refactor_inventory" in dashboard_text
     assert "Used by" in dashboard_text
@@ -321,6 +322,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert any(len(item["signals"]) > 1 for item in refactor_inventory)
     assert all(item["priority"] for item in refactor_inventory)
     assert all(item["suggested_action"] for item in refactor_inventory)
+    assert any(
+        item["priority"] == "Protect" and item["suggested_action"] == "Keep stable"
+        for item in refactor_inventory
+    )
     assert all(
         {
             "function",
@@ -339,7 +344,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         } <= set(item)
         for item in refactor_inventory
     )
-    priority_order = {"Protect": 0, "High": 1, "Medium": 2, "Low": 3, "Review": 4}
+    priority_order = {"High": 0, "Medium": 1, "Low": 2, "Review": 3, "Protect": 4}
     assert [
         (priority_order[item["priority"]], item["module"], item["function"].lower())
         for item in refactor_inventory

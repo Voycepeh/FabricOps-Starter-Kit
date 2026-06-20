@@ -1577,11 +1577,11 @@ REFACTOR_SIGNAL_RECOMMENDATIONS = {
 }
 
 REFACTOR_PRIORITY_ORDER = {
-    "Protect": 0,
-    "High": 1,
-    "Medium": 2,
-    "Low": 3,
-    "Review": 4,
+    "High": 0,
+    "Medium": 1,
+    "Low": 2,
+    "Review": 3,
+    "Protect": 4,
 }
 
 REFACTOR_PRIORITY_ACTIONS = {
@@ -2025,7 +2025,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 <header>
   <h1>FabricOps refactor signal dashboard</h1>
   <p>Generated static dashboard for maintainers. The JSON data remains the source of truth.</p>
-  <p><a href=\"callable-flow.md\">Back to callable-flow reference</a> · <a href=\"_data/callable-flow.json\">Open JSON data</a></p>
+  <p><a href=\"callable-flow/\">Back to callable-flow reference</a> · <a href=\"_data/callable-flow.json\">Open JSON data</a></p>
 </header>
 <main>
   <section class=\"cards\" aria-label=\"Refactor summary\" id=\"summaryCards\"></section>
@@ -2056,7 +2056,7 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 <script>
 let inventory = [];
 let summary = {};
-const priorityRank = {Protect: 0, High: 1, Medium: 2, Low: 3, Review: 4};
+const priorityRank = {High: 0, Medium: 1, Low: 2, Review: 3, Protect: 4};
 const state = {search: '', module: '', signal: '', priority: '', sortKey: 'priority', sortDir: 1, expanded: new Set()};
 const $ = (id) => document.getElementById(id);
 const text = (value) => String(value ?? '');
@@ -2078,7 +2078,7 @@ function renderCards() {
 function populateFilters() {
   unique(inventory.map((item) => item.module)).forEach((value) => option($('moduleFilter'), value));
   unique(inventory.flatMap((item) => item.signals)).forEach((value) => option($('signalFilter'), value));
-  ['Protect', 'High', 'Medium', 'Low', 'Review'].forEach((value) => option($('priorityFilter'), value));
+  ['High', 'Medium', 'Low', 'Review', 'Protect'].forEach((value) => option($('priorityFilter'), value));
 }
 function filteredRows() {
   const q = state.search.trim().toLowerCase();
@@ -2179,16 +2179,16 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             ]
         )
 
-    top_inventory = inventory[:20]
+    top_inventory = [row for row in inventory if row["priority"] != "Protect"][:20]
     lines.extend(
         [
             '</div>',
             "",
-            "[Open interactive refactor dashboard](refactor-dashboard.html){ .md-button } [Download callable-flow JSON](_data/callable-flow.json){ .md-button }",
+            "[Open interactive refactor dashboard](../refactor-dashboard.html){ .md-button } [Download callable-flow JSON](../_data/callable-flow.json){ .md-button }",
             "",
             "## Top priority refactor inventory",
             "",
-            "Top 20 internal helpers sorted by priority, then module, then function name. Open the interactive dashboard for the complete searchable and filterable inventory.",
+            "Top 20 actionable internal helpers sorted by priority, then module, then function name. Protect helpers are excluded here because they should stay stable; use the dashboard priority filter to review them.",
             "",
         ]
     )
@@ -2201,8 +2201,8 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
             "",
             "The generated static dashboard contains the full one-row-per-helper inventory with search, module, signal, priority filters, sortable columns, and expandable row details.",
             "",
-            "- [Open the interactive refactor dashboard](refactor-dashboard.html)",
-            "- [Open the source JSON data](_data/callable-flow.json)",
+            "- [Open the interactive refactor dashboard](../refactor-dashboard.html)",
+            "- [Open the source JSON data](../_data/callable-flow.json)",
             "",
             "## Public callable dependency map",
             "",
