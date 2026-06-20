@@ -248,6 +248,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Needs review" in dashboard_text
     assert "High review" in dashboard_text
     assert "Medium review" in dashboard_text
+    assert "Select visible" in dashboard_text
+    assert "Clear selection" in dashboard_text
+    assert "Copy JSON" in dashboard_text
+    assert "Copy Markdown" in dashboard_text
+    assert "Download JSON" in dashboard_text
+    assert "fabricops_function_refactor_packet" in dashboard_text
+    assert "signal_reason" in dashboard_text
     assert "How signals are classified" in dashboard_text
     assert "Small helpers likely safe to flatten" in dashboard_text
     assert "Function type" in dashboard_text
