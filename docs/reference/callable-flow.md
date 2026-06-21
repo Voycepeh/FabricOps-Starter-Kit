@@ -3,7 +3,7 @@
 AI coding tools make it easy to add functions quickly. That speed is useful, but it can also create too many entry points, thin wrapper functions, nested helpers, and uncontrolled dependencies. The Callable Flow Dashboard exists to make those relationships visible before the codebase becomes hard to maintain.
 
 !!! info "Interactive dashboard"
-    The interactive [Callable Flow Dashboard](../../assets/callable-functions-dashboard.html) is available from this page. This documentation explains why the dashboard exists, how to read the signals, and how to use the exported context for AI-assisted refactoring.
+    The interactive [Callable Flow Dashboard](../assets/callable-functions-dashboard.html) is available from this page. This documentation explains why the dashboard exists, how to read the signals, and how to use the exported context for AI-assisted refactoring.
 
 ## Why callable flow matters
 
@@ -43,7 +43,7 @@ Use the dashboard signals to find patterns that deserve review:
 
 ### Possible wrapper or inline candidates
 
-![Possible wrapper or inline candidates](../../assets/fabricops-bad-example-pointless-wrapper-functions.png)
+![Possible wrapper or inline candidates](../assets/fabricops-bad-example-pointless-wrapper-functions.png)
 
 *Possible wrapper or inline candidates.*
 
@@ -51,7 +51,7 @@ Helpers used by only one function and calling no other function may still be val
 
 ### Large dependency surface
 
-![Large dependency surface](../../assets/fabricops-bad-example-large-surface-area.png)
+![Large dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
 
 *Large dependency surface.*
 
@@ -59,7 +59,7 @@ A public callable depending on many nested helpers may be valid orchestration, b
 
 ### Public callable dependency
 
-![Public callable dependency](../../assets/fabricops-bad-example-function-dependancy.png)
+![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)
 
 *Public callable dependency.*
 
@@ -67,7 +67,7 @@ Public callables should usually be entry points, not dependencies of other publi
 
 ### Nested helper chain
 
-![Nested helper chain](../../assets/fabricops-bad-example-nested-functions.png)
+![Nested helper chain](../assets/fabricops-bad-example-nested-functions.png)
 
 *Nested helper chain.*
 
@@ -75,7 +75,7 @@ Repeated internal-to-internal helper chains make the architecture harder to reas
 
 ## Selecting refactor candidates
 
-![Selecting refactor candidates](../../assets/fabricops-select-refactor-candidates.png)
+![Selecting refactor candidates](../assets/fabricops-select-refactor-candidates.png)
 
 *Selecting refactor candidates.*
 
@@ -83,7 +83,7 @@ The dashboard supports selecting functions that need review. This lets the user 
 
 ## Exporting an AI refactor prompt
 
-![Exporting an AI refactor prompt](../../assets/fabricops-select-refactor-candidates-prompt-export.png)
+![Exporting an AI refactor prompt](../assets/fabricops-select-refactor-candidates-prompt-export.png)
 
 *Exporting an AI refactor prompt.*
 
