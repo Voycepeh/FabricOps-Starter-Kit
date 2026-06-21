@@ -259,6 +259,25 @@ def _parameter_rows_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef, para
     return rows
 
 
+def _is_dataclass_class(node: ast.ClassDef) -> bool:
+    """Return whether a class node is decorated as a dataclass."""
+    return any(
+        (isinstance(decorator, ast.Name) and decorator.id == "dataclass")
+        or (isinstance(decorator, ast.Attribute) and decorator.attr == "dataclass")
+        or (
+            isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Name)
+            and decorator.func.id == "dataclass"
+        )
+        or (
+            isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Attribute)
+            and decorator.func.attr == "dataclass"
+        )
+        for decorator in node.decorator_list
+    )
+
+
 def parse_module(path: Path) -> dict[str, Any]:
     """Parse module."""
     source_text = path.read_text(encoding="utf-8")
@@ -467,6 +486,13 @@ def build_callable_graph(
         classes = info.get("classes", {})
         exported_names = {name for name, sym in symbol_map.items() if sym.actual_module == module}
         same_module_names = set(functions) | set(classes)
+        dataclass_post_init_methods = {
+            f"{class_node.name}.__post_init__"
+            for class_node in module_tree.body
+            if isinstance(class_node, ast.ClassDef) and _is_dataclass_class(class_node)
+            for child in class_node.body
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and child.name == "__post_init__"
+        }
         for callable_name in sorted(set(functions) | set(classes)):
             role = str(
                 docs_metadata.get(callable_name, {}).get("function_type")
@@ -490,6 +516,8 @@ def build_callable_graph(
                         "callable_kind": (
                             "class"
                             if callable_name in classes
+                            else "implicit_lifecycle_method"
+                            if callable_name in dataclass_post_init_methods
                             else "callable_object"
                             if callable_name.endswith(".__call__")
                             else "method"
@@ -1886,10 +1914,12 @@ CALLABLE_LAYER_LABELS = {
 REVIEW_STATUS_LABELS = {
     "classified": "Classified",
     "classification_pending": "Classification pending",
+    "implicit_lifecycle": "Implicit lifecycle method",
     "unreachable": "Unreachable",
 }
 
 LAYER_CONSISTENCY_LABELS = {
+    "implicit_lifecycle": "Implicit lifecycle method",
     "matches_layer": "Matches expected layer",
     "stable_utility": "Stable utility",
     "questionable_utility": "Questionable utility",
@@ -1901,6 +1931,7 @@ LAYER_CONSISTENCY_LABELS = {
 }
 
 LAYER_CONSISTENCY_SIGNALS = {
+    "implicit_lifecycle": "Implicit lifecycle method",
     "questionable_utility": "Utility but low reuse",
     "promote_to_utility_candidate": "Promote candidate",
     "shared_internal_helper": "Shared helper",
@@ -1919,6 +1950,9 @@ def _classify_layer_consistency(
     has_architecture_violation: bool,
 ) -> str:
     """Return whether observed call graph usage supports the assigned layer."""
+    if callable_kind == "implicit_lifecycle_method":
+        return "implicit_lifecycle"
+
     if has_architecture_violation:
         return "architecture_violation"
 
@@ -1959,6 +1993,8 @@ def _callable_classification(
     if qn in public_qn_set:
         return "public", "classified"
     node = node_by_qn[qn]
+    if node.get("callable_kind") == "implicit_lifecycle_method":
+        return "internal", "implicit_lifecycle"
     outbound_project = {callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn}
     layer = "utility" if node.get("is_underscore") and not outbound_project else "internal"
     if qn not in reachable_non_public:
@@ -2076,6 +2112,9 @@ def _build_function_inventory(
             priority = "Medium"
         elif review_status == "classification_pending":
             recommended_action = "Review manually"
+            priority = "Review"
+        elif review_status == "implicit_lifecycle":
+            recommended_action = "Keep lifecycle method"
             priority = "Review"
         elif layer == "public":
             recommended_action = "Public API entrypoint"
@@ -2504,9 +2543,9 @@ function countBy(predicate) { return inventory.filter(predicate).length; }
 function summaryCount(group, label, predicate) { return inventory.length ? countBy(predicate) : (summary[group]?.[label] ?? 0); }
 function syncTreeActive() { if(!state.type && !state.kind && !state.review_status && !state.signal && !state.consistency) state.activeTree = state.activeTree === 'total' ? 'total' : ''; else if(state.type && !state.kind && !state.review_status && !state.signal && !state.consistency) state.activeTree = `type:${state.type}`; else if(state.review_status && !state.type && !state.kind && !state.signal && !state.consistency) state.activeTree = `review:${state.review_status}`; else if(state.signal && !state.type && !state.kind && !state.review_status && !state.consistency) state.activeTree = `action:${state.signal}`; else if(state.kind && !state.type && !state.review_status && !state.signal && !state.consistency) state.activeTree = `kind:${state.kind}`; else if(state.consistency && !state.type && !state.kind && !state.review_status && !state.signal) state.activeTree = `consistency:${state.consistency}`; else state.activeTree = ''; }
 function treeButton(key, label, value) { return `<li><button type="button" class="tree-row ${state.activeTree===key?'active':''}" data-tree="${esc(key)}"><span>${esc(label)}</span><strong>${esc(value ?? 0)}</strong></button></li>`; }
-function renderTreeSummary() { const actionLabels=unique([...Object.keys(summary.recommended_action || {}), ...inventory.map(i=>i.recommended_action)]); const layers=['Public API','Internal helper','Utility']; const statuses=['Classified','Classification pending','Unreachable']; const typeRows=layers.map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label))).join(''); const statusRows=statuses.map(label=>treeButton(`review:${label}`, label, summaryCount('review_status', label.toLowerCase().replaceAll(' ', '_'), i=>i.review_status_label===label))).join(''); const kindRows=unique([...Object.keys(summary.callable_kind || {}), ...inventory.map(i=>i.callable_kind)]).map(label=>treeButton(`kind:${label}`, text(label).replace(/^./, c=>c.toUpperCase()), summaryCount('callable_kind', label, i=>i.callable_kind===label))).join(''); const actionRows=actionLabels.map(label=>treeButton(`action:${label}`, label, summaryCount('recommended_action', label, i=>i.recommended_action===label))).join(''); const consistencyRows=Object.entries(layerConsistencyLabels).filter(([key])=>(summary.layer_consistency?.[key] ?? countBy(i=>i.layer_consistency===key))>0).map(([key,label])=>treeButton(`consistency:${key}`, label, summaryCount('layer_consistency', key, i=>i.layer_consistency===key))).join(''); $('summaryTree').innerHTML=`<h2>Callable inventory</h2><ul>${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul><h3>Architecture layer</h3><ul>${typeRows}</ul><h3>Review status</h3><ul>${statusRows}</ul><h3>Callable kind</h3><ul>${kindRows}</ul><h3>Recommended action</h3><ul>${actionRows}</ul><h3>Layer consistency</h3><ul>${consistencyRows}</ul>`; }
+function renderTreeSummary() { const actionLabels=unique([...Object.keys(summary.recommended_action || {}), ...inventory.map(i=>i.recommended_action)]); const layers=['Public API','Internal helper','Utility']; const statuses=['Classified','Classification pending','Implicit lifecycle method','Unreachable']; const typeRows=layers.map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label))).join(''); const statusRows=statuses.map(label=>treeButton(`review:${label}`, label, summaryCount('review_status', label.toLowerCase().replaceAll(' ', '_'), i=>i.review_status_label===label))).join(''); const kindRows=unique([...Object.keys(summary.callable_kind || {}), ...inventory.map(i=>i.callable_kind)]).map(label=>treeButton(`kind:${label}`, text(label).replace(/^./, c=>c.toUpperCase()), summaryCount('callable_kind', label, i=>i.callable_kind===label))).join(''); const actionRows=actionLabels.map(label=>treeButton(`action:${label}`, label, summaryCount('recommended_action', label, i=>i.recommended_action===label))).join(''); const consistencyRows=Object.entries(layerConsistencyLabels).filter(([key])=>(summary.layer_consistency?.[key] ?? countBy(i=>i.layer_consistency===key))>0).map(([key,label])=>treeButton(`consistency:${key}`, label, summaryCount('layer_consistency', key, i=>i.layer_consistency===key))).join(''); $('summaryTree').innerHTML=`<h2>Callable inventory</h2><ul>${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul><h3>Architecture layer</h3><ul>${typeRows}</ul><h3>Review status</h3><ul>${statusRows}</ul><h3>Callable kind</h3><ul>${kindRows}</ul><h3>Recommended action</h3><ul>${actionRows}</ul><h3>Layer consistency</h3><ul>${consistencyRows}</ul>`; }
 function renderLegend() { $('actionLegendGrid').innerHTML=`<div><strong>Callable kind</strong><p class="hint">Callable kind describes what the object is structurally: function, class, or method.</p></div><div><strong>Callable layer</strong><p class="hint">Callable layer describes the intended architecture role: Public API, Internal helper, or Utility.</p></div><div><strong>Usage evidence</strong><p class="hint">Used by count shows how many discovered callables call this callable. Calls count shows how many discovered callables this callable calls.</p></div><div><strong>Layer consistency</strong><p class="hint">Layer consistency compares the assigned layer against the observed call graph. A utility should normally be broadly reusable, low level, and dependency safe. A utility with low reuse, or an internal helper with high reuse, is marked for layer review instead of being automatically accepted.</p></div><div><strong>Recommended action</strong><p class="hint">Recommended action is the cleanup suggestion used for review and export.</p></div>`+Object.entries(actionLegend).map(([l,d])=>`<div><span class="badge review">${esc(l)}</span><p class="hint">${esc(d)}</p></div>`).join(''); }
-function populateFilters() { ['function','class','method'].forEach(v=>option($('kindFilter'),v[0].toUpperCase()+v.slice(1))); ['Public API','Internal helper','Utility'].forEach(v=>option($('typeFilter'),v)); ['Classified','Classification pending','Unreachable'].forEach(v=>option($('reviewStatusFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); }
+function populateFilters() { ['function','class','method'].forEach(v=>option($('kindFilter'),v[0].toUpperCase()+v.slice(1))); ['Public API','Internal helper','Utility'].forEach(v=>option($('typeFilter'),v)); ['Classified','Classification pending','Implicit lifecycle method','Unreachable'].forEach(v=>option($('reviewStatusFilter'),v)); unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v)); }
 function filteredRows() { const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || text(i.function_name).toLowerCase().includes(q)) && (!state.kind || i.callable_kind===state.kind.toLowerCase()) && (!state.type || i.function_type===state.type) && (!state.review_status || i.review_status_label===state.review_status) && (!state.signal || i.recommended_action===state.signal) && (!state.consistency || i.layer_consistency===state.consistency)); }
 function signalReason(i) { const signals=(i.signals || []).map(s=>reasonLabels[s] || s); if(i.recommended_action && actionLegend[i.recommended_action]) return `${i.recommended_action}: ${actionLegend[i.recommended_action]}`; if(signals.length) return signals.join(', '); return 'No automated signal reason is available yet.'; }
 function compare(a,b) { const k=state.sortKey; if(k==='priority') return ((priorityRank[a.priority]??9)-(priorityRank[b.priority]??9))*state.sortDir || a.function_name.localeCompare(b.function_name); if(typeof a[k]==='number') return (a[k]-b[k])*state.sortDir; return text(a[k]).localeCompare(text(b[k]))*state.sortDir; }

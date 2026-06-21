@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-21T16:10:37+00:00",
+  "generated_at": "2026-06-21T17:02:15+00:00",
   "function_inventory": [
     {
       "function_name": "_audit_timestamp_expr",
@@ -861,8 +861,8 @@
           "qualified_name": "fabricops_kit.config.DataAgreementConfig.__post_init__",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L430-L436",
           "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "method"
+          "review_status": "implicit_lifecycle",
+          "callable_kind": "implicit_lifecycle_method"
         },
         {
           "function": "GovernanceConfig.__post_init__",
@@ -870,8 +870,8 @@
           "qualified_name": "fabricops_kit.config.GovernanceConfig.__post_init__",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L345-L362",
           "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "method"
+          "review_status": "implicit_lifecycle",
+          "callable_kind": "implicit_lifecycle_method"
         }
       ],
       "callees": [],
@@ -1212,8 +1212,8 @@
           "qualified_name": "fabricops_kit.config.FrameworkConfig.__post_init__",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L513-L515",
           "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "method"
+          "review_status": "implicit_lifecycle",
+          "callable_kind": "implicit_lifecycle_method"
         }
       ],
       "callees": [],
@@ -1535,14 +1535,15 @@
       "module": "config",
       "function_type": "Internal helper",
       "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
       "signals": [
-        "callee_unreachable"
+        "callee_unreachable",
+        "Implicit lifecycle method"
       ],
       "architecture_signals": [],
       "review_signals": [
@@ -1551,8 +1552,8 @@
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 1,
-      "layer_consistency": "matches_layer",
-      "layer_consistency_label": "Matches expected layer",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [
         {
@@ -1615,20 +1616,22 @@
       "module": "config",
       "function_type": "Internal helper",
       "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [],
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
+      "signals": [
+        "Implicit lifecycle method"
+      ],
       "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 1,
-      "layer_consistency": "matches_layer",
-      "layer_consistency_label": "Matches expected layer",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [
         {
@@ -1773,14 +1776,15 @@
       "module": "config",
       "function_type": "Internal helper",
       "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
       "signals": [
-        "callee_unreachable"
+        "callee_unreachable",
+        "Implicit lifecycle method"
       ],
       "architecture_signals": [],
       "review_signals": [
@@ -1789,8 +1793,8 @@
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 1,
-      "layer_consistency": "matches_layer",
-      "layer_consistency_label": "Matches expected layer",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [
         {
@@ -1841,24 +1845,24 @@
       "function_name": "LineageConfig.__post_init__",
       "qualified_name": "fabricops_kit.config.LineageConfig.__post_init__",
       "module": "config",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "function_type": "Internal helper",
+      "layer": "internal",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
       "signals": [
-        "Utility but low reuse"
+        "Implicit lifecycle method"
       ],
       "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 0,
-      "layer_consistency": "questionable_utility",
-      "layer_consistency_label": "Questionable utility",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [],
       "direct_internal_helpers": [],
@@ -1899,24 +1903,24 @@
       "function_name": "NotebookRuntimeConfig.__post_init__",
       "qualified_name": "fabricops_kit.config.NotebookRuntimeConfig.__post_init__",
       "module": "config",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "function_type": "Internal helper",
+      "layer": "internal",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
       "signals": [
-        "Utility but low reuse"
+        "Implicit lifecycle method"
       ],
       "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 0,
-      "layer_consistency": "questionable_utility",
-      "layer_consistency_label": "Questionable utility",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [],
       "direct_internal_helpers": [],
@@ -2005,24 +2009,24 @@
       "function_name": "PathConfig.__post_init__",
       "qualified_name": "fabricops_kit.config.PathConfig.__post_init__",
       "module": "config",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "function_type": "Internal helper",
+      "layer": "internal",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
       "signals": [
-        "Utility but low reuse"
+        "Implicit lifecycle method"
       ],
       "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 0,
-      "layer_consistency": "questionable_utility",
-      "layer_consistency_label": "Questionable utility",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [],
       "direct_internal_helpers": [],
@@ -2063,24 +2067,24 @@
       "function_name": "QualityConfig.__post_init__",
       "qualified_name": "fabricops_kit.config.QualityConfig.__post_init__",
       "module": "config",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "function_type": "Internal helper",
+      "layer": "internal",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
       "signals": [
-        "Utility but low reuse"
+        "Implicit lifecycle method"
       ],
       "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 0,
-      "layer_consistency": "questionable_utility",
-      "layer_consistency_label": "Questionable utility",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [],
       "direct_internal_helpers": [],
@@ -6753,24 +6757,24 @@
       "function_name": "FabricStore.__post_init__",
       "qualified_name": "fabricops_kit.fabric_input_output.FabricStore.__post_init__",
       "module": "fabric_input_output",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
+      "function_type": "Internal helper",
+      "layer": "internal",
+      "review_status": "implicit_lifecycle",
+      "review_status_label": "Implicit lifecycle method",
+      "callable_kind": "implicit_lifecycle_method",
       "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
+      "recommended_action": "Keep lifecycle method",
+      "priority": "Review",
       "signals": [
-        "Utility but low reuse"
+        "Implicit lifecycle method"
       ],
       "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 0,
-      "layer_consistency": "questionable_utility",
-      "layer_consistency_label": "Questionable utility",
+      "layer_consistency": "implicit_lifecycle",
+      "layer_consistency_label": "Implicit lifecycle method",
       "callers": [],
       "callees": [],
       "direct_internal_helpers": [],
@@ -19140,28 +19144,31 @@
     "total_functions": 273,
     "function_type": {
       "Public API": 20,
-      "Internal helper": 157,
-      "Utility": 96
+      "Internal helper": 162,
+      "Utility": 91
     },
     "layer": {
       "public": 20,
-      "internal": 157,
-      "utility": 96
+      "internal": 162,
+      "utility": 91
     },
     "review_status": {
       "classified": 231,
       "classification_pending": 14,
-      "unreachable": 28
+      "implicit_lifecycle": 8,
+      "unreachable": 20
     },
     "callable_kind": {
       "class": 13,
       "function": 251,
-      "method": 9
+      "implicit_lifecycle_method": 8,
+      "method": 1
     },
     "recommended_action": {
       "Architecture violation": 97,
       "Inline candidate": 43,
-      "Orphaned callable": 20,
+      "Keep lifecycle method": 8,
+      "Orphaned callable": 12,
       "Public API entrypoint": 19,
       "Review abstraction value": 9,
       "Review manually": 18,
@@ -19169,9 +19176,10 @@
       "Stable utility": 52
     },
     "layer_consistency": {
-      "matches_layer": 63,
+      "implicit_lifecycle": 8,
+      "matches_layer": 60,
       "stable_utility": 25,
-      "questionable_utility": 43,
+      "questionable_utility": 38,
       "promote_to_utility_candidate": 1,
       "shared_internal_helper": 15,
       "possible_inline_or_private_helper": 29,
