@@ -64,3 +64,21 @@ They abstract the important but tedious work into a simplified plug and play wor
     <span class="fabricops-landing-card__body">Written by functions and widgets during runtime for enforcement and review.</span>
   </a>
 </div>
+
+## For maintainers
+
+FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. The Callable Flow Dashboard scans the codebase and visualizes how public functions, internal helpers, and utility functions depend on each other. Use it to identify wrapper candidates, deep helper chains, large dependency surfaces, and public callable dependency issues before they become difficult to unwind.
+
+<div class="fabricops-card-grid">
+  <a class="fabricops-landing-card" href="/FabricOps-Starter-Kit/dev/reference/callable-flow/">
+    <span class="fabricops-landing-card__title">Callable Flow Guide</span>
+    <span class="fabricops-landing-card__body">Understand the Public, Internal, and Utility callable hierarchy, why the dashboard exists, and how to read its architecture signals.</span>
+    <span class="fabricops-landing-card__meta">Read the guide</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="/FabricOps-Starter-Kit/dev/assets/callable-functions-dashboard.html">
+    <span class="fabricops-landing-card__title">Callable Flow Dashboard</span>
+    <span class="fabricops-landing-card__body">Inspect callable relationships, review refactor signals, select candidates, and export an AI refactor prompt.</span>
+    <span class="fabricops-landing-card__meta">Open dashboard</span>
+  </a>
+</div>
