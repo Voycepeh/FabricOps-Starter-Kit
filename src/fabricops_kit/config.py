@@ -430,8 +430,8 @@ class DataAgreementConfig:
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
         object.__setattr__(self, "metadata_tables", deepcopy(dict(self.metadata_tables or {})))
-        object.__setattr__(self, "data_steward_widget", deepcopy(dict(self.data_steward_widget or {})))
-        object.__setattr__(self, "data_agreement_widget", deepcopy(dict(self.data_agreement_widget or {})))
+        object.__setattr__(self, "data_steward_widget", _normalize_widget_config(self.data_steward_widget))
+        object.__setattr__(self, "data_agreement_widget", _normalize_widget_config(self.data_agreement_widget))
         options = [str(option).strip() for option in (self.steward_role_options or []) if str(option).strip()]
         object.__setattr__(self, "steward_role_options", options or list(DEFAULT_STEWARD_ROLE_OPTIONS))
 

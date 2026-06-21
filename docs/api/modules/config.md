@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 21</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 9 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 21</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 10 external modules</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Used by external module count</td>
-      <td>9</td>
+      <td>10</td>
     </tr>
     <tr>
       <td>Uses external module count</td>
@@ -52,7 +52,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>External modules using this module</td>
-      <td><code>FrameworkConfig</code>, <code>GovernanceConfig</code>, <code>data_agreement</code>, <code>data_lineage</code>, <code>data_profiling</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>metadata</code>, <code>pipeline</code></td>
+      <td><code>DataAgreementConfig</code>, <code>FrameworkConfig</code>, <code>GovernanceConfig</code>, <code>data_agreement</code>, <code>data_lineage</code>, <code>data_profiling</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>metadata</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External modules this module uses</td>

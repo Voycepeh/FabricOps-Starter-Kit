@@ -82,6 +82,22 @@ def test_governance_config_uses_widget_custom_fields_contract():
     assert not hasattr(config, legacy_classification_field)
 
 
+def test_data_agreement_widgets_normalize_custom_fields_contract():
+    """Verify data agreement widgets normalize custom field keys consistently."""
+    config = DataAgreementConfig(
+        data_steward_widget={"custom_fields": [{"key": " steward_note ", "type": "textarea"}]},
+        data_agreement_widget={"custom_fields": [{"key": " agreement_note ", "type": "text"}]},
+    )
+
+    assert config.data_steward_widget["custom_fields"][0]["key"] == "steward_note"
+    assert config.data_agreement_widget["custom_fields"][0]["key"] == "agreement_note"
+
+
+def test_data_agreement_widgets_reject_blank_custom_field_keys():
+    """Verify data agreement widgets reject blank custom field keys."""
+    with pytest.raises(ValueError, match="Governance custom fields require a key"):
+        DataAgreementConfig(data_steward_widget={"custom_fields": [{"key": " "}]})
+
 def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
     """Verify env config template does not expose prompt boilerplate or unused defaults."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
@@ -307,7 +323,6 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
     assert "METADATA_DATA_ACCESS" in tables
 
 
-
 def test_metadata_data_catalogue_schema_is_profile_evidence_only():
     """Verify catalogue schema has profile_mode but excludes old result fields."""
     from fabricops_kit.governance_review import CATALOGUE_TABLE, _get_governance_metadata_schemas
@@ -387,7 +402,6 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
     assert result["status"] == "not_ready"
     assert result["missing_tables"] == ["METADATA_DATA_STEWARD"]
     assert "configured metadata target" in result["warnings"][0]
-
 
 
 def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 import fabricops_kit.governance_review as gr
-from fabricops_kit.data_lineage import _build_lineage_records
+from fabricops_kit.data_lineage import _build_lineage_records, _validate_lineage_steps
 from tests.helpers import FakeSpark, framework_config
 
 from fabricops_kit.governance_review import (
@@ -103,6 +103,50 @@ def test_private_lineage_records_default_to_utc_without_config():
 
     assert rows[0]["created_ts"].endswith("+00:00")
 
+
+def test_validate_lineage_steps_reports_valid_empty_missing_and_invalid_records():
+    """Verify lineage validation covers valid, empty, missing field, and invalid record cases."""
+    valid_step = {
+        "source": "raw_orders",
+        "target": "orders",
+        "transformation": "clean",
+        "reason": "prepare target",
+        "source_type": "lakehouse_table",
+        "target_type": "lakehouse_table",
+        "confidence": "high",
+    }
+
+    assert _validate_lineage_steps([valid_step]) == {
+        "is_valid": True,
+        "errors": [],
+        "warnings": [],
+        "review_required": False,
+    }
+    assert _validate_lineage_steps([])["errors"] == ["lineage_steps cannot be empty."]
+    assert "missing required field 'confidence'" in _validate_lineage_steps([{k: v for k, v in valid_step.items() if k != "confidence"}])["errors"][0]
+    assert _validate_lineage_steps(["not-a-dict"])["errors"] == ["Step 1: each lineage step must be a dict."]
+
+
+def test_validate_lineage_steps_flags_low_confidence_and_unknown_types_for_review():
+    """Verify lineage validation warns when records need human review."""
+    result = _validate_lineage_steps([
+        {
+            "source": "raw_orders",
+            "target": "orders",
+            "transformation": "clean",
+            "reason": "prepare target",
+            "source_type": "unknown",
+            "target_type": "lakehouse_table",
+            "confidence": "low",
+        }
+    ])
+
+    assert result["is_valid"] is True
+    assert result["review_required"] is True
+    assert result["warnings"] == [
+        "Step 1: unknown type requires human review.",
+        "Step 1: low confidence requires human review.",
+    ]
 
 def test_governance_review_builders_commit_only_human_approved_records():
     """Verify governed intent builders commit only human-approved records."""

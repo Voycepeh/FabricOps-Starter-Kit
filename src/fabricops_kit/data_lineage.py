@@ -22,7 +22,7 @@ def _validate_lineage_steps(lineage_steps: Any) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     review_required = False
-    required = ["source", "target", "transformation", "reason", "source_type", "target_type", "confidence"]
+    required_fields = ("source", "target", "transformation", "reason", "source_type", "target_type", "confidence")
     if not isinstance(lineage_steps, list):
         return {"is_valid": False, "errors": ["lineage_steps must be a list."], "warnings": [], "review_required": True}
     if not lineage_steps:
@@ -32,13 +32,15 @@ def _validate_lineage_steps(lineage_steps: Any) -> dict[str, Any]:
             errors.append(f"Step {i}: each lineage step must be a dict.")
             review_required = True
             continue
-        for f in required:
-            if f not in step:
-                errors.append(f"Step {i}: missing required field '{f}'.")
+        for field_name in required_fields:
+            if field_name not in step:
+                errors.append(f"Step {i}: missing required field '{field_name}'.")
         if step.get("source_type") == "unknown" or step.get("target_type") == "unknown":
-            review_required = True; warnings.append(f"Step {i}: unknown type requires human review.")
+            review_required = True
+            warnings.append(f"Step {i}: unknown type requires human review.")
         if step.get("confidence") == "low":
-            review_required = True; warnings.append(f"Step {i}: low confidence requires human review.")
+            review_required = True
+            warnings.append(f"Step {i}: low confidence requires human review.")
     return {"is_valid": not errors, "errors": errors, "warnings": warnings, "review_required": review_required}
 
 
