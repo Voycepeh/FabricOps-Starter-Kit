@@ -264,6 +264,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy Markdown" in dashboard_text
     assert "Download JSON" in dashboard_text
     assert "fabricops_callable_refactor_packet" in dashboard_text
+    assert "function refactorContext(callables)" in dashboard_text
+    assert "const callables=selectedItems().map(exportItem)" in dashboard_text
+    assert "callables, functions:callables" in dashboard_text
+    assert "packet.callables.forEach" in dashboard_text
+    assert "packet.functions.forEach" not in dashboard_text
+    assert "const functions=selectedItems().map(exportItem)" not in dashboard_text
     assert "signal_reason" in dashboard_text
     assert "refactor_context" in dashboard_text
     assert "ai_prompt" in dashboard_text
