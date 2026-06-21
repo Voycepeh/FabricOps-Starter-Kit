@@ -278,6 +278,28 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "signal_reason" in dashboard_text
     assert "refactor_context" in dashboard_text
     assert "ai_prompt" in dashboard_text
+    assert "selected_callable_count" in dashboard_text
+    assert "planned_batch_count" in dashboard_text
+    assert "batch_id" in dashboard_text
+    assert "batch_scope" in dashboard_text
+    assert "batch_strategy" in dashboard_text
+    assert "completed_or_refactored_count" in dashboard_text
+    assert "remaining_selected_count" in dashboard_text
+    assert "remaining_selected_count:null" in dashboard_text
+    assert "Remaining selected count: fill in after implementation" in dashboard_text
+    assert "Remaining selected count: 0" not in dashboard_text
+    assert "deferred_selected_callables" in dashboard_text
+    assert "Deferred selected callables: none by default before implementation" in dashboard_text
+    assert "function batchAccounting(callables)" in dashboard_text
+    assert "batch_accounting" in dashboard_text
+    assert "Batch accounting" in dashboard_text
+    assert "Completion accounting required in PR description" in dashboard_text
+    assert "how many callables were selected" in dashboard_text
+    assert "how many are intended for the current batch" in dashboard_text
+    assert "how many were actually refactored in the PR" in dashboard_text
+    assert "Do not imply that all selected callables were refactored unless they were actually changed" in dashboard_text
+    assert "If this PR handles only a subset, clearly label it as a batch" in dashboard_text
+    assert "selected / handled / remaining counts" in dashboard_text
     assert "refactor_type" in dashboard_text
     assert "refactor_guidance" in dashboard_text
     assert "safety_constraints" in dashboard_text
