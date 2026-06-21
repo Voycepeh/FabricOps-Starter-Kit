@@ -9,7 +9,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
     <p class="reference-kpi-note">Notebook-facing entry points used by starter templates.</p>
   </section>
   <section class="reference-kpi-card">
-    <p class="reference-kpi-value">239</p>
+    <p class="reference-kpi-value">240</p>
     <h2 class="reference-kpi-title">Supporting internal functions</h2>
     <p class="reference-kpi-note">Maintainer helpers tracked for source navigation.</p>
   </section>
@@ -91,7 +91,7 @@ Use the finder below to look up the 20 public Starter Kit functions. Supporting 
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore</p>
   <div class="reference-catalogue-item-counts">
 
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Calls 9 nested helper functions</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_path_config</code></li><li><code>_convert_single_parquet_ns_to_us</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li><li><code>_normalize_schema_name</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Calls 10 nested helper functions</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_path_config</code></li><li><code>_convert_single_parquet_ns_to_us</code></li><li><code>_get_spark</code></li><li><code>_lakehouse_file_path</code></li><li><code>_load_pandas</code></li><li><code>_normalize_schema_name</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li></ul></details>
   </div>
 </article>
 <article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">

@@ -2076,15 +2076,19 @@
       "callable": "_convert_single_parquet_ns_to_us",
       "docs_url": null,
       "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
+      "calls": [
+        "fabricops_kit.fabric_input_output._load_pandas"
+      ],
+      "calls_count": 1,
       "used_by": [
         "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helpers_used": [
+        "fabricops_kit.fabric_input_output._load_pandas"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.fabric_input_output._get_spark": {
       "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
@@ -2122,6 +2126,24 @@
         "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
       ],
       "used_by_count": 3,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.fabric_input_output._load_pandas": {
+      "qualified_name": "fabricops_kit.fabric_input_output._load_pandas",
+      "short_name": "_load_pandas",
+      "module": "fabric_input_output",
+      "callable": "_load_pandas",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
+        "fabricops_kit.fabric_input_output.read_lakehouse_excel"
+      ],
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -2292,9 +2314,10 @@
         "fabricops_kit.config._get_store",
         "fabricops_kit.config.resolve_fabric_context",
         "fabricops_kit.fabric_input_output._get_spark",
-        "fabricops_kit.fabric_input_output._lakehouse_file_path"
+        "fabricops_kit.fabric_input_output._lakehouse_file_path",
+        "fabricops_kit.fabric_input_output._load_pandas"
       ],
-      "calls_count": 4,
+      "calls_count": 5,
       "used_by": [
         "fabricops_kit.fabric_input_output.read_data"
       ],
@@ -2302,9 +2325,10 @@
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._get_spark",
-        "fabricops_kit.fabric_input_output._lakehouse_file_path"
+        "fabricops_kit.fabric_input_output._lakehouse_file_path",
+        "fabricops_kit.fabric_input_output._load_pandas"
       ],
-      "internal_helper_count": 2
+      "internal_helper_count": 3
     },
     "fabricops_kit.fabric_input_output.read_lakehouse_parquet": {
       "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
@@ -6143,7 +6167,7 @@
     },
     "fabric_input_output": {
       "callable_count": 2,
-      "internal_count": 9,
+      "internal_count": 10,
       "outbound_modules": [
         "config"
       ],

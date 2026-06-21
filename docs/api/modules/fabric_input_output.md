@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 9</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 6 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 6 external modules</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>9</td>
+      <td>10</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -149,6 +149,10 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_load_pandas</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_normalize_schema_name</code></td>
       <td>—</td>
     </tr>
@@ -181,12 +185,17 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 </li>
 <li>
 <span class="reference-chip"><code>_convert_single_parquet_ns_to_us</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_load_pandas</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_get_spark</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_lakehouse_file_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_load_pandas</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_normalize_schema_name</code></span>
