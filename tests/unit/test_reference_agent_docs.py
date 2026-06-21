@@ -39,7 +39,7 @@ def _section_text(page_text: str, section: str) -> str:
     assert marker in page_text
     after = page_text.split(marker, 1)[1]
     section = after.split("\n## ", 1)[0]
-    section = section.split("\n<details class=\"reference-metadata-details\">", 1)[0]
+    section = section.split('\n<details class="reference-metadata-details">', 1)[0]
     return section.strip()
 
 
@@ -59,12 +59,9 @@ def _exported_symbols() -> list[str]:
             isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
         ):
             return [
-                elt.value
-                for elt in node.value.elts
-                if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
+                elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
             ]
     raise AssertionError("Could not parse __all__")
-
 
 
 def _landing_token_text(page_text: str, token_name: str) -> str:
@@ -100,9 +97,7 @@ def test_landing_stats_match_reference_sources() -> None:
 
     assert stats["public_function_count"] == len(exported_symbols)
     assert stats["supporting_internal_function_count"] == sum(
-        1
-        for entry in function_manifest
-        if entry.get("qualified_name") and entry.get("name") not in exported_symbols
+        1 for entry in function_manifest if entry.get("qualified_name") and entry.get("name") not in exported_symbols
     )
     assert stats["metadata_table_count"] == len(metadata_pages)
 
@@ -136,6 +131,7 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     assert not (removed_symbols & function_callables)
     assert not (removed_symbols & page_callables)
     assert not (removed_symbols & public_inventory)
+
 
 def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
     """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
@@ -242,15 +238,24 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert 'id="searchScope"' not in dashboard_text
     assert 'id="quickFilters"' not in dashboard_text
     assert "Search callable name" in dashboard_text
-    assert "Search matches function names only. Use the filters below for function type and recommended action." not in dashboard_text
+    assert (
+        "Search matches function names only. Use the filters below for function type and recommended action."
+        not in dashboard_text
+    )
     assert "Recommended action" in dashboard_text
     assert "Reset" in dashboard_text
     assert "refactor reason" not in dashboard_text.lower()
     assert "All recommended actions" in dashboard_text
     assert "Quick signal filters" not in dashboard_text
     assert "Easy cleanup" not in dashboard_text
-    assert "Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup." in dashboard_text
-    assert "Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified." in dashboard_text
+    assert (
+        "Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup."
+        in dashboard_text
+    )
+    assert (
+        "Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified."
+        in dashboard_text
+    )
     assert "Most flexible: breaking changes are allowed when they simplify new or experimental code." in dashboard_text
     assert "High review" not in dashboard_text
     assert "Medium review" not in dashboard_text
@@ -309,7 +314,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
 
     summary_counts = flow_data["summary_counts"]
-    assert {"total_callables", "total_functions", "function_type", "layer", "review_status", "callable_kind", "recommended_action"} <= set(summary_counts)
+    assert {
+        "total_callables",
+        "total_functions",
+        "function_type",
+        "layer",
+        "review_status",
+        "callable_kind",
+        "recommended_action",
+    } <= set(summary_counts)
     assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
     assert set(summary_counts["review_status"]) == {"classified", "classification_pending", "unreachable"}
     assert summary_counts["layer"]["public"] == len(exported_symbols)
@@ -320,11 +333,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
     assert {"Public API", "Internal helper", "Utility"} <= {row["function_type"] for row in function_inventory}
-    assert {"classified", "classification_pending", "unreachable"} <= {row["review_status"] for row in function_inventory}
+    assert {"classified", "classification_pending", "unreachable"} <= {
+        row["review_status"] for row in function_inventory
+    }
     assert sum(1 for row in function_inventory if row["layer"] == "public") == summary_counts["layer"]["public"]
     assert sum(1 for row in function_inventory if row["layer"] == "internal") == summary_counts["layer"]["internal"]
     assert sum(1 for row in function_inventory if row["layer"] == "utility") == summary_counts["layer"]["utility"]
-    assert sum(1 for row in function_inventory if row["review_status"] == "unreachable") == summary_counts["review_status"]["unreachable"]
+    assert (
+        sum(1 for row in function_inventory if row["review_status"] == "unreachable")
+        == summary_counts["review_status"]["unreachable"]
+    )
     assert {row["function_name"] for row in function_inventory if row["layer"] == "public"} == exported_symbols
     assert summary_counts["recommended_action"] == {
         action: sum(1 for row in function_inventory if row["recommended_action"] == action)
@@ -352,7 +370,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
             "callers",
             "callees",
             "source_path",
-        } <= set(item)
+        }
+        <= set(item)
         for item in function_inventory
     )
 
@@ -376,8 +395,7 @@ def test_refactor_signals_json_includes_run_table_guardrails() -> None:
     assert guardrail_signals["repeated_helpers"]
     assert guardrail_signals["single_delegate_helpers"]
     assert all(
-        {"helper", "qualified_name", "branch_count"} <= set(item)
-        for item in guardrail_signals["repeated_helpers"]
+        {"helper", "qualified_name", "branch_count"} <= set(item) for item in guardrail_signals["repeated_helpers"]
     )
 
 
@@ -445,13 +463,17 @@ def test_setup_metadata_tables_reference_uses_keyword_only_example() -> None:
     assert "spark_session=spark" not in _section_text(text, "Example usage")
     example = _section_text(text, "Example usage")
     assert 'class="reference-example-usage"' in example
-    assert """```python
+    assert (
+        """```python
 setup_metadata_tables(
     spark=spark,
     config=CONFIG,
     env="Sandbox",
 )
-```""" in example
+```"""
+        in example
+    )
+
 
 def test_core_automation_manifest_entries_have_non_placeholder_agent_fields() -> None:
     """Verify core agent/automation metadata entries have non placeholder agent/automation metadata fields."""
@@ -520,7 +542,7 @@ def test_callable_pages_embed_title_first_collapsed_call_flow() -> None:
                 for position in [text.index(marker)]
             )
             assert text.index("# ") < call_flow_pos < first_description_pos, page
-            assert '```text' not in text.split('??? info "Uses ', 1)[1].split("##", 1)[0], page
+            assert "```text" not in text.split('??? info "Uses ', 1)[1].split("##", 1)[0], page
 
 
 def test_internalized_enforce_profile_behavior_has_no_standalone_page() -> None:
@@ -562,8 +584,7 @@ def test_github_source_url_defaults_to_main(monkeypatch) -> None:
     from scripts.generate_function_reference import github_source_url
 
     assert github_source_url("src/fabricops_kit/config.py", 595, 704) == (
-        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/"
-        "main/src/fabricops_kit/config.py#L595-L704"
+        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L595-L704"
     )
 
 
@@ -574,8 +595,7 @@ def test_github_source_url_uses_configured_source_ref(monkeypatch) -> None:
     from scripts.generate_function_reference import github_source_url
 
     assert github_source_url("src/fabricops_kit/config.py", 595, 704) == (
-        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/"
-        "review-sha-123/src/fabricops_kit/config.py#L595-L704"
+        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/review-sha-123/src/fabricops_kit/config.py#L595-L704"
     )
 
 
@@ -613,10 +633,10 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Uses 12 internal helper functions"') == 1
+    assert text.count('??? info "Uses 11 internal helper functions"') == 1
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
-    assert "Internal helper count: 12" not in text
+    assert "Internal helper count: 11" not in text
     assert 'class="reference-helper-groups"' not in implementation_section
     assert re.search(
         r'href="https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline\.py#L\d+(?:-L\d+)?"',
@@ -624,7 +644,6 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     )
 
     for helper_name in [
-        "_rows_for_display",
         "_guardrail_reason",
         "_dq_reason",
         "_freshness_reason",
@@ -645,17 +664,19 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Uses 12 internal helper functions"') == 1
+    assert implementation_section.count('??? info "Uses 11 internal helper functions"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
-    assert "Unique internal/private helpers: 12. Repeated calls may appear in multiple branches." not in implementation_section
+    assert (
+        "Unique internal/private helpers: 11. Repeated calls may appear in multiple branches."
+        not in implementation_section
+    )
     assert '<div class="reference-call-tree" role="tree">' in implementation_section
     assert "### Refactor signals" not in implementation_section
     assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
     for helper_name in [
-        "_rows_for_display",
         "build_guardrail_detail_rows",
         "_guardrail_reason",
         "_dq_reason",
@@ -671,15 +692,6 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
         "build_guardrail_summary_rows",
     ]:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
-
-    assert (
-        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L314-L338"'
-        in implementation_section
-    )
-    assert (
-        'href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L293-L304"'
-        in implementation_section
-    )
 
 
 def test_removed_aggregate_governance_wrapper_pages_are_absent() -> None:
@@ -883,6 +895,7 @@ def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
             assert 'class="glossary-chip"' in key_terms, entry["name"]
             assert glossary[term] in key_terms, entry["name"]
 
+
 def test_internalized_enforce_profile_behavior_keeps_manifest_metadata_without_page() -> None:
     """Verify internalized enforce_profile_behavior remains metadata-only."""
     function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
@@ -923,7 +936,9 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
     """Verify related guides metadata renders before template and call graph sections."""
     function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
     automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
-    function_by_name = {entry["name"]: entry for entry in function_manifest if entry.get("classification") == "Callable"}
+    function_by_name = {
+        entry["name"]: entry for entry in function_manifest if entry.get("classification") == "Callable"
+    }
     automation_by_name = {entry["name"]: entry for entry in automation_manifest if entry.get("type") == "callable"}
 
     related_guides = function_by_name["run_table_guardrails"]["related_guides"]
@@ -941,26 +956,42 @@ def test_related_guides_metadata_renders_before_template_and_call_graph_sections
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:
     """Verify user-guide pages link back to key callable references."""
-    environment_config = (ROOT / "docs" / "notebook-templates-implementation-guide" / "environment-config.md").read_text(encoding="utf-8")
-    agreement_setup = (ROOT / "docs" / "notebook-templates-implementation-guide" / "agreement-setup.md").read_text(encoding="utf-8")
-    pipeline_execution = (ROOT / "docs" / "notebook-templates-implementation-guide" / "pipeline-execution.md").read_text(encoding="utf-8")
-    governance_review = (ROOT / "docs" / "notebook-templates-implementation-guide" / "governance-review.md").read_text(encoding="utf-8")
-    metadata_tables = (ROOT / "docs" / "reference" / "metadata.md").read_text(encoding="utf-8")
-    lineage_table = (
-        ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage_table.md"
+    environment_config = (
+        ROOT / "docs" / "notebook-templates-implementation-guide" / "environment-config.md"
     ).read_text(encoding="utf-8")
+    agreement_setup = (ROOT / "docs" / "notebook-templates-implementation-guide" / "agreement-setup.md").read_text(
+        encoding="utf-8"
+    )
+    pipeline_execution = (
+        ROOT / "docs" / "notebook-templates-implementation-guide" / "pipeline-execution.md"
+    ).read_text(encoding="utf-8")
+    governance_review = (ROOT / "docs" / "notebook-templates-implementation-guide" / "governance-review.md").read_text(
+        encoding="utf-8"
+    )
+    metadata_tables = (ROOT / "docs" / "reference" / "metadata.md").read_text(encoding="utf-8")
+    lineage_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage_table.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "[`setup_notebook`](../api/reference/setup_notebook.md)" in environment_config
     assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in environment_config
     assert "[`widget_render_data_steward`](../api/reference/widget_render_data_steward.md)" in agreement_setup
-    assert "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
+    assert (
+        "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
+    )
     guardrail_target = "run_table_guardrails"
     guardrail_link = f"[`run_table_guardrails`](../api/reference/{guardrail_target}.md)"
     assert guardrail_link in pipeline_execution
     assert "[`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md)" in governance_review
-    assert "[`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md)" in governance_review
+    assert (
+        "[`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md)"
+        in governance_review
+    )
     assert "[`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md)" in governance_review
-    assert "[`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md)" in governance_review
+    assert (
+        "[`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md)"
+        in governance_review
+    )
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
     assert "[`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)" in lineage_table
@@ -998,13 +1029,10 @@ def _direct_public_notebook_calls(path: Path, public_names: set[str]) -> set[str
     """Return direct public FabricOps calls from a notebook's code cells."""
     notebook = json.loads(path.read_text(encoding="utf-8"))
     code = "\n".join(
-        "".join(cell.get("source", ""))
-        for cell in notebook.get("cells", [])
-        if cell.get("cell_type") == "code"
+        "".join(cell.get("source", "")) for cell in notebook.get("cells", []) if cell.get("cell_type") == "code"
     )
     parseable_code = "\n".join(
-        f"# {line}" if line.lstrip().startswith(("%", "!")) else line
-        for line in code.splitlines()
+        f"# {line}" if line.lstrip().startswith(("%", "!")) else line for line in code.splitlines()
     )
     tree = ast.parse(parseable_code)
     imported_public_by_name = {
@@ -1048,11 +1076,21 @@ def test_used_in_templates_metadata_matches_direct_ast_notebook_usage() -> None:
             if public_name in expected_by_name:
                 expected_by_name[public_name].add(path.stem)
 
-    order = {"00_env_config": 0, "01_agreement": 1, "02_pipeline": 2, "03_governance": 3, "99_explore": 4, "example_pipeline_demo": 5, "example_dq_rule_smoke_test": 6}
+    order = {
+        "00_env_config": 0,
+        "01_agreement": 1,
+        "02_pipeline": 2,
+        "03_governance": 3,
+        "99_explore": 4,
+        "example_pipeline_demo": 5,
+        "example_dq_rule_smoke_test": 6,
+    }
     for entry in function_manifest:
         if entry.get("classification") != "Callable":
             continue
-        expected = sorted(expected_by_name[entry["name"]], key=lambda notebook: (order.get(notebook, len(order)), notebook))
+        expected = sorted(
+            expected_by_name[entry["name"]], key=lambda notebook: (order.get(notebook, len(order)), notebook)
+        )
         assert entry["used_in_templates"] == expected
 
 
@@ -1076,7 +1114,9 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
     assert "  - Reference:" not in mkdocs_text
-    assert "  - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md" in mkdocs_text
+    assert (
+        "  - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md" in mkdocs_text
+    )
     assert "  - List of Metadata Tables:" in mkdocs_text
     assert "      - Overview: reference/metadata.md" in mkdocs_text
     assert "  - List of Functions: reference/index.md" in mkdocs_text
@@ -1086,11 +1126,7 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
     assert not re.search(r"^  - Function & DQ Rules Reference:$", mkdocs_text, re.MULTILINE)
     assert "api/reference/" not in mkdocs_text
 
-    missing = [
-        name
-        for name in _exported_symbols()
-        if not (API_REFERENCE_DIR / f"{name}.md").exists()
-    ]
+    missing = [name for name in _exported_symbols() if not (API_REFERENCE_DIR / f"{name}.md").exists()]
     assert missing == []
 
 
