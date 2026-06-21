@@ -17,8 +17,12 @@ def _exported_symbols() -> list[str]:
     """Return exported public symbol names from the package root."""
     tree = ast.parse((ROOT / "src" / "fabricops_kit" / "__init__.py").read_text(encoding="utf-8"))
     for node in tree.body:
-        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
-            return [elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)]
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
+        ):
+            return [
+                elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
+            ]
     raise AssertionError("Could not parse __all__")
 
 
@@ -93,9 +97,7 @@ def test_stale_pipeline_guardrail_links_do_not_return() -> None:
 
 def test_generated_github_links_use_main_not_local_sha() -> None:
     """Verify generated GitHub links do not point at local commit SHAs."""
-    stale_sha_pattern = re.compile(
-        r"https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/[0-9a-f]{40}/"
-    )
+    stale_sha_pattern = re.compile(r"https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/[0-9a-f]{40}/")
     offenders = [
         str(path.relative_to(ROOT))
         for path in sorted(DOCS.rglob("*.md"))
@@ -124,7 +126,6 @@ def test_generated_relationship_links_respect_public_and_internal_routes() -> No
     pipeline_page = (DOCS / "api" / "modules" / "pipeline.md").read_text(encoding="utf-8")
 
     assert 'href="../reference/display_guardrail_results/"' in pipeline_page
-    assert 'href="../reference/_rows_for_display/"' not in pipeline_page
-    assert '<span class="reference-chip"><code>_rows_for_display</code></span>' in pipeline_page
+    assert "_rows_for_display" not in pipeline_page
     assert 'href="../reference/build_guardrail_summary_rows/"' not in pipeline_page
     assert 'href="../reference/build_guardrail_detail_rows/"' not in pipeline_page

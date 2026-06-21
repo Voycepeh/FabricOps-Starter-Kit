@@ -9,7 +9,14 @@ from uuid import uuid4
 
 from .data_agreement import get_selected_agreement, widget_select_agreement
 from .data_profiling import profile_dataframe
-from .guardrails import enforce_freshness, enforce_freshness_rule, enforce_profile_behavior, stop_if_failed, _check_schema_runtime, _check_schema_rule_runtime
+from .guardrails import (
+    enforce_freshness,
+    enforce_freshness_rule,
+    enforce_profile_behavior,
+    stop_if_failed,
+    _check_schema_runtime,
+    _check_schema_rule_runtime,
+)
 from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
 from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
@@ -41,23 +48,6 @@ class _PipelineRunContext:
 
 
 _ACTIVE_PIPELINE_CONTEXT: _PipelineRunContext | None = None
-
-
-def _notebook_global(name: str, default: Any = None) -> Any:
-    """Return an active IPython notebook global when available."""
-    try:
-        ip = get_ipython()  # type: ignore[name-defined]
-    except Exception:
-        return default
-    return getattr(ip, "user_ns", {}).get(name, default) if ip is not None else default
-
-
-def _runtime_metadata_value(run_context: Any, key: str, default: str = "") -> str:
-    """Return one runtime metadata value from ``RUN_CONTEXT``."""
-    metadata = getattr(run_context, "runtime_metadata", {}) or {}
-    if isinstance(metadata, Mapping):
-        return str(metadata.get(key) or default)
-    return default
 
 
 def start_pipeline_run(
@@ -115,10 +105,22 @@ def start_pipeline_run(
 
     """
     global _ACTIVE_PIPELINE_CONTEXT
-    run_context = run_context if run_context is not None else _notebook_global("RUN_CONTEXT")
-    spark_session = spark_session if spark_session is not None else _notebook_global("spark")
-    schema = metadata_schema if metadata_schema is not None else _notebook_global("METADATA_SCHEMA", "")
-    resolved_pipeline_name = str(pipeline_name or _runtime_metadata_value(run_context, "currentNotebookName", notebook_type))
+    if run_context is None or spark_session is None or metadata_schema is None:
+        try:
+            ip = get_ipython()  # type: ignore[name-defined]
+        except Exception:
+            user_ns = {}
+        else:
+            user_ns = getattr(ip, "user_ns", {}) if ip is not None else {}
+        run_context = run_context if run_context is not None else user_ns.get("RUN_CONTEXT")
+        spark_session = spark_session if spark_session is not None else user_ns.get("spark")
+        schema = metadata_schema if metadata_schema is not None else user_ns.get("METADATA_SCHEMA", "")
+    else:
+        schema = metadata_schema
+    runtime_metadata = getattr(run_context, "runtime_metadata", {}) or {}
+    if not isinstance(runtime_metadata, Mapping):
+        runtime_metadata = {}
+    resolved_pipeline_name = str(pipeline_name or runtime_metadata.get("currentNotebookName") or notebook_type)
     active = _PipelineRunContext(
         run_id=str(getattr(run_context, "run_id", "") or uuid4()),
         pipeline_started_at=_now_iso(),
@@ -126,7 +128,7 @@ def start_pipeline_run(
         spark_session=spark_session,
         metadata_schema=str(schema or ""),
         notebook_type=str(notebook_type or "02_pipeline"),
-        notebook_id=_runtime_metadata_value(run_context, "currentNotebookId", ""),
+        notebook_id=str(runtime_metadata.get("currentNotebookId") or ""),
         context=context,
         read_only=bool(read_only),
     )
@@ -144,7 +146,9 @@ def start_pipeline_run(
         agreement = get_selected_agreement()
         active.agreement = dict(agreement)
         active.agreement_id = str(agreement.get("agreement_id", ""))
-        active.agreement_contract_version = str(agreement.get("agreement_contract_version", agreement.get("contract_version", "")))
+        active.agreement_contract_version = str(
+            agreement.get("agreement_contract_version", agreement.get("contract_version", ""))
+        )
         active.notebook_registry_id = str(agreement.get("notebook_registry_id", agreement.get("registration_id", "")))
         active.notebook_id = str(agreement.get("notebook_id", active.notebook_id))
 
@@ -225,7 +229,9 @@ def _canonical_catalogue_profile_df(profile_df: Any):
     for target, candidates in source_map.items():
         source = next((candidate for candidate in candidates if candidate in profile_columns), None)
         if source is None:
-            source = next((by_lower[candidate.lower()] for candidate in candidates if candidate.lower() in by_lower), None)
+            source = next(
+                (by_lower[candidate.lower()] for candidate in candidates if candidate.lower() in by_lower), None
+            )
         if source is not None:
             expressions.append(F.col(source).alias(target))
     return profile_df.select(*expressions) if expressions else profile_df
@@ -251,7 +257,6 @@ def _normalize_catalogue_evidence_types(evidence_df: Any):
     return normalized
 
 
-
 def _yes_no(value: Any) -> str:
     """Return notebook-friendly yes/no text."""
     return "yes" if bool(value) else "no"
@@ -259,21 +264,34 @@ def _yes_no(value: Any) -> str:
 
 def _result_status(result: Mapping[str, Any] | None) -> str:
     """Return a normalized guardrail result status."""
-    return str((result or {}).get("status") or (result or {}).get("freshness_status") or (result or {}).get("stability_status") or "not_run").lower()
+    return str(
+        (result or {}).get("status")
+        or (result or {}).get("freshness_status")
+        or (result or {}).get("stability_status")
+        or "not_run"
+    ).lower()
 
 
 def _result_can_continue(result: Mapping[str, Any] | None) -> bool:
     """Return whether a guardrail result can continue."""
     if not result:
         return True
-    return bool(result.get("can_continue", result.get("freshness_can_continue", result.get("stability_can_continue", True))))
+    return bool(
+        result.get("can_continue", result.get("freshness_can_continue", result.get("stability_can_continue", True)))
+    )
 
 
 def _result_reason(result: Mapping[str, Any] | None) -> str:
     """Return the clearest human-readable reason from a result."""
     if not result:
         return ""
-    return str(result.get("reason") or result.get("message") or result.get("freshness_message") or result.get("stability_message") or "")
+    return str(
+        result.get("reason")
+        or result.get("message")
+        or result.get("freshness_message")
+        or result.get("stability_message")
+        or ""
+    )
 
 
 def _next_action(guardrail: str, status: str) -> str:
@@ -340,9 +358,15 @@ def _profile_behavior_reason(result: Mapping[str, Any]) -> str:
 
 def _dq_reason(result: Mapping[str, Any]) -> str:
     checks = result.get("checks") or []
-    blocking = [check for check in checks if str(check.get("status") or "").lower() in {"failed", "error"} and str(check.get("severity") or "warning").lower() in {"error", "blocking"}]
+    blocking = [
+        check
+        for check in checks
+        if str(check.get("status") or "").lower() in {"failed", "error"}
+        and str(check.get("severity") or "warning").lower() in {"error", "blocking"}
+    ]
     warnings = [
-        check for check in checks
+        check
+        for check in checks
         if str(check.get("status") or "").lower() in {"failed", "error", "warning"}
         and str(check.get("severity") or "warning").lower() not in {"error", "blocking"}
     ]
@@ -356,7 +380,11 @@ def _dq_reason(result: Mapping[str, Any]) -> str:
 def _guardrail_reason(guardrail: str, result: Mapping[str, Any]) -> str:
     """Return plain-language reason text for one guardrail."""
     if guardrail == "schema":
-        return _schema_reason(result) if _result_status(result) == "failed" else (_result_reason(result) or "Schema validation passed.")
+        return (
+            _schema_reason(result)
+            if _result_status(result) == "failed"
+            else (_result_reason(result) or "Schema validation passed.")
+        )
     if guardrail == "freshness":
         return _freshness_reason(result)
     if guardrail == "profile_behavior":
@@ -412,7 +440,9 @@ def build_guardrail_summary_rows(result_bundle: Mapping[str, Any]) -> list[dict[
                 break
         else:
             profile_status = _result_status(results["profile_behavior"])
-            warning_guardrail = next((name for name, result in results.items() if _result_status(result) == "warning"), "")
+            warning_guardrail = next(
+                (name for name, result in results.items() if _result_status(result) == "warning"), ""
+            )
             if str(catalogue_value).lower() not in {"", "written", "success", "succeeded"}:
                 failed_guardrail = "catalogue"
                 status = "failed"
@@ -456,8 +486,20 @@ def build_guardrail_detail_rows(result_bundle: Mapping[str, Any]) -> list[dict[s
             result = group.get(table, {})
             if not result:
                 continue
-            expected = result.get("expected") or result.get("expected_value_json") or result.get("required_min_value") or result.get("missing_columns") or ""
-            actual = result.get("actual") or result.get("actual_value_json") or result.get("latest_value") or result.get("unexpected_columns") or ""
+            expected = (
+                result.get("expected")
+                or result.get("expected_value_json")
+                or result.get("required_min_value")
+                or result.get("missing_columns")
+                or ""
+            )
+            actual = (
+                result.get("actual")
+                or result.get("actual_value_json")
+                or result.get("latest_value")
+                or result.get("unexpected_columns")
+                or ""
+            )
             rows.append(
                 {
                     "table": table,
@@ -466,8 +508,12 @@ def build_guardrail_detail_rows(result_bundle: Mapping[str, Any]) -> list[dict[s
                     "severity": str(result.get("severity") or result.get("freshness_severity") or "blocking"),
                     "can_continue": _yes_no(_result_can_continue(result)),
                     "reason": _guardrail_reason(guardrail, result),
-                    "expected": json.dumps(expected, default=str, sort_keys=True) if isinstance(expected, (dict, list)) else str(expected),
-                    "actual": json.dumps(actual, default=str, sort_keys=True) if isinstance(actual, (dict, list)) else str(actual),
+                    "expected": json.dumps(expected, default=str, sort_keys=True)
+                    if isinstance(expected, (dict, list))
+                    else str(expected),
+                    "actual": json.dumps(actual, default=str, sort_keys=True)
+                    if isinstance(actual, (dict, list))
+                    else str(actual),
                     "next_action": _next_action(guardrail, _result_status(result)),
                 }
             )
@@ -483,9 +529,11 @@ def _blocking_guardrail_message(summary_rows: list[dict[str, Any]], failed_table
         reason = str(row.get("main_reason") or "blocking guardrail failed").rstrip(".")
         prefix = f"{guardrail.capitalize()} failed: "
         if reason.lower().startswith(prefix.lower()):
-            reason = reason[len(prefix):]
+            reason = reason[len(prefix) :]
         return f"Blocking guardrail failure for {table} — {guardrail} failed: {reason}."
-    return f"Blocking guardrail failure for {len(failed_tables)} table(s). See guardrail summary table above for details."
+    return (
+        f"Blocking guardrail failure for {len(failed_tables)} table(s). See guardrail summary table above for details."
+    )
 
 
 def _build_guardrail_blocking_message_from_bundle(result_bundle: Mapping[str, Any]) -> str:
@@ -497,14 +545,9 @@ def _build_guardrail_blocking_message_from_bundle(result_bundle: Mapping[str, An
     return _blocking_guardrail_message(summary_rows, failed_tables)
 
 
-def _rows_for_display(rows: list[dict[str, Any]], spark_session: Any | None):
-    """Return Spark DataFrame display rows when a Spark session is available."""
-    if spark_session is None or not rows:
-        return rows
-    return spark_session.createDataFrame(rows)
-
-
-def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None) -> Any:
+def display_guardrail_results(
+    result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None
+) -> Any:
     """Return guardrail results prepared for summary, detailed, or debug display.
 
     Parameters
@@ -527,9 +570,11 @@ def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = "sum
     """
     normalized = str(mode or "summary").lower().strip()
     if normalized == "summary":
-        return _rows_for_display(build_guardrail_summary_rows(result_bundle), spark_session)
+        rows = build_guardrail_summary_rows(result_bundle)
+        return rows if spark_session is None or not rows else spark_session.createDataFrame(rows)
     if normalized == "detailed":
-        return _rows_for_display(build_guardrail_detail_rows(result_bundle), spark_session)
+        rows = build_guardrail_detail_rows(result_bundle)
+        return rows if spark_session is None or not rows else spark_session.createDataFrame(rows)
     if normalized == "debug":
         return result_bundle.get("summary", result_bundle)
     raise ValueError("mode must be one of: summary, detailed, debug")
@@ -541,8 +586,7 @@ def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, confi
 
     audit_created_at = _current_audit_timestamp(config=config)
     return (
-        dataframe
-        .withColumn("_fabricops_run_id", F.lit(run_id))
+        dataframe.withColumn("_fabricops_run_id", F.lit(run_id))
         .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
         .withColumn("_fabricops_created_at", F.lit(audit_created_at))
     )
@@ -628,7 +672,12 @@ def prepare_pipeline_table_configs(
             target_kind = merged_config.get("target_kind", merged_config.get("kind", "lakehouse"))
             enriched_table = {
                 **merged_config,
-                "df": _add_audit_columns(merged_config["df"], run_id=run_id, pipeline_name=pipeline_name, config=merged_config.get("config", default_settings.get("config"))),
+                "df": _add_audit_columns(
+                    merged_config["df"],
+                    run_id=run_id,
+                    pipeline_name=pipeline_name,
+                    config=merged_config.get("config", default_settings.get("config")),
+                ),
                 "dataset_name": dataset_name,
                 "stage": stage,
                 "target_layer": target_layer,
@@ -639,16 +688,13 @@ def prepare_pipeline_table_configs(
 
     return enriched_tables, {table_config["key"]: table_config for table_config in enriched_tables}
 
+
 def _table_key(table_config: Mapping[str, Any]) -> str:
     return str(table_config["key"])
 
 
 def _table_name(table_config: Mapping[str, Any]) -> str:
     return str(table_config.get("table_name") or table_config.get("target_name") or table_config["key"])
-
-
-def _guardrail_can_continue(result: Mapping[str, Any] | None) -> bool:
-    return bool((result or {}).get("can_continue", True))
 
 
 def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -802,7 +848,14 @@ def run_table_guardrails(
         schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
         freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
         if schema_rules_df is not None:
-            schema_results[table_key] = _check_schema_rule_runtime(dataframe, schema_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
+            schema_results[table_key] = _check_schema_rule_runtime(
+                dataframe,
+                schema_rules_df,
+                dataset_name=dataset_name,
+                table_name=table_name,
+                environment_name=env,
+                metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name),
+            )
         else:
             schema_results[table_key] = _check_schema_runtime(
                 dataframe,
@@ -811,7 +864,14 @@ def run_table_guardrails(
             )
 
         if freshness_rules_df is not None:
-            freshness_results[table_key] = enforce_freshness_rule(dataframe, freshness_rules_df, dataset_name=dataset_name, table_name=table_name, environment_name=env, metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name))
+            freshness_results[table_key] = enforce_freshness_rule(
+                dataframe,
+                freshness_rules_df,
+                dataset_name=dataset_name,
+                table_name=table_name,
+                environment_name=env,
+                metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name),
+            )
         else:
             freshness_results[table_key] = enforce_freshness(
                 dataframe,
@@ -883,8 +943,13 @@ def run_table_guardrails(
                 )
 
         table_can_continue = all(
-            _guardrail_can_continue(result)
-            for result in (schema_results[table_key], freshness_results[table_key], stability_results[table_key], dq_results[table_key])
+            bool((result or {}).get("can_continue", True))
+            for result in (
+                schema_results[table_key],
+                freshness_results[table_key],
+                stability_results[table_key],
+                dq_results[table_key],
+            )
         )
         if not table_can_continue:
             failed_tables.append(table_key)
@@ -1013,13 +1078,22 @@ def write_catalogue_evidence(
         metadata_table_key = _build_metadata_table_key(env, dataset_name, table_name)
         profile_evidence_rows = list(stability_result.get("profile_evidence_rows") or [])
         if not profile_evidence_rows:
-            profile_evidence_rows = [{
-                "watermark_column": str(stability_result.get("watermark_column", definition.get("watermark_column", ""))),
-                "watermark_value": str(stability_result.get("watermark_value", "__FULL_TABLE__" if str(stability_result.get("profile_mode", "")) == "static_data" else "")),
-                "profile_payload_json": str(stability_result.get("profile_payload_json", "")),
-                "profile_hash": str(stability_result.get("profile_hash", "")),
-                "row_count": stability_result.get("row_count"),
-            }]
+            profile_evidence_rows = [
+                {
+                    "watermark_column": str(
+                        stability_result.get("watermark_column", definition.get("watermark_column", ""))
+                    ),
+                    "watermark_value": str(
+                        stability_result.get(
+                            "watermark_value",
+                            "__FULL_TABLE__" if str(stability_result.get("profile_mode", "")) == "static_data" else "",
+                        )
+                    ),
+                    "profile_payload_json": str(stability_result.get("profile_payload_json", "")),
+                    "profile_hash": str(stability_result.get("profile_hash", "")),
+                    "row_count": stability_result.get("row_count"),
+                }
+            ]
         additions = {
             "metadata_table_key": metadata_table_key,
             "environment_name": env,
@@ -1053,11 +1127,21 @@ def write_catalogue_evidence(
                 group_additions["row_count"] = profile_evidence.get("row_count")
             for column, value in group_additions.items():
                 evidence = evidence.withColumn(column, F.lit(value))
-            evidence = evidence.withColumn("metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name")))
+            evidence = evidence.withColumn(
+                "metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name"))
+            )
             evidence = _normalize_catalogue_evidence_types(evidence)
-            write_lakehouse_table(evidence, metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
+            write_lakehouse_table(
+                evidence,
+                metadata_table,
+                target="metadata",
+                schema=_configured_lakehouse_schema(config, env, "metadata"),
+                context={"config": config, "env": env},
+                mode=mode,
+            )
         statuses[name] = "written"
     return statuses
+
 
 def write_pipeline_lineage(
     *,
@@ -1111,7 +1195,14 @@ def write_pipeline_lineage(
     audit = _runtime_audit_fields(config, env)
     created_at = _now_iso(config)
     if relationships is None:
-        relationships = [{"sources": list(source_definitions), "targets": list(target_definitions), "operation": "pipeline_transform", "description": "User-defined pipeline transformation."}]
+        relationships = [
+            {
+                "sources": list(source_definitions),
+                "targets": list(target_definitions),
+                "operation": "pipeline_transform",
+                "description": "User-defined pipeline transformation.",
+            }
+        ]
     rows: list[dict[str, Any]] = []
     sequence = 0
     for relationship in relationships:
@@ -1132,20 +1223,38 @@ def write_pipeline_lineage(
                     "operation": relationship.get("operation", "pipeline_transform"),
                     "description": relationship.get("description", ""),
                 }
-                rows.append({
-                    "lineage_id": f"{run_id}_{sequence}",
-                    "dataset_name": dataset_name or str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
-                    "run_id": run_id,
-                    "source_table": source_table,
-                    "target_table": target_table,
-                    "source_table_key": _build_metadata_table_key(env, str(source_definitions[str(source_alias)].get("dataset_name") or source_table), source_table),
-                    "target_table_key": _build_metadata_table_key(env, str(target_definitions[str(target_alias)].get("dataset_name") or target_table), target_table),
-                    "transformation_steps_json": json.dumps(payload, default=str, sort_keys=True),
-                    "created_at": created_at,
-                    **audit,
-                })
+                rows.append(
+                    {
+                        "lineage_id": f"{run_id}_{sequence}",
+                        "dataset_name": dataset_name
+                        or str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
+                        "run_id": run_id,
+                        "source_table": source_table,
+                        "target_table": target_table,
+                        "source_table_key": _build_metadata_table_key(
+                            env,
+                            str(source_definitions[str(source_alias)].get("dataset_name") or source_table),
+                            source_table,
+                        ),
+                        "target_table_key": _build_metadata_table_key(
+                            env,
+                            str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
+                            target_table,
+                        ),
+                        "transformation_steps_json": json.dumps(payload, default=str, sort_keys=True),
+                        "created_at": created_at,
+                        **audit,
+                    }
+                )
     if rows:
-        write_lakehouse_table(spark.createDataFrame(rows), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context=resolved_context, mode=mode)
+        write_lakehouse_table(
+            spark.createDataFrame(rows),
+            metadata_table,
+            target="metadata",
+            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            context=resolved_context,
+            mode=mode,
+        )
     return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
 
 
@@ -1266,8 +1375,17 @@ def write_pipeline_run_summary(
         lineage_status = str(lineage_result.get("status", lineage_status))
     if source_guardrail_results or target_guardrail_results:
         if status == "completed":
-            status = "succeeded" if all(bool(result.get("can_continue", True)) for result in (source_guardrail_results, target_guardrail_results)) else "failed"
-        if catalogue_status == "not_run" and any(result.get("catalogue_status") for result in (source_guardrail_results, target_guardrail_results)):
+            status = (
+                "succeeded"
+                if all(
+                    bool(result.get("can_continue", True))
+                    for result in (source_guardrail_results, target_guardrail_results)
+                )
+                else "failed"
+            )
+        if catalogue_status == "not_run" and any(
+            result.get("catalogue_status") for result in (source_guardrail_results, target_guardrail_results)
+        ):
             catalogue_status = "written"
     if target_write_status and not message:
         message = json.dumps({"target_write_status": target_write_status}, default=str, sort_keys=True)
@@ -1277,8 +1395,12 @@ def write_pipeline_run_summary(
     started = started_at or completed
     sources = source_definitions or {}
     targets = target_definitions or {}
-    source_guardrail_status = _summary_status({**(source_schema_results or {}), **(source_freshness_results or {}), **(source_stability_results or {})})
-    target_guardrail_status = _summary_status({**(target_schema_results or {}), **(target_freshness_results or {}), **(target_stability_results or {})})
+    source_guardrail_status = _summary_status(
+        {**(source_schema_results or {}), **(source_freshness_results or {}), **(source_stability_results or {})}
+    )
+    target_guardrail_status = _summary_status(
+        {**(target_schema_results or {}), **(target_freshness_results or {}), **(target_stability_results or {})}
+    )
     dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
     run_summary = {
         "source_schema_results": source_schema_results or {},
@@ -1317,5 +1439,12 @@ def write_pipeline_run_summary(
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
         "created_at": _now_iso(config),
     }
-    write_lakehouse_table(spark.createDataFrame([row]), metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context=resolved_context, mode=mode)
+    write_lakehouse_table(
+        spark.createDataFrame([row]),
+        metadata_table,
+        target="metadata",
+        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        context=resolved_context,
+        mode=mode,
+    )
     return row
