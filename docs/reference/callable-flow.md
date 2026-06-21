@@ -8,7 +8,6 @@ AI coding tools make it easy to add callables quickly. That speed is useful, but
 
 </div>
 
-This page explains why the dashboard exists, how to read the refactor signals, and how to use the exported context for AI-assisted refactoring.
 
 ## Why callable flow matters
 
@@ -48,25 +47,25 @@ Use the dashboard signals to find patterns that deserve review:
 
 Refactor signals are warnings generated from the callable graph. They do not automatically mean the code is wrong. Instead, they help guard against architecture drift from the intended public → internal → utility hierarchy and identify where cleanup should be reviewed before changes are made.
 
-### Possible wrapper or inline candidates
+### EG. Pointless wrapper
 
 ![Possible wrapper or inline candidates](../assets/fabricops-bad-example-pointless-wrapper-functions.png)
 
 *Guardrail: Warn when a helper appears to add little abstraction value. Single-use or thin wrapper callables may still be valid, but they should earn their place through clearer naming, validation, readability, or reuse.*
 
-### Large dependency surface
+### EG. Large dependency surface
 
 ![Large dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
 
 *Guardrail: Warn when a public callable depends on many nested helpers. This may be valid orchestration, but it increases the chance that a small helper change breaks a wider workflow.*
 
-### Public callable dependency
+### EG. Messy callable dependency
 
 ![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)
 
 *Guardrail: Warn when one public callable depends on another public callable. Public callables should usually be entry points. Shared logic should usually move into an internal helper or utility callable.*
 
-### Nested helper chain
+### EG. Nested helper chain
 
 ![Nested helper chain](../assets/fabricops-bad-example-nested-functions.png)
 
