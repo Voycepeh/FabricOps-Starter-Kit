@@ -94,7 +94,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
     Prompt for AI
 
-    You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Always call out tests required before changes.
+    You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Batch accounting: report how many callables were selected, how many are intended for the current batch, how many were actually refactored in the PR, which selected callables were deferred, why each deferred group was deferred, and what the next suggested batch should be. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Completion accounting required in PR description: include selected / handled / remaining counts in the PR body and fill completed_or_refactored_count after implementation if it was unknown at export time. Always call out tests required before changes.
 
     Refactor context
 
@@ -103,6 +103,21 @@ Selected callables can be exported as a structured AI refactor packet. The expor
     Mode: Planning only.
 
     Compatibility mode: Internal cleanup
+
+    Batch accounting
+
+    Selected callables: 1
+    Planned batch count: 1
+    Batch ID: batch-1
+    Batch scope: All selected callables by default; narrow this before implementation when a smaller safe batch is intended.
+    Batch strategy: Single batch by default. If implementation handles only a subset, group deferred selected callables by risk, ownership, or dependency order.
+    Completed/refactored count: fill in after implementation
+    Remaining selected count: 0
+    Deferred selected callables: none by default; list any selected callables not handled in this PR.
+
+    Completion accounting required in PR description
+
+    Include selected / handled / remaining counts in the PR body. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Explain why each deferred group was deferred and recommend the next batch.
 
     Selected callable actions:
     - Architecture violation
@@ -117,6 +132,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
     - Explain which callables are safe cleanup candidates
     - Identify callables that should not be refactored yet
     - Propose an ordered refactor plan
+    - Report selected, intended batch, actually refactored, deferred, and remaining callable counts
     - List risks and required tests
     - Do not produce code changes unless explicitly requested
 
