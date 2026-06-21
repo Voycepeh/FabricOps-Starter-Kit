@@ -285,7 +285,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "batch_strategy" in dashboard_text
     assert "completed_or_refactored_count" in dashboard_text
     assert "remaining_selected_count" in dashboard_text
+    assert "remaining_selected_count:null" in dashboard_text
+    assert "Remaining selected count: fill in after implementation" in dashboard_text
+    assert "Remaining selected count: 0" not in dashboard_text
     assert "deferred_selected_callables" in dashboard_text
+    assert "Deferred selected callables: none by default before implementation" in dashboard_text
     assert "function batchAccounting(callables)" in dashboard_text
     assert "batch_accounting" in dashboard_text
     assert "Batch accounting" in dashboard_text

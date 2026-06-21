@@ -112,8 +112,8 @@ Selected callables can be exported as a structured AI refactor packet. The expor
     Batch scope: All selected callables by default; narrow this before implementation when a smaller safe batch is intended.
     Batch strategy: Single batch by default. If implementation handles only a subset, group deferred selected callables by risk, ownership, or dependency order.
     Completed/refactored count: fill in after implementation
-    Remaining selected count: 0
-    Deferred selected callables: none by default; list any selected callables not handled in this PR.
+    Remaining selected count: fill in after implementation
+    Deferred selected callables: none by default before implementation; list any selected callables not handled in this PR.
 
     Completion accounting required in PR description
 
