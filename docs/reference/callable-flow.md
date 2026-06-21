@@ -85,6 +85,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
 ??? example "Example exported AI refactor packet"
 
+    ```text
     FabricOps callable refactor packet
 
     Prompt for AI
@@ -132,6 +133,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
     - _get_audit_timezone (config)
 
     Source path: src/fabricops_kit/config.py
+    ```
 
 ## Conclusion
 
