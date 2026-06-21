@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 11</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 6 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 12</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 6 external modules</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>11</td>
+      <td>12</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -133,6 +133,10 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
   </thead>
   <tbody>
     <tr>
+      <td><code>_PandasProxy.__getattr__</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_configured_lakehouse_schema</code></td>
       <td>—</td>
     </tr>
@@ -178,6 +182,9 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
+<li>
+<span class="reference-chip"><code>_PandasProxy.__getattr__</code></span>
+</li>
 <li>
 <span class="reference-chip"><code>_configured_lakehouse_schema</code></span>
  <span class="callable-relationship-uses">uses:</span>
