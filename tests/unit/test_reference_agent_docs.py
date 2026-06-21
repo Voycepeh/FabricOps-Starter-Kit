@@ -331,6 +331,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Callers" in dashboard_text
     assert "Callees" in dashboard_text
     assert "Source" in dashboard_text
+    assert "All callable kinds" in dashboard_text
+    assert "Callable kind" in dashboard_text
+    assert "Used by" in dashboard_text
+    assert "Layer consistency" in dashboard_text
+    assert "Utility but low reuse" in dashboard_text
+    assert "Review the assigned callable layer against the usage evidence" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
     assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
@@ -344,6 +350,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "review_status",
         "callable_kind",
         "recommended_action",
+        "layer_consistency",
     } <= set(summary_counts)
     assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
     assert set(summary_counts["review_status"]) == {"classified", "classification_pending", "unreachable"}
@@ -371,6 +378,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         for action in sorted({row["recommended_action"] for row in function_inventory})
     }
     assert all(row["recommended_action"] for row in function_inventory)
+    assert summary_counts["layer_consistency"] == {
+        consistency: sum(1 for row in function_inventory if row["layer_consistency"] == consistency)
+        for consistency in summary_counts["layer_consistency"]
+    }
+    assert any(
+        row["function_type"] == "Utility"
+        and row["used_by_count"] <= 1
+        and row["layer_consistency"] == "questionable_utility"
+        and "Utility but low reuse" in row["signals"]
+        for row in function_inventory
+    )
+    assert all(row["used_by_count"] == row["called_by_count"] for row in function_inventory)
     assert all(
         {
             "function_name",
@@ -382,8 +401,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
             "review_status_label",
             "callable_kind",
             "visibility",
+            "used_by_count",
             "called_by_count",
             "calls_count",
+            "layer_consistency",
+            "layer_consistency_label",
             "direct_internal_helpers",
             "deepest_call_chain_depth",
             "repeated_helper_count",
