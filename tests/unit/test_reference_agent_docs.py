@@ -216,12 +216,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert flow_page.exists()
     assert dashboard_path.exists()
     flow_text = flow_page.read_text(encoding="utf-8")
-    assert "# Callable Functions Flow" in flow_text
-    assert "interactive callable functions dashboard" in flow_text
-    assert "Open full dashboard" in flow_text
-    assert "[Open full dashboard](../assets/callable-functions-dashboard.html)" in flow_text
-    assert 'src="../../assets/callable-functions-dashboard.html"' in flow_text
-    assert "<iframe" in flow_text
+    assert "# Callable Flow Dashboard" in flow_text
+    assert "## Why callable flow matters" in flow_text
+    assert "## How the dashboard is generated" in flow_text
+    assert "## Refactor signals" in flow_text
+    assert "## Exporting an AI refactor prompt" in flow_text
+    assert "[Open the interactive Callable Flow Dashboard](../assets/callable-functions-dashboard.html)" in flow_text
     assert "## Callable helper summary" not in flow_text
     assert "## Internal helper nesting inventory" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
