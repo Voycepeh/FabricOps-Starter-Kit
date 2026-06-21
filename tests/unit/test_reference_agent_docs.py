@@ -333,6 +333,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Source" in dashboard_text
     assert "All callable kinds" in dashboard_text
     assert "Callable kind" in dashboard_text
+    assert "unique(inventory.map(i=>i.callable_kind))" in dashboard_text
+    assert "['function','class','method'].forEach" not in dashboard_text
     assert "Used by" in dashboard_text
     assert "Layer consistency" in dashboard_text
     assert "Utility but low reuse" in dashboard_text
