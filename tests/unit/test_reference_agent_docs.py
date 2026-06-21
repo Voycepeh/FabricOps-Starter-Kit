@@ -333,6 +333,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Source" in dashboard_text
     assert "All callable kinds" in dashboard_text
     assert "Callable kind" in dashboard_text
+    assert "unique(inventory.map(i=>i.callable_kind))" in dashboard_text
+    assert "['function','class','method'].forEach" not in dashboard_text
     assert "Used by" in dashboard_text
     assert "Layer consistency" in dashboard_text
     assert "Utility but low reuse" in dashboard_text
@@ -353,7 +355,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "layer_consistency",
     } <= set(summary_counts)
     assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
-    assert set(summary_counts["review_status"]) == {"classified", "classification_pending", "unreachable"}
+    assert set(summary_counts["review_status"]) == {"classified", "classification_pending", "implicit_lifecycle", "unreachable"}
     assert summary_counts["layer"]["public"] == len(exported_symbols)
     assert summary_counts["total_callables"] == sum(summary_counts["function_type"].values())
 
@@ -362,7 +364,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
     assert {"Public API", "Internal helper", "Utility"} <= {row["function_type"] for row in function_inventory}
-    assert {"classified", "classification_pending", "unreachable"} <= {
+    assert {"classified", "classification_pending", "implicit_lifecycle", "unreachable"} <= {
         row["review_status"] for row in function_inventory
     }
     assert sum(1 for row in function_inventory if row["layer"] == "public") == summary_counts["layer"]["public"]
@@ -389,6 +391,24 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         and "Utility but low reuse" in row["signals"]
         for row in function_inventory
     )
+    lifecycle_names = {
+        "DataAgreementConfig.__post_init__",
+        "FrameworkConfig.__post_init__",
+        "GovernanceConfig.__post_init__",
+        "LineageConfig.__post_init__",
+        "NotebookRuntimeConfig.__post_init__",
+        "PathConfig.__post_init__",
+        "QualityConfig.__post_init__",
+        "FabricStore.__post_init__",
+    }
+    lifecycle_rows = {row["function_name"]: row for row in function_inventory if row["function_name"] in lifecycle_names}
+    assert set(lifecycle_rows) == lifecycle_names
+    assert all(row["function_type"] == "Internal helper" for row in lifecycle_rows.values())
+    assert all(row["layer"] == "internal" for row in lifecycle_rows.values())
+    assert all(row["review_status"] == "implicit_lifecycle" for row in lifecycle_rows.values())
+    assert all(row["callable_kind"] == "implicit_lifecycle_method" for row in lifecycle_rows.values())
+    assert all(row["recommended_action"] == "Keep lifecycle method" for row in lifecycle_rows.values())
+    assert all("Utility but low reuse" not in row["signals"] for row in lifecycle_rows.values())
     assert all(row["used_by_count"] == row["called_by_count"] for row in function_inventory)
     assert all(
         {
