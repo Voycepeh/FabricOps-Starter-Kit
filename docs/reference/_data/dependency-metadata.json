@@ -39,13 +39,17 @@
       "callable": "DataAgreementConfig.__post_init__",
       "docs_url": null,
       "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
+      "calls": [
+        "fabricops_kit.config._normalize_widget_config"
+      ],
+      "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helpers_used": [
+        "fabricops_kit.config._normalize_widget_config"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.config.FrameworkConfig": {
       "qualified_name": "fabricops_kit.config.FrameworkConfig",
@@ -542,9 +546,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.config.DataAgreementConfig.__post_init__",
         "fabricops_kit.config.GovernanceConfig.__post_init__"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -2026,36 +2031,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.fabric_input_output._PandasProxy": {
-      "qualified_name": "fabricops_kit.fabric_input_output._PandasProxy",
-      "short_name": "_PandasProxy",
-      "module": "fabric_input_output",
-      "callable": "_PandasProxy",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output._PandasProxy.__getattr__": {
-      "qualified_name": "fabricops_kit.fabric_input_output._PandasProxy.__getattr__",
-      "short_name": "_PandasProxy.__getattr__",
-      "module": "fabric_input_output",
-      "callable": "_PandasProxy.__getattr__",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.fabric_input_output._configured_lakehouse_schema": {
       "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
       "short_name": "_configured_lakehouse_schema",
@@ -2162,10 +2137,9 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-        "fabricops_kit.fabric_input_output._qualified_table_name",
         "fabricops_kit.fabric_input_output._resolve_lakehouse_schema"
       ],
-      "used_by_count": 3,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -2180,39 +2154,15 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.fabric_input_output._qualified_table_name",
         "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier",
         "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
         "fabricops_kit.fabric_input_output.read_lakehouse_table",
         "fabricops_kit.fabric_input_output.write_lakehouse_table"
       ],
-      "used_by_count": 5,
+      "used_by_count": 4,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output._qualified_table_name": {
-      "qualified_name": "fabricops_kit.fabric_input_output._qualified_table_name",
-      "short_name": "_qualified_table_name",
-      "module": "fabric_input_output",
-      "callable": "_qualified_table_name",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.fabric_input_output._normalize_schema_name",
-        "fabricops_kit.fabric_input_output._normalize_table_name"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.fabric_input_output._normalize_schema_name",
-        "fabricops_kit.fabric_input_output._normalize_table_name"
-      ],
-      "internal_helper_count": 2
     },
     "fabricops_kit.fabric_input_output._resolve_lakehouse_schema": {
       "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
@@ -2245,19 +2195,17 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._qualified_table_name",
         "fabricops_kit.fabric_input_output._resolve_lakehouse_schema"
       ],
-      "calls_count": 3,
+      "calls_count": 2,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.fabric_input_output._normalize_table_name",
-        "fabricops_kit.fabric_input_output._qualified_table_name",
         "fabricops_kit.fabric_input_output._resolve_lakehouse_schema"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 2
     },
     "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path": {
       "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
@@ -6140,6 +6088,7 @@
         "governance_review"
       ],
       "inbound_modules": [
+        "DataAgreementConfig",
         "FrameworkConfig",
         "GovernanceConfig",
         "data_agreement",
@@ -6151,7 +6100,7 @@
         "pipeline"
       ],
       "outbound_count": 3,
-      "inbound_count": 9
+      "inbound_count": 10
     },
     "data_agreement": {
       "callable_count": 3,
@@ -6194,7 +6143,7 @@
     },
     "fabric_input_output": {
       "callable_count": 2,
-      "internal_count": 12,
+      "internal_count": 9,
       "outbound_modules": [
         "config"
       ],

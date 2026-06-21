@@ -17,17 +17,12 @@ from typing import Any
 import re
 import tempfile
 
-
-class _PandasProxy:
-    """Lazily load pandas for Excel/Parquet helpers that need it."""
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(import_module("pandas"), name)
-
-
-pd = _PandasProxy()
-
 from .config import _get_store, resolve_fabric_context
+
+
+def _load_pandas() -> Any:
+    """Return pandas for Excel/Parquet helpers that need it."""
+    return import_module("pandas")
 
 
 @dataclass(frozen=True)
@@ -128,13 +123,6 @@ def _normalize_schema_name(schema: str | None) -> str | None:
     return value
 
 
-def _qualified_table_name(schema: str | None, table: str) -> str:
-    """Return ``schema.table`` when schema is provided, otherwise ``table``."""
-    table_name = _normalize_table_name(table)
-    schema_name = _normalize_schema_name(schema)
-    return f"{schema_name}.{table_name}" if schema_name else table_name
-
-
 def _resolve_lakehouse_schema(store: FabricStore, schema: str | None = None) -> str | None:
     """Return the explicit schema or configured store schema when enabled."""
     if schema is not None:
@@ -158,7 +146,7 @@ def _resolve_lakehouse_table_identifier(store: FabricStore, table: str, schema: 
     """Return the Spark table identifier for a lakehouse table."""
     table_name = _normalize_table_name(table)
     schema_name = _resolve_lakehouse_schema(store, schema)
-    return _qualified_table_name(schema_name, table_name)
+    return f"{schema_name}.{table_name}" if schema_name else table_name
 
 
 def _configured_lakehouse_schema(config, env: str, target: str) -> str | None:
@@ -766,7 +754,7 @@ def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True
             print(f"Reading with pyarrow: {local_in_path}")
             print(f"Writing us timestamps to: {local_out_path}")
 
-        pdf = pd.read_parquet(local_in_path, engine="pyarrow")
+        pdf = _load_pandas().read_parquet(local_in_path, engine="pyarrow")
         table = pa.Table.from_pandas(pdf, preserve_index=False)
 
         pq.write_table(
@@ -996,5 +984,5 @@ def read_lakehouse_excel(relative_path: str, *, target: str = "source", sheet_na
         temp_file.write(bytearray(content))
         temp_file_path = temp_file.name
 
-    pandas_df = pd.read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
+    pandas_df = _load_pandas().read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
     return spark_obj.createDataFrame(pandas_df)

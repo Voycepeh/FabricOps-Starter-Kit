@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-21T11:08:08+00:00",
+  "generated_at": "2026-06-21T12:40:36+00:00",
   "function_inventory": [
     {
       "function_name": "_audit_timestamp_expr",
@@ -155,7 +155,7 @@
           "function": "_build_lineage_records",
           "module": "data_lineage",
           "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L45-L93",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L47-L95",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -592,7 +592,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -601,7 +601,7 @@
           "function": "read_lakehouse_csv",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L534-L577",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -610,7 +610,7 @@
           "function": "read_lakehouse_excel",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L896-L983",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -619,7 +619,7 @@
           "function": "read_lakehouse_parquet",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L769-L893",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -628,7 +628,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -637,7 +637,7 @@
           "function": "read_warehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L580-L642",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -646,7 +646,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -655,7 +655,7 @@
           "function": "write_warehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L662-L727",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L645-L710",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -797,14 +797,22 @@
       "recommended_action": "Orphaned callable",
       "priority": "Medium",
       "signals": [
-        "Single-use internal helper",
         "Leaf internal helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
+      "called_by_count": 2,
       "calls_count": 0,
       "callers": [
+        {
+          "function": "DataAgreementConfig.__post_init__",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.DataAgreementConfig.__post_init__",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L430-L436",
+          "layer": "internal",
+          "review_status": "unreachable",
+          "callable_kind": "method"
+        },
         {
           "function": "GovernanceConfig.__post_init__",
           "module": "config",
@@ -1022,7 +1030,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -1031,7 +1039,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -1323,7 +1331,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -1437,21 +1445,35 @@
       "function_name": "DataAgreementConfig.__post_init__",
       "qualified_name": "fabricops_kit.config.DataAgreementConfig.__post_init__",
       "module": "config",
-      "function_type": "Utility",
-      "layer": "utility",
+      "function_type": "Internal helper",
+      "layer": "internal",
       "review_status": "unreachable",
       "review_status_label": "Unreachable",
       "callable_kind": "method",
       "visibility": "private",
       "recommended_action": "Orphaned callable",
       "priority": "Medium",
-      "signals": [],
+      "signals": [
+        "callee_unreachable"
+      ],
       "architecture_signals": [],
-      "review_signals": [],
+      "review_signals": [
+        "callee_unreachable"
+      ],
       "called_by_count": 0,
-      "calls_count": 0,
+      "calls_count": 1,
       "callers": [],
-      "callees": [],
+      "callees": [
+        {
+          "function": "_normalize_widget_config",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._normalize_widget_config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L302-L314",
+          "layer": "utility",
+          "review_status": "unreachable",
+          "callable_kind": "function"
+        }
+      ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L430-L436",
@@ -1982,7 +2004,7 @@
           "function": "read_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L235-L309",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L218-L292",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -1991,7 +2013,7 @@
           "function": "read_lakehouse_csv",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L534-L577",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2000,7 +2022,7 @@
           "function": "read_lakehouse_excel",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L896-L983",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2009,7 +2031,7 @@
           "function": "read_lakehouse_parquet",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L769-L893",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2018,7 +2040,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2027,7 +2049,7 @@
           "function": "read_warehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L580-L642",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2036,7 +2058,7 @@
           "function": "write_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L312-L379",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L295-L362",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2045,7 +2067,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2054,7 +2076,7 @@
           "function": "write_warehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L662-L727",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L645-L710",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -3491,7 +3513,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -3500,7 +3522,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -3661,7 +3683,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -4793,7 +4815,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -4802,7 +4824,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5162,7 +5184,7 @@
           "function": "_validate_lineage_steps",
           "module": "data_lineage",
           "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L8-L42",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L8-L44",
           "layer": "utility",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -5170,7 +5192,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_lineage.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L45-L93",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L47-L95",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -5199,7 +5221,7 @@
           "function": "_build_lineage_records",
           "module": "data_lineage",
           "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L45-L93",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L47-L95",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -5208,7 +5230,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_lineage.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L8-L42",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L8-L44",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -5803,7 +5825,7 @@
           "function": "_normalize_schema_name",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._normalize_schema_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L107-L118",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5811,7 +5833,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -5840,7 +5862,7 @@
           "function": "read_lakehouse_parquet",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L769-L893",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5849,7 +5871,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L730-L783",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L713-L766",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -5878,7 +5900,7 @@
           "function": "read_lakehouse_csv",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L534-L577",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5887,7 +5909,7 @@
           "function": "read_lakehouse_excel",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L896-L983",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5896,7 +5918,7 @@
           "function": "read_lakehouse_parquet",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L769-L893",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5905,7 +5927,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5914,7 +5936,7 @@
           "function": "read_warehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L580-L642",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5923,7 +5945,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L170-L201",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -5951,7 +5973,7 @@
           "function": "read_lakehouse_csv",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L534-L577",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5960,7 +5982,7 @@
           "function": "read_lakehouse_excel",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L896-L983",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5969,7 +5991,7 @@
           "function": "read_lakehouse_parquet",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L769-L893",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5978,7 +6000,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L221-L231",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L204-L214",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -5999,32 +6021,23 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 3,
+      "called_by_count": 2,
       "calls_count": 0,
       "callers": [
         {
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_qualified_table_name",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output._qualified_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L135",
-          "layer": "internal",
-          "review_status": "unreachable",
           "callable_kind": "function"
         },
         {
           "function": "_resolve_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L121-L127",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6033,7 +6046,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L107-L118",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -6048,30 +6061,20 @@
       "callable_kind": "function",
       "visibility": "private",
       "recommended_action": "Stable utility",
-      "priority": "Protect",
+      "priority": "Low",
       "signals": [
-        "Leaf internal helper",
-        "High-fanout helper"
+        "Leaf internal helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 5,
+      "called_by_count": 4,
       "calls_count": 0,
       "callers": [
-        {
-          "function": "_qualified_table_name",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output._qualified_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L135",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
         {
           "function": "_resolve_lakehouse_table_identifier",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L157-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L140-L144",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -6080,7 +6083,7 @@
           "function": "_resolve_lakehouse_table_path",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L130-L137",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6089,7 +6092,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6098,7 +6101,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6107,118 +6110,8 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L95-L104",
       "deepest_call_chain_depth": 2,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_PandasProxy",
-      "qualified_name": "fabricops_kit.fabric_input_output._PandasProxy",
-      "module": "fabric_input_output",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "class",
-      "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "Leaf internal helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 0,
-      "callers": [],
-      "callees": [],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L21-L25",
-      "deepest_call_chain_depth": null,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_PandasProxy.__getattr__",
-      "qualified_name": "fabricops_kit.fabric_input_output._PandasProxy.__getattr__",
-      "module": "fabric_input_output",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "method",
-      "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "Leaf internal helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 0,
-      "callers": [],
-      "callees": [],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L24-L25",
-      "deepest_call_chain_depth": null,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_qualified_table_name",
-      "qualified_name": "fabricops_kit.fabric_input_output._qualified_table_name",
-      "module": "fabric_input_output",
-      "function_type": "Internal helper",
-      "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "function",
-      "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "Single-use internal helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 2,
-      "callers": [
-        {
-          "function": "_resolve_lakehouse_table_identifier",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L157-L161",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_normalize_schema_name",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output._normalize_schema_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128",
-          "layer": "utility",
-          "review_status": "classified",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_normalize_table_name",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114",
-          "layer": "utility",
-          "review_status": "classified",
-          "callable_kind": "function"
-        }
-      ],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L135",
-      "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
     {
@@ -6243,7 +6136,7 @@
           "function": "_resolve_lakehouse_table_identifier",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_identifier",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L157-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L140-L144",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -6252,7 +6145,7 @@
           "function": "_resolve_lakehouse_table_path",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L130-L137",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6263,7 +6156,7 @@
           "function": "_normalize_schema_name",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._normalize_schema_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L117-L128",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L107-L118",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6271,7 +6164,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L121-L127",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -6288,42 +6181,30 @@
       "recommended_action": "Architecture violation",
       "priority": "High",
       "signals": [
-        "internal_calls_internal",
-        "callee_unreachable"
+        "internal_calls_internal"
       ],
       "architecture_signals": [
         "internal_calls_internal"
       ],
-      "review_signals": [
-        "callee_unreachable"
-      ],
+      "review_signals": [],
       "called_by_count": 0,
-      "calls_count": 3,
+      "calls_count": 2,
       "callers": [],
       "callees": [
         {
           "function": "_normalize_table_name",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L95-L104",
           "layer": "utility",
           "review_status": "classified",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_qualified_table_name",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output._qualified_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L135",
-          "layer": "internal",
-          "review_status": "unreachable",
           "callable_kind": "function"
         },
         {
           "function": "_resolve_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L121-L127",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6331,7 +6212,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L157-L161",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L140-L144",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -6361,7 +6242,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6370,7 +6251,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6381,7 +6262,7 @@
           "function": "_normalize_table_name",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L95-L104",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6390,7 +6271,7 @@
           "function": "_resolve_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L138-L144",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L121-L127",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6398,7 +6279,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L130-L137",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -6423,7 +6304,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L34-L102",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L24-L92",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -6448,7 +6329,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L76-L95",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L66-L85",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -6473,7 +6354,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L98-L102",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L88-L92",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -6509,7 +6390,7 @@
           "function": "read_lakehouse_csv",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L534-L577",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6518,7 +6399,7 @@
           "function": "read_lakehouse_excel",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L896-L983",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6527,7 +6408,7 @@
           "function": "read_lakehouse_parquet",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L769-L893",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6536,7 +6417,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6545,7 +6426,7 @@
           "function": "read_warehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L580-L642",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6553,7 +6434,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L235-L309",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L218-L292",
       "deepest_call_chain_depth": 4,
       "repeated_helper_count": 5
     },
@@ -6583,7 +6464,7 @@
           "function": "read_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L235-L309",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L218-L292",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6612,7 +6493,7 @@
           "function": "_get_spark",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L170-L201",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6621,7 +6502,7 @@
           "function": "_lakehouse_file_path",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._lakehouse_file_path",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L221-L231",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L204-L214",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6629,7 +6510,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L551-L594",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L534-L577",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -6659,7 +6540,7 @@
           "function": "read_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L235-L309",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L218-L292",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6688,7 +6569,7 @@
           "function": "_get_spark",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L170-L201",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6697,7 +6578,7 @@
           "function": "_lakehouse_file_path",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._lakehouse_file_path",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L221-L231",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L204-L214",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6705,7 +6586,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L913-L1000",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L896-L983",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -6735,7 +6616,7 @@
           "function": "read_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L235-L309",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L218-L292",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6764,7 +6645,7 @@
           "function": "_convert_single_parquet_ns_to_us",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._convert_single_parquet_ns_to_us",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L730-L783",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L713-L766",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6773,7 +6654,7 @@
           "function": "_get_spark",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L170-L201",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6782,7 +6663,7 @@
           "function": "_lakehouse_file_path",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._lakehouse_file_path",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L221-L231",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L204-L214",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6790,7 +6671,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L786-L910",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L769-L893",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -6856,7 +6737,7 @@
           "function": "read_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L235-L309",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L218-L292",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6948,7 +6829,7 @@
           "function": "_get_spark",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L170-L201",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6957,7 +6838,7 @@
           "function": "_normalize_table_name",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L95-L104",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6966,7 +6847,7 @@
           "function": "_resolve_lakehouse_table_path",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L130-L137",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6974,7 +6855,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -7004,7 +6885,7 @@
           "function": "read_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L235-L309",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L218-L292",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7033,7 +6914,7 @@
           "function": "_get_spark",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._get_spark",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L218",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L170-L201",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7041,7 +6922,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L597-L659",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L580-L642",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -7077,7 +6958,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7086,7 +6967,7 @@
           "function": "write_warehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L662-L727",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L645-L710",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7094,7 +6975,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L312-L379",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L295-L362",
       "deepest_call_chain_depth": 4,
       "repeated_helper_count": 3
     },
@@ -7142,7 +7023,7 @@
           "function": "write_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L312-L379",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L295-L362",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7243,7 +7124,7 @@
           "function": "_normalize_table_name",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._normalize_table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L114",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L95-L104",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7252,7 +7133,7 @@
           "function": "_resolve_lakehouse_table_path",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L154",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L130-L137",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7260,7 +7141,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -7290,7 +7171,7 @@
           "function": "write_data",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_data",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L312-L379",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L295-L362",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7318,7 +7199,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L662-L727",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L645-L710",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -9744,7 +9625,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9753,7 +9634,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9812,7 +9693,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9821,7 +9702,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9880,7 +9761,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9889,7 +9770,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10975,7 +10856,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10984,7 +10865,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11042,7 +10923,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11051,7 +10932,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11417,7 +11298,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11426,7 +11307,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11455,7 +11336,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11591,7 +11472,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11600,7 +11481,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11791,7 +11672,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11800,7 +11681,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -14222,7 +14103,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -14231,7 +14112,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15020,7 +14901,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15029,7 +14910,7 @@
           "function": "read_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L382-L435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L365-L418",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15274,7 +15155,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15283,7 +15164,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15737,7 +15618,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15746,7 +15627,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -17815,7 +17696,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -17824,7 +17705,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -17922,7 +17803,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -17931,7 +17812,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -17978,7 +17859,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -18057,7 +17938,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -18066,7 +17947,7 @@
           "function": "write_lakehouse_table",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L438-L548",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L421-L531",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -18113,7 +17994,7 @@
           "function": "_configured_lakehouse_schema",
           "module": "fabric_input_output",
           "qualified_name": "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L164-L177",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L147-L160",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -18162,32 +18043,32 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 275,
-    "total_functions": 275,
+    "total_callables": 272,
+    "total_functions": 272,
     "function_type": {
       "Public API": 20,
       "Internal helper": 156,
-      "Utility": 99
+      "Utility": 96
     },
     "layer": {
       "public": 20,
       "internal": 156,
-      "utility": 99
+      "utility": 96
     },
     "review_status": {
       "classified": 230,
       "classification_pending": 14,
-      "unreachable": 31
+      "unreachable": 28
     },
     "callable_kind": {
-      "class": 14,
-      "function": 251,
-      "method": 10
+      "class": 13,
+      "function": 250,
+      "method": 9
     },
     "recommended_action": {
       "Architecture violation": 97,
       "Inline candidate": 43,
-      "Orphaned callable": 23,
+      "Orphaned callable": 20,
       "Public API entrypoint": 19,
       "Review abstraction value": 9,
       "Review manually": 18,

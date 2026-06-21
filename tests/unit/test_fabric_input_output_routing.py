@@ -31,7 +31,10 @@ DELETED_INTERNAL_HELPERS = {
     "_registered_table_identifier",
     "_uses_registered_metadata_table",
     "_current_database_matches",
+    "_qualified_table_name",
 }
+
+DELETED_INTERNAL_CLASSES = {"_PandasProxy"}
 
 
 def _store(target: str, kind: str, name: str, *, schema_enabled: bool = False, schema: str | None = None) -> FabricStore:
@@ -166,10 +169,13 @@ def test_deleted_internal_helpers_are_absent_and_unreferenced():
     source = Path("src/fabricops_kit/fabric_input_output.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+    defined_classes = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
     referenced_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
 
     assert DELETED_INTERNAL_HELPERS.isdisjoint(defined_functions)
+    assert DELETED_INTERNAL_CLASSES.isdisjoint(defined_classes)
     assert DELETED_INTERNAL_HELPERS.isdisjoint(referenced_names)
+    assert DELETED_INTERNAL_CLASSES.isdisjoint(referenced_names)
 
 
 def test_io_orchestrators_are_root_exports_and_low_level_helpers_are_module_only():
