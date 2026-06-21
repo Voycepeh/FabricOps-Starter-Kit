@@ -2,8 +2,13 @@
 
 AI coding tools make it easy to add callables quickly. That speed is useful, but it can also create too many entry points, thin wrapper callables, nested helpers, and uncontrolled dependencies. The Callable Flow Dashboard exists to make those relationships visible before the codebase becomes hard to maintain.
 
-!!! info "Interactive dashboard"
-    The interactive [Callable Flow Dashboard](../assets/callable-functions-dashboard.html) is available from this page. This documentation explains why the dashboard exists, how to read the signals, and how to use the exported context for AI-assisted refactoring.
+<div align="center" markdown="1">
+
+[Open the interactive Callable Flow Dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+
+</div>
+
+This page explains why the dashboard exists, how to read the refactor signals, and how to use the exported context for AI-assisted refactoring.
 
 ## Why callable flow matters
 
