@@ -66,3 +66,13 @@ def test_profile_dataframe_excludes_fabricops_and_dq_annotation_prefixes(spark_s
     columns = {row["COLUMN_NAME"] for row in profile_dataframe(df, "orders").collect()}
 
     assert columns == {"id", "status"}
+
+
+def test_profile_dataframe_public_import_and_signature_are_stable():
+    """Verify profile dataframe root import and public signature remain stable."""
+    import inspect
+
+    from fabricops_kit import profile_dataframe as root_profile_dataframe
+
+    assert root_profile_dataframe is profile_dataframe
+    assert str(inspect.signature(profile_dataframe)) == "(df, table_name: 'str', *, exclude_columns=None, run_timestamp_timezone: 'str | None' = None, config: 'Any' = None, include_distributions: 'bool' = False, distribution_columns: 'list[str] | set[str] | tuple[str, ...] | None' = None, distribution_bin_edges: 'dict[str, list[float]] | None' = None, categorical_categories: 'dict[str, list[str]] | None' = None, categorical_top_n: 'int' = 20)"

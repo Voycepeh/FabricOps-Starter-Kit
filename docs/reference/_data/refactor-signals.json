@@ -931,7 +931,19 @@
         "branch_count": 2
       }
     ],
-    "deep_call_chains": [],
+    "deep_call_chains": [
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.data_profiling.profile_dataframe",
+          "fabricops_kit.data_profiling.profile_dataframe_core",
+          "fabricops_kit._profiling_workflows.profile_dataframe_core",
+          "fabricops_kit.config._audit_timestamp_expr",
+          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config._validate_audit_timezone"
+        ]
+      }
+    ],
     "single_delegate_helpers": [
       {
         "helper": "_audit_timestamp_expr",
