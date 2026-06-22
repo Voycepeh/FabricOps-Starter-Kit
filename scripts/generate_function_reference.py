@@ -1697,7 +1697,14 @@ REFACTOR_REASON_LABELS = {
     "High-fanout helper": "Used by many functions",
     "public_calls_public": "Public calls public",
     "internal_calls_public": "Internal calls public",
-    "internal_calls_internal": "Internal calls internal",
+    "internal_workflow_calls_internal_workflow": "Internal workflow calls internal workflow",
+    "utility_calls_workflow": "Utility calls workflow",
+    "validator_calls_workflow": "Validator calls workflow",
+    "resolver_calls_workflow": "Resolver calls workflow",
+    "model_calls_workflow": "Model calls workflow",
+    "allowed_internal_role_call": "Allowed internal role call",
+    "implicit_lifecycle_reachability": "Implicit lifecycle reachability",
+    "internal_calls_internal": "Internal calls internal (legacy)",
     "utility_calls_project_callable": "Utility calls project callable",
     "callee_classification_pending": "Callee classification pending",
     "callee_unreachable": "Callee unreachable",
@@ -2002,6 +2009,172 @@ def _classify_layer_consistency(
 
     return "review_manually"
 
+
+CONFIG_MODEL_CLASSES = {
+    "NotebookRuntimeConfig",
+    "QualityConfig",
+    "GovernanceConfig",
+    "DataAgreementConfig",
+    "ReviewWorkflowConfig",
+    "LineageConfig",
+    "FrameworkConfig",
+    "PathConfig",
+}
+
+RESULT_MODEL_CLASSES = {"ConfigSmokeCheckResult"}
+CONTEXT_MODEL_CLASSES = {"NotebookSetupContext"}
+
+ROLE_TAGS_BY_NAME = {
+    "setup_notebook": ["public_api_entrypoint", "notebook_api_entrypoint", "public_stable"],
+    "setup_metadata_tables": ["public_api_entrypoint", "metadata_setup_workflow", "public_stable"],
+    "_get_store": ["internal_resolver", "shared_internal_service", "store_resolver", "high_fanout_shared"],
+    "resolve_fabric_context": [
+        "internal_resolver",
+        "shared_internal_service",
+        "runtime_context_resolver",
+        "high_fanout_shared",
+    ],
+    "get_default_fabric_context": ["internal_resolver", "runtime_context_provider", "shared_internal_service"],
+    "_current_audit_timestamp": ["audit_time_utility", "shared_internal_service", "high_fanout_shared"],
+    "_get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
+    "_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
+    "_validate_framework_config": ["internal_validator", "config_validator"],
+    "_validate_metadata_table_registration": ["internal_workflow", "metadata_validation_workflow"],
+    "_validate_audit_timezone": ["utility_validator", "low_level_utility"],
+    "_validate_notebook_name": ["utility_validator", "local_leaf_helper"],
+    "_normalize_path_config": ["internal_normalizer", "path_config_normalizer"],
+    "_normalize_widget_config": ["internal_normalizer", "widget_config_normalizer"],
+    "_get_metadata_table_schema_registry": ["registry_builder", "metadata_schema_registry_builder"],
+    "_metadata_schema_field_names": ["schema_utility"],
+    "_string_metadata_schema": ["schema_utility", "local_leaf_helper"],
+    "_resolve_metadata_schema": ["internal_resolver", "metadata_schema_resolver"],
+    "_get_active_metadata_tables": ["internal_resolver", "metadata_registry_query"],
+    "_setup_metadata_table_registry": ["internal_workflow", "metadata_registry_write_workflow"],
+    "_detect_nested_metadata_delta_folders": ["internal_validator", "storage_guardrail_validator"],
+    "_run_config_smoke_tests": ["internal_workflow", "setup_smoke_test_workflow"],
+    "_check_spark_session": ["spark_runtime_probe", "utility_function"],
+    "_get_fabric_runtime_metadata": ["fabric_runtime_probe", "internal_adapter"],
+}
+
+def _callable_role_tags(qn: str, node: dict[str, Any], layer: str, review_status: str) -> list[str]:
+    """Return refined role tags for a callable without changing runtime behavior."""
+    name = node["callable_name"]
+    base_name = name.split(".")[0]
+    kind = node.get("callable_kind", "unknown")
+    tags: list[str] = []
+    if kind == "implicit_lifecycle_method":
+        tags.extend(["lifecycle_method", "implicit_lifecycle_reachable", "keep_lifecycle_method"])
+    elif kind == "property_accessor":
+        tags.append("property_method")
+    elif kind == "class":
+        if base_name in CONFIG_MODEL_CLASSES:
+            tags.append("config_model_class")
+            if base_name == "FrameworkConfig":
+                tags.append("root_config_model")
+            if base_name == "PathConfig":
+                tags.append("path_config_model")
+        elif base_name in RESULT_MODEL_CLASSES:
+            tags.append("result_model_class")
+        elif base_name in CONTEXT_MODEL_CLASSES:
+            tags.append("context_model_class")
+        else:
+            tags.append(
+                "config_model_class"
+                if base_name.endswith("Config")
+                else "context_model_class"
+                if base_name.endswith("Context")
+                else "result_model_class"
+                if base_name.endswith("Result")
+                else "instance_method"
+            )
+    elif layer == "public":
+        tags.append("public_api_entrypoint")
+    tags.extend(ROLE_TAGS_BY_NAME.get(name, []))
+    if not tags:
+        if name.startswith("_validate"):
+            tags.append("internal_validator")
+        elif name.startswith("_normalize"):
+            tags.append("internal_normalizer")
+        elif name.startswith(("_resolve", "resolve_", "_get", "get_default")):
+            tags.append("internal_resolver")
+        elif layer == "utility":
+            tags.append("utility_function")
+        elif layer == "internal":
+            tags.append("internal_workflow")
+        else:
+            tags.append("instance_method" if kind == "method" else "utility_function")
+    if any(tag.endswith("_normalizer") for tag in tags):
+        tags.append("implicit_lifecycle_reachable")
+    if review_status == "unreachable":
+        tags.append("unreachable_candidate")
+    return list(dict.fromkeys(tags))
+
+
+def _primary_dependency_role(tags: list[str]) -> str:
+    """Return the primary dependency role used by architecture rules."""
+    order = [
+        "public_api_entrypoint",
+        "notebook_api_entrypoint",
+        "internal_workflow",
+        "utility_function",
+        "utility_validator",
+        "internal_validator",
+        "internal_normalizer",
+        "internal_resolver",
+        "internal_adapter",
+        "config_model_class",
+        "result_model_class",
+        "context_model_class",
+        "lifecycle_method",
+        "schema_utility",
+        "audit_time_utility",
+        "spark_runtime_probe",
+        "fabric_runtime_probe",
+        "shared_internal_service",
+    ]
+    return next((role for role in order if role in tags), tags[0] if tags else "unknown")
+
+
+def _role_dependency_signals(caller_role: str, callee_role: str) -> list[str]:
+    """Return role-based architecture signals for a project-local call edge."""
+    if caller_role == "internal_workflow" and callee_role == "internal_workflow":
+        return ["internal_workflow_calls_internal_workflow"]
+    utility_roles = {
+        "utility_function",
+        "audit_time_utility",
+        "schema_utility",
+        "spark_runtime_probe",
+        "fabric_runtime_probe",
+    }
+    if caller_role in utility_roles and callee_role == "internal_workflow":
+        return ["utility_calls_workflow"]
+    if caller_role in {"utility_validator", "internal_validator"} and callee_role == "internal_workflow":
+        return ["validator_calls_workflow"]
+    if caller_role == "internal_resolver" and callee_role == "internal_workflow":
+        return ["resolver_calls_workflow"]
+    if caller_role in {"config_model_class", "result_model_class", "context_model_class"} and callee_role == "internal_workflow":
+        return ["model_calls_workflow"]
+    allowed_callers = {"public_api_entrypoint", "notebook_api_entrypoint", "internal_workflow", "lifecycle_method"}
+    allowed_callees = {
+        "internal_workflow",
+        "utility_function",
+        "utility_validator",
+        "internal_validator",
+        "internal_normalizer",
+        "internal_resolver",
+        "internal_adapter",
+        "config_model_class",
+        "result_model_class",
+        "context_model_class",
+        "schema_utility",
+        "audit_time_utility",
+        "spark_runtime_probe",
+        "fabric_runtime_probe",
+    }
+    if caller_role in allowed_callers and callee_role in allowed_callees:
+        return ["allowed_internal_role_call"]
+    return []
+
 ARCHITECTURE_VIOLATION_ACTION = "Architecture violation"
 
 
@@ -2070,8 +2243,19 @@ def _build_function_inventory(
         qn: _callable_classification(qn, public_qn_set, reachable_non_public, calls_by_qn, node_by_qn)
         for qn in node_by_qn
     }
+    for qn, callers in inbound_by_qn.items():
+        if classification_by_qn[qn][1] == "unreachable" and any(
+            node_by_qn[caller].get("callable_kind") == "implicit_lifecycle_method" for caller in callers
+        ):
+            classification_by_qn[qn] = (classification_by_qn[qn][0], "classified")
     layer_by_qn = {qn: classification[0] for qn, classification in classification_by_qn.items()}
     review_status_by_qn = {qn: classification[1] for qn, classification in classification_by_qn.items()}
+
+    role_tags_by_qn = {
+        qn: _callable_role_tags(qn, node_by_qn[qn], layer_by_qn[qn], review_status_by_qn[qn])
+        for qn in node_by_qn
+    }
+    dependency_role_by_qn = {qn: _primary_dependency_role(tags) for qn, tags in role_tags_by_qn.items()}
 
     def linked(qns: list[str] | set[str]) -> list[dict[str, str]]:
         return [
@@ -2083,6 +2267,8 @@ def _build_function_inventory(
                 "layer": layer_by_qn.get(qn, "internal"),
                 "review_status": review_status_by_qn.get(qn, "classification_pending"),
                 "callable_kind": node_by_qn[qn].get("callable_kind", "unknown"),
+                "callable_role": role_tags_by_qn.get(qn, []),
+                "dependency_role": dependency_role_by_qn.get(qn, "unknown"),
             }
             for qn in sorted(qns, key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()))
             if qn in node_by_qn
@@ -2103,7 +2289,21 @@ def _build_function_inventory(
             signal
             for callee in outbound
             if review_status_by_qn.get(callee, "classification_pending") == "classified"
-            for signal in _architecture_dependency_signals(layer, layer_by_qn.get(callee, "internal"))
+            for signal in _role_dependency_signals(
+                dependency_role_by_qn[qn],
+                dependency_role_by_qn.get(callee, "internal_workflow"),
+            )
+            if signal != "allowed_internal_role_call"
+        })
+        allowed_role_signals = sorted({
+            signal
+            for callee in outbound
+            if review_status_by_qn.get(callee, "classification_pending") == "classified"
+            for signal in _role_dependency_signals(
+                dependency_role_by_qn[qn],
+                dependency_role_by_qn.get(callee, "internal_workflow"),
+            )
+            if signal == "allowed_internal_role_call"
         })
         review_signals = sorted({
             signal
@@ -2124,6 +2324,12 @@ def _build_function_inventory(
         utility_dependency_signal = "Utility has outgoing dependencies" if function_type == "Utility" and calls_count > 0 else None
         signals = [
             *architecture_signals,
+            *allowed_role_signals,
+            *(
+                ["implicit_lifecycle_reachability"]
+                if "implicit_lifecycle_reachable" in role_tags_by_qn[qn]
+                else []
+            ),
             *review_signals,
             *refactor.get("signals", []),
             *([consistency_signal] if consistency_signal else []),
@@ -2164,6 +2370,20 @@ def _build_function_inventory(
                 "review_status_label": REVIEW_STATUS_LABELS[review_status],
                 "callable_kind": callable_kind,
                 "visibility": "public" if qn in public_qn_set else "private" if node.get("is_underscore") else "internal",
+                "callable_role": role_tags_by_qn[qn],
+                "architectural_role": dependency_role_by_qn[qn],
+                "dependency_role": dependency_role_by_qn[qn],
+                "reachability_kind": (
+                    "implicit_lifecycle_reachable"
+                    if review_status == "implicit_lifecycle"
+                    else "unreachable_candidate"
+                    if review_status == "unreachable"
+                    else "directly_reachable"
+                    if used_by_count
+                    else "indirectly_reachable"
+                ),
+                "change_risk": priority,
+                "refined_recommended_action": recommended_action,
                 "recommended_action": recommended_action,
                 "priority": priority,
                 "signals": signals,
@@ -2201,6 +2421,14 @@ def _build_function_inventory(
         "callable_kind": {
             label: sum(1 for row in inventory if row["callable_kind"] == label)
             for label in sorted({row["callable_kind"] for row in inventory})
+        },
+        "callable_role": {
+            label: sum(1 for row in inventory if label in row["callable_role"])
+            for label in sorted({role for row in inventory for role in row["callable_role"]})
+        },
+        "dependency_role": {
+            label: sum(1 for row in inventory if row["dependency_role"] == label)
+            for label in sorted({row["dependency_role"] for row in inventory})
         },
         "recommended_action": {
             label: sum(1 for row in inventory if row["recommended_action"] == label)
@@ -2536,7 +2764,14 @@ let inventory = []; let summary = {}; const actionLegend = {
   "High-fanout helper": "Used by many functions",
   "public_calls_public": "Public calls public",
   "internal_calls_public": "Internal calls public",
-  "internal_calls_internal": "Internal calls internal",
+  "internal_workflow_calls_internal_workflow": "Internal workflow calls internal workflow",
+  "utility_calls_workflow": "Utility calls workflow",
+  "validator_calls_workflow": "Validator calls workflow",
+  "resolver_calls_workflow": "Resolver calls workflow",
+  "model_calls_workflow": "Model calls workflow",
+  "allowed_internal_role_call": "Allowed internal role call",
+  "implicit_lifecycle_reachability": "Implicit lifecycle reachability",
+  "internal_calls_internal": "Internal calls internal (legacy)",
   "utility_calls_project_callable": "Utility calls project callable",
   "callee_classification_pending": "Callee classification pending",
   "callee_unreachable": "Callee unreachable",
@@ -2582,7 +2817,7 @@ function linkedList(items) { return items.length ? `<ul>${items.map(i=>`<li><a h
 function chips(item) { const content=(item.signals || []).map(s=>`<span class="tag" title="${esc(signalTooltips[s] || reasonLabels[s] || s)}">${esc(reasonLabels[s] || s)}</span>`).join('') || `<span class="badge review" title="${esc(item.recommended_action)}">${esc(item.recommended_action)}</span>`; return `<span class="chip-wrap">${content}</span>`; }
 function exportFilters() { return {callable:state.search, kind:state.kind, layer:state.type, review_status:state.review_status, module:state.module, recommended_action:state.signal}; }
 function guidanceFor(action) { return refactorGuidance[action] || ['manual_review', 'Automated signal is inconclusive. Inspect intent, callers, and tests before recommending changes.']; }
-function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, layer:i.layer, callable_kind:i.callable_kind, visibility:i.visibility, architecture_signals:i.architecture_signals || [], review_signals:i.review_signals || [], review_status:i.review_status, review_status_label:i.review_status_label, recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, used_by_count:i.used_by_count ?? i.called_by_count, called_by_count:i.called_by_count, calls_count:i.calls_count, layer_consistency:i.layer_consistency, layer_consistency_label:i.layer_consistency_label || layerConsistencyLabels[i.layer_consistency], callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
+function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, layer:i.layer, callable_kind:i.callable_kind, visibility:i.visibility, architecture_signals:i.architecture_signals || [], review_signals:i.review_signals || [], review_status:i.review_status, review_status_label:i.review_status_label, callable_role:i.callable_role || [], architectural_role:i.architectural_role, reachability_kind:i.reachability_kind, dependency_role:i.dependency_role, change_risk:i.change_risk, refined_recommended_action:i.refined_recommended_action, recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, used_by_count:i.used_by_count ?? i.called_by_count, called_by_count:i.called_by_count, calls_count:i.calls_count, layer_consistency:i.layer_consistency, layer_consistency_label:i.layer_consistency_label || layerConsistencyLabels[i.layer_consistency], callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
 function selectedItems() { const byId=new Map(inventory.map(i=>[i.qualified_name,i])); return [...state.selected].map(id=>byId.get(id)).filter(Boolean); }
 function compatibilityContext() { return compatibilityModes[state.compatibility_mode] || compatibilityModes.internal_cleanup; }
 function refactorContext(callables) { const compatibility=compatibilityContext(); return {selected_callable_actions:unique(callables.map(fn=>fn.recommended_action)), refactor_intent:'Plan safe cleanup for selected FabricOps helper callables.', refactor_mode:'planning_only', compatibility_mode:state.compatibility_mode, compatibility_instruction:compatibility.instruction, likely_refactor_actions:['Inline thin wrappers where readability improves','Merge adjacent helpers with overlapping responsibility','Keep helpers separate when naming, validation boundaries, or tests justify the abstraction'], safety_constraints:compatibility.safety_constraints, expected_ai_output:['Group selected callables by refactor type','Explain which callables are safe cleanup candidates','Identify callables that should not be refactored yet','Propose an ordered refactor plan','Report selected, intended batch, actually refactored, deferred, and remaining callable counts','List risks and required tests','Do not produce code changes unless explicitly requested']}; }
