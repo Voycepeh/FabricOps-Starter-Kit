@@ -142,3 +142,15 @@ def test_package_callables_obey_architecture_boundaries() -> None:
                     if callee_name in FABRIC_IO_INTERNALS and not _is_lower_layer(callee_module, callee_name):
                         violations.append(f"internal helper {caller} must use io_core instead of internal Fabric IO helper {callee}")
     assert violations == []
+
+
+def test_io_core_does_not_depend_on_public_fabric_input_output_module() -> None:
+    """Verify lower-layer IO does not import the public facade module."""
+    tree = ast.parse((SRC / "io_core.py").read_text(encoding="utf-8"))
+    imports: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            imports.append(node.module)
+        elif isinstance(node, ast.Import):
+            imports.extend(alias.name for alias in node.names)
+    assert not any(name.endswith("fabric_input_output") or name == "fabric_input_output" for name in imports)

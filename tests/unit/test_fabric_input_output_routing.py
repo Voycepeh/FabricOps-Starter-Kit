@@ -236,8 +236,10 @@ def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
     config = _io_config()
     metadata_store = config.paths["dev"]["metadata"]
 
-    assert io._resolve_lakehouse_table_path(metadata_store, "orders").endswith("/Tables/orders")
-    assert io._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
+    from fabricops_kit import io_core
+
+    assert io_core._resolve_lakehouse_table_path(metadata_store, "orders").endswith("/Tables/orders")
+    assert io_core._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
 
 
 import pytest
@@ -323,47 +325,3 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
     with pytest.raises(ValueError, match="SELECT statement"):
         io.read_warehouse_query("DELETE FROM dbo.orders", target="warehouse", spark_session=spark, context=context)
 
-
-def test_fabric_io_architecture_call_boundaries():
-    """Verify Fabric IO public, core, and utility call boundaries."""
-    source = Path("src/fabricops_kit/fabric_input_output.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
-    public = {
-        "read_lakehouse_table",
-        "write_lakehouse_table",
-        "read_lakehouse_csv",
-        "read_lakehouse_parquet",
-        "read_lakehouse_excel",
-        "read_warehouse_table",
-        "read_warehouse_query",
-        "write_warehouse_table",
-    }
-    internal = {name for name in functions if name.startswith("_read_") or name.startswith("_write_")}
-    utility = {
-        "_get_spark",
-        "_normalize_table_name",
-        "_normalize_schema_name",
-        "_normalize_write_mode",
-        "_resolve_lakehouse_table_path",
-        "_resolve_lakehouse_table_identifier",
-        "_lakehouse_file_path",
-        "_validate_lakehouse_store",
-        "_validate_warehouse_store",
-        "_validate_relative_path",
-        "_require_fabric_connector",
-        "_build_warehouse_object_name",
-        "_convert_single_parquet_ns_to_us",
-    }
-    fabricops_callables = public | internal | utility
-
-    def calls(node):
-        return {call.func.id for call in ast.walk(node) if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)}
-
-    for name in public:
-        assert calls(functions[name]).isdisjoint(public - {name})
-    for name in internal:
-        assert calls(functions[name]).isdisjoint(public)
-        assert calls(functions[name]).isdisjoint(internal - {name})
-    for name in utility:
-        assert calls(functions[name]).isdisjoint(fabricops_callables - {name})

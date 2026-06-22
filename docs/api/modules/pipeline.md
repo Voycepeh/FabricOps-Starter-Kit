@@ -392,7 +392,7 @@ None.
 <a class="reference-chip" href="guardrails/#enforce_freshness"><code>enforce_freshness</code></a>, <a class="reference-chip" href="guardrails/#enforce_freshness_rule"><code>enforce_freshness_rule</code></a>, <a class="reference-chip" href="guardrails/#enforce_profile_behavior"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="guardrails/#stop_if_failed"><code>stop_if_failed</code></a>
 
 **io_core**
-<a class="reference-chip" href="io_core/#configured_lakehouse_schema"><code>configured_lakehouse_schema</code></a>
+<a class="reference-chip" href="io_core/#configured_lakehouse_schema"><code>configured_lakehouse_schema</code></a>, <a class="reference-chip" href="io_core/#write_lakehouse_table_core"><code>write_lakehouse_table_core</code></a>
 
 **metadata**
 <a class="reference-chip" href="metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>
