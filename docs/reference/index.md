@@ -8,11 +8,6 @@ Use this page to look up Starter Kit functions used by the template notebooks.
     <h2 class="reference-kpi-title">Public functions</h2>
     <p class="reference-kpi-note">Notebook-facing entry points used by starter templates.</p>
   </section>
-  <section class="reference-kpi-card">
-    <p class="reference-kpi-value">270</p>
-    <h2 class="reference-kpi-title">Supporting internal functions</h2>
-    <p class="reference-kpi-note">Maintainer helpers tracked for source navigation.</p>
-  </section>
 </div>
 
 ## Find a function

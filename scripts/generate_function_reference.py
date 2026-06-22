@@ -4428,10 +4428,6 @@ def main() -> None:
             f'title="Open {module} module page" aria-label="Open {module} module page">{_esc(module)}</a>'
         )
 
-    supporting_internal_count = len([
-        node for node in node_by_qn.values()
-        if not node.get("exported") and node["callable_name"] in module_data[node["module_name"]]["functions"]
-    ])
 
     public_flow_qns = sorted(
         [qn for qn, node in node_by_qn.items() if node.get("exported")],
@@ -4451,11 +4447,6 @@ def main() -> None:
         f'    <p class="reference-kpi-value">{public_function_count}</p>',
         '    <h2 class="reference-kpi-title">Public functions</h2>',
         '    <p class="reference-kpi-note">Notebook-facing entry points used by starter templates.</p>',
-        '  </section>',
-        '  <section class="reference-kpi-card">',
-        f'    <p class="reference-kpi-value">{supporting_internal_count}</p>',
-        '    <h2 class="reference-kpi-title">Supporting internal functions</h2>',
-        '    <p class="reference-kpi-note">Maintainer helpers tracked for source navigation.</p>',
         '  </section>',
         '</div>',
         "",
