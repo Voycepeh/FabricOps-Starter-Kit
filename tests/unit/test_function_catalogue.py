@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import re
 from pathlib import Path
 
@@ -98,7 +99,12 @@ def test_homepage_template_called_function_kpi_matches_reference_count() -> None
     )
 
     assert token_match is not None
-    assert token_match.group(1).strip() == f"{len(_catalogue_row_names())} public Starter Kit functions"
+    token_body = token_match.group(1).strip()
+    token_text = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", token_body)).split())
+
+    assert token_text == f"{len(_catalogue_row_names())} public Starter Kit functions"
+    assert "<strong>" in token_body
+    assert "<span>public Starter Kit functions</span>" in token_body
     assert 'href="reference/"' in homepage
 
 
