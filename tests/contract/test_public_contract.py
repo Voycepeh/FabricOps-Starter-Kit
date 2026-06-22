@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import importlib
+import inspect
 import json
 import os
 import subprocess
@@ -12,10 +14,13 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
+from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
 
 pytestmark = pytest.mark.contract
 
-APPROVED_V1_CALLABLES = {
+APPROVED_V1_CALLABLES = {qualified_name.rsplit(".", maxsplit=1)[-1] for qualified_name in SUPPORTED_PUBLIC_API}
+APPROVED_V1_QUALIFIED_CALLABLES = set(SUPPORTED_PUBLIC_API)
+LEGACY_APPROVED_V1_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
     "widget_render_data_steward",
@@ -110,6 +115,372 @@ def _template_called_fabricops_functions() -> set[str]:
     return calls
 
 
+def _signature_snapshot(function):
+    signature = inspect.signature(function)
+    parameters = []
+    for parameter in signature.parameters.values():
+        parameters.append(
+            {
+                "name": parameter.name,
+                "kind": parameter.kind.name,
+                "required": parameter.default is inspect.Parameter.empty,
+            }
+        )
+    return {"parameters": parameters}
+
+
+def test_supported_public_api_contract_has_release_count_and_stable_names():
+    """Verify the release public API contract keeps exactly 26 functions."""
+    message = (
+        "The supported public API surface must remain exactly 26 functions during "
+        "the release refactor. Update SUPPORTED_PUBLIC_API and the release docs "
+        "intentionally if this changes."
+    )
+
+    assert len(SUPPORTED_PUBLIC_API) == 26, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 26
+    assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
+
+
+def test_supported_public_api_imports_are_callable_and_root_exported():
+    """Verify every contract entry imports, is callable, and remains root exported."""
+    for qualified_name in SUPPORTED_PUBLIC_API:
+        module_name, function_name = qualified_name.rsplit(".", maxsplit=1)
+        module = importlib.import_module(module_name)
+        function = getattr(module, function_name)
+
+        assert callable(function), f"{qualified_name} must be callable"
+        assert function_name in fabricops_kit.__all__
+        assert getattr(fabricops_kit, function_name) is function
+
+
+def test_supported_public_api_matches_generated_inventory_classification():
+    """Verify contract entries remain generated Callable inventory entries."""
+    root = Path(__file__).parents[2]
+    function_manifest = json.loads(
+        (root / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
+    )
+    callable_flow = json.loads(
+        (root / "docs" / "reference" / "_data" / "callable-flow.json").read_text(encoding="utf-8")
+    )
+
+    manifest_public = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Callable"}
+    flow_public = {
+        row["qualified_name"]
+        for row in callable_flow["function_inventory"]
+        if row.get("layer") == "public" or row.get("function_type") == "Public Starter Kit function"
+    }
+
+    assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES
+    assert flow_public == APPROVED_V1_QUALIFIED_CALLABLES
+
+
+def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
+    """Verify public signatures keep the same parameter names and required flags."""
+    root = Path(__file__).parents[2]
+    function_manifest = json.loads(
+        (root / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
+    )
+    source_locations = {row["qualified_name"]: row for row in function_manifest}
+
+    snapshots = {}
+    for qualified_name in SUPPORTED_PUBLIC_API:
+        module_name, function_name = qualified_name.rsplit(".", maxsplit=1)
+        function = getattr(importlib.import_module(module_name), function_name)
+        snapshots[qualified_name] = _signature_snapshot(function)
+
+    assert snapshots == {
+        "fabricops_kit.config.setup_metadata_tables": {
+            "parameters": [
+                {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "config", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "env", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "metadata_schema", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "require_active_steward", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.config.setup_notebook": {
+            "parameters": [
+                {"name": "config", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "env", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+                {"name": "required_targets", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+                {"name": "notebook_name", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+                {"name": "run_id_prefix", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+                {"name": "local_fallback_name", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+            ]
+        },
+        "fabricops_kit.data_agreement.widget_render_agreement_evidence": {
+            "parameters": [
+                {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.data_agreement.widget_render_data_agreement": {
+            "parameters": [
+                {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.data_agreement.widget_render_data_steward": {
+            "parameters": [
+                {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.data_profiling.profile_dataframe": {
+            "parameters": [
+                {"name": "df", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "exclude_columns", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "run_timestamp_timezone", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "config", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "include_distributions", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "distribution_columns", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "distribution_bin_edges", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "categorical_categories", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "categorical_top_n", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.read_lakehouse_csv": {
+            "parameters": [
+                {"name": "relative_path", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "header", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "VAR_KEYWORD", "required": True},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.read_lakehouse_excel": {
+            "parameters": [
+                {"name": "relative_path", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "sheet_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "read_excel_kwargs", "kind": "VAR_KEYWORD", "required": True},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.read_lakehouse_parquet": {
+            "parameters": [
+                {"name": "relative_path", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "verbose", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.read_lakehouse_table": {
+            "parameters": [
+                {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "schema", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.read_warehouse_query": {
+            "parameters": [
+                {"name": "query", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.read_warehouse_table": {
+            "parameters": [
+                {"name": "schema", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.write_lakehouse_table": {
+            "parameters": [
+                {"name": "df", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "schema", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "partition_by", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "repartition_by", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "verbose", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.fabric_input_output.write_warehouse_table": {
+            "parameters": [
+                {"name": "df", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "schema", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.governance_review.get_latest_metadata_catalogue": {
+            "parameters": [
+                {"name": "table_name", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "agreement", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "metadata_schema", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.governance_review.widget_author_dq_rules": {
+            "parameters": [
+                {"name": "state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "dq_authoring_mode", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "rule_type", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "selected_columns", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "parameters", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "severity", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "bypass_reason", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_notebook_type", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "created_by_role", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "commit", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules": {
+            "parameters": [
+                {"name": "state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "bypass_reason", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_notebook_type", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "created_by_role", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "commit", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.governance_review.widget_enrich_table_metadata": {
+            "parameters": [
+                {"name": "guardrail_state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_notebook_type", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "created_by_role", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.governance_review.widget_review_guardrail_governance": {
+            "parameters": [
+                {"name": "state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.governance_review.widget_select_guardrail_target": {
+            "parameters": [
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.pipeline.display_guardrail_results": {
+            "parameters": [
+                {"name": "result_bundle", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "mode", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+                {"name": "spark_session", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+            ]
+        },
+        "fabricops_kit.pipeline.prepare_pipeline_table_configs": {
+            "parameters": [
+                {"name": "table_configs", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "default_settings", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "table_role", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "run_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "pipeline_name", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.pipeline.run_table_guardrails": {
+            "parameters": [
+                {"name": "table_configs", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
+                {"name": "run_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "agreement_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "agreement_contract_version", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_registry_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "pipeline_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "table_role", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "stop_on_failure", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.pipeline.start_pipeline_run": {
+            "parameters": [
+                {"name": "notebook_type", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "select_agreement", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "register_notebook", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "read_only", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "run_context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "metadata_schema", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "pipeline_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.pipeline.write_pipeline_lineage": {
+            "parameters": [
+                {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "run_id", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_definitions", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "target_definitions", "kind": "KEYWORD_ONLY", "required": True},
+                {"name": "relationships", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "dataset_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "agreement_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "agreement_contract_version", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_registry_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "pipeline_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "metadata_table", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.pipeline.write_pipeline_run_summary": {
+            "parameters": [
+                {"name": "spark", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "run_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "agreement_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "agreement_contract_version", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_registry_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_type", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "pipeline_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "started_at", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "completed_at", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "status", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_definitions", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target_definitions", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_schema_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target_schema_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_freshness_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target_freshness_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_stability_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target_stability_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_dq_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target_dq_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "lineage_status", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "catalogue_status", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "message", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "source_guardrail_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target_guardrail_results", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target_write_status", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "lineage_result", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "metadata_table", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+    }
+
+    assert set(snapshots) <= set(source_locations)
+
+
 def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
     assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
@@ -195,7 +566,12 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
 
     assert manifest_callables == APPROVED_V1_CALLABLES
     assert called <= manifest_callables
-    assert {"prepare_pipeline_table_configs", "run_table_guardrails", "write_pipeline_lineage", "write_pipeline_run_summary"} <= called
+    assert {
+        "prepare_pipeline_table_configs",
+        "run_table_guardrails",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary",
+    } <= called
     for callable_name in manifest_callables:
         canonical_page = root / "docs" / "api" / "reference" / f"{callable_name}.md"
         legacy_page = root / "docs" / "reference" / "callables" / f"{callable_name}.md"
@@ -229,7 +605,13 @@ def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exporte
     assert callable(setup_notebook)
     assert callable(setup_metadata_tables)
     assert callable(read_lakehouse_table)
-    forbidden = {"AIPromptConfig", "draft_dq_rules", "BUSINESS_CONTEXT_PROMPT", "PDPA_PERSONAL_IDENTIFIER_PROMPT", "DQ_RULE_SUGGESTION_PROMPT"}
+    forbidden = {
+        "AIPromptConfig",
+        "draft_dq_rules",
+        "BUSINESS_CONTEXT_PROMPT",
+        "PDPA_PERSONAL_IDENTIFIER_PROMPT",
+        "DQ_RULE_SUGGESTION_PROMPT",
+    }
     assert forbidden.isdisjoint(set(fabricops_kit.__all__))
     for name in forbidden:
         assert not hasattr(fabricops_kit, name)
