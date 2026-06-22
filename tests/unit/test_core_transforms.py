@@ -10,7 +10,6 @@ from tests.helpers import FakeSpark, framework_config
 
 from fabricops_kit.governance_review import (
     _build_dq_rule_records,
-    _catalogue_profile_target_model,
     build_enrichment_rule_records,
 )
 
@@ -254,123 +253,23 @@ def test_load_rule_review_history_reads_enrichment_and_guardrail_rows():
     assert history[0]["rule_version"] == "v1"
     assert history[1]["rule_version"] == "v2"
 
-def test_governance_profile_target_groups_profiles_by_physical_table_not_stage_or_pipeline():
-    """Verify governance profile target groups profiles by physical table not stage or pipeline."""
-    rows = [
-        {**_profile_rows("run-source-old")[0], "profile_stage": "source", "pipeline_name": "pipe-a", "profiled_at": "2026-01-01T00:00:00Z"},
-        {**_profile_rows("run-target-new")[0], "profile_stage": "target", "pipeline_name": "pipe-b", "profiled_at": "2026-01-03T00:00:00Z"},
-        {**_profile_rows("run-source-newer")[0], "profile_stage": "source", "pipeline_name": "pipe-c", "profiled_at": "2026-01-04T00:00:00Z"},
-    ]
-
-    model = _catalogue_profile_target_model(rows)
-    asset = model["assets"]["dev / asset / sales"]
-    table = asset["schemas"]["-"]["tables"]["orders"]
-
-    assert len(table["profiles"]) == 3
-    assert table["default"]["profile_run_id"] == "run-source-newer"
-    assert table["default"]["profile_stage"] == "source"
-
-
-def test_governance_profile_target_defaults_to_latest_successful_profile():
-    """Verify governance profile target defaults to latest successful profile."""
-    rows = [
-        {**_profile_rows("run-success")[0], "profile_status": "success", "profiled_at": "2026-01-02T00:00:00Z"},
-        {**_profile_rows("run-failed")[0], "profile_status": "failed", "profiled_at": "2026-01-05T00:00:00Z"},
-    ]
-
-    model = _catalogue_profile_target_model(rows)
-    table = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]
-
-    assert table["default"]["profile_run_id"] == "run-success"
-    assert [profile["profile_run_id"] for profile in table["profiles"]] == ["run-success"]
-    assert [profile["profile_run_id"] for profile in table["history_profiles"]] == ["run-failed"]
-
-
-def test_governance_profile_target_defaults_to_latest_when_no_status_column_exists():
-    """Verify governance profile target defaults to latest when no status column exists."""
-    older = {k: v for k, v in _profile_rows("run-old")[0].items() if k != "profile_status"}
-    newer = {k: v for k, v in _profile_rows("run-new")[0].items() if k != "profile_status"}
-    older["profiled_at"] = "2026-01-01T00:00:00Z"
-    newer["profiled_at"] = "2026-01-06T00:00:00Z"
-
-    model = _catalogue_profile_target_model([older, newer])
-    table = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]
-
-    assert table["default"]["profile_run_id"] == "run-new"
-
-
-def test_governance_profile_target_profile_labels_are_readable():
-    """Verify governance profile target profile labels are readable."""
-    model = _catalogue_profile_target_model([
-        {**_profile_rows("run-1")[0], "profile_stage": "target", "pipeline_name": "daily-pipeline", "profiled_at": "2026-01-02T00:00:00Z"}
-    ])
-
-    label = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]["profiles"][0]["label"]
-
-    assert "2026-01-02T00:00:00Z" in label
-    assert "run run-1" in label
-    assert "stage target" in label
-    assert "daily-pipeline" in label
-    assert not label.startswith("{")
-
-
-def test_governance_profile_target_supports_asset_name_without_dataset_name(monkeypatch):
-    """Verify selector identities and loader rows work when only asset_name is populated."""
-    rows = []
-    for row in _profile_rows("run-asset"):
-        updated = {**row, "asset_name": "sales", "lakehouse_name": "sales"}
-        updated.pop("dataset_name")
-        rows.append(updated)
-
-    model = _catalogue_profile_target_model(rows)
-    selection = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]["default"]
-    monkeypatch.setattr(gr, "read_lakehouse_table", lambda *args, **kwargs: rows)
-
-    loaded = gr.load_catalogue_profile_rows(framework_config(), "dev", selection, spark_session=None)
-
-    assert selection["asset_name"] == "sales"
-    assert selection["dataset_name"] == "sales"
-    assert [row["column_name"] for row in loaded] == ["order_id", "amount"]
-
-
-def test_governance_profile_target_keeps_source_and_target_profiles_selectable(monkeypatch):
-    """Verify same physical table profiled as source and target can load exact selected stage."""
-    source_rows = [{**row, "profile_run_id": "run-source", "profile_stage": "source", "profiled_at": "2026-01-03T00:00:00Z"} for row in _profile_rows("run-source")]
-    target_rows = [{**row, "profile_run_id": "run-target", "profile_stage": "target", "profiled_at": "2026-01-04T00:00:00Z"} for row in _profile_rows("run-target")]
-    rows = source_rows + target_rows
-
-    model = _catalogue_profile_target_model(rows)
-    profiles = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]["profiles"]
-    source_selection = next(profile for profile in profiles if profile["profile_stage"] == "source")
-    monkeypatch.setattr(gr, "read_lakehouse_table", lambda *args, **kwargs: rows)
-
-    loaded = gr.load_catalogue_profile_rows(framework_config(), "dev", source_selection, spark_session=None)
-
-    assert {profile["profile_stage"] for profile in profiles} == {"source", "target"}
-    assert {row["profile_stage"] for row in loaded} == {"source"}
-    assert {row["profile_run_id"] for row in loaded} == {"run-source"}
-
-
-def test_governance_profile_target_hides_failed_latest_profile_from_review_options():
-    """Verify failed latest profiles remain history only and do not become review targets."""
-    rows = [
-        {**_profile_rows("run-success")[0], "profile_status": "success", "profiled_at": "2026-01-02T00:00:00Z"},
-        {**_profile_rows("run-failed")[0], "profile_status": "failed", "profiled_at": "2026-01-05T00:00:00Z"},
-    ]
-
-    model = _catalogue_profile_target_model(rows)
-    table = model["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]
-
-    assert table["default"]["profile_run_id"] == "run-success"
-    assert [profile["profile_run_id"] for profile in table["profiles"]] == ["run-success"]
-    assert table["history_profiles"][0]["profile_run_id"] == "run-failed"
-    assert table["history_profiles"][0]["history_only"] is True
-
 
 def test_catalogue_profile_loader_uses_physical_identity_helper(monkeypatch):
     """Verify loader delegates table matching to the shared physical identity helper."""
     rows = _profile_rows("run-shared")
-    selection = _catalogue_profile_target_model(rows)["assets"]["dev / asset / sales"]["schemas"]["-"]["tables"]["orders"]["default"]
+    selection = {
+        "environment_name": "dev",
+        "asset_kind": "",
+        "asset_name": "sales",
+        "dataset_name": "sales",
+        "schema_or_layer": "",
+        "layer": "",
+        "schema_name": "",
+        "table_name": "orders",
+        "metadata_table_key": "table-key",
+        "profile_run_id": "run-shared",
+        "profile_stage": "target",
+    }
     calls = []
     original = gr._catalogue_physical_identity
 

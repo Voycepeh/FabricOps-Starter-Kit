@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 61</span><span class="reference-chip">Uses 4 external modules</span><span class="reference-chip">Used by 2 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 57</span><span class="reference-chip">Uses 4 external modules</span><span class="reference-chip">Used by 2 external modules</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>61</td>
+      <td>57</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -217,10 +217,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_catalogue_profile_target_model</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_check_metadata_schema_field_names</code></td>
       <td>—</td>
     </tr>
@@ -249,15 +245,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
       <td><a href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></td>
     </tr>
     <tr>
-      <td><code>_dq_rule_display_rows</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
       <td><code>_dq_rule_parameter_payload</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_dq_rule_parameters_summary</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -334,10 +322,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
     </tr>
     <tr>
       <td><code>_prepare_dq_profile_input_rows</code></td>
-      <td>—</td>
-    </tr>
-    <tr>
-      <td><code>_profile_sort_key</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -470,11 +454,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_first_present</code></span>, <span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_catalogue_profile_target_model</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_catalogue_physical_identity</code></span>, <span class="reference-chip"><code>_is_success</code></span>, <span class="reference-chip"><code>_value</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_check_metadata_schema_field_names</code></span>
 </li>
 <li>
@@ -502,15 +481,7 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_base_guardrail_rule_record</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_dq_rule_display_rows</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_canonical_dq_rule_type</code></span>, <span class="reference-chip"><code>_dq_rule_parameters_summary</code></span>
-</li>
-<li>
 <span class="reference-chip"><code>_dq_rule_parameter_payload</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_dq_rule_parameters_summary</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_dq_summary</code></span>
@@ -588,11 +559,6 @@ Owns current guardrail authoring and governance review widgets plus internal rev
 <span class="reference-chip"><code>_prepare_dq_profile_input_rows</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_spark_sql_helpers</code></span>
-</li>
-<li>
-<span class="reference-chip"><code>_profile_sort_key</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_value</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_read_guardrail_rule_metadata</code></span>

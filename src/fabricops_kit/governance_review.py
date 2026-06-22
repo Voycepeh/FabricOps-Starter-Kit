@@ -347,16 +347,6 @@ def _first_present(row: dict[str, Any], names: Iterable[str], default: Any = "")
     return default
 
 
-def _profile_sort_key(row: dict[str, Any]) -> tuple[str, str, str, str]:
-    """Return deterministic newest-first profile ordering fields."""
-    return (
-        str(_value(row, "profiled_at")),
-        str(_value(row, "profile_run_id")),
-        str(_value(row, "run_id") or _value(row, "pipeline_run_id")),
-        str(_value(row, "profile_stage")),
-    )
-
-
 def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
     """Return stable physical table identity without profile stage or pipeline identity."""
     env = str(_first_present(row, ["environment_name", "env"]))
@@ -378,64 +368,6 @@ def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
         "table_name": table,
         "metadata_table_key": table_key,
     }
-
-
-def _catalogue_profile_target_model(catalogue_rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
-    """Build dependent governance profile target selector options."""
-    rows = [dict(r) for r in catalogue_rows or []]
-    if not rows:
-        raise ValueError("METADATA_DATA_CATALOGUE has no rows. Run 02_pipeline profiling before 03_governance.")
-    has_status = any(any(k.lower() == "profile_status" for k in r) for r in rows)
-    table_groups: dict[tuple[str, str, str, str, str, str], list[dict[str, Any]]] = {}
-    for row in rows:
-        ident = _catalogue_physical_identity(row)
-        if not ident["table_name"]:
-            continue
-        key = (ident["environment_name"], ident["asset_kind"], ident["asset_name"], ident["schema_or_layer"], ident["table_name"], ident["metadata_table_key"])
-        table_groups.setdefault(key, []).append(row)
-    if not table_groups:
-        raise ValueError("METADATA_DATA_CATALOGUE has no table profile evidence for governance review.")
-
-    assets: dict[str, dict[str, Any]] = {}
-    for key, group in table_groups.items():
-        env, kind, asset, schema, table, _table_key = key
-        selectable_pool = [r for r in group if _is_success(r)] if has_status else group
-        if not selectable_pool:
-            continue
-        latest = max(selectable_pool, key=_profile_sort_key)
-        ident = _catalogue_physical_identity(latest)
-        asset_label = " / ".join(part for part in [env, kind or "asset", asset] if part)
-        assets.setdefault(asset_label, {"label": asset_label, "schemas": {}})
-        schema_label = schema or "-"
-        schema_entry = assets[asset_label]["schemas"].setdefault(schema_label, {"label": schema_label, "tables": {}})
-        profiles = []
-        seen_profiles = set()
-        history_profiles = []
-        for row in sorted(group, key=_profile_sort_key, reverse=True):
-            p_ident = _catalogue_physical_identity(row)
-            run_id = str(_value(row, "profile_run_id"))
-            stage = str(_value(row, "profile_stage"))
-            profiled_at = str(_value(row, "profiled_at"))
-            pkey = (run_id, stage, profiled_at)
-            if pkey in seen_profiles:
-                continue
-            seen_profiles.add(pkey)
-            pipeline = str(_value(row, "pipeline_name") or _value(row, "notebook_id") or _value(row, "notebook_registry_id") or _value(row, "pipeline_run_id") or _value(row, "run_id"))
-            label_parts = [profiled_at or "unknown profile date", f"run {run_id or '-'}"]
-            if stage:
-                label_parts.append(f"stage {stage}")
-            if pipeline:
-                label_parts.append(pipeline)
-            profile = {**p_ident, "profile_run_id": run_id, "profile_stage": stage, "profiled_at": profiled_at, "profile_status": str(_value(row, "profile_status")), "label": " | ".join(label_parts)}
-            if _is_success(row) or not has_status:
-                profiles.append(profile)
-            else:
-                history_profiles.append({**profile, "reviewable": False, "history_only": True})
-        default_identity = {**ident, "profile_run_id": str(_value(latest, "profile_run_id")), "profile_stage": str(_value(latest, "profile_stage")), "profiled_at": str(_value(latest, "profiled_at")), "profile_status": str(_value(latest, "profile_status"))}
-        schema_entry["tables"][table] = {"label": table, "profiles": profiles, "history_profiles": history_profiles, "default": default_identity}
-    if not assets:
-        raise ValueError("METADATA_DATA_CATALOGUE has no successful table profile evidence for governance review.")
-    return {"assets": assets, "has_status": has_status}
 
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
@@ -600,7 +532,16 @@ def _selected_catalogue_rows_for_enrichment(guardrail_state: Mapping[str, Any]) 
     if profile_stage:
         rows = [row for row in rows if str(_value(row, "profile_stage")) == profile_stage]
     deduped: dict[str, dict[str, Any]] = {}
-    for row in sorted(rows, key=_profile_sort_key, reverse=True):
+
+    def profile_sort_key(row: dict[str, Any]) -> tuple[str, str, str, str]:
+        return (
+            str(_value(row, "profiled_at")),
+            str(_value(row, "profile_run_id")),
+            str(_value(row, "run_id") or _value(row, "pipeline_run_id")),
+            str(_value(row, "profile_stage")),
+        )
+
+    for row in sorted(rows, key=profile_sort_key, reverse=True):
         deduped.setdefault(str(_value(row, "column_name")), row)
     return [deduped[name] for name in sorted(deduped)]
 
@@ -895,56 +836,6 @@ def widget_enrich_table_metadata(
         "status": status,
         "controls": {"apply_now_reason": apply_reason_box},
     }
-
-def _dq_rule_parameters_summary(rule: dict[str, Any]) -> str:
-    """Return compact display text for non-identity DQ parameters."""
-    params = dict(rule.get("rule_parameters") or {})
-    raw = rule.get("rule_parameters_json")
-    if raw and not params:
-        try:
-            params = json.loads(raw) if isinstance(raw, str) else dict(raw)
-        except Exception:
-            params = {}
-    if not params:
-        params = {k: v for k, v in rule.items() if k in {
-            "max_null_percent", "allowed_values", "blocked_values", "min_value", "max_value", "value",
-            "regex_pattern", "max_age_days", "condition", "expected_value", "expression",
-        }}
-    params.pop("columns", None)
-    return ", ".join(f"{k}={v}" for k, v in sorted(params.items()))
-
-
-def _dq_rule_display_rows(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return table-shaped rows for active and inactive selected-table rules."""
-    rows = []
-    for rule in rules or []:
-        params = rule.get("rule_parameters") or {}
-        raw = rule.get("rule_parameters_json")
-        if raw and not params:
-            try:
-                params = json.loads(raw) if isinstance(raw, str) else {}
-            except Exception:
-                params = {}
-        cols = params.get("columns") or rule.get("columns") or rule.get("column_name") or ""
-        if isinstance(cols, list):
-            cols_display = ", ".join(str(c) for c in cols)
-        else:
-            cols_display = str(cols)
-        rows.append({
-            "Rule ID": str(rule.get("rule_id") or ""),
-            "Rule type": _canonical_dq_rule_type(rule.get("rule_type")),
-            "Column(s)": cols_display,
-            "Parameters summary": _dq_rule_parameters_summary(rule),
-            "Severity": str(rule.get("severity") or "warning"),
-            "Status": "active" if bool(rule.get("is_active", True)) else "inactive",
-            "Review status": str(rule.get("review_status") or ""),
-            "Approved by": str(rule.get("approved_by") or ""),
-            "Approved at": str(rule.get("approved_at") or ""),
-            "Last action": str(rule.get("action_type") or ""),
-            "Committed at": str(rule.get("_committed_at") or ""),
-            "Description": str(rule.get("description") or ""),
-        })
-    return rows
 
 
 def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
