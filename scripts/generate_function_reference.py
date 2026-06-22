@@ -1453,6 +1453,60 @@ def _remove_stale_function_taxonomy_audit() -> None:
     FUNCTION_TAXONOMY_AUDIT_PATH.unlink(missing_ok=True)
 
 
+def _flow_by_public_qualified_name(callable_flow_data: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Return callable architecture flow records keyed by public qualified name."""
+    return {
+        flow["qualified_name"]: flow
+        for flow in callable_flow_data.get("public_entrypoint_flow", [])
+        if flow.get("qualified_name")
+    }
+
+
+def _render_callable_architecture_flow_tree(
+    flow: dict[str, Any],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Render the same callable flow tree structure used by the dashboard inventory JSON."""
+    root_qn = flow["qualified_name"]
+    by_parent: dict[str, list[dict[str, Any]]] = {}
+    for row in flow.get("transitive_callees", []):
+        parent_qn = row.get("parent_qualified_name") or root_qn
+        by_parent.setdefault(parent_qn, []).append(row)
+
+    lines = [
+        '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">',
+        f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span>{_call_tree_label(root_qn, root_qn, node_by_qn, module_data)}</div>',
+    ]
+
+    def sort_key(row: dict[str, Any]) -> tuple[int, str, str, str]:
+        return (
+            int(row.get("depth") or 0),
+            str(row.get("module") or ""),
+            str(row.get("callable") or "").lower(),
+            str(row.get("qualified_name") or ""),
+        )
+
+    def visit(parent_qn: str, prefix: str, ancestors: set[str]) -> None:
+        child_rows = sorted(by_parent.get(parent_qn, []), key=sort_key)
+        for index, child_row in enumerate(child_rows):
+            child_qn = child_row.get("qualified_name")
+            if not child_qn:
+                continue
+            connector = "└── " if index == len(child_rows) - 1 else "├── "
+            recursive = child_qn in ancestors
+            lines.append(
+                f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix + connector)}</span>{_call_tree_label(child_qn, root_qn, node_by_qn, module_data, recursive=recursive)}</div>'
+            )
+            if not recursive:
+                extension = "    " if index == len(child_rows) - 1 else "│   "
+                visit(child_qn, prefix + extension, ancestors | {child_qn})
+
+    visit(root_qn, "", {root_qn})
+    lines.append("</div>")
+    return lines
+
+
 def _collect_refactor_signals(
     root_qn: str,
     calls_by_qn: dict[str, list[str]],
@@ -4379,6 +4433,13 @@ def main() -> None:
         if not node.get("exported") and node["callable_name"] in module_data[node["module_name"]]["functions"]
     ])
 
+    public_flow_qns = sorted(
+        [qn for qn, node in node_by_qn.items() if node.get("exported")],
+        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
+    )
+    callable_flow_data = _build_callable_flow_data(public_flow_qns, calls_by_qn, node_by_qn, module_data)
+    public_flow_by_qn = _flow_by_public_qualified_name(callable_flow_data)
+
     public_function_count = len(function_symbol_map)
     ref = [
         "# Function Reference",
@@ -4458,10 +4519,8 @@ def main() -> None:
         starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
         usage_source_attribute = f' data-callable-usage-source="{_esc(usage_source)}"' if usage_source != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
-        dependency_meta = dependency_callables.get(qn, {})
-        calls = [item for item in dependency_meta.get("calls", []) if not _hide_from_public_relationships(item)]
-        called_public = [item for item in calls if node_by_qn.get(item, {}).get("exported")]
-        nested_internal_helpers = _callable_flow_internal_helper_qns(qn, calls_by_qn, node_by_qn)
+        public_flow = public_flow_by_qn.get(qn, {})
+        downstream_callables = [row["qualified_name"] for row in public_flow.get("transitive_callees", []) if row.get("qualified_name")]
 
         def _catalogue_relationship_list(items: list[str]) -> str:
             rows = []
@@ -4513,9 +4572,9 @@ def main() -> None:
                     if usage_source != "—"
                     else ""
                 ),
+                '  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>',
                 '  <div class="reference-catalogue-item-counts">',
-                _catalogue_count_details("Calls {count} public function", "Calls {count} public functions", called_public),
-                _catalogue_count_details("Calls {count} nested helper function", "Calls {count} nested helper functions", nested_internal_helpers),
+                _catalogue_count_details("Downstream callables: {count}", "Downstream callables: {count}", downstream_callables),
                 "  </div>",
                 "</article>",
             ]
@@ -4597,11 +4656,7 @@ def main() -> None:
         if node["exported"]:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
-            helper_qns = [
-                helper_qn
-                for helper_qn in _collect_internal_helper_descendants(qn, calls_by_qn, node_by_qn)
-                if helper_qn not in INTERNAL_HELPER_EXCLUSIONS.get(short_name, set())
-            ]
+            public_flow = public_flow_by_qn.get(qn, {})
             refactor_signals = _collect_refactor_signals(
                 qn,
                 calls_by_qn,
@@ -4611,15 +4666,16 @@ def main() -> None:
             )
             refactor_signals_manifest[short_name] = refactor_signals
             used_in_templates = template_usage_by_symbol.get(short_name, [])
-            helper_count = len(helper_qns)
-            helper_word = "function" if helper_count == 1 else "functions"
+            downstream_count = int(public_flow.get("downstream_callable_count") or 0)
             call_flow_lines = (
                 [
-                    f'??? info "Uses {helper_count} internal helper {helper_word}"',
+                    f'??? info "Downstream callables: {downstream_count}"',
                     "",
-                    *_indent_markdown(_render_clickable_call_tree(qn, calls_by_qn, node_by_qn, module_data)),
+                    "    Dependency data is generated from the callable architecture inventory.",
+                    "",
+                    *_indent_markdown(_render_callable_architecture_flow_tree(public_flow, node_by_qn, module_data)),
                 ]
-                if helper_count
+                if downstream_count
                 else []
             )
             notebook_usage_chips = [
@@ -4839,11 +4895,6 @@ def main() -> None:
         json.dumps(refactor_signals_manifest, indent=2) + "\n",
         encoding="utf-8",
     )
-    public_flow_qns = sorted(
-        [qn for qn, node in node_by_qn.items() if node.get("exported")],
-        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
-    )
-    callable_flow_data = _build_callable_flow_data(public_flow_qns, calls_by_qn, node_by_qn, module_data)
     CALLABLE_FLOW_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
     CALLABLE_FLOW_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
     REFACTOR_DASHBOARD_PATH.write_text(_render_refactor_dashboard_html(callable_flow_data), encoding="utf-8", newline="\n")
