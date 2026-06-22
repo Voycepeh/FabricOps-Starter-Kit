@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T12:03:56+00:00",
+  "generated_at": "2026-06-22T14:43:14+00:00",
   "function_inventory": [
     {
       "function_name": "_build_categorical_distribution",
@@ -716,26 +716,12 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "used_by_count": 8,
-      "called_by_count": 8,
+      "used_by_count": 7,
+      "called_by_count": 7,
       "calls_count": 1,
       "layer_consistency": "promote_to_utility_candidate",
       "layer_consistency_label": "Promote to utility candidate",
       "callers": [
-        {
-          "function": "_build_lineage_records",
-          "module": "data_lineage",
-          "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L47-L95",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "unreachable_candidate"
-          ],
-          "dependency_role": "internal_workflow"
-        },
         {
           "function": "_dq_summary",
           "module": "governance_review",
@@ -7964,135 +7950,6 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024",
-      "deepest_call_chain_depth": null,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_build_lineage_records",
-      "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
-      "module": "data_lineage",
-      "function_type": "Internal helper",
-      "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "function",
-      "visibility": "private",
-      "callable_role": [
-        "internal_workflow",
-        "unreachable_candidate"
-      ],
-      "architectural_role": "internal_workflow",
-      "dependency_role": "internal_workflow",
-      "reachability_kind": "unreachable_candidate",
-      "change_risk": "Medium",
-      "refined_recommended_action": "Orphaned callable",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "allowed_internal_role_call",
-        "callee_unreachable",
-        "Possible inline/private helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [
-        "callee_unreachable"
-      ],
-      "used_by_count": 0,
-      "called_by_count": 0,
-      "calls_count": 2,
-      "layer_consistency": "possible_inline_or_private_helper",
-      "layer_consistency_label": "Possible inline/private helper",
-      "callers": [],
-      "callees": [
-        {
-          "function": "_current_audit_timestamp",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "audit_time_utility",
-            "shared_internal_service",
-            "high_fanout_shared"
-          ],
-          "dependency_role": "audit_time_utility"
-        },
-        {
-          "function": "_validate_lineage_steps",
-          "module": "data_lineage",
-          "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L8-L44",
-          "layer": "utility",
-          "review_status": "unreachable",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_validator",
-            "unreachable_candidate"
-          ],
-          "dependency_role": "internal_validator"
-        }
-      ],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/data_lineage.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L47-L95",
-      "deepest_call_chain_depth": null,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_validate_lineage_steps",
-      "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
-      "module": "data_lineage",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "function",
-      "visibility": "private",
-      "callable_role": [
-        "internal_validator",
-        "unreachable_candidate"
-      ],
-      "architectural_role": "internal_validator",
-      "dependency_role": "internal_validator",
-      "reachability_kind": "unreachable_candidate",
-      "change_risk": "Medium",
-      "refined_recommended_action": "Orphaned callable",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "Single-use internal helper",
-        "Leaf internal helper",
-        "Utility but low reuse"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "used_by_count": 1,
-      "called_by_count": 1,
-      "calls_count": 0,
-      "layer_consistency": "questionable_utility",
-      "layer_consistency_label": "Questionable utility",
-      "callers": [
-        {
-          "function": "_build_lineage_records",
-          "module": "data_lineage",
-          "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L47-L95",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "unreachable_candidate"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "callees": [],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/data_lineage.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L8-L44",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -60439,28 +60296,28 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 311,
-    "total_functions": 311,
+    "total_callables": 309,
+    "total_functions": 309,
     "function_type": {
       "Public API": 26,
-      "Internal helper": 182,
-      "Utility": 103
+      "Internal helper": 181,
+      "Utility": 102
     },
     "layer": {
       "public": 26,
-      "internal": 182,
-      "utility": 103
+      "internal": 181,
+      "utility": 102
     },
     "review_status": {
       "classified": 274,
       "classification_pending": 13,
       "implicit_lifecycle": 8,
       "property_accessor": 1,
-      "unreachable": 15
+      "unreachable": 13
     },
     "callable_kind": {
       "class": 13,
-      "function": 289,
+      "function": 287,
       "implicit_lifecycle_method": 8,
       "property_accessor": 1
     },
@@ -60499,8 +60356,8 @@
       "internal_adapter": 23,
       "internal_normalizer": 20,
       "internal_resolver": 38,
-      "internal_validator": 16,
-      "internal_workflow": 92,
+      "internal_validator": 15,
+      "internal_workflow": 91,
       "io_workflow": 8,
       "keep_lifecycle_method": 8,
       "lakehouse_file_path_resolver": 2,
@@ -60575,7 +60432,7 @@
       "store_validator": 2,
       "threshold_config_resolver": 2,
       "timestamp_utility": 2,
-      "unreachable_candidate": 15,
+      "unreachable_candidate": 13,
       "utility_function": 67,
       "utility_validator": 2,
       "warehouse_name_formatter": 1,
@@ -60596,8 +60453,8 @@
       "internal_adapter": 23,
       "internal_normalizer": 20,
       "internal_resolver": 38,
-      "internal_validator": 16,
-      "internal_workflow": 92,
+      "internal_validator": 15,
+      "internal_workflow": 91,
       "lifecycle_method": 8,
       "property_method": 1,
       "public_api_entrypoint": 26,
@@ -60612,7 +60469,7 @@
       "Inline candidate": 64,
       "Keep lifecycle method": 8,
       "Keep property accessor": 1,
-      "Orphaned callable": 12,
+      "Orphaned callable": 10,
       "Public API entrypoint": 26,
       "Review abstraction value": 27,
       "Review manually": 28,
@@ -60624,10 +60481,10 @@
       "property_accessor": 1,
       "matches_layer": 69,
       "stable_utility": 24,
-      "questionable_utility": 48,
+      "questionable_utility": 47,
       "promote_to_utility_candidate": 11,
       "shared_internal_helper": 30,
-      "possible_inline_or_private_helper": 71,
+      "possible_inline_or_private_helper": 70,
       "architecture_violation": 49,
       "review_manually": 0
     },

@@ -987,7 +987,6 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_lineage._build_lineage_records",
       "fabricops_kit.governance_review._dq_summary",
       "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
       "fabricops_kit.metadata._build_runtime_audit_fields",
@@ -1022,7 +1021,6 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_build_lineage_records",
       "_dq_summary",
       "_prepare_dq_profile_input_rows",
       "_build_runtime_audit_fields",
@@ -3897,82 +3895,6 @@
     "related_functions": [
       "get_selected_agreement",
       "setup_metadata_tables"
-    ]
-  },
-  {
-    "name": "_build_lineage_records",
-    "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config._current_audit_timestamp",
-      "fabricops_kit.data_lineage._validate_lineage_steps"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "source_start_line": 47,
-    "source_end_line": 95,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L47-L95",
-    "docs_path": null,
-    "summary": "Build metadata-ready lineage rows from validated lineage steps.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "dataset_name : str\n    Dataset identifier associated with the lineage rows.\nlineage_steps : list of dict\n    Validated lineage step dictionaries.\nrun_id : str or None, default=None\n    Optional run identifier.\nnotebook_name : str or None, default=None\n    Optional notebook name.\nworkspace_name : str or None, default=None\n    Optional workspace display name.\nworkspace_id : str or None, default=None\n    Optional workspace identifier.\nnotebook_id : str or None, default=None\n    Optional notebook identifier.\ncreated_by : str or None, default=None\n    Optional creator identity.\nconfig : Any, optional\n    Framework configuration used to resolve the configured audit timezone.",
-    "output": "list of dict\n    Lineage rows suitable for metadata persistence.",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "_current_audit_timestamp",
-      "_validate_lineage_steps"
-    ]
-  },
-  {
-    "name": "_validate_lineage_steps",
-    "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
-    "module": "data_lineage",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.data_lineage._build_lineage_records"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/data_lineage.py",
-    "source_start_line": 8,
-    "source_end_line": 44,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_lineage.py#L8-L44",
-    "docs_path": null,
-    "summary": "Validate lineage step structure and flag records requiring human review.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "lineage_steps : Any\n    Candidate lineage payload, expected to be a list of dictionaries.",
-    "output": "dict of str to Any\n    Validation result with ``is_valid``, ``errors``, ``warnings``, and ``review_required``.",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "_build_lineage_records"
     ]
   },
   {
