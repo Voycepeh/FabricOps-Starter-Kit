@@ -1,6 +1,6 @@
 # Callable Flow Dashboard
 
-AI coding tools make it easy to add callables quickly. That speed is useful, and it needs clear architecture guardrails. The Callable Flow Dashboard shows entry points, thin wrappers, nested helpers, and cross-layer dependencies so maintainers can plan focused cleanup work.
+AI coding tools make it easy to add callables quickly. That speed is useful, but it can also create too many entry points, thin wrapper callables, nested helpers, and uncontrolled dependencies. The Callable Flow Dashboard exists to make those relationships visible before the codebase becomes hard to maintain.
 
 <div align="center" markdown="1">
 
@@ -18,16 +18,14 @@ FabricOps keeps notebook-facing APIs small and explainable. A callable should ha
 Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers
 ```
 
-Callable review is role-aware. Internal-to-internal calls are valid when the dependency direction is intentional and the helper role is clear. The classifier distinguishes public API entrypoints, internal workflows, adapters, validators, resolvers, normalizers, services, utilities, model classes, lifecycle methods, property accessors, reachability kinds, dependency roles, and allowed internal role calls.
+Callable review is role-aware. Internal-to-internal calls are valid when the roles and direction are clear. Callable review is no longer based on a blanket "internal calls internal is bad" rule. The current classifier distinguishes public API entrypoints, internal workflows, adapters, validators, resolvers, normalizers, services, utilities, model classes, lifecycle methods, property accessors, reachability kinds, dependency roles, and allowed internal role calls.
 
 The intent is:
 
 - Public API entrypoints should remain stable notebook-facing surfaces.
-- Public API callables may be heavier when that makes the code easier to follow.
 - Internal workflows may orchestrate lower-level implementation roles.
 - Validators, resolvers, normalizers, adapters, and services may support workflows when their direction is intentional.
 - Utilities and model/lifecycle helpers should stay low-level and avoid depending upward on workflows.
-- Single-use helpers should be inlined, privatized, or moved closer to their caller when that improves readability.
 
 This keeps public callables stable, lets purposeful internal implementation roles collaborate, and still flags dependency direction that makes the architecture harder to maintain.
 
@@ -53,7 +51,7 @@ Use the dashboard signals to find patterns that deserve review:
 
 ## Refactor signals
 
-Refactor signals are warnings generated from the callable graph. They do not automatically mean the code is wrong or that a callable must be changed. They highlight role-aware architecture drift and identify where cleanup should be reviewed.
+Refactor signals are warnings generated from the callable graph. They do not automatically mean the code is wrong. Instead, they help guard against architecture drift from the role-aware callable model and identify where cleanup should be reviewed before changes are made.
 
 ### EG. Pointless wrapper
 
@@ -85,72 +83,69 @@ Refactor signals are warnings generated from the callable graph. They do not aut
 
 *Selecting a focused cleanup set.*
 
-The dashboard supports selecting callables with refactor signals so users can build a focused cleanup set. This narrows review to specific architecture guardrails instead of asking AI tools or Codex to reason over the whole codebase at once.
+The dashboard supports selecting callables with refactor signals so users can build a focused cleanup set. This narrows review to specific architecture guardrails instead of asking AI tools to reason over the whole codebase at once.
 
 ## Exporting an AI refactor prompt
 
 ![Exporting an AI refactor prompt](../assets/fabricops-select-refactor-candidates-prompt-export.png)
 
-*Exporting a structured callable refactor packet.*
+*Exporting a structured AI refactor packet.*
 
-Selected callables export as structured callable refactor packets for AI tools or Codex. Each packet is a planning and execution aid that summarizes architecture intent, compatibility mode, selected callable evidence, requested work, expected output, and batch accounting. It is not automatic proof that a callable must be changed. Maintainers inspect the callable, review direct and downstream dependencies, preserve expected public behavior, and decide whether to keep, inline, move, privatize, simplify, or intentionally leave the callable unchanged.
+Selected callables can be exported as a structured AI refactor packet. Role group is the broad job of the callable, role detail is the specific detected purpose, reachability explains whether it can be reached from public or notebook-facing API, and signals are refactor hints rather than automatic instructions. The export keeps callable_role_detail, dependency_role, callable kind, counts, raw classifications, compatibility mode, safety constraints, batch accounting, completion accounting, and expected output available for advanced review so AI tools can reason from architecture context instead of guessing from isolated code snippets.
 
-??? example "Example exported callable refactor packet"
+??? example "Example exported AI refactor packet"
 
     ```text
-    Callable refactor packet
+    FabricOps callable refactor packet
 
-    Objective:
-    Review and refactor selected FabricOps callables to improve maintainability, flatten overly deep call chains, reduce confusing cross layer dependencies, and preserve expected public behavior.
+    Prompt for AI
 
-    Architecture intent:
-    Keep the public API surface small and clear.
-    Public API callables may be heavier if that makes the code easier to follow.
-    Prefer public API to internal workflow, resolver, validator, adapter, service, utility, or model flow.
-    Avoid deep cross module helper chains.
-    Inline or privatize single use helpers when readability improves.
-    Move helpers closer to their caller when they are not genuinely reusable.
-    Keep genuinely shared utilities stable and generic.
-    Do not casually change public API behavior.
+    Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when used_by_count is low. Do not assume that a highly reused Internal helper must remain internal. Do not treat all internal-to-internal calls as violations. Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers. Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes. Respect compatibility mode, batch accounting, and completion accounting.
 
-    Compatibility mode:
-    selected mode: internal_cleanup
-    instruction: Preserve public API behavior. Internal helpers may be renamed, moved, privatized, inlined, or simplified when tests and callers remain valid.
+    Refactor context
 
-    Selected callable example:
-    qualified_name: fabricops_kit._profiling_adapters._build_categorical_distribution
-    function_name: _build_categorical_distribution
-    module: _profiling_adapters
-    layer / function_type: utility
-    callable_kind: function
-    recommended_action: Inline candidate
-    priority or risk: Medium
-    callable_role: internal_adapter, spark_profiling_adapter
-    dependency_role: internal_adapter
-    reachability_kind: directly_reachable
-    callers count: 1
-    callees count: None
-    signal reason / signals: Single use internal helper, leaf internal helper, utility but low reuse
+    Compatibility mode: Internal cleanup
 
-    Requested work:
-    Inspect the callable and its direct and downstream dependencies.
-    Decide whether to keep public, flatten internals, inline single use helpers, move helper closer to caller, or review cross layer dependency.
-    Preserve external behavior unless compatibility mode explicitly allows breaking changes.
-    Prefer simpler, flatter code over deeply nested helper chains.
-    Keep utilities generic and prevent utility to project specific workflow dependencies.
-    Update or add tests where needed.
-    Avoid broad unrelated refactors.
+    Batch accounting
 
-    Expected output:
-    Summary of changes
-    Callables changed
-    Callables intentionally left unchanged
-    Tests added or updated
-    Risks
-    Remaining follow up items
-    Batch accounting: completed, deferred, remaining
+    Selected callables: 1
+    Planned batch count: 1
+    Completed/refactored count: fill in after implementation
+    Remaining selected count: fill in after implementation
+
+    Selected callables
+
+    Callable 1: _audit_timestamp_expr
+
+    Qualified name: fabricops_kit.config._audit_timestamp_expr
+    Module: config
+    Kind: function
+    Layer: Internal helper
+    Callable role: internal_adapter, shared_internal_service
+    Architectural role: shared_internal_service
+    Reachability kind: public_api_reachable
+    Dependency role: shared_internal_service
+    Change risk: Medium
+    Refined recommended action: Review role-aware dependency direction
+    Used by count: 1
+    Calls count: 1
+    Layer consistency: Role-aware review needed
+    Layer consistency key: role_review
+    Review status: Classified
+    Review status key: classified
+    Recommended action: Architecture violation
+    Architecture signals: workflow_calls_workflow
+    Review signals: allowed_internal_role_call
+    Callers:
+    - profile_dataframe (data_profiling)
+    Callees:
+    - _get_audit_timezone (config)
+    Direct internal helpers:
+    - _get_audit_timezone (config)
     ```
 
 ## Conclusion
 
-The Callable Flow Dashboard is an architecture guardrail for keeping FabricOps maintainable as the kit grows. It helps maintainers choose focused inspection and refactor work, especially when using AI or Codex, without treating graph signals as automatic change requirements. The main rule is role-aware: public API entrypoints should remain stable notebook-facing surfaces; internal workflows may orchestrate lower-level implementation roles; validators, resolvers, normalizers, adapters, and services may support workflows when their direction is intentional; and utilities plus model/lifecycle helpers should stay low-level and avoid depending upward on workflows.
+The Callable Flow Dashboard is not only a dependency viewer. It is an architecture guardrail for keeping FabricOps maintainable as the kit grows. The main rule is role-aware: public API entrypoints should remain stable notebook-facing surfaces; internal workflows may orchestrate lower-level implementation roles; validators, resolvers, normalizers, adapters, and services may support workflows when their direction is intentional; and utilities plus model/lifecycle helpers should stay low-level and avoid depending upward on workflows. Repeated workflow-to-workflow chains, upward dependencies, or project-callable dependencies from utility/model layers should be reviewed, but allowed internal role calls can be valid.
+
+The exported refactor packet gives AI tools enough context to reason safely from the call graph instead of guessing from isolated code snippets. This makes the workflow useful for planned refactors, code review, and future architecture governance.
