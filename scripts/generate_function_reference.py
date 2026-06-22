@@ -2688,7 +2688,7 @@ def _build_public_entrypoint_flow(
     module_data: dict[str, dict[str, Any]],
     function_inventory: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Build decision-oriented downstream flow trees for public API review."""
+    """Build lean decision-oriented downstream flow rows for public API review."""
     row_by_qn = {row["qualified_name"]: row for row in function_inventory}
     inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
 
@@ -2696,18 +2696,26 @@ def _build_public_entrypoint_flow(
         role = row.get("dependency_role", "")
         if row.get("layer") == "public":
             return "Public API"
-        if row.get("layer") == "internal" or role in {"internal_workflow", "internal_validator", "internal_resolver", "internal_adapter"}:
+        if row.get("layer") == "internal" or role in {
+            "internal_workflow",
+            "internal_validator",
+            "internal_resolver",
+            "internal_adapter",
+        }:
             return "Internal workflow/resolver/validator/adapter"
         if row.get("calls_count", 0) == 0 or len(inbound_by_qn.get(row["qualified_name"], set())) <= 1:
             return "Leaf/private helper candidates"
         return "Utility/model/class/method"
 
-    def node_payload(qn: str, depth: int, path: list[str], edge_type: str) -> dict[str, Any]:
+    def flat_payload(
+        qn: str,
+        *,
+        depth: int,
+        edge_type: str,
+        parent_qn: str | None,
+        path_examples: list[list[str]] | None = None,
+    ) -> dict[str, Any]:
         row = row_by_qn[qn]
-        children_qns = sorted(
-            {callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn and callee not in path},
-            key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
-        )
         return {
             "callable": row["function_name"],
             "qualified_name": qn,
@@ -2718,12 +2726,13 @@ def _build_public_entrypoint_flow(
             "callable_role": row.get("callable_role", []),
             "dependency_role": row.get("dependency_role"),
             "edge_type": edge_type,
+            "parent_qualified_name": parent_qn,
             "signals": row.get("signals", []),
             "architecture_signals": row.get("architecture_signals", []),
             "recommended_action": row.get("recommended_action"),
             "downstream_count": len(_reachable_callables(qn, calls_by_qn, node_by_qn)),
             "source_url": _callable_flow_source_link(qn, module_data),
-            "children": [node_payload(child, depth + 1, [*path, child], "direct_call") for child in children_qns],
+            "path_examples": path_examples or [],
         }
 
     flows: list[dict[str, Any]] = []
@@ -2748,7 +2757,11 @@ def _build_public_entrypoint_flow(
             warnings.append("Internal workflow chain")
         if any("utility_calls_project_callable" in row.get("signals", []) for row in downstream_rows):
             warnings.append("Utility calls project-specific logic")
-        if any(sig in row.get("architecture_signals", []) for row in downstream_rows for sig in ["utility_calls_workflow", "model_calls_workflow"]):
+        if any(
+            sig in row.get("architecture_signals", [])
+            for row in downstream_rows
+            for sig in ["utility_calls_workflow", "model_calls_workflow"]
+        ):
             warnings.append("Utility/model depends upward")
         if single_use:
             warnings.append("Single-use helper candidate")
@@ -2762,6 +2775,7 @@ def _build_public_entrypoint_flow(
             recommendation = "Move helper closer to caller"
         else:
             recommendation = "Keep public"
+
         direct = sorted({callee for callee in calls_by_qn.get(public_qn, []) if callee in node_by_qn})
         depths = {public_qn: 0}
         parents: dict[str, str | None] = {public_qn: None}
@@ -2780,34 +2794,43 @@ def _build_public_entrypoint_flow(
             while parents.get(path[-1]):
                 path.append(parents[path[-1]])
             return [row_by_qn[item]["function_name"] for item in reversed(path)]
-        flows.append({
-            "public_callable": row_by_qn[public_qn]["function_name"],
-            "qualified_name": public_qn,
-            "module": row_by_qn[public_qn]["module"],
-            "downstream_callable_count": len(downstream),
-            "maximum_chain_depth": maximum_depth,
-            "modules_touched_count": len(modules),
-            "modules_touched": modules,
-            "cross_layer_issue_count": cross_layer,
-            "single_use_helper_candidate_count": single_use,
-            "recommended_simplification_action": recommendation,
-            "warnings": warnings,
-            "direct_callees": [node_payload(qn, 1, [public_qn, qn], "direct_call") for qn in direct],
-            "transitive_callees": [
-                {
-                    "callable": row_by_qn[qn]["function_name"],
-                    "qualified_name": qn,
-                    "module": row_by_qn[qn]["module"],
-                    "depth": depths.get(qn, 0),
-                    "layer": row_by_qn[qn]["function_type"],
-                    "layer_group": layer_group(row_by_qn[qn]),
-                    "edge_type": "transitive_call",
-                    "path_examples": [path_example(qn)],
-                }
-                for qn in downstream
-                if qn in row_by_qn
-            ],
-        })
+
+        flows.append(
+            {
+                "public_callable": row_by_qn[public_qn]["function_name"],
+                "qualified_name": public_qn,
+                "module": row_by_qn[public_qn]["module"],
+                "downstream_callable_count": len(downstream),
+                "maximum_chain_depth": maximum_depth,
+                "modules_touched_count": len(modules),
+                "modules_touched": modules,
+                "cross_layer_issue_count": cross_layer,
+                "single_use_helper_candidate_count": single_use,
+                "recommended_simplification_action": recommendation,
+                "warnings": warnings,
+                "direct_callees": [
+                    flat_payload(
+                        qn,
+                        depth=1,
+                        edge_type="direct_call",
+                        parent_qn=public_qn,
+                        path_examples=[path_example(qn)],
+                    )
+                    for qn in direct
+                ],
+                "transitive_callees": [
+                    flat_payload(
+                        qn,
+                        depth=depths.get(qn, 0),
+                        edge_type="transitive_call",
+                        parent_qn=parents.get(qn),
+                        path_examples=[path_example(qn)],
+                    )
+                    for qn in downstream
+                    if qn in row_by_qn
+                ],
+            }
+        )
     return sorted(flows, key=lambda row: row["public_callable"].lower())
 
 
@@ -3138,8 +3161,9 @@ function renderTable() { const rows=filteredRows().sort(compare); renderExportTo
 
 function warningBadges(warnings) { return (warnings || []).map(w=>`<span class="warning">⚠ ${esc(w)}</span>`).join('') || '<span class="badge protect">No warning markers</span>'; }
 function renderPublicSurfaceCards() { const surface=summary.public_api_surface || {}; const cards=[['Public API entrypoints', surface.public_api_entrypoints ?? publicFlows.length], ['Deep chains', surface.deep_chains ?? 0], ['Cross-layer issues', surface.cross_layer_issues ?? 0], ['Single-use helpers', surface.single_use_helper_candidates ?? 0], ['Inline / privatize suggestions', surface.suggested_inline_or_privatize ?? 0]]; $('publicSurfaceCards').innerHTML=cards.map(([label,value])=>`<div class="surface-card"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join(''); }
-function flowNode(node) { const children=(node.children || []).map(flowNode).join(''); return `<li><div class="flow-node"><strong>${esc(node.callable)}</strong> <small>${esc(node.module)} · depth ${esc(node.depth)} · ${esc(node.layer_group || node.layer)}</small> ${warningBadges((node.architecture_signals || []).concat((node.signals || []).filter(s=>s==='Single-use internal helper')))}</div>${children?`<ul>${children}</ul>`:''}</li>`; }
-function renderPublicFlowDetails(flow) { if(!flow){ $('publicFlowDetails').innerHTML='<p class="helper-text">Select a public callable to inspect its downstream flow tree.</p>'; return; } $('publicFlowDetails').innerHTML=`<section class="flow-panel"><h3>${esc(flow.public_callable)} callable flow tree</h3><p><code>${esc(flow.qualified_name)}</code> touches <strong>${esc(flow.downstream_callable_count)}</strong> downstream callables across <strong>${esc(flow.modules_touched_count)}</strong> modules. Recommendation: <span class="decision-action">${esc(flow.recommended_simplification_action)}</span></p><p>${warningBadges(flow.warnings)}</p><div class="flow-tree"><ul><li><div class="flow-node"><strong>${esc(flow.public_callable)}</strong> <small>${esc(flow.module)} · Public API · depth 0</small></div><ul>${(flow.direct_callees || []).map(flowNode).join('') || '<li>—</li>'}</ul></li></ul></div></section>`; }
+function buildFlowTree(flow) { const nodes=new Map(); (flow.transitive_callees || []).forEach(row=>nodes.set(row.qualified_name,{...row, children:[]})); const roots=[]; [...nodes.values()].sort((a,b)=>(a.depth||0)-(b.depth||0)||text(a.callable).localeCompare(text(b.callable))).forEach(node=>{ const parent=nodes.get(node.parent_qualified_name); if(parent) parent.children.push(node); else roots.push(node); }); return roots; }
+function flowNode(node) { const children=(node.children || []).map(flowNode).join(''); const path=(node.path_examples?.[0] || []).join(' → '); return `<li><div class="flow-node"><strong>${esc(node.callable)}</strong> <small>${esc(node.module)} · depth ${esc(node.depth)} · ${esc(node.layer_group || node.layer)}</small> ${warningBadges((node.architecture_signals || []).concat((node.signals || []).filter(s=>s==='Single-use internal helper')))}${path?`<br><small>Path: ${esc(path)}</small>`:''}</div>${children?`<ul>${children}</ul>`:''}</li>`; }
+function renderPublicFlowDetails(flow) { if(!flow){ $('publicFlowDetails').innerHTML='<p class="helper-text">Select a public callable to inspect its downstream flow tree.</p>'; return; } const treeRoots=buildFlowTree(flow); $('publicFlowDetails').innerHTML=`<section class="flow-panel"><h3>${esc(flow.public_callable)} callable flow tree</h3><p><code>${esc(flow.qualified_name)}</code> touches <strong>${esc(flow.downstream_callable_count)}</strong> downstream callables across <strong>${esc(flow.modules_touched_count)}</strong> modules. Recommendation: <span class="decision-action">${esc(flow.recommended_simplification_action)}</span></p><p>${warningBadges(flow.warnings)}</p><div class="flow-tree"><ul><li><div class="flow-node"><strong>${esc(flow.public_callable)}</strong> <small>${esc(flow.module)} · Public API · depth 0</small></div><ul>${treeRoots.map(flowNode).join('') || '<li>—</li>'}</ul></li></ul></div></section>`; }
 function renderPublicCallableList() { const rows=publicFlows.map(flow=>`<tr><td><button type="button" data-public-flow="${esc(flow.qualified_name)}"><code>${esc(flow.public_callable)}</code></button></td><td><code>${esc(flow.module)}</code></td><td class="num">${esc(flow.downstream_callable_count)}</td><td class="num">${esc(flow.maximum_chain_depth)}</td><td class="num">${esc(flow.modules_touched_count)}</td><td class="num">${esc(flow.cross_layer_issue_count)}</td><td><span class="decision-action">${esc(flow.recommended_simplification_action)}</span><br>${warningBadges(flow.warnings)}</td></tr>`).join(''); $('publicCallableList').innerHTML=`<table><thead><tr><th>Callable name</th><th>Module</th><th>Downstream callable count</th><th>Maximum chain depth</th><th>Modules touched</th><th>Cross-layer issues</th><th>Recommended simplification action</th></tr></thead><tbody>${rows}</tbody></table>`; renderPublicFlowDetails(publicFlows[0]); }
 function renderDecisionMode() { renderPublicSurfaceCards(); renderPublicCallableList(); }
 function updateCompatibilityHelp() { $('compatibilityHelp').textContent=compatibilityContext().description; }

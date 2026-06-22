@@ -717,6 +717,11 @@ def test_callable_dashboard_public_decision_mode() -> None:
     assert all("downstream_callable_count" in flow for flow in flows)
     assert all("direct_callees" in flow for flow in flows)
     assert all("depth" in callee for flow in flows for callee in flow["transitive_callees"])
+    assert all("parent_qualified_name" in callee for flow in flows for callee in flow["transitive_callees"])
+    assert all("children" not in callee for flow in flows for callee in flow["direct_callees"])
+    assert all("children" not in callee for flow in flows for callee in flow["transitive_callees"])
+    assert all(len(callee.get("path_examples", [])) <= 3 for flow in flows for callee in flow["transitive_callees"])
+    assert "buildFlowTree" in dashboard_text
     assert "public_api_surface" in flow_data["summary_counts"]
 
 
