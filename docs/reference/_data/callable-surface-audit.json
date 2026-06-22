@@ -17,9 +17,7 @@
     "directly_called_in_core_templates": [],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "run_table_guardrails"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": false,
     "decision": "convert_to_internal"
   },
@@ -39,9 +37,7 @@
     "directly_called_in_core_templates": [],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "run_table_guardrails"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": false,
     "decision": "convert_to_internal"
   },
@@ -63,9 +59,7 @@
     "directly_called_in_core_templates": [],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": false,
     "decision": "remove_export"
   },
@@ -217,9 +211,7 @@
     "directly_called_in_core_templates": [],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "run_table_guardrails"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": false,
     "decision": "convert_to_internal"
   },
@@ -317,9 +309,7 @@
     "directly_called_in_core_templates": [],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "start_pipeline_run"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": false,
     "decision": "remove_export"
   },
@@ -342,9 +332,7 @@
     "directly_called_in_core_templates": [],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "run_table_guardrails"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": false,
     "decision": "convert_to_internal"
   },

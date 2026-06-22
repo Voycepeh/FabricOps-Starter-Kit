@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 25</span><span class="reference-chip">Uses 7 external modules</span><span class="reference-chip">Used by 0 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 6</span><span class="reference-chip">Internal helpers: 31</span><span class="reference-chip">Uses 7 external modules</span><span class="reference-chip">Used by 0 external modules</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>25</td>
+      <td>31</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -80,42 +80,42 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
       <td>Callable</td>
       <td>function</td>
       <td>Return summary, detailed, or debug guardrail display output for Fabric notebooks.</td>
-      <td>—</td>
+      <td><code>_display_guardrail_results_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Prepare source or target table configs for 02_pipeline.</td>
-      <td><code>_add_audit_columns</code> (internal)</td>
+      <td><code>_prepare_pipeline_table_configs_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</td>
-      <td><code>_active_pipeline_context</code> (internal), <code>_build_guardrail_blocking_message_from_bundle</code> (internal), <code>_build_guardrail_evidence_definitions</code> (internal), <code>_table_key</code> (internal), <code>_table_name</code> (internal)</td>
+      <td><code>_run_table_guardrails_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/start_pipeline_run/"><code>start_pipeline_run</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Start a guided notebook run and store runtime defaults.</td>
-      <td><code>_now_iso</code> (internal)</td>
+      <td><code>_start_pipeline_run_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Write many-to-many source-to-target lineage evidence.</td>
-      <td><code>_definition_name</code> (internal), <code>_now_iso</code> (internal), <code>_runtime_audit_fields</code> (internal)</td>
+      <td><code>_write_pipeline_lineage_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Write one pipeline runtime summary row to metadata.</td>
-      <td><code>_active_pipeline_context</code> (internal), <code>_definition_name</code> (internal), <code>_now_iso</code> (internal), <code>_summary_status</code> (internal)</td>
+      <td><code>_write_pipeline_run_summary_workflow</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -136,32 +136,32 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
 <li>
 <a class="reference-chip" href="../reference/display_guardrail_results/"><code>display_guardrail_results</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>
+<span class="reference-chip"><code>_display_guardrail_results_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_add_audit_columns</code></span>
+<span class="reference-chip"><code>_prepare_pipeline_table_configs_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_active_pipeline_context</code></span>, <span class="reference-chip"><code>_build_guardrail_blocking_message_from_bundle</code></span>, <span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>, <span class="reference-chip"><code>write_catalogue_evidence</code></span>
+<span class="reference-chip"><code>_run_table_guardrails_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/start_pipeline_run/"><code>start_pipeline_run</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_now_iso</code></span>
+<span class="reference-chip"><code>_start_pipeline_run_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
+<span class="reference-chip"><code>_write_pipeline_lineage_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_active_pipeline_context</code></span>, <span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_summary_status</code></span>
+<span class="reference-chip"><code>_write_pipeline_run_summary_workflow</code></span>
 </li>
 </ul>
 </section>
@@ -182,11 +182,11 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
   <tbody>
     <tr>
       <td><code>_active_pipeline_context</code></td>
-      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>, <a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_add_audit_columns</code></td>
-      <td><a href="../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_blocking_guardrail_message</code></td>
@@ -194,11 +194,11 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_build_guardrail_blocking_message_from_bundle</code></td>
-      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_build_guardrail_evidence_definitions</code></td>
-      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_canonical_catalogue_profile_df</code></td>
@@ -206,7 +206,11 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_definition_name</code></td>
-      <td><a href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_display_guardrail_results_workflow</code></td>
+      <td><a href="../reference/display_guardrail_results/"><code>display_guardrail_results</code></a></td>
     </tr>
     <tr>
       <td><code>_dq_reason</code></td>
@@ -230,7 +234,11 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_now_iso</code></td>
-      <td><a href="../reference/start_pipeline_run/"><code>start_pipeline_run</code></a>, <a href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a>, <a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_prepare_pipeline_table_configs_workflow</code></td>
+      <td><a href="../reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></td>
     </tr>
     <tr>
       <td><code>_profile_behavior_reason</code></td>
@@ -249,20 +257,28 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_run_table_guardrails_workflow</code></td>
+      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+    </tr>
+    <tr>
       <td><code>_runtime_audit_fields</code></td>
-      <td><a href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_schema_reason</code></td>
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_start_pipeline_run_workflow</code></td>
+      <td><a href="../reference/start_pipeline_run/"><code>start_pipeline_run</code></a></td>
+    </tr>
+    <tr>
       <td><code>_summary_status</code></td>
-      <td><a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_table_key</code></td>
-      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_table_keys</code></td>
@@ -270,7 +286,15 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td><code>_table_name</code></td>
-      <td><a href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_write_pipeline_lineage_workflow</code></td>
+      <td><a href="../reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_write_pipeline_run_summary_workflow</code></td>
+      <td><a href="../reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></td>
     </tr>
     <tr>
       <td><code>_yes_no</code></td>
@@ -308,6 +332,11 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
 <span class="reference-chip"><code>_definition_name</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_display_guardrail_results_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_dq_reason</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_result_reason</code></span>
@@ -332,6 +361,11 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
 <span class="reference-chip"><code>_now_iso</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_prepare_pipeline_table_configs_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_add_audit_columns</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_profile_behavior_reason</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_result_reason</code></span>, <span class="reference-chip"><code>_result_status</code></span>
@@ -346,12 +380,22 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
 <span class="reference-chip"><code>_result_status</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_run_table_guardrails_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_active_pipeline_context</code></span>, <span class="reference-chip"><code>_build_guardrail_blocking_message_from_bundle</code></span>, <span class="reference-chip"><code>_build_guardrail_evidence_definitions</code></span>, <span class="reference-chip"><code>_table_key</code></span>, <span class="reference-chip"><code>_table_name</code></span>, <span class="reference-chip"><code>build_guardrail_detail_rows</code></span>, <span class="reference-chip"><code>build_guardrail_summary_rows</code></span>, <span class="reference-chip"><code>write_catalogue_evidence</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_runtime_audit_fields</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_now_iso</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_schema_reason</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_start_pipeline_run_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_now_iso</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_summary_status</code></span>
@@ -364,6 +408,16 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
 </li>
 <li>
 <span class="reference-chip"><code>_table_name</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_write_pipeline_lineage_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_runtime_audit_fields</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_write_pipeline_run_summary_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_active_pipeline_context</code></span>, <span class="reference-chip"><code>_definition_name</code></span>, <span class="reference-chip"><code>_now_iso</code></span>, <span class="reference-chip"><code>_summary_status</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_yes_no</code></span>
