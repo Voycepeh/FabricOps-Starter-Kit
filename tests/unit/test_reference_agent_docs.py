@@ -431,6 +431,41 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in inventory_text
     assert "selectAllVisible" in inventory_text
     assert "$('selectAllVisible').onchange" in inventory_text
+    assert "ROLE_GROUP_FILTER_OPTIONS" in inventory_text
+    for role_group_label in [
+        "Public entrypoint",
+        "Workflow",
+        "Resolver",
+        "Normalizer",
+        "Validator",
+        "Adapter",
+        "Utility",
+        "Model class",
+        "Registry builder",
+        "Lifecycle method",
+        "Property method",
+        "Other",
+    ]:
+        assert role_group_label in inventory_text
+    signal_options = inventory_text.split("const USER_FACING_RECOMMENDED_ACTIONS=", 1)[1].split(";", 1)[0]
+    assert "Public API entrypoint" not in signal_options
+    assert "Priority is generated from callable inventory signals, architecture findings" in inventory_text
+    assert "strongest review/refactor signal; inspect first" in inventory_text
+    assert "Findings / Signal" in inventory_text
+    assert "Role group" in inventory_text
+    assert "Role detail" in inventory_text
+    assert "Suggested action" in inventory_text
+    assert "Inbound" in inventory_text
+    assert "Outbound" in inventory_text
+    assert "Dependency role" in inventory_text
+    assert "Kind / Layer" in inventory_text
+    assert "<th>Debug details</th>" not in inventory_text
+    assert "function debugCell" not in inventory_text
+    assert "DISPLAY_LABEL_MAP" in inventory_text
+    assert "tag,.badge" in inventory_text
+    assert "priority-high" in inventory_text
+    assert ".badge.issue" in inventory_text
+    assert "displayLabel(i.recommended_action)" in inventory_text
     assert '<span class="reference-kpi-title">Modules</span>' in reference_text
     assert '<span class="reference-kpi-title">Total callables</span>' in reference_text
     assert '<span class="reference-kpi-title">Public API</span>' in reference_text
@@ -472,6 +507,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "recommended_action",
         "layer_consistency",
         "callable_inventory_metrics",
+        "callable_role_group",
     } <= set(summary_counts)
     assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
     assert set(summary_counts["review_status"]) == {
@@ -483,6 +519,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     }
     assert summary_counts["layer"]["public"] == len(exported_symbols)
     assert summary_counts["total_callables"] == sum(summary_counts["function_type"].values())
+    assert summary_counts["callable_role_group"]
 
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == 309
@@ -512,6 +549,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     function_inventory = flow_data["function_inventory"]
     assert len(function_inventory) == summary_counts["total_callables"]
+    assert all(row["callable_role_group"] for row in function_inventory)
+    assert all(row["callable_role_group_label"] for row in function_inventory)
+    assert summary_counts["callable_role_group"] == {
+        role_group: sum(1 for row in function_inventory if row["callable_role_group"] == role_group)
+        for role_group in sorted({row["callable_role_group"] for row in function_inventory})
+    }
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
     assert {"Public API", "Internal helper", "Utility"} <= {row["function_type"] for row in function_inventory}
@@ -642,6 +685,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
     assert "Callable review is role-aware" in callable_flow_text
     assert "Internal-to-internal calls are valid" in callable_flow_text
+    assert "Role group = broad job of the callable." in callable_flow_text
+    assert "Findings / Signal = review hints or actions, not automatic refactor commands." in callable_flow_text
+    assert "Priority = triage order, not a guarantee something must be changed." in callable_flow_text
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:

@@ -91,7 +91,15 @@ The dashboard supports selecting callables with refactor signals so users can bu
 
 *Exporting a structured AI refactor packet.*
 
-Selected callables can be exported as a structured AI refactor packet. Role group is the broad job of the callable, role detail is the specific detected purpose, reachability explains whether it can be reached from public or notebook-facing API, and signals are refactor hints rather than automatic instructions. The export keeps callable_role_detail, dependency_role, callable kind, counts, raw classifications, compatibility mode, safety constraints, batch accounting, completion accounting, and expected output available for advanced review so AI tools can reason from architecture context instead of guessing from isolated code snippets.
+Selected callables can be exported as a structured AI refactor packet. The export keeps callable_role_detail, dependency_role, callable kind, counts, raw classifications, compatibility mode, safety constraints, batch accounting, completion accounting, and expected output available for advanced review so AI tools can reason from architecture context instead of guessing from isolated code snippets.
+
+## Inventory terms
+
+- Role group = broad job of the callable.
+- Role detail = specific detected purpose.
+- Reachability = whether it can be reached from public or notebook-facing API.
+- Findings / Signal = review hints or actions, not automatic refactor commands.
+- Priority = triage order, not a guarantee something must be changed.
 
 ??? example "Example exported AI refactor packet"
 
