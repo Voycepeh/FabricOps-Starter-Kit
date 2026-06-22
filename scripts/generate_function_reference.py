@@ -2901,7 +2901,7 @@ let inventory = []; let summary = {}; const actionLegend = {
   "Shared helper": "Shared helper"
 };
 
-const AI_PROMPT = 'You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Batch accounting: report how many callables were selected, how many are intended for the current batch, how many were actually refactored in the PR, which selected callables were deferred, why each deferred group was deferred, and what the next suggested batch should be. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Completion accounting required in PR description: include selected / handled / remaining counts in the PR body and fill completed_or_refactored_count after implementation if it was unknown at export time. Always call out tests required before changes. Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when used_by_count is low, and do not assume that a highly reused Internal helper must remain internal.';
+const AI_PROMPT = 'You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Batch accounting: report how many callables were selected, how many are intended for the current batch, how many were actually refactored in the PR, which selected callables were deferred, why each deferred group was deferred, and what the next suggested batch should be. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Completion accounting required in PR description: include selected / handled / remaining counts in the PR body and fill completed_or_refactored_count after implementation if it was unknown at export time. Always call out tests required before changes. Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when used_by_count is low. Do not assume that a highly reused Internal helper must remain internal. Do not treat all internal-to-internal calls as violations. Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers. Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes.';
 const refactorGuidance = {
   'Inline candidate': ['inline_candidate', 'Likely small helper or wrapper. Consider inlining only if it improves readability and does not duplicate validation logic.'],
   'Merge candidate': ['merge_candidate', 'Likely adjacent helper responsibility. Review whether this should be consolidated with related helpers.'],
@@ -2910,7 +2910,7 @@ const refactorGuidance = {
   'Public API entrypoint': ['public_entrypoint', 'Supported public API. Preserve notebook-facing behavior and avoid hidden orchestration chains.'],
   'Stable utility': ['stable_utility', 'Leaf utility. Keep generic and free of project-callable dependencies.'],
   'Shared internal helper': ['shared_internal_helper', 'Shared implementation helper. Refactor only with focused tests and caller review.'],
-  'Architecture violation': ['architecture_violation', 'Dependency direction breaks the public → internal → utility rule. Review before cleanup.'],
+  'Architecture violation': ['architecture_violation', 'Role-aware dependency direction needs review. Focus on upward dependencies, workflow-to-workflow coupling, and utility/model project-callable dependencies instead of blanket internal-to-internal violations.'],
   'Orphaned callable': ['orphaned_callable', 'No public lineage. Remove or reconnect if still needed.']
 };
 const compatibilityModes = {
@@ -2956,11 +2956,11 @@ function guidanceFor(action) { return refactorGuidance[action] || ['manual_revie
 function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, layer:i.layer, callable_kind:i.callable_kind, visibility:i.visibility, architecture_signals:i.architecture_signals || [], review_signals:i.review_signals || [], review_status:i.review_status, review_status_label:i.review_status_label, callable_role:i.callable_role || [], architectural_role:i.architectural_role, reachability_kind:i.reachability_kind, dependency_role:i.dependency_role, change_risk:i.change_risk, refined_recommended_action:i.refined_recommended_action, recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, used_by_count:i.used_by_count ?? i.called_by_count, called_by_count:i.called_by_count, calls_count:i.calls_count, layer_consistency:i.layer_consistency, layer_consistency_label:i.layer_consistency_label || layerConsistencyLabels[i.layer_consistency], callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
 function selectedItems() { const byId=new Map(inventory.map(i=>[i.qualified_name,i])); return [...state.selected].map(id=>byId.get(id)).filter(Boolean); }
 function compatibilityContext() { return compatibilityModes[state.compatibility_mode] || compatibilityModes.internal_cleanup; }
-function refactorContext(callables) { const compatibility=compatibilityContext(); return {selected_callable_actions:unique(callables.map(fn=>fn.recommended_action)), refactor_intent:'Plan safe cleanup for selected FabricOps helper callables.', refactor_mode:'planning_only', compatibility_mode:state.compatibility_mode, compatibility_instruction:compatibility.instruction, likely_refactor_actions:['Inline thin wrappers where readability improves','Merge adjacent helpers with overlapping responsibility','Keep helpers separate when naming, validation boundaries, or tests justify the abstraction'], safety_constraints:compatibility.safety_constraints, expected_ai_output:['Group selected callables by refactor type','Explain which callables are safe cleanup candidates','Identify callables that should not be refactored yet','Propose an ordered refactor plan','Report selected, intended batch, actually refactored, deferred, and remaining callable counts','List risks and required tests','Do not produce code changes unless explicitly requested']}; }
+function refactorContext(callables) { const compatibility=compatibilityContext(); return {selected_callable_actions:unique(callables.map(fn=>fn.recommended_action)), refactor_intent:'Plan safe cleanup for selected FabricOps helper callables.', refactor_mode:'planning_only', compatibility_mode:state.compatibility_mode, compatibility_instruction:compatibility.instruction, likely_refactor_actions:['Inline thin wrappers where readability improves','Merge adjacent helpers with overlapping responsibility','Keep helpers separate when naming, validation boundaries, or tests justify the abstraction'], role_aware_review_guidance:['Review the assigned layer against the usage evidence','Do not assume that a Utility layer is correct when used_by_count is low','Do not assume that a highly reused Internal helper must remain internal','Do not treat all internal-to-internal calls as violations','Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers','Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes'], safety_constraints:compatibility.safety_constraints, expected_ai_output:['Group selected callables by refactor type','Explain which callables are safe cleanup candidates','Identify callables that should not be refactored yet','Propose an ordered refactor plan','Report selected, intended batch, actually refactored, deferred, and remaining callable counts','List risks and required tests','Do not produce code changes unless explicitly requested']}; }
 function batchAccounting(callables) { const selectedCount=callables.length; return {selected_count:selectedCount, selected_callable_count:selectedCount, planned_batch_count:selectedCount, batch_id:'batch-1', batch_scope:'All selected callables by default; narrow this before implementation when a smaller safe batch is intended.', batch_strategy:'Single batch by default. If implementation handles only a subset, group deferred selected callables by risk, ownership, or dependency order.', completed_or_refactored_count:null, remaining_selected_count:null, deferred_selected_callables:[]}; }
 function refactorPacket() { const callables=selectedItems().map(exportItem), accounting=batchAccounting(callables); return {export_type:'fabricops_callable_refactor_packet', generated_from:'Callable Inventory and Refactor Signals', ...accounting, filters:exportFilters(), refactor_context:refactorContext(callables), batch_accounting:accounting, ai_prompt:AI_PROMPT, callables, functions:callables}; }
 function markdownList(label, items) { return [label, ...items.map(item=>`- ${item}`)]; }
-function markdownPacket() { const packet=refactorPacket(), ctx=packet.refactor_context, acct=packet.batch_accounting; const lines=['FabricOps callable refactor packet','','Prompt for AI','',packet.ai_prompt,'','Refactor context','',`Intent: ${ctx.refactor_intent}`,'','Mode: Planning only.','',`Compatibility mode: ${compatibilityContext().label}`,'','Compatibility instruction:',ctx.compatibility_instruction,'','Batch accounting','',`Selected callables: ${acct.selected_callable_count}`,`Planned batch count: ${acct.planned_batch_count}`,`Batch ID: ${acct.batch_id}`,`Batch scope: ${acct.batch_scope}`,`Batch strategy: ${acct.batch_strategy}`,`Completed/refactored count: fill in after implementation`, 'Remaining selected count: fill in after implementation','Deferred selected callables: none by default before implementation; list any selected callables not handled in this PR.','', 'Completion accounting required in PR description','', 'Include selected / handled / remaining counts in the PR body. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Explain why each deferred group was deferred and recommend the next batch.','',...markdownList('Selected callable actions:', ctx.selected_callable_actions), '', ...markdownList('Likely refactor actions:', ctx.likely_refactor_actions), '', ...markdownList('Safety constraints:', ctx.safety_constraints), '', ...markdownList('Expected AI output:', ctx.expected_ai_output), '', 'Selected callables', '']; packet.callables.forEach((fn,idx)=>{ lines.push(`Callable ${idx+1}: ${fn.function_name}`,'',`Qualified name: ${fn.qualified_name}`,`Module: ${fn.module}`,`Kind: ${fn.callable_kind}`,`Layer: ${fn.function_type}`,`Used by count: ${fn.used_by_count}`,`Calls count: ${fn.calls_count}`,`Layer consistency: ${fn.layer_consistency_label || fn.layer_consistency}`,`Review status: ${fn.review_status_label || fn.review_status}` ,`Recommended action: ${fn.recommended_action}`,`Priority: ${fn.priority}`,`Refactor type: ${fn.refactor_type}`,`Refactor guidance: ${fn.refactor_guidance}`,`Signal reason: ${fn.signal_reason}`,`Caller count: ${fn.called_by_count}`,`Callee count: ${fn.calls_count}`,'','Callers:',...(fn.callers.length?fn.callers.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Callees:',...(fn.callees.length?fn.callees.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Direct internal helpers:',...(fn.direct_internal_helpers.length?fn.direct_internal_helpers.map(h=>`- ${h.function} (${h.module}) ${h.source_path || ''}`):['- —']),'',`Source path: ${fn.source_path || 'Source unavailable'}`,`Source URL: ${fn.source_url || 'Source unavailable'}`,''); }); return lines.join('\n'); }
+function markdownPacket() { const packet=refactorPacket(), ctx=packet.refactor_context, acct=packet.batch_accounting; const lines=['FabricOps callable refactor packet','','Prompt for AI','',packet.ai_prompt,'','Refactor context','',`Intent: ${ctx.refactor_intent}`,'','Mode: Planning only.','',`Compatibility mode: ${compatibilityContext().label}`,'','Compatibility instruction:',ctx.compatibility_instruction,'','Batch accounting','',`Selected callables: ${acct.selected_callable_count}`,`Planned batch count: ${acct.planned_batch_count}`,`Batch ID: ${acct.batch_id}`,`Batch scope: ${acct.batch_scope}`,`Batch strategy: ${acct.batch_strategy}`,`Completed/refactored count: fill in after implementation`, 'Remaining selected count: fill in after implementation','Deferred selected callables: none by default before implementation; list any selected callables not handled in this PR.','', 'Completion accounting required in PR description','', 'Include selected / handled / remaining counts in the PR body. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Explain why each deferred group was deferred and recommend the next batch.','',...markdownList('Selected callable actions:', ctx.selected_callable_actions), '', ...markdownList('Likely refactor actions:', ctx.likely_refactor_actions), '', ...markdownList('Role-aware review guidance:', ctx.role_aware_review_guidance), '', ...markdownList('Safety constraints:', ctx.safety_constraints), '', ...markdownList('Expected AI output:', ctx.expected_ai_output), '', 'Selected callables', '']; packet.callables.forEach((fn,idx)=>{ lines.push(`Callable ${idx+1}: ${fn.function_name}`,'',`Qualified name: ${fn.qualified_name}`,`Module: ${fn.module}`,`Kind: ${fn.callable_kind}`,`Layer: ${fn.function_type}`,`Callable role: ${(fn.callable_role || []).join(', ') || 'unknown'}`,`Architectural role: ${fn.architectural_role || 'unknown'}`,`Reachability kind: ${fn.reachability_kind || 'unknown'}`,`Dependency role: ${fn.dependency_role || 'unknown'}`,`Change risk: ${fn.change_risk || 'unknown'}`,`Refined recommended action: ${fn.refined_recommended_action || fn.recommended_action}`,`Used by count: ${fn.used_by_count}`,`Calls count: ${fn.calls_count}`,`Layer consistency: ${fn.layer_consistency_label || fn.layer_consistency}`,`Layer consistency key: ${fn.layer_consistency || 'unknown'}`,`Review status: ${fn.review_status_label || fn.review_status}`,`Review status key: ${fn.review_status || 'unknown'}` ,`Recommended action: ${fn.recommended_action}`,`Priority: ${fn.priority}`,`Refactor type: ${fn.refactor_type}`,`Refactor guidance: ${fn.refactor_guidance}`,`Signal reason: ${fn.signal_reason}`,`Architecture signals: ${(fn.architecture_signals || []).join(', ') || '—'}`,`Review signals: ${(fn.review_signals || []).join(', ') || '—'}`,`Caller count: ${fn.called_by_count}`,`Callee count: ${fn.calls_count}`,'','Callers:',...(fn.callers.length?fn.callers.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Callees:',...(fn.callees.length?fn.callees.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Direct internal helpers:',...(fn.direct_internal_helpers.length?fn.direct_internal_helpers.map(h=>`- ${h.function} (${h.module}) ${h.source_path || ''}`):['- —']),'',`Source path: ${fn.source_path || 'Source unavailable'}`,`Source URL: ${fn.source_url || 'Source unavailable'}`,''); }); return lines.join('\n'); }
 function showManualCopy(textValue) { const area=$('manualCopy'); area.hidden=false; area.value=textValue; area.focus(); area.select(); }
 async function copyExport(format) { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const output=format==='json'?JSON.stringify(refactorPacket(), null, 2):markdownPacket(); if(navigator.clipboard?.writeText){ await navigator.clipboard.writeText(output); $('manualCopy').hidden=true; $('exportStatus').textContent=`Copied ${format.toUpperCase()} for ${items.length} callables.`; } else { showManualCopy(output); $('exportStatus').textContent='Clipboard unavailable. Copy the refactor packet from the text box.'; } }
 function downloadJson() { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/T/,'_').slice(0,15); const blob=new Blob([JSON.stringify(refactorPacket(), null, 2)], {type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fabricops_refactor_packet_${stamp}.json`; link.click(); URL.revokeObjectURL(link.href); $('exportStatus').textContent=`Downloaded JSON for ${items.length} callables.`; }
@@ -2996,23 +2996,26 @@ AI coding tools make it easy to add callables quickly. That speed is useful, but
 
 ## Why callable flow matters
 
-FabricOps keeps notebook-facing APIs small and explainable. A callable should have a clear role in the callable hierarchy:
+FabricOps keeps notebook-facing APIs small and explainable. A callable should have a clear role in the role-aware callable model:
 
 ```text
-Public callables → Internal helpers → Utility callables
+Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers
 ```
 
-The dependency rule is intentionally simple: a callable may call lower layers, but not the same layer or higher layers.
+Callable review is no longer based on a blanket "internal calls internal is bad" rule. The current classifier distinguishes public API entrypoints, internal workflows, adapters, validators, resolvers, normalizers, services, utilities, model classes, lifecycle methods, property accessors, reachability kinds, dependency roles, and allowed internal role calls.
 
-- Public callables may call internal helpers and utility callables.
-- Internal helpers may call utility callables.
-- Utility callables should be self-contained and should not call shared project callables.
+The intent is:
 
-This keeps public callables as stable entry points, internal helpers as reusable implementation details, and utility callables as low-risk building blocks.
+- Public API entrypoints should remain stable notebook-facing surfaces.
+- Internal workflows may orchestrate lower-level implementation roles.
+- Validators, resolvers, normalizers, adapters, and services may support workflows when their direction is intentional.
+- Utilities and model/lifecycle helpers should stay low-level and avoid depending upward on workflows.
+
+This keeps public callables stable, lets purposeful internal implementation roles collaborate, and still flags dependency direction that makes the architecture harder to maintain.
 
 ## How the dashboard is generated
 
-The dashboard is built from repository scans that inspect callable definitions and relationships. The scan produces callable relationship metadata in [`_data/callable-flow.json`](_data/callable-flow.json), and the visual dashboard uses that JSON to show caller and callee relationships, depth, reuse, and refactor recommendations.
+The dashboard is built from repository scans that inspect callable definitions and relationships. The scan produces callable relationship metadata in [`_data/callable-flow.json`](_data/callable-flow.json), and the visual dashboard uses that JSON to show caller and callee relationships, roles, reachability, reuse, layer consistency, and refactor recommendations.
 
 Because the dashboard is generated from the codebase, it is a maintenance aid rather than a separate source of truth. Use it to decide where to inspect source code, update docstrings, flatten helper chains, or preserve shared helpers carefully.
 
@@ -3020,17 +3023,19 @@ Because the dashboard is generated from the codebase, it is a maintenance aid ra
 
 Use the dashboard signals to find patterns that deserve review:
 
-- public callables calling public callables
-- internal helpers with too many dependencies
-- deep nested helper chains
-- low-value wrapper or inline candidates
-- highly reused helpers that should be preserved carefully
-- callables used by only one caller
-- large dependency surfaces
+- workflow-to-workflow coupling
+- utilities depending on project workflows
+- validators/resolvers/models depending upward on workflows
+- unknown or classification-pending roles
+- unreachable or orphan candidates
+- thin wrapper or inline candidates
+- single-use helpers that need abstraction review
+- high fanout helpers that should be protected
+- implicit lifecycle and property accessor methods that should not be treated as ordinary orphans
 
 ## Refactor signals
 
-Refactor signals are warnings generated from the callable graph. They do not automatically mean the code is wrong. Instead, they help guard against architecture drift from the intended public → internal → utility hierarchy and identify where cleanup should be reviewed before changes are made.
+Refactor signals are warnings generated from the callable graph. They do not automatically mean the code is wrong. Instead, they help guard against architecture drift from the role-aware callable model and identify where cleanup should be reviewed before changes are made.
 
 ### EG. Pointless wrapper
 
@@ -3048,13 +3053,13 @@ Refactor signals are warnings generated from the callable graph. They do not aut
 
 ![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)
 
-*Guardrail: Warn when one public callable depends on another public callable. Public callables should usually be entry points. Shared logic should usually move into an internal helper or utility callable.*
+*Guardrail: Warn when one public callable depends on another public callable. Public callables should usually be entry points. Shared logic should usually move into an internal workflow, service, adapter, validator, resolver, normalizer, or utility according to its role.*
 
 ### EG. Nested helper chain
 
 ![Nested helper chain](../assets/fabricops-bad-example-nested-functions.png)
 
-*Guardrail: Warn when internal helpers repeatedly call other internal helpers. This makes the architecture harder to reason about and should be flattened where the extra layer does not add validation, naming, or reuse value.*
+*Guardrail: Repeated workflow-to-workflow chains or upward dependency patterns need review because they make orchestration harder to reason about. Allowed internal role calls can be valid when validators, resolvers, normalizers, adapters, services, utilities, models, lifecycle hooks, or property accessors support the intended lower-level direction.*
 
 ## Selecting refactor candidates
 
@@ -3070,7 +3075,7 @@ The dashboard supports selecting callables with refactor signals so users can bu
 
 *Exporting a structured AI refactor packet.*
 
-Selected callables can be exported as a structured AI refactor packet. The export gives AI tools the callable layer, call graph context, recommended action, compatibility mode, safety constraints, and expected output so they can reason from architecture context instead of guessing from isolated code snippets.
+Selected callables can be exported as a structured AI refactor packet. The export gives AI tools the callable layer, callable_role, architectural_role, reachability_kind, dependency_role, change_risk, refined_recommended_action, layer_consistency, layer_consistency_label, architecture_signals, review_signals, review_status, review_status_label, used_by_count, calls_count, callers, callees, direct_internal_helpers, compatibility mode, safety constraints, batch accounting, completion accounting, and expected output so they can reason from architecture context instead of guessing from isolated code snippets.
 
 ??? example "Example exported AI refactor packet"
 
@@ -3079,13 +3084,9 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
     Prompt for AI
 
-    You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Batch accounting: report how many callables were selected, how many are intended for the current batch, how many were actually refactored in the PR, which selected callables were deferred, why each deferred group was deferred, and what the next suggested batch should be. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Completion accounting required in PR description: include selected / handled / remaining counts in the PR body and fill completed_or_refactored_count after implementation if it was unknown at export time. Always call out tests required before changes.
+    Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when used_by_count is low. Do not assume that a highly reused Internal helper must remain internal. Do not treat all internal-to-internal calls as violations. Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers. Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes. Respect compatibility mode, batch accounting, and completion accounting.
 
     Refactor context
-
-    Intent: Plan safe cleanup for selected FabricOps helper callables.
-
-    Mode: Planning only.
 
     Compatibility mode: Internal cleanup
 
@@ -3093,33 +3094,8 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
     Selected callables: 1
     Planned batch count: 1
-    Batch ID: batch-1
-    Batch scope: All selected callables by default; narrow this before implementation when a smaller safe batch is intended.
-    Batch strategy: Single batch by default. If implementation handles only a subset, group deferred selected callables by risk, ownership, or dependency order.
     Completed/refactored count: fill in after implementation
     Remaining selected count: fill in after implementation
-    Deferred selected callables: none by default before implementation; list any selected callables not handled in this PR.
-
-    Completion accounting required in PR description
-
-    Include selected / handled / remaining counts in the PR body. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Explain why each deferred group was deferred and recommend the next batch.
-
-    Selected callable actions:
-    - Architecture violation
-
-    Safety constraints:
-    - Preserve external behavior
-    - Internal helper names, signatures, and module boundaries may change if justified
-    - Identify impacted callers before recommending changes
-
-    Expected AI output:
-    - Group selected callables by refactor type
-    - Explain which callables are safe cleanup candidates
-    - Identify callables that should not be refactored yet
-    - Propose an ordered refactor plan
-    - Report selected, intended batch, actually refactored, deferred, and remaining callable counts
-    - List risks and required tests
-    - Do not produce code changes unless explicitly requested
 
     Selected callables
 
@@ -3127,24 +3103,34 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
     Qualified name: fabricops_kit.config._audit_timestamp_expr
     Module: config
+    Kind: function
     Layer: Internal helper
+    Callable role: internal_adapter, shared_internal_service
+    Architectural role: shared_internal_service
+    Reachability kind: public_api_reachable
+    Dependency role: shared_internal_service
+    Change risk: Medium
+    Refined recommended action: Review role-aware dependency direction
+    Used by count: 1
+    Calls count: 1
+    Layer consistency: Role-aware review needed
+    Layer consistency key: role_review
+    Review status: Classified
+    Review status key: classified
     Recommended action: Architecture violation
-    Priority: High
-    Signal reason: Architecture violation: Callable dependency direction breaks the public → internal → utility layer rule.
+    Architecture signals: workflow_calls_workflow
+    Review signals: allowed_internal_role_call
     Callers:
     - profile_dataframe (data_profiling)
-
     Callees:
     - _get_audit_timezone (config)
-
-    Source path: src/fabricops_kit/config.py
+    Direct internal helpers:
+    - _get_audit_timezone (config)
     ```
 
 ## Conclusion
 
-The Callable Flow Dashboard is not only a dependency viewer. It is an architecture guardrail for keeping FabricOps maintainable as the kit grows.
-
-The main rule is simple: public callables should orchestrate, internal helpers should contain reusable workflow logic, and utility callables should stay small, stable, and dependency-light. When a callable breaks this direction, depends on too many nested helpers, or creates repeated helper chains, the dashboard should flag it for review before cleanup.
+The Callable Flow Dashboard is not only a dependency viewer. It is an architecture guardrail for keeping FabricOps maintainable as the kit grows. The main rule is role-aware: public API entrypoints should remain stable notebook-facing surfaces; internal workflows may orchestrate lower-level implementation roles; validators, resolvers, normalizers, adapters, and services may support workflows when their direction is intentional; and utilities plus model/lifecycle helpers should stay low-level and avoid depending upward on workflows. Repeated workflow-to-workflow chains, upward dependencies, or project-callable dependencies from utility/model layers should be reviewed, but allowed internal role calls can be valid.
 
 The exported refactor packet gives AI tools enough context to reason safely from the call graph instead of guessing from isolated code snippets. This makes the workflow useful for planned refactors, code review, and future architecture governance.
 '''
