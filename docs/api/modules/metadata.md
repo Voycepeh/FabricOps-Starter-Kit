@@ -56,7 +56,7 @@ Owns metadata evidence persistence, stable keys, notebook registry, catalogue ke
     </tr>
     <tr>
       <td>External modules this module uses</td>
-      <td><code>config</code>, <code>fabric_input_output</code></td>
+      <td><code>config</code>, <code>io_core</code></td>
     </tr>
   </tbody>
 </table>
@@ -260,5 +260,5 @@ No public exports in this module.
 **config**
 <a class="reference-chip" href="config/#_current_audit_timestamp"><code>_current_audit_timestamp</code></a>, <a class="reference-chip" href="config/#_get_store"><code>_get_store</code></a>
 
-**fabric_input_output**
-<a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="fabric_input_output/#read_lakehouse_table"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="fabric_input_output/#write_lakehouse_table"><code>write_lakehouse_table</code></a>
+**io_core**
+<a class="reference-chip" href="io_core/#configured_lakehouse_schema"><code>configured_lakehouse_schema</code></a>, <a class="reference-chip" href="io_core/#read_lakehouse_table_core"><code>read_lakehouse_table_core</code></a>, <a class="reference-chip" href="io_core/#write_lakehouse_table_core"><code>write_lakehouse_table_core</code></a>

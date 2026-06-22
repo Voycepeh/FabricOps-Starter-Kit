@@ -13,7 +13,7 @@ pytestmark = pytest.mark.integration
 def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     """Verify central metadata setup preserves existing valid tables."""
     import fabricops_kit.config as config_module
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
     import fabricops_kit.governance_review as governance
 
     class Schema:
@@ -49,8 +49,8 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
 
     monkeypatch.setattr(config_module, "_get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
-    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
-    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: writes.append((args, kwargs)))
+    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
 
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
@@ -68,7 +68,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
 def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypatch):
     """Verify central metadata setup rejects existing tables missing columns."""
     import fabricops_kit.config as config_module
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
     import fabricops_kit.governance_review as governance
 
     class Schema:
@@ -88,8 +88,8 @@ def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypa
 
     monkeypatch.setattr(config_module, "_get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
-    monkeypatch.setattr(io, "read_lakehouse_table", lambda *args, **kwargs: BadTable())
-    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: pytest.fail("invalid existing schema should not be overwritten"))
+    monkeypatch.setattr(io, "read_lakehouse_table_core", lambda *args, **kwargs: BadTable())
+    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("invalid existing schema should not be overwritten"))
 
     with pytest.raises(ValueError, match=r"METADATA_DATA_STEWARD is missing required column\(s\): is_active"):
         setup_metadata_tables(spark=object(), config=framework_config(), env="dev")

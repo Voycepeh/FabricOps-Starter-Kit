@@ -30,8 +30,14 @@ EXPECTED_V1_CALLABLES = [
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
-    "read_data",
-    "write_data",
+    "read_lakehouse_table",
+    "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "read_warehouse_query",
+    "write_warehouse_table",
     "profile_dataframe",
     "get_latest_metadata_catalogue",
     "display_guardrail_results",
@@ -50,7 +56,7 @@ EXPECTED_V1_CALLABLES = [
 def test_public_callable_list_includes_guardrail_authoring_widgets():
     """Verify public callable list includes guardrail authoring widgets."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 20
+    assert len(fabricops_kit.__all__) == 26
     assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)
 
 
@@ -234,8 +240,8 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
         assert context["env"] == "dev"
         writes.append((table, df.rows, context["env"], target, kwargs))
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
-    monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(governance, "write_lakehouse_table_core", write_table)
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark(), reviewed_by="reviewer@example.com")
 
@@ -278,8 +284,8 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
         assert context["env"] == "dev"
         writes.append((table, df.rows))
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
-    monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(governance, "write_lakehouse_table_core", write_table)
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark())
 
@@ -340,8 +346,8 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
         assert context["env"] == "dev"
         writes.append((table, df.rows))
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", read_table)
-    monkeypatch.setattr(governance, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(governance, "write_lakehouse_table_core", write_table)
 
     result = governance._evaluate_governance_readiness(framework_config(), "dev", selection, spark_session=FakeSpark())
     return result, writes
@@ -383,7 +389,7 @@ def test_evaluate_governance_readiness_ignores_pipeline_passed_dq_status(monkeyp
 def test_get_latest_metadata_catalogue_returns_friendly_not_found(monkeypatch):
     """Verify exploratory catalogue lookup is read-only and tolerant of missing rows."""
     monkeypatch.setattr(governance, "resolve_fabric_context", lambda context=None: (object(), "dev", {"config": object(), "env": "dev"}))
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: [])
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: [])
 
     result = governance.get_latest_metadata_catalogue(
         table_name="orders",
@@ -409,7 +415,7 @@ def test_get_latest_metadata_catalogue_filters_latest_agreement_rows(monkeypatch
         {"table_name": "orders", "column_name": "other_agreement", "profiled_at": "2026-01-03", "agreement_id": "agreement-2", "contract_version": "1"},
     ]
     monkeypatch.setattr(governance, "resolve_fabric_context", lambda context=None: (object(), "dev", {"config": object(), "env": "dev"}))
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: rows)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: rows)
 
     result = governance.get_latest_metadata_catalogue(
         table_name="orders",

@@ -31,7 +31,7 @@ def test_pipeline_notebook_uses_existing_public_helpers_without_pr_only_wrappers
     for helper in [
         "prepare_pipeline_table_configs",
         "run_table_guardrails",
-        "write_data",
+        "write_lakehouse_table",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "widget_author_schema_freshness_profile_rules",
@@ -77,6 +77,7 @@ def test_pipeline_notebook_contains_widget_led_flow_sections():
         "## 1. Run `00_env_config`",
         "## 2. Import required functions",
         "## 3. Select agreement and capture run context",
+        "## Optional bootstrap from Warehouse to Source Lakehouse Delta",
         "## 4. USER EDIT SECTION — read source DataFrames",
         "## 5. USER EDIT SECTION — register source DataFrames only",
         "## 6. Profile source data",
@@ -100,27 +101,68 @@ def test_pipeline_notebook_contains_widget_led_flow_sections():
     assert "Write settings belong after the guardrail gate" in markdown
 
 
-def test_source_loading_uses_read_data_orchestrator():
-    """Verify source loading examples use the read_data orchestrator."""
+def test_pipeline_notebook_contains_disabled_warehouse_bootstrap_guidance():
+    """Verify the Warehouse bootstrap example is explicit, safe, and disabled."""
+    markdown, code, _cells = _notebook_sources()
+    bootstrap_block = code[code.index("RUN_WAREHOUSE_TO_LAKEHOUSE_BOOTSTRAP = False") : code.index("source_table = ")]
+
+    assert "Optional bootstrap from Warehouse to Source Lakehouse Delta" in markdown
+    assert "Lakehouse Delta for Spark processing" in markdown
+    assert "Warehouse connector path" in markdown
+    assert "performance impact for large tables" in markdown
+    assert "Warehouse → Source Lakehouse Delta → PySpark transforms → Unified/Product Delta → optional Warehouse publish" in markdown
+    assert "RUN_WAREHOUSE_TO_LAKEHOUSE_BOOTSTRAP = False" in bootstrap_block
+    for setting in [
+        "WAREHOUSE_TARGET",
+        "WAREHOUSE_SCHEMA",
+        "WAREHOUSE_TABLE",
+        "SOURCE_LAKEHOUSE_TARGET",
+        "SOURCE_LAKEHOUSE_TABLE",
+        "SOURCE_LAKEHOUSE_SCHEMA",
+        "PARALLEL_LOAD_COLUMN",
+        "LOAD_MODE",
+        "LOWER_BOUND",
+        "UPPER_BOUND",
+        "CHUNK_SIZE",
+        "OUTPUT_PARTITION_COLUMNS",
+    ]:
+        assert setting in bootstrap_block
+
+    for helper in [
+        "read_warehouse_query(",
+        "read_warehouse_table(",
+        "write_lakehouse_table(",
+    ]:
+        assert helper in bootstrap_block
+
+    assert "if not PARALLEL_LOAD_COLUMN:" in bootstrap_block
+    assert "Set PARALLEL_LOAD_COLUMN before running Warehouse to Lakehouse bootstrap" in bootstrap_block
+    assert "Only use this for small reference or ad hoc tables" in bootstrap_block
+    assert "use chunked incremental loading or Fabric Copy activity" in bootstrap_block
+    assert "not direct Warehouse reads" in bootstrap_block
+    assert "read_data(" not in code
+    assert "write_data(" not in code
+    assert 'format="warehouse"' not in code
+    assert "format = \"warehouse\"" not in code
+
+
+def test_source_loading_uses_read_lakehouse_table():
+    """Verify source loading examples use the read_lakehouse_table orchestrator."""
     _markdown, code, _cells = _notebook_sources()
 
-    load_block = code[code.index("df_orders = read_data(") : code.index("SOURCE_TABLES = [")]
-    assert "read_data(" in load_block
+    load_block = code[code.index("df_orders = read_lakehouse_table(") : code.index("SOURCE_TABLES = [")]
+    assert "read_lakehouse_table(" in load_block
     for low_level_helper in [
-        "read_lakehouse_table(",
-        "read_lakehouse_csv(",
-        "read_lakehouse_parquet(",
-        "read_lakehouse_excel(",
         "read_warehouse_table(",
     ]:
         assert low_level_helper not in load_block
-    for fmt in [
-        'format="csv"',
-        'format="parquet"',
-        'format="excel"',
-        'format="warehouse"',
+    for helper in [
+        'read_lakehouse_csv(',
+        'read_lakehouse_parquet(',
+        'read_lakehouse_excel(',
+        'read_warehouse_query(',
     ]:
-        assert fmt in load_block
+        assert helper in load_block
     assert '"source"' in load_block
     assert '"demo_src_orders_happy"' in load_block
     assert '"demo_src_customers_happy"' in load_block
@@ -199,9 +241,7 @@ def test_explicit_target_writes_use_prepared_target_configs_and_real_helpers():
     _markdown, code, _cells = _notebook_sources()
 
     write_block = code[code.index("target_write_status = {}") : code.index("LINEAGE_RELATIONSHIPS = [")]
-    assert "write_data(" in write_block
-    assert "write_lakehouse_table(" not in write_block
-    assert "write_warehouse_table(" not in write_block
+    assert "write_lakehouse_table(" in write_block
     assert "write_targets_parallel" not in write_block
     assert "TARGET_CONFIG_BY_KEY.items()" in write_block
     for prepared_field in [
@@ -215,6 +255,17 @@ def test_explicit_target_writes_use_prepared_target_configs_and_real_helpers():
         '.get("options")',
     ]:
         assert prepared_field in write_block
+
+
+def test_optional_warehouse_write_example_uses_warehouse_callable():
+    """Verify optional Warehouse publication uses the explicit warehouse writer."""
+    _markdown, code, _cells = _notebook_sources()
+    warehouse_block = code[code.index("# orders_summary_target = TARGET_CONFIG_BY_KEY") : code.index("LINEAGE_RELATIONSHIPS = [")]
+
+    assert "# write_warehouse_table(" in warehouse_block
+    assert 'target="warehouse"' in warehouse_block
+    assert 'format="warehouse"' not in warehouse_block
+    assert "write_lakehouse_table(\n#     orders_summary_target" not in warehouse_block
 
 
 def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
@@ -296,12 +347,12 @@ def test_template_examples_use_default_context_not_framework_plumbing():
         "context=custom_context",
         "workspace_id=",
         "lakehouse_id=",
-        "read_data(CONFIG",
-        "write_data(\n        CONFIG",
+        "read_lakehouse_table(CONFIG",
+        "write_lakehouse_table(\n        CONFIG",
     ]
     bootstrap_block = code[: code.index("source_table = ")]
-    read_config_block = code[code.index("source_table = ") : code.index("df_orders = read_data(")]
-    load_block = code[code.index("df_orders = read_data(") : code.index("SOURCE_TABLES = [")]
+    read_config_block = code[code.index("source_table = ") : code.index("df_orders = read_lakehouse_table(")]
+    load_block = code[code.index("df_orders = read_lakehouse_table(") : code.index("SOURCE_TABLES = [")]
 
     assert all(item not in code for item in forbidden)
     assert "source_table" not in bootstrap_block
@@ -310,6 +361,7 @@ def test_template_examples_use_default_context_not_framework_plumbing():
     assert "customer_table" in read_config_block
     assert "target_table = " not in code
     assert "primary_key = " not in code
-    assert 'format="csv"' in load_block
-    assert 'format="excel"' in load_block
-    assert 'format="parquet"' in load_block
+    assert 'read_lakehouse_csv(' in load_block
+    assert 'read_lakehouse_excel(' in load_block
+    assert 'read_lakehouse_parquet(' in load_block
+    assert 'read_warehouse_query(' in load_block

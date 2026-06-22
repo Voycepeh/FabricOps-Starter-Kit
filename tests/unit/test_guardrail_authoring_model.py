@@ -539,7 +539,7 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
         def createDataFrame(self, records):
             return records
 
-    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, table, *, target, context, **kwargs: writes.append(table))
+    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
     widget = widget_author_schema_freshness_profile_rules(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
 
@@ -561,7 +561,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
         def createDataFrame(self, records):
             return records
 
-    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, table, *, target, context, **kwargs: writes.append(table))
+    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
     widget = governance_review.widget_review_guardrail_governance(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
 
@@ -633,7 +633,7 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
             return rows
 
     writes = []
-    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
+    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
     config = types.SimpleNamespace(
         governance_config=types.SimpleNamespace(
             sensitivity_labels=["classified", "restricted", "public"],
@@ -733,8 +733,8 @@ def test_enrichment_governance_approved_lifecycle_from_record_table(monkeypatch)
         def createDataFrame(self, records):
             return records
 
-    monkeypatch.setattr(governance_review, "write_lakehouse_table", lambda frame, table, *, target, context, **kwargs: written.append((table, frame)))
-    monkeypatch.setattr(governance_review, "_configured_lakehouse_schema", lambda *args, **kwargs: None)
+    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: written.append((table, frame)))
+    monkeypatch.setattr(governance_review, "configured_lakehouse_schema", lambda *args, **kwargs: None)
     profile_rows = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "metadata_table_key": "t", "metadata_column_key": "c"}]
     result = governance_review.record_table_governance(
         None,

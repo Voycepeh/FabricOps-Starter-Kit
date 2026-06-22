@@ -21,8 +21,14 @@ APPROVED_V1_CALLABLES = {
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
-    "read_data",
-    "write_data",
+    "read_lakehouse_table",
+    "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "read_warehouse_query",
+    "write_warehouse_table",
     "profile_dataframe",
     "get_latest_metadata_catalogue",
     "display_guardrail_results",
@@ -206,6 +212,7 @@ def test_generated_module_docs_surface_only_active_v1_modules():
         "governance_review",
         "data_profiling",
         "fabric_input_output",
+        "io_core",
         "data_lineage",
         "guardrails",
         "metadata",
@@ -217,11 +224,11 @@ def test_generated_module_docs_surface_only_active_v1_modules():
 
 def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exported():
     """Verify required v1 imports remain and prompt helpers are not exported."""
-    from fabricops_kit import read_data, setup_metadata_tables, setup_notebook
+    from fabricops_kit import read_lakehouse_table, setup_metadata_tables, setup_notebook
 
     assert callable(setup_notebook)
     assert callable(setup_metadata_tables)
-    assert callable(read_data)
+    assert callable(read_lakehouse_table)
     forbidden = {"AIPromptConfig", "draft_dq_rules", "BUSINESS_CONTEXT_PROMPT", "PDPA_PERSONAL_IDENTIFIER_PROMPT", "DQ_RULE_SUGGESTION_PROMPT"}
     assert forbidden.isdisjoint(set(fabricops_kit.__all__))
     for name in forbidden:

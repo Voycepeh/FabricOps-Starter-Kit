@@ -56,7 +56,7 @@ def test_explore_template_is_read_only_context_aware_sequence():
     assert "display(source_df.limit(100))" in code
 
     forbidden = [
-        "write_data(",
+        "write_lakehouse_table(",
         "write_lakehouse_table(",
         "write_pipeline_run_summary(",
         "run_table_guardrails(",

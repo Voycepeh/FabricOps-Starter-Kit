@@ -86,6 +86,7 @@ nav:
           - data_lineage: api/modules/data_lineage.md
           - guardrails: api/modules/guardrails.md
           - pipeline: api/modules/pipeline.md
+          - io_core: api/modules/io_core.md
           - metadata: api/modules/metadata.md
       # AUTO-GENERATED-MODULES-END
 

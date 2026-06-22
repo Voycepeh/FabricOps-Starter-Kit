@@ -77,6 +77,7 @@ MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "governance_review",
     "data_profiling",
     "fabric_input_output",
+    "io_core",
     "data_lineage",
     "guardrails",
     "metadata",
@@ -97,7 +98,6 @@ INTERNAL_ALIAS_MODULES = {}
 # suppressing intentionally noisy shared plumbing.
 INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     "enforce_profile_behavior": {
-        "fabricops_kit.fabric_input_output._configured_lakehouse_schema",
         "fabricops_kit.fabric_input_output._normalize_schema_name",
         "fabricops_kit.config._get_store",
     },

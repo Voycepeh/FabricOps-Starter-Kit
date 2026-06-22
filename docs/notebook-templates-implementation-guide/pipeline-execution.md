@@ -18,7 +18,20 @@ This single startup step captures the run id, audit timestamp, notebook metadata
 
 ## Source read
 
-Use [`read_data`](../api/reference/read_data.md) for source reads. The template keeps source table names and transformations visible so notebook users can understand what is being read and changed.
+Use explicit Fabric IO callables such as [`read_lakehouse_table`](../api/reference/read_lakehouse_table.md), [`read_lakehouse_csv`](../api/reference/read_lakehouse_csv.md), or [`read_warehouse_query`](../api/reference/read_warehouse_query.md) for source reads. The template keeps storage intent, source table names, and transformations visible so notebook users can understand what is being read and changed.
+
+## Warehouse sources and Spark performance
+
+FabricOps is optimized for PySpark transformations over Lakehouse Delta tables. The Warehouse SQL endpoint is useful for SQL pushdown, reference lookups, ad hoc slices, and serving, but Warehouse access from Spark uses a connector path rather than native Delta file access. Do not treat full Warehouse table reads as the default processing layer for large or repeatedly transformed data.
+
+Recommended pattern:
+
+1. Initial load: copy or materialize Warehouse data into the Source Lakehouse as Delta.
+2. Ongoing load: load incremental rows only, using a watermark or stable partition column.
+3. Transformations: run PySpark against Lakehouse Delta with [`read_lakehouse_table`](../api/reference/read_lakehouse_table.md).
+4. Outputs: write curated Delta outputs, and publish small serving outputs to Warehouse with [`write_warehouse_table`](../api/reference/write_warehouse_table.md) only when needed.
+
+As a rule of thumb, small Warehouse reads are usually acceptable for narrow reference tables, filtered slices, or one-time ad hoc data under roughly 1 million rows or 1 GB. For 1 million to 10 million rows or 1 to 10 GB, benchmark first and prefer Lakehouse Delta if the data will be reused. For larger data, wide tables, large text columns, or repeated processing, use chunked incremental loading or Fabric Copy/Data Factory style movement into Lakehouse Delta before Spark processing.
 
 ## Pipeline table config preparation
 
@@ -151,7 +164,7 @@ Formal table governance review is still owned by [03 Governance Review](governan
 
 ## Target write
 
-Use [`write_data`](../api/reference/write_data.md) after enforcement guardrails allow the run to continue. The template keeps write mode and target routing visible so users understand what will be published, while active pipeline defaults keep shared run metadata consistent.
+Use explicit Fabric IO callables such as [`write_lakehouse_table`](../api/reference/write_lakehouse_table.md) or [`write_warehouse_table`](../api/reference/write_warehouse_table.md) after enforcement guardrails allow the run to continue. The template keeps write mode and target routing visible so users understand what will be published, while active pipeline defaults keep shared run metadata consistent.
 
 ## Lineage writing
 

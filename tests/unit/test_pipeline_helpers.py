@@ -201,7 +201,7 @@ def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch)
         assert context["env"] == "dev"
         writes.append((df, context["env"], target, table, kwargs))
 
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", write_table)
 
     result = pipeline.write_pipeline_lineage(
         spark=FakeSpark(),
@@ -229,7 +229,7 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
         assert context["env"] == "dev"
         writes.append((df, context["env"], target, table, kwargs))
 
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", write_table)
 
     row = pipeline.write_pipeline_run_summary(
         spark=fake_spark,
@@ -348,7 +348,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         catalogue_calls.append((profiles, definitions, kwargs))
         return {"status": "written"}
 
-    monkeypatch.setattr(pipeline, "profile_dataframe", fake_profile)
+    monkeypatch.setattr(pipeline, "profile_dataframe_core", fake_profile)
     monkeypatch.setattr(pipeline, "_check_schema_runtime", fake_validate)
     monkeypatch.setattr(pipeline, "enforce_freshness", fake_freshness)
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", fake_stability)
@@ -422,7 +422,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
         def createDataFrame(self, rows):
             return rows
 
-    monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
     monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
@@ -455,7 +455,7 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
     """Verify profile behavior config uses clean profile_mode values only."""
     stability_calls = []
 
-    monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
     monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
 
@@ -514,7 +514,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
     """Verify run table guardrails stop on failure delegates to standard stopper."""
     stopped = []
 
-    monkeypatch.setattr(pipeline, "profile_dataframe", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
     monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
     monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
@@ -605,7 +605,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
 
     monkeypatch.setattr(
         pipeline,
-        "profile_dataframe",
+        "profile_dataframe_core",
         lambda dataframe, **kwargs: [
             {
                 "table_name": kwargs["table_name"],
@@ -683,7 +683,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
 
     monkeypatch.setattr(
         pipeline,
-        "profile_dataframe",
+        "profile_dataframe_core",
         lambda dataframe, **kwargs: [{"table_name": kwargs["table_name"], "column_name": "id", "row_count": dataframe.count()}],
     )
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
@@ -783,7 +783,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     )
     monkeypatch.setattr(pipeline, "_ACTIVE_PIPELINE_CONTEXT", active)
     monkeypatch.setattr(pipeline, "resolve_fabric_context", lambda context=None: ("config", "dev", context))
-    monkeypatch.setattr(pipeline, "profile_dataframe", lambda *args, **kwargs: FakeDataFrame("profile"))
+    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda *args, **kwargs: FakeDataFrame("profile"))
     monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     captured = {}
@@ -836,7 +836,7 @@ def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_contex
     monkeypatch.setattr(pipeline, "_ACTIVE_PIPELINE_CONTEXT", active)
     monkeypatch.setattr(pipeline, "resolve_fabric_context", lambda context=None: (framework_config(), "dev", {"config": framework_config(), "env": "dev"}))
     writes = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda *args, **kwargs: writes.append((args, kwargs)))
+    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))
     source_results = {"can_continue": True, "schema_results": {"orders": {"status": "passed"}}, "catalogue_status": {"orders": "written"}}
     target_results = {"can_continue": False, "dq_results": {"curated": {"status": "failed"}}, "catalogue_status": {"curated": "written"}}
 

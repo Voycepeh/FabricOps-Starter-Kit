@@ -34,7 +34,7 @@ def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
 
     monkeypatch.setattr(
         metadata,
-        "write_lakehouse_table",
+        "write_lakehouse_table_core",
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     monkeypatch.setattr(
@@ -106,7 +106,7 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
         },
     ]
     monkeypatch.setattr(metadata, "_runtime_context", lambda: {"currentNotebookId": "notebook-id"})
-    monkeypatch.setattr(metadata, "read_lakehouse_table", lambda *args, **kwargs: rows)
+    monkeypatch.setattr(metadata, "read_lakehouse_table_core", lambda *args, **kwargs: rows)
 
     active = metadata._current_notebook_active_registrations(
         object(), config=framework_config(), env="dev", notebook_type="02_pipeline", environment_name="dev", registration_role="primary"
@@ -157,8 +157,8 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
             return steward_rows
         return []
 
-    monkeypatch.setattr(agreement, "write_lakehouse_table", write_table)
-    monkeypatch.setattr(agreement, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(agreement, "write_lakehouse_table_core", write_table)
+    monkeypatch.setattr(agreement, "read_lakehouse_table_core", read_table)
 
     steward = agreement._create_or_update_data_steward(
         spark=FakeSpark(),
@@ -219,8 +219,14 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_render_agreement_evidence",
-        "read_data",
-        "write_data",
+        "read_lakehouse_table",
+        "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "read_warehouse_query",
+    "write_warehouse_table",
         "profile_dataframe",
         "get_latest_metadata_catalogue",
         "display_guardrail_results",
@@ -236,5 +242,5 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "widget_review_guardrail_governance",
     ]
     assert fabricops_kit.__all__ == expected_public_callables
-    assert len(fabricops_kit.__all__) == 20
+    assert len(fabricops_kit.__all__) == 26
     assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)

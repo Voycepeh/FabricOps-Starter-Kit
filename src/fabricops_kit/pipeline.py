@@ -8,7 +8,7 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from .data_agreement import get_selected_agreement, widget_select_agreement
-from .data_profiling import profile_dataframe
+from .data_profiling import profile_dataframe_core
 from .guardrails import (
     enforce_freshness,
     enforce_freshness_rule,
@@ -17,7 +17,7 @@ from .guardrails import (
     _check_schema_runtime,
     _check_schema_rule_runtime,
 )
-from .fabric_input_output import _configured_lakehouse_schema, write_lakehouse_table
+from .io_core import configured_lakehouse_schema, write_lakehouse_table_core
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
 from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
@@ -832,7 +832,7 @@ def run_table_guardrails(
         stage = table_config.get("stage", "target")
         dataframe = table_config["df"]
 
-        profiles[table_key] = profile_dataframe(
+        profiles[table_key] = profile_dataframe_core(
             dataframe,
             table_name=table_name,
             # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
@@ -1131,11 +1131,11 @@ def write_catalogue_evidence(
                 "metadata_column_key", F.concat_ws("::", F.lit(metadata_table_key), F.col("column_name"))
             )
             evidence = _normalize_catalogue_evidence_types(evidence)
-            write_lakehouse_table(
+            write_lakehouse_table_core(
                 evidence,
                 metadata_table,
                 target="metadata",
-                schema=_configured_lakehouse_schema(config, env, "metadata"),
+                schema=configured_lakehouse_schema(config, env, "metadata"),
                 context={"config": config, "env": env},
                 mode=mode,
             )
@@ -1247,11 +1247,11 @@ def write_pipeline_lineage(
                     }
                 )
     if rows:
-        write_lakehouse_table(
+        write_lakehouse_table_core(
             spark.createDataFrame(rows),
             metadata_table,
             target="metadata",
-            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            schema=configured_lakehouse_schema(config, env, "metadata"),
             context=resolved_context,
             mode=mode,
         )
@@ -1439,11 +1439,11 @@ def write_pipeline_run_summary(
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
         "created_at": _now_iso(config),
     }
-    write_lakehouse_table(
+    write_lakehouse_table_core(
         spark.createDataFrame([row]),
         metadata_table,
         target="metadata",
-        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        schema=configured_lakehouse_schema(config, env, "metadata"),
         context=resolved_context,
         mode=mode,
     )

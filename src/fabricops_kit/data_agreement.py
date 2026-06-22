@@ -17,7 +17,7 @@ import sys
 from typing import Any
 
 from .config import DEFAULT_STEWARD_ROLE_OPTIONS, resolve_fabric_context
-from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
+from .io_core import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
@@ -481,7 +481,7 @@ def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, act
     """
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
+        rows = read_lakehouse_table_core(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
     except Exception:
         if missing_ok:
             return []
@@ -491,7 +491,7 @@ def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, act
 
 
 def _write_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
-    write_lakehouse_table(spark.createDataFrame([row]), table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
+    write_lakehouse_table_core(spark.createDataFrame([row]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
 
 
 def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> str:
@@ -605,7 +605,7 @@ def _list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any =
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session)
+        rows = read_lakehouse_table_core(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_schema or configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []

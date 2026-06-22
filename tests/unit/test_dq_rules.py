@@ -289,7 +289,7 @@ def test__run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monk
         reads.append((context["env"], target, table, kwargs))
         return metadata
 
-    monkeypatch.setattr(governance, "read_lakehouse_table", fake_read)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", fake_read)
 
     result = governance._run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
 
@@ -326,7 +326,7 @@ def test__run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(m
             }
         ]
     )
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
 
     result = governance._run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
 

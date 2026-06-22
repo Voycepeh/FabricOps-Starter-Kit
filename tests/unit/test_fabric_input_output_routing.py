@@ -14,7 +14,7 @@ import fabricops_kit.fabric_input_output as io
 from tests.integration.test_storage_io import _Frame, _Spark
 
 
-LOW_LEVEL_IO_HELPERS = {
+PUBLIC_IO_CALLABLES = {
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_lakehouse_csv",
@@ -22,6 +22,7 @@ LOW_LEVEL_IO_HELPERS = {
     "read_lakehouse_excel",
     "read_warehouse_table",
     "write_warehouse_table",
+    "read_warehouse_query",
 }
 
 DELETED_INTERNAL_HELPERS = {
@@ -178,20 +179,14 @@ def test_deleted_internal_helpers_are_absent_and_unreferenced():
     assert DELETED_INTERNAL_CLASSES.isdisjoint(referenced_names)
 
 
-def test_io_orchestrators_are_root_exports_and_low_level_helpers_are_module_only():
-    """Verify IO orchestrators are public while low-level helpers stay module scoped."""
+def test_explicit_io_callables_are_root_exports():
+    """Verify explicit IO callables are root exports."""
     import fabricops_kit
 
-    assert "read_data" in fabricops_kit.__all__
-    assert "write_data" in fabricops_kit.__all__
-    assert callable(fabricops_kit.read_data)
-    assert callable(fabricops_kit.write_data)
-
-    for helper_name in LOW_LEVEL_IO_HELPERS:
-        helper = getattr(io, helper_name)
-        assert callable(helper)
-        assert helper_name not in fabricops_kit.__all__
-        assert not hasattr(fabricops_kit, helper_name)
+    for helper_name in PUBLIC_IO_CALLABLES:
+        assert helper_name in fabricops_kit.__all__
+        assert callable(getattr(fabricops_kit, helper_name))
+        assert callable(getattr(io, helper_name))
 
 
 def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
@@ -233,7 +228,7 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
 
     assert ("load", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders") in spark.read.calls
     assert ("save", "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL_RULES") in frame.write.calls
-    assert io._resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES") == "meta.METADATA_GUARDRAIL_RULES"
+    assert io._resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES", "meta") == "meta.METADATA_GUARDRAIL_RULES"
 
 
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
@@ -241,8 +236,10 @@ def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
     config = _io_config()
     metadata_store = config.paths["dev"]["metadata"]
 
-    assert io._resolve_lakehouse_table_path(metadata_store, "orders").endswith("/Tables/orders")
-    assert io._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
+    from fabricops_kit import io_core
+
+    assert io_core._resolve_lakehouse_table_path(metadata_store, "orders").endswith("/Tables/orders")
+    assert io_core._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
 
 
 import pytest
@@ -260,38 +257,6 @@ def test_lakehouse_table_validation_rejects_unsafe_names(table):
     """Verify lakehouse table validation rejects unsafe names."""
     with pytest.raises(ValueError):
         io.read_lakehouse_table(table, target="metadata", schema=None, spark_session=_Spark(), context={"config": _io_config(), "env": "dev"})
-
-
-def test_read_write_data_are_public_orchestrators_and_low_level_io_is_module_only(monkeypatch):
-    """Verify public IO orchestrators delegate while format helpers stay off root exports."""
-    import fabricops_kit
-
-    assert "read_data" in fabricops_kit.__all__
-    assert "write_data" in fabricops_kit.__all__
-    assert "read_lakehouse_table" not in fabricops_kit.__all__
-    assert "write_lakehouse_table" not in fabricops_kit.__all__
-    assert "read_warehouse_table" not in fabricops_kit.__all__
-    assert "write_warehouse_table" not in fabricops_kit.__all__
-
-    calls = []
-    monkeypatch.setattr(io, "read_lakehouse_table", lambda *args, **kwargs: calls.append(("read_table", args, kwargs)) or "read")
-    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: calls.append(("write_table", args, kwargs)))
-
-    context = {"config": _io_config(), "env": "dev"}
-
-    assert io.read_data("orders", target="source", schema="dbo", context=context) == "read"
-    io.write_data("df", "orders", target="unified", schema="dbo", mode="overwrite", context=context)
-
-    assert calls[0][0] == "read_table"
-    assert calls[0][1] == ("orders",)
-    assert calls[0][2]["target"] == "source"
-    assert calls[0][2]["schema"] == "dbo"
-    assert calls[0][2]["context"] == context
-    assert calls[1][0] == "write_table"
-    assert calls[1][1] == ("df", "orders")
-    assert calls[1][2]["target"] == "unified"
-    assert calls[1][2]["mode"] == "overwrite"
-    assert calls[1][2]["context"] == context
 
 
 def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
@@ -329,3 +294,34 @@ def test_missing_active_context_has_clear_error(monkeypatch):
 
     with pytest.raises(RuntimeError, match="Please run 00_env_config"):
         io.read_lakehouse_table("orders", spark_session=_Spark())
+
+
+def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
+    """Verify warehouse query pushdown validates SQL and builds connector calls."""
+    config = _io_config()
+    context = {"config": config, "env": "dev"}
+
+    class Constants:
+        WorkspaceId = "workspace_id"
+        DatawarehouseId = "datawarehouse_id"
+
+    constants_module = types.ModuleType("com.microsoft.spark.fabric.Constants")
+    constants_module.Constants = Constants
+    monkeypatch.setitem(sys.modules, "com", types.ModuleType("com"))
+    monkeypatch.setitem(sys.modules, "com.microsoft", types.ModuleType("com.microsoft"))
+    monkeypatch.setitem(sys.modules, "com.microsoft.spark", types.ModuleType("com.microsoft.spark"))
+    monkeypatch.setitem(sys.modules, "com.microsoft.spark.fabric", types.ModuleType("com.microsoft.spark.fabric"))
+    monkeypatch.setitem(sys.modules, "com.microsoft.spark.fabric.Constants", constants_module)
+
+    spark = _Spark()
+    result = io.read_warehouse_query("SELECT order_id FROM dbo.orders WHERE status = 'OPEN'", target="warehouse", spark_session=spark, context=context)
+
+    assert result == {"synapsesql": "SELECT order_id FROM dbo.orders WHERE status = 'OPEN'"}
+    assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
+    assert ("option", "datawarehouse_id", "dev-warehouse-item") in spark.read.calls
+
+    with pytest.raises(ValueError, match="non-empty SQL SELECT"):
+        io.read_warehouse_query("", target="warehouse", spark_session=spark, context=context)
+    with pytest.raises(ValueError, match="SELECT statement"):
+        io.read_warehouse_query("DELETE FROM dbo.orders", target="warehouse", spark_session=spark, context=context)
+

@@ -189,7 +189,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     """Verify setup metadata tables creates missing tables with write helper."""
     from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
     from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
     import fabricops_kit.governance_review as governance
 
     class Schema:
@@ -235,13 +235,13 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
 
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
-    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
     def write_table(df, table, *, target, context, **kwargs):
         assert target == "metadata"
         assert context["env"] == "dev"
         writes.append((context["env"], target, table, kwargs))
 
-    monkeypatch.setattr(io, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(io, "write_lakehouse_table_core", write_table)
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
 
     spark = Spark()
@@ -265,7 +265,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
     """Verify setup metadata tables ready without active steward when not required."""
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
 
     class Schema:
         def __init__(self, fields):
@@ -289,8 +289,8 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
 
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
-    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
-    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: pytest.fail("valid existing metadata tables should not be recreated"))
+    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("valid existing metadata tables should not be recreated"))
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [])
 
     spark = object()
@@ -347,7 +347,7 @@ def test_metadata_data_catalogue_schema_is_profile_evidence_only():
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
     """Verify metadata registration validation reads configured metadata target."""
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
 
     calls = []
 
@@ -361,7 +361,7 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
         def sql(self, statement):
             raise AssertionError(f"metadata validation must not call spark.sql: {statement}")
 
-    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
     spark = Spark()
     result = _validate_metadata_table_registration(
         spark=spark,
@@ -384,14 +384,14 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
 
 def test_metadata_registration_validation_warns_for_missing_configured_tables(monkeypatch):
     """Verify metadata registration validation warns for missing configured tables."""
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
 
     def read_table(table, *, target, context, schema=None, spark_session=None):
         assert context["env"] == "dev"
         assert target == "metadata"
         raise RuntimeError("table does not exist")
 
-    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
     result = _validate_metadata_table_registration(
         spark=object(),
         config=framework_config(),
@@ -406,7 +406,7 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
 
 def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch):
     """Verify setup metadata tables passes metadata schema to io helpers."""
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
 
     class Schema:
         def __init__(self, fields):
@@ -434,8 +434,8 @@ def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch)
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr("fabricops_kit.config._get_active_metadata_tables", lambda config: list(schemas))
     monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
-    monkeypatch.setattr(io, "read_lakehouse_table", read_table)
-    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: writes.append(kwargs))
+    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append(kwargs))
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
 
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", metadata_schema="METADATA")
@@ -449,7 +449,7 @@ def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch)
 
 def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     """Verify setup metadata tables reports configured metadata schema."""
-    import fabricops_kit.fabric_input_output as io
+    import fabricops_kit.io_core as io
 
     class Schema:
         def fieldNames(self):  # noqa: N802
@@ -477,8 +477,8 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
 
     monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
-    monkeypatch.setattr(io, "read_lakehouse_table", lambda *args, **kwargs: Table())
-    monkeypatch.setattr(io, "write_lakehouse_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(io, "read_lakehouse_table_core", lambda *args, **kwargs: Table())
+    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: None)
     monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
 
     result = setup_metadata_tables(spark=Spark(), config=cfg, env="dev")
