@@ -475,7 +475,6 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.data_lineage._build_lineage_records",
         "fabricops_kit.governance_review._dq_summary",
         "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
         "fabricops_kit.metadata._build_runtime_audit_fields",
@@ -484,7 +483,7 @@
         "fabricops_kit.pipeline._add_audit_columns",
         "fabricops_kit.pipeline._now_iso"
       ],
-      "used_by_count": 8,
+      "used_by_count": 7,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.config._get_audit_timezone"
@@ -1968,43 +1967,6 @@
         "fabricops_kit.data_agreement._require_ipywidgets"
       ],
       "internal_helper_count": 5
-    },
-    "fabricops_kit.data_lineage._build_lineage_records": {
-      "qualified_name": "fabricops_kit.data_lineage._build_lineage_records",
-      "short_name": "_build_lineage_records",
-      "module": "data_lineage",
-      "callable": "_build_lineage_records",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config._current_audit_timestamp",
-        "fabricops_kit.data_lineage._validate_lineage_steps"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.data_lineage._validate_lineage_steps"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.data_lineage._validate_lineage_steps": {
-      "qualified_name": "fabricops_kit.data_lineage._validate_lineage_steps",
-      "short_name": "_validate_lineage_steps",
-      "module": "data_lineage",
-      "callable": "_validate_lineage_steps",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.data_lineage._build_lineage_records"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
     },
     "fabricops_kit.data_profiling.profile_dataframe": {
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
@@ -6895,14 +6857,13 @@
         "GovernanceConfig",
         "_profiling_workflows",
         "data_agreement",
-        "data_lineage",
         "governance_review",
         "io_core",
         "metadata",
         "pipeline"
       ],
       "outbound_count": 3,
-      "inbound_count": 10
+      "inbound_count": 9
     },
     "data_agreement": {
       "callable_count": 3,
@@ -6918,16 +6879,6 @@
       ],
       "outbound_count": 3,
       "inbound_count": 2
-    },
-    "data_lineage": {
-      "callable_count": 0,
-      "internal_count": 2,
-      "outbound_modules": [
-        "config"
-      ],
-      "inbound_modules": [],
-      "outbound_count": 1,
-      "inbound_count": 0
     },
     "data_profiling": {
       "callable_count": 1,

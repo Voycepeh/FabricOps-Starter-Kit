@@ -84,7 +84,6 @@ nav:
           - governance_review: api/modules/governance_review.md
           - data_profiling: api/modules/data_profiling.md
           - fabric_input_output: api/modules/fabric_input_output.md
-          - data_lineage: api/modules/data_lineage.md
           - guardrails: api/modules/guardrails.md
           - pipeline: api/modules/pipeline.md
           - io_core: api/modules/io_core.md

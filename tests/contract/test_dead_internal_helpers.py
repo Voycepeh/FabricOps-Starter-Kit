@@ -8,7 +8,6 @@ SRC = ROOT / "src" / "fabricops_kit"
 SEARCH_ROOTS = [SRC, ROOT / "templates" / "notebooks", ROOT / "scripts", ROOT / "tests"]
 
 PRIVATE_HELPER_ALLOWLIST = {
-    "_build_lineage_records": "Internal lineage row builder is intentionally tested directly as shared pipeline evidence logic.",
     "_load_package_version": "Package metadata fallback is invoked during module import rather than by a source-level call.",
 }
 
