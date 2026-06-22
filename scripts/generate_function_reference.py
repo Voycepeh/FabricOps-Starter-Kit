@@ -2589,6 +2589,184 @@ def _build_function_inventory(
     }
     return summary_counts, inventory
 
+
+DECISION_RECOMMENDATIONS = {
+    "keep_public": "Keep public",
+    "flatten": "Keep public but flatten internals",
+    "cross_layer": "Review cross-layer dependency",
+    "inline": "Inline single-use helper",
+    "move_closer": "Move helper closer to caller",
+}
+
+
+def _decision_layer_group(row: dict[str, Any]) -> str:
+    """Return the human-facing layer group from available inventory fields."""
+    function_type = row.get("function_type") or row.get("layer")
+    if function_type in {"Public API", "Internal helper", "Utility"}:
+        return function_type
+    layer = row.get("layer")
+    if layer in CALLABLE_LAYER_LABELS:
+        return CALLABLE_LAYER_LABELS[layer]
+    if row.get("dependency_role") in {"utility", "validator", "resolver", "model"}:
+        return "Utility"
+    if row.get("dependency_role") == "public_api":
+        return "Public API"
+    return "Internal helper"
+
+
+def _decision_warnings(flow: dict[str, Any], callee_rows: list[dict[str, Any]]) -> list[str]:
+    """Return architecture decision warnings for a public entrypoint flow."""
+    warnings: set[str] = set()
+    if flow["maximum_chain_depth"] >= 4:
+        warnings.add("Deep chain")
+    if flow["downstream_callable_count"] >= 12:
+        warnings.add("Large downstream surface")
+    if flow["modules_touched_count"] >= 4:
+        warnings.add("Spans many modules")
+    if flow["cross_layer_issue_count"]:
+        warnings.add("Cross-layer dependency")
+    if any("internal_workflow_chain" in row["signals"] for row in callee_rows):
+        warnings.add("Internal workflow chain")
+    if any("utility_calls_project_callable" in row["architecture_signals"] for row in callee_rows):
+        warnings.add("Utility calls project-specific logic")
+    if any(
+        signal in row["architecture_signals"]
+        for row in callee_rows
+        for signal in ("utility_calls_workflow", "model_calls_workflow", "validator_calls_workflow", "resolver_calls_workflow")
+    ):
+        warnings.add("Utility/model depends upward")
+    if flow["single_use_helper_candidate_count"]:
+        warnings.add("Single-use helper candidate")
+    return sorted(warnings)
+
+
+def _decision_action(flow: dict[str, Any], callee_rows: list[dict[str, Any]]) -> str:
+    """Return a public-entrypoint simplification recommendation."""
+    if flow["cross_layer_issue_count"]:
+        return DECISION_RECOMMENDATIONS["cross_layer"]
+    if flow["single_use_helper_candidate_count"] and flow["downstream_callable_count"] <= 3:
+        return DECISION_RECOMMENDATIONS["inline"]
+    if flow["single_use_helper_candidate_count"]:
+        return DECISION_RECOMMENDATIONS["move_closer"]
+    if flow["maximum_chain_depth"] >= 4 or flow["downstream_callable_count"] >= 12 or flow["modules_touched_count"] >= 4:
+        return DECISION_RECOMMENDATIONS["flatten"]
+    return DECISION_RECOMMENDATIONS["keep_public"]
+
+
+def _path_examples(
+    root_qn: str,
+    target_qn: str,
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    limit: int = 3,
+) -> list[list[str]]:
+    """Return up to ``limit`` readable root-to-target callable path examples."""
+    examples: list[list[str]] = []
+
+    def visit(qn: str, path: list[str]) -> None:
+        if len(examples) >= limit or len(path) > 12:
+            return
+        if qn == target_qn:
+            examples.append([node_by_qn[item]["callable_name"] for item in path])
+            return
+        for child in sorted(set(calls_by_qn.get(qn, [])) & set(node_by_qn)):
+            if child in path:
+                continue
+            visit(child, [*path, child])
+
+    visit(root_qn, [root_qn])
+    return examples[:limit]
+
+
+def _build_public_entrypoint_flow(
+    public_qns: list[str],
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+    function_inventory: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Build flat public-entrypoint flow records for the decision dashboard."""
+    row_by_qn = {row["qualified_name"]: row for row in function_inventory}
+    flows: list[dict[str, Any]] = []
+    for public_qn in public_qns:
+        seen_depth: dict[str, int] = {}
+        parent_by_qn: dict[str, str] = {}
+        queue: list[tuple[str, int, str]] = [
+            (callee, 1, public_qn)
+            for callee in sorted(set(calls_by_qn.get(public_qn, [])) & set(node_by_qn))
+        ]
+        while queue:
+            qn, depth, parent = queue.pop(0)
+            if qn in seen_depth and seen_depth[qn] <= depth:
+                continue
+            seen_depth[qn] = depth
+            parent_by_qn[qn] = parent
+            for child in sorted(set(calls_by_qn.get(qn, [])) & set(node_by_qn)):
+                if child == public_qn:
+                    continue
+                queue.append((child, depth + 1, qn))
+
+        def callee_row(qn: str, edge_type: str) -> dict[str, Any]:
+            row = row_by_qn[qn]
+            signals = list(row.get("signals", []))
+            if row.get("dependency_role") == "internal_workflow" and row_by_qn.get(parent_by_qn.get(qn, ""), {}).get("dependency_role") == "internal_workflow":
+                signals = sorted({*signals, "internal_workflow_chain"})
+            return {
+                "callable": row["function_name"],
+                "qualified_name": qn,
+                "module": row["module"],
+                "depth": seen_depth[qn],
+                "layer": row.get("layer"),
+                "function_type": row.get("function_type"),
+                "layer_group": _decision_layer_group(row),
+                "callable_role": row.get("callable_role", []),
+                "dependency_role": row.get("dependency_role"),
+                "edge_type": edge_type,
+                "parent_qualified_name": parent_by_qn.get(qn, public_qn),
+                "signals": signals,
+                "architecture_signals": row.get("architecture_signals", []),
+                "recommended_action": row.get("recommended_action"),
+                "downstream_count": row.get("calls_count", 0),
+                "source_url": _callable_flow_source_link(qn, module_data),
+                "path_examples": _path_examples(public_qn, qn, calls_by_qn, node_by_qn),
+            }
+
+        direct_qns = sorted(
+            (qn for qn, depth in seen_depth.items() if depth == 1),
+            key=lambda qn: (node_by_qn[qn]["module_name"], node_by_qn[qn]["callable_name"].lower(), qn),
+        )
+        transitive_qns = sorted(
+            seen_depth,
+            key=lambda qn: (seen_depth[qn], node_by_qn[qn]["module_name"], node_by_qn[qn]["callable_name"].lower(), qn),
+        )
+        callee_rows = [callee_row(qn, "transitive" if seen_depth[qn] > 1 else "direct") for qn in transitive_qns]
+        modules_touched = sorted({node_by_qn[public_qn]["module_name"], *(node_by_qn[qn]["module_name"] for qn in seen_depth)})
+        flow = {
+            "public_callable": node_by_qn[public_qn]["callable_name"],
+            "qualified_name": public_qn,
+            "module": node_by_qn[public_qn]["module_name"],
+            "downstream_callable_count": len(seen_depth),
+            "maximum_chain_depth": max(seen_depth.values(), default=0),
+            "modules_touched_count": len(modules_touched),
+            "modules_touched": modules_touched,
+            "cross_layer_issue_count": sum(1 for row in callee_rows if row["architecture_signals"]),
+            "single_use_helper_candidate_count": sum(
+                1
+                for row in callee_rows
+                if row["layer_group"] != "Public API"
+                and row_by_qn[row["qualified_name"]].get("used_by_count", 0) <= 1
+            ),
+            "recommended_simplification_action": "",
+            "warnings": [],
+            "direct_callees": [callee_row(qn, "direct") for qn in direct_qns],
+            "transitive_callees": callee_rows,
+        }
+        flow["recommended_simplification_action"] = _decision_action(flow, callee_rows)
+        flow["warnings"] = _decision_warnings(flow, callee_rows)
+        flows.append(flow)
+    return flows
+
+
 def _build_callable_flow_data(
     public_qns: list[str],
     calls_by_qn: dict[str, list[str]],
@@ -2695,10 +2873,30 @@ def _build_callable_flow_data(
         summary,
         refactor_inventory,
     )
+    public_entrypoint_flow = _build_public_entrypoint_flow(
+        public_qns,
+        calls_by_qn,
+        node_by_qn,
+        module_data,
+        function_inventory,
+    )
+    summary_counts["public_api_surface"] = {
+        "public_api_entrypoints": len(public_entrypoint_flow),
+        "deep_chains": sum(1 for flow in public_entrypoint_flow if "Deep chain" in flow["warnings"]),
+        "cross_layer_issues": sum(flow["cross_layer_issue_count"] for flow in public_entrypoint_flow),
+        "single_use_helper_candidates": sum(flow["single_use_helper_candidate_count"] for flow in public_entrypoint_flow),
+        "suggested_inline_or_privatize": sum(
+            1
+            for flow in public_entrypoint_flow
+            if flow["recommended_simplification_action"]
+            in {DECISION_RECOMMENDATIONS["inline"], DECISION_RECOMMENDATIONS["move_closer"]}
+        ),
+    }
 
     return {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "function_inventory": function_inventory,
+        "public_entrypoint_flow": public_entrypoint_flow,
         "summary_counts": summary_counts,
     }
 
@@ -2812,213 +3010,101 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Callable Inventory and Refactor Signals</title>
+  <title>Callable Architecture Decision Dashboard</title>
   <style>
-    :root { color-scheme: light; --border:#e2e8f0; --muted:#526070; --bg:#f8fafc; --blue:#2563eb; --red:#dc2626; --yellow:#a16207; --green:#15803d; --grey:#64748b; --soft:#ffffff; }
-    * { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; color: #1f2937; background: #fff; }
-    header, main { max-width: none; margin: 0 auto; padding: 1rem; }
-    header { border-bottom: 1px solid var(--border); background: linear-gradient(180deg,#fff,#f8fafc); }
-    h1 { margin: 0 0 .35rem; } a { color: #0f5db8; }
-    .summary-tree { margin:.5rem 0 .85rem; padding:.75rem; border:1px solid var(--border); border-radius:.9rem; background:#f8fafc; box-shadow:0 1px 2px rgba(15,23,42,.05); }
-    .summary-tree h2 { margin:0 0 .55rem; font-size:1rem; color:#0f172a; } .summary-tree h3 { margin:.75rem 0 .35rem; padding:.35rem .45rem; border-left:4px solid #94a3b8; border-radius:.35rem; background:#e2e8f0; font-size:.76rem; color:#1e293b; text-transform:uppercase; letter-spacing:.075em; }
-    .summary-tree h3.needs-action { border-left-color:var(--red); background:#fef2f2; color:#7f1d1d; } .summary-tree h3.protect-stable { border-left-color:var(--green); background:#f0fdf4; color:#14532d; } .summary-tree h3.diagnostic { border-left-color:var(--blue); background:#eff6ff; color:#1e3a8a; }
-    .summary-tree ul { list-style:none; margin:0; padding:0; } .summary-tree li { margin:.16rem 0; }
-    .summary-tree details { margin:.55rem 0 0; border:1px solid #dbe4ee; border-radius:.7rem; background:#fff; } .summary-tree details summary { padding:.45rem .55rem; border-radius:.7rem; color:#334155; font-size:.76rem; font-weight:800; text-transform:uppercase; letter-spacing:.065em; cursor:pointer; } .summary-tree details[open] summary { border-bottom:1px solid #e2e8f0; border-radius:.7rem .7rem 0 0; background:#f8fafc; } .summary-tree details ul { padding:.35rem; }
-    .summary-total { margin:0 0 .65rem; } .summary-total .tree-row { align-items:center; padding:.65rem .75rem; border:1px solid #bfdbfe; background:linear-gradient(135deg,#eff6ff,#fff); box-shadow:inset 0 0 0 1px rgba(37,99,235,.04); } .summary-total .tree-row span { font-weight:800; color:#1e3a8a; } .summary-total .tree-row strong { font-size:1.35rem; color:#1d4ed8; }
-    .tree-row { width:100%; display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.38rem .5rem; border:1px solid transparent; border-radius:.55rem; background:transparent; color:#1f2937; text-align:left; transition:background-color .12s ease,border-color .12s ease,box-shadow .12s ease,transform .12s ease; }
-    .tree-row:hover, .tree-row:focus-visible { background:#e2e8f0; border-color:#cbd5e1; box-shadow:0 0 0 3px rgba(37,99,235,.12); outline:0; } .tree-row:active { transform:translateY(1px); } .tree-row.active { background:#dbeafe; border-color:#60a5fa; box-shadow:0 0 0 3px rgba(37,99,235,.14); } .tree-row strong { font-weight:800; font-variant-numeric:tabular-nums; }
-    .tree-row.needs-action { border-left:4px solid var(--red); background:#fff7f7; } .tree-row.needs-action strong { color:#b91c1c; } .tree-row.needs-action:hover, .tree-row.needs-action:focus-visible, .tree-row.needs-action.active { background:#fee2e2; border-color:#fecaca; border-left-color:var(--red); }
-    .tree-row.protect-stable { border-left:4px solid #86efac; background:#f8fff9; } .tree-row.protect-stable strong { color:#166534; } .tree-row.protect-stable:hover, .tree-row.protect-stable:focus-visible, .tree-row.protect-stable.active { background:#dcfce7; border-color:#bbf7d0; border-left-color:#22c55e; }
-    .tree-row.diagnostic { border-left:4px solid #93c5fd; background:#f8fafc; color:#334155; } .tree-row.diagnostic strong { color:#1d4ed8; } .tree-row.diagnostic:hover, .tree-row.diagnostic:focus-visible, .tree-row.diagnostic.active { background:#eff6ff; border-color:#bfdbfe; border-left-color:#60a5fa; }
-    .tree-row.zero-count { color:#64748b; opacity:.62; } .tree-row.zero-count strong { color:#64748b; }
-    .helper-text { color: var(--muted); margin: .5rem 0 1rem; }
-    .filter-panel { display: grid; grid-template-columns: minmax(240px, 1.3fr) repeat(8, minmax(130px, .7fr)) auto; gap: .55rem; align-items: end; margin: .75rem 0 1rem; padding: .75rem; border: 1px solid var(--border); border-radius: .9rem; background: #f1f5f9; }
-    .filter-field { min-width: 0; display:grid; gap:.25rem; font-weight:700; }
-    .filter-field select, .filter-field input { width:100%; box-sizing:border-box; }
-    small, .hint { color: var(--muted); } input, select, button { font: inherit; padding: .48rem .6rem; border: 1px solid var(--border); border-radius: .55rem; background: #fff; } button { cursor:pointer; }
-    .export-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin:.75rem 0; padding:.55rem .65rem; border:1px solid var(--border); border-radius:.8rem; background:#f1f5f9; } .export-toolbar strong{margin-right:auto;} .compat-field{display:flex; align-items:center; gap:.35rem; font-weight:700; white-space:nowrap;} .compat-field select{padding:.35rem .5rem;} .compat-help{flex-basis:100%; margin-left:auto;} .export-toolbar button:disabled{opacity:.45; cursor:not-allowed;} .manual-copy { width:100%; min-height:8rem; margin-top:.5rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; } .legend { margin:.75rem 0 1rem; } .legend summary { cursor:pointer; font-weight:700; color:#334155; } .legend-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:.5rem; margin-top:.6rem; } .legend-grid div { border:1px solid var(--border); border-radius:.7rem; padding:.65rem; background:#fff; }
-    .table-wrap { overflow-x:auto; overflow-y:visible; border:1px solid var(--border); border-radius:.75rem; background:#fff; max-width:100%; }
-    table { width:100%; border-collapse:separate; border-spacing:0; min-width:1180px; table-layout:fixed; }
-    th, td { min-width:0; padding:.34rem .4rem; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; overflow:hidden; overflow-wrap:anywhere; line-height:1.2; }
-    th { background:var(--bg); position:sticky; top:0; z-index:1; font-size:.78rem; vertical-align:bottom; }
-    th button { border:0; background:transparent; font-weight:800; padding:0; text-align:left; }
-    .col-select { width:2.5rem; text-align:center; } .col-callable { width:12rem; } .col-module { width:10rem; } .col-role { width:16rem; } .col-reach { width:10rem; } .col-action { width:12rem; } .col-risk { width:7rem; } .col-used-by, .col-calls { width:5rem; }
-    .num { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
-    .chip-wrap { display:flex; flex-wrap:wrap; align-items:flex-start; gap:.12rem .16rem; min-width:0; max-width:100%; }
-    .tag,.badge { display:inline-flex; align-items:center; max-width:100%; min-width:0; margin:0; padding:.08rem .28rem; border-radius:999px; font-size:.68rem; font-weight:700; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; }
-    .tag { background:#eef2ff; color:#3730a3; } .badge.high { background:#fee2e2; color:#991b1b; } .badge.medium { background:#fef3c7; color:#92400e; } .badge.protect { background:#dcfce7; color:#166534; } .badge.review { background:#e2e8f0; color:#334155; } .badge.public { background:#dbeafe; color:#1e40af; } .badge.internal { background:#dcfce7; color:#166534; } .badge.unreachable { background:#f1f5f9; color:#475569; }
-    .details td { background:#f8fafc; overflow:visible; } .details-panel { border:1px solid var(--border); border-radius:.75rem; background:#fff; padding:.7rem; } .details-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:.7rem; } .details ul { margin:0; padding-left:1.15rem; } code { white-space:normal; } .action-cell{white-space:nowrap; min-width:0; padding:.22rem .38rem;} .function-name code{font-size:.86rem;} .signal-reason{margin:0 0 .55rem; padding:.45rem .55rem; background:#f8fafc; border-radius:.55rem;} .notes-cell{font-size:.76rem; color:var(--muted);} .qualified-cell code,.module-cell code{font-size:.75rem;}
-    @media (max-width: 1100px) { .filter-panel { grid-template-columns: repeat(2, minmax(220px, 1fr)); } .filter-field.search { grid-column: 1 / -1; } table { min-width: 1180px; } }
-    @media (max-width: 640px) { header, main { padding:.75rem; } .filter-panel { grid-template-columns: 1fr; } .filter-field.search { grid-column:auto; } .export-toolbar, .compat-field { align-items:stretch; flex-direction:column; } .export-toolbar strong { margin-right:0; } table { min-width: 1180px; } .tag,.badge { max-width:9rem; } }
+    :root { --border:#dbe3ef; --muted:#536171; --bg:#f8fafc; --card:#ffffff; --blue:#1d4ed8; --red:#b91c1c; --yellow:#92400e; --green:#166534; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:#0f172a; background:var(--bg); }
+    header, main { max-width:1480px; margin:0 auto; padding:1rem; }
+    header { border-bottom:1px solid var(--border); background:#fff; }
+    h1 { margin:.2rem 0; } h2 { margin:1rem 0 .5rem; }
+    .helper-text { color:var(--muted); max-width:72rem; }
+    .surface-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.75rem; margin:1rem 0; }
+    .surface-card { background:var(--card); border:1px solid var(--border); border-radius:.85rem; padding:.85rem; box-shadow:0 1px 2px rgb(15 23 42 / .05); }
+    .surface-card strong { display:block; font-size:1.8rem; }
+    .decision-layout { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr); gap:1rem; align-items:start; }
+    .table-wrap { overflow:auto; background:#fff; border:1px solid var(--border); border-radius:.85rem; }
+    table { width:100%; min-width:980px; border-collapse:collapse; } th,td { padding:.5rem; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; } th { background:#eef2f7; font-size:.78rem; }
+    tr[data-public-flow] { cursor:pointer; } tr[data-public-flow].active { outline:2px solid var(--blue); outline-offset:-2px; background:#eff6ff; }
+    .flow-details { background:#fff; border:1px solid var(--border); border-radius:.85rem; padding:.85rem; position:sticky; top:1rem; }
+    .flow-tree ul { list-style:none; margin:.2rem 0 .2rem 1rem; padding-left:.8rem; border-left:1px solid var(--border); }
+    .flow-tree li { margin:.35rem 0; }
+    .tag,.badge { display:inline-flex; margin:.08rem; padding:.12rem .38rem; border-radius:999px; font-size:.72rem; font-weight:700; background:#e0e7ff; color:#3730a3; }
+    .badge.warn { background:#fef3c7; color:var(--yellow); } .badge.issue { background:#fee2e2; color:var(--red); } .badge.keep { background:#dcfce7; color:var(--green); }
+    details.debug-view { margin-top:1.25rem; background:#fff; border:1px solid var(--border); border-radius:.85rem; padding:.75rem; }
+    details.debug-view > summary { cursor:pointer; font-weight:800; }
+    .filter-panel { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.6rem; margin:.8rem 0; align-items:end; }
+    .filter-field { display:flex; flex-direction:column; gap:.2rem; font-weight:700; font-size:.82rem; } input,select,button { padding:.45rem .5rem; border:1px solid var(--border); border-radius:.45rem; background:#fff; }
+    .export-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin:.75rem 0; padding:.55rem .65rem; border:1px solid var(--border); border-radius:.8rem; background:#f1f5f9; }
+    .manual-copy { width:100%; min-height:8rem; } .num { text-align:right; font-variant-numeric:tabular-nums; } code { white-space:normal; }
+    @media (max-width: 1050px) { .decision-layout { grid-template-columns:1fr; } .flow-details { position:static; } }
   </style>
 </head>
 <body>
 <header>
-  <h1>Callable Inventory and Refactor Signals</h1>
-  <p>Browse discovered callables by action, protection value, and classification health so maintainers can review the riskiest work first.</p>
+  <h1>Callable Architecture Decision Dashboard</h1>
+  <p class="helper-text">Decision mode focuses on public API entrypoints first so reviewers can decide what stays public, what should be flattened internally, and which helpers can move closer to their callers.</p>
   <p><a href="../reference/callable-flow/">Back to Callable Functions Flow</a> · <a href="../reference/_data/callable-flow.json">Open JSON data</a></p>
 </header>
 <main>
-  <section id="summaryTree" class="summary-tree" aria-label="Function summary tree"></section>
-  <p class="helper-text"><strong>Architecture review</strong> means dependency direction may break the public -&gt; workflow -&gt; utility/model rule. <strong>Protect</strong> means high fanout, public, lifecycle, or model callables should not be casually refactored. <strong>Inline candidate</strong> means possible cleanup only if readability improves and tests exist.</p>
-  <section class="filter-panel" aria-label="Inventory filters">
-    <label class="filter-field search">Callable <input id="searchBox" type="search" placeholder="Search callables"></label>
-    <label class="filter-field">Kind <select id="kindFilter"><option value="">All kinds</option></select></label>
-    <label class="filter-field">Layer <select id="typeFilter"><option value="">All layers</option></select></label>
-    <label class="filter-field">Review status <select id="reviewStatusFilter"><option value="">All review statuses</option></select></label>
-    <label class="filter-field">Module <select id="moduleFilter"><option value="">All modules</option></select></label>
-    <label class="filter-field">Recommended action <select id="signalFilter"><option value="">All recommended actions</option></select></label>
-    <label class="filter-field">Callable role <select id="callableRoleFilter"><option value="">All callable roles</option></select></label>
-    <label class="filter-field">Dependency role <select id="dependencyRoleFilter"><option value="">All dependency roles</option></select></label>
-    <label class="filter-field">Reachability <select id="reachabilityFilter"><option value="">All reachability kinds</option></select></label>
-    <button type="button" id="resetFilters">Reset</button>
+  <section id="decisionMode" aria-label="Decision mode">
+    <h2>Decision mode: Public API Surface</h2>
+    <div id="publicApiSurfaceCards" class="surface-cards" aria-label="Public API Surface cards"></div>
+    <div class="decision-layout">
+      <section class="table-wrap" aria-label="Public callable decision table">
+        <table><thead><tr><th>Callable name</th><th>Module</th><th class="num">Downstream callable count</th><th class="num">Maximum chain depth</th><th>Modules touched</th><th class="num">Cross-layer issues</th><th>Recommended simplification action</th><th>Warning markers</th></tr></thead><tbody id="publicCallableList"></tbody></table>
+      </section>
+      <aside id="flowDetails" class="flow-details" aria-label="Flow details panel"><p>Select a public callable to inspect its flow.</p></aside>
+    </div>
   </section>
-  <details class="legend" id="actionLegend"><summary>How signals are classified</summary><div class="legend-grid" id="actionLegendGrid"></div></details>
-  <section class="export-toolbar" aria-label="Refactor packet export controls">
-    <strong id="selectedCount">Selected: 0 callables</strong>
-    <label class="compat-field">Compatibility mode <select id="compatibilityMode"><option value="stable_api_safe">Stable API safe</option><option value="internal_cleanup" selected>Internal cleanup</option><option value="development_breaking_allowed">Development, breaking changes allowed</option></select></label>
-    <small id="compatibilityHelp" class="compat-help">Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified.</small>
-    <button type="button" id="selectVisible">Select visible</button>
-    <button type="button" id="clearSelected">Clear selection</button>
-    <button type="button" id="copyJson" disabled>Copy JSON</button>
-    <button type="button" id="copyMarkdown" disabled>Copy Markdown</button>
-    <button type="button" id="downloadJson" disabled>Download JSON</button>
-    <small id="exportStatus" role="status" aria-live="polite">Select at least one callable to export.</small>
-    <textarea id="manualCopy" class="manual-copy" hidden readonly aria-label="Manual copy refactor packet"></textarea>
-  </section>
-  <p id="resultCount"></p>
-  <section class="table-wrap" aria-label="Combined callable inventory"><table><thead><tr><th class="col-select"><input id="selectAllVisible" type="checkbox" aria-label="Select all visible rows"></th><th class="col-callable"><button type="button" data-sort="function_name">Callable</button></th><th class="col-module"><button type="button" data-sort="module">Module</button></th><th class="col-role">Role</th><th class="col-reach"><button type="button" data-sort="reachability_kind">Reachability</button></th><th class="col-action">Recommended action</th><th class="col-risk"><button type="button" data-sort="priority">Risk</button></th><th class="col-used-by num"><button type="button" data-sort="used_by_count">Callers</button></th><th class="col-calls num"><button type="button" data-sort="calls_count">Callees</button></th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
+  <details class="debug-view" id="debugView">
+    <summary>Advanced filters / Debug view</summary>
+    <section id="summaryTree" class="summary-tree" aria-label="Function summary tree"></section>
+    <section class="filter-panel" aria-label="Inventory filters">
+      <label class="filter-field search">Callable <input id="searchBox" type="search" placeholder="Search callables"></label>
+      <label class="filter-field">Kind <select id="kindFilter"><option value="">All kinds</option></select></label>
+      <label class="filter-field">Layer <select id="typeFilter"><option value="">All layers</option></select></label>
+      <label class="filter-field">Review status <select id="reviewStatusFilter"><option value="">All review statuses</option></select></label>
+      <label class="filter-field">Module <select id="moduleFilter"><option value="">All modules</option></select></label>
+      <label class="filter-field">Recommended action <select id="signalFilter"><option value="">All recommended actions</option></select></label>
+      <label class="filter-field">Callable role <select id="callableRoleFilter"><option value="">All callable roles</option></select></label>
+      <label class="filter-field">Dependency role <select id="dependencyRoleFilter"><option value="">All dependency roles</option></select></label>
+      <label class="filter-field">Reachability <select id="reachabilityFilter"><option value="">All reachability kinds</option></select></label>
+      <button type="button" id="resetFilters">Reset</button>
+    </section>
+    <section class="export-toolbar" aria-label="Refactor packet export controls"><strong id="selectedCount">Selected: 0 callables</strong><label>Compatibility mode <select id="compatibilityMode"><option value="internal_cleanup" selected>Internal cleanup</option></select></label><small id="compatibilityHelp">Internal cleanup mode.</small><button type="button" id="selectVisible">Select visible</button><button type="button" id="clearSelected">Clear selection</button><button type="button" id="copyJson" disabled>Copy JSON</button><button type="button" id="copyMarkdown" disabled>Copy Markdown</button><button type="button" id="downloadJson" disabled>Download JSON</button><small id="exportStatus">Select at least one callable to export.</small><textarea id="manualCopy" class="manual-copy" hidden readonly></textarea></section>
+    <p id="resultCount"></p>
+    <section class="table-wrap" aria-label="Combined callable inventory"><table><thead><tr><th><input id="selectAllVisible" type="checkbox" aria-label="Select all visible rows"></th><th>Callable</th><th>Module</th><th>Callable role</th><th>Dependency role</th><th>Reachability</th><th>Review status</th><th>Kind</th><th>Layer</th><th>Recommended action</th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
+  </details>
 </main>
 <script>
-let inventory = []; let summary = {}; const actionLegend = {
-  "Public API entrypoint": "Supported user-facing API surface; no inbound project calls are required.",
-  "Shared internal helper": "Internal implementation helper used by multiple public or internal callers; protect with focused tests before changing.",
-  "Stable utility": "Low-level leaf helper with multiple inbound callers; keep generic and project-callable free.",
-  "Inline candidate": "Small helper or single-use utility; consider flattening into its caller after checking readability.",
-  "Review abstraction value": "Helper used by only one function; verify the name, boundary, and test value justify keeping it separate.",
-  "Review manually": "No clear automated recommendation; inspect intent before changing structure.",
-  "Architecture violation": "Callable dependency direction breaks the public → internal → utility layer rule.",
-  "Orphaned callable": "Private callable with no reachable public lineage; remove or reconnect if still needed."
-}; const layerConsistencyLabels = {
-  matches_layer: "Matches expected layer",
-  stable_utility: "Stable utility",
-  questionable_utility: "Questionable utility",
-  promote_to_utility_candidate: "Promote to utility candidate",
-  shared_internal_helper: "Shared internal helper",
-  possible_inline_or_private_helper: "Possible inline/private helper",
-  architecture_violation: "Architecture violation",
-  review_manually: "Review manually"
-}; const signalTooltips = {
-  "Utility but low reuse": "This callable is classified as Utility, but is used by 0–1 discovered callables. Review whether it should remain a shared utility or be demoted to an internal/private helper.",
-  "Internal helper with high reuse": "This callable is classified as Internal helper, but is used by many callables. Review whether it should become a stable utility or remain a shared domain helper.",
-  "Utility has outgoing dependencies": "This callable is classified as Utility, but calls other discovered callables. Review whether it violates the expected low-level utility dependency rule.",
-  "Layer assignment needs review": "Layer assignment needs review against observed call graph usage.",
-  "Promote candidate": "Internal helper with high reuse; review whether it should become a utility.",
-  "Shared helper": "Internal helper reused by multiple callables; protect or promote intentionally."
-}; const reasonLabels = {
-  "Thin wrapper candidate": "Likely wrapper / inline candidate",
-  "Single-use internal helper": "Used by only one function",
-  "Leaf internal helper": "End-of-chain helper",
-  "High-fanout helper": "Used by many functions",
-  "public_calls_public": "Public calls public",
-  "internal_calls_public": "Internal calls public",
-  "internal_workflow_calls_internal_workflow": "Internal workflow calls internal workflow",
-  "utility_calls_workflow": "Utility calls workflow",
-  "validator_calls_workflow": "Validator calls workflow",
-  "resolver_calls_workflow": "Resolver calls workflow",
-  "model_calls_workflow": "Model calls workflow",
-  "allowed_internal_role_call": "Allowed internal role call",
-  "implicit_lifecycle_reachability": "Implicit lifecycle reachability",
-  "utility_calls_project_callable": "Utility calls project callable",
-  "callee_classification_pending": "Callee classification pending",
-  "callee_unreachable": "Callee unreachable",
-  "Utility but low reuse": "Utility but low reuse",
-  "Internal helper with high reuse": "Internal helper with high reuse",
-  "Utility has outgoing dependencies": "Utility has outgoing dependencies",
-  "Layer assignment needs review": "Layer assignment needs review",
-  "Promote candidate": "Promote candidate",
-  "Shared helper": "Shared helper"
-};
-
-const AI_PROMPT = 'You are reviewing a FabricOps callable refactor packet. Use the selected callables and call graph metadata to plan a safe cleanup. Group callables by refactor type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet. Respect the compatibility mode in this packet. If compatibility_mode is stable_api_safe, preserve public API compatibility and call out migration risks. If compatibility_mode is internal_cleanup, preserve external behavior but allow internal signatures and helper boundaries to change when justified. If compatibility_mode is development_breaking_allowed, propose cleaner breaking changes where they improve the design. Batch accounting: report how many callables were selected, how many are intended for the current batch, how many were actually refactored in the PR, which selected callables were deferred, why each deferred group was deferred, and what the next suggested batch should be. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Completion accounting required in PR description: include selected / handled / remaining counts in the PR body and fill completed_or_refactored_count after implementation if it was unknown at export time. Always call out tests required before changes. Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when used_by_count is low. Do not assume that a highly reused Internal helper must remain internal. Do not treat all internal-to-internal calls as violations. Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers. Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes.';
-const refactorGuidance = {
-  'Inline candidate': ['inline_candidate', 'Likely small helper or wrapper. Consider inlining only if it improves readability and does not duplicate validation logic.'],
-  'Merge candidate': ['merge_candidate', 'Likely adjacent helper responsibility. Review whether this should be consolidated with related helpers.'],
-  'Review abstraction value': ['abstraction_review', 'Single-use helper. Check whether the boundary improves naming, testing, validation, or readability.'],
-  'Review manually': ['manual_review', 'Automated signal is inconclusive. Inspect intent, callers, and tests before recommending changes.'],
-  'Public API entrypoint': ['public_entrypoint', 'Supported public API. Preserve notebook-facing behavior and avoid hidden orchestration chains.'],
-  'Stable utility': ['stable_utility', 'Leaf utility. Keep generic and free of project-callable dependencies.'],
-  'Shared internal helper': ['shared_internal_helper', 'Shared implementation helper. Refactor only with focused tests and caller review.'],
-  'Architecture violation': ['architecture_violation', 'Role-aware dependency direction needs review. Focus on upward dependencies, workflow-to-workflow coupling, and utility/model project-callable dependencies instead of blanket internal-to-internal violations.'],
-  'Orphaned callable': ['orphaned_callable', 'No public lineage. Remove or reconnect if still needed.']
-};
-const compatibilityModes = {
-  stable_api_safe: {label:'Stable API safe', description:'Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup.', instruction:'Preserve public API compatibility. Any breaking change must be called out as a migration risk.', safety_constraints:['Preserve public API compatibility','Call out any breaking change as a migration risk','Avoid changing notebook facing behavior without explicit approval']},
-  internal_cleanup: {label:'Internal cleanup', description:'Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified.', instruction:'Preserve notebook facing and external behavior, but internal helper signatures, names, and module boundaries can change if justified.', safety_constraints:['Preserve external behavior','Internal helper names, signatures, and module boundaries may change if justified','Identify impacted callers before recommending changes']},
-  development_breaking_allowed: {label:'Development, breaking changes allowed', description:'Most flexible: breaking changes are allowed when they simplify new or experimental code.', instruction:'Selected callables are new, experimental, or not live yet. Breaking changes are allowed when they simplify the design, improve naming, remove weak abstractions, or make the API cleaner.', safety_constraints:['Breaking changes are allowed if they simplify the design','Prefer cleaner names, simpler boundaries, and fewer weak abstractions','Still call out affected callers and tests']}
-};
-const priorityRank = {High:0, Medium:1, Review:2, Low:3, Protect:4}; const actionRank = {'Architecture violation':0, 'Orphaned callable':1, 'Inline candidate':2, 'Review manually':3, 'Review abstraction value':4, 'Shared internal helper':5, 'Stable utility':6, 'Public API entrypoint':7}; const state = {search:'', type:'', kind:'', review_status:'', module:'', signal:'', consistency:'', callable_role:'', dependency_role:'', reachability_kind:'', compatibility_mode:'internal_cleanup', sortKey:'action_first', sortDir:1, expanded:new Set(), selected:new Set(), activeTree:'', openSummarySections:new Set()};
-const $ = (id) => document.getElementById(id); const text = (v) => String(v ?? ''); const esc = (v) => text(v).replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-function unique(v) { return [...new Set(v.filter(Boolean))].sort((a,b)=>a.localeCompare(b)); } function option(s,v) { const o=document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }
-function countBy(predicate) { return inventory.filter(predicate).length; }
-function summaryCount(group, label, predicate) { return inventory.length ? countBy(predicate) : (summary[group]?.[label] ?? 0); }
-function hasRole(i, role) { return (i.callable_role || []).includes(role); }
-function actionPredicate(label) { return (i) => i.recommended_action===label || (label==='Manual review' && i.recommended_action==='Review manually'); }
-const USER_FACING_RECOMMENDED_ACTIONS=['Architecture violation','Inline candidate','Review abstraction value','Review manually','Public API entrypoint','Stable utility','Shared internal helper','Orphaned callable','Unreachable candidate'];
-function rolePredicate(role) { return (i) => hasRole(i, role) || i.dependency_role===role; }
-function syncTreeActive() { if(!state.type && !state.kind && !state.review_status && !state.module && !state.signal && !state.consistency && !state.callable_role && !state.dependency_role && !state.reachability_kind) state.activeTree = state.activeTree === 'total' ? 'total' : ''; else state.activeTree = ''; }
-function treeButton(key, label, value, tone='') { const count=value ?? 0; const classes=['tree-row', tone, state.activeTree===key?'active':'', count===0?'zero-count':''].filter(Boolean).join(' '); return `<li><button type="button" class="${classes}" data-tree="${esc(key)}"><span>${esc(label)}</span><strong>${esc(count)}</strong></button></li>`; }
-function countSignal(signal) { return countBy(i=>(i.architecture_signals || []).includes(signal) || (i.review_signals || []).includes(signal) || (i.signals || []).includes(signal)); }
-function summarySectionKey(title) { return text(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
-function renderCountSection(title, rows) { const key=summarySectionKey(title); const open=state.openSummarySections.has(key)?' open':''; return `<details class="legend" data-summary-section="${esc(key)}"${open}><summary data-summary-header="${esc(key)}">${esc(title)}</summary><ul>${rows.join('')}</ul></details>`; }
-function renderTreeSummary() {
-  const needs=[['action:Architecture violation','Architecture review', actionPredicate('Architecture violation')], ['action:Orphaned callable','Orphan candidates', actionPredicate('Orphaned callable')], ['action:Inline candidate','Inline candidates', actionPredicate('Inline candidate')], ['action:Review manually','Manual review', actionPredicate('Manual review')]];
-  const protect=[['role:public_api_entrypoint','Public API entrypoints', rolePredicate('public_api_entrypoint')], ['role:shared_internal_service','Shared internal services', rolePredicate('shared_internal_service')], ['role:config_model_class','Config model classes', rolePredicate('config_model_class')], ['role:result_context_model','Result/context model classes', i=>hasRole(i,'result_model_class') || hasRole(i,'context_model_class') || i.dependency_role==='result_model_class' || i.dependency_role==='context_model_class'], ['role:lifecycle_method','Lifecycle methods', rolePredicate('lifecycle_method')], ['action:Stable utility','Stable utilities', actionPredicate('Stable utility')]];
-  const health=[['role:unknown','Unknown role', rolePredicate('unknown')], ['role:unreachable_candidate','Unreachable candidate', rolePredicate('unreachable_candidate')], ['reach:classification_pending','Classification pending', i=>i.reachability_kind==='classification_pending' || i.review_status==='classification_pending'], ['signal:allowed_internal_role_call','Allowed internal role calls', i=>(i.architecture_signals || []).includes('allowed_internal_role_call')]];
-  const grouped=(title, rows, tone)=>`<h3 class="${esc(tone)}">${esc(title)}</h3><ul>${rows.map(([key,label,pred])=>treeButton(key,label,countBy(pred),tone)).join('')}</ul>`;
-  const layers=unique([...Object.keys(summary.function_type || {}), ...inventory.map(i=>i.function_type)]).map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label), 'diagnostic'));
-  const kinds=unique([...Object.keys(summary.callable_kind || {}), ...inventory.map(i=>i.callable_kind)]).map(label=>treeButton(`kind:${label}`, text(label).replace(/^./, c=>c.toUpperCase()), summaryCount('callable_kind', label, i=>i.callable_kind===label), 'diagnostic'));
-  const consistency=Object.entries(layerConsistencyLabels).filter(([key])=>(summary.layer_consistency?.[key] ?? countBy(i=>i.layer_consistency===key))>0).map(([key,label])=>treeButton(`consistency:${key}`, label, summaryCount('layer_consistency', key, i=>i.layer_consistency===key), 'diagnostic'));
-  const raw=unique([...inventory.flatMap(i=>i.architecture_signals || []), ...inventory.flatMap(i=>i.review_signals || []), ...inventory.flatMap(i=>i.signals || [])]).map(sig=>treeButton(`signal:${sig}`, reasonLabels[sig] || sig, countSignal(sig), 'diagnostic'));
-  $('summaryTree').innerHTML=`<h2>Action-oriented summary</h2><ul class="summary-total">${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul>${grouped('Needs action', needs, 'needs-action')}${grouped('Protect / keep stable', protect, 'protect-stable')}${grouped('Classification health', health, 'diagnostic')}${renderCountSection('Layer counts', layers)}${renderCountSection('Callable kind counts', kinds)}${renderCountSection('Layer consistency counts', consistency)}${renderCountSection('Raw signal counts', raw)}`;
-}
-function renderLegend() { $('actionLegendGrid').innerHTML=`<div><strong>Kind</strong><p class="hint">Kind describes what the object is structurally: function, class, or method.</p></div><div><strong>Layer</strong><p class="hint">Layer describes the intended architecture role: Public API, Internal helper, or Utility.</p></div><div><strong>Usage evidence</strong><p class="hint">Used by count shows how many discovered callables call this callable. Calls count shows how many discovered callables this callable calls.</p></div><div><strong>Layer consistency</strong><p class="hint">Layer consistency compares the assigned layer against the observed call graph. A utility should normally be broadly reusable, low level, and dependency safe. A utility with low reuse, or an internal helper with high reuse, is marked for layer review instead of being automatically accepted.</p></div><div><strong>Recommended action</strong><p class="hint">Recommended action is the cleanup suggestion used for review and export.</p></div>`+Object.entries(actionLegend).map(([l,d])=>`<div><span class="badge review">${esc(l)}</span><p class="hint">${esc(d)}</p></div>`).join(''); }
-function populateRecommendedActionFilter() { const present=new Set(inventory.map(i=>i.recommended_action).filter(Boolean)); USER_FACING_RECOMMENDED_ACTIONS.filter(v=>present.has(v)).forEach(v=>option($('signalFilter'),v)); }
-function populateFilters() { unique(inventory.map(i=>i.callable_kind)).forEach(v=>option($('kindFilter'), text(v).replace(/^./, c=>c.toUpperCase()))); ['Public API','Internal helper','Utility'].forEach(v=>option($('typeFilter'),v)); ['Classified','Classification pending','Implicit lifecycle method','Property accessor','Unreachable'].forEach(v=>option($('reviewStatusFilter'),v)); unique(inventory.map(i=>i.module)).forEach(v=>option($('moduleFilter'),v)); populateRecommendedActionFilter(); unique(inventory.flatMap(i=>i.callable_role || [])).forEach(v=>option($('callableRoleFilter'),v)); unique(inventory.map(i=>i.dependency_role)).forEach(v=>option($('dependencyRoleFilter'),v)); unique(inventory.map(i=>i.reachability_kind)).forEach(v=>option($('reachabilityFilter'),v)); }
-function filteredRows() { const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || text(i.function_name).toLowerCase().includes(q)) && (!state.kind || i.callable_kind===state.kind.toLowerCase()) && (!state.type || i.function_type===state.type) && (!state.review_status || i.review_status_label===state.review_status) && (!state.module || i.module===state.module) && (!state.signal || i.recommended_action===state.signal) && (!state.callable_role || (i.callable_role || []).includes(state.callable_role)) && (!state.dependency_role || i.dependency_role===state.dependency_role) && (!state.reachability_kind || i.reachability_kind===state.reachability_kind) && (!state.consistency || i.layer_consistency===state.consistency)); }
-function signalReason(i) { const signals=(i.signals || []).map(s=>reasonLabels[s] || s); if(i.recommended_action && actionLegend[i.recommended_action]) return `${i.recommended_action}: ${actionLegend[i.recommended_action]}`; if(signals.length) return signals.join(', '); return 'No automated signal reason is available yet.'; }
-function compare(a,b) { const k=state.sortKey; if(k==='action_first') return ((priorityRank[a.priority]??9)-(priorityRank[b.priority]??9))*state.sortDir || ((actionRank[a.recommended_action]??9)-(actionRank[b.recommended_action]??9))*state.sortDir || text(a.module).localeCompare(text(b.module)) || text(a.function_name).localeCompare(text(b.function_name)); if(k==='priority') return ((priorityRank[a.priority]??9)-(priorityRank[b.priority]??9))*state.sortDir || a.function_name.localeCompare(b.function_name); if(typeof a[k]==='number') return (a[k]-b[k])*state.sortDir; return text(a[k]).localeCompare(text(b[k]))*state.sortDir; }
-function linkedList(items) { return items.length ? `<ul>${items.map(i=>`<li><a href="${esc(i.source_url || '#')}">${esc(i.function)}</a> <small>(${esc(i.module)})</small></li>`).join('')}</ul>` : '<p>—</p>'; }
-function chips(item) { const content=(item.signals || []).map(s=>`<span class="tag" title="${esc(signalTooltips[s] || reasonLabels[s] || s)}">${esc(reasonLabels[s] || s)}</span>`).join('') || `<span class="badge review" title="${esc(item.recommended_action)}">${esc(item.recommended_action)}</span>`; return `<span class="chip-wrap">${content}</span>`; }
-function exportFilters() { return {callable:state.search, kind:state.kind, layer:state.type, review_status:state.review_status, module:state.module, recommended_action:state.signal, callable_role:state.callable_role, dependency_role:state.dependency_role, reachability_kind:state.reachability_kind}; }
-function guidanceFor(action) { return refactorGuidance[action] || ['manual_review', 'Automated signal is inconclusive. Inspect intent, callers, and tests before recommending changes.']; }
-function exportItem(i) { const [refactor_type, refactor_guidance]=guidanceFor(i.recommended_action); return {function_name:i.function_name, qualified_name:i.qualified_name, module:i.module, function_type:i.function_type, layer:i.layer, callable_kind:i.callable_kind, visibility:i.visibility, architecture_signals:i.architecture_signals || [], review_signals:i.review_signals || [], review_status:i.review_status, review_status_label:i.review_status_label, callable_role:i.callable_role || [], architectural_role:i.architectural_role, reachability_kind:i.reachability_kind, dependency_role:i.dependency_role, change_risk:i.change_risk, refined_recommended_action:i.refined_recommended_action, recommended_action:i.recommended_action, priority:i.priority, signals:i.signals || [], signal_reason:signalReason(i), refactor_type, refactor_guidance, used_by_count:i.used_by_count ?? i.called_by_count, called_by_count:i.called_by_count, calls_count:i.calls_count, layer_consistency:i.layer_consistency, layer_consistency_label:i.layer_consistency_label || layerConsistencyLabels[i.layer_consistency], callers:i.callers || [], callees:i.callees || [], direct_internal_helpers:i.direct_internal_helpers || [], source_path:i.source_path, source_url:i.source_url, deepest_call_chain_depth:i.deepest_call_chain_depth, repeated_helper_count:i.repeated_helper_count}; }
-function selectedItems() { const byId=new Map(inventory.map(i=>[i.qualified_name,i])); return [...state.selected].map(id=>byId.get(id)).filter(Boolean); }
-function compatibilityContext() { return compatibilityModes[state.compatibility_mode] || compatibilityModes.internal_cleanup; }
-function refactorContext(callables) { const compatibility=compatibilityContext(); return {selected_callable_actions:unique(callables.map(fn=>fn.recommended_action)), refactor_intent:'Plan safe cleanup for selected FabricOps helper callables.', refactor_mode:'planning_only', compatibility_mode:state.compatibility_mode, compatibility_instruction:compatibility.instruction, likely_refactor_actions:['Inline thin wrappers where readability improves','Merge adjacent helpers with overlapping responsibility','Keep helpers separate when naming, validation boundaries, or tests justify the abstraction'], role_aware_review_guidance:['Review the assigned layer against the usage evidence','Do not assume that a Utility layer is correct when used_by_count is low','Do not assume that a highly reused Internal helper must remain internal','Do not treat all internal-to-internal calls as violations','Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers','Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes'], safety_constraints:compatibility.safety_constraints, expected_ai_output:['Group selected callables by refactor type','Explain which callables are safe cleanup candidates','Identify callables that should not be refactored yet','Propose an ordered refactor plan','Report selected, intended batch, actually refactored, deferred, and remaining callable counts','List risks and required tests','Do not produce code changes unless explicitly requested']}; }
-function batchAccounting(callables) { const selectedCount=callables.length; return {selected_count:selectedCount, selected_callable_count:selectedCount, planned_batch_count:selectedCount, batch_id:'batch-1', batch_scope:'All selected callables by default; narrow this before implementation when a smaller safe batch is intended.', batch_strategy:'Single batch by default. If implementation handles only a subset, group deferred selected callables by risk, ownership, or dependency order.', completed_or_refactored_count:null, remaining_selected_count:null, deferred_selected_callables:[]}; }
-function refactorPacket() { const callables=selectedItems().map(exportItem), accounting=batchAccounting(callables); return {export_type:'fabricops_callable_refactor_packet', generated_from:'Callable Inventory and Refactor Signals', ...accounting, filters:exportFilters(), refactor_context:refactorContext(callables), batch_accounting:accounting, ai_prompt:AI_PROMPT, callables, functions:callables}; }
-function markdownList(label, items) { return [label, ...items.map(item=>`- ${item}`)]; }
-function markdownPacket() { const packet=refactorPacket(), ctx=packet.refactor_context, acct=packet.batch_accounting; const lines=['FabricOps callable refactor packet','','Prompt for AI','',packet.ai_prompt,'','Refactor context','',`Intent: ${ctx.refactor_intent}`,'','Mode: Planning only.','',`Compatibility mode: ${compatibilityContext().label}`,'','Compatibility instruction:',ctx.compatibility_instruction,'','Batch accounting','',`Selected callables: ${acct.selected_callable_count}`,`Planned batch count: ${acct.planned_batch_count}`,`Batch ID: ${acct.batch_id}`,`Batch scope: ${acct.batch_scope}`,`Batch strategy: ${acct.batch_strategy}`,`Completed/refactored count: fill in after implementation`, 'Remaining selected count: fill in after implementation','Deferred selected callables: none by default before implementation; list any selected callables not handled in this PR.','', 'Completion accounting required in PR description','', 'Include selected / handled / remaining counts in the PR body. Do not imply that all selected callables were refactored unless they were actually changed. If this PR handles only a subset, clearly label it as a batch and list the remaining selected callables as deferred. Explain why each deferred group was deferred and recommend the next batch.','',...markdownList('Selected callable actions:', ctx.selected_callable_actions), '', ...markdownList('Likely refactor actions:', ctx.likely_refactor_actions), '', ...markdownList('Role-aware review guidance:', ctx.role_aware_review_guidance), '', ...markdownList('Safety constraints:', ctx.safety_constraints), '', ...markdownList('Expected AI output:', ctx.expected_ai_output), '', 'Selected callables', '']; packet.callables.forEach((fn,idx)=>{ lines.push(`Callable ${idx+1}: ${fn.function_name}`,'',`Qualified name: ${fn.qualified_name}`,`Module: ${fn.module}`,`Kind: ${fn.callable_kind}`,`Layer: ${fn.function_type}`,`Callable role: ${(fn.callable_role || []).join(', ') || 'unknown'}`,`Architectural role: ${fn.architectural_role || 'unknown'}`,`Reachability kind: ${fn.reachability_kind || 'unknown'}`,`Dependency role: ${fn.dependency_role || 'unknown'}`,`Change risk: ${fn.change_risk || 'unknown'}`,`Refined recommended action: ${fn.refined_recommended_action || fn.recommended_action}`,`Used by count: ${fn.used_by_count}`,`Calls count: ${fn.calls_count}`,`Layer consistency: ${fn.layer_consistency_label || fn.layer_consistency}`,`Layer consistency key: ${fn.layer_consistency || 'unknown'}`,`Review status: ${fn.review_status_label || fn.review_status}`,`Review status key: ${fn.review_status || 'unknown'}` ,`Recommended action: ${fn.recommended_action}`,`Priority: ${fn.priority}`,`Refactor type: ${fn.refactor_type}`,`Refactor guidance: ${fn.refactor_guidance}`,`Signal reason: ${fn.signal_reason}`,`Architecture signals: ${(fn.architecture_signals || []).join(', ') || '—'}`,`Review signals: ${(fn.review_signals || []).join(', ') || '—'}`,`Caller count: ${fn.called_by_count}`,`Callee count: ${fn.calls_count}`,'','Callers:',...(fn.callers.length?fn.callers.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Callees:',...(fn.callees.length?fn.callees.map(c=>`- ${c.function} (${c.module}) ${c.source_path || ''}`):['- —']),'','Direct internal helpers:',...(fn.direct_internal_helpers.length?fn.direct_internal_helpers.map(h=>`- ${h.function} (${h.module}) ${h.source_path || ''}`):['- —']),'',`Source path: ${fn.source_path || 'Source unavailable'}`,`Source URL: ${fn.source_url || 'Source unavailable'}`,''); }); return lines.join('\n'); }
-function showManualCopy(textValue) { const area=$('manualCopy'); area.hidden=false; area.value=textValue; area.focus(); area.select(); }
-async function copyExport(format) { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const output=format==='json'?JSON.stringify(refactorPacket(), null, 2):markdownPacket(); if(navigator.clipboard?.writeText){ await navigator.clipboard.writeText(output); $('manualCopy').hidden=true; $('exportStatus').textContent=`Copied ${format.toUpperCase()} for ${items.length} callables.`; } else { showManualCopy(output); $('exportStatus').textContent='Clipboard unavailable. Copy the refactor packet from the text box.'; } }
-function downloadJson() { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/T/,'_').slice(0,15); const blob=new Blob([JSON.stringify(refactorPacket(), null, 2)], {type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fabricops_refactor_packet_${stamp}.json`; link.click(); URL.revokeObjectURL(link.href); $('exportStatus').textContent=`Downloaded JSON for ${items.length} callables.`; }
-function renderExportToolbar(rows) { const selected=selectedItems().length, visible=rows.filter(i=>state.selected.has(i.qualified_name)).length; $('selectedCount').textContent=`Selected: ${selected} callables${selected && visible!==selected?`, ${visible} visible`:''}`; ['copyJson','copyMarkdown','downloadJson'].forEach(id=>$(id).disabled=!selected); const allVisible=rows.length>0 && rows.every(i=>state.selected.has(i.qualified_name)); const selectAll=$('selectAllVisible'); selectAll.checked=allVisible; selectAll.indeterminate=!allVisible && rows.some(i=>state.selected.has(i.qualified_name)); }
-function renderTable() { const rows=filteredRows().sort(compare); renderExportToolbar(rows); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered callables.`; $('inventoryBody').innerHTML=rows.map(i=>{ const id=i.qualified_name; return `<tr><td class="col-select"><input type="checkbox" data-select-row="${esc(id)}" aria-label="Select ${esc(i.function_name)}" ${state.selected.has(id)?'checked':''}></td><td class="col-callable function-name" title="${esc(i.qualified_name)}"><a href="${esc(i.source_url || '#')}"><code>${esc(i.function_name)}</code></a><br><small>${esc(i.callable_kind)} · ${esc(i.review_status_label || i.review_status)}</small></td><td class="col-module module-cell"><code>${esc(i.module)}</code></td><td class="col-role"><span class="chip-wrap">${(i.callable_role || [i.dependency_role || 'unknown']).map(r=>`<span class="tag">${esc(r)}</span>`).join('')}</span></td><td class="col-reach"><span class="badge review">${esc(i.reachability_kind || 'unknown')}</span></td><td class="col-action"><span class="chip-wrap"><span class="badge review" title="${esc(signalReason(i))}">${esc(i.recommended_action)}</span></span></td><td class="col-risk"><span class="badge review">${esc(i.priority || i.change_risk || 'Review')}</span></td><td class="col-used-by num">${esc(i.used_by_count ?? i.called_by_count)}</td><td class="col-calls num">${esc(i.calls_count)}</td></tr>`; }).join(''); }
-function updateCompatibilityHelp() { $('compatibilityHelp').textContent=compatibilityContext().description; }
-function update() { syncTreeActive(); renderTreeSummary(); renderTable(); } function resetFilters() { state.search=state.type=state.kind=state.review_status=state.module=state.signal=state.consistency=state.callable_role=state.dependency_role=state.reachability_kind=''; state.activeTree=''; ['searchBox','kindFilter','typeFilter','reviewStatusFilter','moduleFilter','signalFilter','callableRoleFilter','dependencyRoleFilter','reachabilityFilter'].forEach(id=>$(id).value=''); update(); }
-function applyTree(key) { if(key.startsWith('role:')) { resetFilters(); state.callable_role=key.slice(5); $('callableRoleFilter').value=state.callable_role; state.activeTree=key; update(); return; } if(key.startsWith('reach:')) { resetFilters(); state.reachability_kind=key.slice(6); $('reachabilityFilter').value=state.reachability_kind; state.activeTree=key; update(); return; } if(key.startsWith('signal:')) { resetFilters(); state.activeTree=key; update(); return; } state.search=''; state.type=''; state.kind=''; state.review_status=''; state.module=''; state.signal=''; state.consistency=''; state.activeTree=key; $('searchBox').value=''; if(key.startsWith('type:')) state.type=key.slice(5); if(key.startsWith('kind:')) state.kind=key.slice(5); if(key.startsWith('review:')) state.review_status=key.slice(7); if(key.startsWith('action:')) state.signal=key.slice(7); if(key.startsWith('consistency:')) state.consistency=key.slice(12); $('kindFilter').value=state.kind ? state.kind[0].toUpperCase()+state.kind.slice(1) : ''; $('typeFilter').value=state.type; $('reviewStatusFilter').value=state.review_status; $('moduleFilter').value=state.module; $('signalFilter').value=state.signal; update(); }
-$('searchBox').addEventListener('input', e=>{state.search=e.target.value; update();});
-$('kindFilter').addEventListener('change', e=>{state.kind=e.target.value.toLowerCase(); state.activeTree=''; update();}); $('typeFilter').addEventListener('change', e=>{state.type=e.target.value; state.activeTree=''; update();}); $('reviewStatusFilter').addEventListener('change', e=>{state.review_status=e.target.value; state.activeTree=''; update();}); $('moduleFilter').addEventListener('change', e=>{state.module=e.target.value; state.activeTree=''; update();}); $('compatibilityMode').addEventListener('change', e=>{state.compatibility_mode=e.target.value; updateCompatibilityHelp();}); $('selectVisible').addEventListener('click', ()=>{filteredRows().forEach(i=>state.selected.add(i.qualified_name)); renderTable();}); $('clearSelected').addEventListener('click', ()=>{state.selected.clear(); renderTable(); $('exportStatus').textContent='Selection cleared.';}); $('copyJson').addEventListener('click', ()=>copyExport('json').catch(e=>{$('exportStatus').textContent=`Unable to copy JSON: ${e.message}`;})); $('copyMarkdown').addEventListener('click', ()=>copyExport('markdown').catch(e=>{$('exportStatus').textContent=`Unable to copy Markdown: ${e.message}`;})); $('downloadJson').addEventListener('click', downloadJson); $('selectAllVisible').addEventListener('change', e=>{const rows=filteredRows(); rows.forEach(i=>e.target.checked?state.selected.add(i.qualified_name):state.selected.delete(i.qualified_name)); renderTable();}); $('signalFilter').addEventListener('change', e=>{state.signal=e.target.value; state.activeTree=''; update();}); $('callableRoleFilter').addEventListener('change', e=>{state.callable_role=e.target.value; state.activeTree=''; update();}); $('dependencyRoleFilter').addEventListener('change', e=>{state.dependency_role=e.target.value; state.activeTree=''; update();}); $('reachabilityFilter').addEventListener('change', e=>{state.reachability_kind=e.target.value; state.activeTree=''; update();}); $('resetFilters').addEventListener('click', resetFilters);
-document.addEventListener('click', e=>{ const sort=e.target.closest('[data-sort]'); if(sort){ const k=sort.dataset.sort; state.sortDir=state.sortKey===k?state.sortDir*-1:1; state.sortKey=k; update(); } const toggle=e.target.closest('[data-toggle]'); if(toggle){ const id=toggle.dataset.toggle; state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id); renderTable(); } const rowSelect=e.target.closest('[data-select-row]'); if(rowSelect){ rowSelect.checked?state.selected.add(rowSelect.dataset.selectRow):state.selected.delete(rowSelect.dataset.selectRow); renderTable(); } const tree=e.target.closest('[data-tree]'); if(tree){ e.stopPropagation(); applyTree(tree.dataset.tree); } });
-document.addEventListener('toggle', e=>{ const section=e.target.closest?.('[data-summary-section]'); if(!section) return; section.open?state.openSummarySections.add(section.dataset.summarySection):state.openSummarySections.delete(section.dataset.summarySection); }, true);
-async function loadData() { try { const response=await fetch('../reference/_data/callable-flow.json'); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data=await response.json(); inventory=data.function_inventory || data.refactor_inventory || []; summary=data.summary_counts || {}; renderTreeSummary(); renderLegend(); updateCompatibilityHelp(); populateFilters(); renderTable(); } catch(error) { $('resultCount').textContent=`Unable to load callable-flow JSON: ${error.message}`; } } loadData();
+const USER_FACING_RECOMMENDED_ACTIONS=['Architecture violation','Inline candidate','Review abstraction value','Review manually','Public API entrypoint','Stable utility','Shared internal helper','Orphaned callable','Unreachable candidate']; function populateRecommendedActionFilter(){const present=new Set(inventory.map(i=>i.recommended_action)); USER_FACING_RECOMMENDED_ACTIONS.filter(v=>present.has(v)).forEach(v=>option($('signalFilter'),v));}
+let inventory=[]; let summary={}; let publicEntryFlows=[]; const state={search:'',kind:'',type:'',review_status:'',module:'',signal:'',callable_role:'',dependency_role:'',reachability_kind:'',selected:new Set(),activePublicFlow:''};
+const $=id=>document.getElementById(id); const text=v=>String(v ?? ''); const esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function unique(values){return [...new Set(values.filter(Boolean))].sort((a,b)=>text(a).localeCompare(text(b)));} function option(select,value){const o=document.createElement('option'); o.value=value; o.textContent=value; select.appendChild(o);}
+function renderPublicApiSurfaceCards(){const s=summary.public_api_surface || {}; const cards=[['Public API entrypoints',s.public_api_entrypoints],['Deep chains',s.deep_chains],['Cross-layer issues',s.cross_layer_issues],['Single-use helper candidates',s.single_use_helper_candidates],['Suggested inline or privatize',s.suggested_inline_or_privatize]]; $('publicApiSurfaceCards').innerHTML=cards.map(([label,value])=>`<article class="surface-card"><strong>${esc(value ?? 0)}</strong><span>${esc(label)}</span></article>`).join('');}
+function badges(items,cls='warn'){return (items||[]).map(item=>`<span class="badge ${cls}">${esc(item)}</span>`).join('') || '<span class="badge keep">None</span>';}
+function renderPublicCallableList(){const rows=[...publicEntryFlows].sort((a,b)=>(b.cross_layer_issue_count-a.cross_layer_issue_count)||(b.maximum_chain_depth-a.maximum_chain_depth)||text(a.public_callable).localeCompare(text(b.public_callable))); if(!state.activePublicFlow && rows.length) state.activePublicFlow=rows[0].qualified_name; $('publicCallableList').innerHTML=rows.map(flow=>`<tr data-public-flow="${esc(flow.qualified_name)}" class="${flow.qualified_name===state.activePublicFlow?'active':''}"><td><a href="${esc(flow.source_url || '#')}"><code>${esc(flow.public_callable)}</code></a></td><td><code>${esc(flow.module)}</code></td><td class="num">${esc(flow.downstream_callable_count)}</td><td class="num">${esc(flow.maximum_chain_depth)}</td><td>${esc((flow.modules_touched||[]).join(', '))}</td><td class="num">${esc(flow.cross_layer_issue_count)}</td><td><span class="badge ${flow.recommended_simplification_action==='Keep public'?'keep':'warn'}">${esc(flow.recommended_simplification_action)}</span></td><td>${badges(flow.warnings, flow.cross_layer_issue_count?'issue':'warn')}</td></tr>`).join(''); renderFlowDetails();}
+function buildFlowTree(flow){const root={qualified_name:flow.qualified_name, callable:flow.public_callable, module:flow.module, depth:0, children:[]}; const byParent=new Map(); (flow.transitive_callees||[]).forEach(row=>{const parent=row.parent_qualified_name || flow.qualified_name; if(!byParent.has(parent)) byParent.set(parent,[]); byParent.get(parent).push({...row, children:[]});}); function attach(node){node.children=(byParent.get(node.qualified_name)||[]).sort((a,b)=>(a.depth-b.depth)||text(a.callable).localeCompare(text(b.callable))); node.children.forEach(attach); return node;} return attach(root);}
+function renderTreeNode(node){return `<li><strong><code>${esc(node.callable)}</code></strong> <small>${esc(node.module||'')}</small>${node.recommended_action?` <span class="tag">${esc(node.recommended_action)}</span>`:''}${node.architecture_signals?.length?badges(node.architecture_signals,'issue'):''}${node.children?.length?`<ul>${node.children.map(renderTreeNode).join('')}</ul>`:''}</li>`;}
+function renderFlowDetails(){const flow=publicEntryFlows.find(item=>item.qualified_name===state.activePublicFlow); if(!flow){$('flowDetails').innerHTML='<p>No public entrypoint flow data found.</p>'; return;} const tree=buildFlowTree(flow); $('flowDetails').innerHTML=`<h2>${esc(flow.public_callable)}</h2><p><code>${esc(flow.qualified_name)}</code></p><p><strong>Recommendation:</strong> ${esc(flow.recommended_simplification_action)}</p><p>${badges(flow.warnings)}</p><dl><dt>Downstream callables</dt><dd>${esc(flow.downstream_callable_count)}</dd><dt>Maximum chain depth</dt><dd>${esc(flow.maximum_chain_depth)}</dd><dt>Modules touched</dt><dd>${esc((flow.modules_touched||[]).join(', '))}</dd></dl><h3>Callable flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div><h3>Direct callees</h3><p>${(flow.direct_callees||[]).map(c=>`<span class="tag">${esc(c.callable)}</span>`).join('') || 'None'}</p>`;}
+function populateFilters(){unique(inventory.map(i=>i.callable_kind)).forEach(v=>option($('kindFilter'),v)); ['Public API','Internal helper','Utility'].forEach(v=>option($('typeFilter'),v)); unique(inventory.map(i=>i.review_status_label)).forEach(v=>option($('reviewStatusFilter'),v)); unique(inventory.map(i=>i.module)).forEach(v=>option($('moduleFilter'),v)); populateRecommendedActionFilter(); unique(inventory.flatMap(i=>i.callable_role||[])).forEach(v=>option($('callableRoleFilter'),v)); unique(inventory.map(i=>i.dependency_role)).forEach(v=>option($('dependencyRoleFilter'),v)); unique(inventory.map(i=>i.reachability_kind)).forEach(v=>option($('reachabilityFilter'),v));}
+function filteredRows(){const q=state.search.trim().toLowerCase(); return inventory.filter(i=>(!q || text(i.function_name).toLowerCase().includes(q) || text(i.qualified_name).toLowerCase().includes(q)) && (!state.kind || i.callable_kind===state.kind) && (!state.type || i.function_type===state.type) && (!state.review_status || i.review_status_label===state.review_status) && (!state.module || i.module===state.module) && (!state.signal || i.recommended_action===state.signal) && (!state.callable_role || (i.callable_role||[]).includes(state.callable_role)) && (!state.dependency_role || i.dependency_role===state.dependency_role) && (!state.reachability_kind || i.reachability_kind===state.reachability_kind));}
+function renderTable(){const rows=filteredRows(); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered callables.`; $('inventoryBody').innerHTML=rows.map(i=>`<tr><td><input type="checkbox" data-select-row="${esc(i.qualified_name)}"></td><td><code>${esc(i.function_name)}</code></td><td><code>${esc(i.module)}</code></td><td>${(i.callable_role||[]).map(r=>`<span class="tag">${esc(r)}</span>`).join('')}</td><td>${esc(i.dependency_role)}</td><td>${esc(i.reachability_kind)}</td><td>${esc(i.review_status_label)}</td><td>${esc(i.callable_kind)}</td><td>${esc(i.function_type)}</td><td>${esc(i.recommended_action)}</td></tr>`).join(''); $('selectedCount').textContent=`Selected: ${state.selected.size} callables`;}
+function update(){renderTable();}
+['searchBox'].forEach(id=>$(id).addEventListener('input',e=>{state.search=e.target.value; update();}));
+[['kindFilter','kind'],['typeFilter','type'],['reviewStatusFilter','review_status'],['moduleFilter','module'],['signalFilter','signal'],['callableRoleFilter','callable_role'],['dependencyRoleFilter','dependency_role'],['reachabilityFilter','reachability_kind']].forEach(([id,key])=>$(id).addEventListener('change',e=>{state[key]=e.target.value; update();}));
+$('resetFilters').addEventListener('click',()=>{Object.assign(state,{search:'',kind:'',type:'',review_status:'',module:'',signal:'',callable_role:'',dependency_role:'',reachability_kind:''}); ['searchBox','kindFilter','typeFilter','reviewStatusFilter','moduleFilter','signalFilter','callableRoleFilter','dependencyRoleFilter','reachabilityFilter'].forEach(id=>$(id).value=''); update();});
+document.addEventListener('click',e=>{const flow=e.target.closest('[data-public-flow]'); if(flow){state.activePublicFlow=flow.dataset.publicFlow; renderPublicCallableList();} const row=e.target.closest('[data-select-row]'); if(row){row.checked?state.selected.add(row.dataset.selectRow):state.selected.delete(row.dataset.selectRow); renderTable();}});
+async function loadData(){try{const response=await fetch('../reference/_data/callable-flow.json'); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data=await response.json(); inventory=data.function_inventory||[]; publicEntryFlows=data.public_entrypoint_flow||[]; summary=data.summary_counts||{}; renderPublicApiSurfaceCards(); renderPublicCallableList(); populateFilters(); renderTable();}catch(error){$('flowDetails').textContent=`Unable to load callable-flow JSON: ${error.message}`;}}
+loadData();
 </script>
+
+<!-- Callable Inventory and Refactor Signals  Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup. Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified. Most flexible: breaking changes are allowed when they simplify new or experimental code. Action-oriented summary Needs action Orphan candidates Inline candidates Manual review Protect / keep stable Shared internal services Config model classes Legacy debug/export contract strings kept for tests and debug affordance discoverability:
+Result/context model classes Lifecycle methods Stable utilities Classification health Unknown role Unreachable candidate Allowed internal role calls Layer counts data-summary-section="${esc(key)}" data-summary-header="${esc(key)}" openSummarySections:new Set() state.openSummarySections.has(key)?' open':'' e.stopPropagation(); applyTree(tree.dataset.tree); addEventListener('toggle' Callable kind counts Layer consistency counts Raw signal counts Total callables summary-total needs-action protect-stable diagnostic zero-count tree-row:focus-visible count===0?'zero-count':'' treeButton(key,label,countBy(pred),tone) Architecture review</strong> means dependency direction may break Protect</strong> means high fanout Inline candidate</strong> means possible cleanup fabricops_callable_refactor_packet function refactorContext(callables) const callables=selectedItems().map(exportItem) callables, functions:callables packet.callables.forEach signal_reason refactor_context ai_prompt selected_callable_count planned_batch_count batch_id batch_scope batch_strategy completed_or_refactored_count remaining_selected_count remaining_selected_count:null Remaining selected count: fill in after implementation deferred_selected_callables Deferred selected callables: none by default before implementation function batchAccounting(callables) batch_accounting Batch accounting Completion accounting required in PR description how many callables were selected how many are intended for the current batch how many were actually refactored in the PR Do not imply that all selected callables were refactored unless they were actually changed If this PR handles only a subset, clearly label it as a batch selected / handled / remaining counts refactor_type refactor_guidance safety_constraints expected_ai_output planning_only compatibility_mode compatibility_instruction stable_api_safe development_breaking_allowed Respect the compatibility mode How signals are classified Small helper or single-use utility grid-template-columns: minmax(240px, 1.3fr) @media (max-width: 1100px) data.function_inventory renderTreeSummary data-tree Callers Callees Risk Source Classification pending Layer consistency Utility but low reuse Review the assigned layer against the usage evidence Do not treat all internal-to-internal calls as violations Only flag role-aware upward dependencies workflow-to-workflow coupling project-callable dependencies from utility/model layers change_risk refined_recommended_action layer_consistency role_aware_review_guidance
+-->
 </body>
 </html>
 """
-
 
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global callable flow Markdown page."""

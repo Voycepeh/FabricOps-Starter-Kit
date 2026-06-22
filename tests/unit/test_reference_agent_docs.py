@@ -397,6 +397,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Hygiene signals" not in dashboard_text
     assert "Inventory and stability" not in dashboard_text
     assert "fetch('../reference/_data/callable-flow.json')" in dashboard_text
+    assert "Decision mode: Public API Surface" in dashboard_text
+    assert "Public API Surface cards" in dashboard_text
+    assert "publicCallableList" in dashboard_text
+    assert "callableFlowTree" in dashboard_text
+    assert "function buildFlowTree" in dashboard_text
+    assert "Advanced filters / Debug view" in dashboard_text
+    assert dashboard_text.index("Decision mode: Public API Surface") < dashboard_text.index("Advanced filters / Debug view")
+    assert dashboard_text.index('id="callableRoleFilter"') > dashboard_text.index("Advanced filters / Debug view")
+    assert dashboard_text.index('id="dependencyRoleFilter"') > dashboard_text.index("Advanced filters / Debug view")
+    assert dashboard_text.index('id="reachabilityFilter"') > dashboard_text.index("Advanced filters / Debug view")
     assert "Callers" in dashboard_text
     assert "Callees" in dashboard_text
     assert "Role" in dashboard_text
@@ -424,7 +434,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "role_aware_review_guidance" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
+    assert set(flow_data) == {"generated_at", "function_inventory", "public_entrypoint_flow", "summary_counts"}
 
     summary_counts = flow_data["summary_counts"]
     assert {
@@ -447,6 +457,29 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     }
     assert summary_counts["layer"]["public"] == len(exported_symbols)
     assert summary_counts["total_callables"] == sum(summary_counts["function_type"].values())
+
+    public_api_surface = summary_counts["public_api_surface"]
+    assert {
+        "public_api_entrypoints",
+        "deep_chains",
+        "cross_layer_issues",
+        "single_use_helper_candidates",
+        "suggested_inline_or_privatize",
+    } <= set(public_api_surface)
+
+
+    public_flows = flow_data["public_entrypoint_flow"]
+    assert len(public_flows) == summary_counts["layer"]["public"]
+    assert len(public_flows) == public_api_surface["public_api_entrypoints"]
+    for flow in public_flows:
+        assert "maximum_chain_depth" in flow
+        assert "downstream_callable_count" in flow
+        assert "children" not in flow
+        for callee in [*flow["direct_callees"], *flow["transitive_callees"]]:
+            assert "depth" in callee
+            assert "parent_qualified_name" in callee
+            assert "children" not in callee
+            assert len(callee.get("path_examples", [])) <= 3
 
     function_inventory = flow_data["function_inventory"]
     assert len(function_inventory) == summary_counts["total_callables"]
