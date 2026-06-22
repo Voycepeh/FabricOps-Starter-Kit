@@ -256,6 +256,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "resetDecisionFilters" in dashboard_text
     assert "compactList" in dashboard_text
     assert "compactBadges" in dashboard_text
+    assert "<details class=\"inline-more\">" in dashboard_text
+    assert "+${hidden.length} more" in dashboard_text
+    assert "showAllPublicCallables" in dashboard_text
+    assert "collapsedPublicList" in dashboard_text
+    assert "scrollIntoView" in dashboard_text
+    assert "Callable flow" in dashboard_text
+    assert "Showing flow for" in dashboard_text
+    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in dashboard_text
+    assert ".surface-card span{display:block;line-height:1.2" in dashboard_text
+    assert "<th>Callable</th><th>Module</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th><th>Modules</th><th class=\"num\">Issues</th><th>Recommendation</th><th>Warnings</th>" in dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
