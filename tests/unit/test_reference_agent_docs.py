@@ -257,6 +257,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy Markdown" in dashboard_text
     assert "Download JSON" in dashboard_text
     assert "compatibilityMode" in dashboard_text
+    assert "function markdownPacket(packet)" in dashboard_text
+    assert "Selected callables:" in dashboard_text
+    assert "disabled>Copy JSON" in dashboard_text
+    assert "disabled>Copy Markdown" in dashboard_text
+    assert "disabled>Download JSON" in dashboard_text
+    assert "location.reload" not in dashboard_text
+    assert "decisionSearch:''" in dashboard_text
 
     assert "Callable Inventory and Refactor Export" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
@@ -280,6 +287,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "refactorPacket" in inventory_text
     assert "copyExport" in inventory_text
     assert "downloadJson" in inventory_text
+    assert "function markdownPacket(packet)" in inventory_text
+    assert "Selected callables:" in inventory_text
+    assert "disabled>Copy JSON" in inventory_text
+    assert "disabled>Copy Markdown" in inventory_text
+    assert "disabled>Download JSON" in inventory_text
+    assert "selectAllVisible" in inventory_text
+    assert "$('selectAllVisible').onchange" in inventory_text
     assert "compatibility context / compatibility mode" in inventory_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
