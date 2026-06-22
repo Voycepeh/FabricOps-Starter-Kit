@@ -142,6 +142,8 @@ def test_pipeline_notebook_contains_disabled_warehouse_bootstrap_guidance():
     assert "not direct Warehouse reads" in bootstrap_block
     assert "read_data(" not in code
     assert "write_data(" not in code
+    assert 'format="warehouse"' not in code
+    assert "format = \"warehouse\"" not in code
 
 
 def test_source_loading_uses_read_lakehouse_table():
@@ -253,6 +255,17 @@ def test_explicit_target_writes_use_prepared_target_configs_and_real_helpers():
         '.get("options")',
     ]:
         assert prepared_field in write_block
+
+
+def test_optional_warehouse_write_example_uses_warehouse_callable():
+    """Verify optional Warehouse publication uses the explicit warehouse writer."""
+    _markdown, code, _cells = _notebook_sources()
+    warehouse_block = code[code.index("# orders_summary_target = TARGET_CONFIG_BY_KEY") : code.index("LINEAGE_RELATIONSHIPS = [")]
+
+    assert "# write_warehouse_table(" in warehouse_block
+    assert 'target="warehouse"' in warehouse_block
+    assert 'format="warehouse"' not in warehouse_block
+    assert "write_lakehouse_table(\n#     orders_summary_target" not in warehouse_block
 
 
 def test_lineage_and_runtime_summary_still_use_package_evidence_outputs():
