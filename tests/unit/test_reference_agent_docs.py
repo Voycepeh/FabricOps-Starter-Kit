@@ -317,6 +317,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Layer consistency counts" in dashboard_text
     assert "Raw signal counts" in dashboard_text
     assert "Total callables" in dashboard_text
+    assert "summary-total" in dashboard_text
+    assert "needs-action" in dashboard_text
+    assert "protect-stable" in dashboard_text
+    assert "diagnostic" in dashboard_text
+    assert "zero-count" in dashboard_text
+    assert "tree-row:focus-visible" in dashboard_text
+    assert "count===0?'zero-count':''" in dashboard_text
+    assert "treeButton(key,label,countBy(pred),tone)" in dashboard_text
     assert "All modules" in dashboard_text
     assert 'id="callableRoleFilter"' in dashboard_text
     assert 'id="dependencyRoleFilter"' in dashboard_text
