@@ -5,19 +5,31 @@ Use this page to look up Starter Kit functions used by the template notebooks.
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
     <strong class="reference-kpi-value">26</strong>
-    <span class="reference-kpi-title">Public functions</span>
-    <p class="reference-kpi-note">Notebook-facing entry points used by starter templates.</p>
+    <span class="reference-kpi-title">Public Starter Kit functions</span>
+    <p class="reference-kpi-note">Public API entrypoints from the callable inventory.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">270</strong>
-    <span class="reference-kpi-title">Supporting internal functions</span>
-    <p class="reference-kpi-note">Maintainer helpers tracked for source navigation.</p>
+    <strong class="reference-kpi-value">309</strong>
+    <span class="reference-kpi-title">Total discovered callable records</span>
+    <p class="reference-kpi-note">All callable inventory records across functions, classes, lifecycle methods, and properties.</p>
+  </section>
+  <section class="reference-kpi-card surface-card">
+    <strong class="reference-kpi-value">287</strong>
+    <span class="reference-kpi-title">Function callables</span>
+    <p class="reference-kpi-note">Callable inventory records whose kind is function.</p>
+  </section>
+  <section class="reference-kpi-card surface-card">
+    <strong class="reference-kpi-value">22</strong>
+    <span class="reference-kpi-title">Non-function callable records</span>
+    <p class="reference-kpi-note">Class, lifecycle, property, and other non-function callable records.</p>
   </section>
 </div>
 
+<p><small>Callable metrics are generated from the callable inventory data.</small></p>
+
 ## Find a function
 
-Use the finder below to look up the 26 public Starter Kit functions. Supporting internal functions stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or internal helper usage.
+Use the finder below to look up the 26 public Starter Kit functions. Internal helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or internal helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search functions</label>

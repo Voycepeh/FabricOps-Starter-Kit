@@ -51,7 +51,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 
   <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>26</strong><span>public Starter Kit functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body">Supported by <!-- FABRICOPS_INTERNAL_FUNCTION_COUNT --><strong>283</strong><span>supporting internal functions</span><!-- /FABRICOPS_INTERNAL_FUNCTION_COUNT -->.</span>
+    <span class="fabricops-landing-card__body">Tracked across <!-- FABRICOPS_CALLABLE_RECORD_COUNT --><strong>309</strong><span>discovered callable records</span><!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
@@ -88,3 +88,5 @@ FabricOps Starter Kit includes maintainer tooling to keep the framework clean, e
     <span class="fabricops-landing-card__meta">Open Inventory</span>
   </a>
 </div>
+
+<p><small>Callable metrics are generated from the callable inventory data.</small></p>
