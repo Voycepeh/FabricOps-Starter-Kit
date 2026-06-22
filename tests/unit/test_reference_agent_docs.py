@@ -416,6 +416,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["review_status"] == "implicit_lifecycle" for row in lifecycle_rows.values())
     assert all(row["callable_kind"] == "implicit_lifecycle_method" for row in lifecycle_rows.values())
     assert all(row["recommended_action"] == "Keep lifecycle method" for row in lifecycle_rows.values())
+    assert all("lifecycle_method" in row["callable_role"] for row in lifecycle_rows.values())
+    assert all("implicit_lifecycle_reachable" in row["callable_role"] for row in lifecycle_rows.values())
+    assert all(row["reachability_kind"] == "implicit_lifecycle_reachable" for row in lifecycle_rows.values())
+    assert all("implicit_lifecycle_reachability" in row["signals"] for row in lifecycle_rows.values())
     assert all("Utility but low reuse" not in row["signals"] for row in lifecycle_rows.values())
     root_row = next(row for row in function_inventory if row["qualified_name"] == "fabricops_kit.io_core.FabricStore.root")
     assert root_row["function_name"] == "FabricStore.root"
@@ -427,6 +431,23 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert root_row["layer_consistency"] == "property_accessor"
     assert "Utility but low reuse" not in root_row["signals"]
     assert root_row["recommended_action"] != "Orphaned callable"
+    rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
+    assert "config_model_class" in rows_by_qn["fabricops_kit.config.FrameworkConfig"]["callable_role"]
+    assert "utility_function" not in rows_by_qn["fabricops_kit.config.FrameworkConfig"]["callable_role"]
+    assert rows_by_qn["fabricops_kit.config.FrameworkConfig"]["function_type"] != "Utility"
+    assert "context_model_class" in rows_by_qn["fabricops_kit.config.NotebookSetupContext"]["callable_role"]
+    assert "result_model_class" in rows_by_qn["fabricops_kit.config.ConfigSmokeCheckResult"]["callable_role"]
+    assert {"internal_resolver", "shared_internal_service", "store_resolver"} <= set(rows_by_qn["fabricops_kit.config._get_store"]["callable_role"])
+    assert rows_by_qn["fabricops_kit.config._get_store"]["recommended_action"] != "Architecture violation"
+    assert {"internal_resolver", "runtime_context_resolver", "shared_internal_service"} <= set(rows_by_qn["fabricops_kit.config.resolve_fabric_context"]["callable_role"])
+    assert rows_by_qn["fabricops_kit.config.resolve_fabric_context"]["recommended_action"] != "Architecture violation"
+    assert {"audit_time_utility", "shared_internal_service"} <= set(rows_by_qn["fabricops_kit.config._current_audit_timestamp"]["callable_role"])
+    assert rows_by_qn["fabricops_kit.config._current_audit_timestamp"]["recommended_action"] != "Architecture violation"
+    assert rows_by_qn["fabricops_kit.config._normalize_widget_config"]["recommended_action"] != "Orphaned callable"
+    assert "implicit_lifecycle_reachable" in rows_by_qn["fabricops_kit.config._normalize_widget_config"]["callable_role"]
+    assert "implicit_lifecycle_reachable" not in rows_by_qn["fabricops_kit.config._normalize_path_config"]["callable_role"]
+    assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
+    assert any(row["review_status"] == "unreachable" and row["recommended_action"] == "Orphaned callable" and "unreachable_candidate" in row["callable_role"] for row in function_inventory)
     assert all(row["used_by_count"] == row["called_by_count"] for row in function_inventory)
     assert all(
         {
@@ -439,6 +460,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
             "review_status_label",
             "callable_kind",
             "visibility",
+            "callable_role",
+            "architectural_role",
+            "reachability_kind",
+            "dependency_role",
+            "change_risk",
+            "refined_recommended_action",
             "used_by_count",
             "called_by_count",
             "calls_count",
@@ -1229,7 +1256,11 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
 
 def test_callable_layer_dependency_rule_matrix() -> None:
     """Verify callable layer dependency rules match the architecture matrix."""
-    from scripts.generate_function_reference import _architecture_dependency_signals, _dependency_review_signals
+    from scripts.generate_function_reference import (
+        _architecture_dependency_signals,
+        _dependency_review_signals,
+        _role_dependency_signals,
+    )
 
     assert _architecture_dependency_signals("public", "internal") == []
     assert _architecture_dependency_signals("public", "utility") == []
@@ -1243,3 +1274,12 @@ def test_callable_layer_dependency_rule_matrix() -> None:
     assert _dependency_review_signals("classification_pending") == ["callee_classification_pending"]
     assert _dependency_review_signals("unreachable") == ["callee_unreachable"]
     assert _dependency_review_signals("classified") == []
+    assert _role_dependency_signals("internal_workflow", "utility_function") == ["allowed_internal_role_call"]
+    assert _role_dependency_signals("internal_workflow", "internal_validator") == ["allowed_internal_role_call"]
+    assert _role_dependency_signals("internal_workflow", "internal_resolver") == ["allowed_internal_role_call"]
+    assert _role_dependency_signals("internal_workflow", "config_model_class") == ["allowed_internal_role_call"]
+    assert _role_dependency_signals("internal_workflow", "internal_workflow") == ["internal_workflow_calls_internal_workflow"]
+    assert _role_dependency_signals("utility_function", "internal_workflow") == ["utility_calls_workflow"]
+    assert _role_dependency_signals("internal_validator", "internal_workflow") == ["validator_calls_workflow"]
+    assert _role_dependency_signals("utility_validator", "internal_workflow") == ["validator_calls_workflow"]
+    assert _role_dependency_signals("internal_resolver", "internal_workflow") == ["resolver_calls_workflow"]
