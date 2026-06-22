@@ -4,24 +4,29 @@ Use this page to look up Starter Kit functions used by the template notebooks.
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">26</strong>
-    <span class="reference-kpi-title">Public Starter Kit functions</span>
-    <p class="reference-kpi-note">Public API entrypoints from the callable inventory.</p>
+    <strong class="reference-kpi-value">12</strong>
+    <span class="reference-kpi-title">Modules</span>
+    <p class="reference-kpi-note">Code areas represented.</p>
   </section>
   <section class="reference-kpi-card surface-card">
     <strong class="reference-kpi-value">309</strong>
-    <span class="reference-kpi-title">Total discovered callable records</span>
-    <p class="reference-kpi-note">All callable inventory records across functions, classes, lifecycle methods, and properties.</p>
+    <span class="reference-kpi-title">Total callables</span>
+    <p class="reference-kpi-note">Complete discovered callable inventory.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">287</strong>
-    <span class="reference-kpi-title">Function callables</span>
-    <p class="reference-kpi-note">Callable inventory records whose kind is function.</p>
+    <strong class="reference-kpi-value">26</strong>
+    <span class="reference-kpi-title">Public API</span>
+    <p class="reference-kpi-note">Notebook-facing entrypoints.</p>
+  </section>
+  <section class="reference-kpi-card surface-card">
+    <strong class="reference-kpi-value">261</strong>
+    <span class="reference-kpi-title">Supporting functions</span>
+    <p class="reference-kpi-note">Internal functions behind the public API.</p>
   </section>
   <section class="reference-kpi-card surface-card">
     <strong class="reference-kpi-value">22</strong>
-    <span class="reference-kpi-title">Non-function callable records</span>
-    <p class="reference-kpi-note">Class, lifecycle, property, and other non-function callable records.</p>
+    <span class="reference-kpi-title">Non-function records</span>
+    <p class="reference-kpi-note">Classes, aliases, or metadata records.</p>
   </section>
 </div>
 
