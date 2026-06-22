@@ -2056,7 +2056,14 @@ ROLE_TAGS_BY_NAME = {
     "_get_fabric_runtime_metadata": ["fabric_runtime_probe", "internal_adapter"],
 }
 
-def _callable_role_tags(qn: str, node: dict[str, Any], layer: str, review_status: str) -> list[str]:
+def _callable_role_tags(
+    qn: str,
+    node: dict[str, Any],
+    layer: str,
+    review_status: str,
+    *,
+    is_called_by_lifecycle: bool = False,
+) -> list[str]:
     """Return refined role tags for a callable without changing runtime behavior."""
     name = node["callable_name"]
     base_name = name.split(".")[0]
@@ -2103,7 +2110,7 @@ def _callable_role_tags(qn: str, node: dict[str, Any], layer: str, review_status
             tags.append("internal_workflow")
         else:
             tags.append("instance_method" if kind == "method" else "utility_function")
-    if any(tag.endswith("_normalizer") for tag in tags):
+    if is_called_by_lifecycle:
         tags.append("implicit_lifecycle_reachable")
     if review_status == "unreachable":
         tags.append("unreachable_candidate")
@@ -2251,8 +2258,19 @@ def _build_function_inventory(
     layer_by_qn = {qn: classification[0] for qn, classification in classification_by_qn.items()}
     review_status_by_qn = {qn: classification[1] for qn, classification in classification_by_qn.items()}
 
+    lifecycle_called_qns = {
+        qn
+        for qn, callers in inbound_by_qn.items()
+        if any(node_by_qn[caller].get("callable_kind") == "implicit_lifecycle_method" for caller in callers)
+    }
     role_tags_by_qn = {
-        qn: _callable_role_tags(qn, node_by_qn[qn], layer_by_qn[qn], review_status_by_qn[qn])
+        qn: _callable_role_tags(
+            qn,
+            node_by_qn[qn],
+            layer_by_qn[qn],
+            review_status_by_qn[qn],
+            is_called_by_lifecycle=qn in lifecycle_called_qns,
+        )
         for qn in node_by_qn
     }
     dependency_role_by_qn = {qn: _primary_dependency_role(tags) for qn, tags in role_tags_by_qn.items()}
@@ -2374,13 +2392,15 @@ def _build_function_inventory(
                 "architectural_role": dependency_role_by_qn[qn],
                 "dependency_role": dependency_role_by_qn[qn],
                 "reachability_kind": (
-                    "implicit_lifecycle_reachable"
-                    if review_status == "implicit_lifecycle"
+                    "public_entrypoint"
+                    if qn in public_qn_set
+                    else "implicit_lifecycle_reachable"
+                    if review_status == "implicit_lifecycle" or qn in lifecycle_called_qns
                     else "unreachable_candidate"
                     if review_status == "unreachable"
                     else "directly_reachable"
                     if used_by_count
-                    else "indirectly_reachable"
+                    else "unknown_or_entrypoint"
                 ),
                 "change_risk": priority,
                 "refined_recommended_action": recommended_action,

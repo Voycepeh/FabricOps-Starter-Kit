@@ -444,6 +444,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert {"audit_time_utility", "shared_internal_service"} <= set(rows_by_qn["fabricops_kit.config._current_audit_timestamp"]["callable_role"])
     assert rows_by_qn["fabricops_kit.config._current_audit_timestamp"]["recommended_action"] != "Architecture violation"
     assert rows_by_qn["fabricops_kit.config._normalize_widget_config"]["recommended_action"] != "Orphaned callable"
+    assert "implicit_lifecycle_reachable" in rows_by_qn["fabricops_kit.config._normalize_widget_config"]["callable_role"]
+    assert "implicit_lifecycle_reachable" not in rows_by_qn["fabricops_kit.config._normalize_path_config"]["callable_role"]
+    assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
     assert any(row["review_status"] == "unreachable" and row["recommended_action"] == "Orphaned callable" and "unreachable_candidate" in row["callable_role"] for row in function_inventory)
     assert all(row["used_by_count"] == row["called_by_count"] for row in function_inventory)
     assert all(

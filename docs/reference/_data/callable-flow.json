@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T09:10:27+00:00",
+  "generated_at": "2026-06-22T09:17:45+00:00",
   "function_inventory": [
     {
       "function_name": "_audit_timestamp_expr",
@@ -587,7 +587,8 @@
           "callable_kind": "function",
           "callable_role": [
             "utility_validator",
-            "low_level_utility"
+            "low_level_utility",
+            "implicit_lifecycle_reachable"
           ],
           "dependency_role": "utility_validator"
         }
@@ -1000,8 +1001,7 @@
           "callable_kind": "function",
           "callable_role": [
             "internal_normalizer",
-            "path_config_normalizer",
-            "implicit_lifecycle_reachable"
+            "path_config_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -1092,8 +1092,7 @@
       "visibility": "private",
       "callable_role": [
         "internal_normalizer",
-        "path_config_normalizer",
-        "implicit_lifecycle_reachable"
+        "path_config_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -1103,7 +1102,6 @@
       "recommended_action": "Inline candidate",
       "priority": "High",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Thin wrapper candidate",
         "Single-use internal helper",
         "Possible inline/private helper"
@@ -1172,7 +1170,7 @@
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
-      "reachability_kind": "directly_reachable",
+      "reachability_kind": "implicit_lifecycle_reachable",
       "change_risk": "Low",
       "refined_recommended_action": "Stable utility",
       "recommended_action": "Stable utility",
@@ -1636,16 +1634,18 @@
       "visibility": "private",
       "callable_role": [
         "utility_validator",
-        "low_level_utility"
+        "low_level_utility",
+        "implicit_lifecycle_reachable"
       ],
       "architectural_role": "utility_validator",
       "dependency_role": "utility_validator",
-      "reachability_kind": "directly_reachable",
+      "reachability_kind": "implicit_lifecycle_reachable",
       "change_risk": "Low",
       "refined_recommended_action": "Stable utility",
       "recommended_action": "Stable utility",
       "priority": "Low",
       "signals": [
+        "implicit_lifecycle_reachability",
         "Leaf internal helper"
       ],
       "architecture_signals": [],
@@ -1824,7 +1824,8 @@
           "callable_kind": "function",
           "callable_role": [
             "utility_validator",
-            "low_level_utility"
+            "low_level_utility",
+            "implicit_lifecycle_reachable"
           ],
           "dependency_role": "utility_validator"
         },
@@ -2117,7 +2118,7 @@
       ],
       "architectural_role": "config_model_class",
       "dependency_role": "config_model_class",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -2294,7 +2295,8 @@
           "callable_kind": "function",
           "callable_role": [
             "utility_validator",
-            "low_level_utility"
+            "low_level_utility",
+            "implicit_lifecycle_reachable"
           ],
           "dependency_role": "utility_validator"
         }
@@ -2390,7 +2392,7 @@
       ],
       "architectural_role": "internal_workflow",
       "dependency_role": "internal_workflow",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -2445,7 +2447,7 @@
       ],
       "architectural_role": "config_model_class",
       "dependency_role": "config_model_class",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -2539,7 +2541,7 @@
       ],
       "architectural_role": "config_model_class",
       "dependency_role": "config_model_class",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -2616,7 +2618,7 @@
       ],
       "architectural_role": "config_model_class",
       "dependency_role": "config_model_class",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -2770,8 +2772,7 @@
           "callable_kind": "function",
           "callable_role": [
             "internal_normalizer",
-            "path_config_normalizer",
-            "implicit_lifecycle_reachable"
+            "path_config_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -2839,7 +2840,7 @@
       ],
       "architectural_role": "config_model_class",
       "dependency_role": "config_model_class",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -3247,7 +3248,7 @@
       ],
       "architectural_role": "config_model_class",
       "dependency_role": "config_model_class",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -3285,7 +3286,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -3545,7 +3546,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -7136,7 +7137,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -7218,7 +7219,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -7300,7 +7301,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8039,7 +8040,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8255,7 +8256,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8307,7 +8308,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8359,7 +8360,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8411,7 +8412,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8463,7 +8464,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8515,7 +8516,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8567,7 +8568,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -8619,7 +8620,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -9342,8 +9343,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -10369,8 +10369,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -11562,8 +11561,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -11611,8 +11609,7 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_normalizer",
-        "implicit_lifecycle_reachable"
+        "internal_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -11622,7 +11619,6 @@
       "recommended_action": "Stable utility",
       "priority": "Protect",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Leaf internal helper",
         "High-fanout helper"
       ],
@@ -12531,8 +12527,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -13285,8 +13280,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -14196,7 +14190,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -14619,7 +14613,7 @@
       ],
       "architectural_role": "internal_workflow",
       "dependency_role": "internal_workflow",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -14674,7 +14668,7 @@
       ],
       "architectural_role": "internal_workflow",
       "dependency_role": "internal_workflow",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -14729,7 +14723,7 @@
       ],
       "architectural_role": "internal_workflow",
       "dependency_role": "internal_workflow",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "High",
       "refined_recommended_action": "Architecture violation",
       "recommended_action": "Architecture violation",
@@ -14934,7 +14928,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -15094,7 +15088,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -15254,7 +15248,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -15479,7 +15473,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -15573,7 +15567,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -15868,8 +15862,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -16353,8 +16346,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -16846,8 +16838,7 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_normalizer",
-        "implicit_lifecycle_reachable"
+        "internal_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -16857,7 +16848,6 @@
       "recommended_action": "Stable utility",
       "priority": "Low",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Leaf internal helper"
       ],
       "architecture_signals": [],
@@ -16913,8 +16903,7 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_normalizer",
-        "implicit_lifecycle_reachable"
+        "internal_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -16924,7 +16913,6 @@
       "recommended_action": "Shared internal helper",
       "priority": "Review",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Shared helper"
       ],
       "architecture_signals": [],
@@ -16944,8 +16932,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -16986,8 +16973,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -17207,8 +17193,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -17316,8 +17301,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -18938,8 +18922,7 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_normalizer",
-        "implicit_lifecycle_reachable"
+        "internal_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -18949,7 +18932,6 @@
       "recommended_action": "Stable utility",
       "priority": "Protect",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Leaf internal helper",
         "High-fanout helper"
       ],
@@ -19045,8 +19027,7 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_normalizer",
-        "implicit_lifecycle_reachable"
+        "internal_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -19056,7 +19037,6 @@
       "recommended_action": "Stable utility",
       "priority": "Low",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Leaf internal helper"
       ],
       "architecture_signals": [],
@@ -19138,8 +19118,7 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_normalizer",
-        "implicit_lifecycle_reachable"
+        "internal_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -19149,7 +19128,6 @@
       "recommended_action": "Inline candidate",
       "priority": "Medium",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Single-use internal helper",
         "Leaf internal helper",
         "Utility but low reuse"
@@ -19908,8 +19886,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         }
@@ -19935,7 +19912,7 @@
       ],
       "architectural_role": "instance_method",
       "dependency_role": "instance_method",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Review manually",
       "recommended_action": "Review manually",
@@ -20012,7 +19989,7 @@
       ],
       "architectural_role": "property_method",
       "dependency_role": "property_method",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "unknown_or_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Keep property accessor",
       "recommended_action": "Keep property accessor",
@@ -20722,8 +20699,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -20736,8 +20712,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -21013,8 +20988,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -21027,8 +21001,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -21284,8 +21257,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -21298,8 +21270,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -21312,8 +21283,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -21451,8 +21421,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -21465,8 +21434,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -24314,8 +24282,7 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_normalizer",
-        "implicit_lifecycle_reachable"
+        "internal_normalizer"
       ],
       "architectural_role": "internal_normalizer",
       "dependency_role": "internal_normalizer",
@@ -24325,7 +24292,6 @@
       "recommended_action": "Inline candidate",
       "priority": "Medium",
       "signals": [
-        "implicit_lifecycle_reachability",
         "Single-use internal helper",
         "Leaf internal helper",
         "Utility but low reuse"
@@ -25664,7 +25630,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -25729,7 +25695,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -25795,7 +25761,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -26215,7 +26181,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -26442,8 +26408,7 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_normalizer",
-            "implicit_lifecycle_reachable"
+            "internal_normalizer"
           ],
           "dependency_role": "internal_normalizer"
         },
@@ -26495,7 +26460,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -26681,7 +26646,7 @@
       ],
       "architectural_role": "public_api_entrypoint",
       "dependency_role": "public_api_entrypoint",
-      "reachability_kind": "indirectly_reachable",
+      "reachability_kind": "public_entrypoint",
       "change_risk": "Review",
       "refined_recommended_action": "Public API entrypoint",
       "recommended_action": "Public API entrypoint",
@@ -26887,7 +26852,7 @@
       "context_model_class": 2,
       "fabric_runtime_probe": 1,
       "high_fanout_shared": 3,
-      "implicit_lifecycle_reachable": 17,
+      "implicit_lifecycle_reachable": 10,
       "instance_method": 2,
       "internal_adapter": 1,
       "internal_normalizer": 9,
