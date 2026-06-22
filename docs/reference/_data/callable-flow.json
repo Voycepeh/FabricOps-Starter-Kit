@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T19:19:49+00:00",
+  "generated_at": "2026-06-22T19:25:51+00:00",
   "function_inventory": [
     {
       "function_name": "_build_categorical_distribution",
@@ -66625,5 +66625,9 @@
       "supporting_functions": 261,
       "non_function_records": 22
     }
+  },
+  "architecture_thresholds": {
+    "long_call_chain_depth": 4,
+    "large_dependency_surface": 10
   }
 }
