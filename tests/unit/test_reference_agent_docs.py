@@ -221,7 +221,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## How the dashboard is generated" in flow_text
     assert "## Refactor signals" in flow_text
     assert "## Exporting an AI refactor prompt" in flow_text
-    assert "[Open the interactive Callable Flow Dashboard](../assets/callable-functions-dashboard.html)" in flow_text
+    assert "[Architecture](../assets/callable-functions-dashboard.html)" in flow_text
+    assert "[Inventory](../assets/callable-functions-inventory.html)" in flow_text
     assert "## Callable helper summary" not in flow_text
     assert "## Internal helper nesting inventory" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
@@ -233,6 +234,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
     inventory_text = inventory_path.read_text(encoding="utf-8")
 
+    assert "Callable Architecture" in dashboard_text
+    assert "Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations." in dashboard_text
+    assert "Inventory" in dashboard_text
     assert "Decision mode: Public API Surface" in dashboard_text
     assert "publicSurfaceCards" in dashboard_text
     assert "publicCallableList" in dashboard_text
@@ -265,7 +269,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in dashboard_text
 
-    assert "Callable Inventory and Refactor Export" in inventory_text
+    assert "Callable Inventory" in inventory_text
+    assert "Search/filter all callables, select rows, and export AI refactor packets." in inventory_text
+    assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
     assert "searchBox" in inventory_text
     assert "kindFilter" in inventory_text
@@ -295,6 +301,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "selectAllVisible" in inventory_text
     assert "$('selectAllVisible').onchange" in inventory_text
     assert "compatibility context / compatibility mode" in inventory_text
+
+    home_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
+    assert "assets/callable-functions-dashboard.html" in home_text
+    assert "assets/callable-functions-inventory.html" in home_text
+    assert "Architecture" in home_text
+    assert "Inventory" in home_text
+    assert "Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations." in home_text
+    assert "Search/filter all callables, select rows, and export AI refactor packets." in home_text
+
+    maintainer_text = (REFERENCE_DIR / "maintainer-guide.md").read_text(encoding="utf-8")
+    assert "[Architecture](../assets/callable-functions-dashboard.html)" in maintainer_text
+    assert "[Inventory](../assets/callable-functions-inventory.html)" in maintainer_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
     assert set(flow_data) == {"generated_at", "function_inventory", "public_entrypoint_flow", "summary_counts"}

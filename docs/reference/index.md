@@ -33,6 +33,8 @@ Use the finder below to look up the 26 public Starter Kit functions. Supporting 
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Public callable flow map](callable-flow.md): global public callable dependency view and nested internal helper summary.
+    - [Architecture](../assets/callable-functions-dashboard.html): review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations.
+    - [Inventory](../assets/callable-functions-inventory.html): search/filter all callables, select rows, and export AI refactor packets.
     - [Implementation modules](../api/modules/): source ownership, module-level dependencies, and utility/internal relationships.
     - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.
     - Agent metadata: `_data/automation-manifest.json`.

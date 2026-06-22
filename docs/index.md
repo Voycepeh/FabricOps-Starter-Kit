@@ -67,7 +67,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 
 ## For maintainers
 
-FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. The Callable Flow Dashboard scans the codebase and visualizes how public functions, internal helpers, and utility functions depend on each other. Use it to identify wrapper candidates, deep helper chains, large dependency surfaces, and public callable dependency issues before they become difficult to unwind.
+FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the callable dashboards to review public API architecture and export raw callable inventory packets.
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="/FabricOps-Starter-Kit/dev/reference/callable-flow/">
@@ -76,9 +76,15 @@ FabricOps Starter Kit includes maintainer tooling to keep the framework clean, e
     <span class="fabricops-landing-card__meta">Read the guide</span>
   </a>
 
-  <a class="fabricops-landing-card" href="/FabricOps-Starter-Kit/dev/assets/callable-functions-dashboard.html">
-    <span class="fabricops-landing-card__title">Callable Flow Dashboard</span>
-    <span class="fabricops-landing-card__body">Inspect callable relationships, review refactor signals, select candidates, and export an AI refactor prompt.</span>
-    <span class="fabricops-landing-card__meta">Open dashboard</span>
+  <a class="fabricops-landing-card" href="assets/callable-functions-dashboard.html">
+    <span class="fabricops-landing-card__title">Architecture</span>
+    <span class="fabricops-landing-card__body">Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations.</span>
+    <span class="fabricops-landing-card__meta">Open Architecture</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="assets/callable-functions-inventory.html">
+    <span class="fabricops-landing-card__title">Inventory</span>
+    <span class="fabricops-landing-card__body">Search/filter all callables, select rows, and export AI refactor packets.</span>
+    <span class="fabricops-landing-card__meta">Open Inventory</span>
   </a>
 </div>
