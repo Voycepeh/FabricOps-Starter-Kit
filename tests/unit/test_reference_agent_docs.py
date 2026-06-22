@@ -1065,7 +1065,7 @@ def _dashboard_flow_tree_rows(flow: dict[str, object]) -> list[str]:
         return (
             int(row.get("depth") or 0),
             str(row.get("module") or ""),
-            str(row.get("callable") or "").lower(),
+            str(row.get("function_name") or "").lower(),
             str(row.get("qualified_name") or ""),
         )
 
