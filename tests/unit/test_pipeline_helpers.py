@@ -605,7 +605,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
 
     monkeypatch.setattr(
         pipeline,
-        "profile_dataframe",
+        "profile_dataframe_core",
         lambda dataframe, **kwargs: [
             {
                 "table_name": kwargs["table_name"],
@@ -683,7 +683,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
 
     monkeypatch.setattr(
         pipeline,
-        "profile_dataframe",
+        "profile_dataframe_core",
         lambda dataframe, **kwargs: [{"table_name": kwargs["table_name"], "column_name": "id", "row_count": dataframe.count()}],
     )
     monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})

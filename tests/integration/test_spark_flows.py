@@ -573,7 +573,7 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
     writes = []
     monkeypatch.setattr(
         pipeline,
-        "write_lakehouse_table",
+        "write_lakehouse_table_core",
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
