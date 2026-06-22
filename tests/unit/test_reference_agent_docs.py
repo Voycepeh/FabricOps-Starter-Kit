@@ -268,7 +268,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionWarningFilter" in dashboard_text
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
-    assert "decisionMinIssues" in dashboard_text
+    assert "Architecture violation type" in dashboard_text
     assert "resetDecisionFilters" in dashboard_text
     assert "compactList" in dashboard_text
     assert "compactBadges" in dashboard_text
@@ -281,7 +281,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Showing flow for" in dashboard_text
     assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in dashboard_text
     assert ".surface-card span{display:block;line-height:1.2" in dashboard_text
-    assert "<th>Callable</th><th>Module</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th><th>Modules</th><th class=\"num\">Issues</th><th>Recommendation</th><th>Warnings</th>" in dashboard_text
+    assert "<th>Public callable</th><th>Module</th><th>Findings</th><th>Why review</th><th>Suggested action</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th>" in dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
@@ -312,10 +312,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in dashboard_text
-    assert "High-priority review candidates" in dashboard_text
-    assert "Clean public flows" in dashboard_text
+    assert "High-priority public callables" in dashboard_text
+    assert "Architecture violations" in dashboard_text
+    assert "Long public flows" in dashboard_text
+    assert "Merge candidates" in dashboard_text
+    assert "Public callables scanned" in dashboard_text
+    assert "Clean public flows" not in dashboard_text
+    assert "Public flows with warnings" not in dashboard_text
     assert "Callables flagged as single-use helper candidates" not in dashboard_text
-    assert "305 Single-use helper candidates" not in dashboard_text
+    assert "305 Merge candidates" not in dashboard_text
     assert "Architecture metrics summarize public entrypoint flow risk." in dashboard_text
 
     assert "Callable Inventory" in inventory_text
@@ -1472,3 +1477,28 @@ def test_callable_layer_dependency_rule_matrix() -> None:
     assert _role_dependency_signals("internal_validator", "internal_workflow") == ["validator_calls_workflow"]
     assert _role_dependency_signals("utility_validator", "internal_workflow") == ["validator_calls_workflow"]
     assert _role_dependency_signals("internal_resolver", "internal_workflow") == ["resolver_calls_workflow"]
+
+
+def test_callable_architecture_layer_rules_and_labels():
+    """Verify callable architecture labels and layer rule helpers."""
+    import scripts.generate_function_reference as generator
+
+    allowed = [
+        ("Public", "Public", "Review"),
+        ("Public", "Internal", "Allowed"),
+        ("Public", "Utility", "Allowed"),
+        ("Internal", "Internal", "Allowed"),
+        ("Internal", "Utility", "Allowed"),
+        ("Utility", "Utility", "Allowed"),
+    ]
+    for caller, callee, result in allowed:
+        assert generator._classify_architecture_edge(caller, callee)["result"] == result
+
+    for caller, callee in [("Internal", "Public"), ("Utility", "Public"), ("Utility", "Internal")]:
+        edge = generator._classify_architecture_edge(caller, callee)
+        assert edge["result"] == "Violation"
+        assert edge["violation_type"] == f"{caller} -> {callee}"
+
+    assert generator._display_label("Cross-layer dependency") == "Architecture violation"
+    assert generator._display_label("Deep chain") == "Long call chain"
+    assert generator._display_label("Single-use helper candidate") == "Merge candidate"
