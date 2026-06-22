@@ -411,6 +411,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Layer consistency" in dashboard_text
     assert "Utility but low reuse" in dashboard_text
     assert "Review the assigned layer against the usage evidence" in dashboard_text
+    assert "Do not treat all internal-to-internal calls as violations" in dashboard_text
+    assert "Only flag role-aware upward dependencies" in dashboard_text
+    assert "workflow-to-workflow coupling" in dashboard_text
+    assert "project-callable dependencies from utility/model layers" in dashboard_text
+    assert "callable_role" in dashboard_text
+    assert "dependency_role" in dashboard_text
+    assert "reachability_kind" in dashboard_text
+    assert "change_risk" in dashboard_text
+    assert "refined_recommended_action" in dashboard_text
+    assert "layer_consistency" in dashboard_text
+    assert "role_aware_review_guidance" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
     assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
@@ -553,6 +564,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         <= set(item)
         for item in function_inventory
     )
+
+    callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
+    assert "Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers" in callable_flow_text
+    assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
+    assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
+    assert "Callable review is no longer based on a blanket" in callable_flow_text
+    assert "internal-to-internal calls as violations" in callable_flow_text
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
