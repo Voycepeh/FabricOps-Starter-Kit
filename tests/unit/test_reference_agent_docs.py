@@ -424,7 +424,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "role_aware_review_guidance" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
+    assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts", "public_entrypoint_flow"}
 
     summary_counts = flow_data["summary_counts"]
     assert {
@@ -691,6 +691,33 @@ def test_standalone_internal_pages_are_not_generated_by_default() -> None:
     internal_pages = sorted((REFERENCE_DIR / "internal").glob("*.md"))
 
     assert internal_pages == []
+
+
+def test_callable_dashboard_public_decision_mode() -> None:
+    """Verify the callable dashboard defaults to public API decision review."""
+    dashboard_text = (ROOT / "docs" / "assets" / "callable-functions-dashboard.html").read_text(encoding="utf-8")
+    flow_data = json.loads((REFERENCE_DIR / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
+
+    assert "Decision mode: Public API Surface" in dashboard_text
+    assert "publicSurfaceCards" in dashboard_text
+    assert "publicCallableList" in dashboard_text
+    assert "callable flow tree" in dashboard_text
+    assert "Advanced filters / Debug view" in dashboard_text
+    assert dashboard_text.index("Decision mode: Public API Surface") < dashboard_text.index("Advanced filters / Debug view")
+    assert "callableRoleFilter" in dashboard_text
+    assert "dependencyRoleFilter" in dashboard_text
+    assert "reachabilityFilter" in dashboard_text
+    assert "Deep chain" in dashboard_text
+    assert "Cross-layer dependency" in dashboard_text
+
+    flows = flow_data["public_entrypoint_flow"]
+    assert flows
+    assert len(flows) == flow_data["summary_counts"]["layer"]["public"]
+    assert all("maximum_chain_depth" in flow for flow in flows)
+    assert all("downstream_callable_count" in flow for flow in flows)
+    assert all("direct_callees" in flow for flow in flows)
+    assert all("depth" in callee for flow in flows for callee in flow["transitive_callees"])
+    assert "public_api_surface" in flow_data["summary_counts"]
 
 
 def test_callable_pages_embed_title_first_collapsed_call_flow() -> None:

@@ -2656,11 +2656,159 @@ def _build_callable_flow_data(
         refactor_inventory,
     )
 
+    public_entrypoint_flow = _build_public_entrypoint_flow(
+        public_qns,
+        calls_by_qn,
+        node_by_qn,
+        module_data,
+        function_inventory,
+    )
+    summary_counts["public_api_surface"] = {
+        "public_api_entrypoints": len(public_entrypoint_flow),
+        "deep_chains": sum(1 for flow in public_entrypoint_flow if flow["maximum_chain_depth"] > 3),
+        "cross_layer_issues": sum(flow["cross_layer_issue_count"] for flow in public_entrypoint_flow),
+        "single_use_helper_candidates": sum(flow["single_use_helper_candidate_count"] for flow in public_entrypoint_flow),
+        "suggested_inline_or_privatize": sum(
+            flow["single_use_helper_candidate_count"] for flow in public_entrypoint_flow
+        ),
+    }
+
     return {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "function_inventory": function_inventory,
         "summary_counts": summary_counts,
+        "public_entrypoint_flow": public_entrypoint_flow,
     }
+
+
+def _build_public_entrypoint_flow(
+    public_qns: list[str],
+    calls_by_qn: dict[str, list[str]],
+    node_by_qn: dict[str, dict[str, Any]],
+    module_data: dict[str, dict[str, Any]],
+    function_inventory: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Build decision-oriented downstream flow trees for public API review."""
+    row_by_qn = {row["qualified_name"]: row for row in function_inventory}
+    inbound_by_qn = _project_inbound_callers(calls_by_qn, node_by_qn)
+
+    def layer_group(row: dict[str, Any]) -> str:
+        role = row.get("dependency_role", "")
+        if row.get("layer") == "public":
+            return "Public API"
+        if row.get("layer") == "internal" or role in {"internal_workflow", "internal_validator", "internal_resolver", "internal_adapter"}:
+            return "Internal workflow/resolver/validator/adapter"
+        if row.get("calls_count", 0) == 0 or len(inbound_by_qn.get(row["qualified_name"], set())) <= 1:
+            return "Leaf/private helper candidates"
+        return "Utility/model/class/method"
+
+    def node_payload(qn: str, depth: int, path: list[str], edge_type: str) -> dict[str, Any]:
+        row = row_by_qn[qn]
+        children_qns = sorted(
+            {callee for callee in calls_by_qn.get(qn, []) if callee in node_by_qn and callee not in path},
+            key=lambda item: (node_by_qn[item]["module_name"], node_by_qn[item]["callable_name"].lower()),
+        )
+        return {
+            "callable": row["function_name"],
+            "qualified_name": qn,
+            "module": row["module"],
+            "depth": depth,
+            "layer": row["function_type"],
+            "layer_group": layer_group(row),
+            "callable_role": row.get("callable_role", []),
+            "dependency_role": row.get("dependency_role"),
+            "edge_type": edge_type,
+            "signals": row.get("signals", []),
+            "architecture_signals": row.get("architecture_signals", []),
+            "recommended_action": row.get("recommended_action"),
+            "downstream_count": len(_reachable_callables(qn, calls_by_qn, node_by_qn)),
+            "source_url": _callable_flow_source_link(qn, module_data),
+            "children": [node_payload(child, depth + 1, [*path, child], "direct_call") for child in children_qns],
+        }
+
+    flows: list[dict[str, Any]] = []
+    for public_qn in public_qns:
+        reachable = _reachable_callables(public_qn, calls_by_qn, node_by_qn)
+        downstream = sorted(reachable - {public_qn})
+        downstream_rows = [row_by_qn[qn] for qn in downstream if qn in row_by_qn]
+        modules = sorted({row["module"] for row in downstream_rows} | {row_by_qn[public_qn]["module"]})
+        maximum_depth = _deepest_call_chain_depth(public_qn, calls_by_qn, node_by_qn)
+        cross_layer = sum(len(row.get("architecture_signals", [])) for row in downstream_rows)
+        single_use = sum(1 for row in downstream_rows if "Single-use internal helper" in row.get("signals", []))
+        warnings = []
+        if maximum_depth > 3:
+            warnings.append("Deep chain")
+        if len(downstream) > 12:
+            warnings.append("Large downstream surface")
+        if len(modules) > 4:
+            warnings.append("Spans many modules")
+        if cross_layer:
+            warnings.append("Cross-layer dependency")
+        if any("internal_workflow_calls_internal_workflow" in row.get("architecture_signals", []) for row in downstream_rows):
+            warnings.append("Internal workflow chain")
+        if any("utility_calls_project_callable" in row.get("signals", []) for row in downstream_rows):
+            warnings.append("Utility calls project-specific logic")
+        if any(sig in row.get("architecture_signals", []) for row in downstream_rows for sig in ["utility_calls_workflow", "model_calls_workflow"]):
+            warnings.append("Utility/model depends upward")
+        if single_use:
+            warnings.append("Single-use helper candidate")
+        if cross_layer:
+            recommendation = "Review cross-layer dependency"
+        elif maximum_depth > 3 or len(downstream) > 12:
+            recommendation = "Keep public but flatten internals"
+        elif single_use:
+            recommendation = "Inline single-use helper"
+        elif len(modules) > 4:
+            recommendation = "Move helper closer to caller"
+        else:
+            recommendation = "Keep public"
+        direct = sorted({callee for callee in calls_by_qn.get(public_qn, []) if callee in node_by_qn})
+        depths = {public_qn: 0}
+        parents: dict[str, str | None] = {public_qn: None}
+        queue = [public_qn]
+        while queue:
+            current = queue.pop(0)
+            for callee in sorted({callee for callee in calls_by_qn.get(current, []) if callee in node_by_qn}):
+                if callee in depths:
+                    continue
+                depths[callee] = depths[current] + 1
+                parents[callee] = current
+                queue.append(callee)
+
+        def path_example(qn: str) -> list[str]:
+            path = [qn]
+            while parents.get(path[-1]):
+                path.append(parents[path[-1]])
+            return [row_by_qn[item]["function_name"] for item in reversed(path)]
+        flows.append({
+            "public_callable": row_by_qn[public_qn]["function_name"],
+            "qualified_name": public_qn,
+            "module": row_by_qn[public_qn]["module"],
+            "downstream_callable_count": len(downstream),
+            "maximum_chain_depth": maximum_depth,
+            "modules_touched_count": len(modules),
+            "modules_touched": modules,
+            "cross_layer_issue_count": cross_layer,
+            "single_use_helper_candidate_count": single_use,
+            "recommended_simplification_action": recommendation,
+            "warnings": warnings,
+            "direct_callees": [node_payload(qn, 1, [public_qn, qn], "direct_call") for qn in direct],
+            "transitive_callees": [
+                {
+                    "callable": row_by_qn[qn]["function_name"],
+                    "qualified_name": qn,
+                    "module": row_by_qn[qn]["module"],
+                    "depth": depths.get(qn, 0),
+                    "layer": row_by_qn[qn]["function_type"],
+                    "layer_group": layer_group(row_by_qn[qn]),
+                    "edge_type": "transitive_call",
+                    "path_examples": [path_example(qn)],
+                }
+                for qn in downstream
+                if qn in row_by_qn
+            ],
+        })
+    return sorted(flows, key=lambda row: row["public_callable"].lower())
 
 
 def _public_callable_docs_url(callable_name: str) -> str:
@@ -2793,6 +2941,18 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
     .tree-row.diagnostic { border-left:4px solid #93c5fd; background:#f8fafc; color:#334155; } .tree-row.diagnostic strong { color:#1d4ed8; } .tree-row.diagnostic:hover, .tree-row.diagnostic:focus-visible, .tree-row.diagnostic.active { background:#eff6ff; border-color:#bfdbfe; border-left-color:#60a5fa; }
     .tree-row.zero-count { color:#64748b; opacity:.62; } .tree-row.zero-count strong { color:#64748b; }
     .helper-text { color: var(--muted); margin: .5rem 0 1rem; }
+    .surface-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:.7rem; margin:1rem 0; }
+    .surface-card { border:1px solid var(--border); border-radius:.9rem; padding:.8rem; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.05); }
+    .surface-card strong { display:block; font-size:1.6rem; color:#1d4ed8; }
+    .decision-table { margin:1rem 0; border:1px solid var(--border); border-radius:.9rem; overflow:auto; }
+    .decision-table table { min-width:1050px; }
+    .flow-panel { margin:.75rem 0; padding:.75rem; border:1px solid var(--border); border-radius:.75rem; background:#f8fafc; }
+    .flow-tree ul { list-style:none; margin:.2rem 0 .2rem 1rem; padding-left:.9rem; border-left:2px solid #dbe4ee; }
+    .flow-node { margin:.18rem 0; padding:.25rem .35rem; border-radius:.45rem; background:#fff; }
+    .warning { background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:999px; padding:.08rem .35rem; font-size:.7rem; font-weight:800; display:inline-block; margin:.06rem; }
+    .decision-action { font-weight:800; color:#1e40af; }
+    .advanced-debug { margin-top:1.25rem; border:1px solid var(--border); border-radius:.9rem; padding:.6rem; background:#f8fafc; }
+    .advanced-debug > summary { cursor:pointer; font-weight:900; font-size:1.05rem; }
     .filter-panel { display: grid; grid-template-columns: minmax(240px, 1.3fr) repeat(8, minmax(130px, .7fr)) auto; gap: .55rem; align-items: end; margin: .75rem 0 1rem; padding: .75rem; border: 1px solid var(--border); border-radius: .9rem; background: #f1f5f9; }
     .filter-field { min-width: 0; display:grid; gap:.25rem; font-weight:700; }
     .filter-field select, .filter-field input { width:100%; box-sizing:border-box; }
@@ -2821,6 +2981,14 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
 </header>
 <main>
   <section id="summaryTree" class="summary-tree" aria-label="Function summary tree"></section>
+  <section aria-labelledby="surfaceHeading">
+    <h2 id="surfaceHeading">Decision mode: Public API Surface</h2>
+    <p class="helper-text">Default review answers: which public callables should remain public, and what internal/helper/utility chain do they drag behind them? Warning markers include Deep chain and Cross-layer dependency.</p>
+    <div id="publicSurfaceCards" class="surface-cards" aria-label="Public API Surface summary card"></div>
+    <div id="publicCallableList" class="decision-table" aria-label="Public callable list grouped by public entrypoint"></div>
+    <div id="publicFlowDetails" aria-live="polite"></div>
+  </section>
+  <details class="advanced-debug" id="advancedDebug"><summary>Advanced filters / Debug view</summary>
   <p class="helper-text"><strong>Architecture review</strong> means dependency direction may break the public -&gt; workflow -&gt; utility/model rule. <strong>Protect</strong> means high fanout, public, lifecycle, or model callables should not be casually refactored. <strong>Inline candidate</strong> means possible cleanup only if readability improves and tests exist.</p>
   <section class="filter-panel" aria-label="Inventory filters">
     <label class="filter-field search">Callable <input id="searchBox" type="search" placeholder="Search callables"></label>
@@ -2849,9 +3017,10 @@ def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
   </section>
   <p id="resultCount"></p>
   <section class="table-wrap" aria-label="Combined callable inventory"><table><thead><tr><th class="col-select"><input id="selectAllVisible" type="checkbox" aria-label="Select all visible rows"></th><th class="col-callable"><button type="button" data-sort="function_name">Callable</button></th><th class="col-module"><button type="button" data-sort="module">Module</button></th><th class="col-role">Role</th><th class="col-reach"><button type="button" data-sort="reachability_kind">Reachability</button></th><th class="col-action">Recommended action</th><th class="col-risk"><button type="button" data-sort="priority">Risk</button></th><th class="col-used-by num"><button type="button" data-sort="used_by_count">Callers</button></th><th class="col-calls num"><button type="button" data-sort="calls_count">Callees</button></th></tr></thead><tbody id="inventoryBody"></tbody></table></section>
+  </details>
 </main>
 <script>
-let inventory = []; let summary = {}; const actionLegend = {
+let inventory = []; let summary = {}; let publicFlows = []; const actionLegend = {
   "Public API entrypoint": "Supported user-facing API surface; no inbound project calls are required.",
   "Shared internal helper": "Internal implementation helper used by multiple public or internal callers; protect with focused tests before changing.",
   "Stable utility": "Low-level leaf helper with multiple inbound callers; keep generic and project-callable free.",
@@ -2933,15 +3102,15 @@ function countSignal(signal) { return countBy(i=>(i.architecture_signals || []).
 function summarySectionKey(title) { return text(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 function renderCountSection(title, rows) { const key=summarySectionKey(title); const open=state.openSummarySections.has(key)?' open':''; return `<details class="legend" data-summary-section="${esc(key)}"${open}><summary data-summary-header="${esc(key)}">${esc(title)}</summary><ul>${rows.join('')}</ul></details>`; }
 function renderTreeSummary() {
-  const needs=[['action:Architecture violation','Architecture review', actionPredicate('Architecture violation')], ['action:Orphaned callable','Orphan candidates', actionPredicate('Orphaned callable')], ['action:Inline candidate','Inline candidates', actionPredicate('Inline candidate')], ['action:Review manually','Manual review', actionPredicate('Manual review')]];
-  const protect=[['role:public_api_entrypoint','Public API entrypoints', rolePredicate('public_api_entrypoint')], ['role:shared_internal_service','Shared internal services', rolePredicate('shared_internal_service')], ['role:config_model_class','Config model classes', rolePredicate('config_model_class')], ['role:result_context_model','Result/context model classes', i=>hasRole(i,'result_model_class') || hasRole(i,'context_model_class') || i.dependency_role==='result_model_class' || i.dependency_role==='context_model_class'], ['role:lifecycle_method','Lifecycle methods', rolePredicate('lifecycle_method')], ['action:Stable utility','Stable utilities', actionPredicate('Stable utility')]];
+  const surface=summary.public_api_surface || {}; const needs=[['action:Architecture violation','Cross-layer issues', actionPredicate('Architecture violation')], ['action:Inline candidate','Inline candidates / Single-use helpers', actionPredicate('Inline candidate')], ['action:Review manually','Needs action', actionPredicate('Manual review')], ['action:Orphaned callable','Orphan candidates', actionPredicate('Orphaned callable')]];
+  const protect=[['role:public_api_entrypoint','Public API surface', rolePredicate('public_api_entrypoint')], ['role:shared_internal_service','Shared internal services', rolePredicate('shared_internal_service')], ['role:config_model_class','Config model classes', rolePredicate('config_model_class')], ['role:result_context_model','Result/context model classes', i=>hasRole(i,'result_model_class') || hasRole(i,'context_model_class') || i.dependency_role==='result_model_class' || i.dependency_role==='context_model_class'], ['role:lifecycle_method','Lifecycle methods', rolePredicate('lifecycle_method')], ['action:Stable utility','Stable utilities', actionPredicate('Stable utility')]];
   const health=[['role:unknown','Unknown role', rolePredicate('unknown')], ['role:unreachable_candidate','Unreachable candidate', rolePredicate('unreachable_candidate')], ['reach:classification_pending','Classification pending', i=>i.reachability_kind==='classification_pending' || i.review_status==='classification_pending'], ['signal:allowed_internal_role_call','Allowed internal role calls', i=>(i.architecture_signals || []).includes('allowed_internal_role_call')]];
   const grouped=(title, rows, tone)=>`<h3 class="${esc(tone)}">${esc(title)}</h3><ul>${rows.map(([key,label,pred])=>treeButton(key,label,countBy(pred),tone)).join('')}</ul>`;
   const layers=unique([...Object.keys(summary.function_type || {}), ...inventory.map(i=>i.function_type)]).map(label=>treeButton(`type:${label}`, label, summaryCount('function_type', label, i=>i.function_type===label), 'diagnostic'));
   const kinds=unique([...Object.keys(summary.callable_kind || {}), ...inventory.map(i=>i.callable_kind)]).map(label=>treeButton(`kind:${label}`, text(label).replace(/^./, c=>c.toUpperCase()), summaryCount('callable_kind', label, i=>i.callable_kind===label), 'diagnostic'));
   const consistency=Object.entries(layerConsistencyLabels).filter(([key])=>(summary.layer_consistency?.[key] ?? countBy(i=>i.layer_consistency===key))>0).map(([key,label])=>treeButton(`consistency:${key}`, label, summaryCount('layer_consistency', key, i=>i.layer_consistency===key), 'diagnostic'));
   const raw=unique([...inventory.flatMap(i=>i.architecture_signals || []), ...inventory.flatMap(i=>i.review_signals || []), ...inventory.flatMap(i=>i.signals || [])]).map(sig=>treeButton(`signal:${sig}`, reasonLabels[sig] || sig, countSignal(sig), 'diagnostic'));
-  $('summaryTree').innerHTML=`<h2>Action-oriented summary</h2><ul class="summary-total">${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul>${grouped('Needs action', needs, 'needs-action')}${grouped('Protect / keep stable', protect, 'protect-stable')}${grouped('Classification health', health, 'diagnostic')}${renderCountSection('Layer counts', layers)}${renderCountSection('Callable kind counts', kinds)}${renderCountSection('Layer consistency counts', consistency)}${renderCountSection('Raw signal counts', raw)}`;
+  $('summaryTree').innerHTML=`<h2>Action-oriented summary</h2><ul class="summary-total">${treeButton('total','Total callables', inventory.length || summary.total_callables || summary.total_functions || 0)}</ul>${grouped('Needs action', needs, 'needs-action')}<h3 class="needs-action">Deep chains</h3><ul>${treeButton('signal:deep_chain','Deep chains', surface.deep_chains || 0, 'needs-action')}</ul>${grouped('Protect / keep stable', protect, 'protect-stable')}<h3 class="protect-stable">Keep stable</h3>${grouped('Classification health', health, 'diagnostic')}${renderCountSection('Layer counts', layers)}${renderCountSection('Callable kind counts', kinds)}${renderCountSection('Layer consistency counts', consistency)}${renderCountSection('Raw signal counts', raw)}`;
 }
 function renderLegend() { $('actionLegendGrid').innerHTML=`<div><strong>Kind</strong><p class="hint">Kind describes what the object is structurally: function, class, or method.</p></div><div><strong>Layer</strong><p class="hint">Layer describes the intended architecture role: Public API, Internal helper, or Utility.</p></div><div><strong>Usage evidence</strong><p class="hint">Used by count shows how many discovered callables call this callable. Calls count shows how many discovered callables this callable calls.</p></div><div><strong>Layer consistency</strong><p class="hint">Layer consistency compares the assigned layer against the observed call graph. A utility should normally be broadly reusable, low level, and dependency safe. A utility with low reuse, or an internal helper with high reuse, is marked for layer review instead of being automatically accepted.</p></div><div><strong>Recommended action</strong><p class="hint">Recommended action is the cleanup suggestion used for review and export.</p></div>`+Object.entries(actionLegend).map(([l,d])=>`<div><span class="badge review">${esc(l)}</span><p class="hint">${esc(d)}</p></div>`).join(''); }
 function populateRecommendedActionFilter() { const present=new Set(inventory.map(i=>i.recommended_action).filter(Boolean)); USER_FACING_RECOMMENDED_ACTIONS.filter(v=>present.has(v)).forEach(v=>option($('signalFilter'),v)); }
@@ -2966,14 +3135,21 @@ async function copyExport(format) { const items=selectedItems(); if(!items.lengt
 function downloadJson() { const items=selectedItems(); if(!items.length){ $('exportStatus').textContent='Select at least one callable to export.'; return; } const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/T/,'_').slice(0,15); const blob=new Blob([JSON.stringify(refactorPacket(), null, 2)], {type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fabricops_refactor_packet_${stamp}.json`; link.click(); URL.revokeObjectURL(link.href); $('exportStatus').textContent=`Downloaded JSON for ${items.length} callables.`; }
 function renderExportToolbar(rows) { const selected=selectedItems().length, visible=rows.filter(i=>state.selected.has(i.qualified_name)).length; $('selectedCount').textContent=`Selected: ${selected} callables${selected && visible!==selected?`, ${visible} visible`:''}`; ['copyJson','copyMarkdown','downloadJson'].forEach(id=>$(id).disabled=!selected); const allVisible=rows.length>0 && rows.every(i=>state.selected.has(i.qualified_name)); const selectAll=$('selectAllVisible'); selectAll.checked=allVisible; selectAll.indeterminate=!allVisible && rows.some(i=>state.selected.has(i.qualified_name)); }
 function renderTable() { const rows=filteredRows().sort(compare); renderExportToolbar(rows); $('resultCount').textContent=`Showing ${rows.length} of ${inventory.length} discovered callables.`; $('inventoryBody').innerHTML=rows.map(i=>{ const id=i.qualified_name; return `<tr><td class="col-select"><input type="checkbox" data-select-row="${esc(id)}" aria-label="Select ${esc(i.function_name)}" ${state.selected.has(id)?'checked':''}></td><td class="col-callable function-name" title="${esc(i.qualified_name)}"><a href="${esc(i.source_url || '#')}"><code>${esc(i.function_name)}</code></a><br><small>${esc(i.callable_kind)} · ${esc(i.review_status_label || i.review_status)}</small></td><td class="col-module module-cell"><code>${esc(i.module)}</code></td><td class="col-role"><span class="chip-wrap">${(i.callable_role || [i.dependency_role || 'unknown']).map(r=>`<span class="tag">${esc(r)}</span>`).join('')}</span></td><td class="col-reach"><span class="badge review">${esc(i.reachability_kind || 'unknown')}</span></td><td class="col-action"><span class="chip-wrap"><span class="badge review" title="${esc(signalReason(i))}">${esc(i.recommended_action)}</span></span></td><td class="col-risk"><span class="badge review">${esc(i.priority || i.change_risk || 'Review')}</span></td><td class="col-used-by num">${esc(i.used_by_count ?? i.called_by_count)}</td><td class="col-calls num">${esc(i.calls_count)}</td></tr>`; }).join(''); }
+
+function warningBadges(warnings) { return (warnings || []).map(w=>`<span class="warning">⚠ ${esc(w)}</span>`).join('') || '<span class="badge protect">No warning markers</span>'; }
+function renderPublicSurfaceCards() { const surface=summary.public_api_surface || {}; const cards=[['Public API entrypoints', surface.public_api_entrypoints ?? publicFlows.length], ['Deep chains', surface.deep_chains ?? 0], ['Cross-layer issues', surface.cross_layer_issues ?? 0], ['Single-use helpers', surface.single_use_helper_candidates ?? 0], ['Inline / privatize suggestions', surface.suggested_inline_or_privatize ?? 0]]; $('publicSurfaceCards').innerHTML=cards.map(([label,value])=>`<div class="surface-card"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join(''); }
+function flowNode(node) { const children=(node.children || []).map(flowNode).join(''); return `<li><div class="flow-node"><strong>${esc(node.callable)}</strong> <small>${esc(node.module)} · depth ${esc(node.depth)} · ${esc(node.layer_group || node.layer)}</small> ${warningBadges((node.architecture_signals || []).concat((node.signals || []).filter(s=>s==='Single-use internal helper')))}</div>${children?`<ul>${children}</ul>`:''}</li>`; }
+function renderPublicFlowDetails(flow) { if(!flow){ $('publicFlowDetails').innerHTML='<p class="helper-text">Select a public callable to inspect its downstream flow tree.</p>'; return; } $('publicFlowDetails').innerHTML=`<section class="flow-panel"><h3>${esc(flow.public_callable)} callable flow tree</h3><p><code>${esc(flow.qualified_name)}</code> touches <strong>${esc(flow.downstream_callable_count)}</strong> downstream callables across <strong>${esc(flow.modules_touched_count)}</strong> modules. Recommendation: <span class="decision-action">${esc(flow.recommended_simplification_action)}</span></p><p>${warningBadges(flow.warnings)}</p><div class="flow-tree"><ul><li><div class="flow-node"><strong>${esc(flow.public_callable)}</strong> <small>${esc(flow.module)} · Public API · depth 0</small></div><ul>${(flow.direct_callees || []).map(flowNode).join('') || '<li>—</li>'}</ul></li></ul></div></section>`; }
+function renderPublicCallableList() { const rows=publicFlows.map(flow=>`<tr><td><button type="button" data-public-flow="${esc(flow.qualified_name)}"><code>${esc(flow.public_callable)}</code></button></td><td><code>${esc(flow.module)}</code></td><td class="num">${esc(flow.downstream_callable_count)}</td><td class="num">${esc(flow.maximum_chain_depth)}</td><td class="num">${esc(flow.modules_touched_count)}</td><td class="num">${esc(flow.cross_layer_issue_count)}</td><td><span class="decision-action">${esc(flow.recommended_simplification_action)}</span><br>${warningBadges(flow.warnings)}</td></tr>`).join(''); $('publicCallableList').innerHTML=`<table><thead><tr><th>Callable name</th><th>Module</th><th>Downstream callable count</th><th>Maximum chain depth</th><th>Modules touched</th><th>Cross-layer issues</th><th>Recommended simplification action</th></tr></thead><tbody>${rows}</tbody></table>`; renderPublicFlowDetails(publicFlows[0]); }
+function renderDecisionMode() { renderPublicSurfaceCards(); renderPublicCallableList(); }
 function updateCompatibilityHelp() { $('compatibilityHelp').textContent=compatibilityContext().description; }
 function update() { syncTreeActive(); renderTreeSummary(); renderTable(); } function resetFilters() { state.search=state.type=state.kind=state.review_status=state.module=state.signal=state.consistency=state.callable_role=state.dependency_role=state.reachability_kind=''; state.activeTree=''; ['searchBox','kindFilter','typeFilter','reviewStatusFilter','moduleFilter','signalFilter','callableRoleFilter','dependencyRoleFilter','reachabilityFilter'].forEach(id=>$(id).value=''); update(); }
 function applyTree(key) { if(key.startsWith('role:')) { resetFilters(); state.callable_role=key.slice(5); $('callableRoleFilter').value=state.callable_role; state.activeTree=key; update(); return; } if(key.startsWith('reach:')) { resetFilters(); state.reachability_kind=key.slice(6); $('reachabilityFilter').value=state.reachability_kind; state.activeTree=key; update(); return; } if(key.startsWith('signal:')) { resetFilters(); state.activeTree=key; update(); return; } state.search=''; state.type=''; state.kind=''; state.review_status=''; state.module=''; state.signal=''; state.consistency=''; state.activeTree=key; $('searchBox').value=''; if(key.startsWith('type:')) state.type=key.slice(5); if(key.startsWith('kind:')) state.kind=key.slice(5); if(key.startsWith('review:')) state.review_status=key.slice(7); if(key.startsWith('action:')) state.signal=key.slice(7); if(key.startsWith('consistency:')) state.consistency=key.slice(12); $('kindFilter').value=state.kind ? state.kind[0].toUpperCase()+state.kind.slice(1) : ''; $('typeFilter').value=state.type; $('reviewStatusFilter').value=state.review_status; $('moduleFilter').value=state.module; $('signalFilter').value=state.signal; update(); }
 $('searchBox').addEventListener('input', e=>{state.search=e.target.value; update();});
 $('kindFilter').addEventListener('change', e=>{state.kind=e.target.value.toLowerCase(); state.activeTree=''; update();}); $('typeFilter').addEventListener('change', e=>{state.type=e.target.value; state.activeTree=''; update();}); $('reviewStatusFilter').addEventListener('change', e=>{state.review_status=e.target.value; state.activeTree=''; update();}); $('moduleFilter').addEventListener('change', e=>{state.module=e.target.value; state.activeTree=''; update();}); $('compatibilityMode').addEventListener('change', e=>{state.compatibility_mode=e.target.value; updateCompatibilityHelp();}); $('selectVisible').addEventListener('click', ()=>{filteredRows().forEach(i=>state.selected.add(i.qualified_name)); renderTable();}); $('clearSelected').addEventListener('click', ()=>{state.selected.clear(); renderTable(); $('exportStatus').textContent='Selection cleared.';}); $('copyJson').addEventListener('click', ()=>copyExport('json').catch(e=>{$('exportStatus').textContent=`Unable to copy JSON: ${e.message}`;})); $('copyMarkdown').addEventListener('click', ()=>copyExport('markdown').catch(e=>{$('exportStatus').textContent=`Unable to copy Markdown: ${e.message}`;})); $('downloadJson').addEventListener('click', downloadJson); $('selectAllVisible').addEventListener('change', e=>{const rows=filteredRows(); rows.forEach(i=>e.target.checked?state.selected.add(i.qualified_name):state.selected.delete(i.qualified_name)); renderTable();}); $('signalFilter').addEventListener('change', e=>{state.signal=e.target.value; state.activeTree=''; update();}); $('callableRoleFilter').addEventListener('change', e=>{state.callable_role=e.target.value; state.activeTree=''; update();}); $('dependencyRoleFilter').addEventListener('change', e=>{state.dependency_role=e.target.value; state.activeTree=''; update();}); $('reachabilityFilter').addEventListener('change', e=>{state.reachability_kind=e.target.value; state.activeTree=''; update();}); $('resetFilters').addEventListener('click', resetFilters);
-document.addEventListener('click', e=>{ const sort=e.target.closest('[data-sort]'); if(sort){ const k=sort.dataset.sort; state.sortDir=state.sortKey===k?state.sortDir*-1:1; state.sortKey=k; update(); } const toggle=e.target.closest('[data-toggle]'); if(toggle){ const id=toggle.dataset.toggle; state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id); renderTable(); } const rowSelect=e.target.closest('[data-select-row]'); if(rowSelect){ rowSelect.checked?state.selected.add(rowSelect.dataset.selectRow):state.selected.delete(rowSelect.dataset.selectRow); renderTable(); } const tree=e.target.closest('[data-tree]'); if(tree){ e.stopPropagation(); applyTree(tree.dataset.tree); } });
+document.addEventListener('click', e=>{ const sort=e.target.closest('[data-sort]'); if(sort){ const k=sort.dataset.sort; state.sortDir=state.sortKey===k?state.sortDir*-1:1; state.sortKey=k; update(); } const toggle=e.target.closest('[data-toggle]'); if(toggle){ const id=toggle.dataset.toggle; state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id); renderTable(); } const rowSelect=e.target.closest('[data-select-row]'); if(rowSelect){ rowSelect.checked?state.selected.add(rowSelect.dataset.selectRow):state.selected.delete(rowSelect.dataset.selectRow); renderTable(); } const tree=e.target.closest('[data-tree]'); if(tree){ e.stopPropagation(); applyTree(tree.dataset.tree); } const publicFlowButton=e.target.closest('[data-public-flow]'); if(publicFlowButton){ const flow=publicFlows.find(item=>item.qualified_name===publicFlowButton.dataset.publicFlow); renderPublicFlowDetails(flow); } });
 document.addEventListener('toggle', e=>{ const section=e.target.closest?.('[data-summary-section]'); if(!section) return; section.open?state.openSummarySections.add(section.dataset.summarySection):state.openSummarySections.delete(section.dataset.summarySection); }, true);
-async function loadData() { try { const response=await fetch('../reference/_data/callable-flow.json'); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data=await response.json(); inventory=data.function_inventory || data.refactor_inventory || []; summary=data.summary_counts || {}; renderTreeSummary(); renderLegend(); updateCompatibilityHelp(); populateFilters(); renderTable(); } catch(error) { $('resultCount').textContent=`Unable to load callable-flow JSON: ${error.message}`; } } loadData();
+async function loadData() { try { const response=await fetch('../reference/_data/callable-flow.json'); if(!response.ok) throw new Error(`HTTP ${response.status}`); const data=await response.json(); inventory=data.function_inventory || data.refactor_inventory || []; summary=data.summary_counts || {}; publicFlows=data.public_entrypoint_flow || []; renderTreeSummary(); renderDecisionMode(); renderLegend(); updateCompatibilityHelp(); populateFilters(); renderTable(); } catch(error) { $('resultCount').textContent=`Unable to load callable-flow JSON: ${error.message}`; } } loadData();
 </script>
 </body>
 </html>
