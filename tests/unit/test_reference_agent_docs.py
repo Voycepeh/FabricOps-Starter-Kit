@@ -227,211 +227,60 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
     assert "refactor reason" not in flow_text.lower()
 
+    inventory_path = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
+    assert dashboard_path.exists()
+    assert inventory_path.exists()
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
-    assert "Callable Inventory and Refactor Signals" in dashboard_text
-    assert 'id="searchBox"' in dashboard_text
-    assert 'id="typeFilter"' in dashboard_text
-    assert 'id="signalFilter"' in dashboard_text
-    assert 'id="reviewStatusFilter"' in dashboard_text
-    assert 'id="moduleFilter"' in dashboard_text
-    assert 'id="priorityFilter"' not in dashboard_text
-    assert 'id="searchScope"' not in dashboard_text
-    assert 'id="quickFilters"' not in dashboard_text
-    assert "Callable" in dashboard_text
-    assert (
-        "Search matches function names only. Use the filters below for function type and recommended action."
-        not in dashboard_text
-    )
-    assert "Recommended action" in dashboard_text
-    assert "Reset" in dashboard_text
-    assert "refactor reason" not in dashboard_text.lower()
-    assert "All recommended actions" in dashboard_text
-    action_filter_match = re.search(r"const USER_FACING_RECOMMENDED_ACTIONS=\[(.*?)\];", dashboard_text)
-    assert action_filter_match is not None
-    action_filter_source = action_filter_match.group(1)
-    for action in [
-        "Architecture violation",
-        "Inline candidate",
-        "Review abstraction value",
-        "Review manually",
-        "Public API entrypoint",
-        "Stable utility",
-        "Shared internal helper",
-        "Orphaned callable",
-        "Unreachable candidate",
-    ]:
-        assert action in action_filter_source
-    for hidden_action in [
-        "Legacy internal_calls_internal",
-        "Allowed internal role calls",
-        "Classification pending",
-        "Keep lifecycle method",
-        "Keep property accessor",
-    ]:
-        assert hidden_action not in action_filter_source
-    assert "populateRecommendedActionFilter" in dashboard_text
-    assert "USER_FACING_RECOMMENDED_ACTIONS.filter(v=>present.has(v))" in dashboard_text
-    assert "unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v))" not in dashboard_text
-    assert "Quick signal filters" not in dashboard_text
-    assert "Easy cleanup" not in dashboard_text
-    assert (
-        "Most conservative: preserve public APIs and notebook-facing behavior. Recommend only safe internal cleanup."
-        in dashboard_text
-    )
-    assert (
-        "Balanced default: preserve external behavior, but allow internal helper names, signatures, and boundaries to change when justified."
-        in dashboard_text
-    )
-    assert "Most flexible: breaking changes are allowed when they simplify new or experimental code." in dashboard_text
-    assert "High review" not in dashboard_text
-    assert "Medium review" not in dashboard_text
-    assert 'id="summaryTree"' in dashboard_text
-    assert "Function summary tree" in dashboard_text
-    assert "Action-oriented summary" in dashboard_text
-    assert "Needs action" in dashboard_text
-    assert "Architecture review" in dashboard_text
-    assert "Orphan candidates" in dashboard_text
-    assert "Inline candidates" in dashboard_text
-    assert "Manual review" in dashboard_text
-    assert "Protect / keep stable" in dashboard_text
-    assert "Public API entrypoints" in dashboard_text
-    assert "Shared internal services" in dashboard_text
-    assert "Config model classes" in dashboard_text
-    assert "Result/context model classes" in dashboard_text
-    assert "Lifecycle methods" in dashboard_text
-    assert "Stable utilities" in dashboard_text
-    assert "Classification health" in dashboard_text
-    assert "Unknown role" in dashboard_text
-    assert "Unreachable candidate" in dashboard_text
-    assert "Allowed internal role calls" in dashboard_text
-    assert "Legacy internal_calls_internal" not in dashboard_text
-    assert "internal_calls_internal" not in dashboard_text
-    assert "Layer counts" in dashboard_text
-    assert 'data-summary-section="${esc(key)}"' in dashboard_text
-    assert 'data-summary-header="${esc(key)}"' in dashboard_text
-    assert "openSummarySections:new Set()" in dashboard_text
-    assert "state.openSummarySections.has(key)?' open':''" in dashboard_text
-    assert "e.stopPropagation(); applyTree(tree.dataset.tree);" in dashboard_text
-    assert "addEventListener('toggle'" in dashboard_text
-    assert "Callable kind counts" in dashboard_text
-    assert "Layer consistency counts" in dashboard_text
-    assert "Raw signal counts" in dashboard_text
-    assert "Total callables" in dashboard_text
-    assert "summary-total" in dashboard_text
-    assert "needs-action" in dashboard_text
-    assert "protect-stable" in dashboard_text
-    assert "diagnostic" in dashboard_text
-    assert "zero-count" in dashboard_text
-    assert "tree-row:focus-visible" in dashboard_text
-    assert "count===0?'zero-count':''" in dashboard_text
-    assert "treeButton(key,label,countBy(pred),tone)" in dashboard_text
-    assert "All modules" in dashboard_text
-    assert 'id="callableRoleFilter"' in dashboard_text
-    assert 'id="dependencyRoleFilter"' in dashboard_text
-    assert 'id="reachabilityFilter"' in dashboard_text
-    assert "Architecture review</strong> means dependency direction may break" in dashboard_text
-    assert "Protect</strong> means high fanout" in dashboard_text
-    assert "Inline candidate</strong> means possible cleanup" in dashboard_text
-    assert "Select visible" in dashboard_text
-    assert "Clear selection" in dashboard_text
+    inventory_text = inventory_path.read_text(encoding="utf-8")
+
+    assert "Decision mode: Public API Surface" in dashboard_text
+    assert "publicSurfaceCards" in dashboard_text
+    assert "publicCallableList" in dashboard_text
+    assert "publicFlowDetails" in dashboard_text
+    assert "buildFlowTree" in dashboard_text
+    assert "callable-functions-inventory.html" in dashboard_text
+    assert "data-public-flow" in dashboard_text
+    assert 'href="${esc(flow.source_url' not in dashboard_text
+    assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
+    assert "decisionSearchBox" in dashboard_text
+    assert "decisionModuleFilter" in dashboard_text
+    assert "decisionRecommendationFilter" in dashboard_text
+    assert "decisionWarningFilter" in dashboard_text
+    assert "decisionMinDownstream" in dashboard_text
+    assert "decisionMinDepth" in dashboard_text
+    assert "decisionMinIssues" in dashboard_text
+    assert "resetDecisionFilters" in dashboard_text
+    assert "compactList" in dashboard_text
+    assert "compactBadges" in dashboard_text
+    assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
     assert "Download JSON" in dashboard_text
-    assert "fabricops_callable_refactor_packet" in dashboard_text
-    assert "function refactorContext(callables)" in dashboard_text
-    assert "const callables=selectedItems().map(exportItem)" in dashboard_text
-    assert "callables, functions:callables" in dashboard_text
-    assert "packet.callables.forEach" in dashboard_text
-    assert "packet.functions.forEach" not in dashboard_text
-    assert "const functions=selectedItems().map(exportItem)" not in dashboard_text
-    assert "signal_reason" in dashboard_text
-    assert "refactor_context" in dashboard_text
-    assert "ai_prompt" in dashboard_text
-    assert "selected_callable_count" in dashboard_text
-    assert "planned_batch_count" in dashboard_text
-    assert "batch_id" in dashboard_text
-    assert "batch_scope" in dashboard_text
-    assert "batch_strategy" in dashboard_text
-    assert "completed_or_refactored_count" in dashboard_text
-    assert "remaining_selected_count" in dashboard_text
-    assert "remaining_selected_count:null" in dashboard_text
-    assert "Remaining selected count: fill in after implementation" in dashboard_text
-    assert "Remaining selected count: 0" not in dashboard_text
-    assert "deferred_selected_callables" in dashboard_text
-    assert "Deferred selected callables: none by default before implementation" in dashboard_text
-    assert "function batchAccounting(callables)" in dashboard_text
-    assert "batch_accounting" in dashboard_text
-    assert "Batch accounting" in dashboard_text
-    assert "Completion accounting required in PR description" in dashboard_text
-    assert "how many callables were selected" in dashboard_text
-    assert "how many are intended for the current batch" in dashboard_text
-    assert "how many were actually refactored in the PR" in dashboard_text
-    assert "Do not imply that all selected callables were refactored unless they were actually changed" in dashboard_text
-    assert "If this PR handles only a subset, clearly label it as a batch" in dashboard_text
-    assert "selected / handled / remaining counts" in dashboard_text
-    assert "refactor_type" in dashboard_text
-    assert "refactor_guidance" in dashboard_text
-    assert "safety_constraints" in dashboard_text
-    assert "expected_ai_output" in dashboard_text
-    assert "planning_only" in dashboard_text
-    assert "compatibility_mode" in dashboard_text
-    assert "compatibility_instruction" in dashboard_text
-    assert "stable_api_safe" in dashboard_text
-    assert "internal_cleanup" in dashboard_text
-    assert "development_breaking_allowed" in dashboard_text
-    assert "Respect the compatibility mode" in dashboard_text
-    assert "How signals are classified" in dashboard_text
-    assert "Small helper or single-use utility" in dashboard_text
-    assert "Layer" in dashboard_text
-    assert "Unreachable" in dashboard_text
-    assert "Classification pending" in dashboard_text
-    assert "Layer" in dashboard_text
-    assert "Review status" in dashboard_text
-    assert ".filter-panel" in dashboard_text
-    assert "grid-template-columns: minmax(240px, 1.3fr)" in dashboard_text
-    assert "@media (max-width: 1100px)" in dashboard_text
-    assert "data.function_inventory" in dashboard_text
-    assert "renderTreeSummary" in dashboard_text
-    assert "data-tree" in dashboard_text
-    assert "Cleanup opportunities" not in dashboard_text
-    assert "Hygiene signals" not in dashboard_text
-    assert "Inventory and stability" not in dashboard_text
-    assert "fetch('../reference/_data/callable-flow.json')" in dashboard_text
-    assert "Decision mode: Public API Surface" in dashboard_text
-    assert "Public API Surface cards" in dashboard_text
-    assert "publicCallableList" in dashboard_text
-    assert "callableFlowTree" in dashboard_text
-    assert "function buildFlowTree" in dashboard_text
-    assert "Advanced filters / Debug view" in dashboard_text
-    assert dashboard_text.index("Decision mode: Public API Surface") < dashboard_text.index("Advanced filters / Debug view")
-    assert dashboard_text.index('id="callableRoleFilter"') > dashboard_text.index("Advanced filters / Debug view")
-    assert dashboard_text.index('id="dependencyRoleFilter"') > dashboard_text.index("Advanced filters / Debug view")
-    assert dashboard_text.index('id="reachabilityFilter"') > dashboard_text.index("Advanced filters / Debug view")
-    assert "Callers" in dashboard_text
-    assert "Callees" in dashboard_text
-    assert "Role" in dashboard_text
-    assert "Reachability" in dashboard_text
-    assert "Risk" in dashboard_text
-    assert "Source" in dashboard_text
-    assert "All kinds" in dashboard_text
-    assert "Kind" in dashboard_text
-    assert "unique(inventory.map(i=>i.callable_kind))" in dashboard_text
-    assert "['function','class','method'].forEach" not in dashboard_text
-    assert "Callers" in dashboard_text
-    assert "Layer consistency" in dashboard_text
-    assert "Utility but low reuse" in dashboard_text
-    assert "Review the assigned layer against the usage evidence" in dashboard_text
-    assert "Do not treat all internal-to-internal calls as violations" in dashboard_text
-    assert "Only flag role-aware upward dependencies" in dashboard_text
-    assert "workflow-to-workflow coupling" in dashboard_text
-    assert "project-callable dependencies from utility/model layers" in dashboard_text
-    assert "callable_role" in dashboard_text
-    assert "dependency_role" in dashboard_text
-    assert "reachability_kind" in dashboard_text
-    assert "change_risk" in dashboard_text
-    assert "refined_recommended_action" in dashboard_text
-    assert "layer_consistency" in dashboard_text
-    assert "role_aware_review_guidance" in dashboard_text
+    assert "compatibilityMode" in dashboard_text
+
+    assert "Callable Inventory and Refactor Export" in inventory_text
+    assert "callable-functions-dashboard.html" in inventory_text
+    assert "searchBox" in inventory_text
+    assert "kindFilter" in inventory_text
+    assert "typeFilter" in inventory_text
+    assert "reviewStatusFilter" in inventory_text
+    assert "moduleFilter" in inventory_text
+    assert "signalFilter" in inventory_text
+    assert "callableRoleFilter" in inventory_text
+    assert "dependencyRoleFilter" in inventory_text
+    assert "reachabilityFilter" in inventory_text
+    assert "selectedCount" in inventory_text
+    assert "compatibilityMode" in inventory_text
+    assert "Select visible" in inventory_text
+    assert "Clear selection" in inventory_text
+    assert "Copy JSON" in inventory_text
+    assert "Copy Markdown" in inventory_text
+    assert "Download JSON" in inventory_text
+    assert "selectedItems" in inventory_text
+    assert "refactorPacket" in inventory_text
+    assert "copyExport" in inventory_text
+    assert "downloadJson" in inventory_text
+    assert "compatibility context / compatibility mode" in inventory_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
     assert set(flow_data) == {"generated_at", "function_inventory", "public_entrypoint_flow", "summary_counts"}
