@@ -48,6 +48,8 @@ Internal helpers are not part of the stable public API. Internal functions, clas
 Use these pages after confirming the v1.0.0 public API release contract:
 
 - [Callable Functions Flow](callable-flow.md): generated callable relationships and flow context for maintainers.
+- [Architecture](../assets/callable-functions-dashboard.html): review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations.
+- [Inventory](../assets/callable-functions-inventory.html): search/filter all callables, select rows, and export AI refactor packets.
 - [Release Management](../development/release-management.md): release process and checklist guidance.
 - [Release Traceability](../release-info.md): published release traceability and release evidence.
 - [Documentation Versioning](../development/docs-versioning.md): docs versioning expectations for release preparation.

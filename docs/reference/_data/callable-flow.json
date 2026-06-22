@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T14:43:14+00:00",
+  "generated_at": "2026-06-22T15:21:33+00:00",
   "function_inventory": [
     {
       "function_name": "_build_categorical_distribution",
@@ -38741,7 +38741,6 @@
         "Deep chain",
         "Large downstream surface",
         "Single-use helper candidate",
-        "Spans many modules",
         "Utility/model depends upward"
       ],
       "direct_callees": [
@@ -43295,7 +43294,6 @@
         "Internal workflow chain",
         "Large downstream surface",
         "Single-use helper candidate",
-        "Spans many modules",
         "Utility/model depends upward"
       ],
       "direct_callees": [
@@ -44860,7 +44858,6 @@
         "Internal workflow chain",
         "Large downstream surface",
         "Single-use helper candidate",
-        "Spans many modules",
         "Utility/model depends upward"
       ],
       "direct_callees": [
@@ -46425,7 +46422,6 @@
         "Internal workflow chain",
         "Large downstream surface",
         "Single-use helper candidate",
-        "Spans many modules",
         "Utility/model depends upward"
       ],
       "direct_callees": [
@@ -48306,7 +48302,6 @@
         "Internal workflow chain",
         "Large downstream surface",
         "Single-use helper candidate",
-        "Spans many modules",
         "Utility/model depends upward"
       ],
       "direct_callees": [
@@ -49973,7 +49968,6 @@
         "Internal workflow chain",
         "Large downstream surface",
         "Single-use helper candidate",
-        "Spans many modules",
         "Utility/model depends upward"
       ],
       "direct_callees": [
@@ -52630,7 +52624,6 @@
         "Internal workflow chain",
         "Large downstream surface",
         "Single-use helper candidate",
-        "Spans many modules",
         "Utility/model depends upward"
       ],
       "direct_callees": [
@@ -55890,8 +55883,7 @@
       "warnings": [
         "Deep chain",
         "Large downstream surface",
-        "Single-use helper candidate",
-        "Spans many modules"
+        "Single-use helper candidate"
       ],
       "direct_callees": [
         {
@@ -57507,8 +57499,7 @@
         "Deep chain",
         "Internal workflow chain",
         "Large downstream surface",
-        "Single-use helper candidate",
-        "Spans many modules"
+        "Single-use helper candidate"
       ],
       "direct_callees": [
         {
