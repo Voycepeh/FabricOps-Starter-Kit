@@ -555,6 +555,38 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     )
 
 
+
+def test_callable_flow_docs_and_export_prompt_are_role_aware() -> None:
+    """Verify callable-flow guidance matches the role-aware classifier."""
+    page_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
+    dashboard_text = (ROOT / "docs" / "assets" / "callable-functions-dashboard.html").read_text(encoding="utf-8")
+
+    assert "Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers" in page_text
+    assert "Public callables → Internal helpers → Utility callables" not in page_text
+    assert "The dependency rule is intentionally simple" not in page_text
+    assert "Callable review is no longer based on a blanket" in page_text
+    assert "workflow-to-workflow coupling" in page_text
+    assert "implicit lifecycle and property accessor methods that should not be treated as ordinary orphans" in page_text
+    assert "Allowed internal role calls can be valid" in page_text
+
+    assert "Only flag role-aware upward dependencies, workflow-to-workflow coupling" in dashboard_text
+    assert "Do not treat all internal-to-internal calls as violations" in dashboard_text
+    assert "role_aware_review_guidance" in dashboard_text
+    for field in (
+        "callable_role",
+        "dependency_role",
+        "reachability_kind",
+        "change_risk",
+        "refined_recommended_action",
+        "layer_consistency",
+    ):
+        assert field in dashboard_text
+    assert "Callable role:" in dashboard_text
+    assert "Dependency role:" in dashboard_text
+    assert "Reachability kind:" in dashboard_text
+    assert "Change risk:" in dashboard_text
+    assert "Refined recommended action:" in dashboard_text
+
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
     """Verify structured refactor signals are generated for public guardrail orchestration."""
     signal_path = REFERENCE_DIR / "_data" / "refactor-signals.json"
