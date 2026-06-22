@@ -568,8 +568,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers" in callable_flow_text
     assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
     assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
-    assert "Callable review is no longer based on a blanket" in callable_flow_text
-    assert "internal-to-internal calls as violations" in callable_flow_text
+    assert "Callable review is role-aware" in callable_flow_text
+    assert "Internal-to-internal calls are valid" in callable_flow_text
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:

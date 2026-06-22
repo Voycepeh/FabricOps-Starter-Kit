@@ -1,6 +1,6 @@
 # Callable Flow Dashboard
 
-AI coding tools make it easy to add callables quickly. That speed is useful, but it can also create too many entry points, thin wrappers, nested helpers, and confusing cross-layer dependencies. The Callable Flow Dashboard makes those relationships visible so maintainers can plan focused cleanup before the codebase becomes harder to explain.
+AI coding tools make it easy to add callables quickly. That speed is useful, and it needs clear architecture guardrails. The Callable Flow Dashboard shows entry points, thin wrappers, nested helpers, and cross-layer dependencies so maintainers can plan focused cleanup work.
 
 <div align="center" markdown="1">
 
@@ -18,7 +18,7 @@ FabricOps keeps notebook-facing APIs small and explainable. A callable should ha
 Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers
 ```
 
-Callable review is no longer based on a blanket "internal calls internal is bad" rule, and it should not treat all internal-to-internal calls as violations. The classifier distinguishes public API entrypoints, internal workflows, adapters, validators, resolvers, normalizers, services, utilities, model classes, lifecycle methods, property accessors, reachability kinds, dependency roles, and allowed internal role calls.
+Callable review is role-aware. Internal-to-internal calls are valid when the dependency direction is intentional and the helper role is clear. The classifier distinguishes public API entrypoints, internal workflows, adapters, validators, resolvers, normalizers, services, utilities, model classes, lifecycle methods, property accessors, reachability kinds, dependency roles, and allowed internal role calls.
 
 The intent is:
 
@@ -53,7 +53,7 @@ Use the dashboard signals to find patterns that deserve review:
 
 ## Refactor signals
 
-Refactor signals are warnings generated from the callable graph. They do not automatically mean the code is wrong or that a callable must be changed. Instead, they help guard against architecture drift from the role-aware callable model and identify where cleanup should be reviewed before changes are made.
+Refactor signals are warnings generated from the callable graph. They do not automatically mean the code is wrong or that a callable must be changed. They highlight role-aware architecture drift and identify where cleanup should be reviewed.
 
 ### EG. Pointless wrapper
 
@@ -93,7 +93,7 @@ The dashboard supports selecting callables with refactor signals so users can bu
 
 *Exporting a structured callable refactor packet.*
 
-Selected callables can be exported as a structured callable refactor packet for AI tools or Codex. The packet is a planning and execution aid: it summarizes architecture intent, compatibility mode, selected callable evidence, requested work, expected output, and batch accounting. It is not automatic proof that a callable must be changed. Maintainers should still inspect the callable, review direct and downstream dependencies, preserve expected public behavior, and decide whether to keep, inline, move, privatize, simplify, or intentionally leave the callable unchanged.
+Selected callables export as structured callable refactor packets for AI tools or Codex. Each packet is a planning and execution aid that summarizes architecture intent, compatibility mode, selected callable evidence, requested work, expected output, and batch accounting. It is not automatic proof that a callable must be changed. Maintainers inspect the callable, review direct and downstream dependencies, preserve expected public behavior, and decide whether to keep, inline, move, privatize, simplify, or intentionally leave the callable unchanged.
 
 ??? example "Example exported callable refactor packet"
 
