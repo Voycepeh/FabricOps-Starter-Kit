@@ -233,11 +233,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert 'id="typeFilter"' in dashboard_text
     assert 'id="signalFilter"' in dashboard_text
     assert 'id="reviewStatusFilter"' in dashboard_text
-    assert 'id="moduleFilter"' not in dashboard_text
+    assert 'id="moduleFilter"' in dashboard_text
     assert 'id="priorityFilter"' not in dashboard_text
     assert 'id="searchScope"' not in dashboard_text
     assert 'id="quickFilters"' not in dashboard_text
-    assert "Search callable name" in dashboard_text
+    assert "Callable" in dashboard_text
     assert (
         "Search matches function names only. Use the filters below for function type and recommended action."
         not in dashboard_text
@@ -263,6 +263,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Function summary tree" in dashboard_text
     assert "Callable inventory" in dashboard_text
     assert "Total callables" in dashboard_text
+    assert "All modules" in dashboard_text
+    assert "module:state.module" in dashboard_text
     assert "Select visible" in dashboard_text
     assert "Clear selection" in dashboard_text
     assert "Copy JSON" in dashboard_text
@@ -313,10 +315,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Respect the compatibility mode" in dashboard_text
     assert "How signals are classified" in dashboard_text
     assert "Small helper or single-use utility" in dashboard_text
-    assert "Callable layer" in dashboard_text
+    assert "Layer" in dashboard_text
     assert "Unreachable" in dashboard_text
     assert "Classification pending" in dashboard_text
-    assert "Architecture layer" in dashboard_text
+    assert "Layer" in dashboard_text
     assert "Review status" in dashboard_text
     assert ".filter-panel" in dashboard_text
     assert "grid-template-columns: minmax(240px, 1.3fr)" in dashboard_text
@@ -331,14 +333,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Callers" in dashboard_text
     assert "Callees" in dashboard_text
     assert "Source" in dashboard_text
-    assert "All callable kinds" in dashboard_text
-    assert "Callable kind" in dashboard_text
+    assert "All kinds" in dashboard_text
+    assert "Kind" in dashboard_text
     assert "unique(inventory.map(i=>i.callable_kind))" in dashboard_text
     assert "['function','class','method'].forEach" not in dashboard_text
     assert "Used by" in dashboard_text
     assert "Layer consistency" in dashboard_text
     assert "Utility but low reuse" in dashboard_text
-    assert "Review the assigned callable layer against the usage evidence" in dashboard_text
+    assert "Review the assigned layer against the usage evidence" in dashboard_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
     assert set(flow_data) == {"generated_at", "function_inventory", "summary_counts"}
