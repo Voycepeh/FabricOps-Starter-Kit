@@ -159,7 +159,7 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
     from tests.helpers import framework_config
 
     writes = []
-    monkeypatch.setattr(governance, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
+    monkeypatch.setattr(governance, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
     profile_rows = [
         {
             "environment_name": "dev",
@@ -225,7 +225,7 @@ def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_sess
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
     metadata_df = _dq_metadata_df(spark_session, [])
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
     result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
@@ -246,8 +246,8 @@ def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_sess
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
     metadata_df = _dq_metadata_df(spark_session, [])
     writes = []
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
-    monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
+    monkeypatch.setattr(metadata, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-1", write_results=False)
     assert writes == []
@@ -289,7 +289,7 @@ def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, mo
             }
         ],
     )
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
     result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
@@ -355,7 +355,7 @@ def test__run_active_dq_guardrail_warning_failure_adds_technical_columns_and_pre
             },
         ],
     )
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
     result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
     tagged_rows = {row["order_id"]: row.asDict() for row in result["dataframe"].collect()}
@@ -403,7 +403,7 @@ def test__run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatc
             }
         ],
     )
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
     result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
@@ -462,7 +462,7 @@ def test__run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed
             },
         ],
     )
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
     result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
@@ -500,7 +500,7 @@ def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessi
             }
         ],
     )
-    monkeypatch.setattr(governance, "read_lakehouse_table", lambda *args, **kwargs: metadata_df)
+    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
     result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
@@ -515,7 +515,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
     from fabricops_kit import pipeline
 
     writes = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
     profile_df = profile_dataframe(df, "orders")
 
@@ -544,7 +544,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     from fabricops_kit import metadata
 
     writes = []
-    monkeypatch.setattr(metadata, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(metadata, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     metadata._write_guardrail_result_row(
         spark_session=spark_session,

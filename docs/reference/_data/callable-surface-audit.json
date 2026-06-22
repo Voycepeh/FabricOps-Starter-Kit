@@ -89,9 +89,7 @@
     ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "run_table_guardrails"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
     "decision": "template_called_public"
   },
@@ -134,9 +132,7 @@
     ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": true,
-    "called_only_internally_by_public_helper": [
-      "get_latest_metadata_catalogue"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
     "decision": "template_called_public"
   },
@@ -359,10 +355,7 @@
       "example_dq_rule_smoke_test"
     ],
     "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [
-      "write_pipeline_lineage",
-      "write_pipeline_run_summary"
-    ],
+    "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
     "decision": "template_called_public"
   },

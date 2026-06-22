@@ -56,7 +56,7 @@ Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail res
     </tr>
     <tr>
       <td>External modules this module uses</td>
-      <td><code>config</code>, <code>data_agreement</code>, <code>data_profiling</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>guardrails</code>, <code>metadata</code></td>
+      <td><code>config</code>, <code>data_agreement</code>, <code>data_profiling</code>, <code>governance_review</code>, <code>guardrails</code>, <code>io_core</code>, <code>metadata</code></td>
     </tr>
   </tbody>
 </table>
@@ -383,16 +383,16 @@ None.
 <a class="reference-chip" href="data_agreement/#get_selected_agreement"><code>get_selected_agreement</code></a>, <a class="reference-chip" href="data_agreement/#widget_select_agreement"><code>widget_select_agreement</code></a>
 
 **data_profiling**
-<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
-
-**fabric_input_output**
-<a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+<a class="reference-chip" href="data_profiling/#profile_dataframe_core"><code>profile_dataframe_core</code></a>
 
 **governance_review**
 <a class="reference-chip" href="governance_review/#_run_active_dq_guardrail"><code>_run_active_dq_guardrail</code></a>
 
 **guardrails**
 <a class="reference-chip" href="guardrails/#enforce_freshness"><code>enforce_freshness</code></a>, <a class="reference-chip" href="guardrails/#enforce_freshness_rule"><code>enforce_freshness_rule</code></a>, <a class="reference-chip" href="guardrails/#enforce_profile_behavior"><code>enforce_profile_behavior</code></a>, <a class="reference-chip" href="guardrails/#stop_if_failed"><code>stop_if_failed</code></a>
+
+**io_core**
+<a class="reference-chip" href="io_core/#configured_lakehouse_schema"><code>configured_lakehouse_schema</code></a>
 
 **metadata**
 <a class="reference-chip" href="metadata/#_build_metadata_table_key"><code>_build_metadata_table_key</code></a>, <a class="reference-chip" href="metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

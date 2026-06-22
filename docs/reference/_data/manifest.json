@@ -50,6 +50,13 @@
       "sidebar_include": true
     },
     {
+      "module_name": "io_core",
+      "visibility": "internal",
+      "module_summary": "Owns lower-level Fabric IO implementations shared by package internals.",
+      "sidebar_group": "Internal architecture",
+      "sidebar_include": true
+    },
+    {
       "module_name": "metadata",
       "visibility": "public",
       "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",

@@ -782,9 +782,9 @@ def enforce_profile_behavior(
 
     """
     if rules_df is None and config is not None and env is not None:
-        from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table
+        from fabricops_kit.io_core import configured_lakehouse_schema, read_lakehouse_table_core
         try:
-            rules_df = read_lakehouse_table(rules_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark)
+            rules_df = read_lakehouse_table_core(rules_table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark)
         except Exception as exc:
             if not _is_missing_table_error(exc):
                 raise
@@ -809,9 +809,9 @@ def enforce_profile_behavior(
         raise ValueError("profile_mode must be one of: static_data, changing_data, skip")
 
     if catalogue_df is None and config is not None and env is not None:
-        from fabricops_kit.fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table
+        from fabricops_kit.io_core import configured_lakehouse_schema, read_lakehouse_table_core
         try:
-            catalogue_df = read_lakehouse_table(metadata_table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark)
+            catalogue_df = read_lakehouse_table_core(metadata_table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark)
         except Exception as exc:
             if _is_missing_table_error(exc):
                 catalogue_df = None
@@ -827,8 +827,8 @@ def enforce_profile_behavior(
     effective_exclude_columns = _guardrail_exclude_columns(exclude_columns)
     if mode == "static_data":
         if current_profile is None:
-            from fabricops_kit.data_profiling import profile_dataframe
-            current_profile = profile_dataframe(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
+            from fabricops_kit.data_profiling import profile_dataframe_core
+            current_profile = profile_dataframe_core(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
         payload = _profile_payload_from_profile(current_profile, dataframe=dataframe, watermark_column="", watermark_value="__FULL_TABLE__")
         evidence_rows.append({"watermark_column": "", "watermark_value": "__FULL_TABLE__", "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
     else:
@@ -837,10 +837,10 @@ def enforce_profile_behavior(
         if not hasattr(dataframe, "filter") or not hasattr(dataframe, "select"):
             raise ValueError("changing_data profile behavior requires a Spark-like DataFrame")
         values = [row[0] for row in dataframe.select(watermark_column).distinct().collect()]
-        from fabricops_kit.data_profiling import profile_dataframe
+        from fabricops_kit.data_profiling import profile_dataframe_core
         for value in sorted(values, key=lambda item: str(item)):
             group_df = dataframe.filter(dataframe[watermark_column] == value)
-            group_profile = profile_dataframe(group_df, table_name, exclude_columns=effective_exclude_columns, config=config)
+            group_profile = profile_dataframe_core(group_df, table_name, exclude_columns=effective_exclude_columns, config=config)
             payload = _profile_payload_from_profile(group_profile, dataframe=group_df, watermark_column=watermark_column, watermark_value=_string_value(value))
             evidence_rows.append({"watermark_column": watermark_column, "watermark_value": _string_value(value), "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
 

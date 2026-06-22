@@ -179,7 +179,7 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
         assert context["env"] == "dev"
         writes.append((table, df))
 
-    monkeypatch.setattr(gr, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(gr, "write_lakehouse_table_core", write_table)
 
     result = gr.record_table_governance(
         framework_config(),
@@ -277,7 +277,7 @@ def test_catalogue_profile_loader_uses_physical_identity_helper(monkeypatch):
         calls.append(row)
         return original(row)
 
-    monkeypatch.setattr(gr, "read_lakehouse_table", lambda *args, **kwargs: rows)
+    monkeypatch.setattr(gr, "read_lakehouse_table_core", lambda *args, **kwargs: rows)
     monkeypatch.setattr(gr, "_catalogue_physical_identity", tracking_identity)
 
     loaded = gr.load_catalogue_profile_rows(framework_config(), "dev", selection, spark_session=None)

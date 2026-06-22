@@ -1096,7 +1096,7 @@ def _setup_metadata_table_registry(
     metadata_schema: str | None = None,
 ) -> dict[str, Any]:
     """Create missing metadata tables through configured lakehouse IO helpers."""
-    from fabricops_kit.fabric_input_output import read_lakehouse_table, write_lakehouse_table
+    from fabricops_kit.io_core import read_lakehouse_table_core, write_lakehouse_table_core
     from fabricops_kit.governance_review import _is_table_not_found_error
 
     created: list[str] = []
@@ -1105,7 +1105,7 @@ def _setup_metadata_table_registry(
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(
+            table = read_lakehouse_table_core(
                 table_name, target="metadata", context={"config": config, "env": env}, **read_kwargs
             )
         except Exception as exc:
@@ -1114,7 +1114,7 @@ def _setup_metadata_table_registry(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc
             empty_df = spark.createDataFrame([], schema=schema)
-            write_lakehouse_table(
+            write_lakehouse_table_core(
                 empty_df,
                 table_name,
                 target="metadata",
@@ -1126,7 +1126,7 @@ def _setup_metadata_table_registry(
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:
                 read_kwargs["schema"] = metadata_schema
-            table = read_lakehouse_table(
+            table = read_lakehouse_table_core(
                 table_name, target="metadata", context={"config": config, "env": env}, **read_kwargs
             )
             created.append(table_name)
@@ -1152,7 +1152,7 @@ def _validate_metadata_table_registration(
     metadata_schema: str | None = None,
 ) -> dict[str, Any]:
     """Validate active metadata tables through configured metadata target reads."""
-    from fabricops_kit.fabric_input_output import read_lakehouse_table
+    from fabricops_kit.io_core import read_lakehouse_table_core
 
     normalized = _validate_framework_config(config)
     expected = list(expected_tables or _get_active_metadata_tables(normalized))
@@ -1164,7 +1164,7 @@ def _validate_metadata_table_registration(
             read_kwargs = {"spark_session": spark}
             if resolved_metadata_schema is not None:
                 read_kwargs["schema"] = resolved_metadata_schema
-            read_lakehouse_table(table, target="metadata", context={"config": config, "env": env}, **read_kwargs)
+            read_lakehouse_table_core(table, target="metadata", context={"config": config, "env": env}, **read_kwargs)
         except Exception:
             missing.append(table)
     nested_paths = _detect_nested_metadata_delta_folders(config=normalized, env=env, expected_tables=expected)

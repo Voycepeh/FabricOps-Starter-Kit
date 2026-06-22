@@ -56,7 +56,7 @@ Owns schema, freshness, and profile behavior checks as pipeline guardrails durin
     </tr>
     <tr>
       <td>External modules this module uses</td>
-      <td><code>data_profiling</code>, <code>fabric_input_output</code>, <code>metadata</code></td>
+      <td><code>data_profiling</code>, <code>io_core</code>, <code>metadata</code></td>
     </tr>
   </tbody>
 </table>
@@ -317,10 +317,10 @@ No public exports in this module.
 ### External callees
 
 **data_profiling**
-<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="data_profiling/#profile_dataframe_core"><code>profile_dataframe_core</code></a>
 
-**fabric_input_output**
-<a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>
+**io_core**
+<a class="reference-chip" href="io_core/#configured_lakehouse_schema"><code>configured_lakehouse_schema</code></a>
 
 **metadata**
 <a class="reference-chip" href="metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

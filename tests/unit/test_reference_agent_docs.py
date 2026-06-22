@@ -841,9 +841,10 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "Used in 1 notebook" not in text
     assert "Used by 1 public function" not in text
     assert "internal helpers" not in text
-    assert "Calls 1 public function" in text
+    assert "Calls 1 public function" not in text
     assert "nested helper functions" in text
-    assert '<a href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a>' in text
+    assert 'href="../api/reference/profile_dataframe/"' in text
+    assert "<code>profile_dataframe</code>" in text
 
 
 def test_module_badges_pluralize_external_module_counts() -> None:

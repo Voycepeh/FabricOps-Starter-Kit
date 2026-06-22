@@ -162,18 +162,7 @@ def _resolve_lakehouse_table_identifier(store: FabricStore, table_name: str, sch
     return f"{schema_name}.{table_name}" if schema_name else table_name
 
 
-def _configured_lakehouse_schema(config, env: str, target: str) -> str | None:
-    """Return the configured schema for a lakehouse target, if enabled."""
-    try:
-        store = _get_store(config, env, target)
-    except ValueError:
-        return None
-    if store.kind != "lakehouse" or not getattr(store, "schema_enabled", False):
-        return None
-    return _normalize_schema_name(getattr(store, "schema", None))
-
-
-def _read_lakehouse_table_core(table_name: str, *, target: str, schema: str | None, spark_session=None, context: dict[str, Any] | None = None):
+def _read_lakehouse_table_core(table_name: str, *, target: str, schema: str | None = None, spark_session=None, context: dict[str, Any] | None = None):
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_lakehouse_store(store, env, target)

@@ -9,8 +9,8 @@ import uuid
 from typing import Any, Iterable, Mapping
 
 from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
-from .fabric_input_output import _configured_lakehouse_schema, read_lakehouse_table, write_lakehouse_table
-from .data_profiling import profile_dataframe
+from .io_core import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+from .data_profiling import profile_dataframe_core
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row
 from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
@@ -147,10 +147,10 @@ def get_latest_metadata_catalogue(
         return [{"status": "not_found", "table_name": requested_table, "message": message}]
 
     try:
-        catalogue_df = read_lakehouse_table(
+        catalogue_df = read_lakehouse_table_core(
             CATALOGUE_TABLE,
             target="metadata",
-            schema=metadata_schema or _configured_lakehouse_schema(config, env, "metadata"),
+            schema=metadata_schema or configured_lakehouse_schema(config, env, "metadata"),
             context=resolved_context,
             spark_session=spark_session,
         )
@@ -372,7 +372,7 @@ def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
-    rows = _coerce_rows(read_lakehouse_table(CATALOGUE_TABLE, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
+    rows = _coerce_rows(read_lakehouse_table_core(CATALOGUE_TABLE, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
     selection_identity = _catalogue_physical_identity(selection)
     filtered = []
     for row in rows:
@@ -691,11 +691,11 @@ def build_enrichment_rule_records(
 def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
     """Append descriptive enrichment intent only to ``METADATA_ENRICHMENT_RULES``."""
     if records:
-        write_lakehouse_table(
+        write_lakehouse_table_core(
             spark_session.createDataFrame(records),
             ENRICHMENT_RULES_TABLE,
             target="metadata",
-            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            schema=configured_lakehouse_schema(config, env, "metadata"),
             context={"config": config, "env": env},
             mode="append",
         )
@@ -854,7 +854,7 @@ def _status_is_warning(value: Any) -> bool:
 
 
 def _read_metadata_rows(config: Any, env: str, table: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    return _coerce_rows(read_lakehouse_table(table, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
+    return _coerce_rows(read_lakehouse_table_core(table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
 
 
 def _evaluate_governance_readiness(
@@ -1094,7 +1094,7 @@ def record_table_governance(
     }
     for table_name, records in writes.items():
         if records:
-            write_lakehouse_table(spark_session.createDataFrame(records), table_name, target="metadata", schema=_configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
+            write_lakehouse_table_core(spark_session.createDataFrame(records), table_name, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
 
     readiness_summary = None
     if evaluate_readiness:
@@ -1490,8 +1490,8 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
     """Read current DQ guardrail rules from the configured metadata target."""
-    schema = _configured_lakehouse_schema(config, env, "metadata")
-    frame = read_lakehouse_table(GUARDRAIL_RULES_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
+    schema = configured_lakehouse_schema(config, env, "metadata")
+    frame = read_lakehouse_table_core(GUARDRAIL_RULES_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
     if "guardrail_type" in set(getattr(frame, "columns", [])):
         _, F, _ = _spark_sql_helpers()
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
@@ -1588,7 +1588,7 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
-        profile_df = profile_dataframe(df, table_name=table_name, config=config)
+        profile_df = profile_dataframe_core(df, table_name=table_name, config=config)
     cols = set(profile_df.columns)
     if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
         return profile_df
@@ -1917,10 +1917,10 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
     """Read a metadata table and return row dictionaries."""
     try:
-        frame = read_lakehouse_table(
+        frame = read_lakehouse_table_core(
             table_name,
             target="metadata",
-            schema=_configured_lakehouse_schema(config, env, "metadata"),
+            schema=configured_lakehouse_schema(config, env, "metadata"),
             context={"config": config, "env": env},
             spark_session=spark_session,
         )
@@ -1977,11 +1977,11 @@ def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str,
     """Append rule records to ``METADATA_GUARDRAIL_RULES``."""
     if not records:
         return
-    write_lakehouse_table(
+    write_lakehouse_table_core(
         spark_session.createDataFrame(records),
         GUARDRAIL_RULES_TABLE,
         target="metadata",
-        schema=_configured_lakehouse_schema(config, env, "metadata"),
+        schema=configured_lakehouse_schema(config, env, "metadata"),
         context={"config": config, "env": env},
         mode="append",
     )

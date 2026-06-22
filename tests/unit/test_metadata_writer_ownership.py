@@ -18,10 +18,10 @@ def _function_source(path: str, function_name: str) -> str:
     raise AssertionError(f"{function_name} not found in {path}")
 
 
-def _calls_write_lakehouse_table(source: str) -> bool:
-    """Return whether source calls write_lakehouse_table directly."""
+def _calls_write_lakehouse_table_core(source: str) -> bool:
+    """Return whether source calls write_lakehouse_table_core directly."""
     tree = ast.parse(source)
-    return any(isinstance(node, ast.Call) and getattr(node.func, "id", "") == "write_lakehouse_table" for node in ast.walk(tree))
+    return any(isinstance(node, ast.Call) and getattr(node.func, "id", "") == "write_lakehouse_table_core" for node in ast.walk(tree))
 
 
 
@@ -48,7 +48,7 @@ def test_catalogue_writer_targets_catalogue_only():
     """Verify catalogue writer writes observed evidence to catalogue only."""
     source = _function_source("pipeline.py", "write_catalogue_evidence")
 
-    assert _calls_write_lakehouse_table(source)
+    assert _calls_write_lakehouse_table_core(source)
     assert "metadata_table: str = CATALOGUE_TABLE" in source
     assert "GUARDRAIL_RULES_TABLE" not in source
     assert "GUARDRAIL_RESULTS_TABLE" not in source
@@ -60,7 +60,7 @@ def test_runtime_result_writers_target_guardrail_results_only():
     """Verify runtime outcome writers target METADATA_GUARDRAIL_RESULTS only."""
     for path, function_name in [("metadata.py", "_write_guardrail_result_row")]:
         source = _function_source(path, function_name)
-        assert _calls_write_lakehouse_table(source)
+        assert _calls_write_lakehouse_table_core(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
         assert "GUARDRAIL_RULES_TABLE" not in source
 
@@ -132,7 +132,7 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef) and node.name.startswith("widget_"):
                 function_source = ast.get_source_segment(source, node) or ""
-                assert "write_lakehouse_table" not in function_source, f"{path}:{node.name} writes metadata directly"
+                assert "write_lakehouse_table_core" not in function_source, f"{path}:{node.name} writes metadata directly"
                 if node.name in {"widget_author_schema_freshness_profile_rules", "widget_author_dq_rules"}:
                     assert "CATALOGUE_TABLE" not in function_source
                     assert "GUARDRAIL_RESULTS_TABLE" not in function_source

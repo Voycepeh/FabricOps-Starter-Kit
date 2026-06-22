@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 21</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 10 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 21</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 11 external modules</span></div>
 
 ## Module purpose
 
@@ -44,7 +44,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Used by external module count</td>
-      <td>10</td>
+      <td>11</td>
     </tr>
     <tr>
       <td>Uses external module count</td>
@@ -52,11 +52,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>External modules using this module</td>
-      <td><code>DataAgreementConfig</code>, <code>FrameworkConfig</code>, <code>GovernanceConfig</code>, <code>data_agreement</code>, <code>data_lineage</code>, <code>data_profiling</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>metadata</code>, <code>pipeline</code></td>
+      <td><code>DataAgreementConfig</code>, <code>FrameworkConfig</code>, <code>GovernanceConfig</code>, <code>data_agreement</code>, <code>data_lineage</code>, <code>data_profiling</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>io_core</code>, <code>metadata</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External modules this module uses</td>
-      <td><code>data_agreement</code>, <code>fabric_input_output</code>, <code>governance_review</code></td>
+      <td><code>data_agreement</code>, <code>governance_review</code>, <code>io_core</code></td>
     </tr>
   </tbody>
 </table>
@@ -321,13 +321,16 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <a class="reference-chip" href="data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a>
 
 **data_profiling**
-<a class="reference-chip" href="../reference/profile_dataframe/"><code>profile_dataframe</code></a>
+<a class="reference-chip" href="data_profiling/#profile_dataframe_core"><code>profile_dataframe_core</code></a>
 
 **fabric_input_output**
-<a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_lakehouse_csv_core"><code>_read_lakehouse_csv_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_lakehouse_excel_core"><code>_read_lakehouse_excel_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_lakehouse_parquet_core"><code>_read_lakehouse_parquet_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_lakehouse_table_core"><code>_read_lakehouse_table_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_warehouse_query_core"><code>_read_warehouse_query_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_warehouse_table_core"><code>_read_warehouse_table_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_write_lakehouse_table_core"><code>_write_lakehouse_table_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_write_warehouse_table_core"><code>_write_warehouse_table_core</code></a>
+<a class="reference-chip" href="fabric_input_output/#_read_lakehouse_csv_core"><code>_read_lakehouse_csv_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_lakehouse_excel_core"><code>_read_lakehouse_excel_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_lakehouse_parquet_core"><code>_read_lakehouse_parquet_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_lakehouse_table_core"><code>_read_lakehouse_table_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_warehouse_query_core"><code>_read_warehouse_query_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_read_warehouse_table_core"><code>_read_warehouse_table_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_write_lakehouse_table_core"><code>_write_lakehouse_table_core</code></a>, <a class="reference-chip" href="fabric_input_output/#_write_warehouse_table_core"><code>_write_warehouse_table_core</code></a>
 
 **governance_review**
 <a class="reference-chip" href="governance_review/#_dq_summary"><code>_dq_summary</code></a>, <a class="reference-chip" href="governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="../reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a>, <a class="reference-chip" href="../reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a>, <a class="reference-chip" href="../reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a>, <a class="reference-chip" href="../reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a>, <a class="reference-chip" href="../reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a>, <a class="reference-chip" href="../reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a>
+
+**io_core**
+<a class="reference-chip" href="io_core/#configured_lakehouse_schema"><code>configured_lakehouse_schema</code></a>
 
 **metadata**
 <a class="reference-chip" href="metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="metadata/#_now_utc_iso"><code>_now_utc_iso</code></a>, <a class="reference-chip" href="metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>
@@ -339,9 +342,6 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 **data_agreement**
 <a class="reference-chip" href="data_agreement/#_list_data_stewards"><code>_list_data_stewards</code></a>
-
-**fabric_input_output**
-<a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
 
 **governance_review**
 <a class="reference-chip" href="governance_review/#_get_governance_metadata_schemas"><code>_get_governance_metadata_schemas</code></a>, <a class="reference-chip" href="governance_review/#_is_table_not_found_error"><code>_is_table_not_found_error</code></a>

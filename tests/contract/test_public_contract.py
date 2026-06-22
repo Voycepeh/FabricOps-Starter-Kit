@@ -212,6 +212,7 @@ def test_generated_module_docs_surface_only_active_v1_modules():
         "governance_review",
         "data_profiling",
         "fabric_input_output",
+        "io_core",
         "data_lineage",
         "guardrails",
         "metadata",

@@ -56,7 +56,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
     </tr>
     <tr>
       <td>External modules this module uses</td>
-      <td><code>config</code>, <code>fabric_input_output</code>, <code>metadata</code></td>
+      <td><code>config</code>, <code>io_core</code>, <code>metadata</code></td>
     </tr>
   </tbody>
 </table>
@@ -451,8 +451,8 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 **config**
 <a class="reference-chip" href="config/#resolve_fabric_context"><code>resolve_fabric_context</code></a>
 
-**fabric_input_output**
-<a class="reference-chip" href="fabric_input_output/#_configured_lakehouse_schema"><code>_configured_lakehouse_schema</code></a>, <a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+**io_core**
+<a class="reference-chip" href="io_core/#configured_lakehouse_schema"><code>configured_lakehouse_schema</code></a>
 
 **metadata**
 <a class="reference-chip" href="metadata/#_build_runtime_audit_fields"><code>_build_runtime_audit_fields</code></a>, <a class="reference-chip" href="metadata/#_current_notebook_active_registrations"><code>_current_notebook_active_registrations</code></a>, <a class="reference-chip" href="metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>
