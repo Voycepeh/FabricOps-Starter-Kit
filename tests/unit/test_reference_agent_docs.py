@@ -268,7 +268,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionWarningFilter" in dashboard_text
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
-    assert "decisionMinIssues" in dashboard_text
+    assert "Architecture violation count" in dashboard_text
+    assert "Architecture violation type<input" not in dashboard_text
     assert "resetDecisionFilters" in dashboard_text
     assert "compactList" in dashboard_text
     assert "compactBadges" in dashboard_text
@@ -281,7 +282,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Showing flow for" in dashboard_text
     assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in dashboard_text
     assert ".surface-card span{display:block;line-height:1.2" in dashboard_text
-    assert "<th>Callable</th><th>Module</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th><th>Modules</th><th class=\"num\">Issues</th><th>Recommendation</th><th>Warnings</th>" in dashboard_text
+    assert "<th>Public callable</th><th>Module</th><th>Findings</th><th>Why review</th><th>Suggested action</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th>" in dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
@@ -312,11 +313,41 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in dashboard_text
-    assert "High-priority review candidates" in dashboard_text
-    assert "Clean public flows" in dashboard_text
+    assert "High-priority public callables" in dashboard_text
+    assert "Architecture violations" in dashboard_text
+    assert "Long public flows" in dashboard_text
+    assert "Merge candidates" in dashboard_text
+    assert "Public callables scanned" in dashboard_text
+    assert "Clean public flows" not in dashboard_text
+    assert "Public flows with warnings" not in dashboard_text
     assert "Callables flagged as single-use helper candidates" not in dashboard_text
-    assert "305 Single-use helper candidates" not in dashboard_text
+    assert "305 Merge candidates" not in dashboard_text
     assert "Architecture metrics summarize public entrypoint flow risk." in dashboard_text
+
+    assert "architectureThresholds=data.architecture_thresholds||architectureThresholds" in dashboard_text
+    assert "function longCallChainThreshold()" in dashboard_text
+    assert "function largeDependencySurfaceThreshold()" in dashboard_text
+    assert "long_call_chain_depth:null" in dashboard_text
+    assert "large_dependency_surface:null" in dashboard_text
+    assert "function positiveThreshold(value)" in dashboard_text
+    assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in dashboard_text
+    assert "architecture_violation_count??f.cross_layer_issue_count" in dashboard_text
+    assert ">=3" not in dashboard_text
+    assert "down>=12" not in dashboard_text
+    assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
+    assert "function whyReview(flow)" in dashboard_text
+    assert "reasons.join(' ')" in dashboard_text
+    assert "Contains ${violations} architecture violations." in dashboard_text
+    assert "Depth is ${flow.maximum_chain_depth}; threshold is >= ${longThreshold}." in dashboard_text
+    assert "Has ${flow.downstream_callable_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
+    assert "Public callables whose call depth exceeds the threshold >= ${longCallChainThreshold()}." in dashboard_text
+    assert "Depth; long call chain threshold >= ${longThreshold}" in dashboard_text
+    assert "longThreshold!==null" in dashboard_text
+    assert "largeThreshold!==null" in dashboard_text
+    assert "long call chain threshold unavailable" in dashboard_text
+    assert "Contains ${flow.single_use_helper_candidate_count} merge candidates inside this flow." in dashboard_text
+    assert "deep cross-module helper chains" not in dashboard_text
+    assert "inline single-use helper" not in dashboard_text
 
     assert "Callable Inventory" in inventory_text
     assert "Search/filter callables with maintainer-friendly role groups, reachability, and refactor signals." in inventory_text
@@ -332,6 +363,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Complete discovered callable inventory." in inventory_text
     assert "Internal functions behind the public API." in inventory_text
     assert "callable_inventory_metrics" in inventory_text
+    assert "deep cross-module helper chains" not in inventory_text
+    assert "inline single-use helper" not in inventory_text
     assert "Total discovered callable records" not in inventory_text
     assert "Function callables" not in inventory_text
     assert "Non-function callable records" not in inventory_text
@@ -398,6 +431,41 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in inventory_text
     assert "selectAllVisible" in inventory_text
     assert "$('selectAllVisible').onchange" in inventory_text
+    assert "ROLE_GROUP_FILTER_OPTIONS" in inventory_text
+    for role_group_label in [
+        "Public entrypoint",
+        "Workflow",
+        "Resolver",
+        "Normalizer",
+        "Validator",
+        "Adapter",
+        "Utility",
+        "Model class",
+        "Registry builder",
+        "Lifecycle method",
+        "Property method",
+        "Other",
+    ]:
+        assert role_group_label in inventory_text
+    signal_options = inventory_text.split("const USER_FACING_RECOMMENDED_ACTIONS=", 1)[1].split(";", 1)[0]
+    assert "Public API entrypoint" not in signal_options
+    assert "Priority is generated from callable inventory signals, architecture findings" in inventory_text
+    assert "strongest review/refactor signal; inspect first" in inventory_text
+    assert "Findings / Signal" in inventory_text
+    assert "Role group" in inventory_text
+    assert "Role detail" in inventory_text
+    assert "Suggested action" in inventory_text
+    assert "Inbound" in inventory_text
+    assert "Outbound" in inventory_text
+    assert "Dependency role" in inventory_text
+    assert "Kind / Layer" in inventory_text
+    assert "<th>Debug details</th>" not in inventory_text
+    assert "function debugCell" not in inventory_text
+    assert "DISPLAY_LABEL_MAP" in inventory_text
+    assert "tag,.badge" in inventory_text
+    assert "priority-high" in inventory_text
+    assert ".badge.issue" in inventory_text
+    assert "displayLabel(i.recommended_action)" in inventory_text
     assert '<span class="reference-kpi-title">Modules</span>' in reference_text
     assert '<span class="reference-kpi-title">Total callables</span>' in reference_text
     assert '<span class="reference-kpi-title">Public API</span>' in reference_text
@@ -425,7 +493,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "[Inventory](../assets/callable-functions-inventory.html)" in maintainer_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert set(flow_data) == {"generated_at", "function_inventory", "public_entrypoint_flow", "summary_counts"}
+    assert set(flow_data) == {"generated_at", "function_inventory", "public_entrypoint_flow", "summary_counts", "architecture_thresholds"}
+    assert flow_data["architecture_thresholds"] == {"long_call_chain_depth": 4, "large_dependency_surface": 10}
 
     summary_counts = flow_data["summary_counts"]
     assert {
@@ -438,6 +507,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "recommended_action",
         "layer_consistency",
         "callable_inventory_metrics",
+        "callable_role_group",
     } <= set(summary_counts)
     assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
     assert set(summary_counts["review_status"]) == {
@@ -449,6 +519,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     }
     assert summary_counts["layer"]["public"] == len(exported_symbols)
     assert summary_counts["total_callables"] == sum(summary_counts["function_type"].values())
+    assert summary_counts["callable_role_group"]
 
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == 309
@@ -478,6 +549,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     function_inventory = flow_data["function_inventory"]
     assert len(function_inventory) == summary_counts["total_callables"]
+    assert all(row["callable_role_group"] for row in function_inventory)
+    assert all(row["callable_role_group_label"] for row in function_inventory)
+    assert summary_counts["callable_role_group"] == {
+        role_group: sum(1 for row in function_inventory if row["callable_role_group"] == role_group)
+        for role_group in sorted({row["callable_role_group"] for row in function_inventory})
+    }
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
     assert {"Public API", "Internal helper", "Utility"} <= {row["function_type"] for row in function_inventory}
@@ -608,6 +685,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
     assert "Callable review is role-aware" in callable_flow_text
     assert "Internal-to-internal calls are valid" in callable_flow_text
+    assert "Role group = broad job of the callable." in callable_flow_text
+    assert "Findings / Signal = review hints or actions, not automatic refactor commands." in callable_flow_text
+    assert "Priority = triage order, not a guarantee something must be changed." in callable_flow_text
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
@@ -1472,3 +1552,28 @@ def test_callable_layer_dependency_rule_matrix() -> None:
     assert _role_dependency_signals("internal_validator", "internal_workflow") == ["validator_calls_workflow"]
     assert _role_dependency_signals("utility_validator", "internal_workflow") == ["validator_calls_workflow"]
     assert _role_dependency_signals("internal_resolver", "internal_workflow") == ["resolver_calls_workflow"]
+
+
+def test_callable_architecture_layer_rules_and_labels():
+    """Verify callable architecture labels and layer rule helpers."""
+    import scripts.generate_function_reference as generator
+
+    allowed = [
+        ("Public", "Public", "Review"),
+        ("Public", "Internal", "Allowed"),
+        ("Public", "Utility", "Allowed"),
+        ("Internal", "Internal", "Allowed"),
+        ("Internal", "Utility", "Allowed"),
+        ("Utility", "Utility", "Allowed"),
+    ]
+    for caller, callee, result in allowed:
+        assert generator._classify_architecture_edge(caller, callee)["result"] == result
+
+    for caller, callee in [("Internal", "Public"), ("Utility", "Public"), ("Utility", "Internal")]:
+        edge = generator._classify_architecture_edge(caller, callee)
+        assert edge["result"] == "Violation"
+        assert edge["violation_type"] == f"{caller} -> {callee}"
+
+    assert generator._display_label("Cross-layer dependency") == "Architecture violation"
+    assert generator._display_label("Deep chain") == "Long call chain"
+    assert generator._display_label("Single-use helper candidate") == "Merge candidate"
