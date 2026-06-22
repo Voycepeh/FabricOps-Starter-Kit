@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T18:08:54+00:00",
+  "generated_at": "2026-06-22T18:23:33+00:00",
   "function_inventory": [
     {
       "function_name": "_build_categorical_distribution",
@@ -60673,6 +60673,14 @@
       "cross_layer_issues": 72,
       "single_use_helper_candidates": 305,
       "suggested_inline_or_privatize": 10
+    },
+    "callable_inventory_metrics": {
+      "module_count": 12,
+      "total_callables": 309,
+      "public_api_entrypoints": 26,
+      "function_callables": 287,
+      "supporting_functions": 261,
+      "non_function_records": 22
     }
   }
 }

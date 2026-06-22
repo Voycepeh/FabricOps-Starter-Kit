@@ -81,15 +81,18 @@ def test_landing_page_counts_match_generated_stats() -> None:
     index_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
     assert "<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>" in index_text
-    assert "</strong><span>public Starter Kit functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
+    assert "</strong><span> public callables,</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
     assert "FABRICOPS_CALLABLE_RECORD_COUNT" in index_text
     assert "Callable metrics are generated from the callable inventory data." in index_text
     assert "283 supporting internal functions" not in index_text
     assert "supporting internal functions" not in index_text
 
     expected = {
-        "FABRICOPS_PUBLIC_FUNCTION_COUNT": f"{stats['public_function_count']} public Starter Kit functions",
-        "FABRICOPS_CALLABLE_RECORD_COUNT": f"{stats['total_callable_records']} discovered callable records",
+        "FABRICOPS_PUBLIC_FUNCTION_COUNT": f"{stats['public_function_count']} public callables,",
+        "FABRICOPS_CALLABLE_RECORD_COUNT": (
+            f"supported by {stats['supporting_function_count']} functions and "
+            f"{stats['non_function_record_count']} non-function records"
+        ),
         "FABRICOPS_METADATA_TABLE_COUNT": f"{stats['metadata_table_count']} metadata tables",
     }
 
@@ -106,7 +109,10 @@ def test_landing_stats_match_reference_sources() -> None:
     summary_counts = callable_flow["summary_counts"]
     assert stats["public_function_count"] == summary_counts["public_api_surface"]["public_api_entrypoints"]
     assert stats["total_callable_records"] == summary_counts["total_callables"]
+    metrics = summary_counts["callable_inventory_metrics"]
     assert stats["function_callable_count"] == summary_counts["callable_kind"]["function"]
+    assert stats["supporting_function_count"] == metrics["supporting_functions"]
+    assert stats["non_function_record_count"] == metrics["non_function_records"]
     assert stats["metadata_table_count"] == len(metadata_pages)
 
 
@@ -244,7 +250,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     reference_text = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
 
     assert "Callable Architecture" in dashboard_text
-    assert "Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations." in dashboard_text
+    assert "High-level triage for notebook-facing public APIs, dependency depth, and architecture boundary risk." in dashboard_text
     assert "Inventory" in dashboard_text
     assert "Decision mode: Public API Surface" in dashboard_text
     assert "publicSurfaceCards" in dashboard_text
@@ -301,9 +307,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in dashboard_text
-    assert "Callables flagged as single-use helper candidates" in dashboard_text
+    assert "High-priority review candidates" in dashboard_text
+    assert "Clean public flows" in dashboard_text
+    assert "Callables flagged as single-use helper candidates" not in dashboard_text
     assert "305 Single-use helper candidates" not in dashboard_text
-    assert "Callable metrics are generated from the callable inventory data." in dashboard_text
+    assert "Architecture metrics summarize public entrypoint flow risk." in dashboard_text
 
     assert "Callable Inventory" in inventory_text
     assert "Search/filter all callables, select rows, and export AI refactor packets." in inventory_text
@@ -311,15 +319,20 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "callable-functions-dashboard.html" in inventory_text
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
-    assert "Total discovered callable records" in inventory_text
-    assert "Public API entrypoints" in inventory_text
-    assert "Deep chains" in inventory_text
-    assert "Cross-layer issues" in inventory_text
-    assert "Function callables" in inventory_text
-    assert "Non-function callable records" in inventory_text
-    assert "<article class=\"surface-card\"><strong>${esc(v??0)}</strong><span>${esc(l)}</span></article>" in inventory_text
-    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1}" in inventory_text
-    assert ".surface-card span{display:block;line-height:1.2}" in inventory_text
+    assert "Modules" in inventory_text
+    assert "Total callables" in inventory_text
+    assert "Public API" in inventory_text
+    assert "Supporting functions" in inventory_text
+    assert "Non-function records" in inventory_text
+    assert "Complete discovered callable inventory." in inventory_text
+    assert "Internal functions behind the public API." in inventory_text
+    assert "callable_inventory_metrics" in inventory_text
+    assert "Total discovered callable records" not in inventory_text
+    assert "Function callables" not in inventory_text
+    assert "Non-function callable records" not in inventory_text
+    assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
+    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem}" in inventory_text
+    assert ".surface-card span{display:block;line-height:1.2;font-weight:700}" in inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
     assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
     assert "if(i.source_url)return i.source_url" in inventory_text
@@ -370,15 +383,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in inventory_text
     assert "selectAllVisible" in inventory_text
     assert "$('selectAllVisible').onchange" in inventory_text
-    assert "compatibility context / compatibility mode" in inventory_text
-
-    assert '<span class="reference-kpi-title">Public Starter Kit functions</span>' in reference_text
-    assert '<span class="reference-kpi-title">Total discovered callable records</span>' in reference_text
-    assert '<span class="reference-kpi-title">Function callables</span>' in reference_text
-    assert '<span class="reference-kpi-title">Non-function callable records</span>' in reference_text
-    assert '<strong class="reference-kpi-value">26</strong>' in reference_text
+    assert '<span class="reference-kpi-title">Modules</span>' in reference_text
+    assert '<span class="reference-kpi-title">Total callables</span>' in reference_text
+    assert '<span class="reference-kpi-title">Public API</span>' in reference_text
+    assert '<span class="reference-kpi-title">Supporting functions</span>' in reference_text
+    assert '<span class="reference-kpi-title">Non-function records</span>' in reference_text
+    assert '<strong class="reference-kpi-value">12</strong>' in reference_text
     assert '<strong class="reference-kpi-value">309</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">287</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">26</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">261</strong>' in reference_text
     assert '<strong class="reference-kpi-value">22</strong>' in reference_text
     assert "Callable metrics are generated from the callable inventory data." in reference_text
     assert "270 Supporting internal functions" not in reference_text
@@ -389,7 +402,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "assets/callable-functions-inventory.html" in home_text
     assert "Architecture" in home_text
     assert "Inventory" in home_text
-    assert "Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations." in home_text
+    assert "High-level triage for notebook-facing public APIs, dependency depth, and architecture boundary risk." not in home_text or "Architecture" in home_text
     assert "Search/filter all callables, select rows, and export AI refactor packets." in home_text
 
     maintainer_text = (REFERENCE_DIR / "maintainer-guide.md").read_text(encoding="utf-8")
@@ -409,6 +422,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callable_kind",
         "recommended_action",
         "layer_consistency",
+        "callable_inventory_metrics",
     } <= set(summary_counts)
     assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
     assert set(summary_counts["review_status"]) == {
