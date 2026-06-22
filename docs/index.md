@@ -50,8 +50,8 @@ They abstract the important but tedious work into a simplified plug and play wor
   </a>
 
   <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>26</strong><span>public Starter Kit functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body">Tracked across <!-- FABRICOPS_CALLABLE_RECORD_COUNT --><strong>309</strong><span>discovered callable records</span><!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
+    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>26</strong><span> public Starter Kit functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
+    <span class="fabricops-landing-card__body">Tracked across <!-- FABRICOPS_CALLABLE_RECORD_COUNT --><strong>309</strong><span> discovered callable records</span><!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
