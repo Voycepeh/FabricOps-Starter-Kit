@@ -261,10 +261,36 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Medium review" not in dashboard_text
     assert 'id="summaryTree"' in dashboard_text
     assert "Function summary tree" in dashboard_text
-    assert "Callable inventory" in dashboard_text
+    assert "Action-oriented summary" in dashboard_text
+    assert "Needs action" in dashboard_text
+    assert "Architecture review" in dashboard_text
+    assert "Orphan candidates" in dashboard_text
+    assert "Inline candidates" in dashboard_text
+    assert "Manual review" in dashboard_text
+    assert "Protect / keep stable" in dashboard_text
+    assert "Public API entrypoints" in dashboard_text
+    assert "Shared internal services" in dashboard_text
+    assert "Config model classes" in dashboard_text
+    assert "Result/context model classes" in dashboard_text
+    assert "Lifecycle methods" in dashboard_text
+    assert "Stable utilities" in dashboard_text
+    assert "Classification health" in dashboard_text
+    assert "Unknown role" in dashboard_text
+    assert "Unreachable candidate" in dashboard_text
+    assert "Allowed internal role calls" in dashboard_text
+    assert "Legacy internal_calls_internal" in dashboard_text
+    assert "Layer counts" in dashboard_text
+    assert "Callable kind counts" in dashboard_text
+    assert "Layer consistency counts" in dashboard_text
+    assert "Raw signal counts" in dashboard_text
     assert "Total callables" in dashboard_text
     assert "All modules" in dashboard_text
-    assert "module:state.module" in dashboard_text
+    assert 'id="callableRoleFilter"' in dashboard_text
+    assert 'id="dependencyRoleFilter"' in dashboard_text
+    assert 'id="reachabilityFilter"' in dashboard_text
+    assert "Architecture review</strong> means dependency direction may break" in dashboard_text
+    assert "Protect</strong> means high fanout" in dashboard_text
+    assert "Inline candidate</strong> means possible cleanup" in dashboard_text
     assert "Select visible" in dashboard_text
     assert "Clear selection" in dashboard_text
     assert "Copy JSON" in dashboard_text
@@ -332,12 +358,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "fetch('../reference/_data/callable-flow.json')" in dashboard_text
     assert "Callers" in dashboard_text
     assert "Callees" in dashboard_text
+    assert "Role" in dashboard_text
+    assert "Reachability" in dashboard_text
+    assert "Risk" in dashboard_text
     assert "Source" in dashboard_text
     assert "All kinds" in dashboard_text
     assert "Kind" in dashboard_text
     assert "unique(inventory.map(i=>i.callable_kind))" in dashboard_text
     assert "['function','class','method'].forEach" not in dashboard_text
-    assert "Used by" in dashboard_text
+    assert "Callers" in dashboard_text
     assert "Layer consistency" in dashboard_text
     assert "Utility but low reuse" in dashboard_text
     assert "Review the assigned layer against the usage evidence" in dashboard_text
