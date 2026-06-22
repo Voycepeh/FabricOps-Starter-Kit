@@ -11,7 +11,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 14</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 7 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 28</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 7 external modules</span></div>
 
 ## Module purpose
 
@@ -41,7 +41,7 @@ Owns lower-level Fabric IO implementations shared by package internals.
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>14</td>
+      <td>28</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -107,6 +107,10 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_join_lakehouse_area_path</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_lakehouse_file_path</code></td>
       <td>—</td>
     </tr>
@@ -127,7 +131,31 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_read_csv_path</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_read_delta_path</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_read_excel_file</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_read_warehouse_synapsesql</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_require_fabric_connector</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_resolve_lakehouse_file_location</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_resolve_lakehouse_schema</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -135,7 +163,23 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_resolve_lakehouse_table_location</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_resolve_lakehouse_table_path</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_resolve_target_store</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_resolve_warehouse_table_location</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_validate_dataframe_writer</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -147,7 +191,19 @@ No public exports in this module.
       <td>—</td>
     </tr>
     <tr>
+      <td><code>_validate_select_query</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
       <td><code>_validate_warehouse_store</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_write_delta_path</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_write_warehouse_synapsesql</code></td>
       <td>—</td>
     </tr>
   </tbody>
@@ -166,7 +222,12 @@ No public exports in this module.
 <span class="reference-chip"><code>_get_spark</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_join_lakehouse_area_path</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_lakehouse_file_path</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_join_lakehouse_area_path</code></span>, <span class="reference-chip"><code>_validate_relative_path</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_load_pandas</code></span>
@@ -181,13 +242,59 @@ No public exports in this module.
 <span class="reference-chip"><code>_normalize_write_mode</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_read_csv_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_delta_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_excel_file</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_load_pandas</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_warehouse_synapsesql</code></span>
+ <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_require_fabric_connector</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_require_fabric_connector</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_resolve_lakehouse_file_location</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_lakehouse_file_path</code></span>, <span class="reference-chip"><code>_validate_relative_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_resolve_lakehouse_schema</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_normalize_schema_name</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_resolve_lakehouse_table_identifier</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_resolve_lakehouse_table_location</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_normalize_table_name</code></span>, <span class="reference-chip"><code>_resolve_lakehouse_schema</code></span>, <span class="reference-chip"><code>_resolve_lakehouse_table_path</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_resolve_lakehouse_table_path</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_join_lakehouse_area_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_resolve_target_store</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_validate_lakehouse_store</code></span>, <span class="reference-chip"><code>_validate_warehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_resolve_warehouse_table_location</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_build_warehouse_object_name</code></span>, <span class="reference-chip"><code>_normalize_schema_name</code></span>, <span class="reference-chip"><code>_normalize_table_name</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_validate_dataframe_writer</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_validate_lakehouse_store</code></span>
@@ -196,7 +303,18 @@ No public exports in this module.
 <span class="reference-chip"><code>_validate_relative_path</code></span>
 </li>
 <li>
+<span class="reference-chip"><code>_validate_select_query</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_validate_warehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_write_delta_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_write_warehouse_synapsesql</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_require_fabric_connector</code></span>
 </li>
 </ul>
 </details>
