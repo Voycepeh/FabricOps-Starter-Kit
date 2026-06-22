@@ -659,7 +659,7 @@ def test_callable_pages_embed_title_first_collapsed_call_flow() -> None:
         assert "\n### `_" not in text, page
         assert "\n## `_" not in text, page
         if 'class="reference-call-tree"' in text:
-            call_flow_pos = text.index('??? info "Uses ')
+            call_flow_pos = text.index('??? info "Downstream callables: ')
             first_description_pos = min(
                 position
                 for marker in (
@@ -670,7 +670,7 @@ def test_callable_pages_embed_title_first_collapsed_call_flow() -> None:
                 for position in [text.index(marker)]
             )
             assert text.index("# ") < call_flow_pos < first_description_pos, page
-            assert "```text" not in text.split('??? info "Uses ', 1)[1].split("##", 1)[0], page
+            assert "```text" not in text.split('??? info "Downstream callables: ', 1)[1].split("##", 1)[0], page
 
 
 def test_internalized_enforce_profile_behavior_has_no_standalone_page() -> None:
@@ -761,7 +761,8 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Uses 12 internal helper functions"') == 1
+    assert text.count('??? info "Downstream callables: 14"') == 1
+    assert "Dependency data is generated from the callable architecture inventory." in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
     assert "Internal helper count: 11" not in text
@@ -792,14 +793,14 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Uses 12 internal helper functions"') == 1
+    assert implementation_section.count('??? info "Downstream callables: 14"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
     assert (
         "Unique internal/private helpers: 11. Repeated calls may appear in multiple branches."
         not in implementation_section
     )
-    assert '<div class="reference-call-tree" role="tree">' in implementation_section
+    assert '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">' in implementation_section
     assert "### Refactor signals" not in implementation_section
     assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
@@ -822,6 +823,67 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
 
 
+def _reference_call_tree_rows(text: str) -> list[str]:
+    """Return normalized callable names and prefixes from a generated call tree."""
+    rows = []
+    for prefix, name in re.findall(
+        r'<div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">(?P<prefix>.*?)</span>.*?<code>(?P<name>[^(<]+)\(\.\.\.\)</code></(?:a|div)>',
+        text,
+    ):
+        rows.append(f"{prefix}{name}")
+    return rows
+
+
+def _dashboard_flow_tree_rows(flow: dict[str, object]) -> list[str]:
+    """Return normalized callable names and prefixes from callable-flow JSON."""
+    root_qn = str(flow["qualified_name"])
+    by_parent: dict[str, list[dict[str, object]]] = {}
+    for row in flow.get("transitive_callees", []):
+        assert isinstance(row, dict)
+        parent = str(row.get("parent_qualified_name") or root_qn)
+        by_parent.setdefault(parent, []).append(row)
+    rows = [str(flow["public_callable"])]
+
+    def sort_key(row: dict[str, object]) -> tuple[int, str, str, str]:
+        return (
+            int(row.get("depth") or 0),
+            str(row.get("module") or ""),
+            str(row.get("callable") or "").lower(),
+            str(row.get("qualified_name") or ""),
+        )
+
+    def visit(parent_qn: str, prefix: str, ancestors: set[str]) -> None:
+        children = sorted(by_parent.get(parent_qn, []), key=sort_key)
+        for index, child in enumerate(children):
+            child_qn = str(child.get("qualified_name") or "")
+            connector = "└── " if index == len(children) - 1 else "├── "
+            rows.append(f"{prefix}{connector}{child['callable']}")
+            if child_qn and child_qn not in ancestors:
+                extension = "    " if index == len(children) - 1 else "│   "
+                visit(child_qn, prefix + extension, ancestors | {child_qn})
+
+    visit(root_qn, "", {root_qn})
+    return rows
+
+
+def test_display_guardrail_results_dependency_count_matches_callable_architecture_inventory() -> None:
+    """Verify display_guardrail_results uses one canonical dependency inventory everywhere."""
+    callable_flow = json.loads((REFERENCE_DIR / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
+    flow = next(
+        item
+        for item in callable_flow["public_entrypoint_flow"]
+        if item["public_callable"] == "display_guardrail_results"
+    )
+    reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
+    detail_page = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
+
+    assert flow["downstream_callable_count"] == 14
+    assert 'data-callable-name="display_guardrail_results"' in reference_index
+    assert "Downstream callables: 14" in reference_index
+    assert '??? info "Downstream callables: 14"' in detail_page
+    assert _reference_call_tree_rows(detail_page) == _dashboard_flow_tree_rows(flow)
+
+
 def test_removed_aggregate_governance_wrapper_pages_are_absent() -> None:
     """Verify removed aggregate governance wrapper pages are no longer generated."""
     assert not (API_REFERENCE_DIR / "widget_author_guardrail_rules.md").exists()
@@ -835,7 +897,7 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
     assert callable_pages
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
-        match = re.search(r'<div class="reference-call-tree" role="tree">(?P<body>.*?)</div>', text, re.DOTALL)
+        match = re.search(r'<div class="reference-call-tree" role="tree"[^>]*>(?P<body>.*?)</div>', text, re.DOTALL)
         assert match, page
         slug = page.stem
         first_row = match.group("body").split("\n", 2)[1]
@@ -848,13 +910,13 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     """Verify public callable helper trees appear directly below the title."""
     text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
     title_index = text.index("# prepare_pipeline_table_configs")
-    call_tree_index = text.index('??? info "Uses 5 internal helper functions"')
+    call_tree_index = text.index('??? info "Downstream callables: 5"')
     description_index = text.index("Prepare source or target table configs for 02_pipeline.")
     chips_index = text.index('<span class="reference-chip">Module: <code>pipeline</code></span>')
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
     assert title_index < call_tree_index < description_index < chips_index < usage_index
-    assert text.count('??? info "Uses 5 internal helper functions"') == 1
+    assert text.count('??? info "Downstream callables: 5"') == 1
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
@@ -886,7 +948,9 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "Used by 1 public function" not in text
     assert "internal helpers" not in text
     assert "Calls 1 public function" not in text
-    assert "nested helper functions" in text
+    assert "nested helper functions" not in text
+    assert "Downstream callables:" in text
+    assert "Dependency data is generated from the callable architecture inventory." in text
     assert 'href="../api/reference/profile_dataframe/"' in text
     assert "<code>profile_dataframe</code>" in text
 
