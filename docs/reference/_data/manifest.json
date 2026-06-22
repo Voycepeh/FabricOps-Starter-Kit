@@ -239,7 +239,9 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO",
-      "used_in_templates": []
+      "used_in_templates": [
+        "02_pipeline"
+      ]
     },
     {
       "module_name": "fabric_input_output",
@@ -253,7 +255,9 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Fabric IO",
-      "used_in_templates": []
+      "used_in_templates": [
+        "02_pipeline"
+      ]
     },
     {
       "module_name": "fabric_input_output",

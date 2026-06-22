@@ -2824,9 +2824,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 82,
-    "source_end_line": 105,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L82-L105",
+    "source_start_line": 105,
+    "source_end_line": 128,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L128",
     "docs_path": "api/reference/read_lakehouse_csv.md",
     "summary": "Read a CSV file from a configured Fabric lakehouse Files path."
   },
@@ -2863,9 +2863,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 132,
-    "source_end_line": 155,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L132-L155",
+    "source_start_line": 155,
+    "source_end_line": 178,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L155-L178",
     "docs_path": "api/reference/read_lakehouse_excel.md",
     "summary": "Read an Excel file from a configured Fabric lakehouse Files path."
   },
@@ -2902,9 +2902,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 108,
-    "source_end_line": 129,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L108-L129",
+    "source_start_line": 131,
+    "source_end_line": 152,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L152",
     "docs_path": "api/reference/read_lakehouse_parquet.md",
     "summary": "Read a Parquet path from a configured Fabric lakehouse Files path."
   },
@@ -2947,9 +2947,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 24,
-    "source_end_line": 45,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L24-L45",
+    "source_start_line": 37,
+    "source_end_line": 63,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L37-L63",
     "docs_path": "api/reference/read_lakehouse_table.md",
     "summary": "Read a Delta table from a configured Fabric lakehouse target."
   },
@@ -2960,12 +2960,16 @@
     "module": "fabric_input_output",
     "classification": "Callable",
     "function_category": "public_starter_kit",
-    "usage_sources": [],
+    "usage_sources": [
+      "02_pipeline"
+    ],
     "inbound": [],
     "outbound": [
       "fabricops_kit.io_core.read_warehouse_query_core"
     ],
-    "used_in_templates": [],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
     "glossary_terms": [
       "source data",
       "notebook template"
@@ -2986,9 +2990,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 187,
-    "source_end_line": 207,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L187-L207",
+    "source_start_line": 221,
+    "source_end_line": 254,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L221-L254",
     "docs_path": "api/reference/read_warehouse_query.md",
     "summary": "Read warehouse rows with SQL pushdown through a configured Fabric warehouse target."
   },
@@ -2999,12 +3003,16 @@
     "module": "fabric_input_output",
     "classification": "Callable",
     "function_category": "public_starter_kit",
-    "usage_sources": [],
+    "usage_sources": [
+      "02_pipeline"
+    ],
     "inbound": [],
     "outbound": [
       "fabricops_kit.io_core.read_warehouse_table_core"
     ],
-    "used_in_templates": [],
+    "used_in_templates": [
+      "02_pipeline"
+    ],
     "glossary_terms": [
       "source data",
       "notebook template"
@@ -3025,9 +3033,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 158,
-    "source_end_line": 184,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L158-L184",
+    "source_start_line": 181,
+    "source_end_line": 218,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L181-L218",
     "docs_path": "api/reference/read_warehouse_table.md",
     "summary": "Read a table from a configured Fabric warehouse target."
   },
@@ -3073,9 +3081,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 48,
-    "source_end_line": 79,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L48-L79",
+    "source_start_line": 66,
+    "source_end_line": 102,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L66-L102",
     "docs_path": "api/reference/write_lakehouse_table.md",
     "summary": "Write a Spark DataFrame to a configured Fabric lakehouse Delta table."
   },
@@ -3112,9 +3120,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 210,
-    "source_end_line": 233,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L210-L233",
+    "source_start_line": 257,
+    "source_end_line": 287,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L257-L287",
     "docs_path": "api/reference/write_warehouse_table.md",
     "summary": "Write a DataFrame to a configured Fabric warehouse target."
   },

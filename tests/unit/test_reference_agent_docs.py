@@ -415,11 +415,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["callable_kind"] == "implicit_lifecycle_method" for row in lifecycle_rows.values())
     assert all(row["recommended_action"] == "Keep lifecycle method" for row in lifecycle_rows.values())
     assert all("Utility but low reuse" not in row["signals"] for row in lifecycle_rows.values())
-    root_row = next(
-        row
-        for row in function_inventory
-        if row["qualified_name"] == "fabricops_kit.fabric_input_output.FabricStore.root"
-    )
+    root_row = next(row for row in function_inventory if row["qualified_name"] == "fabricops_kit.io_core.FabricStore.root")
     assert root_row["function_name"] == "FabricStore.root"
     assert root_row["function_type"] == "Internal helper"
     assert root_row["layer"] == "internal"

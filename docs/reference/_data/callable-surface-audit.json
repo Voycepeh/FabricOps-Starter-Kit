@@ -139,22 +139,26 @@
   {
     "function": "read_warehouse_query",
     "in_root_exports": true,
-    "directly_called_in_core_templates": [],
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": true,
     "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
+    "decision": "template_called_public"
   },
   {
     "function": "read_warehouse_table",
     "in_root_exports": true,
-    "directly_called_in_core_templates": [],
+    "directly_called_in_core_templates": [
+      "02_pipeline"
+    ],
     "directly_called_in_example_templates": [],
     "imported_only_in_templates": true,
     "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
-    "decision": "advanced_public_helper"
+    "decision": "template_called_public"
   },
   {
     "function": "run_table_guardrails",

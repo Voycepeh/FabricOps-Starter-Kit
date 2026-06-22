@@ -77,6 +77,7 @@ def test_pipeline_notebook_contains_widget_led_flow_sections():
         "## 1. Run `00_env_config`",
         "## 2. Import required functions",
         "## 3. Select agreement and capture run context",
+        "## Optional bootstrap from Warehouse to Source Lakehouse Delta",
         "## 4. USER EDIT SECTION — read source DataFrames",
         "## 5. USER EDIT SECTION — register source DataFrames only",
         "## 6. Profile source data",
@@ -98,6 +99,49 @@ def test_pipeline_notebook_contains_widget_led_flow_sections():
     assert "Do not define schema, freshness, profile behaviour, DQ" in markdown
     assert "If any blocking source or pipeline output guardrail fails" in markdown
     assert "Write settings belong after the guardrail gate" in markdown
+
+
+def test_pipeline_notebook_contains_disabled_warehouse_bootstrap_guidance():
+    """Verify the Warehouse bootstrap example is explicit, safe, and disabled."""
+    markdown, code, _cells = _notebook_sources()
+    bootstrap_block = code[code.index("RUN_WAREHOUSE_TO_LAKEHOUSE_BOOTSTRAP = False") : code.index("source_table = ")]
+
+    assert "Optional bootstrap from Warehouse to Source Lakehouse Delta" in markdown
+    assert "Lakehouse Delta for Spark processing" in markdown
+    assert "Warehouse connector path" in markdown
+    assert "performance impact for large tables" in markdown
+    assert "Warehouse → Source Lakehouse Delta → PySpark transforms → Unified/Product Delta → optional Warehouse publish" in markdown
+    assert "RUN_WAREHOUSE_TO_LAKEHOUSE_BOOTSTRAP = False" in bootstrap_block
+    for setting in [
+        "WAREHOUSE_TARGET",
+        "WAREHOUSE_SCHEMA",
+        "WAREHOUSE_TABLE",
+        "SOURCE_LAKEHOUSE_TARGET",
+        "SOURCE_LAKEHOUSE_TABLE",
+        "SOURCE_LAKEHOUSE_SCHEMA",
+        "PARALLEL_LOAD_COLUMN",
+        "LOAD_MODE",
+        "LOWER_BOUND",
+        "UPPER_BOUND",
+        "CHUNK_SIZE",
+        "OUTPUT_PARTITION_COLUMNS",
+    ]:
+        assert setting in bootstrap_block
+
+    for helper in [
+        "read_warehouse_query(",
+        "read_warehouse_table(",
+        "write_lakehouse_table(",
+    ]:
+        assert helper in bootstrap_block
+
+    assert "if not PARALLEL_LOAD_COLUMN:" in bootstrap_block
+    assert "Set PARALLEL_LOAD_COLUMN before running Warehouse to Lakehouse bootstrap" in bootstrap_block
+    assert "Only use this for small reference or ad hoc tables" in bootstrap_block
+    assert "use chunked incremental loading or Fabric Copy activity" in bootstrap_block
+    assert "not direct Warehouse reads" in bootstrap_block
+    assert "read_data(" not in code
+    assert "write_data(" not in code
 
 
 def test_source_loading_uses_read_lakehouse_table():

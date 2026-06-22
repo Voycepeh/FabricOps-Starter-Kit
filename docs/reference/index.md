@@ -124,21 +124,21 @@ Use the finder below to look up the 26 public Starter Kit functions. Supporting 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Calls 7 nested helper functions</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_path_config</code></li><li><code>_get_spark</code></li><li><code>_normalize_schema_name</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_table_path</code></li><li><code>_validate_lakehouse_store</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
+<article id="fabric_input_output-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_query/"><code>read_warehouse_query</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Calls 5 nested helper functions</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_path_config</code></li><li><code>_get_spark</code></li><li><code>_require_fabric_connector</code></li><li><code>_validate_warehouse_store</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
+<article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_table/"><code>read_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a table from a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <div class="reference-catalogue-item-counts">
 
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Calls 8 nested helper functions</span></summary><ul><li><code>_get_store</code></li><li><code>_normalize_path_config</code></li><li><code>_build_warehouse_object_name</code></li><li><code>_get_spark</code></li><li><code>_normalize_schema_name</code></li><li><code>_normalize_table_name</code></li><li><code>_require_fabric_connector</code></li><li><code>_validate_warehouse_store</code></li></ul></details>

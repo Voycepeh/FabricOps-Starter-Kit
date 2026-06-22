@@ -172,7 +172,7 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "validate_schema" not in called
     assert "validate_schema_rule" not in called
     assert "read_lakehouse_csv" not in called
-    assert "read_warehouse_table" not in called
+    assert "read_warehouse_table" in called
     assert "write_warehouse_table" not in called
 
 

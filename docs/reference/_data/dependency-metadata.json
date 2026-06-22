@@ -2088,7 +2088,9 @@
       "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [],
+      "used_in_templates": [
+        "02_pipeline"
+      ],
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -2105,7 +2107,9 @@
       "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [],
+      "used_in_templates": [
+        "02_pipeline"
+      ],
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },

@@ -20,10 +20,10 @@ Read warehouse rows with SQL pushdown through a configured Fabric warehouse targ
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Module: <code>fabric_input_output</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">No starter notebook usage detected</span>
+<span class="reference-chip">02_pipeline</span>
 </p>
 
-**Used in notebooks:** Not currently detected in starter notebooks.
+**Used in notebooks:** `02_pipeline`
 
 ## Usage guidance
 
