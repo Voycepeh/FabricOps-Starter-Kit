@@ -80,21 +80,21 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone agreement-evidence widget.</td>
-      <td><code>_render_agreement_evidence_widget</code> (internal)</td>
+      <td><code>_render_agreement_evidence_widget_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-agreement intake widget.</td>
-      <td><code>_render_maintenance_widget</code> (internal)</td>
+      <td><code>_render_maintenance_widget_shared_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Render the standalone data-steward intake widget.</td>
-      <td><code>_render_maintenance_widget</code> (internal)</td>
+      <td><code>_render_maintenance_widget_shared_workflow</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -115,17 +115,17 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <li>
 <a class="reference-chip" href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
+<span class="reference-chip"><code>_render_agreement_evidence_widget_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_render_maintenance_widget</code></span>
+<span class="reference-chip"><code>_render_maintenance_widget_shared_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_render_maintenance_widget</code></span>
+<span class="reference-chip"><code>_render_maintenance_widget_shared_workflow</code></span>
 </li>
 </ul>
 </section>
@@ -237,7 +237,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_render_agreement_evidence_widget</code></td>
+      <td><code>_render_agreement_evidence_widget_workflow</code></td>
       <td><a href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></td>
     </tr>
     <tr>
@@ -245,7 +245,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_render_maintenance_widget</code></td>
+      <td><code>_render_maintenance_widget_shared_workflow</code></td>
       <td><a href="../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></td>
     </tr>
     <tr>
@@ -388,7 +388,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <span class="reference-chip"><code>_get_notebookutils</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_render_agreement_evidence_widget</code></span>
+<span class="reference-chip"><code>_render_agreement_evidence_widget_workflow</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_list_all_data_agreement_rows</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_save_agreement_evidence_records</code></span>, <span class="reference-chip"><code>_widget_common</code></span>
 </li>
@@ -398,7 +398,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_to_bool</code></span>, <span class="reference-chip"><code>_widget_common</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_render_maintenance_widget</code></span>
+<span class="reference-chip"><code>_render_maintenance_widget_shared_workflow</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_agreement_identity_text</code></span>, <span class="reference-chip"><code>_collect_custom_fields</code></span>, <span class="reference-chip"><code>_config_value</code></span>, <span class="reference-chip"><code>_create_or_update_data_agreement</code></span>, <span class="reference-chip"><code>_create_or_update_data_steward</code></span>, <span class="reference-chip"><code>_deserialize_custom_fields</code></span>, <span class="reference-chip"><code>_get_widget_visible_fields</code></span>, <span class="reference-chip"><code>_list_data_agreements</code></span>, <span class="reference-chip"><code>_list_data_stewards</code></span>, <span class="reference-chip"><code>_render_custom_fields</code></span>, <span class="reference-chip"><code>_render_searchable_selector</code></span>, <span class="reference-chip"><code>_require_ipywidgets</code></span>, <span class="reference-chip"><code>_standard_widget</code></span>, <span class="reference-chip"><code>_to_bool</code></span>, <span class="reference-chip"><code>_to_iso_date</code></span>
 </li>

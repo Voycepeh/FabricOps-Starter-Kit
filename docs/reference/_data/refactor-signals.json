@@ -310,7 +310,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
           "fabricops_kit.config._get_store",
@@ -321,7 +321,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
           "fabricops_kit.config._get_store",
@@ -333,7 +333,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -344,7 +344,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -355,7 +355,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -367,7 +367,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -378,7 +378,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -390,7 +390,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+          "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_target_store",
@@ -514,7 +514,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
@@ -525,7 +525,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
@@ -537,7 +537,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._get_store",
@@ -548,7 +548,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._get_store",
@@ -560,7 +560,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.metadata._runtime_context",
@@ -571,7 +571,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -582,7 +582,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -594,7 +594,7 @@
         "depth": 7,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -750,7 +750,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
@@ -761,7 +761,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
@@ -773,7 +773,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._get_store",
@@ -784,7 +784,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._get_store",
@@ -796,7 +796,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.metadata._runtime_context",
@@ -807,7 +807,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -818,7 +818,7 @@
         "depth": 6,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -830,7 +830,7 @@
         "depth": 7,
         "chain": [
           "fabricops_kit.data_agreement.widget_render_data_steward",
-          "fabricops_kit.data_agreement._render_maintenance_widget",
+          "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.data_agreement._list_all_data_agreement_rows",
           "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -1242,7 +1242,7 @@
   },
   "get_latest_metadata_catalogue": {
     "qualified_name": "fabricops_kit.governance_review.get_latest_metadata_catalogue",
-    "unique_internal_helper_count": 15,
+    "unique_internal_helper_count": 16,
     "repeated_helpers": [
       {
         "helper": "_get_store",
@@ -1265,11 +1265,67 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
+          "fabricops_kit.io_core.configured_lakehouse_schema",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config",
+          "fabricops_kit.config.PathConfig"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_schema",
+          "fabricops_kit.io_core._normalize_schema_name"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_table_path",
+          "fabricops_kit.io_core._join_lakehouse_area_path"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_target_store",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_target_store",
           "fabricops_kit.config._get_store",
           "fabricops_kit.config._normalize_path_config",
           "fabricops_kit.config.PathConfig"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.get_latest_metadata_catalogue",
+          "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_target_store",
+          "fabricops_kit.config.resolve_fabric_context",
+          "fabricops_kit.config.get_default_fabric_context"
         ]
       }
     ],
@@ -1297,7 +1353,7 @@
   },
   "widget_author_dq_rules": {
     "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
-    "unique_internal_helper_count": 33,
+    "unique_internal_helper_count": 34,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -1365,6 +1421,51 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._dq_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._build_dq_rule_key",
+          "fabricops_kit.metadata._stable_metadata_key"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._dq_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._build_metadata_column_key",
+          "fabricops_kit.metadata._stable_metadata_key"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._dq_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._build_metadata_table_key",
+          "fabricops_kit.metadata._stable_metadata_key"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._dq_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._now_utc_iso",
+          "fabricops_kit.config._current_audit_timestamp"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._dq_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
@@ -1373,9 +1474,10 @@
         ]
       },
       {
-        "depth": 6,
+        "depth": 7,
         "chain": [
           "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._dq_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
@@ -1388,10 +1490,10 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._dq_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._resolve_action_by",
-          "fabricops_kit.metadata._runtime_context",
           "fabricops_kit.metadata._context_get"
         ]
       },
@@ -1399,58 +1501,11 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_author_dq_rules",
+          "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._dq_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.governance_review._is_no_approval_required"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_dq_rules",
-          "fabricops_kit.governance_review._dq_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.governance_review._lifecycle_fields"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_dq_rules",
-          "fabricops_kit.governance_review._dq_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.metadata._now_utc_iso"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_dq_rules",
-          "fabricops_kit.governance_review._dq_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.metadata._now_utc_iso",
-          "fabricops_kit.config._current_audit_timestamp"
-        ]
-      },
-      {
-        "depth": 7,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_dq_rules",
-          "fabricops_kit.governance_review._dq_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.metadata._now_utc_iso",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.metadata._resolve_action_by",
+          "fabricops_kit.metadata._runtime_context"
         ]
       }
     ],
@@ -1526,7 +1581,7 @@
   },
   "widget_author_schema_freshness_profile_rules": {
     "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-    "unique_internal_helper_count": 33,
+    "unique_internal_helper_count": 34,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -1594,6 +1649,51 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._build_dq_rule_key",
+          "fabricops_kit.metadata._stable_metadata_key"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._build_metadata_column_key",
+          "fabricops_kit.metadata._stable_metadata_key"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._build_metadata_table_key",
+          "fabricops_kit.metadata._stable_metadata_key"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
+          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
+          "fabricops_kit.governance_review._base_guardrail_rule_record",
+          "fabricops_kit.metadata._now_utc_iso",
+          "fabricops_kit.config._current_audit_timestamp"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
@@ -1602,9 +1702,10 @@
         ]
       },
       {
-        "depth": 6,
+        "depth": 7,
         "chain": [
           "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
@@ -1617,10 +1718,10 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._resolve_action_by",
-          "fabricops_kit.metadata._runtime_context",
           "fabricops_kit.metadata._context_get"
         ]
       },
@@ -1628,58 +1729,11 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
+          "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
           "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
           "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.governance_review._is_no_approval_required"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.governance_review._lifecycle_fields"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.metadata._now_utc_iso"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.metadata._now_utc_iso",
-          "fabricops_kit.config._current_audit_timestamp"
-        ]
-      },
-      {
-        "depth": 7,
-        "chain": [
-          "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-          "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "fabricops_kit.governance_review.guardrail_authoring_status",
-          "fabricops_kit.governance_review._authoring_lifecycle",
-          "fabricops_kit.metadata._now_utc_iso",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.metadata._resolve_action_by",
+          "fabricops_kit.metadata._runtime_context"
         ]
       }
     ],
@@ -1755,7 +1809,7 @@
   },
   "widget_enrich_table_metadata": {
     "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-    "unique_internal_helper_count": 40,
+    "unique_internal_helper_count": 41,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -1823,6 +1877,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+          "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
+          "fabricops_kit.io_core.configured_lakehouse_schema",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
           "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
           "fabricops_kit.io_core.configured_lakehouse_schema",
           "fabricops_kit.config._get_store",
@@ -1834,6 +1900,29 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+          "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
+          "fabricops_kit.io_core.write_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._normalize_table_name"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+          "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
+          "fabricops_kit.io_core.write_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_schema"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
           "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
           "fabricops_kit.io_core.write_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -1845,6 +1934,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+          "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
+          "fabricops_kit.io_core.write_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_table_path"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
           "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
           "fabricops_kit.io_core.write_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -1856,57 +1957,11 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_enrich_table_metadata",
+          "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
           "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
           "fabricops_kit.io_core.write_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_target_store",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-          "fabricops_kit.io_core.write_lakehouse_table_core",
-          "fabricops_kit.io_core._resolve_target_store",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-          "fabricops_kit.io_core.write_lakehouse_table_core",
-          "fabricops_kit.io_core._resolve_target_store",
-          "fabricops_kit.config.resolve_fabric_context",
-          "fabricops_kit.config.get_default_fabric_context"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "fabricops_kit.governance_review._approved_review_context",
-          "fabricops_kit.metadata._build_runtime_audit_fields",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "fabricops_kit.governance_review._approved_review_context",
-          "fabricops_kit.metadata._build_runtime_audit_fields",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
-          "fabricops_kit.config._validate_audit_timezone"
+          "fabricops_kit.config._get_store"
         ]
       }
     ],
@@ -1982,7 +2037,7 @@
   },
   "widget_review_guardrail_governance": {
     "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
-    "unique_internal_helper_count": 9,
+    "unique_internal_helper_count": 10,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -2035,6 +2090,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
+          "fabricops_kit.governance_review.apply_governance_enrichment_action",
+          "fabricops_kit.metadata._now_utc_iso",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
           "fabricops_kit.governance_review.apply_governance_enrichment_action",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
@@ -2046,11 +2113,45 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
+          "fabricops_kit.governance_review.apply_governance_enrichment_action",
+          "fabricops_kit.metadata._resolve_action_by",
+          "fabricops_kit.metadata._runtime_context",
+          "fabricops_kit.metadata._context_get"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
+          "fabricops_kit.governance_review.apply_governance_rule_action",
+          "fabricops_kit.metadata._now_utc_iso",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
           "fabricops_kit.governance_review.apply_governance_rule_action",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
           "fabricops_kit.config._get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_review_guardrail_governance",
+          "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
+          "fabricops_kit.governance_review.apply_governance_rule_action",
+          "fabricops_kit.metadata._resolve_action_by",
+          "fabricops_kit.metadata._runtime_context",
+          "fabricops_kit.metadata._context_get"
         ]
       }
     ],
@@ -2084,7 +2185,7 @@
   },
   "widget_select_guardrail_target": {
     "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
-    "unique_internal_helper_count": 19,
+    "unique_internal_helper_count": 20,
     "repeated_helpers": [
       {
         "helper": "_coerce_rows",
@@ -2112,6 +2213,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
+          "fabricops_kit.governance_review._read_metadata_table_or_empty",
+          "fabricops_kit.io_core.configured_lakehouse_schema",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
           "fabricops_kit.governance_review._read_metadata_table_or_empty",
           "fabricops_kit.io_core.configured_lakehouse_schema",
           "fabricops_kit.config._get_store",
@@ -2123,6 +2236,29 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
+          "fabricops_kit.governance_review._read_metadata_table_or_empty",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._normalize_table_name"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
+          "fabricops_kit.governance_review._read_metadata_table_or_empty",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_schema"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
           "fabricops_kit.governance_review._read_metadata_table_or_empty",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -2134,6 +2270,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
+          "fabricops_kit.governance_review._read_metadata_table_or_empty",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_table_path"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
           "fabricops_kit.governance_review._read_metadata_table_or_empty",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_lakehouse_table_location",
@@ -2145,34 +2293,11 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.governance_review.widget_select_guardrail_target",
+          "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
           "fabricops_kit.governance_review._read_metadata_table_or_empty",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_target_store",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.governance_review.widget_select_guardrail_target",
-          "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "fabricops_kit.io_core.read_lakehouse_table_core",
-          "fabricops_kit.io_core._resolve_target_store",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.governance_review.widget_select_guardrail_target",
-          "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "fabricops_kit.io_core.read_lakehouse_table_core",
-          "fabricops_kit.io_core._resolve_target_store",
-          "fabricops_kit.config.resolve_fabric_context",
-          "fabricops_kit.config.get_default_fabric_context"
+          "fabricops_kit.config._get_store"
         ]
       }
     ],

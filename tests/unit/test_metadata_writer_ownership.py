@@ -112,19 +112,55 @@ def test_guardrail_result_writer_has_single_shared_implementation():
     assert writer_definitions == ["metadata.py:_write_guardrail_result_row"]
 
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
-    """Verify widget functions do not directly write mixed metadata payloads."""
-    selector_source = _function_source("governance_review.py", "widget_select_guardrail_target")
-    schema_widget_source = _function_source("governance_review.py", "widget_author_schema_freshness_profile_rules")
-    dq_widget_source = _function_source("governance_review.py", "widget_author_dq_rules")
-    review_widget_source = _function_source("governance_review.py", "widget_review_guardrail_governance")
+    """Verify widget wrappers delegate and workflows keep metadata ownership."""
+    workflow_by_wrapper = {
+        "widget_select_guardrail_target": "_guardrail_target_selection_widget_workflow",
+        "widget_author_schema_freshness_profile_rules": "_schema_freshness_profile_rule_authoring_widget_workflow",
+        "widget_author_dq_rules": "_dq_rule_authoring_widget_workflow",
+        "widget_review_guardrail_governance": "_guardrail_governance_review_widget_workflow",
+    }
+    workflow_sources = {
+        workflow_name: _function_source("governance_review.py", workflow_name)
+        for workflow_name in workflow_by_wrapper.values()
+    }
+
+    selector_source = workflow_sources["_guardrail_target_selection_widget_workflow"]
+    schema_widget_source = workflow_sources["_schema_freshness_profile_rule_authoring_widget_workflow"]
+    dq_widget_source = workflow_sources["_dq_rule_authoring_widget_workflow"]
+    review_widget_source = workflow_sources["_guardrail_governance_review_widget_workflow"]
 
     assert "CATALOGUE_TABLE" in selector_source
+    assert "GUARDRAIL_RULES_TABLE" in selector_source
+    assert "ENRICHMENT_RULES_TABLE" in selector_source
     assert "_read_metadata_table_or_empty" in selector_source
     assert "_write_rule_records" in schema_widget_source
     assert "_write_rule_records" in dq_widget_source
     assert "_write_rule_records" in review_widget_source
+    assert "_write_enrichment_records" in review_widget_source
     assert "_write_governance_policy_record" not in review_widget_source
     assert "METADATA_GOVERNANCE_REVIEWS" not in review_widget_source
+
+    for source in (schema_widget_source, dq_widget_source, review_widget_source):
+        assert "CATALOGUE_TABLE" not in source
+        assert "GUARDRAIL_RESULTS_TABLE" not in source
+        assert "write_lakehouse_table_core" not in source
+
+    for wrapper_name, workflow_name in workflow_by_wrapper.items():
+        wrapper_source = _function_source("governance_review.py", wrapper_name)
+        wrapper_tree = ast.parse(wrapper_source)
+        wrapper_def = next(node for node in wrapper_tree.body if isinstance(node, ast.FunctionDef))
+        wrapper_calls = {node.func.id for node in ast.walk(wrapper_def) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+        wrapper_returns = [node for node in ast.walk(wrapper_def) if isinstance(node, ast.Return)]
+
+        assert workflow_name in wrapper_calls
+        assert len(wrapper_returns) == 1
+        assert "write_lakehouse_table_core" not in wrapper_source
+        assert "_write_rule_records" not in wrapper_source
+        assert "_write_enrichment_records" not in wrapper_source
+        assert "CATALOGUE_TABLE" not in wrapper_source
+        assert "GUARDRAIL_RULES_TABLE" not in wrapper_source
+        assert "GUARDRAIL_RESULTS_TABLE" not in wrapper_source
+        assert "ENRICHMENT_RULES_TABLE" not in wrapper_source
 
     for path in SRC.glob("*.py"):
         source = path.read_text(encoding="utf-8")
@@ -133,9 +169,3 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
             if isinstance(node, ast.FunctionDef) and node.name.startswith("widget_"):
                 function_source = ast.get_source_segment(source, node) or ""
                 assert "write_lakehouse_table_core" not in function_source, f"{path}:{node.name} writes metadata directly"
-                if node.name in {"widget_author_schema_freshness_profile_rules", "widget_author_dq_rules"}:
-                    assert "CATALOGUE_TABLE" not in function_source
-                    assert "GUARDRAIL_RESULTS_TABLE" not in function_source
-                if node.name == "widget_review_guardrail_governance":
-                    assert "CATALOGUE_TABLE" not in function_source
-                    assert "GUARDRAIL_RESULTS_TABLE" not in function_source
