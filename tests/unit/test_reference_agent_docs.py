@@ -319,7 +319,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Architecture metrics summarize public entrypoint flow risk." in dashboard_text
 
     assert "Callable Inventory" in inventory_text
-    assert "Search/filter all callables, select rows, and export AI refactor packets." in inventory_text
+    assert "Search/filter callables with maintainer-friendly role groups, reachability, and refactor signals." in inventory_text
     assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
     assert "inventorySummaryCards" in inventory_text
@@ -344,7 +344,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "const start=i.source_start_line||i.start_line||i.line_number" in inventory_text
     assert "#L${start}" in inventory_text
     assert "GITHUB_SOURCE_BASE" in inventory_text
-    assert "Showing ${visibleRows.length} ${state.kind} callables of ${total} total discovered callable records." in inventory_text
+    assert "Showing ${visibleRows.length} callable records of ${total} total discovered callable records." in inventory_text
     assert "Showing ${visibleRows.length} of ${inventory.length} discovered callables" not in inventory_text
     assert "Callable metrics are generated from the callable inventory data." in inventory_text
     assert "<td>${sourceCallableLink(i)}</td>" in inventory_text
@@ -354,14 +354,19 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "copyMarkdown" in inventory_text
     assert "downloadJson" in inventory_text
     assert "searchBox" in inventory_text
+    assert "moduleFilter" in inventory_text
+    assert "roleGroupFilter" in inventory_text
+    assert "reachabilityFilter" in inventory_text
+    assert "signalFilter" in inventory_text
+    assert "priorityFilter" in inventory_text
+    assert "Advanced / Debug filters" in inventory_text
+    assert "callableRoleFilter" in inventory_text
+    assert "dependencyRoleFilter" in inventory_text
     assert "kindFilter" in inventory_text
     assert "typeFilter" in inventory_text
     assert "reviewStatusFilter" in inventory_text
-    assert "moduleFilter" in inventory_text
-    assert "signalFilter" in inventory_text
-    assert "callableRoleFilter" in inventory_text
-    assert "dependencyRoleFilter" in inventory_text
-    assert "reachabilityFilter" in inventory_text
+    assert "minInboundFilter" in inventory_text
+    assert "minOutboundFilter" in inventory_text
     assert "selectedCount" in inventory_text
     assert "compatibilityMode" in inventory_text
     assert "Select visible" in inventory_text
@@ -522,7 +527,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["recommended_action"] == "Keep lifecycle method" for row in lifecycle_rows.values())
     assert all("lifecycle_method" in row["callable_role"] for row in lifecycle_rows.values())
     assert all("implicit_lifecycle_reachable" in row["callable_role"] for row in lifecycle_rows.values())
+    assert all(row["callable_role_group"] == "lifecycle_method" for row in lifecycle_rows.values())
+    assert all(row["callable_role_group_label"] == "Lifecycle method" for row in lifecycle_rows.values())
+    assert all("lifecycle_method" in row["callable_role_detail"] for row in lifecycle_rows.values())
     assert all(row["reachability_kind"] == "implicit_lifecycle_reachable" for row in lifecycle_rows.values())
+    assert all(row["reachability_label"] == "Lifecycle reachable" for row in lifecycle_rows.values())
     assert all("implicit_lifecycle_reachability" in row["signals"] for row in lifecycle_rows.values())
     assert all("Utility but low reuse" not in row["signals"] for row in lifecycle_rows.values())
     root_row = next(row for row in function_inventory if row["qualified_name"] == "fabricops_kit.io_core.FabricStore.root")
@@ -565,8 +574,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
             "callable_kind",
             "visibility",
             "callable_role",
+            "callable_role_group",
+            "callable_role_group_label",
+            "callable_role_detail",
+            "callable_role_detail_label",
             "architectural_role",
             "reachability_kind",
+            "reachability_label",
             "dependency_role",
             "change_risk",
             "refined_recommended_action",
