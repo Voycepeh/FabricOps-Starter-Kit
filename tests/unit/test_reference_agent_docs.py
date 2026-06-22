@@ -327,8 +327,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architectureThresholds=data.architecture_thresholds||architectureThresholds" in dashboard_text
     assert "function longCallChainThreshold()" in dashboard_text
     assert "function largeDependencySurfaceThreshold()" in dashboard_text
-    assert "long_call_chain_depth:0" in dashboard_text
-    assert "large_dependency_surface:0" in dashboard_text
+    assert "long_call_chain_depth:null" in dashboard_text
+    assert "large_dependency_surface:null" in dashboard_text
+    assert "function positiveThreshold(value)" in dashboard_text
+    assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in dashboard_text
     assert "architecture_violation_count??f.cross_layer_issue_count" in dashboard_text
     assert ">=3" not in dashboard_text
     assert "down>=12" not in dashboard_text
@@ -336,10 +338,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function whyReview(flow)" in dashboard_text
     assert "reasons.join(' ')" in dashboard_text
     assert "Contains ${violations} architecture violations." in dashboard_text
-    assert "Depth is ${flow.maximum_chain_depth}; threshold is >= ${longCallChainThreshold()}." in dashboard_text
-    assert "Has ${flow.downstream_callable_count} downstream functions; threshold is >= ${largeDependencySurfaceThreshold()}." in dashboard_text
+    assert "Depth is ${flow.maximum_chain_depth}; threshold is >= ${longThreshold}." in dashboard_text
+    assert "Has ${flow.downstream_callable_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
     assert "Public callables whose call depth exceeds the threshold >= ${longCallChainThreshold()}." in dashboard_text
-    assert "Depth; long call chain threshold >= ${longCallChainThreshold()}" in dashboard_text
+    assert "Depth; long call chain threshold >= ${longThreshold}" in dashboard_text
+    assert "longThreshold!==null" in dashboard_text
+    assert "largeThreshold!==null" in dashboard_text
+    assert "long call chain threshold unavailable" in dashboard_text
     assert "Contains ${flow.single_use_helper_candidate_count} merge candidates inside this flow." in dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
