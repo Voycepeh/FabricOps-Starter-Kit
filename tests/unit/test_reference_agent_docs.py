@@ -303,10 +303,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Requested work" in dashboard_text
     assert "Output required from AI" in dashboard_text
     assert "Batch accounting" in dashboard_text
-    assert "downstream_callable_count" in dashboard_text
-    assert "maximum_chain_depth" in dashboard_text
+    assert "downstream_count" in dashboard_text
+    assert "max_depth" in dashboard_text
     assert "modules_touched" in dashboard_text
-    assert "cross_layer_issue_count" in dashboard_text
+    assert "architecture_violation_count" in dashboard_text
+    assert "cross_layer_issue_count" not in dashboard_text
     assert "direct callees" in dashboard_text
     assert "disabled>Copy JSON" in dashboard_text
     assert "disabled>Copy Markdown" in dashboard_text
@@ -331,21 +332,21 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "large_dependency_surface:null" in dashboard_text
     assert "function positiveThreshold(value)" in dashboard_text
     assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in dashboard_text
-    assert "architecture_violation_count??f.cross_layer_issue_count" in dashboard_text
+    assert "architecture_violation_count??0" in dashboard_text
     assert ">=3" not in dashboard_text
     assert "down>=12" not in dashboard_text
     assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
     assert "reasons.join(' ')" in dashboard_text
     assert "Contains ${violations} architecture violations." in dashboard_text
-    assert "Depth is ${flow.maximum_chain_depth}; threshold is >= ${longThreshold}." in dashboard_text
-    assert "Has ${flow.downstream_callable_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
+    assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
+    assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
     assert "Public callables whose call depth exceeds the threshold >= ${longCallChainThreshold()}." in dashboard_text
     assert "Depth; long call chain threshold >= ${longThreshold}" in dashboard_text
     assert "longThreshold!==null" in dashboard_text
     assert "largeThreshold!==null" in dashboard_text
     assert "long call chain threshold unavailable" in dashboard_text
-    assert "Contains ${flow.single_use_helper_candidate_count} merge candidates inside this flow." in dashboard_text
+    assert "Contains ${flow.helper_cleanup_candidates} merge candidates inside this flow." in dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
 
@@ -374,7 +375,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function sourceCallableLink(i)" in inventory_text
     assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
     assert "if(i.source_url)return i.source_url" in inventory_text
-    assert "const start=i.source_start_line||i.start_line||i.line_number" in inventory_text
+    assert "const start=i.source_start_line" in inventory_text
     assert "#L${start}" in inventory_text
     assert "GITHUB_SOURCE_BASE" in inventory_text
     assert "Showing ${visibleRows.length} callable records of ${total} total discovered callable records." in inventory_text
@@ -493,19 +494,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "[Inventory](../assets/callable-functions-inventory.html)" in maintainer_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert set(flow_data) == {"generated_at", "function_inventory", "public_entrypoint_flow", "summary_counts", "architecture_thresholds"}
+    assert set(flow_data) == {"function_inventory", "public_entrypoint_flow", "summary_counts", "architecture_thresholds"}
     assert flow_data["architecture_thresholds"] == {"long_call_chain_depth": 4, "large_dependency_surface": 10}
 
     summary_counts = flow_data["summary_counts"]
     assert {
         "total_callables",
-        "total_functions",
         "function_type",
         "layer",
         "review_status",
         "callable_kind",
         "recommended_action",
-        "layer_consistency",
         "callable_inventory_metrics",
         "callable_role_group",
     } <= set(summary_counts)
@@ -527,9 +526,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert summary_counts["total_callables"] - summary_counts["callable_kind"]["function"] == 22
     assert {
         "public_api_entrypoints",
-        "deep_chains",
-        "cross_layer_issues",
-        "single_use_helper_candidates",
+        "long_call_chains",
+        "architecture_violations",
+        "merge_candidates",
         "suggested_inline_or_privatize",
     } <= set(public_api_surface)
 
@@ -538,14 +537,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert len(public_flows) == summary_counts["layer"]["public"]
     assert len(public_flows) == public_api_surface["public_api_entrypoints"]
     for flow in public_flows:
-        assert "maximum_chain_depth" in flow
-        assert "downstream_callable_count" in flow
+        assert "max_depth" in flow
+        assert "downstream_count" in flow
         assert "children" not in flow
         for callee in [*flow["direct_callees"], *flow["transitive_callees"]]:
             assert "depth" in callee
             assert "parent_qualified_name" in callee
             assert "children" not in callee
             assert len(callee.get("path_examples", [])) <= 3
+            assert "helper_cleanup_candidate" in callee
 
     function_inventory = flow_data["function_inventory"]
     assert len(function_inventory) == summary_counts["total_callables"]
@@ -574,14 +574,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         for action in sorted({row["recommended_action"] for row in function_inventory})
     }
     assert all(row["recommended_action"] for row in function_inventory)
-    assert summary_counts["layer_consistency"] == {
-        consistency: sum(1 for row in function_inventory if row["layer_consistency"] == consistency)
-        for consistency in summary_counts["layer_consistency"]
-    }
     assert any(
         row["function_type"] == "Utility"
-        and row["used_by_count"] <= 1
-        and row["layer_consistency"] == "questionable_utility"
+        and row["called_by_count"] <= 1
         and "Utility but low reuse" in row["signals"]
         for row in function_inventory
     )
@@ -618,7 +613,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert root_row["callable_kind"] == "property_accessor"
     assert root_row["review_status"] == "property_accessor"
     assert root_row["recommended_action"] == "Keep property accessor"
-    assert root_row["layer_consistency"] == "property_accessor"
     assert "Utility but low reuse" not in root_row["signals"]
     assert root_row["recommended_action"] != "Orphaned callable"
     rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
@@ -638,46 +632,36 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "implicit_lifecycle_reachable" not in rows_by_qn["fabricops_kit.config._normalize_path_config"]["callable_role"]
     assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
     assert any(row["review_status"] == "unreachable" and row["recommended_action"] == "Orphaned callable" and "unreachable_candidate" in row["callable_role"] for row in function_inventory)
-    assert all(row["used_by_count"] == row["called_by_count"] for row in function_inventory)
-    assert all(
-        {
-            "function_name",
-            "qualified_name",
-            "module",
-            "function_type",
-            "layer",
-            "review_status",
-            "review_status_label",
-            "callable_kind",
-            "visibility",
-            "callable_role",
-            "callable_role_group",
-            "callable_role_group_label",
-            "callable_role_detail",
-            "callable_role_detail_label",
-            "architectural_role",
-            "reachability_kind",
-            "reachability_label",
-            "dependency_role",
-            "change_risk",
-            "refined_recommended_action",
-            "used_by_count",
-            "called_by_count",
-            "calls_count",
-            "layer_consistency",
-            "layer_consistency_label",
-            "direct_internal_helpers",
-            "deepest_call_chain_depth",
-            "repeated_helper_count",
-            "recommended_action",
-            "priority",
-            "callers",
-            "callees",
-            "source_path",
-        }
-        <= set(item)
-        for item in function_inventory
-    )
+    expected_inventory_keys = {
+        "qualified_name",
+        "function_name",
+        "module",
+        "source_path",
+        "source_url",
+        "function_type",
+        "layer",
+        "review_status",
+        "review_status_label",
+        "callable_kind",
+        "callable_role",
+        "callable_role_group",
+        "callable_role_group_label",
+        "callable_role_detail",
+        "callable_role_detail_label",
+        "dependency_role",
+        "reachability_kind",
+        "reachability_label",
+        "recommended_action",
+        "priority",
+        "signals",
+        "called_by_count",
+        "calls_count",
+        "callers",
+        "callees",
+    }
+    public_inventory_keys = expected_inventory_keys | {"docs_path"}
+    assert all(set(item) == expected_inventory_keys or set(item) == public_inventory_keys for item in function_inventory)
+    assert all({"function_type", "layer", "dependency_role", "callable_kind"} <= set(item) for item in function_inventory)
 
     callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
     assert "Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers" in callable_flow_text
@@ -688,6 +672,53 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Role group = broad job of the callable." in callable_flow_text
     assert "Findings / Signal = review hints or actions, not automatic refactor commands." in callable_flow_text
     assert "Priority = triage order, not a guarantee something must be changed." in callable_flow_text
+    assert "compact dashboard contract data" in callable_flow_text
+    serialized_flow = json.dumps(flow_data)
+    for legacy_name in ["cross_layer", "deep_chain", "inline_candidate", "used_by_count", "change_risk", "refined_recommended_action"]:
+        assert legacy_name not in serialized_flow
+
+    expected_public_flow_keys = {
+        "qualified_name",
+        "function_name",
+        "module",
+        "docs_path",
+        "source_url",
+        "priority",
+        "recommended_simplification_action",
+        "warnings",
+        "downstream_count",
+        "max_depth",
+        "modules_touched",
+        "architecture_violation_count",
+        "architecture_violation_breakdown",
+        "helper_cleanup_candidates",
+        "direct_callees",
+        "transitive_callees",
+    }
+    expected_callee_keys = {
+        "qualified_name",
+        "function_name",
+        "module",
+        "depth",
+        "function_type",
+        "layer",
+        "layer_group",
+        "dependency_role",
+        "edge_type",
+        "parent_qualified_name",
+        "caller_type",
+        "callee_type",
+        "architecture_result",
+        "violation_type",
+        "signals",
+        "recommended_action",
+        "downstream_count",
+        "source_url",
+        "path_examples",
+        "helper_cleanup_candidate",
+    }
+    assert all(set(flow) == expected_public_flow_keys for flow in public_flows)
+    assert all(set(callee) == expected_callee_keys for flow in public_flows for callee in flow["transitive_callees"])
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
@@ -1028,7 +1059,7 @@ def _dashboard_flow_tree_rows(flow: dict[str, object]) -> list[str]:
         assert isinstance(row, dict)
         parent = str(row.get("parent_qualified_name") or root_qn)
         by_parent.setdefault(parent, []).append(row)
-    rows = [str(flow["public_callable"])]
+    rows = [str(flow["function_name"])]
 
     def sort_key(row: dict[str, object]) -> tuple[int, str, str, str]:
         return (
@@ -1043,7 +1074,7 @@ def _dashboard_flow_tree_rows(flow: dict[str, object]) -> list[str]:
         for index, child in enumerate(children):
             child_qn = str(child.get("qualified_name") or "")
             connector = "└── " if index == len(children) - 1 else "├── "
-            rows.append(f"{prefix}{connector}{child['callable']}")
+            rows.append(f"{prefix}{connector}{child['function_name']}")
             if child_qn and child_qn not in ancestors:
                 extension = "    " if index == len(children) - 1 else "│   "
                 visit(child_qn, prefix + extension, ancestors | {child_qn})
@@ -1058,12 +1089,12 @@ def test_display_guardrail_results_dependency_count_matches_callable_architectur
     flow = next(
         item
         for item in callable_flow["public_entrypoint_flow"]
-        if item["public_callable"] == "display_guardrail_results"
+        if item["function_name"] == "display_guardrail_results"
     )
     reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
     detail_page = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
 
-    assert flow["downstream_callable_count"] == 14
+    assert flow["downstream_count"] == 14
     assert 'data-callable-name="display_guardrail_results"' in reference_index
     assert "Downstream callables: 14" in reference_index
     assert '??? info "Downstream callables: 14"' in detail_page

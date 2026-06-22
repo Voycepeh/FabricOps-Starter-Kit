@@ -31,7 +31,7 @@ This keeps public callables stable, lets purposeful internal implementation role
 
 ## How the dashboard is generated
 
-The dashboard is built from repository scans that inspect callable definitions and relationships. The scan produces callable relationship metadata in [`_data/callable-flow.json`](_data/callable-flow.json), and the visual dashboard uses that JSON to show caller and callee relationships, roles, reachability, reuse, layer consistency, and refactor recommendations.
+The dashboard is built from repository scans that inspect callable definitions and relationships. The scan produces compact dashboard contract data in [`_data/callable-flow.json`](_data/callable-flow.json), containing only fields used by the Architecture and Inventory dashboards for caller and callee relationships, roles, reachability, reuse, layer consistency, and refactor recommendations.
 
 Because the dashboard is generated from the codebase, it is a maintenance aid rather than a separate source of truth. Use it to decide where to inspect source code, update docstrings, flatten helper chains, or preserve shared helpers carefully.
 
@@ -108,7 +108,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
     Prompt for AI
 
-    Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when used_by_count is low. Do not assume that a highly reused Internal helper must remain internal. Do not treat all internal-to-internal calls as violations. Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers. Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes. Respect compatibility mode, batch accounting, and completion accounting.
+    Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when inbound count is low. Do not assume that a highly reused Internal helper must remain internal. Do not treat all internal-to-internal calls as violations. Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers. Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes. Respect compatibility mode, batch accounting, and completion accounting.
 
     Refactor context
 
