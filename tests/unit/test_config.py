@@ -603,3 +603,39 @@ def test_config_workflow_role_boundaries_do_not_add_workflow_to_workflow_signal(
         )
         == ["allowed_internal_role_call"]
     )
+
+
+def test_data_agreement_widget_role_hints_keep_orchestration_as_workflow():
+    """Verify agreement widget orchestration is not misclassified as an adapter."""
+    from scripts.generate_function_reference import ROLE_TAGS_BY_NAME, _role_dependency_signals
+
+    shared_roles = ROLE_TAGS_BY_NAME["_render_maintenance_widget_shared_workflow"]
+
+    assert shared_roles[:2] == ["internal_workflow", "shared_widget_rendering_workflow"]
+    assert "internal_adapter" not in shared_roles
+    assert "widget_rendering_adapter" not in shared_roles
+    assert "_render_maintenance_widget_workflow" not in ROLE_TAGS_BY_NAME
+    assert "_render_data_steward_widget_workflow" not in ROLE_TAGS_BY_NAME
+    assert "_render_data_agreement_widget_workflow" not in ROLE_TAGS_BY_NAME
+    assert (
+        _role_dependency_signals("public_api_entrypoint", shared_roles[0])
+        == ["allowed_internal_role_call"]
+    )
+
+
+def test_data_agreement_widget_callable_inventory_roles_are_current():
+    """Verify generated widget inventory reflects the shared workflow role split."""
+    import json
+
+    inventory = json.loads(Path("docs/reference/_data/callable-flow.json").read_text(encoding="utf-8"))["function_inventory"]
+    rows = {row["qualified_name"]: row for row in inventory}
+    shared = rows["fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"]
+
+    assert shared["dependency_role"] == "internal_workflow"
+    assert "shared_widget_rendering_workflow" in shared["callable_role"]
+    assert "internal_adapter" not in shared["callable_role"]
+    assert "fabricops_kit.data_agreement._render_maintenance_widget_workflow" not in rows
+    assert "fabricops_kit.data_agreement._render_data_steward_widget_workflow" not in rows
+    assert "fabricops_kit.data_agreement._render_data_agreement_widget_workflow" not in rows
+    assert rows["fabricops_kit.data_agreement.widget_render_data_steward"]["architecture_signals"] == []
+    assert rows["fabricops_kit.data_agreement.widget_render_data_agreement"]["architecture_signals"] == []

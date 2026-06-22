@@ -1891,7 +1891,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._next_minor_version"
@@ -1919,7 +1919,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_next_minor_version"
     ]
   },
@@ -2014,7 +2014,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.config.get",
@@ -2043,7 +2043,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "get",
       "_to_iso_date"
     ]
@@ -2061,7 +2061,7 @@
       "fabricops_kit.data_agreement._get_widget_visible_fields",
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
       "fabricops_kit.data_agreement._list_data_stewards",
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
       "fabricops_kit.data_agreement._save_agreement_evidence_records"
     ],
     "outbound": [],
@@ -2093,7 +2093,7 @@
       "_get_widget_visible_fields",
       "_list_all_data_agreement_rows",
       "_list_data_stewards",
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_save_agreement_evidence_records"
     ]
   },
@@ -2105,7 +2105,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
@@ -2143,7 +2143,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_business_agreement_snapshot",
       "_config_value",
       "_generate_agreement_id",
@@ -2165,7 +2165,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._active_steward",
@@ -2200,7 +2200,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_active_steward",
       "_config_value",
       "_generate_steward_id",
@@ -2220,7 +2220,7 @@
     "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -2247,7 +2247,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_business_agreement_snapshot",
-      "_render_maintenance_widget_workflow"
+      "_render_maintenance_widget_shared_workflow"
     ]
   },
   {
@@ -2369,7 +2369,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._config_value"
@@ -2397,7 +2397,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_config_value"
     ]
   },
@@ -2582,7 +2582,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
     "outbound": [
@@ -2612,7 +2612,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "widget_select_agreement",
       "_latest_agreement_versions",
       "_list_all_data_agreement_rows"
@@ -2628,7 +2628,7 @@
     "inbound": [
       "fabricops_kit.config._setup_metadata_tables_workflow",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._active_steward",
@@ -2661,7 +2661,7 @@
     "related_functions": [
       "_setup_metadata_tables_workflow",
       "_create_or_update_data_agreement",
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_active_steward",
       "_config_value",
       "_latest_by_key",
@@ -2852,9 +2852,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1308,
-    "source_end_line": 1426,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+    "source_start_line": 1286,
+    "source_end_line": 1404,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
     "docs_path": null,
     "summary": "Render optional agreement evidence upload controls.",
     "use_when": "Not documented yet",
@@ -2886,7 +2886,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.config.get",
@@ -2917,7 +2917,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "get",
       "_require_ipywidgets",
       "_to_bool",
@@ -2925,95 +2925,15 @@
     ]
   },
   {
-    "name": "_render_data_agreement_widget_workflow",
-    "qualified_name": "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
+    "name": "_render_maintenance_widget_shared_workflow",
+    "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement.widget_render_data_agreement"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1297,
-    "source_end_line": 1305,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1297-L1305",
-    "docs_path": null,
-    "summary": "Run the internal data agreement widget workflow.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "Not documented yet",
-    "output": "Not documented yet",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "widget_render_data_agreement",
-      "_render_maintenance_widget_workflow"
-    ]
-  },
-  {
-    "name": "_render_data_steward_widget_workflow",
-    "qualified_name": "fabricops_kit.data_agreement._render_data_steward_widget_workflow",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
+      "fabricops_kit.data_agreement.widget_render_data_agreement",
       "fabricops_kit.data_agreement.widget_render_data_steward"
-    ],
-    "outbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1286,
-    "source_end_line": 1294,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1294",
-    "docs_path": null,
-    "summary": "Run the internal data steward widget workflow.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "Not documented yet",
-    "output": "Not documented yet",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "widget_render_data_steward",
-      "_render_maintenance_widget_workflow"
-    ]
-  },
-  {
-    "name": "_render_maintenance_widget_workflow",
-    "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
-    "module": "data_agreement",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
-      "fabricops_kit.data_agreement._render_data_steward_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._agreement_identity_text",
@@ -3055,8 +2975,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_data_agreement_widget_workflow",
-      "_render_data_steward_widget_workflow",
+      "widget_render_data_agreement",
+      "widget_render_data_steward",
       "_agreement_identity_text",
       "_collect_custom_fields",
       "_config_value",
@@ -3083,7 +3003,7 @@
     "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
     "outbound": [
@@ -3114,7 +3034,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_render_agreement_evidence_widget_workflow",
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "widget_select_agreement",
       "_html_escape",
       "_widget_common"
@@ -3130,7 +3050,7 @@
     "inbound": [
       "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
       "fabricops_kit.data_agreement._render_custom_fields",
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
       "fabricops_kit.data_agreement._standard_widget",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
@@ -3160,7 +3080,7 @@
     "related_functions": [
       "_render_agreement_evidence_widget_workflow",
       "_render_custom_fields",
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_standard_widget",
       "widget_select_agreement"
     ]
@@ -3260,7 +3180,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._require_ipywidgets",
@@ -3290,7 +3210,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_require_ipywidgets",
       "_to_bool",
       "_widget_common"
@@ -3307,7 +3227,7 @@
       "fabricops_kit.data_agreement._active_steward",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
       "fabricops_kit.data_agreement._render_custom_fields",
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
       "fabricops_kit.data_agreement._standard_widget"
     ],
     "outbound": [],
@@ -3337,7 +3257,7 @@
       "_active_steward",
       "_create_or_update_data_steward",
       "_render_custom_fields",
-      "_render_maintenance_widget_workflow",
+      "_render_maintenance_widget_shared_workflow",
       "_standard_widget"
     ]
   },
@@ -3350,7 +3270,7 @@
     "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._collect_custom_fields",
-      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -3377,7 +3297,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_collect_custom_fields",
-      "_render_maintenance_widget_workflow"
+      "_render_maintenance_widget_shared_workflow"
     ]
   },
   {
@@ -3528,9 +3448,9 @@
     "expanded_purpose": "Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.",
     "when_to_use": "Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.",
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1429,
-    "source_end_line": 1462,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1429-L1462",
+    "source_start_line": 1407,
+    "source_end_line": 1440,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1407-L1440",
     "docs_path": "api/reference/widget_render_agreement_evidence.md",
     "summary": "Render the standalone agreement-evidence widget.",
     "use_when": "Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.",
@@ -3569,7 +3489,7 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.data_agreement._render_data_agreement_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "used_in_templates": [
       "01_agreement"
@@ -3580,9 +3500,9 @@
     "expanded_purpose": "Renders the data agreement intake widget used to capture agreement identity, scope, and business metadata for later notebook workflows.",
     "when_to_use": "Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.",
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1486,
-    "source_end_line": 1504,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1486-L1504",
+    "source_start_line": 1464,
+    "source_end_line": 1482,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1464-L1482",
     "docs_path": "api/reference/widget_render_data_agreement.md",
     "summary": "Render the standalone data-agreement intake widget.",
     "use_when": "Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.",
@@ -3604,7 +3524,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "resolve_fabric_context",
-      "_render_data_agreement_widget_workflow"
+      "_render_maintenance_widget_shared_workflow"
     ]
   },
   {
@@ -3617,7 +3537,7 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.data_agreement._render_data_steward_widget_workflow"
+      "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"
     ],
     "used_in_templates": [
       "01_agreement"
@@ -3628,9 +3548,9 @@
     "expanded_purpose": "Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.",
     "when_to_use": "Use in 01_agreement when collecting or updating data steward details before creating a data agreement.",
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1465,
-    "source_end_line": 1483,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1465-L1483",
+    "source_start_line": 1443,
+    "source_end_line": 1461,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1443-L1461",
     "docs_path": "api/reference/widget_render_data_steward.md",
     "summary": "Render the standalone data-steward intake widget.",
     "use_when": "Use in 01_agreement when collecting or updating data steward details before creating a data agreement.",
@@ -3652,7 +3572,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "resolve_fabric_context",
-      "_render_data_steward_widget_workflow"
+      "_render_maintenance_widget_shared_workflow"
     ]
   },
   {

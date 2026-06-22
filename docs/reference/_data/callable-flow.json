@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T10:22:09+00:00",
+  "generated_at": "2026-06-22T10:32:54+00:00",
   "function_inventory": [
     {
       "function_name": "_audit_timestamp_expr",
@@ -3131,7 +3131,7 @@
           "function": "widget_render_agreement_evidence",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1429-L1462",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1407-L1440",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function",
@@ -3146,7 +3146,7 @@
           "function": "widget_render_data_agreement",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1486-L1504",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1464-L1482",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function",
@@ -3161,7 +3161,7 @@
           "function": "widget_render_data_steward",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1465-L1483",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1443-L1461",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function",
@@ -3641,18 +3641,18 @@
       "layer_consistency_label": "Architecture violation",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -3673,7 +3673,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1062-L1072",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -3754,7 +3754,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L636-L640",
-      "deepest_call_chain_depth": 4,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -3872,18 +3872,18 @@
       "layer_consistency_label": "Possible inline/private helper",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -3904,7 +3904,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L366-L399",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -4007,18 +4007,18 @@
           "dependency_role": "internal_resolver"
         },
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         },
         {
           "function": "_save_agreement_evidence_records",
@@ -4039,7 +4039,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L151-L155",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -4079,18 +4079,18 @@
       "layer_consistency_label": "Architecture violation",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -4245,7 +4245,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L643-L687",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -4285,18 +4285,18 @@
       "layer_consistency_label": "Architecture violation",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -4410,7 +4410,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L510-L567",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -4459,25 +4459,25 @@
           "dependency_role": "internal_normalizer"
         },
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L119-L148",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -4531,7 +4531,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L626-L627",
-      "deepest_call_chain_depth": 4,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -4585,7 +4585,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L451-L455",
-      "deepest_call_chain_depth": 4,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -4676,18 +4676,18 @@
       "layer_consistency_label": "Possible inline/private helper",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -4708,7 +4708,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L158-L180",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -5009,7 +5009,7 @@
           "function": "_render_agreement_evidence_widget_workflow",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -5121,18 +5121,18 @@
       "layer_consistency_label": "Architecture violation",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         },
         {
           "function": "widget_select_agreement",
@@ -5246,18 +5246,18 @@
           "dependency_role": "internal_workflow"
         },
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -5400,7 +5400,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L579-L582",
-      "deepest_call_chain_depth": 4,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -5543,7 +5543,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L497-L507",
-      "deepest_call_chain_depth": 4,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -5654,7 +5654,7 @@
           "function": "widget_render_agreement_evidence",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1429-L1462",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1407-L1440",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function",
@@ -5738,7 +5738,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -5776,18 +5776,18 @@
       "layer_consistency_label": "Possible inline/private helper",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -5834,12 +5834,12 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L313-L363",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
-      "function_name": "_render_data_agreement_widget_workflow",
-      "qualified_name": "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
+      "function_name": "_render_maintenance_widget_shared_workflow",
+      "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
       "module": "data_agreement",
       "function_type": "Internal helper",
       "layer": "internal",
@@ -5849,34 +5849,35 @@
       "visibility": "private",
       "callable_role": [
         "internal_workflow",
-        "data_agreement_widget_workflow"
+        "shared_widget_rendering_workflow"
       ],
       "architectural_role": "internal_workflow",
       "dependency_role": "internal_workflow",
       "reachability_kind": "directly_reachable",
       "change_risk": "High",
-      "refined_recommended_action": "Inline candidate",
-      "recommended_action": "Inline candidate",
+      "refined_recommended_action": "Architecture violation",
+      "recommended_action": "Architecture violation",
       "priority": "High",
       "signals": [
+        "internal_workflow_calls_internal_workflow",
         "allowed_internal_role_call",
-        "Thin wrapper candidate",
-        "Single-use internal helper",
-        "Possible inline/private helper"
+        "Layer assignment needs review"
       ],
-      "architecture_signals": [],
+      "architecture_signals": [
+        "internal_workflow_calls_internal_workflow"
+      ],
       "review_signals": [],
-      "used_by_count": 1,
-      "called_by_count": 1,
-      "calls_count": 1,
-      "layer_consistency": "possible_inline_or_private_helper",
-      "layer_consistency_label": "Possible inline/private helper",
+      "used_by_count": 2,
+      "called_by_count": 2,
+      "calls_count": 15,
+      "layer_consistency": "architecture_violation",
+      "layer_consistency_label": "Architecture violation",
       "callers": [
         {
           "function": "widget_render_data_agreement",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1486-L1504",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1464-L1482",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function",
@@ -5886,70 +5887,12 @@
             "public_stable"
           ],
           "dependency_role": "public_api_entrypoint"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_render_maintenance_widget_workflow",
-          "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        }
-      ],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/data_agreement.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1297-L1305",
-      "deepest_call_chain_depth": 1,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_render_data_steward_widget_workflow",
-      "qualified_name": "fabricops_kit.data_agreement._render_data_steward_widget_workflow",
-      "module": "data_agreement",
-      "function_type": "Internal helper",
-      "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "visibility": "private",
-      "callable_role": [
-        "internal_workflow",
-        "data_steward_widget_workflow"
-      ],
-      "architectural_role": "internal_workflow",
-      "dependency_role": "internal_workflow",
-      "reachability_kind": "directly_reachable",
-      "change_risk": "High",
-      "refined_recommended_action": "Inline candidate",
-      "recommended_action": "Inline candidate",
-      "priority": "High",
-      "signals": [
-        "allowed_internal_role_call",
-        "Thin wrapper candidate",
-        "Single-use internal helper",
-        "Possible inline/private helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "used_by_count": 1,
-      "called_by_count": 1,
-      "calls_count": 1,
-      "layer_consistency": "possible_inline_or_private_helper",
-      "layer_consistency_label": "Possible inline/private helper",
-      "callers": [
+        },
         {
           "function": "widget_render_data_steward",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1465-L1483",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1443-L1461",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function",
@@ -5959,89 +5902,6 @@
             "public_stable"
           ],
           "dependency_role": "public_api_entrypoint"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_render_maintenance_widget_workflow",
-          "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        }
-      ],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/data_agreement.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1294",
-      "deepest_call_chain_depth": 1,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_render_maintenance_widget_workflow",
-      "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
-      "module": "data_agreement",
-      "function_type": "Internal helper",
-      "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "visibility": "private",
-      "callable_role": [
-        "internal_adapter",
-        "widget_rendering_adapter"
-      ],
-      "architectural_role": "internal_adapter",
-      "dependency_role": "internal_adapter",
-      "reachability_kind": "directly_reachable",
-      "change_risk": "Review",
-      "refined_recommended_action": "Shared internal helper",
-      "recommended_action": "Shared internal helper",
-      "priority": "Review",
-      "signals": [
-        "Shared helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "used_by_count": 2,
-      "called_by_count": 2,
-      "calls_count": 15,
-      "layer_consistency": "shared_internal_helper",
-      "layer_consistency_label": "Shared internal helper",
-      "callers": [
-        {
-          "function": "_render_data_agreement_widget_workflow",
-          "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1297-L1305",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "data_agreement_widget_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_render_data_steward_widget_workflow",
-          "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_data_steward_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1294",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "data_steward_widget_workflow"
-          ],
-          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -6247,7 +6107,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
-      "deepest_call_chain_depth": 2,
+      "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
     {
@@ -6286,7 +6146,7 @@
           "function": "_render_agreement_evidence_widget_workflow",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -6297,18 +6157,18 @@
           "dependency_role": "internal_workflow"
         },
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         },
         {
           "function": "widget_select_agreement",
@@ -6394,7 +6254,7 @@
           "function": "_render_agreement_evidence_widget_workflow",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -6418,18 +6278,18 @@
           "dependency_role": "internal_workflow"
         },
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         },
         {
           "function": "_standard_widget",
@@ -6502,7 +6362,7 @@
           "function": "_render_agreement_evidence_widget_workflow",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -6650,7 +6510,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L102-L116",
-      "deepest_call_chain_depth": 4,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -6687,18 +6547,18 @@
       "layer_consistency_label": "Possible inline/private helper",
       "callers": [
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -6745,7 +6605,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1046-L1059",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -6821,18 +6681,18 @@
           "dependency_role": "internal_workflow"
         },
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         },
         {
           "function": "_standard_widget",
@@ -6852,7 +6712,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L419-L435",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -6900,25 +6760,25 @@
           "dependency_role": "internal_workflow"
         },
         {
-          "function": "_render_maintenance_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_adapter",
-            "widget_rendering_adapter"
+            "internal_workflow",
+            "shared_widget_rendering_workflow"
           ],
-          "dependency_role": "internal_adapter"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L630-L633",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -6956,7 +6816,7 @@
           "function": "_render_agreement_evidence_widget_workflow",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7231,7 +7091,7 @@
           "function": "_render_agreement_evidence_widget_workflow",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7247,7 +7107,7 @@
           "function": "_render_agreement_evidence_widget_workflow",
           "module": "data_agreement",
           "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7259,7 +7119,7 @@
         }
       ],
       "source_path": "src/fabricops_kit/data_agreement.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1429-L1462",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1407-L1440",
       "deepest_call_chain_depth": 8,
       "repeated_helper_count": 12
     },
@@ -7314,39 +7174,39 @@
           "dependency_role": "internal_resolver"
         },
         {
-          "function": "_render_data_agreement_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1297-L1305",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "data_agreement_widget_workflow"
+            "shared_widget_rendering_workflow"
           ],
           "dependency_role": "internal_workflow"
         }
       ],
       "direct_internal_helpers": [
         {
-          "function": "_render_data_agreement_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1297-L1305",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "data_agreement_widget_workflow"
+            "shared_widget_rendering_workflow"
           ],
           "dependency_role": "internal_workflow"
         }
       ],
       "source_path": "src/fabricops_kit/data_agreement.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1486-L1504",
-      "deepest_call_chain_depth": 9,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1464-L1482",
+      "deepest_call_chain_depth": 8,
       "repeated_helper_count": 12
     },
     {
@@ -7400,39 +7260,39 @@
           "dependency_role": "internal_resolver"
         },
         {
-          "function": "_render_data_steward_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_data_steward_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1294",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "data_steward_widget_workflow"
+            "shared_widget_rendering_workflow"
           ],
           "dependency_role": "internal_workflow"
         }
       ],
       "direct_internal_helpers": [
         {
-          "function": "_render_data_steward_widget_workflow",
+          "function": "_render_maintenance_widget_shared_workflow",
           "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._render_data_steward_widget_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1294",
+          "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1075-L1283",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "data_steward_widget_workflow"
+            "shared_widget_rendering_workflow"
           ],
           "dependency_role": "internal_workflow"
         }
       ],
       "source_path": "src/fabricops_kit/data_agreement.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1465-L1483",
-      "deepest_call_chain_depth": 9,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1443-L1461",
+      "deepest_call_chain_depth": 8,
       "repeated_helper_count": 12
     },
     {
@@ -28291,20 +28151,20 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 306,
-    "total_functions": 306,
+    "total_callables": 304,
+    "total_functions": 304,
     "function_type": {
       "Public API": 26,
-      "Internal helper": 177,
+      "Internal helper": 175,
       "Utility": 103
     },
     "layer": {
       "public": 26,
-      "internal": 177,
+      "internal": 175,
       "utility": 103
     },
     "review_status": {
-      "classified": 269,
+      "classified": 267,
       "classification_pending": 13,
       "implicit_lifecycle": 8,
       "property_accessor": 1,
@@ -28312,7 +28172,7 @@
     },
     "callable_kind": {
       "class": 13,
-      "function": 284,
+      "function": 282,
       "implicit_lifecycle_method": 8,
       "property_accessor": 1
     },
@@ -28327,9 +28187,7 @@
       "config_model_class": 8,
       "config_validator": 1,
       "context_model_class": 2,
-      "data_agreement_widget_workflow": 1,
       "data_steward_resolver": 1,
-      "data_steward_widget_workflow": 1,
       "dataframe_validator": 1,
       "dq_rule_validator": 1,
       "fabric_connector_adapter": 1,
@@ -28343,11 +28201,11 @@
       "high_fanout_shared": 3,
       "implicit_lifecycle_reachable": 10,
       "instance_method": 2,
-      "internal_adapter": 19,
+      "internal_adapter": 18,
       "internal_normalizer": 16,
       "internal_resolver": 29,
       "internal_validator": 14,
-      "internal_workflow": 101,
+      "internal_workflow": 100,
       "io_workflow": 8,
       "keep_lifecycle_method": 8,
       "lakehouse_file_path_resolver": 2,
@@ -28394,6 +28252,7 @@
       "setup_notebook_workflow": 1,
       "setup_smoke_test_validator": 1,
       "shared_internal_service": 4,
+      "shared_widget_rendering_workflow": 1,
       "spark_audit_expression_utility": 1,
       "spark_read_adapter": 2,
       "spark_runtime_probe": 1,
@@ -28411,7 +28270,7 @@
       "warehouse_write_workflow": 1,
       "widget_config_normalizer": 1,
       "widget_entrypoint": 8,
-      "widget_rendering_adapter": 2,
+      "widget_rendering_adapter": 1,
       "widget_workflow": 5,
       "write_mode_validator": 1
     },
@@ -28420,11 +28279,11 @@
       "config_model_class": 8,
       "context_model_class": 2,
       "instance_method": 2,
-      "internal_adapter": 19,
+      "internal_adapter": 18,
       "internal_normalizer": 16,
       "internal_resolver": 29,
       "internal_validator": 14,
-      "internal_workflow": 101,
+      "internal_workflow": 100,
       "lifecycle_method": 8,
       "property_method": 1,
       "public_api_entrypoint": 26,
@@ -28435,15 +28294,15 @@
       "utility_validator": 2
     },
     "recommended_action": {
-      "Architecture violation": 51,
-      "Inline candidate": 65,
+      "Architecture violation": 52,
+      "Inline candidate": 63,
       "Keep lifecycle method": 8,
       "Keep property accessor": 1,
       "Orphaned callable": 12,
       "Public API entrypoint": 26,
       "Review abstraction value": 24,
       "Review manually": 27,
-      "Shared internal helper": 37,
+      "Shared internal helper": 36,
       "Stable utility": 55
     },
     "layer_consistency": {
@@ -28453,9 +28312,9 @@
       "stable_utility": 24,
       "questionable_utility": 48,
       "promote_to_utility_candidate": 11,
-      "shared_internal_helper": 26,
-      "possible_inline_or_private_helper": 68,
-      "architecture_violation": 51,
+      "shared_internal_helper": 25,
+      "possible_inline_or_private_helper": 66,
+      "architecture_violation": 52,
       "review_manually": 0
     }
   }
