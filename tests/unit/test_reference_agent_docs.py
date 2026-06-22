@@ -355,7 +355,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "layer_consistency",
     } <= set(summary_counts)
     assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
-    assert set(summary_counts["review_status"]) == {"classified", "classification_pending", "implicit_lifecycle", "unreachable"}
+    assert set(summary_counts["review_status"]) == {
+        "classified",
+        "classification_pending",
+        "implicit_lifecycle",
+        "property_accessor",
+        "unreachable",
+    }
     assert summary_counts["layer"]["public"] == len(exported_symbols)
     assert summary_counts["total_callables"] == sum(summary_counts["function_type"].values())
 
@@ -364,7 +370,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
     assert {"Public API", "Internal helper", "Utility"} <= {row["function_type"] for row in function_inventory}
-    assert {"classified", "classification_pending", "implicit_lifecycle", "unreachable"} <= {
+    assert {"classified", "classification_pending", "implicit_lifecycle", "property_accessor", "unreachable"} <= {
         row["review_status"] for row in function_inventory
     }
     assert sum(1 for row in function_inventory if row["layer"] == "public") == summary_counts["layer"]["public"]
@@ -409,6 +415,20 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["callable_kind"] == "implicit_lifecycle_method" for row in lifecycle_rows.values())
     assert all(row["recommended_action"] == "Keep lifecycle method" for row in lifecycle_rows.values())
     assert all("Utility but low reuse" not in row["signals"] for row in lifecycle_rows.values())
+    root_row = next(
+        row
+        for row in function_inventory
+        if row["qualified_name"] == "fabricops_kit.fabric_input_output.FabricStore.root"
+    )
+    assert root_row["function_name"] == "FabricStore.root"
+    assert root_row["function_type"] == "Internal helper"
+    assert root_row["layer"] == "internal"
+    assert root_row["callable_kind"] == "property_accessor"
+    assert root_row["review_status"] == "property_accessor"
+    assert root_row["recommended_action"] == "Keep property accessor"
+    assert root_row["layer_consistency"] == "property_accessor"
+    assert "Utility but low reuse" not in root_row["signals"]
+    assert root_row["recommended_action"] != "Orphaned callable"
     assert all(row["used_by_count"] == row["called_by_count"] for row in function_inventory)
     assert all(
         {

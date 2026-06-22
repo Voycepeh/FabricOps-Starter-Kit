@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-21T17:30:03+00:00",
+  "generated_at": "2026-06-22T03:45:29+00:00",
   "function_inventory": [
     {
       "function_name": "_audit_timestamp_expr",
@@ -6789,20 +6789,22 @@
       "module": "fabric_input_output",
       "function_type": "Internal helper",
       "layer": "internal",
-      "review_status": "classification_pending",
-      "review_status_label": "Classification pending",
-      "callable_kind": "method",
+      "review_status": "property_accessor",
+      "review_status_label": "Property accessor",
+      "callable_kind": "property_accessor",
       "visibility": "internal",
-      "recommended_action": "Review manually",
+      "recommended_action": "Keep property accessor",
       "priority": "Review",
-      "signals": [],
+      "signals": [
+        "Property accessor"
+      ],
       "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
       "calls_count": 0,
-      "layer_consistency": "matches_layer",
-      "layer_consistency_label": "Matches expected layer",
+      "layer_consistency": "property_accessor",
+      "layer_consistency_label": "Property accessor",
       "callers": [],
       "callees": [],
       "direct_internal_helpers": [],
@@ -18917,30 +18919,33 @@
     },
     "review_status": {
       "classified": 231,
-      "classification_pending": 14,
+      "classification_pending": 13,
       "implicit_lifecycle": 8,
+      "property_accessor": 1,
       "unreachable": 16
     },
     "callable_kind": {
       "class": 13,
       "function": 247,
       "implicit_lifecycle_method": 8,
-      "method": 1
+      "property_accessor": 1
     },
     "recommended_action": {
       "Architecture violation": 97,
       "Inline candidate": 43,
       "Keep lifecycle method": 8,
+      "Keep property accessor": 1,
       "Orphaned callable": 8,
       "Public API entrypoint": 19,
       "Review abstraction value": 9,
-      "Review manually": 18,
+      "Review manually": 17,
       "Shared internal helper": 15,
       "Stable utility": 52
     },
     "layer_consistency": {
       "implicit_lifecycle": 8,
-      "matches_layer": 60,
+      "property_accessor": 1,
+      "matches_layer": 59,
       "stable_utility": 25,
       "questionable_utility": 37,
       "promote_to_utility_candidate": 1,
