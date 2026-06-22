@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T09:34:47+00:00",
+  "generated_at": "2026-06-22T09:54:28+00:00",
   "function_inventory": [
     {
       "function_name": "_audit_timestamp_expr",
@@ -54,7 +54,7 @@
           "function": "_get_audit_timezone",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -67,7 +67,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L218-L223",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L233-L238",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -109,22 +109,22 @@
           "function": "_run_config_smoke_tests",
           "module": "config",
           "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "setup_smoke_test_workflow"
+            "internal_validator",
+            "setup_smoke_test_validator"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1352-L1357",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1454-L1459",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -164,22 +164,22 @@
           "function": "_setup_metadata_table_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_registry_write_workflow"
+            "internal_adapter",
+            "metadata_registry_write_adapter"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_adapter"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1069-L1075",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1143-L1149",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -328,7 +328,7 @@
           "function": "_get_audit_timezone",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -341,7 +341,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -383,15 +383,15 @@
           "function": "_validate_metadata_table_registration",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_validation_workflow"
+            "internal_validator",
+            "metadata_table_registration_validator"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [
@@ -399,7 +399,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -414,8 +414,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L983-L1009",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1057-L1083",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -455,15 +455,15 @@
           "function": "_validate_metadata_table_registration",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_validation_workflow"
+            "internal_validator",
+            "metadata_table_registration_validator"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [
@@ -471,7 +471,7 @@
           "function": "_validate_framework_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -497,8 +497,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L954-L980",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1028-L1054",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -537,7 +537,7 @@
           "function": "_audit_timestamp_expr",
           "module": "config",
           "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L218-L223",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L233-L238",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -551,7 +551,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -581,7 +581,7 @@
           "function": "_validate_audit_timezone",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L174-L206",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -595,7 +595,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -637,22 +637,22 @@
           "function": "_run_config_smoke_tests",
           "module": "config",
           "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "setup_smoke_test_workflow"
+            "internal_validator",
+            "setup_smoke_test_validator"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1360-L1399",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1462-L1501",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -689,19 +689,18 @@
       "layer_consistency_label": "Possible inline/private helper",
       "callers": [
         {
-          "function": "setup_metadata_tables",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
+            "internal_workflow",
+            "metadata_setup_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -709,7 +708,7 @@
           "function": "_string_metadata_schema",
           "module": "config",
           "qualified_name": "fabricops_kit.config._string_metadata_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1019-L1034",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1093-L1108",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -723,7 +722,7 @@
           "function": "_validate_framework_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -749,8 +748,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1037-L1066",
-      "deepest_call_chain_depth": 1,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1111-L1140",
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -792,7 +791,7 @@
           "function": "_detect_nested_metadata_delta_folders",
           "module": "config",
           "qualified_name": "fabricops_kit.config._detect_nested_metadata_delta_folders",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L983-L1009",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1057-L1083",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -806,7 +805,7 @@
           "function": "_resolve_metadata_schema",
           "module": "config",
           "qualified_name": "fabricops_kit.config._resolve_metadata_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1078-L1087",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1152-L1161",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -820,13 +819,27 @@
           "function": "_run_config_smoke_tests",
           "module": "config",
           "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "setup_smoke_test_validator"
+          ],
+          "dependency_role": "internal_validator"
+        },
+        {
+          "function": "_setup_notebook_workflow",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "setup_smoke_test_workflow"
+            "setup_notebook_workflow"
           ],
           "dependency_role": "internal_workflow"
         },
@@ -834,30 +847,15 @@
           "function": "_validate_metadata_table_registration",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_validation_workflow"
+            "internal_validator",
+            "metadata_table_registration_validator"
           ],
-          "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "setup_notebook",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_notebook",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L841-L951",
-          "layer": "public",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "public_api_entrypoint",
-            "notebook_api_entrypoint",
-            "public_stable"
-          ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_validator"
         },
         {
           "function": "configured_lakehouse_schema",
@@ -995,7 +993,7 @@
           "function": "_normalize_path_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._normalize_path_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L639-L679",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L669-L709",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1008,8 +1006,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
-      "deepest_call_chain_depth": 1,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -1047,37 +1045,36 @@
           "function": "_setup_metadata_table_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "metadata_registry_write_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        },
+        {
+          "function": "_setup_metadata_tables_workflow",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "metadata_registry_write_workflow"
+            "metadata_setup_workflow"
           ],
           "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "setup_metadata_tables",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
-          ],
-          "dependency_role": "public_api_entrypoint"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1012-L1016",
-      "deepest_call_chain_depth": 1,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1086-L1090",
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -1118,7 +1115,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1136,7 +1133,7 @@
           "function": "PathConfig",
           "module": "config",
           "qualified_name": "fabricops_kit.config.PathConfig",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L227-L248",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L247-L268",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "class",
@@ -1149,8 +1146,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L639-L679",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L669-L709",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -1191,7 +1188,7 @@
           "function": "DataAgreementConfig.__post_init__",
           "module": "config",
           "qualified_name": "fabricops_kit.config.DataAgreementConfig.__post_init__",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L430-L436",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L455-L461",
           "layer": "internal",
           "review_status": "implicit_lifecycle",
           "callable_kind": "implicit_lifecycle_method",
@@ -1206,7 +1203,7 @@
           "function": "GovernanceConfig.__post_init__",
           "module": "config",
           "qualified_name": "fabricops_kit.config.GovernanceConfig.__post_init__",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L345-L362",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L370-L387",
           "layer": "internal",
           "review_status": "implicit_lifecycle",
           "callable_kind": "implicit_lifecycle_method",
@@ -1221,7 +1218,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L302-L314",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L327-L339",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -1258,33 +1255,32 @@
       "layer_consistency_label": "Shared internal helper",
       "callers": [
         {
-          "function": "_validate_metadata_table_registration",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "metadata_validation_workflow"
+            "metadata_setup_workflow"
           ],
           "dependency_role": "internal_workflow"
         },
         {
-          "function": "setup_metadata_tables",
+          "function": "_validate_metadata_table_registration",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
+            "internal_validator",
+            "metadata_table_registration_validator"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [
@@ -1292,7 +1288,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1307,8 +1303,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1078-L1087",
-      "deepest_call_chain_depth": 1,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1152-L1161",
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -1322,18 +1318,17 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_workflow",
-        "setup_smoke_test_workflow"
+        "internal_validator",
+        "setup_smoke_test_validator"
       ],
-      "architectural_role": "internal_workflow",
-      "dependency_role": "internal_workflow",
+      "architectural_role": "internal_validator",
+      "dependency_role": "internal_validator",
       "reachability_kind": "directly_reachable",
       "change_risk": "Medium",
       "refined_recommended_action": "Review abstraction value",
       "recommended_action": "Review abstraction value",
       "priority": "Medium",
       "signals": [
-        "allowed_internal_role_call",
         "Single-use internal helper",
         "Possible inline/private helper"
       ],
@@ -1346,19 +1341,18 @@
       "layer_consistency_label": "Possible inline/private helper",
       "callers": [
         {
-          "function": "setup_notebook",
+          "function": "_setup_notebook_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_notebook",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L841-L951",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "notebook_api_entrypoint",
-            "public_stable"
+            "internal_workflow",
+            "setup_notebook_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -1366,7 +1360,7 @@
           "function": "_check_spark_session",
           "module": "config",
           "qualified_name": "fabricops_kit.config._check_spark_session",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1352-L1357",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1454-L1459",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1380,7 +1374,7 @@
           "function": "_get_fabric_runtime_metadata",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_fabric_runtime_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1360-L1399",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1462-L1501",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1394,7 +1388,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1410,7 +1404,7 @@
           "function": "_validate_notebook_name",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_notebook_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L724-L735",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L759-L770",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1424,7 +1418,7 @@
           "function": "ConfigSmokeCheckResult",
           "module": "config",
           "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L519-L524",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L544-L549",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "class",
@@ -1436,8 +1430,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
-      "deepest_call_chain_depth": 1,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -1451,46 +1445,41 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_workflow",
-        "metadata_registry_write_workflow"
+        "internal_adapter",
+        "metadata_registry_write_adapter"
       ],
-      "architectural_role": "internal_workflow",
-      "dependency_role": "internal_workflow",
+      "architectural_role": "internal_adapter",
+      "dependency_role": "internal_adapter",
       "reachability_kind": "directly_reachable",
-      "change_risk": "High",
-      "refined_recommended_action": "Architecture violation",
-      "recommended_action": "Architecture violation",
-      "priority": "High",
+      "change_risk": "Medium",
+      "refined_recommended_action": "Review abstraction value",
+      "recommended_action": "Review abstraction value",
+      "priority": "Medium",
       "signals": [
-        "internal_workflow_calls_internal_workflow",
-        "allowed_internal_role_call",
         "Single-use internal helper",
-        "Layer assignment needs review"
+        "Possible inline/private helper"
       ],
-      "architecture_signals": [
-        "internal_workflow_calls_internal_workflow"
-      ],
+      "architecture_signals": [],
       "review_signals": [],
       "used_by_count": 1,
       "called_by_count": 1,
       "calls_count": 5,
-      "layer_consistency": "architecture_violation",
-      "layer_consistency_label": "Architecture violation",
+      "layer_consistency": "possible_inline_or_private_helper",
+      "layer_consistency_label": "Possible inline/private helper",
       "callers": [
         {
-          "function": "setup_metadata_tables",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
+            "internal_workflow",
+            "metadata_setup_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -1498,7 +1487,7 @@
           "function": "_coerce_row_dicts",
           "module": "config",
           "qualified_name": "fabricops_kit.config._coerce_row_dicts",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1069-L1075",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1143-L1149",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1511,7 +1500,7 @@
           "function": "_metadata_schema_field_names",
           "module": "config",
           "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1012-L1016",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1086-L1090",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1562,7 +1551,290 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
+      "deepest_call_chain_depth": 2,
+      "repeated_helper_count": 0
+    },
+    {
+      "function_name": "_setup_metadata_tables_workflow",
+      "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+      "module": "config",
+      "function_type": "Internal helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "visibility": "private",
+      "callable_role": [
+        "internal_workflow",
+        "metadata_setup_workflow"
+      ],
+      "architectural_role": "internal_workflow",
+      "dependency_role": "internal_workflow",
+      "reachability_kind": "directly_reachable",
+      "change_risk": "Medium",
+      "refined_recommended_action": "Review abstraction value",
+      "recommended_action": "Review abstraction value",
+      "priority": "Medium",
+      "signals": [
+        "allowed_internal_role_call",
+        "Single-use internal helper",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "used_by_count": 1,
+      "called_by_count": 1,
+      "calls_count": 8,
+      "layer_consistency": "possible_inline_or_private_helper",
+      "layer_consistency_label": "Possible inline/private helper",
+      "callers": [
+        {
+          "function": "setup_metadata_tables",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1391-L1446",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_get_metadata_table_schema_registry",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._get_metadata_table_schema_registry",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1111-L1140",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "registry_builder",
+            "metadata_schema_registry_builder"
+          ],
+          "dependency_role": "registry_builder"
+        },
+        {
+          "function": "_metadata_schema_field_names",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1086-L1090",
+          "layer": "utility",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "schema_utility"
+          ],
+          "dependency_role": "schema_utility"
+        },
+        {
+          "function": "_resolve_metadata_schema",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._resolve_metadata_schema",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1152-L1161",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "metadata_schema_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "_setup_metadata_table_registry",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "metadata_registry_write_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        },
+        {
+          "function": "_validate_framework_config",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._validate_framework_config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "config_validator"
+          ],
+          "dependency_role": "internal_validator"
+        },
+        {
+          "function": "_validate_metadata_table_registration",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "metadata_table_registration_validator"
+          ],
+          "dependency_role": "internal_validator"
+        },
+        {
+          "function": "_list_data_stewards",
+          "module": "data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement._list_data_stewards",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "data_steward_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "_get_governance_metadata_schemas",
+          "module": "governance_review",
+          "qualified_name": "fabricops_kit.governance_review._get_governance_metadata_schemas",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
+      "direct_internal_helpers": [],
+      "source_path": "src/fabricops_kit/config.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
+      "deepest_call_chain_depth": 1,
+      "repeated_helper_count": 0
+    },
+    {
+      "function_name": "_setup_notebook_workflow",
+      "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+      "module": "config",
+      "function_type": "Internal helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "visibility": "private",
+      "callable_role": [
+        "internal_workflow",
+        "setup_notebook_workflow"
+      ],
+      "architectural_role": "internal_workflow",
+      "dependency_role": "internal_workflow",
+      "reachability_kind": "directly_reachable",
+      "change_risk": "Medium",
+      "refined_recommended_action": "Review abstraction value",
+      "recommended_action": "Review abstraction value",
+      "priority": "Medium",
+      "signals": [
+        "allowed_internal_role_call",
+        "Single-use internal helper",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "used_by_count": 1,
+      "called_by_count": 1,
+      "calls_count": 4,
+      "layer_consistency": "possible_inline_or_private_helper",
+      "layer_consistency_label": "Possible inline/private helper",
+      "callers": [
+        {
+          "function": "setup_notebook",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.setup_notebook",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L966-L1020",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "notebook_api_entrypoint",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_get_store",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._get_store",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "shared_internal_service",
+            "store_resolver",
+            "high_fanout_shared"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "_run_config_smoke_tests",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "setup_smoke_test_validator"
+          ],
+          "dependency_role": "internal_validator"
+        },
+        {
+          "function": "_validate_framework_config",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._validate_framework_config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "config_validator"
+          ],
+          "dependency_role": "internal_validator"
+        },
+        {
+          "function": "NotebookSetupContext",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.NotebookSetupContext",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L553-L587",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "class",
+          "callable_role": [
+            "context_model_class"
+          ],
+          "dependency_role": "context_model_class"
+        }
+      ],
+      "direct_internal_helpers": [],
+      "source_path": "src/fabricops_kit/config.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -1604,7 +1876,7 @@
           "function": "_get_metadata_table_schema_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1037-L1066",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1111-L1140",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1618,8 +1890,8 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1019-L1034",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1093-L1108",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -1660,7 +1932,7 @@
           "function": "_get_audit_timezone",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1674,7 +1946,7 @@
           "function": "_validate_framework_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1688,7 +1960,7 @@
           "function": "FrameworkConfig.__post_init__",
           "module": "config",
           "qualified_name": "fabricops_kit.config.FrameworkConfig.__post_init__",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L513-L515",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L538-L540",
           "layer": "internal",
           "review_status": "implicit_lifecycle",
           "callable_kind": "implicit_lifecycle_method",
@@ -1703,8 +1975,8 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L174-L206",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -1744,7 +2016,7 @@
           "function": "_get_active_metadata_tables",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_active_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L954-L980",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1028-L1054",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1758,7 +2030,7 @@
           "function": "_get_metadata_table_schema_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1037-L1066",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1111-L1140",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1769,48 +2041,46 @@
           "dependency_role": "registry_builder"
         },
         {
-          "function": "_validate_metadata_table_registration",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "metadata_validation_workflow"
+            "metadata_setup_workflow"
           ],
           "dependency_role": "internal_workflow"
         },
         {
-          "function": "setup_metadata_tables",
+          "function": "_setup_notebook_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
+            "internal_workflow",
+            "setup_notebook_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         },
         {
-          "function": "setup_notebook",
+          "function": "_validate_metadata_table_registration",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_notebook",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L841-L951",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "notebook_api_entrypoint",
-            "public_stable"
+            "internal_validator",
+            "metadata_table_registration_validator"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [
@@ -1818,7 +2088,7 @@
           "function": "_validate_audit_timezone",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L174-L206",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1833,7 +2103,7 @@
           "function": "FrameworkConfig",
           "module": "config",
           "qualified_name": "fabricops_kit.config.FrameworkConfig",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L473-L515",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L498-L540",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "class",
@@ -1846,8 +2116,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
-      "deepest_call_chain_depth": 1,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -1861,24 +2131,23 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_workflow",
-        "metadata_validation_workflow"
+        "internal_validator",
+        "metadata_table_registration_validator"
       ],
-      "architectural_role": "internal_workflow",
-      "dependency_role": "internal_workflow",
+      "architectural_role": "internal_validator",
+      "dependency_role": "internal_validator",
       "reachability_kind": "directly_reachable",
       "change_risk": "High",
       "refined_recommended_action": "Architecture violation",
       "recommended_action": "Architecture violation",
       "priority": "High",
       "signals": [
-        "internal_workflow_calls_internal_workflow",
-        "allowed_internal_role_call",
+        "validator_calls_workflow",
         "Single-use internal helper",
         "Layer assignment needs review"
       ],
       "architecture_signals": [
-        "internal_workflow_calls_internal_workflow"
+        "validator_calls_workflow"
       ],
       "review_signals": [],
       "used_by_count": 1,
@@ -1888,19 +2157,18 @@
       "layer_consistency_label": "Architecture violation",
       "callers": [
         {
-          "function": "setup_metadata_tables",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
+            "internal_workflow",
+            "metadata_setup_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -1908,7 +2176,7 @@
           "function": "_detect_nested_metadata_delta_folders",
           "module": "config",
           "qualified_name": "fabricops_kit.config._detect_nested_metadata_delta_folders",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L983-L1009",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1057-L1083",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1922,7 +2190,7 @@
           "function": "_get_active_metadata_tables",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_active_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L954-L980",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1028-L1054",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1936,7 +2204,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1952,7 +2220,7 @@
           "function": "_resolve_metadata_schema",
           "module": "config",
           "qualified_name": "fabricops_kit.config._resolve_metadata_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1078-L1087",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1152-L1161",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1966,7 +2234,7 @@
           "function": "_validate_framework_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1992,8 +2260,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
-      "deepest_call_chain_depth": 1,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -2034,22 +2302,22 @@
           "function": "_run_config_smoke_tests",
           "module": "config",
           "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "setup_smoke_test_workflow"
+            "internal_validator",
+            "setup_smoke_test_validator"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L724-L735",
-      "deepest_call_chain_depth": 2,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L759-L770",
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -2085,21 +2353,21 @@
           "function": "_run_config_smoke_tests",
           "module": "config",
           "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "setup_smoke_test_workflow"
+            "internal_validator",
+            "setup_smoke_test_validator"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_validator"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L519-L524",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L544-L549",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2135,7 +2403,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L375-L436",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L400-L461",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2179,7 +2447,7 @@
           "function": "_normalize_widget_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._normalize_widget_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L302-L314",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L327-L339",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2193,7 +2461,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L430-L436",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L455-L461",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2231,7 +2499,7 @@
           "function": "_validate_framework_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2245,7 +2513,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L473-L515",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L498-L540",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2289,7 +2557,7 @@
           "function": "_validate_audit_timezone",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L174-L206",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2303,7 +2571,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L513-L515",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L538-L540",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2344,7 +2612,7 @@
           "function": "get_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.get_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L86-L138",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L91-L143",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function",
@@ -2357,7 +2625,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2373,7 +2641,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2414,7 +2682,7 @@
           "function": "get_default_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2428,7 +2696,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L86-L138",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L91-L143",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2464,7 +2732,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L318-L362",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L343-L387",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2508,7 +2776,7 @@
           "function": "_normalize_widget_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._normalize_widget_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L302-L314",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L327-L339",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2522,7 +2790,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L345-L362",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L370-L387",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2558,7 +2826,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L454-L469",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L479-L494",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2599,7 +2867,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L467-L469",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L492-L494",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2635,7 +2903,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L252-L268",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L272-L288",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2676,7 +2944,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L263-L268",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L283-L288",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2710,25 +2978,24 @@
       "layer_consistency_label": "Matches expected layer",
       "callers": [
         {
-          "function": "setup_notebook",
+          "function": "_setup_notebook_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_notebook",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L841-L951",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "notebook_api_entrypoint",
-            "public_stable"
+            "internal_workflow",
+            "setup_notebook_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L528-L562",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L553-L587",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2766,7 +3033,7 @@
           "function": "_normalize_path_config",
           "module": "config",
           "qualified_name": "fabricops_kit.config._normalize_path_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L639-L679",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L669-L709",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2780,7 +3047,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L227-L248",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L247-L268",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2821,7 +3088,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L245-L248",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L265-L268",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2857,7 +3124,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L272-L299",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L292-L319",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -2898,7 +3165,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L292-L299",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L312-L319",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -3215,7 +3482,7 @@
           "function": "get_default_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -3229,7 +3496,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -3265,7 +3532,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L440-L450",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L465-L475",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -3298,235 +3565,45 @@
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
-      "calls_count": 8,
+      "calls_count": 1,
       "layer_consistency": "matches_layer",
       "layer_consistency_label": "Matches expected layer",
       "callers": [],
       "callees": [
         {
-          "function": "_get_metadata_table_schema_registry",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config._get_metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1037-L1066",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "registry_builder",
-            "metadata_schema_registry_builder"
-          ],
-          "dependency_role": "registry_builder"
-        },
-        {
-          "function": "_metadata_schema_field_names",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1012-L1016",
-          "layer": "utility",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "schema_utility"
-          ],
-          "dependency_role": "schema_utility"
-        },
-        {
-          "function": "_resolve_metadata_schema",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._resolve_metadata_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1078-L1087",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "metadata_schema_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        },
-        {
-          "function": "_setup_metadata_table_registry",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "metadata_registry_write_workflow"
+            "metadata_setup_workflow"
           ],
           "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_validate_framework_config",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_validator",
-            "config_validator"
-          ],
-          "dependency_role": "internal_validator"
-        },
-        {
-          "function": "_validate_metadata_table_registration",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "metadata_validation_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_list_data_stewards",
-          "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._list_data_stewards",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_get_governance_metadata_schemas",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._get_governance_metadata_schemas",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver"
-          ],
-          "dependency_role": "internal_resolver"
         }
       ],
       "direct_internal_helpers": [
         {
-          "function": "_get_metadata_table_schema_registry",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config._get_metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1037-L1066",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "registry_builder",
-            "metadata_schema_registry_builder"
-          ],
-          "dependency_role": "registry_builder"
-        },
-        {
-          "function": "_metadata_schema_field_names",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1012-L1016",
-          "layer": "utility",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "schema_utility"
-          ],
-          "dependency_role": "schema_utility"
-        },
-        {
-          "function": "_resolve_metadata_schema",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._resolve_metadata_schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1078-L1087",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "metadata_schema_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        },
-        {
-          "function": "_setup_metadata_table_registry",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "metadata_registry_write_workflow"
+            "metadata_setup_workflow"
           ],
           "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_validate_framework_config",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_validator",
-            "config_validator"
-          ],
-          "dependency_role": "internal_validator"
-        },
-        {
-          "function": "_validate_metadata_table_registration",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "metadata_validation_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_list_data_stewards",
-          "module": "data_agreement",
-          "qualified_name": "fabricops_kit.data_agreement._list_data_stewards",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_get_governance_metadata_schemas",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._get_governance_metadata_schemas",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver"
-          ],
-          "dependency_role": "internal_resolver"
         }
       ],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-      "deepest_call_chain_depth": 5,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1391-L1446",
+      "deepest_call_chain_depth": 6,
       "repeated_helper_count": 12
     },
     {
@@ -3558,118 +3635,45 @@
       "review_signals": [],
       "used_by_count": 0,
       "called_by_count": 0,
-      "calls_count": 4,
+      "calls_count": 1,
       "layer_consistency": "matches_layer",
       "layer_consistency_label": "Matches expected layer",
       "callers": [],
       "callees": [
         {
-          "function": "_get_store",
+          "function": "_setup_notebook_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "shared_internal_service",
-            "store_resolver",
-            "high_fanout_shared"
-          ],
-          "dependency_role": "internal_resolver"
-        },
-        {
-          "function": "_run_config_smoke_tests",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+          "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "setup_smoke_test_workflow"
+            "setup_notebook_workflow"
           ],
           "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_validate_framework_config",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_validator",
-            "config_validator"
-          ],
-          "dependency_role": "internal_validator"
-        },
-        {
-          "function": "NotebookSetupContext",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config.NotebookSetupContext",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L528-L562",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "class",
-          "callable_role": [
-            "context_model_class"
-          ],
-          "dependency_role": "context_model_class"
         }
       ],
       "direct_internal_helpers": [
         {
-          "function": "_get_store",
+          "function": "_setup_notebook_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "shared_internal_service",
-            "store_resolver",
-            "high_fanout_shared"
-          ],
-          "dependency_role": "internal_resolver"
-        },
-        {
-          "function": "_run_config_smoke_tests",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._run_config_smoke_tests",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+          "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
-            "setup_smoke_test_workflow"
+            "setup_notebook_workflow"
           ],
           "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_validate_framework_config",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_validator",
-            "config_validator"
-          ],
-          "dependency_role": "internal_validator"
         }
       ],
       "source_path": "src/fabricops_kit/config.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L841-L951",
-      "deepest_call_chain_depth": 4,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L966-L1020",
+      "deepest_call_chain_depth": 5,
       "repeated_helper_count": 2
     },
     {
@@ -3726,9 +3730,10 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow"
+            "internal_resolver",
+            "data_steward_resolver"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_resolver"
         }
       ],
       "callees": [
@@ -3749,7 +3754,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L438-L448",
-      "deepest_call_chain_depth": 2,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -4144,9 +4149,10 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow"
+            "internal_resolver",
+            "data_steward_resolver"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_resolver"
         },
         {
           "function": "_render_maintenance_widget",
@@ -4294,9 +4300,10 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow"
+            "internal_resolver",
+            "data_steward_resolver"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_resolver"
         },
         {
           "function": "_next_minor_version",
@@ -5041,9 +5048,10 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow"
+            "internal_resolver",
+            "data_steward_resolver"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_resolver"
         }
       ],
       "callees": [
@@ -5064,7 +5072,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L410-L416",
-      "deepest_call_chain_depth": 2,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -5308,22 +5316,22 @@
       "callable_kind": "function",
       "visibility": "private",
       "callable_role": [
-        "internal_workflow"
+        "internal_resolver",
+        "data_steward_resolver"
       ],
-      "architectural_role": "internal_workflow",
-      "dependency_role": "internal_workflow",
+      "architectural_role": "internal_resolver",
+      "dependency_role": "internal_resolver",
       "reachability_kind": "directly_reachable",
       "change_risk": "High",
       "refined_recommended_action": "Architecture violation",
       "recommended_action": "Architecture violation",
       "priority": "High",
       "signals": [
-        "internal_workflow_calls_internal_workflow",
-        "allowed_internal_role_call",
+        "resolver_calls_workflow",
         "Layer assignment needs review"
       ],
       "architecture_signals": [
-        "internal_workflow_calls_internal_workflow"
+        "resolver_calls_workflow"
       ],
       "review_signals": [],
       "used_by_count": 3,
@@ -5333,19 +5341,18 @@
       "layer_consistency_label": "Architecture violation",
       "callers": [
         {
-          "function": "setup_metadata_tables",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
+            "internal_workflow",
+            "metadata_setup_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         },
         {
           "function": "_create_or_update_data_agreement",
@@ -5431,7 +5438,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/data_agreement.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L458-L490",
-      "deepest_call_chain_depth": 1,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -6119,9 +6126,10 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow"
+            "internal_resolver",
+            "data_steward_resolver"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_resolver"
         },
         {
           "function": "_render_custom_fields",
@@ -7158,7 +7166,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7240,7 +7248,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7322,7 +7330,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7422,7 +7430,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7573,7 +7581,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -8171,7 +8179,7 @@
           "function": "_audit_timestamp_expr",
           "module": "config",
           "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L218-L223",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L233-L238",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -8185,7 +8193,7 @@
           "function": "_get_audit_timezone",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -9666,7 +9674,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L237-L263",
-      "deepest_call_chain_depth": 3,
+      "deepest_call_chain_depth": 4,
       "repeated_helper_count": 0
     },
     {
@@ -10265,7 +10273,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -10862,7 +10870,7 @@
           "function": "_get_active_metadata_tables",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_active_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L954-L980",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1028-L1054",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -10876,7 +10884,7 @@
           "function": "_get_metadata_table_schema_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1037-L1066",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1111-L1140",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -10887,19 +10895,18 @@
           "dependency_role": "registry_builder"
         },
         {
-          "function": "setup_metadata_tables",
+          "function": "_setup_metadata_tables_workflow",
           "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
-          "layer": "public",
+          "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
+            "internal_workflow",
+            "metadata_setup_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -10933,7 +10940,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L272-L313",
-      "deepest_call_chain_depth": 1,
+      "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
     {
@@ -11106,15 +11113,15 @@
           "function": "_setup_metadata_table_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_registry_write_workflow"
+            "internal_adapter",
+            "metadata_registry_write_adapter"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_adapter"
         },
         {
           "function": "_read_metadata_table_or_empty",
@@ -11745,7 +11752,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -12642,7 +12649,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L266-L269",
-      "deepest_call_chain_depth": 2,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -12992,7 +12999,7 @@
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L228-L234",
-      "deepest_call_chain_depth": 2,
+      "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
     {
@@ -14211,7 +14218,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -14949,7 +14956,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -15109,7 +15116,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -15269,7 +15276,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -15494,7 +15501,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -15588,7 +15595,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -19865,7 +19872,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20063,7 +20070,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20079,7 +20086,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20201,7 +20208,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20217,7 +20224,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20352,7 +20359,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20368,7 +20375,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20488,29 +20495,29 @@
           "function": "_setup_metadata_table_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_registry_write_workflow"
+            "internal_adapter",
+            "metadata_registry_write_adapter"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_adapter"
         },
         {
           "function": "_validate_metadata_table_registration",
           "module": "config",
           "qualified_name": "fabricops_kit.config._validate_metadata_table_registration",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_validation_workflow"
+            "internal_validator",
+            "metadata_table_registration_validator"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_validator"
         },
         {
           "function": "_list_all_data_agreement_rows",
@@ -20534,9 +20541,10 @@
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow"
+            "internal_resolver",
+            "data_steward_resolver"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_resolver"
         },
         {
           "function": "read_lakehouse_table",
@@ -20649,7 +20657,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20665,7 +20673,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20800,7 +20808,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20816,7 +20824,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20925,7 +20933,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20941,7 +20949,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -21074,15 +21082,15 @@
           "function": "_setup_metadata_table_registry",
           "module": "config",
           "qualified_name": "fabricops_kit.config._setup_metadata_table_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "internal_workflow",
-            "metadata_registry_write_workflow"
+            "internal_adapter",
+            "metadata_registry_write_adapter"
           ],
-          "dependency_role": "internal_workflow"
+          "dependency_role": "internal_adapter"
         },
         {
           "function": "_write_row",
@@ -21220,7 +21228,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -21236,7 +21244,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -21371,7 +21379,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -21387,7 +21395,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -21940,7 +21948,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -21955,7 +21963,7 @@
           "function": "_get_store",
           "module": "config",
           "qualified_name": "fabricops_kit.config._get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -22614,7 +22622,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -22687,7 +22695,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -23539,7 +23547,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -24429,7 +24437,7 @@
           "function": "_current_audit_timestamp",
           "module": "config",
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -25782,7 +25790,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -26481,7 +26489,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -26667,7 +26675,7 @@
           "function": "resolve_fabric_context",
           "module": "config",
           "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -26819,20 +26827,20 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 282,
-    "total_functions": 282,
+    "total_callables": 284,
+    "total_functions": 284,
     "function_type": {
       "Public API": 26,
-      "Internal helper": 157,
+      "Internal helper": 159,
       "Utility": 99
     },
     "layer": {
       "public": 26,
-      "internal": 157,
+      "internal": 159,
       "utility": 99
     },
     "review_status": {
-      "classified": 245,
+      "classified": 247,
       "classification_pending": 13,
       "implicit_lifecycle": 8,
       "property_accessor": 1,
@@ -26840,7 +26848,7 @@
     },
     "callable_kind": {
       "class": 13,
-      "function": 260,
+      "function": 262,
       "implicit_lifecycle_method": 8,
       "property_accessor": 1
     },
@@ -26850,25 +26858,26 @@
       "config_model_class": 8,
       "config_validator": 1,
       "context_model_class": 2,
+      "data_steward_resolver": 1,
       "fabric_runtime_probe": 1,
       "high_fanout_shared": 3,
       "implicit_lifecycle_reachable": 10,
       "instance_method": 2,
-      "internal_adapter": 1,
+      "internal_adapter": 2,
       "internal_normalizer": 9,
-      "internal_resolver": 15,
-      "internal_validator": 7,
-      "internal_workflow": 118,
+      "internal_resolver": 16,
+      "internal_validator": 9,
+      "internal_workflow": 116,
       "keep_lifecycle_method": 8,
       "lifecycle_method": 8,
       "local_leaf_helper": 2,
       "low_level_utility": 1,
       "metadata_registry_query": 1,
-      "metadata_registry_write_workflow": 1,
+      "metadata_registry_write_adapter": 1,
       "metadata_schema_registry_builder": 1,
       "metadata_schema_resolver": 1,
-      "metadata_setup_workflow": 1,
-      "metadata_validation_workflow": 1,
+      "metadata_setup_workflow": 2,
+      "metadata_table_registration_validator": 1,
       "notebook_api_entrypoint": 1,
       "path_config_model": 1,
       "path_config_normalizer": 1,
@@ -26881,7 +26890,8 @@
       "runtime_context_provider": 1,
       "runtime_context_resolver": 1,
       "schema_utility": 2,
-      "setup_smoke_test_workflow": 1,
+      "setup_notebook_workflow": 1,
+      "setup_smoke_test_validator": 1,
       "shared_internal_service": 4,
       "spark_audit_expression_utility": 1,
       "spark_runtime_probe": 1,
@@ -26897,11 +26907,11 @@
       "config_model_class": 8,
       "context_model_class": 2,
       "instance_method": 2,
-      "internal_adapter": 1,
+      "internal_adapter": 2,
       "internal_normalizer": 9,
-      "internal_resolver": 15,
-      "internal_validator": 7,
-      "internal_workflow": 118,
+      "internal_resolver": 16,
+      "internal_validator": 9,
+      "internal_workflow": 116,
       "lifecycle_method": 8,
       "property_method": 1,
       "public_api_entrypoint": 26,
@@ -26912,13 +26922,13 @@
       "utility_validator": 2
     },
     "recommended_action": {
-      "Architecture violation": 66,
+      "Architecture violation": 65,
       "Inline candidate": 50,
       "Keep lifecycle method": 8,
       "Keep property accessor": 1,
       "Orphaned callable": 9,
       "Public API entrypoint": 26,
-      "Review abstraction value": 13,
+      "Review abstraction value": 16,
       "Review manually": 25,
       "Shared internal helper": 26,
       "Stable utility": 58
@@ -26931,8 +26941,8 @@
       "questionable_utility": 41,
       "promote_to_utility_candidate": 10,
       "shared_internal_helper": 16,
-      "possible_inline_or_private_helper": 44,
-      "architecture_violation": 66,
+      "possible_inline_or_private_helper": 47,
+      "architecture_violation": 65,
       "review_manually": 0
     }
   }

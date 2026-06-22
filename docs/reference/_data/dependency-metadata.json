@@ -191,7 +191,7 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.config.setup_notebook"
+        "fabricops_kit.config._setup_notebook_workflow"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
@@ -455,7 +455,7 @@
       ],
       "calls_count": 3,
       "used_by": [
-        "fabricops_kit.config.setup_metadata_tables"
+        "fabricops_kit.config._setup_metadata_tables_workflow"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
@@ -480,8 +480,8 @@
         "fabricops_kit.config._detect_nested_metadata_delta_folders",
         "fabricops_kit.config._resolve_metadata_schema",
         "fabricops_kit.config._run_config_smoke_tests",
+        "fabricops_kit.config._setup_notebook_workflow",
         "fabricops_kit.config._validate_metadata_table_registration",
-        "fabricops_kit.config.setup_notebook",
         "fabricops_kit.io_core.configured_lakehouse_schema",
         "fabricops_kit.io_core.read_lakehouse_csv_core",
         "fabricops_kit.io_core.read_lakehouse_excel_core",
@@ -511,7 +511,7 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.config._setup_metadata_table_registry",
-        "fabricops_kit.config.setup_metadata_tables"
+        "fabricops_kit.config._setup_metadata_tables_workflow"
       ],
       "used_by_count": 2,
       "used_in_templates": [],
@@ -567,8 +567,8 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.config._validate_metadata_table_registration",
-        "fabricops_kit.config.setup_metadata_tables"
+        "fabricops_kit.config._setup_metadata_tables_workflow",
+        "fabricops_kit.config._validate_metadata_table_registration"
       ],
       "used_by_count": 2,
       "used_in_templates": [],
@@ -593,7 +593,7 @@
       ],
       "calls_count": 5,
       "used_by": [
-        "fabricops_kit.config.setup_notebook"
+        "fabricops_kit.config._setup_notebook_workflow"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
@@ -621,7 +621,7 @@
       ],
       "calls_count": 5,
       "used_by": [
-        "fabricops_kit.config.setup_metadata_tables"
+        "fabricops_kit.config._setup_metadata_tables_workflow"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
@@ -630,6 +630,66 @@
         "fabricops_kit.config._metadata_schema_field_names"
       ],
       "internal_helper_count": 2
+    },
+    "fabricops_kit.config._setup_metadata_tables_workflow": {
+      "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+      "short_name": "_setup_metadata_tables_workflow",
+      "module": "config",
+      "callable": "_setup_metadata_tables_workflow",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._get_metadata_table_schema_registry",
+        "fabricops_kit.config._metadata_schema_field_names",
+        "fabricops_kit.config._resolve_metadata_schema",
+        "fabricops_kit.config._setup_metadata_table_registry",
+        "fabricops_kit.config._validate_framework_config",
+        "fabricops_kit.config._validate_metadata_table_registration",
+        "fabricops_kit.data_agreement._list_data_stewards",
+        "fabricops_kit.data_agreement.get",
+        "fabricops_kit.governance_review._get_governance_metadata_schemas"
+      ],
+      "calls_count": 9,
+      "used_by": [
+        "fabricops_kit.config.setup_metadata_tables"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.config._get_metadata_table_schema_registry",
+        "fabricops_kit.config._metadata_schema_field_names",
+        "fabricops_kit.config._resolve_metadata_schema",
+        "fabricops_kit.config._setup_metadata_table_registry",
+        "fabricops_kit.config._validate_framework_config",
+        "fabricops_kit.config._validate_metadata_table_registration"
+      ],
+      "internal_helper_count": 6
+    },
+    "fabricops_kit.config._setup_notebook_workflow": {
+      "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+      "short_name": "_setup_notebook_workflow",
+      "module": "config",
+      "callable": "_setup_notebook_workflow",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.NotebookSetupContext",
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._run_config_smoke_tests",
+        "fabricops_kit.config._validate_framework_config"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.config.setup_notebook"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._run_config_smoke_tests",
+        "fabricops_kit.config._validate_framework_config"
+      ],
+      "internal_helper_count": 3
     },
     "fabricops_kit.config._string_metadata_schema": {
       "qualified_name": "fabricops_kit.config._string_metadata_schema",
@@ -683,9 +743,9 @@
       "used_by": [
         "fabricops_kit.config._get_active_metadata_tables",
         "fabricops_kit.config._get_metadata_table_schema_registry",
-        "fabricops_kit.config._validate_metadata_table_registration",
-        "fabricops_kit.config.setup_metadata_tables",
-        "fabricops_kit.config.setup_notebook"
+        "fabricops_kit.config._setup_metadata_tables_workflow",
+        "fabricops_kit.config._setup_notebook_workflow",
+        "fabricops_kit.config._validate_metadata_table_registration"
       ],
       "used_by_count": 5,
       "used_in_templates": [],
@@ -711,7 +771,7 @@
       ],
       "calls_count": 6,
       "used_by": [
-        "fabricops_kit.config.setup_metadata_tables"
+        "fabricops_kit.config._setup_metadata_tables_workflow"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
@@ -823,31 +883,18 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/setup_metadata_tables/",
       "classification": "callable",
       "calls": [
-        "fabricops_kit.config._get_metadata_table_schema_registry",
-        "fabricops_kit.config._metadata_schema_field_names",
-        "fabricops_kit.config._resolve_metadata_schema",
-        "fabricops_kit.config._setup_metadata_table_registry",
-        "fabricops_kit.config._validate_framework_config",
-        "fabricops_kit.config._validate_metadata_table_registration",
-        "fabricops_kit.data_agreement._list_data_stewards",
-        "fabricops_kit.data_agreement.get",
-        "fabricops_kit.governance_review._get_governance_metadata_schemas"
+        "fabricops_kit.config._setup_metadata_tables_workflow"
       ],
-      "calls_count": 9,
+      "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [
         "00_env_config"
       ],
       "internal_helpers_used": [
-        "fabricops_kit.config._get_metadata_table_schema_registry",
-        "fabricops_kit.config._metadata_schema_field_names",
-        "fabricops_kit.config._resolve_metadata_schema",
-        "fabricops_kit.config._setup_metadata_table_registry",
-        "fabricops_kit.config._validate_framework_config",
-        "fabricops_kit.config._validate_metadata_table_registration"
+        "fabricops_kit.config._setup_metadata_tables_workflow"
       ],
-      "internal_helper_count": 6
+      "internal_helper_count": 1
     },
     "fabricops_kit.config.setup_notebook": {
       "qualified_name": "fabricops_kit.config.setup_notebook",
@@ -857,23 +904,18 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/setup_notebook/",
       "classification": "callable",
       "calls": [
-        "fabricops_kit.config.NotebookSetupContext",
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config._validate_framework_config"
+        "fabricops_kit.config._setup_notebook_workflow"
       ],
-      "calls_count": 4,
+      "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [
         "00_env_config"
       ],
       "internal_helpers_used": [
-        "fabricops_kit.config._get_store",
-        "fabricops_kit.config._run_config_smoke_tests",
-        "fabricops_kit.config._validate_framework_config"
+        "fabricops_kit.config._setup_notebook_workflow"
       ],
-      "internal_helper_count": 3
+      "internal_helper_count": 1
     },
     "fabricops_kit.data_agreement._active_steward": {
       "qualified_name": "fabricops_kit.data_agreement._active_steward",
@@ -1298,7 +1340,7 @@
       ],
       "calls_count": 4,
       "used_by": [
-        "fabricops_kit.config.setup_metadata_tables",
+        "fabricops_kit.config._setup_metadata_tables_workflow",
         "fabricops_kit.data_agreement._create_or_update_data_agreement",
         "fabricops_kit.data_agreement._render_maintenance_widget"
       ],
@@ -2689,7 +2731,7 @@
       "used_by": [
         "fabricops_kit.config._get_active_metadata_tables",
         "fabricops_kit.config._get_metadata_table_schema_registry",
-        "fabricops_kit.config.setup_metadata_tables"
+        "fabricops_kit.config._setup_metadata_tables_workflow"
       ],
       "used_by_count": 3,
       "used_in_templates": [],
@@ -6285,7 +6327,7 @@
   "modules": {
     "config": {
       "callable_count": 2,
-      "internal_count": 21,
+      "internal_count": 23,
       "outbound_modules": [
         "data_agreement",
         "governance_review",

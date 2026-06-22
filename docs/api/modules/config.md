@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 21</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 10 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 23</span><span class="reference-chip">Uses 3 external modules</span><span class="reference-chip">Used by 10 external modules</span></div>
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>21</td>
+      <td>23</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -80,14 +80,14 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
       <td>Callable</td>
       <td>function</td>
       <td>Create or validate all FabricOps metadata tables through one setup action.</td>
-      <td><code>_get_metadata_table_schema_registry</code> (internal), <code>_metadata_schema_field_names</code> (internal), <code>_resolve_metadata_schema</code> (internal), <code>_setup_metadata_table_registry</code> (internal), <code>_validate_framework_config</code> (internal), <code>_validate_metadata_table_registration</code> (internal)</td>
+      <td><code>_setup_metadata_tables_workflow</code> (internal)</td>
     </tr>
     <tr>
       <td><a href="../reference/setup_notebook/"><code>setup_notebook</code></a></td>
       <td>Callable</td>
       <td>function</td>
       <td>Shared environment setup and runtime validation for notebook templates.</td>
-      <td><code>_get_store</code> (internal), <code>_run_config_smoke_tests</code> (internal), <code>_validate_framework_config</code> (internal)</td>
+      <td><code>_setup_notebook_workflow</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -108,12 +108,12 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <li>
 <a class="reference-chip" href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_get_metadata_table_schema_registry</code></span>, <span class="reference-chip"><code>_metadata_schema_field_names</code></span>, <span class="reference-chip"><code>_resolve_metadata_schema</code></span>, <span class="reference-chip"><code>_setup_metadata_table_registry</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>, <span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
+<span class="reference-chip"><code>_setup_metadata_tables_workflow</code></span>
 </li>
 <li>
 <a class="reference-chip" href="../reference/setup_notebook/"><code>setup_notebook</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_run_config_smoke_tests</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>
+<span class="reference-chip"><code>_setup_notebook_workflow</code></span>
 </li>
 </ul>
 </section>
@@ -166,15 +166,15 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td><code>_get_metadata_table_schema_registry</code></td>
-      <td><a href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_get_store</code></td>
-      <td><a href="../reference/setup_notebook/"><code>setup_notebook</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_metadata_schema_field_names</code></td>
-      <td><a href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_normalize_path_config</code></td>
@@ -186,15 +186,23 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td><code>_resolve_metadata_schema</code></td>
-      <td><a href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_run_config_smoke_tests</code></td>
-      <td><a href="../reference/setup_notebook/"><code>setup_notebook</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_setup_metadata_table_registry</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_setup_metadata_tables_workflow</code></td>
       <td><a href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_setup_notebook_workflow</code></td>
+      <td><a href="../reference/setup_notebook/"><code>setup_notebook</code></a></td>
     </tr>
     <tr>
       <td><code>_string_metadata_schema</code></td>
@@ -206,11 +214,11 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td><code>_validate_framework_config</code></td>
-      <td><a href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a>, <a href="../reference/setup_notebook/"><code>setup_notebook</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_validate_metadata_table_registration</code></td>
-      <td><a href="../reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></td>
+      <td>—</td>
     </tr>
     <tr>
       <td><code>_validate_notebook_name</code></td>
@@ -289,6 +297,16 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 <span class="reference-chip"><code>_setup_metadata_table_registry</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_coerce_row_dicts</code></span>, <span class="reference-chip"><code>_metadata_schema_field_names</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_setup_metadata_tables_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_get_metadata_table_schema_registry</code></span>, <span class="reference-chip"><code>_metadata_schema_field_names</code></span>, <span class="reference-chip"><code>_resolve_metadata_schema</code></span>, <span class="reference-chip"><code>_setup_metadata_table_registry</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>, <span class="reference-chip"><code>_validate_metadata_table_registration</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_setup_notebook_workflow</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_get_store</code></span>, <span class="reference-chip"><code>_run_config_smoke_tests</code></span>, <span class="reference-chip"><code>_validate_framework_config</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_string_metadata_schema</code></span>
