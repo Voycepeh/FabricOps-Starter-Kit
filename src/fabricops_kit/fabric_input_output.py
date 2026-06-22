@@ -59,6 +59,7 @@ def read_lakehouse_table(table_name: str, *, target: str = "source", schema: str
     -------
     pyspark.sql.DataFrame
         Spark DataFrame loaded from the configured Delta table path.
+
     """
     return read_lakehouse_table_core(table_name, target=target, schema=schema, spark_session=spark_session, context=context)
 
@@ -98,6 +99,7 @@ def write_lakehouse_table(df, table_name: str, *, target: str = "unified", schem
     -------
     None
         The DataFrame is written to the configured Delta table path.
+
     """
     return write_lakehouse_table_core(df, table_name, target=target, schema=schema, mode=mode, partition_by=partition_by, repartition_by=repartition_by, options=options, verbose=verbose, context=context)
 
@@ -124,6 +126,7 @@ def read_lakehouse_csv(relative_path: str, *, target: str = "source", spark_sess
     -------
     pyspark.sql.DataFrame
         Spark DataFrame loaded from the CSV path.
+
     """
     return read_lakehouse_csv_core(relative_path, target=target, spark_session=spark_session, header=header, context=context, **options)
 
@@ -148,6 +151,7 @@ def read_lakehouse_parquet(relative_path: str, *, target: str = "source", verbos
     -------
     pyspark.sql.DataFrame
         Spark DataFrame loaded from the Parquet path.
+
     """
     return read_lakehouse_parquet_core(relative_path, target=target, verbose=verbose, spark_session=spark_session, context=context)
 
@@ -174,6 +178,7 @@ def read_lakehouse_excel(relative_path: str, *, target: str = "source", sheet_na
     -------
     pyspark.sql.DataFrame
         Spark DataFrame converted from the selected Excel worksheet.
+
     """
     return read_lakehouse_excel_core(relative_path, target=target, sheet_name=sheet_name, spark_session=spark_session, context=context, **read_excel_kwargs)
 
@@ -214,6 +219,7 @@ def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehou
     -------
     pyspark.sql.DataFrame
         Spark DataFrame loaded through the Fabric warehouse connector.
+
     """
     return read_warehouse_table_core(schema, table_name, target=target, spark_session=spark_session, context=context)
 
@@ -250,6 +256,7 @@ def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session
     -------
     pyspark.sql.DataFrame
         Spark DataFrame returned by the SQL serving engine.
+
     """
     return read_warehouse_query_core(query, target=target, spark_session=spark_session, context=context)
 
@@ -283,5 +290,6 @@ def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "wa
     -------
     None
         The DataFrame is written through the Fabric warehouse connector.
+
     """
     return write_warehouse_table_core(df, schema, table_name, target=target, mode=mode, context=context)

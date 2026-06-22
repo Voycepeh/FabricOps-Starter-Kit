@@ -390,6 +390,7 @@ def profile_dataframe(
     -------
     pyspark.sql.DataFrame
         Metadata-compatible profile DataFrame.
+
     """
     return profile_dataframe_core(
         df,

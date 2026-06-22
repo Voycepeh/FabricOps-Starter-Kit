@@ -163,6 +163,27 @@ def _resolve_lakehouse_table_identifier(store: FabricStore, table_name: str, sch
 
 
 def read_lakehouse_table_core(table_name: str, *, target: str, schema: str | None = None, spark_session=None, context: dict[str, Any] | None = None):
+    """Read a Lakehouse Delta table for package-internal callers.
+
+    Parameters
+    ----------
+    table_name : str
+        Lakehouse table name.
+    target : str
+        Configured lakehouse target key.
+    schema : str or None, default=None
+        Optional schema override for schema-enabled lakehouses.
+    spark_session : object, optional
+        Spark session to use instead of the notebook global ``spark``.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame loaded from the resolved Delta table path.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_lakehouse_store(store, env, target)
@@ -173,6 +194,37 @@ def read_lakehouse_table_core(table_name: str, *, target: str, schema: str | Non
 
 
 def write_lakehouse_table_core(df, table_name: str, *, target: str, schema: str | None, mode: str, partition_by=None, repartition_by=None, options=None, verbose: bool = True, context=None):
+    """Write a Lakehouse Delta table for package-internal callers.
+
+    Parameters
+    ----------
+    df : pyspark.sql.DataFrame
+        Spark DataFrame to write.
+    table_name : str
+        Lakehouse table name.
+    target : str
+        Configured lakehouse target key.
+    schema : str or None
+        Optional schema override for schema-enabled lakehouses.
+    mode : str
+        Spark write mode.
+    partition_by : str or list[str], optional
+        Delta partition column or columns.
+    repartition_by : int, str, list, or tuple, optional
+        Optional repartitioning before write.
+    options : dict, optional
+        Additional Spark writer options.
+    verbose : bool, default=True
+        Whether to print the resolved output path.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+
+    Returns
+    -------
+    None
+        The DataFrame is written to the resolved Delta table path.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_lakehouse_store(store, env, target)
@@ -196,6 +248,29 @@ def write_lakehouse_table_core(df, table_name: str, *, target: str, schema: str 
 
 
 def read_lakehouse_csv_core(relative_path: str, *, target: str, spark_session=None, header: bool = True, context: dict[str, Any] | None = None, **options):
+    """Read Lakehouse CSV files for package-internal callers.
+
+    Parameters
+    ----------
+    relative_path : str
+        Path under the lakehouse ``Files`` area.
+    target : str
+        Configured lakehouse target key.
+    spark_session : object, optional
+        Spark session to use instead of the notebook global ``spark``.
+    header : bool, default=True
+        Whether the first row contains column names.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+    **options
+        Additional Spark CSV reader options.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame loaded from the resolved CSV path.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_lakehouse_store(store, env, target)
@@ -208,6 +283,27 @@ def read_lakehouse_csv_core(relative_path: str, *, target: str, spark_session=No
 
 
 def read_lakehouse_parquet_core(relative_path: str, *, target: str, verbose: bool = True, spark_session=None, context: dict[str, Any] | None = None):
+    """Read Lakehouse Parquet files for package-internal callers.
+
+    Parameters
+    ----------
+    relative_path : str
+        Path under the lakehouse ``Files`` area.
+    target : str
+        Configured lakehouse target key.
+    verbose : bool, default=True
+        Whether to print fallback read progress.
+    spark_session : object, optional
+        Spark session to use instead of the notebook global ``spark``.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame loaded from the resolved Parquet path.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_lakehouse_store(store, env, target)
@@ -261,6 +357,29 @@ def read_lakehouse_parquet_core(relative_path: str, *, target: str, verbose: boo
 
 
 def read_lakehouse_excel_core(relative_path: str, *, target: str, sheet_name=0, spark_session=None, context: dict[str, Any] | None = None, **read_excel_kwargs):
+    """Read Lakehouse Excel files for package-internal callers.
+
+    Parameters
+    ----------
+    relative_path : str
+        Path under the lakehouse ``Files`` area.
+    target : str
+        Configured lakehouse target key.
+    sheet_name : str or int, default=0
+        Worksheet name or index to read.
+    spark_session : object, optional
+        Spark session to use instead of the notebook global ``spark``.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+    **read_excel_kwargs
+        Additional keyword arguments passed to ``pandas.read_excel``.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame converted from the selected Excel worksheet.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_lakehouse_store(store, env, target)
@@ -279,6 +398,27 @@ def read_lakehouse_excel_core(relative_path: str, *, target: str, sheet_name=0, 
 
 
 def read_warehouse_table_core(schema: str, table_name: str, *, target: str, spark_session=None, context: dict[str, Any] | None = None):
+    """Read a Warehouse table for package-internal callers.
+
+    Parameters
+    ----------
+    schema : str
+        Warehouse schema name.
+    table_name : str
+        Warehouse table name.
+    target : str
+        Configured warehouse target key.
+    spark_session : object, optional
+        Spark session to use instead of the notebook global ``spark``.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame loaded through the Fabric Warehouse connector.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_warehouse_store(store, env, target)
@@ -290,6 +430,25 @@ def read_warehouse_table_core(schema: str, table_name: str, *, target: str, spar
 
 
 def read_warehouse_query_core(query: str, *, target: str, spark_session=None, context: dict[str, Any] | None = None):
+    """Read a Warehouse SQL query for package-internal callers.
+
+    Parameters
+    ----------
+    query : str
+        SQL ``SELECT`` statement, or CTE beginning with ``WITH``.
+    target : str
+        Configured warehouse target key.
+    spark_session : object, optional
+        Spark session to use instead of the notebook global ``spark``.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        DataFrame loaded through the Fabric Warehouse connector.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_warehouse_store(store, env, target)
@@ -304,6 +463,29 @@ def read_warehouse_query_core(query: str, *, target: str, spark_session=None, co
 
 
 def write_warehouse_table_core(df, schema: str, table_name: str, *, target: str, mode: str, context: dict[str, Any] | None = None):
+    """Write a Warehouse table for package-internal callers.
+
+    Parameters
+    ----------
+    df : pyspark.sql.DataFrame
+        Spark DataFrame to publish.
+    schema : str
+        Warehouse schema name.
+    table_name : str
+        Warehouse table name.
+    target : str
+        Configured warehouse target key.
+    mode : str
+        Spark writer mode passed to the Fabric Warehouse connector.
+    context : dict[str, Any], optional
+        Active Fabric context override.
+
+    Returns
+    -------
+    None
+        The DataFrame is written through the Fabric Warehouse connector.
+
+    """
     config, env, _context = resolve_fabric_context(context=context)
     store = _get_store(config, env, target)
     _validate_warehouse_store(store, env, target)

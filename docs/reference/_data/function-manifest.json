@@ -2751,8 +2751,8 @@
     ],
     "source_path": "src/fabricops_kit/data_profiling.py",
     "source_start_line": 351,
-    "source_end_line": 405,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L351-L405",
+    "source_end_line": 406,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L351-L406",
     "docs_path": "api/reference/profile_dataframe.md",
     "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence."
   },
@@ -2824,9 +2824,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 105,
-    "source_end_line": 128,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L105-L128",
+    "source_start_line": 107,
+    "source_end_line": 131,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L107-L131",
     "docs_path": "api/reference/read_lakehouse_csv.md",
     "summary": "Read a CSV file from a configured Fabric lakehouse Files path."
   },
@@ -2863,9 +2863,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 155,
-    "source_end_line": 178,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L155-L178",
+    "source_start_line": 159,
+    "source_end_line": 183,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L159-L183",
     "docs_path": "api/reference/read_lakehouse_excel.md",
     "summary": "Read an Excel file from a configured Fabric lakehouse Files path."
   },
@@ -2902,9 +2902,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 131,
-    "source_end_line": 152,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L131-L152",
+    "source_start_line": 134,
+    "source_end_line": 156,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L134-L156",
     "docs_path": "api/reference/read_lakehouse_parquet.md",
     "summary": "Read a Parquet path from a configured Fabric lakehouse Files path."
   },
@@ -2948,8 +2948,8 @@
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
     "source_start_line": 37,
-    "source_end_line": 63,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L37-L63",
+    "source_end_line": 64,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L37-L64",
     "docs_path": "api/reference/read_lakehouse_table.md",
     "summary": "Read a Delta table from a configured Fabric lakehouse target."
   },
@@ -2990,9 +2990,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 221,
-    "source_end_line": 254,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L221-L254",
+    "source_start_line": 227,
+    "source_end_line": 261,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L227-L261",
     "docs_path": "api/reference/read_warehouse_query.md",
     "summary": "Read warehouse rows with SQL pushdown through a configured Fabric warehouse target."
   },
@@ -3033,9 +3033,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 181,
-    "source_end_line": 218,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L181-L218",
+    "source_start_line": 186,
+    "source_end_line": 224,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L186-L224",
     "docs_path": "api/reference/read_warehouse_table.md",
     "summary": "Read a table from a configured Fabric warehouse target."
   },
@@ -3081,9 +3081,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 66,
-    "source_end_line": 102,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L66-L102",
+    "source_start_line": 67,
+    "source_end_line": 104,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L67-L104",
     "docs_path": "api/reference/write_lakehouse_table.md",
     "summary": "Write a Spark DataFrame to a configured Fabric lakehouse Delta table."
   },
@@ -3120,9 +3120,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/fabric_input_output.py",
-    "source_start_line": 257,
-    "source_end_line": 287,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L257-L287",
+    "source_start_line": 264,
+    "source_end_line": 295,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L264-L295",
     "docs_path": "api/reference/write_warehouse_table.md",
     "summary": "Write a DataFrame to a configured Fabric warehouse target."
   },
@@ -6394,9 +6394,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 318,
-    "source_end_line": 333,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L318-L333",
+    "source_start_line": 500,
+    "source_end_line": 515,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L500-L515",
     "docs_path": null,
     "summary": "Convert one local Parquet file from nanosecond to microsecond timestamps."
   },
@@ -6774,9 +6774,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 338,
-    "source_end_line": 346,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L338-L346",
+    "source_start_line": 520,
+    "source_end_line": 528,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L520-L528",
     "docs_path": null,
     "summary": "Return the configured schema for a schema-enabled lakehouse target."
   },
@@ -6807,11 +6807,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 198,
-    "source_end_line": 207,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L198-L207",
+    "source_start_line": 250,
+    "source_end_line": 282,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L250-L282",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Read Lakehouse CSV files for package-internal callers."
   },
   {
     "id": "fabricops_kit.io_core.read_lakehouse_excel_core",
@@ -6841,11 +6841,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 263,
-    "source_end_line": 278,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L263-L278",
+    "source_start_line": 359,
+    "source_end_line": 397,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L359-L397",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Read Lakehouse Excel files for package-internal callers."
   },
   {
     "id": "fabricops_kit.io_core.read_lakehouse_parquet_core",
@@ -6875,11 +6875,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 210,
-    "source_end_line": 260,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L210-L260",
+    "source_start_line": 285,
+    "source_end_line": 356,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L285-L356",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Read Lakehouse Parquet files for package-internal callers."
   },
   {
     "id": "fabricops_kit.io_core.read_lakehouse_table_core",
@@ -6921,10 +6921,10 @@
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
     "source_start_line": 165,
-    "source_end_line": 172,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L165-L172",
+    "source_end_line": 193,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L165-L193",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Read a Lakehouse Delta table for package-internal callers."
   },
   {
     "id": "fabricops_kit.io_core.read_warehouse_query_core",
@@ -6952,11 +6952,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 292,
-    "source_end_line": 303,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L292-L303",
+    "source_start_line": 432,
+    "source_end_line": 462,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L432-L462",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Read a Warehouse SQL query for package-internal callers."
   },
   {
     "id": "fabricops_kit.io_core.read_warehouse_table_core",
@@ -6987,11 +6987,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 281,
-    "source_end_line": 289,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L281-L289",
+    "source_start_line": 400,
+    "source_end_line": 429,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L400-L429",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Read a Warehouse table for package-internal callers."
   },
   {
     "id": "fabricops_kit.io_core.write_lakehouse_table_core",
@@ -7031,11 +7031,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 175,
-    "source_end_line": 195,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L175-L195",
+    "source_start_line": 196,
+    "source_end_line": 247,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L196-L247",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Write a Lakehouse Delta table for package-internal callers."
   },
   {
     "id": "fabricops_kit.io_core.write_warehouse_table_core",
@@ -7065,11 +7065,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io_core.py",
-    "source_start_line": 306,
-    "source_end_line": 313,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L306-L313",
+    "source_start_line": 465,
+    "source_end_line": 495,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L465-L495",
     "docs_path": null,
-    "summary": "No summary available."
+    "summary": "Write a Warehouse table for package-internal callers."
   },
   {
     "id": "fabricops_kit.metadata._build_dq_rule_key",
