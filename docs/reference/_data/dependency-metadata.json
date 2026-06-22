@@ -2658,11 +2658,10 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.governance_review._build_dq_rule_records",
-        "fabricops_kit.governance_review._dq_rule_display_rows",
         "fabricops_kit.governance_review._load_active_dq_rules",
         "fabricops_kit.governance_review._validate_dq_rules"
       ],
-      "used_by_count": 4,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -2698,39 +2697,15 @@
       ],
       "calls_count": 3,
       "used_by": [
-        "fabricops_kit.governance_review._catalogue_profile_target_model",
         "fabricops_kit.governance_review.load_catalogue_profile_rows"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._first_present",
         "fabricops_kit.governance_review._value"
       ],
       "internal_helper_count": 2
-    },
-    "fabricops_kit.governance_review._catalogue_profile_target_model": {
-      "qualified_name": "fabricops_kit.governance_review._catalogue_profile_target_model",
-      "short_name": "_catalogue_profile_target_model",
-      "module": "governance_review",
-      "callable": "_catalogue_profile_target_model",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._catalogue_physical_identity",
-        "fabricops_kit.governance_review._is_success",
-        "fabricops_kit.governance_review._value"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._catalogue_physical_identity",
-        "fabricops_kit.governance_review._is_success",
-        "fabricops_kit.governance_review._value"
-      ],
-      "internal_helper_count": 3
     },
     "fabricops_kit.governance_review._check_metadata_schema_field_names": {
       "qualified_name": "fabricops_kit.governance_review._check_metadata_schema_field_names",
@@ -2874,27 +2849,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.governance_review._dq_rule_display_rows": {
-      "qualified_name": "fabricops_kit.governance_review._dq_rule_display_rows",
-      "short_name": "_dq_rule_display_rows",
-      "module": "governance_review",
-      "callable": "_dq_rule_display_rows",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._canonical_dq_rule_type",
-        "fabricops_kit.governance_review._dq_rule_parameters_summary"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._canonical_dq_rule_type",
-        "fabricops_kit.governance_review._dq_rule_parameters_summary"
-      ],
-      "internal_helper_count": 2
-    },
     "fabricops_kit.governance_review._dq_rule_parameter_payload": {
       "qualified_name": "fabricops_kit.governance_review._dq_rule_parameter_payload",
       "short_name": "_dq_rule_parameter_payload",
@@ -2906,23 +2860,6 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.governance_review._build_dq_rule_records"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.governance_review._dq_rule_parameters_summary": {
-      "qualified_name": "fabricops_kit.governance_review._dq_rule_parameters_summary",
-      "short_name": "_dq_rule_parameters_summary",
-      "module": "governance_review",
-      "callable": "_dq_rule_parameters_summary",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.governance_review._dq_rule_display_rows"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
@@ -3137,10 +3074,9 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.governance_review._catalogue_profile_target_model",
         "fabricops_kit.governance_review.load_catalogue_profile_rows"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._value"
@@ -3330,25 +3266,6 @@
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.governance_review._spark_sql_helpers"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.governance_review._profile_sort_key": {
-      "qualified_name": "fabricops_kit.governance_review._profile_sort_key",
-      "short_name": "_profile_sort_key",
-      "module": "governance_review",
-      "callable": "_profile_sort_key",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.governance_review._value"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.governance_review._value"
       ],
       "internal_helper_count": 1
     },
@@ -3737,17 +3654,15 @@
         "fabricops_kit.governance_review._approved_column_identity",
         "fabricops_kit.governance_review._approved_review_context",
         "fabricops_kit.governance_review._catalogue_physical_identity",
-        "fabricops_kit.governance_review._catalogue_profile_target_model",
         "fabricops_kit.governance_review._evaluate_governance_readiness",
         "fabricops_kit.governance_review._first_present",
         "fabricops_kit.governance_review._is_success",
         "fabricops_kit.governance_review._latest_row",
-        "fabricops_kit.governance_review._profile_sort_key",
         "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
         "fabricops_kit.governance_review.load_catalogue_profile_rows",
         "fabricops_kit.governance_review.widget_enrich_table_metadata"
       ],
-      "used_by_count": 12,
+      "used_by_count": 10,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -6184,7 +6099,7 @@
     },
     "governance_review": {
       "callable_count": 6,
-      "internal_count": 61,
+      "internal_count": 57,
       "outbound_modules": [
         "config",
         "data_profiling",

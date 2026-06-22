@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-21T17:18:10+00:00",
+  "generated_at": "2026-06-21T17:30:03+00:00",
   "function_inventory": [
     {
       "function_name": "_audit_timestamp_expr",
@@ -180,7 +180,7 @@
           "function": "_dq_summary",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_summary",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1561-L1576",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1452-L1467",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -189,7 +189,7 @@
           "function": "_prepare_dq_profile_input_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1695-L1719",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1586-L1610",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -2249,7 +2249,7 @@
           "function": "widget_author_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2438-L2606",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2258,7 +2258,7 @@
           "function": "widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2267,7 +2267,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2276,7 +2276,7 @@
           "function": "widget_review_guardrail_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2568-L2668",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -2285,7 +2285,7 @@
           "function": "widget_select_guardrail_target",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2099-L2180",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -5861,7 +5861,7 @@
           "function": "_prepare_dq_profile_input_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1695-L1719",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1586-L1610",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -6033,7 +6033,7 @@
           "function": "_read_guardrail_rule_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1600-L1607",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1491-L1498",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6042,7 +6042,7 @@
           "function": "_read_metadata_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L965-L966",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L856-L857",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -6051,7 +6051,7 @@
           "function": "_read_metadata_table_or_empty",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1917-L1931",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6060,7 +6060,7 @@
           "function": "_write_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1976-L1987",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6069,7 +6069,7 @@
           "function": "_write_table_metadata_enrichment_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L691-L701",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -6087,7 +6087,7 @@
           "function": "load_catalogue_profile_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -6096,7 +6096,7 @@
           "function": "record_table_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -7227,7 +7227,7 @@
           "function": "_read_guardrail_rule_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1600-L1607",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1491-L1498",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7236,7 +7236,7 @@
           "function": "_read_metadata_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L965-L966",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L856-L857",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -7245,7 +7245,7 @@
           "function": "_read_metadata_table_or_empty",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1917-L1931",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7263,7 +7263,7 @@
           "function": "load_catalogue_profile_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -7524,7 +7524,7 @@
           "function": "_write_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1976-L1987",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7533,7 +7533,7 @@
           "function": "_write_table_metadata_enrichment_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L691-L701",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7542,7 +7542,7 @@
           "function": "record_table_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -7729,7 +7729,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -7738,7 +7738,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7809,7 +7809,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -7818,7 +7818,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7895,7 +7895,7 @@
           "function": "apply_governance_enrichment_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_enrichment_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1900-L1953",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1791-L1844",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7904,7 +7904,7 @@
           "function": "apply_governance_rule_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_rule_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1847-L1898",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1738-L1789",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7913,7 +7913,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1769-L1772",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1660-L1663",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -7948,7 +7948,7 @@
           "function": "guardrail_authoring_status",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.guardrail_authoring_status",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1808-L1840",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1699-L1731",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7959,7 +7959,7 @@
           "function": "_is_no_approval_required",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._is_no_approval_required",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1764-L1766",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1655-L1657",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7968,7 +7968,7 @@
           "function": "_lifecycle_fields",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._lifecycle_fields",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1775-L1791",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1666-L1682",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -7994,7 +7994,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1685-L1697",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -8028,7 +8028,7 @@
           "function": "_dq_records_from_selection",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_records_from_selection",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2290-L2326",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8037,7 +8037,7 @@
           "function": "_schema_freshness_profile_records_from_selection",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2073-L2140",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8048,7 +8048,7 @@
           "function": "guardrail_authoring_status",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.guardrail_authoring_status",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1808-L1840",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1699-L1731",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8101,7 +8101,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -8139,7 +8139,7 @@
           "function": "record_table_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -8177,7 +8177,7 @@
           "function": "_dq_rule_parameter_payload",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_rule_parameter_payload",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L460-L482",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L392-L414",
           "layer": "utility",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -8186,7 +8186,7 @@
           "function": "_json",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._json",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L547-L552",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L479-L484",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8204,7 +8204,7 @@
           "function": "_validate_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1235-L1307",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1126-L1198",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8221,7 +8221,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -8242,8 +8242,8 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "used_by_count": 4,
-      "called_by_count": 4,
+      "used_by_count": 3,
+      "called_by_count": 3,
       "calls_count": 0,
       "layer_consistency": "stable_utility",
       "layer_consistency_label": "Stable utility",
@@ -8252,16 +8252,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_dq_rule_display_rows",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._dq_rule_display_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L917-L947",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -8270,7 +8261,7 @@
           "function": "_load_active_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8279,7 +8270,7 @@
           "function": "_validate_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1235-L1307",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1126-L1198",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8349,6 +8340,7 @@
       "signals": [
         "internal_calls_internal",
         "callee_unreachable",
+        "Single-use internal helper",
         "Layer assignment needs review"
       ],
       "architecture_signals": [
@@ -8357,26 +8349,17 @@
       "review_signals": [
         "callee_unreachable"
       ],
-      "used_by_count": 2,
-      "called_by_count": 2,
+      "used_by_count": 1,
+      "called_by_count": 1,
       "calls_count": 3,
       "layer_consistency": "architecture_violation",
       "layer_consistency_label": "Architecture violation",
       "callers": [
         {
-          "function": "_catalogue_profile_target_model",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._catalogue_profile_target_model",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L383-L438",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
-        {
           "function": "load_catalogue_profile_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -8413,68 +8396,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L360-L380",
-      "deepest_call_chain_depth": null,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_catalogue_profile_target_model",
-      "qualified_name": "fabricops_kit.governance_review._catalogue_profile_target_model",
-      "module": "governance_review",
-      "function_type": "Internal helper",
-      "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "function",
-      "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "callee_unreachable",
-        "Possible inline/private helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [
-        "callee_unreachable"
-      ],
-      "used_by_count": 0,
-      "called_by_count": 0,
-      "calls_count": 3,
-      "layer_consistency": "possible_inline_or_private_helper",
-      "layer_consistency_label": "Possible inline/private helper",
-      "callers": [],
-      "callees": [
-        {
-          "function": "_catalogue_physical_identity",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._catalogue_physical_identity",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L360-L380",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_is_success",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._is_success",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L74-L75",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_value",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._value",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71",
-          "layer": "utility",
-          "review_status": "classified",
-          "callable_kind": "function"
-        }
-      ],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L383-L438",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L350-L370",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -8548,7 +8470,7 @@
           "function": "_load_active_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8557,7 +8479,7 @@
           "function": "_read_metadata_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L965-L966",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L856-L857",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -8566,7 +8488,7 @@
           "function": "_read_metadata_table_or_empty",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1917-L1931",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8584,7 +8506,7 @@
           "function": "load_catalogue_profile_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -8593,7 +8515,7 @@
           "function": "resolve_table_governance_policy",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.resolve_table_governance_policy",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1722-L1760",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1613-L1651",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8635,7 +8557,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8644,7 +8566,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L588-L590",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L520-L522",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -8677,7 +8599,7 @@
           "function": "_run_dq_guardrail_checks",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1474-L1509",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1365-L1400",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8686,7 +8608,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1468-L1471",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1359-L1362",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -8720,7 +8642,7 @@
           "function": "_dq_failed_row_count",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_row_count",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1548-L1558",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1439-L1449",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8729,7 +8651,7 @@
           "function": "_dq_tagged_dataframe",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_tagged_dataframe",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1512-L1545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1403-L1436",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8738,7 +8660,7 @@
           "function": "_run_dq_guardrail_checks",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1474-L1509",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1365-L1400",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8749,7 +8671,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8758,7 +8680,7 @@
           "function": "_validate_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1235-L1307",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1126-L1198",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8766,7 +8688,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1384-L1466",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1275-L1357",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -8801,7 +8723,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8812,7 +8734,7 @@
           "function": "_dq_failed_expression",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_expression",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1384-L1466",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1275-L1357",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8821,7 +8743,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8829,7 +8751,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1548-L1558",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1439-L1449",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -8865,7 +8787,7 @@
           "function": "widget_author_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2438-L2606",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8876,7 +8798,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -8884,60 +8806,8 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2290-L2326",
       "deepest_call_chain_depth": 1,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_dq_rule_display_rows",
-      "qualified_name": "fabricops_kit.governance_review._dq_rule_display_rows",
-      "module": "governance_review",
-      "function_type": "Internal helper",
-      "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "function",
-      "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "callee_unreachable",
-        "Possible inline/private helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [
-        "callee_unreachable"
-      ],
-      "used_by_count": 0,
-      "called_by_count": 0,
-      "calls_count": 2,
-      "layer_consistency": "possible_inline_or_private_helper",
-      "layer_consistency_label": "Possible inline/private helper",
-      "callers": [],
-      "callees": [
-        {
-          "function": "_canonical_dq_rule_type",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._canonical_dq_rule_type",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L197-L198",
-          "layer": "utility",
-          "review_status": "classified",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_dq_rule_parameters_summary",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._dq_rule_parameters_summary",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L899-L914",
-          "layer": "utility",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        }
-      ],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L917-L947",
-      "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
     {
@@ -8969,7 +8839,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -8978,49 +8848,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L460-L482",
-      "deepest_call_chain_depth": null,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_dq_rule_parameters_summary",
-      "qualified_name": "fabricops_kit.governance_review._dq_rule_parameters_summary",
-      "module": "governance_review",
-      "function_type": "Utility",
-      "layer": "utility",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "function",
-      "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "Single-use internal helper",
-        "Leaf internal helper",
-        "Utility but low reuse"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "used_by_count": 1,
-      "called_by_count": 1,
-      "calls_count": 0,
-      "layer_consistency": "questionable_utility",
-      "layer_consistency_label": "Questionable utility",
-      "callers": [
-        {
-          "function": "_dq_rule_display_rows",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._dq_rule_display_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L917-L947",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        }
-      ],
-      "callees": [],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L899-L914",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L392-L414",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -9055,7 +8883,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9075,7 +8903,7 @@
           "function": "_summarize_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._summarize_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1579-L1596",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1470-L1487",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9083,7 +8911,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1561-L1576",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1452-L1467",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -9118,7 +8946,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9129,7 +8957,7 @@
           "function": "_dq_failed_expression",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_expression",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1384-L1466",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1275-L1357",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9147,7 +8975,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9155,7 +8983,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1512-L1545",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1403-L1436",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -9188,7 +9016,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9197,7 +9025,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L555-L564",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L487-L496",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -9230,7 +9058,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9239,7 +9067,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L608-L625",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L549-L566",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -9279,7 +9107,7 @@
           "function": "record_table_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -9290,7 +9118,7 @@
           "function": "_latest_row",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_row",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L950-L954",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L841-L845",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -9299,7 +9127,7 @@
           "function": "_read_metadata_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L965-L966",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L856-L857",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -9308,7 +9136,7 @@
           "function": "_status_is_failed",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._status_is_failed",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L957-L958",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L848-L849",
           "layer": "utility",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -9317,7 +9145,7 @@
           "function": "_status_is_warning",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._status_is_warning",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L961-L962",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L852-L853",
           "layer": "utility",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -9335,7 +9163,7 @@
           "function": "load_catalogue_profile_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -9379,7 +9207,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -9412,7 +9240,7 @@
           "function": "widget_select_guardrail_target",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2099-L2180",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9421,7 +9249,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2043-L2057",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1934-L1948",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -9454,7 +9282,7 @@
           "function": "_catalogue_physical_identity",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._catalogue_physical_identity",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L360-L380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L350-L370",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -9584,7 +9412,7 @@
           "function": "_authoring_lifecycle",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1685-L1697",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9593,7 +9421,7 @@
           "function": "guardrail_authoring_status",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.guardrail_authoring_status",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1808-L1840",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1699-L1731",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9602,7 +9430,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1764-L1766",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1655-L1657",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -9619,30 +9447,23 @@
       "recommended_action": "Orphaned callable",
       "priority": "Medium",
       "signals": [
-        "Shared helper"
+        "Thin wrapper candidate",
+        "Single-use internal helper",
+        "Possible inline/private helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "used_by_count": 2,
-      "called_by_count": 2,
+      "used_by_count": 1,
+      "called_by_count": 1,
       "calls_count": 1,
-      "layer_consistency": "shared_internal_helper",
-      "layer_consistency_label": "Shared internal helper",
+      "layer_consistency": "possible_inline_or_private_helper",
+      "layer_consistency_label": "Possible inline/private helper",
       "callers": [
-        {
-          "function": "_catalogue_profile_target_model",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._catalogue_profile_target_model",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L383-L438",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
         {
           "function": "load_catalogue_profile_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -9701,7 +9522,7 @@
           "function": "_read_metadata_table_or_empty",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1917-L1931",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9741,7 +9562,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -9750,7 +9571,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9759,7 +9580,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L547-L552",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L479-L484",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -9792,7 +9613,7 @@
           "function": "_load_active_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9803,7 +9624,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9811,7 +9632,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1309-L1330",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1200-L1221",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -9844,7 +9665,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -9863,7 +9684,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L950-L954",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L841-L845",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -9894,7 +9715,7 @@
           "function": "widget_author_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2438-L2606",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9903,7 +9724,7 @@
           "function": "widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9912,7 +9733,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1951-L1964",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -9945,7 +9766,7 @@
           "function": "_authoring_lifecycle",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1685-L1697",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -9954,7 +9775,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1775-L1791",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1666-L1682",
       "deepest_call_chain_depth": 4,
       "repeated_helper_count": 0
     },
@@ -9989,7 +9810,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10018,7 +9839,7 @@
           "function": "_latest_dq_rule_versions",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_dq_rule_versions",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1309-L1330",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1200-L1221",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10036,7 +9857,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10045,7 +9866,7 @@
           "function": "_validate_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1235-L1307",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1126-L1198",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10053,7 +9874,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -10085,7 +9906,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -10094,7 +9915,7 @@
           "function": "_dq_tagged_dataframe",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_tagged_dataframe",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1512-L1545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1403-L1436",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10103,7 +9924,7 @@
           "function": "_load_active_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10112,7 +9933,7 @@
           "function": "_run_dq_guardrail_checks",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1474-L1509",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1365-L1400",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10121,7 +9942,7 @@
           "function": "_validate_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1235-L1307",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1126-L1198",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10185,7 +10006,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10193,47 +10014,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1695-L1719",
-      "deepest_call_chain_depth": null,
-      "repeated_helper_count": 0
-    },
-    {
-      "function_name": "_profile_sort_key",
-      "qualified_name": "fabricops_kit.governance_review._profile_sort_key",
-      "module": "governance_review",
-      "function_type": "Internal helper",
-      "layer": "internal",
-      "review_status": "unreachable",
-      "review_status_label": "Unreachable",
-      "callable_kind": "function",
-      "visibility": "private",
-      "recommended_action": "Orphaned callable",
-      "priority": "Medium",
-      "signals": [
-        "Possible inline/private helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "used_by_count": 0,
-      "called_by_count": 0,
-      "calls_count": 1,
-      "layer_consistency": "possible_inline_or_private_helper",
-      "layer_consistency_label": "Possible inline/private helper",
-      "callers": [],
-      "callees": [
-        {
-          "function": "_value",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._value",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L70-L71",
-          "layer": "utility",
-          "review_status": "classified",
-          "callable_kind": "function"
-        }
-      ],
-      "direct_internal_helpers": [],
-      "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L350-L357",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1586-L1610",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -10268,7 +10049,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10297,7 +10078,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10305,7 +10086,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1600-L1607",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1491-L1498",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -10340,7 +10121,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -10377,7 +10158,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L965-L966",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L856-L857",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -10412,7 +10193,7 @@
           "function": "widget_select_guardrail_target",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2099-L2180",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10458,7 +10239,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1917-L1931",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -10489,7 +10270,7 @@
           "function": "apply_governance_enrichment_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_enrichment_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1900-L1953",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1791-L1844",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10498,7 +10279,7 @@
           "function": "apply_governance_rule_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_rule_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1847-L1898",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1738-L1789",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10507,7 +10288,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1842-L1844",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1733-L1735",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -10540,7 +10321,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10549,7 +10330,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L567-L585",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L499-L517",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -10580,7 +10361,7 @@
           "function": "widget_author_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2438-L2606",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10589,7 +10370,7 @@
           "function": "widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10598,7 +10379,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1967-L1973",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -10644,7 +10425,7 @@
           "function": "_dq_failed_row_count",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_row_count",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1548-L1558",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1439-L1449",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10653,7 +10434,7 @@
           "function": "_dq_summary",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_summary",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1561-L1576",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1452-L1467",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10662,7 +10443,7 @@
           "function": "_dq_tagged_dataframe",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_tagged_dataframe",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1512-L1545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1403-L1436",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10671,7 +10452,7 @@
           "function": "_load_active_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10680,7 +10461,7 @@
           "function": "_read_guardrail_rule_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1600-L1607",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1491-L1498",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10689,7 +10470,7 @@
           "function": "_run_dq_guardrail_checks",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1474-L1509",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1365-L1400",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10698,7 +10479,7 @@
           "function": "_summarize_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._summarize_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1579-L1596",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1470-L1487",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10715,7 +10496,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -10750,7 +10531,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10761,7 +10542,7 @@
           "function": "_dq_check_status",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_check_status",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1468-L1471",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1359-L1362",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10770,7 +10551,7 @@
           "function": "_dq_failed_expression",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_expression",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1384-L1466",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1275-L1357",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10788,7 +10569,7 @@
           "function": "_spark_sql_helpers",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._spark_sql_helpers",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10797,7 +10578,7 @@
           "function": "_validate_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1235-L1307",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1126-L1198",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10805,7 +10586,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1474-L1509",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1365-L1400",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -10901,7 +10682,7 @@
           "function": "widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10912,7 +10693,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10920,7 +10701,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2073-L2140",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -10953,7 +10734,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -10972,7 +10753,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L525-L546",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -11004,7 +10785,7 @@
           "function": "_dq_failed_expression",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_expression",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1384-L1466",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1275-L1357",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11013,7 +10794,7 @@
           "function": "_dq_failed_row_count",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_row_count",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1548-L1558",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1439-L1449",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11022,7 +10803,7 @@
           "function": "_dq_tagged_dataframe",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_tagged_dataframe",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1512-L1545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1403-L1436",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11031,7 +10812,7 @@
           "function": "_latest_dq_rule_versions",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_dq_rule_versions",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1309-L1330",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1200-L1221",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11040,7 +10821,7 @@
           "function": "_load_active_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11049,7 +10830,7 @@
           "function": "_prepare_dq_profile_input_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1695-L1719",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1586-L1610",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11058,7 +10839,7 @@
           "function": "_read_guardrail_rule_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_guardrail_rule_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1600-L1607",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1491-L1498",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11067,7 +10848,7 @@
           "function": "_run_dq_guardrail_checks",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1474-L1509",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1365-L1400",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11076,7 +10857,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1225-L1232",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1116-L1123",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -11158,7 +10939,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11167,7 +10948,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L957-L958",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L848-L849",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -11200,7 +10981,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11209,7 +10990,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L961-L962",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L852-L853",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -11240,7 +11021,7 @@
           "function": "_dq_summary",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_summary",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1561-L1576",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1452-L1467",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11249,7 +11030,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11258,7 +11039,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1579-L1596",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1470-L1487",
       "deepest_call_chain_depth": 2,
       "repeated_helper_count": 0
     },
@@ -11289,7 +11070,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11298,7 +11079,7 @@
           "function": "_dq_failed_expression",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_failed_expression",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1384-L1466",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1275-L1357",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11307,7 +11088,7 @@
           "function": "_load_active_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._load_active_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1333-L1380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1224-L1271",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11316,7 +11097,7 @@
           "function": "_run_dq_guardrail_checks",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_dq_guardrail_checks",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1474-L1509",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1365-L1400",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11344,7 +11125,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1235-L1307",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1126-L1198",
       "deepest_call_chain_depth": 3,
       "repeated_helper_count": 0
     },
@@ -11366,8 +11147,8 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "used_by_count": 12,
-      "called_by_count": 12,
+      "used_by_count": 10,
+      "called_by_count": 10,
       "calls_count": 0,
       "layer_consistency": "stable_utility",
       "layer_consistency_label": "Stable utility",
@@ -11394,16 +11175,7 @@
           "function": "_catalogue_physical_identity",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._catalogue_physical_identity",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L360-L380",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_catalogue_profile_target_model",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._catalogue_profile_target_model",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L383-L438",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L350-L370",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11412,7 +11184,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11439,16 +11211,7 @@
           "function": "_latest_row",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_row",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L950-L954",
-          "layer": "internal",
-          "review_status": "unreachable",
-          "callable_kind": "function"
-        },
-        {
-          "function": "_profile_sort_key",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._profile_sort_key",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L350-L357",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L841-L845",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11457,7 +11220,7 @@
           "function": "_selected_catalogue_rows_for_enrichment",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L525-L546",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11466,7 +11229,7 @@
           "function": "load_catalogue_profile_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_catalogue_profile_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -11475,7 +11238,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11519,7 +11282,7 @@
           "function": "_write_table_metadata_enrichment_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L691-L701",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11527,7 +11290,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2002-L2004",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1893-L1895",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -11561,7 +11324,7 @@
           "function": "widget_author_dq_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2438-L2606",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11570,7 +11333,7 @@
           "function": "widget_author_schema_freshness_profile_rules",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11598,7 +11361,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1976-L1987",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -11632,7 +11395,7 @@
           "function": "_write_enrichment_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_enrichment_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2002-L2004",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1893-L1895",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -11641,7 +11404,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11669,7 +11432,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L691-L701",
       "deepest_call_chain_depth": 1,
       "repeated_helper_count": 0
     },
@@ -11703,7 +11466,7 @@
           "function": "widget_review_guardrail_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2568-L2668",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11714,7 +11477,7 @@
           "function": "_assert_governance_review_context",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._assert_governance_review_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1769-L1772",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1660-L1663",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11723,7 +11486,7 @@
           "function": "_record_identity",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._record_identity",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1842-L1844",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1733-L1735",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11749,7 +11512,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1900-L1953",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1791-L1844",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -11783,7 +11546,7 @@
           "function": "widget_review_guardrail_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2568-L2668",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11794,7 +11557,7 @@
           "function": "_assert_governance_review_context",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._assert_governance_review_context",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1769-L1772",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1660-L1663",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11803,7 +11566,7 @@
           "function": "_record_identity",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._record_identity",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1842-L1844",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1733-L1735",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11829,7 +11592,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1847-L1898",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1738-L1789",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -11863,7 +11626,7 @@
           "function": "record_table_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -11872,7 +11635,7 @@
           "function": "widget_enrich_table_metadata",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11901,7 +11664,7 @@
           "function": "_enrichment_payload_from_review",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._enrichment_payload_from_review",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L608-L625",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L549-L566",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11910,7 +11673,7 @@
           "function": "_json",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._json",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L547-L552",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L479-L484",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11919,7 +11682,7 @@
           "function": "guardrail_authoring_status",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.guardrail_authoring_status",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1808-L1840",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1699-L1731",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -11936,7 +11699,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -11970,7 +11733,7 @@
           "function": "mark_table_governed",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.mark_table_governed",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2665-L2667",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2556-L2558",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -11979,7 +11742,7 @@
           "function": "mark_table_ungoverned",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.mark_table_ungoverned",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2670-L2672",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2561-L2563",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -12007,7 +11770,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2608-L2662",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2499-L2553",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12143,7 +11906,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12152,7 +11915,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12163,7 +11926,7 @@
           "function": "_authoring_lifecycle",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1685-L1697",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12172,7 +11935,7 @@
           "function": "_is_no_approval_required",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._is_no_approval_required",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1764-L1766",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1655-L1657",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12180,7 +11943,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1808-L1840",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1699-L1731",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12217,7 +11980,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -12246,7 +12009,7 @@
           "function": "_catalogue_physical_identity",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._catalogue_physical_identity",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L360-L380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L350-L370",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -12281,7 +12044,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L441-L457",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L373-L389",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12312,7 +12075,7 @@
           "function": "widget_review_guardrail_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2568-L2668",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12321,7 +12084,7 @@
       "callees": [],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1955-L2000",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1846-L1891",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12356,7 +12119,7 @@
           "function": "build_table_governance_policy_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_table_governance_policy_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2608-L2662",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2499-L2553",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -12364,7 +12127,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2665-L2667",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2556-L2558",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12399,7 +12162,7 @@
           "function": "build_table_governance_policy_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_table_governance_policy_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2608-L2662",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2499-L2553",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -12407,7 +12170,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2670-L2672",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2561-L2563",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12463,7 +12226,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -12472,7 +12235,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -12481,7 +12244,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12507,7 +12270,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12538,7 +12301,7 @@
           "function": "widget_select_guardrail_target",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2099-L2180",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12557,7 +12320,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1722-L1760",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1613-L1651",
       "deepest_call_chain_depth": null,
       "repeated_helper_count": 0
     },
@@ -12596,7 +12359,7 @@
           "function": "_dq_records_from_selection",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_records_from_selection",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2290-L2326",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12605,7 +12368,7 @@
           "function": "_latest_rule",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_rule",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1951-L1964",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12614,7 +12377,7 @@
           "function": "_rule_params",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._rule_params",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1967-L1973",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12623,7 +12386,7 @@
           "function": "_write_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1976-L1987",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12634,7 +12397,7 @@
           "function": "_dq_records_from_selection",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._dq_records_from_selection",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2399-L2435",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2290-L2326",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12643,7 +12406,7 @@
           "function": "_latest_rule",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_rule",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1951-L1964",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12652,7 +12415,7 @@
           "function": "_rule_params",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._rule_params",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1967-L1973",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12661,14 +12424,14 @@
           "function": "_write_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1976-L1987",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
         }
       ],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2438-L2606",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
       "deepest_call_chain_depth": 8,
       "repeated_helper_count": 12
     },
@@ -12707,7 +12470,7 @@
           "function": "_latest_rule",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_rule",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1951-L1964",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12716,7 +12479,7 @@
           "function": "_rule_params",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._rule_params",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1967-L1973",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12725,7 +12488,7 @@
           "function": "_schema_freshness_profile_records_from_selection",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2073-L2140",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12734,7 +12497,7 @@
           "function": "_write_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1976-L1987",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12745,7 +12508,7 @@
           "function": "_latest_rule",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._latest_rule",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2060-L2073",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1951-L1964",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12754,7 +12517,7 @@
           "function": "_rule_params",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._rule_params",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2076-L2082",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1967-L1973",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12763,7 +12526,7 @@
           "function": "_schema_freshness_profile_records_from_selection",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2182-L2249",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2073-L2140",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12772,14 +12535,14 @@
           "function": "_write_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2085-L2096",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1976-L1987",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
         }
       ],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2252-L2397",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
       "deepest_call_chain_depth": 8,
       "repeated_helper_count": 12
     },
@@ -12818,7 +12581,7 @@
           "function": "_collect_enrichment_extra_fields",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._collect_enrichment_extra_fields",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L588-L590",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L520-L522",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12827,7 +12590,7 @@
           "function": "_enrichment_options",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._enrichment_options",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L555-L564",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L487-L496",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12836,7 +12599,7 @@
           "function": "_render_enrichment_extra_fields",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._render_enrichment_extra_fields",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L567-L585",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L499-L517",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12845,7 +12608,7 @@
           "function": "_selected_catalogue_rows_for_enrichment",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L525-L546",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12863,7 +12626,7 @@
           "function": "_write_table_metadata_enrichment_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L691-L701",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12872,7 +12635,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12883,7 +12646,7 @@
           "function": "_collect_enrichment_extra_fields",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._collect_enrichment_extra_fields",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L588-L590",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L520-L522",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12892,7 +12655,7 @@
           "function": "_enrichment_options",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._enrichment_options",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L555-L564",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L487-L496",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12901,7 +12664,7 @@
           "function": "_render_enrichment_extra_fields",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._render_enrichment_extra_fields",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L567-L585",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L499-L517",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12910,7 +12673,7 @@
           "function": "_selected_catalogue_rows_for_enrichment",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L593-L605",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L525-L546",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12928,14 +12691,14 @@
           "function": "_write_table_metadata_enrichment_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L750-L760",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L691-L701",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
         }
       ],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L763-L897",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
       "deepest_call_chain_depth": 7,
       "repeated_helper_count": 12
     },
@@ -12974,7 +12737,7 @@
           "function": "apply_governance_enrichment_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_enrichment_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1900-L1953",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1791-L1844",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12983,7 +12746,7 @@
           "function": "apply_governance_rule_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_rule_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1847-L1898",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1738-L1789",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -12992,7 +12755,7 @@
           "function": "load_rule_review_history",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.load_rule_review_history",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1955-L2000",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1846-L1891",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -13000,7 +12763,7 @@
       ],
       "direct_internal_helpers": [],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2677-L2777",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2568-L2668",
       "deepest_call_chain_depth": 5,
       "repeated_helper_count": 9
     },
@@ -13039,7 +12802,7 @@
           "function": "_filter_table_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._filter_table_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2043-L2057",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1934-L1948",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -13048,7 +12811,7 @@
           "function": "_read_metadata_table_or_empty",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1917-L1931",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -13057,7 +12820,7 @@
           "function": "resolve_table_governance_policy",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.resolve_table_governance_policy",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1722-L1760",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1613-L1651",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -13077,7 +12840,7 @@
           "function": "_filter_table_rows",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._filter_table_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2043-L2057",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1934-L1948",
           "layer": "utility",
           "review_status": "classified",
           "callable_kind": "function"
@@ -13086,7 +12849,7 @@
           "function": "_read_metadata_table_or_empty",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._read_metadata_table_or_empty",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2026-L2040",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1917-L1931",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -13102,7 +12865,7 @@
         }
       ],
       "source_path": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2099-L2180",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
       "deepest_call_chain_depth": 5,
       "repeated_helper_count": 5
     },
@@ -15243,7 +15006,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15252,7 +15015,7 @@
           "function": "_build_dq_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._build_dq_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L485-L545",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L417-L477",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -15261,7 +15024,7 @@
           "function": "build_enrichment_rule_records",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_enrichment_rule_records",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L628-L747",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L569-L688",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15320,7 +15083,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15380,7 +15143,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15389,7 +15152,7 @@
           "function": "_catalogue_physical_identity",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._catalogue_physical_identity",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L360-L380",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L350-L370",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -15398,7 +15161,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -15407,7 +15170,7 @@
           "function": "widget_select_guardrail_target",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.widget_select_guardrail_target",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2099-L2180",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
           "layer": "public",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15524,7 +15287,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -15971,7 +15734,7 @@
           "function": "_authoring_lifecycle",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1685-L1697",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15980,7 +15743,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -15989,7 +15752,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -15998,7 +15761,7 @@
           "function": "apply_governance_enrichment_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_enrichment_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1900-L1953",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1791-L1844",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -16007,7 +15770,7 @@
           "function": "apply_governance_rule_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_rule_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1847-L1898",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1738-L1789",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -16016,7 +15779,7 @@
           "function": "build_table_governance_policy_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_table_governance_policy_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2608-L2662",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2499-L2553",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -16025,7 +15788,7 @@
           "function": "record_table_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -16214,7 +15977,7 @@
           "function": "_authoring_lifecycle",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1794-L1806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1685-L1697",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -16223,7 +15986,7 @@
           "function": "_base_guardrail_rule_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._base_guardrail_rule_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2006-L2023",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1897-L1914",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -16232,7 +15995,7 @@
           "function": "_evaluate_governance_readiness",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._evaluate_governance_readiness",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L969-L1111",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L860-L1002",
           "layer": "internal",
           "review_status": "unreachable",
           "callable_kind": "function"
@@ -16241,7 +16004,7 @@
           "function": "apply_governance_enrichment_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_enrichment_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1900-L1953",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1791-L1844",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -16250,7 +16013,7 @@
           "function": "apply_governance_rule_action",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.apply_governance_rule_action",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1847-L1898",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1738-L1789",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -16259,7 +16022,7 @@
           "function": "build_table_governance_policy_record",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.build_table_governance_policy_record",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2608-L2662",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2499-L2553",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -16268,7 +16031,7 @@
           "function": "record_table_governance",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1113-L1224",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function"
@@ -16565,7 +16328,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -18415,7 +18178,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -18570,7 +18333,7 @@
           "function": "_run_active_dq_guardrail",
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1609-L1692",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1500-L1583",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function"
@@ -19140,27 +18903,27 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 273,
-    "total_functions": 273,
+    "total_callables": 269,
+    "total_functions": 269,
     "function_type": {
       "Public API": 20,
-      "Internal helper": 162,
-      "Utility": 91
+      "Internal helper": 159,
+      "Utility": 90
     },
     "layer": {
       "public": 20,
-      "internal": 162,
-      "utility": 91
+      "internal": 159,
+      "utility": 90
     },
     "review_status": {
       "classified": 231,
       "classification_pending": 14,
       "implicit_lifecycle": 8,
-      "unreachable": 20
+      "unreachable": 16
     },
     "callable_kind": {
       "class": 13,
-      "function": 251,
+      "function": 247,
       "implicit_lifecycle_method": 8,
       "method": 1
     },
@@ -19168,7 +18931,7 @@
       "Architecture violation": 97,
       "Inline candidate": 43,
       "Keep lifecycle method": 8,
-      "Orphaned callable": 12,
+      "Orphaned callable": 8,
       "Public API entrypoint": 19,
       "Review abstraction value": 9,
       "Review manually": 18,
@@ -19179,10 +18942,10 @@
       "implicit_lifecycle": 8,
       "matches_layer": 60,
       "stable_utility": 25,
-      "questionable_utility": 38,
+      "questionable_utility": 37,
       "promote_to_utility_candidate": 1,
-      "shared_internal_helper": 15,
-      "possible_inline_or_private_helper": 29,
+      "shared_internal_helper": 14,
+      "possible_inline_or_private_helper": 27,
       "architecture_violation": 97,
       "review_manually": 0
     }

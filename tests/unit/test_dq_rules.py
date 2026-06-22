@@ -158,14 +158,6 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
         set(schemas[governance.GUARDRAIL_RESULTS_TABLE].fieldNames())
     )
 
-def test_widget_display_rows_include_active_and_inactive_rules():
-    """Verify widget display rows include active and inactive rules."""
-    rows = governance._dq_rule_display_rows([
-        {"rule_id": "r1", "rule_type": "not_null", "column_name": "id", "is_active": True},
-        {"rule_id": "r2", "rule_type": "unique", "column_name": "id", "is_active": False},
-    ])
-    assert [r["Status"] for r in rows] == ["active", "inactive"]
-
 
 def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_session):
     """Verify dq tagged dataframe uses row level warning and error status."""
