@@ -169,6 +169,18 @@
   line-height: 1.25;
 }
 
+
+.md-typeset .fabricops-landing-card__title strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  line-height: 1;
+}
+
+.md-typeset .fabricops-landing-card__title span {
+  display: block;
+  line-height: 1.2;
+}
+
 .md-typeset .fabricops-landing-card__body {
   margin-top: 0.55rem;
   color: var(--md-default-fg-color);

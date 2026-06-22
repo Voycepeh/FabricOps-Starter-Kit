@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import html
 import json
 import re
 from pathlib import Path
@@ -70,13 +71,17 @@ def _landing_token_text(page_text: str, token_name: str) -> str:
     end = f"<!-- /{token_name} -->"
     assert start in page_text
     assert end in page_text
-    return page_text.split(start, 1)[1].split(end, 1)[0]
+    token_html = page_text.split(start, 1)[1].split(end, 1)[0]
+    return html.unescape(re.sub(r"<[^>]+>", " ", token_html)).split()
 
 
 def test_landing_page_counts_match_generated_stats() -> None:
     """Verify landing-page count text cannot drift from generated data."""
     stats = json.loads((REFERENCE_DIR / "_data" / "landing-stats.json").read_text(encoding="utf-8"))
     index_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
+
+    assert "<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>" in index_text
+    assert "</strong><span>public Starter Kit functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
 
     expected = {
         "FABRICOPS_PUBLIC_FUNCTION_COUNT": f"{stats['public_function_count']} public Starter Kit functions",
@@ -85,7 +90,7 @@ def test_landing_page_counts_match_generated_stats() -> None:
     }
 
     for token_name, expected_text in expected.items():
-        assert _landing_token_text(index_text, token_name) == expected_text
+        assert " ".join(_landing_token_text(index_text, token_name)) == expected_text
 
 
 def test_landing_stats_match_reference_sources() -> None:
@@ -233,6 +238,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert inventory_path.exists()
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
     inventory_text = inventory_path.read_text(encoding="utf-8")
+    reference_text = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
+    api_chips_css = (ROOT / "docs" / "stylesheets" / "api-chips.css").read_text(encoding="utf-8")
+    fabric_theme_css = (ROOT / "docs" / "stylesheets" / "fabric-theme.css").read_text(encoding="utf-8")
 
     assert "Callable Architecture" in dashboard_text
     assert "Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations." in dashboard_text
@@ -297,6 +305,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Search/filter all callables, select rows, and export AI refactor packets." in inventory_text
     assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
+    assert "inventorySurfaceCards" in inventory_text
+    assert "function renderInventoryCards()" in inventory_text
+    assert "Total callables" in inventory_text
+    assert "Public API entrypoints" in inventory_text
+    assert "Deep chains" in inventory_text
+    assert "Cross-layer issues" in inventory_text
+    assert "Single-use helper candidates" in inventory_text
+    assert "Suggested inline or privatize" in inventory_text
+    assert "<article class=\"surface-card\"><strong>${esc(v??0)}</strong><span>${esc(l)}</span></article>" in inventory_text
+    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in inventory_text
+    assert ".surface-card span{display:block;line-height:1.2" in inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
     assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
     assert "i.source_url" in inventory_text

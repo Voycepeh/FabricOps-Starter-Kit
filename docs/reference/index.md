@@ -3,14 +3,14 @@
 Use this page to look up Starter Kit functions used by the template notebooks.
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
-  <section class="reference-kpi-card">
-    <p class="reference-kpi-value">26</p>
-    <h2 class="reference-kpi-title">Public functions</h2>
+  <section class="reference-kpi-card surface-card">
+    <strong class="reference-kpi-value">26</strong>
+    <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing entry points used by starter templates.</p>
   </section>
-  <section class="reference-kpi-card">
-    <p class="reference-kpi-value">270</p>
-    <h2 class="reference-kpi-title">Supporting internal functions</h2>
+  <section class="reference-kpi-card surface-card">
+    <strong class="reference-kpi-value">270</strong>
+    <span class="reference-kpi-title">Supporting internal functions</span>
     <p class="reference-kpi-note">Maintainer helpers tracked for source navigation.</p>
   </section>
 </div>
