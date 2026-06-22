@@ -23,7 +23,7 @@ def test_function_catalogue_uses_public_starter_kit_finder() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to look up the 20 public Starter Kit functions." in page
+    assert "Use the finder below to look up the 26 public Starter Kit functions." in page
     assert "Search functions" in page
     assert 'placeholder="Search public functions"' in page
     assert "Function taxonomy filters" not in page
@@ -98,7 +98,7 @@ def test_homepage_template_called_function_kpi_matches_reference_count() -> None
     )
 
     assert token_match is not None
-    assert token_match.group(1).strip() == f"{len(_core_template_called_public())} public Starter Kit functions"
+    assert token_match.group(1).strip() == f"{len(_catalogue_row_names())} public Starter Kit functions"
     assert 'href="reference/"' in homepage
 
 
@@ -182,7 +182,7 @@ def test_reference_catalogue_rows_include_only_public_root_exports() -> None:
 
     assert _core_template_called_public() <= _catalogue_row_names()
     assert _catalogue_row_names() == exported_names
-    assert len(_catalogue_row_names()) == 20
+    assert len(_catalogue_row_names()) == 26
 
 
 def test_root_exported_catalogue_functions_have_standalone_pages() -> None:
@@ -201,15 +201,15 @@ def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
     exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
 
     assert page_names == exported_names
-    assert "read_data" in page_names
-    assert "write_data" in page_names
-    assert "read_lakehouse_csv" not in page_names
-    assert "write_warehouse_table" not in page_names
+    assert "read_lakehouse_table" in page_names
+    assert "write_lakehouse_table" in page_names
+    assert "read_lakehouse_csv" in page_names
+    assert "write_warehouse_table" in page_names
 
 
 
-def test_format_specific_io_helpers_are_internal_support_functions() -> None:
-    """Verify format-specific IO helpers are not public catalogue functions."""
+def test_explicit_io_helpers_are_public_catalogue_functions() -> None:
+    """Verify explicit IO helpers are public catalogue functions."""
     page = _reference_index()
 
     for name in (
@@ -217,11 +217,12 @@ def test_format_specific_io_helpers_are_internal_support_functions() -> None:
         "read_lakehouse_excel",
         "read_lakehouse_parquet",
         "read_lakehouse_table",
+        "read_warehouse_query",
         "read_warehouse_table",
         "write_lakehouse_table",
         "write_warehouse_table",
     ):
-        assert f'data-callable-name="{name}"' not in page
+        assert f'data-callable-name="{name}"' in page
 
 
 def test_functions_with_blank_starter_path_are_not_counted() -> None:
@@ -264,18 +265,8 @@ def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> N
     import fabricops_kit
 
     root_exports = set(fabricops_kit.__all__)
-    assert {"read_data", "write_data"} <= root_exports
-    assert {
-        "read_lakehouse_csv",
-        "read_lakehouse_excel",
-        "read_lakehouse_parquet",
-        "read_lakehouse_table",
-        "read_warehouse_table",
-        "write_lakehouse_table",
-        "write_warehouse_table",
-        "stop_if_failed",
-        "write_catalogue_evidence",
-    }.isdisjoint(root_exports)
+    assert {"read_lakehouse_table", "write_lakehouse_table"} <= root_exports
+    assert {"stop_if_failed", "write_catalogue_evidence"}.isdisjoint(root_exports)
 
 
 def test_retired_function_taxonomy_audit_is_removed() -> None:

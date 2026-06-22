@@ -15,8 +15,8 @@ PLACEHOLDER = "Not documented yet"
 CORE_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
-    "read_data",
-    "write_data",
+    "read_lakehouse_table",
+    "write_lakehouse_table",
     "profile_dataframe",
 }
 CORE_PAGE_SECTIONS = (

@@ -43,7 +43,7 @@ def test_production_and_governance_templates_cover_output_summary_and_review_flo
     for expected in [
         "run_table_guardrails",
         "prepare_pipeline_table_configs",
-        "write_data",
+        "write_lakehouse_table",
         "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "runtime_summary_result",
@@ -124,12 +124,11 @@ def test_guardrail_orchestration_is_imported_and_documents_simple_v1_behavior():
     assert "def _table_key(" not in production
     assert "run_table_guardrails," in production
     assert "prepare_pipeline_table_configs," in production
-    assert "read_data," in production
-    assert "read_lakehouse_table," not in production
-    assert "read_lakehouse_csv," not in production
-    assert "read_lakehouse_parquet," not in production
-    assert "read_lakehouse_excel," not in production
-    assert "read_warehouse_table," not in production
+    assert "read_lakehouse_table," in production
+    assert "read_lakehouse_csv," in production
+    assert "read_lakehouse_parquet," in production
+    assert "read_lakehouse_excel," in production
+    assert "read_warehouse_query," in production
     assert "display_guardrail_results(source_enforcement_results" in production
     assert "display_guardrail_results(target_enforcement_results" in production
     assert "target_write_status = {}" in production

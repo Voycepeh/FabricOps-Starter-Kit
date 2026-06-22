@@ -18,7 +18,7 @@ This single startup step captures the run id, audit timestamp, notebook metadata
 
 ## Source read
 
-Use [`read_data`](../api/reference/read_data.md) for source reads. The template keeps source table names and transformations visible so notebook users can understand what is being read and changed.
+Use explicit Fabric IO callables such as [`read_lakehouse_table`](../api/reference/read_lakehouse_table.md), [`read_lakehouse_csv`](../api/reference/read_lakehouse_csv.md), or [`read_warehouse_query`](../api/reference/read_warehouse_query.md) for source reads. The template keeps storage intent, source table names, and transformations visible so notebook users can understand what is being read and changed.
 
 ## Pipeline table config preparation
 
@@ -151,7 +151,7 @@ Formal table governance review is still owned by [03 Governance Review](governan
 
 ## Target write
 
-Use [`write_data`](../api/reference/write_data.md) after enforcement guardrails allow the run to continue. The template keeps write mode and target routing visible so users understand what will be published, while active pipeline defaults keep shared run metadata consistent.
+Use explicit Fabric IO callables such as [`write_lakehouse_table`](../api/reference/write_lakehouse_table.md) or [`write_warehouse_table`](../api/reference/write_warehouse_table.md) after enforcement guardrails allow the run to continue. The template keeps write mode and target routing visible so users understand what will be published, while active pipeline defaults keep shared run metadata consistent.
 
 ## Lineage writing
 

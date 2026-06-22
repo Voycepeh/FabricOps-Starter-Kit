@@ -219,8 +219,14 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_render_agreement_evidence",
-        "read_data",
-        "write_data",
+        "read_lakehouse_table",
+        "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "read_warehouse_query",
+    "write_warehouse_table",
         "profile_dataframe",
         "get_latest_metadata_catalogue",
         "display_guardrail_results",
@@ -236,5 +242,5 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         "widget_review_guardrail_governance",
     ]
     assert fabricops_kit.__all__ == expected_public_callables
-    assert len(fabricops_kit.__all__) == 20
+    assert len(fabricops_kit.__all__) == 26
     assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)

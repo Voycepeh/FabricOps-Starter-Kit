@@ -30,8 +30,14 @@ EXPECTED_V1_CALLABLES = [
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
-    "read_data",
-    "write_data",
+    "read_lakehouse_table",
+    "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "read_warehouse_query",
+    "write_warehouse_table",
     "profile_dataframe",
     "get_latest_metadata_catalogue",
     "display_guardrail_results",
@@ -50,7 +56,7 @@ EXPECTED_V1_CALLABLES = [
 def test_public_callable_list_includes_guardrail_authoring_widgets():
     """Verify public callable list includes guardrail authoring widgets."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 20
+    assert len(fabricops_kit.__all__) == 26
     assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)
 
 

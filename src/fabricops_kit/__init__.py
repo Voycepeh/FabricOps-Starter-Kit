@@ -11,7 +11,16 @@ from .data_agreement import (
     widget_render_data_steward,
 )
 from .data_profiling import profile_dataframe
-from .fabric_input_output import read_data, write_data
+from .fabric_input_output import (
+    read_lakehouse_csv,
+    read_lakehouse_excel,
+    read_lakehouse_parquet,
+    read_lakehouse_table,
+    read_warehouse_query,
+    read_warehouse_table,
+    write_lakehouse_table,
+    write_warehouse_table,
+)
 from .pipeline import (
     display_guardrail_results,
     prepare_pipeline_table_configs,
@@ -51,8 +60,14 @@ __all__ = [
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
-    "read_data",
-    "write_data",
+    "read_lakehouse_table",
+    "write_lakehouse_table",
+    "read_lakehouse_csv",
+    "read_lakehouse_parquet",
+    "read_lakehouse_excel",
+    "read_warehouse_table",
+    "read_warehouse_query",
+    "write_warehouse_table",
     "profile_dataframe",
     "get_latest_metadata_catalogue",
     "display_guardrail_results",

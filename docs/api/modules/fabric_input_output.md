@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 2</span><span class="reference-chip">Internal helpers: 10</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 6 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 23</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 6 external modules</span></div>
 
 ## Module purpose
 
@@ -36,11 +36,11 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>2</td>
+      <td>8</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
-      <td>10</td>
+      <td>23</td>
     </tr>
     <tr>
       <td>Used by external module count</td>
@@ -76,18 +76,60 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
   </thead>
   <tbody>
     <tr>
-      <td><a href="../reference/read_data/"><code>read_data</code></a></td>
+      <td><a href="../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Read Lakehouse tables, Lakehouse files, or Warehouse tables through one notebook-facing IO function.</td>
-      <td>—</td>
+      <td>Read a CSV file from a configured Fabric lakehouse Files path.</td>
+      <td><code>_read_lakehouse_csv_core</code> (internal)</td>
     </tr>
     <tr>
-      <td><a href="../reference/write_data/"><code>write_data</code></a></td>
+      <td><a href="../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Write Lakehouse or Warehouse targets through one notebook-facing IO function.</td>
-      <td>—</td>
+      <td>Read an Excel file from a configured Fabric lakehouse Files path.</td>
+      <td><code>_read_lakehouse_excel_core</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Read a Parquet path from a configured Fabric lakehouse Files path.</td>
+      <td><code>_read_lakehouse_parquet_core</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Read a Delta table from a configured Fabric lakehouse target.</td>
+      <td><code>_read_lakehouse_table_core</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../reference/read_warehouse_query/"><code>read_warehouse_query</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.</td>
+      <td><code>_read_warehouse_query_core</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Read a table from a configured Fabric warehouse target.</td>
+      <td><code>_read_warehouse_table_core</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Write a Spark DataFrame to a configured Fabric lakehouse Delta table.</td>
+      <td><code>_write_lakehouse_table_core</code> (internal)</td>
+    </tr>
+    <tr>
+      <td><a href="../reference/write_warehouse_table/"><code>write_warehouse_table</code></a></td>
+      <td>Callable</td>
+      <td>function</td>
+      <td>Write a DataFrame to a configured Fabric warehouse target.</td>
+      <td><code>_write_warehouse_table_core</code> (internal)</td>
     </tr>
   </tbody>
 </table>
@@ -106,14 +148,44 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <h6>Public callables</h6>
 <ul class="callable-relationship-rows">
 <li>
-<a class="reference-chip" href="../reference/read_data/"><code>read_data</code></a>
+<a class="reference-chip" href="../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>read_lakehouse_csv</code></span>, <span class="reference-chip"><code>read_lakehouse_excel</code></span>, <span class="reference-chip"><code>read_lakehouse_parquet</code></span>, <span class="reference-chip"><code>read_lakehouse_table</code></span>, <span class="reference-chip"><code>read_warehouse_table</code></span>
+<span class="reference-chip"><code>_read_lakehouse_csv_core</code></span>
 </li>
 <li>
-<a class="reference-chip" href="../reference/write_data/"><code>write_data</code></a>
+<a class="reference-chip" href="../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>write_lakehouse_table</code></span>, <span class="reference-chip"><code>write_warehouse_table</code></span>
+<span class="reference-chip"><code>_read_lakehouse_excel_core</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_read_lakehouse_parquet_core</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_read_lakehouse_table_core</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../reference/read_warehouse_query/"><code>read_warehouse_query</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_read_warehouse_query_core</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_read_warehouse_table_core</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_write_lakehouse_table_core</code></span>
+</li>
+<li>
+<a class="reference-chip" href="../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_write_warehouse_table_core</code></span>
 </li>
 </ul>
 </section>
@@ -132,6 +204,10 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td><code>_build_warehouse_object_name</code></td>
+      <td>—</td>
+    </tr>
     <tr>
       <td><code>_configured_lakehouse_schema</code></td>
       <td>—</td>
@@ -161,7 +237,35 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
       <td>—</td>
     </tr>
     <tr>
-      <td><code>_resolve_lakehouse_schema</code></td>
+      <td><code>_normalize_write_mode</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_read_lakehouse_csv_core</code></td>
+      <td><a href="../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_read_lakehouse_excel_core</code></td>
+      <td><a href="../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_read_lakehouse_parquet_core</code></td>
+      <td><a href="../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_read_lakehouse_table_core</code></td>
+      <td><a href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_read_warehouse_query_core</code></td>
+      <td><a href="../reference/read_warehouse_query/"><code>read_warehouse_query</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_read_warehouse_table_core</code></td>
+      <td><a href="../reference/read_warehouse_table/"><code>read_warehouse_table</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_require_fabric_connector</code></td>
       <td>—</td>
     </tr>
     <tr>
@@ -172,6 +276,26 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
       <td><code>_resolve_lakehouse_table_path</code></td>
       <td>—</td>
     </tr>
+    <tr>
+      <td><code>_validate_lakehouse_store</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_validate_relative_path</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_validate_warehouse_store</code></td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>_write_lakehouse_table_core</code></td>
+      <td><a href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></td>
+    </tr>
+    <tr>
+      <td><code>_write_warehouse_table_core</code></td>
+      <td><a href="../reference/write_warehouse_table/"><code>write_warehouse_table</code></a></td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -179,14 +303,15 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <h6>Internal helpers details</h6>
 <ul class="callable-relationship-rows">
 <li>
+<span class="reference-chip"><code>_build_warehouse_object_name</code></span>
+</li>
+<li>
 <span class="reference-chip"><code>_configured_lakehouse_schema</code></span>
  <span class="callable-relationship-uses">uses:</span>
 <span class="reference-chip"><code>_normalize_schema_name</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_convert_single_parquet_ns_to_us</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_load_pandas</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_get_spark</code></span>
@@ -204,19 +329,65 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 <span class="reference-chip"><code>_normalize_table_name</code></span>
 </li>
 <li>
-<span class="reference-chip"><code>_resolve_lakehouse_schema</code></span>
+<span class="reference-chip"><code>_normalize_write_mode</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_lakehouse_csv_core</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_normalize_schema_name</code></span>
+<span class="reference-chip"><code>_get_spark</code></span>, <span class="reference-chip"><code>_lakehouse_file_path</code></span>, <span class="reference-chip"><code>_validate_lakehouse_store</code></span>, <span class="reference-chip"><code>_validate_relative_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_lakehouse_excel_core</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_get_spark</code></span>, <span class="reference-chip"><code>_lakehouse_file_path</code></span>, <span class="reference-chip"><code>_load_pandas</code></span>, <span class="reference-chip"><code>_validate_lakehouse_store</code></span>, <span class="reference-chip"><code>_validate_relative_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_lakehouse_parquet_core</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_convert_single_parquet_ns_to_us</code></span>, <span class="reference-chip"><code>_get_spark</code></span>, <span class="reference-chip"><code>_lakehouse_file_path</code></span>, <span class="reference-chip"><code>_validate_lakehouse_store</code></span>, <span class="reference-chip"><code>_validate_relative_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_lakehouse_table_core</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_get_spark</code></span>, <span class="reference-chip"><code>_normalize_schema_name</code></span>, <span class="reference-chip"><code>_normalize_table_name</code></span>, <span class="reference-chip"><code>_resolve_lakehouse_table_path</code></span>, <span class="reference-chip"><code>_validate_lakehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_warehouse_query_core</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_get_spark</code></span>, <span class="reference-chip"><code>_require_fabric_connector</code></span>, <span class="reference-chip"><code>_validate_warehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_read_warehouse_table_core</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_build_warehouse_object_name</code></span>, <span class="reference-chip"><code>_get_spark</code></span>, <span class="reference-chip"><code>_normalize_schema_name</code></span>, <span class="reference-chip"><code>_normalize_table_name</code></span>, <span class="reference-chip"><code>_require_fabric_connector</code></span>, <span class="reference-chip"><code>_validate_warehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_require_fabric_connector</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_resolve_lakehouse_table_identifier</code></span>
- <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_normalize_table_name</code></span>, <span class="reference-chip"><code>_resolve_lakehouse_schema</code></span>
 </li>
 <li>
 <span class="reference-chip"><code>_resolve_lakehouse_table_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_validate_lakehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_validate_relative_path</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_validate_warehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_write_lakehouse_table_core</code></span>
  <span class="callable-relationship-uses">uses:</span>
-<span class="reference-chip"><code>_normalize_table_name</code></span>, <span class="reference-chip"><code>_resolve_lakehouse_schema</code></span>
+<span class="reference-chip"><code>_normalize_schema_name</code></span>, <span class="reference-chip"><code>_normalize_table_name</code></span>, <span class="reference-chip"><code>_normalize_write_mode</code></span>, <span class="reference-chip"><code>_resolve_lakehouse_table_path</code></span>, <span class="reference-chip"><code>_validate_lakehouse_store</code></span>
+</li>
+<li>
+<span class="reference-chip"><code>_write_warehouse_table_core</code></span>
+ <span class="callable-relationship-uses">uses:</span>
+<span class="reference-chip"><code>_build_warehouse_object_name</code></span>, <span class="reference-chip"><code>_normalize_schema_name</code></span>, <span class="reference-chip"><code>_normalize_table_name</code></span>, <span class="reference-chip"><code>_require_fabric_connector</code></span>, <span class="reference-chip"><code>_validate_warehouse_store</code></span>
 </li>
 </ul>
 </details>
