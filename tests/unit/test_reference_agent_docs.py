@@ -812,7 +812,7 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Uses 11 internal helper functions"') == 1
+    assert text.count('??? info "Uses 12 internal helper functions"') == 1
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
     assert "Internal helper count: 11" not in text
@@ -843,7 +843,7 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Uses 11 internal helper functions"') == 1
+    assert implementation_section.count('??? info "Uses 12 internal helper functions"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
     assert (
@@ -899,13 +899,13 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     """Verify public callable helper trees appear directly below the title."""
     text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
     title_index = text.index("# prepare_pipeline_table_configs")
-    call_tree_index = text.index('??? info "Uses 4 internal helper functions"')
+    call_tree_index = text.index('??? info "Uses 5 internal helper functions"')
     description_index = text.index("Prepare source or target table configs for 02_pipeline.")
     chips_index = text.index('<span class="reference-chip">Module: <code>pipeline</code></span>')
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
     assert title_index < call_tree_index < description_index < chips_index < usage_index
-    assert text.count('??? info "Uses 4 internal helper functions"') == 1
+    assert text.count('??? info "Uses 5 internal helper functions"') == 1
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:

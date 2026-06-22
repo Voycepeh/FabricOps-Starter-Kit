@@ -1,13 +1,14 @@
 # prepare_pipeline_table_configs
 
-??? info "Uses 4 internal helper functions"
+??? info "Uses 5 internal helper functions"
 
     <div class="reference-call-tree" role="tree">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>prepare_pipeline_table_configs(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L583-L592"><code>_add_audit_columns(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230"><code>_current_audit_timestamp(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219"><code>_get_audit_timezone(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">            └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L174-L206"><code>_validate_audit_timezone(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L760-L854"><code>_prepare_pipeline_table_configs_workflow(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L748-L757"><code>_add_audit_columns(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230"><code>_current_audit_timestamp(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">            └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219"><code>_get_audit_timezone(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">                └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L174-L206"><code>_validate_audit_timezone(...)</code></a></div>
     </div>
 
 Prepare source or target table configs for 02_pipeline.
@@ -65,11 +66,11 @@ SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABL
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_configs` | `list[dict[str, Any]]` | Yes | User-authored table config dictionaries from ``SOURCE_TABLES`` or ``TARGET_TABLES``. |
-| `default_settings` | `Mapping[str, Any]` | Yes | Default guardrails, and for targets write options, merged before each table config. Table-specific values take precedence. |
-| `table_role` | `str` | Yes | Role-specific preparation mode. Source mode validates that each config already includes a DataFrame; target mode adds FabricOps audit columns and derives write metadata. |
-| `run_id` | `str` | No | Pipeline run identifier used for target audit columns. Required for target role. |
-| `pipeline_name` | `str` | No | Pipeline name used for target audit columns. Required for target role. |
+| `table_configs` | `list[dict[str, Any]]` | Yes | Not documented yet |
+| `default_settings` | `Mapping[str, Any]` | Yes | Not documented yet |
+| `table_role` | `str` | Yes | Not documented yet |
+| `run_id` | `str` | No | Not documented yet |
+| `pipeline_name` | `str` | No | Not documented yet |
 
 ## Returns
 
@@ -81,8 +82,7 @@ The returned configs are enriched copies keyed for downstream helpers. Confirm e
 
 ## Raises / Errors
 
-ValueError
-    If ``table_role`` is not ``"source"`` or ``"target"``.
+Not documented yet
 
 ### Common failure causes
 

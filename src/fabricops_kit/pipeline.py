@@ -50,7 +50,172 @@ class _PipelineRunContext:
 _ACTIVE_PIPELINE_CONTEXT: _PipelineRunContext | None = None
 
 
+# ---------------------------------------------------------------------------
+# Public API layer
+# ---------------------------------------------------------------------------
+
 def start_pipeline_run(
+    *,
+    notebook_type: str = "02_pipeline",
+    select_agreement: bool = False,
+    register_notebook: bool = False,
+    read_only: bool = False,
+    run_context: Any = None,
+    spark_session: Any = None,
+    metadata_schema: str | None = None,
+    pipeline_name: str | None = None,
+    context: dict[str, Any] | None = None,
+) -> Any:
+    """Start a guided notebook run and store runtime defaults."""
+    return _start_pipeline_run_workflow(
+        notebook_type=notebook_type,
+        select_agreement=select_agreement,
+        register_notebook=register_notebook,
+        read_only=read_only,
+        run_context=run_context,
+        spark_session=spark_session,
+        metadata_schema=metadata_schema,
+        pipeline_name=pipeline_name,
+        context=context,
+    )
+
+
+def prepare_pipeline_table_configs(
+    table_configs: list[dict[str, Any]],
+    default_settings: Mapping[str, Any],
+    *,
+    table_role: str,
+    run_id: str = "",
+    pipeline_name: str = "",
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Prepare source or target table configs for a pipeline notebook."""
+    return _prepare_pipeline_table_configs_workflow(
+        table_configs,
+        default_settings,
+        table_role=table_role,
+        run_id=run_id,
+        pipeline_name=pipeline_name,
+    )
+
+
+def run_table_guardrails(
+    table_configs: list[dict[str, Any]],
+    *,
+    run_id: str | None = None,
+    context: dict[str, Any] | None = None,
+    spark_session: Any | None = None,
+    agreement_id: str = "",
+    agreement_contract_version: str = "",
+    notebook_registry_id: str = "",
+    notebook_id: str = "",
+    pipeline_name: str = "",
+    table_role: str = "",
+    mode: str = "profile",
+    stop_on_failure: bool | None = None,
+) -> dict[str, Any]:
+    """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails."""
+    return _run_table_guardrails_workflow(
+        table_configs,
+        run_id=run_id,
+        context=context,
+        spark_session=spark_session,
+        agreement_id=agreement_id,
+        agreement_contract_version=agreement_contract_version,
+        notebook_registry_id=notebook_registry_id,
+        notebook_id=notebook_id,
+        pipeline_name=pipeline_name,
+        table_role=table_role,
+        mode=mode,
+        stop_on_failure=stop_on_failure,
+    )
+
+
+def display_guardrail_results(
+    result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None
+) -> Any:
+    """Return guardrail results prepared for summary, detailed, or debug display."""
+    return _display_guardrail_results_workflow(result_bundle, mode=mode, spark_session=spark_session)
+
+
+def write_pipeline_lineage(
+    *,
+    spark: Any,
+    run_id: str,
+    context: dict[str, Any] | None = None,
+    source_definitions: Mapping[str, Mapping[str, Any]],
+    target_definitions: Mapping[str, Mapping[str, Any]],
+    relationships: list[Mapping[str, Any]] | None = None,
+    dataset_name: str = "",
+    agreement_id: str = "",
+    agreement_contract_version: str = "",
+    notebook_registry_id: str = "",
+    notebook_id: str = "",
+    pipeline_name: str = "",
+    metadata_table: str = LINEAGE_TABLE,
+    mode: str = "append",
+) -> dict[str, Any]:
+    """Write many-to-many source-to-target lineage evidence."""
+    return _write_pipeline_lineage_workflow(
+        spark=spark,
+        run_id=run_id,
+        context=context,
+        source_definitions=source_definitions,
+        target_definitions=target_definitions,
+        relationships=relationships,
+        dataset_name=dataset_name,
+        agreement_id=agreement_id,
+        agreement_contract_version=agreement_contract_version,
+        notebook_registry_id=notebook_registry_id,
+        notebook_id=notebook_id,
+        pipeline_name=pipeline_name,
+        metadata_table=metadata_table,
+        mode=mode,
+    )
+
+
+def write_pipeline_run_summary(
+    *,
+    spark: Any | None = None,
+    run_id: str | None = None,
+    context: dict[str, Any] | None = None,
+    agreement_id: str = "",
+    agreement_contract_version: str = "",
+    notebook_registry_id: str = "",
+    notebook_id: str = "",
+    notebook_type: str = "02_pipeline",
+    pipeline_name: str = "",
+    started_at: str | None = None,
+    completed_at: str | None = None,
+    status: str = "completed",
+    source_definitions: Mapping[str, Mapping[str, Any]] | None = None,
+    target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
+    source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
+    target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
+    source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
+    target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
+    source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
+    target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
+    source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
+    target_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
+    lineage_status: str = "not_run",
+    catalogue_status: str = "not_run",
+    message: str = "",
+    source_guardrail_results: Mapping[str, Any] | None = None,
+    target_guardrail_results: Mapping[str, Any] | None = None,
+    target_write_status: Mapping[str, Any] | None = None,
+    lineage_result: Mapping[str, Any] | None = None,
+    metadata_table: str = METADATA_PIPELINE_RUNS_TABLE,
+    mode: str = "append",
+) -> dict[str, Any]:
+    """Write a pipeline runtime summary to metadata."""
+    return _write_pipeline_run_summary_workflow(**locals())
+
+
+# ---------------------------------------------------------------------------
+# Internal workflow layer
+# ---------------------------------------------------------------------------
+
+def _start_pipeline_run_workflow(
     *,
     notebook_type: str = "02_pipeline",
     select_agreement: bool = False,
@@ -545,7 +710,7 @@ def _build_guardrail_blocking_message_from_bundle(result_bundle: Mapping[str, An
     return _blocking_guardrail_message(summary_rows, failed_tables)
 
 
-def display_guardrail_results(
+def _display_guardrail_results_workflow(
     result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None
 ) -> Any:
     """Return guardrail results prepared for summary, detailed, or debug display.
@@ -592,7 +757,7 @@ def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, confi
     )
 
 
-def prepare_pipeline_table_configs(
+def _prepare_pipeline_table_configs_workflow(
     table_configs: list[dict[str, Any]],
     default_settings: Mapping[str, Any],
     *,
@@ -730,7 +895,7 @@ def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]
     return definitions
 
 
-def run_table_guardrails(
+def _run_table_guardrails_workflow(
     table_configs: list[dict[str, Any]],
     *,
     run_id: str | None = None,
@@ -1143,7 +1308,7 @@ def write_catalogue_evidence(
     return statuses
 
 
-def write_pipeline_lineage(
+def _write_pipeline_lineage_workflow(
     *,
     spark: Any,
     run_id: str,
@@ -1258,7 +1423,7 @@ def write_pipeline_lineage(
     return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
 
 
-def write_pipeline_run_summary(
+def _write_pipeline_run_summary_workflow(
     *,
     spark: Any | None = None,
     run_id: str | None = None,

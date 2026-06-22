@@ -2331,7 +2331,7 @@
   },
   "display_guardrail_results": {
     "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
-    "unique_internal_helper_count": 11,
+    "unique_internal_helper_count": 12,
     "repeated_helpers": [
       {
         "helper": "_result_reason",
@@ -2389,7 +2389,96 @@
         "branch_count": 2
       }
     ],
-    "deep_call_chains": [],
+    "deep_call_chains": [
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_detail_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._dq_reason",
+          "fabricops_kit.pipeline._result_reason"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_detail_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._freshness_reason",
+          "fabricops_kit.pipeline._result_reason"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_detail_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._freshness_reason",
+          "fabricops_kit.pipeline._result_status"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_detail_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._profile_behavior_reason",
+          "fabricops_kit.pipeline._result_reason"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_detail_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._profile_behavior_reason",
+          "fabricops_kit.pipeline._result_status"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_summary_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._dq_reason",
+          "fabricops_kit.pipeline._result_reason"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_summary_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._freshness_reason",
+          "fabricops_kit.pipeline._result_reason"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.display_guardrail_results",
+          "fabricops_kit.pipeline._display_guardrail_results_workflow",
+          "fabricops_kit.pipeline.build_guardrail_summary_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._freshness_reason",
+          "fabricops_kit.pipeline._result_status"
+        ]
+      }
+    ],
     "single_delegate_helpers": [
       {
         "helper": "_dq_reason",
@@ -2402,9 +2491,21 @@
   },
   "prepare_pipeline_table_configs": {
     "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
-    "unique_internal_helper_count": 4,
+    "unique_internal_helper_count": 5,
     "repeated_helpers": [],
-    "deep_call_chains": [],
+    "deep_call_chains": [
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+          "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
+          "fabricops_kit.pipeline._add_audit_columns",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config._validate_audit_timezone"
+        ]
+      }
+    ],
     "single_delegate_helpers": [
       {
         "helper": "_current_audit_timestamp",
@@ -2423,13 +2524,19 @@
         "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
         "delegates_to": "_current_audit_timestamp",
         "delegates_to_qualified_name": "fabricops_kit.config._current_audit_timestamp"
+      },
+      {
+        "helper": "_prepare_pipeline_table_configs_workflow",
+        "qualified_name": "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
+        "delegates_to": "_add_audit_columns",
+        "delegates_to_qualified_name": "fabricops_kit.pipeline._add_audit_columns"
       }
     ],
     "possible_grouping_mismatches": []
   },
   "run_table_guardrails": {
     "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
-    "unique_internal_helper_count": 94,
+    "unique_internal_helper_count": 95,
     "repeated_helpers": [
       {
         "helper": "_catalogue_value",
@@ -2497,6 +2604,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
+          "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
+          "fabricops_kit.pipeline.build_guardrail_summary_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._dq_reason"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
           "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
           "fabricops_kit.pipeline.build_guardrail_summary_rows",
           "fabricops_kit.pipeline._guardrail_reason",
@@ -2508,6 +2627,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
+          "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
+          "fabricops_kit.pipeline.build_guardrail_summary_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._freshness_reason"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
           "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
           "fabricops_kit.pipeline.build_guardrail_summary_rows",
           "fabricops_kit.pipeline._guardrail_reason",
@@ -2516,9 +2647,10 @@
         ]
       },
       {
-        "depth": 5,
+        "depth": 6,
         "chain": [
           "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
           "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
           "fabricops_kit.pipeline.build_guardrail_summary_rows",
           "fabricops_kit.pipeline._guardrail_reason",
@@ -2530,6 +2662,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
+          "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
+          "fabricops_kit.pipeline.build_guardrail_summary_rows",
+          "fabricops_kit.pipeline._guardrail_reason",
+          "fabricops_kit.pipeline._profile_behavior_reason"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
           "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
           "fabricops_kit.pipeline.build_guardrail_summary_rows",
           "fabricops_kit.pipeline._guardrail_reason",
@@ -2538,47 +2682,15 @@
         ]
       },
       {
-        "depth": 5,
+        "depth": 6,
         "chain": [
           "fabricops_kit.pipeline.run_table_guardrails",
+          "fabricops_kit.pipeline._run_table_guardrails_workflow",
           "fabricops_kit.pipeline._build_guardrail_blocking_message_from_bundle",
           "fabricops_kit.pipeline.build_guardrail_summary_rows",
           "fabricops_kit.pipeline._guardrail_reason",
           "fabricops_kit.pipeline._profile_behavior_reason",
           "fabricops_kit.pipeline._result_status"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.run_table_guardrails",
-          "fabricops_kit.guardrails._check_schema_rule_runtime",
-          "fabricops_kit.guardrails._select_table_guardrail_rule",
-          "fabricops_kit.guardrails._is_active_guardrail_rule",
-          "fabricops_kit.guardrails._rule_review_status",
-          "fabricops_kit.guardrails._catalogue_value"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.run_table_guardrails",
-          "fabricops_kit.guardrails._check_schema_rule_runtime",
-          "fabricops_kit.guardrails._select_table_guardrail_rule",
-          "fabricops_kit.guardrails._is_active_guardrail_rule",
-          "fabricops_kit.guardrails._rule_review_status",
-          "fabricops_kit.guardrails._string_value"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.run_table_guardrails",
-          "fabricops_kit.governance_review._run_active_dq_guardrail",
-          "fabricops_kit.governance_review._dq_failed_row_count",
-          "fabricops_kit.governance_review._dq_failed_expression",
-          "fabricops_kit.governance_review._validate_dq_rules",
-          "fabricops_kit.governance_review._canonical_dq_rule_type"
         ]
       }
     ],
@@ -2660,7 +2772,7 @@
   },
   "start_pipeline_run": {
     "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
-    "unique_internal_helper_count": 40,
+    "unique_internal_helper_count": 41,
     "repeated_helpers": [
       {
         "helper": "_get_store",
@@ -2728,6 +2840,51 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
+          "fabricops_kit.pipeline._now_iso",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config._validate_audit_timezone"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
+          "fabricops_kit.data_agreement.widget_select_agreement",
+          "fabricops_kit.metadata._current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.metadata._coerce_row_dicts"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
+          "fabricops_kit.data_agreement.widget_select_agreement",
+          "fabricops_kit.metadata._current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.metadata._notebook_registration_key"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
+          "fabricops_kit.data_agreement.widget_select_agreement",
+          "fabricops_kit.metadata._current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.io_core.configured_lakehouse_schema"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
           "fabricops_kit.data_agreement.widget_select_agreement",
           "fabricops_kit.metadata._current_notebook_active_registrations",
           "fabricops_kit.metadata._load_notebook_registry",
@@ -2736,9 +2893,10 @@
         ]
       },
       {
-        "depth": 6,
+        "depth": 7,
         "chain": [
           "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
           "fabricops_kit.data_agreement.widget_select_agreement",
           "fabricops_kit.metadata._current_notebook_active_registrations",
           "fabricops_kit.metadata._load_notebook_registry",
@@ -2748,9 +2906,10 @@
         ]
       },
       {
-        "depth": 7,
+        "depth": 8,
         "chain": [
           "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
           "fabricops_kit.data_agreement.widget_select_agreement",
           "fabricops_kit.metadata._current_notebook_active_registrations",
           "fabricops_kit.metadata._load_notebook_registry",
@@ -2761,59 +2920,15 @@
         ]
       },
       {
-        "depth": 5,
+        "depth": 6,
         "chain": [
           "fabricops_kit.pipeline.start_pipeline_run",
+          "fabricops_kit.pipeline._start_pipeline_run_workflow",
           "fabricops_kit.data_agreement.widget_select_agreement",
           "fabricops_kit.metadata._current_notebook_active_registrations",
           "fabricops_kit.metadata._load_notebook_registry",
           "fabricops_kit.io_core.configured_lakehouse_schema",
           "fabricops_kit.io_core._normalize_schema_name"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.start_pipeline_run",
-          "fabricops_kit.data_agreement.widget_select_agreement",
-          "fabricops_kit.metadata._current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io_core.read_lakehouse_table_core",
-          "fabricops_kit.io_core._get_spark"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.start_pipeline_run",
-          "fabricops_kit.data_agreement.widget_select_agreement",
-          "fabricops_kit.metadata._current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io_core.read_lakehouse_table_core",
-          "fabricops_kit.io_core._read_delta_path"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.start_pipeline_run",
-          "fabricops_kit.data_agreement.widget_select_agreement",
-          "fabricops_kit.metadata._current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io_core.read_lakehouse_table_core",
-          "fabricops_kit.io_core._resolve_lakehouse_table_location"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.pipeline.start_pipeline_run",
-          "fabricops_kit.data_agreement.widget_select_agreement",
-          "fabricops_kit.metadata._current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io_core.read_lakehouse_table_core",
-          "fabricops_kit.io_core._resolve_lakehouse_table_location",
-          "fabricops_kit.io_core._normalize_table_name"
         ]
       }
     ],
@@ -2865,7 +2980,7 @@
   },
   "write_pipeline_lineage": {
     "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
-    "unique_internal_helper_count": 26,
+    "unique_internal_helper_count": 27,
     "repeated_helpers": [
       {
         "helper": "_current_audit_timestamp",
@@ -2913,29 +3028,7 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.write_pipeline_lineage",
-          "fabricops_kit.pipeline._runtime_audit_fields",
-          "fabricops_kit.metadata._build_runtime_audit_fields",
-          "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
-          "fabricops_kit.config._validate_audit_timezone"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.write_pipeline_lineage",
-          "fabricops_kit.pipeline._runtime_audit_fields",
-          "fabricops_kit.metadata._build_runtime_audit_fields",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.pipeline.write_pipeline_lineage",
-          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
           "fabricops_kit.pipeline._now_iso",
           "fabricops_kit.config._current_audit_timestamp",
           "fabricops_kit.config._get_audit_timezone",
@@ -2946,11 +3039,80 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.write_pipeline_lineage",
-          "fabricops_kit.io_core.write_lakehouse_table_core",
-          "fabricops_kit.io_core._resolve_target_store",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.metadata._build_runtime_audit_fields",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_lineage",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.metadata._build_runtime_audit_fields",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config._validate_audit_timezone"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_lineage",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.metadata._build_runtime_audit_fields",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_lineage",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._get_store",
           "fabricops_kit.config._normalize_path_config",
           "fabricops_kit.config.PathConfig"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_lineage",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.metadata._build_runtime_audit_fields",
+          "fabricops_kit.metadata._runtime_context",
+          "fabricops_kit.metadata._context_get"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_lineage",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.pipeline._now_iso",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_lineage",
+          "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+          "fabricops_kit.pipeline._runtime_audit_fields",
+          "fabricops_kit.pipeline._now_iso",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config._validate_audit_timezone"
         ]
       }
     ],
@@ -3008,7 +3170,7 @@
   },
   "write_pipeline_run_summary": {
     "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
-    "unique_internal_helper_count": 21,
+    "unique_internal_helper_count": 22,
     "repeated_helpers": [
       {
         "helper": "_get_store",
@@ -3031,11 +3193,78 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
+          "fabricops_kit.pipeline._now_iso",
+          "fabricops_kit.config._current_audit_timestamp",
+          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config._validate_audit_timezone"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
+          "fabricops_kit.io_core.configured_lakehouse_schema",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config",
+          "fabricops_kit.config.PathConfig"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
+          "fabricops_kit.io_core.write_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_schema",
+          "fabricops_kit.io_core._normalize_schema_name"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
+          "fabricops_kit.io_core.write_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_lakehouse_table_location",
+          "fabricops_kit.io_core._resolve_lakehouse_table_path",
+          "fabricops_kit.io_core._join_lakehouse_area_path"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
+          "fabricops_kit.io_core.write_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_target_store",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
           "fabricops_kit.io_core.write_lakehouse_table_core",
           "fabricops_kit.io_core._resolve_target_store",
           "fabricops_kit.config._get_store",
           "fabricops_kit.config._normalize_path_config",
           "fabricops_kit.config.PathConfig"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
+          "fabricops_kit.io_core.write_lakehouse_table_core",
+          "fabricops_kit.io_core._resolve_target_store",
+          "fabricops_kit.config.resolve_fabric_context",
+          "fabricops_kit.config.get_default_fabric_context"
         ]
       }
     ],
