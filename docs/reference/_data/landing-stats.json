@@ -1,5 +1,6 @@
 {
   "public_function_count": 26,
-  "supporting_internal_function_count": 283,
+  "total_callable_records": 309,
+  "function_callable_count": 287,
   "metadata_table_count": 11
 }
