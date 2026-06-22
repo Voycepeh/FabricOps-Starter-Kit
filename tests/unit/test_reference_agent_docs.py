@@ -246,6 +246,32 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Reset" in dashboard_text
     assert "refactor reason" not in dashboard_text.lower()
     assert "All recommended actions" in dashboard_text
+    action_filter_match = re.search(r"const USER_FACING_RECOMMENDED_ACTIONS=\[(.*?)\];", dashboard_text)
+    assert action_filter_match is not None
+    action_filter_source = action_filter_match.group(1)
+    for action in [
+        "Architecture violation",
+        "Inline candidate",
+        "Review abstraction value",
+        "Review manually",
+        "Public API entrypoint",
+        "Stable utility",
+        "Shared internal helper",
+        "Orphaned callable",
+        "Unreachable candidate",
+    ]:
+        assert action in action_filter_source
+    for hidden_action in [
+        "Legacy internal_calls_internal",
+        "Allowed internal role calls",
+        "Classification pending",
+        "Keep lifecycle method",
+        "Keep property accessor",
+    ]:
+        assert hidden_action not in action_filter_source
+    assert "populateRecommendedActionFilter" in dashboard_text
+    assert "USER_FACING_RECOMMENDED_ACTIONS.filter(v=>present.has(v))" in dashboard_text
+    assert "unique(inventory.map(i=>i.recommended_action)).forEach(v=>option($('signalFilter'),v))" not in dashboard_text
     assert "Quick signal filters" not in dashboard_text
     assert "Easy cleanup" not in dashboard_text
     assert (
@@ -278,8 +304,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Unknown role" in dashboard_text
     assert "Unreachable candidate" in dashboard_text
     assert "Allowed internal role calls" in dashboard_text
-    assert "Legacy internal_calls_internal" in dashboard_text
+    assert "Legacy internal_calls_internal" not in dashboard_text
+    assert "internal_calls_internal" not in dashboard_text
     assert "Layer counts" in dashboard_text
+    assert 'data-summary-section="${esc(key)}"' in dashboard_text
+    assert 'data-summary-header="${esc(key)}"' in dashboard_text
+    assert "openSummarySections:new Set()" in dashboard_text
+    assert "state.openSummarySections.has(key)?' open':''" in dashboard_text
+    assert "e.stopPropagation(); applyTree(tree.dataset.tree);" in dashboard_text
+    assert "addEventListener('toggle'" in dashboard_text
     assert "Callable kind counts" in dashboard_text
     assert "Layer consistency counts" in dashboard_text
     assert "Raw signal counts" in dashboard_text
@@ -1296,7 +1329,7 @@ def test_callable_layer_dependency_rule_matrix() -> None:
     assert _architecture_dependency_signals("public", "public") == ["public_calls_public"]
     assert _architecture_dependency_signals("internal", "utility") == []
     assert _architecture_dependency_signals("internal", "public") == ["internal_calls_public"]
-    assert _architecture_dependency_signals("internal", "internal") == ["internal_calls_internal"]
+    assert _architecture_dependency_signals("internal", "internal") == []
     assert _architecture_dependency_signals("utility", "public") == ["utility_calls_project_callable"]
     assert _architecture_dependency_signals("utility", "internal") == ["utility_calls_project_callable"]
     assert _architecture_dependency_signals("utility", "utility") == ["utility_calls_project_callable"]
