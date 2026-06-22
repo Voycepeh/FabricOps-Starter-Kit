@@ -305,7 +305,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Search/filter all callables, select rows, and export AI refactor packets." in inventory_text
     assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
-    assert "inventorySurfaceCards" in inventory_text
+    assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
     assert "Total callables" in inventory_text
     assert "Public API entrypoints" in inventory_text
@@ -314,11 +314,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Single-use helper candidates" in inventory_text
     assert "Suggested inline or privatize" in inventory_text
     assert "<article class=\"surface-card\"><strong>${esc(v??0)}</strong><span>${esc(l)}</span></article>" in inventory_text
-    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in inventory_text
-    assert ".surface-card span{display:block;line-height:1.2" in inventory_text
+    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1}" in inventory_text
+    assert ".surface-card span{display:block;line-height:1.2}" in inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
     assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
-    assert "i.source_url" in inventory_text
+    assert "if(i.source_url)return i.source_url" in inventory_text
+    assert "const start=i.source_start_line||i.start_line||i.line_number" in inventory_text
+    assert "#L${start}" in inventory_text
     assert "GITHUB_SOURCE_BASE" in inventory_text
     assert "<td>${sourceCallableLink(i)}</td>" in inventory_text
     assert "data-select-row" in inventory_text
