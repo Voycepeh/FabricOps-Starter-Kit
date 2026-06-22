@@ -268,7 +268,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionWarningFilter" in dashboard_text
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
-    assert "Architecture violation type" in dashboard_text
+    assert "Architecture violation count" in dashboard_text
+    assert "Architecture violation type<input" not in dashboard_text
     assert "resetDecisionFilters" in dashboard_text
     assert "compactList" in dashboard_text
     assert "compactBadges" in dashboard_text
@@ -323,6 +324,21 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "305 Merge candidates" not in dashboard_text
     assert "Architecture metrics summarize public entrypoint flow risk." in dashboard_text
 
+    assert "LONG_CALL_CHAIN_DEPTH_THRESHOLD=4" in dashboard_text
+    assert "LARGE_DEPENDENCY_SURFACE_THRESHOLD=10" in dashboard_text
+    assert "architecture_violation_count??f.cross_layer_issue_count" in dashboard_text
+    assert ">=3" not in dashboard_text
+    assert "down>=12" not in dashboard_text
+    assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
+    assert "function whyReview(flow)" in dashboard_text
+    assert "reasons.join(' ')" in dashboard_text
+    assert "Contains ${violations} architecture violations." in dashboard_text
+    assert "Depth is ${flow.maximum_chain_depth}; threshold is >= ${LONG_CALL_CHAIN_DEPTH_THRESHOLD}." in dashboard_text
+    assert "Has ${flow.downstream_callable_count} downstream functions; threshold is >= ${LARGE_DEPENDENCY_SURFACE_THRESHOLD}." in dashboard_text
+    assert "Contains ${flow.single_use_helper_candidate_count} merge candidates inside this flow." in dashboard_text
+    assert "deep cross-module helper chains" not in dashboard_text
+    assert "inline single-use helper" not in dashboard_text
+
     assert "Callable Inventory" in inventory_text
     assert "Search/filter callables with maintainer-friendly role groups, reachability, and refactor signals." in inventory_text
     assert "Architecture" in inventory_text
@@ -337,6 +353,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Complete discovered callable inventory." in inventory_text
     assert "Internal functions behind the public API." in inventory_text
     assert "callable_inventory_metrics" in inventory_text
+    assert "deep cross-module helper chains" not in inventory_text
+    assert "inline single-use helper" not in inventory_text
     assert "Total discovered callable records" not in inventory_text
     assert "Function callables" not in inventory_text
     assert "Non-function callable records" not in inventory_text
