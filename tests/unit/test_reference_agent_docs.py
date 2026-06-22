@@ -262,7 +262,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Download JSON" in dashboard_text
     assert "compatibilityMode" in dashboard_text
     assert "function markdownPacket(packet)" in dashboard_text
-    assert "Selected callables:" in dashboard_text
+    assert "## Objective" in dashboard_text
+    assert "## Architecture intent" in dashboard_text
+    assert "## Compatibility mode" in dashboard_text
+    assert "## Selected callables" in dashboard_text
+    assert "## Requested work" in dashboard_text
+    assert "## Output required from AI" in dashboard_text
+    assert "## Batch accounting" in dashboard_text
+    assert "downstream_callable_count" in dashboard_text
+    assert "maximum_chain_depth" in dashboard_text
+    assert "modules_touched" in dashboard_text
+    assert "cross_layer_issue_count" in dashboard_text
+    assert "direct callees" in dashboard_text
     assert "disabled>Copy JSON" in dashboard_text
     assert "disabled>Copy Markdown" in dashboard_text
     assert "disabled>Download JSON" in dashboard_text
@@ -294,7 +305,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "copyExport" in inventory_text
     assert "downloadJson" in inventory_text
     assert "function markdownPacket(packet)" in inventory_text
-    assert "Selected callables:" in inventory_text
+    assert "## Objective" in inventory_text
+    assert "## Architecture intent" in inventory_text
+    assert "## Compatibility mode" in inventory_text
+    assert "## Selected callables" in inventory_text
+    assert "## Requested work" in inventory_text
+    assert "## Output required from AI" in inventory_text
+    assert "## Batch accounting" in inventory_text
     assert "disabled>Copy JSON" in inventory_text
     assert "disabled>Copy Markdown" in inventory_text
     assert "disabled>Download JSON" in inventory_text
