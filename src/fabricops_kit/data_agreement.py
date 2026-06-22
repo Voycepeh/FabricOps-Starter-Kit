@@ -1072,7 +1072,7 @@ def _agreement_identity_text(row: dict[str, Any] | None) -> str:
     )
 
 
-def _render_maintenance_widget(*, spark: Any, config: Any, env: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
+def _render_maintenance_widget_workflow(*, spark: Any, config: Any, env: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
     widgets = _require_ipywidgets()
     from IPython import display as ip
 
@@ -1283,7 +1283,29 @@ def _render_maintenance_widget(*, spark: Any, config: Any, env: str, kind: str, 
     }
 
 
-def _render_agreement_evidence_widget(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
+def _render_data_steward_widget_workflow(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
+    """Run the internal data steward widget workflow."""
+    return _render_maintenance_widget_workflow(
+        spark=spark,
+        config=config,
+        env=env,
+        kind="data_steward_widget",
+        display_widget=display_widget,
+    )
+
+
+def _render_data_agreement_widget_workflow(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
+    """Run the internal data agreement widget workflow."""
+    return _render_maintenance_widget_workflow(
+        spark=spark,
+        config=config,
+        env=env,
+        kind="data_agreement_widget",
+        display_widget=display_widget,
+    )
+
+
+def _render_agreement_evidence_widget_workflow(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
     widgets = _require_ipywidgets()
     from IPython import display as ip
@@ -1433,7 +1455,7 @@ def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | No
 
     """
     config, env, _context = resolve_fabric_context(context=context)
-    return _render_agreement_evidence_widget(
+    return _render_agreement_evidence_widget_workflow(
         spark=spark,
         config=config,
         env=env,
@@ -1458,7 +1480,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     """
     config, env, _context = resolve_fabric_context(context=context)
-    return _render_maintenance_widget(spark=spark, config=config, env=env, kind="data_steward_widget")
+    return _render_data_steward_widget_workflow(spark=spark, config=config, env=env)
 
 
 def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -1479,4 +1501,4 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     """
     config, env, _context = resolve_fabric_context(context=context)
-    return _render_maintenance_widget(spark=spark, config=config, env=env, kind="data_agreement_widget")
+    return _render_data_agreement_widget_workflow(spark=spark, config=config, env=env)

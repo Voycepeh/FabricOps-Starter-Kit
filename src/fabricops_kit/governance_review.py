@@ -93,7 +93,7 @@ def _catalogue_lookup_value(row: Mapping[str, Any], *names: str) -> Any:
     return fallback
 
 
-def get_latest_metadata_catalogue(
+def _latest_metadata_catalogue_lookup_workflow(
     *,
     table_name: str,
     agreement: Mapping[str, Any] | None = None,
@@ -701,7 +701,7 @@ def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, c
         )
 
 
-def widget_enrich_table_metadata(
+def _table_metadata_enrichment_widget_workflow(
     guardrail_state: Mapping[str, Any],
     *,
     spark_session: Any,
@@ -1987,7 +1987,7 @@ def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str,
     )
 
 
-def widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
+def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render an interactive guardrail target selector and return handover state.
 
     Parameters
@@ -2140,7 +2140,7 @@ def _schema_freshness_profile_records_from_selection(
     ]
 
 
-def widget_author_schema_freshness_profile_rules(
+def _schema_freshness_profile_rule_authoring_widget_workflow(
     state: Mapping[str, Any],
     *,
     spark_session: Any = None,
@@ -2326,7 +2326,7 @@ def _dq_records_from_selection(
     return records
 
 
-def widget_author_dq_rules(
+def _dq_rule_authoring_widget_workflow(
     state: Mapping[str, Any],
     *,
     dq_authoring_mode: str = "manual",
@@ -2565,7 +2565,7 @@ def mark_table_ungoverned(state: Mapping[str, Any], *, actor: str | None = None,
 
 
 
-def widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None) -> dict[str, Any]:
+def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render interactive 03 governance policy and shared rule-review controls.
 
     Parameters
@@ -2666,3 +2666,107 @@ def widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_sessio
     ])
     ip.display(ui)
     return {"controls": {"selected_record": selected_record, "selected_rule": selected_record, "replacement_key": replacement_key}, "save_record_action": save_record_action, "save_rule_action": save_record_action, "last_record": records_state, "ui": ui}
+
+
+# ---------------------------------------------------------------------------
+# Public API wrappers
+# ---------------------------------------------------------------------------
+
+def get_latest_metadata_catalogue(
+    *,
+    table_name: str,
+    agreement: Mapping[str, Any] | None = None,
+    metadata_schema: str | None = None,
+    spark_session: Any = None,
+    context: dict[str, Any] | None = None,
+) -> Any:
+    """Return the latest metadata catalogue rows for an exploratory table lookup."""
+    return _latest_metadata_catalogue_lookup_workflow(
+        table_name=table_name,
+        agreement=agreement,
+        metadata_schema=metadata_schema,
+        spark_session=spark_session,
+        context=context,
+    )
+
+
+def widget_enrich_table_metadata(
+    guardrail_state: Mapping[str, Any],
+    *,
+    spark_session: Any,
+    context: dict[str, Any] | None = None,
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
+) -> dict[str, Any]:
+    """Render one consolidated governed table metadata enrichment widget."""
+    return _table_metadata_enrichment_widget_workflow(
+        guardrail_state,
+        spark_session=spark_session,
+        context=context,
+        source_notebook_type=source_notebook_type,
+        created_by_role=created_by_role,
+    )
+
+
+def widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Render an interactive guardrail target selector and return handover state."""
+    return _guardrail_target_selection_widget_workflow(spark_session=spark_session, context=context)
+
+
+def widget_author_schema_freshness_profile_rules(
+    state: Mapping[str, Any],
+    *,
+    spark_session: Any = None,
+    context: dict[str, Any] | None = None,
+    bypass_reason: str = "",
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Render interactive schema, freshness, and profile behavior authoring UI."""
+    return _schema_freshness_profile_rule_authoring_widget_workflow(
+        state,
+        spark_session=spark_session,
+        context=context,
+        bypass_reason=bypass_reason,
+        source_notebook_type=source_notebook_type,
+        created_by_role=created_by_role,
+        commit=commit,
+    )
+
+
+def widget_author_dq_rules(
+    state: Mapping[str, Any],
+    *,
+    dq_authoring_mode: str = "manual",
+    rule_type: str = "not_null",
+    selected_columns: Iterable[str] | None = None,
+    parameters: Mapping[str, Any] | None = None,
+    severity: str = "warning",
+    spark_session: Any = None,
+    context: dict[str, Any] | None = None,
+    bypass_reason: str = "",
+    source_notebook_type: str = "02_pipeline",
+    created_by_role: str = "engineering",
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Render interactive manual DQ rule authoring UI."""
+    return _dq_rule_authoring_widget_workflow(
+        state,
+        dq_authoring_mode=dq_authoring_mode,
+        rule_type=rule_type,
+        selected_columns=selected_columns,
+        parameters=parameters,
+        severity=severity,
+        spark_session=spark_session,
+        context=context,
+        bypass_reason=bypass_reason,
+        source_notebook_type=source_notebook_type,
+        created_by_role=created_by_role,
+        commit=commit,
+    )
+
+
+def widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Render interactive 03 governance policy and shared rule-review controls."""
+    return _guardrail_governance_review_widget_workflow(state, spark_session=spark_session, context=context)

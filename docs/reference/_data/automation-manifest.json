@@ -1680,12 +1680,12 @@
       "fabricops_kit.data_agreement.widget_render_data_agreement",
       "fabricops_kit.data_agreement.widget_render_data_steward",
       "fabricops_kit.data_agreement.widget_select_agreement",
-      "fabricops_kit.governance_review.get_latest_metadata_catalogue",
-      "fabricops_kit.governance_review.widget_author_dq_rules",
-      "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-      "fabricops_kit.governance_review.widget_enrich_table_metadata",
-      "fabricops_kit.governance_review.widget_review_guardrail_governance",
-      "fabricops_kit.governance_review.widget_select_guardrail_target",
+      "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+      "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
+      "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
+      "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
+      "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
       "fabricops_kit.io_core._resolve_target_store",
       "fabricops_kit.pipeline.run_table_guardrails",
       "fabricops_kit.pipeline.write_pipeline_lineage",
@@ -1721,12 +1721,12 @@
       "widget_render_data_agreement",
       "widget_render_data_steward",
       "widget_select_agreement",
-      "get_latest_metadata_catalogue",
-      "widget_author_dq_rules",
-      "widget_author_schema_freshness_profile_rules",
-      "widget_enrich_table_metadata",
-      "widget_review_guardrail_governance",
-      "widget_select_guardrail_target",
+      "_dq_rule_authoring_widget_workflow",
+      "_guardrail_governance_review_widget_workflow",
+      "_guardrail_target_selection_widget_workflow",
+      "_latest_metadata_catalogue_lookup_workflow",
+      "_schema_freshness_profile_rule_authoring_widget_workflow",
+      "_table_metadata_enrichment_widget_workflow",
       "_resolve_target_store",
       "run_table_guardrails",
       "write_pipeline_lineage",
@@ -1891,7 +1891,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._next_minor_version"
@@ -1919,7 +1919,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_next_minor_version"
     ]
   },
@@ -2014,7 +2014,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.config.get",
@@ -2043,7 +2043,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "get",
       "_to_iso_date"
     ]
@@ -2061,7 +2061,7 @@
       "fabricops_kit.data_agreement._get_widget_visible_fields",
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
       "fabricops_kit.data_agreement._list_data_stewards",
-      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
       "fabricops_kit.data_agreement._save_agreement_evidence_records"
     ],
     "outbound": [],
@@ -2093,7 +2093,7 @@
       "_get_widget_visible_fields",
       "_list_all_data_agreement_rows",
       "_list_data_stewards",
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_save_agreement_evidence_records"
     ]
   },
@@ -2105,7 +2105,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
@@ -2143,7 +2143,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_business_agreement_snapshot",
       "_config_value",
       "_generate_agreement_id",
@@ -2165,7 +2165,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._active_steward",
@@ -2200,7 +2200,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_active_steward",
       "_config_value",
       "_generate_steward_id",
@@ -2220,7 +2220,7 @@
     "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._business_agreement_snapshot",
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -2247,7 +2247,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_business_agreement_snapshot",
-      "_render_maintenance_widget"
+      "_render_maintenance_widget_workflow"
     ]
   },
   {
@@ -2369,7 +2369,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._config_value"
@@ -2397,7 +2397,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_config_value"
     ]
   },
@@ -2534,7 +2534,7 @@
     "inbound": [
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._list_data_agreements",
-      "fabricops_kit.data_agreement._render_agreement_evidence_widget"
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._coerce_row_dicts",
@@ -2567,7 +2567,7 @@
     "related_functions": [
       "_create_or_update_data_agreement",
       "_list_data_agreements",
-      "_render_agreement_evidence_widget",
+      "_render_agreement_evidence_widget_workflow",
       "_coerce_row_dicts",
       "_config_value",
       "configured_lakehouse_schema",
@@ -2582,7 +2582,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
     "outbound": [
@@ -2612,7 +2612,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "widget_select_agreement",
       "_latest_agreement_versions",
       "_list_all_data_agreement_rows"
@@ -2628,7 +2628,7 @@
     "inbound": [
       "fabricops_kit.config._setup_metadata_tables_workflow",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._active_steward",
@@ -2661,7 +2661,7 @@
     "related_functions": [
       "_setup_metadata_tables_workflow",
       "_create_or_update_data_agreement",
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_active_steward",
       "_config_value",
       "_latest_by_key",
@@ -2831,8 +2831,8 @@
     ]
   },
   {
-    "name": "_render_agreement_evidence_widget",
-    "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+    "name": "_render_agreement_evidence_widget_workflow",
+    "qualified_name": "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
@@ -2852,9 +2852,9 @@
     "expanded_purpose": null,
     "when_to_use": null,
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1286,
-    "source_end_line": 1404,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1404",
+    "source_start_line": 1308,
+    "source_end_line": 1426,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1308-L1426",
     "docs_path": null,
     "summary": "Render optional agreement evidence upload controls.",
     "use_when": "Not documented yet",
@@ -2886,7 +2886,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.config.get",
@@ -2917,7 +2917,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "get",
       "_require_ipywidgets",
       "_to_bool",
@@ -2925,15 +2925,95 @@
     ]
   },
   {
-    "name": "_render_maintenance_widget",
-    "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget",
+    "name": "_render_data_agreement_widget_workflow",
+    "qualified_name": "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
     "module": "data_agreement",
     "type": "internal",
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement.widget_render_data_agreement",
+      "fabricops_kit.data_agreement.widget_render_data_agreement"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_start_line": 1297,
+    "source_end_line": 1305,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1297-L1305",
+    "docs_path": null,
+    "summary": "Run the internal data agreement widget workflow.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_render_data_agreement",
+      "_render_maintenance_widget_workflow"
+    ]
+  },
+  {
+    "name": "_render_data_steward_widget_workflow",
+    "qualified_name": "fabricops_kit.data_agreement._render_data_steward_widget_workflow",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
       "fabricops_kit.data_agreement.widget_render_data_steward"
+    ],
+    "outbound": [
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/data_agreement.py",
+    "source_start_line": 1286,
+    "source_end_line": 1294,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1286-L1294",
+    "docs_path": null,
+    "summary": "Run the internal data steward widget workflow.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_render_data_steward",
+      "_render_maintenance_widget_workflow"
+    ]
+  },
+  {
+    "name": "_render_maintenance_widget_workflow",
+    "qualified_name": "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
+    "module": "data_agreement",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.data_agreement._render_data_agreement_widget_workflow",
+      "fabricops_kit.data_agreement._render_data_steward_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._agreement_identity_text",
@@ -2975,8 +3055,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_render_data_agreement",
-      "widget_render_data_steward",
+      "_render_data_agreement_widget_workflow",
+      "_render_data_steward_widget_workflow",
       "_agreement_identity_text",
       "_collect_custom_fields",
       "_config_value",
@@ -3002,8 +3082,8 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_agreement_evidence_widget",
-      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
     "outbound": [
@@ -3033,8 +3113,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_agreement_evidence_widget",
-      "_render_maintenance_widget",
+      "_render_agreement_evidence_widget_workflow",
+      "_render_maintenance_widget_workflow",
       "widget_select_agreement",
       "_html_escape",
       "_widget_common"
@@ -3048,9 +3128,9 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
       "fabricops_kit.data_agreement._render_custom_fields",
-      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
       "fabricops_kit.data_agreement._standard_widget",
       "fabricops_kit.data_agreement.widget_select_agreement"
     ],
@@ -3078,9 +3158,9 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_agreement_evidence_widget",
+      "_render_agreement_evidence_widget_workflow",
       "_render_custom_fields",
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_standard_widget",
       "widget_select_agreement"
     ]
@@ -3093,7 +3173,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_agreement_evidence_widget"
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._config_value",
@@ -3124,7 +3204,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_agreement_evidence_widget",
+      "_render_agreement_evidence_widget_workflow",
       "_config_value",
       "_prepare_evidence_file_references",
       "_write_row",
@@ -3180,7 +3260,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.data_agreement._require_ipywidgets",
@@ -3210,7 +3290,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_require_ipywidgets",
       "_to_bool",
       "_widget_common"
@@ -3227,7 +3307,7 @@
       "fabricops_kit.data_agreement._active_steward",
       "fabricops_kit.data_agreement._create_or_update_data_steward",
       "fabricops_kit.data_agreement._render_custom_fields",
-      "fabricops_kit.data_agreement._render_maintenance_widget",
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow",
       "fabricops_kit.data_agreement._standard_widget"
     ],
     "outbound": [],
@@ -3257,7 +3337,7 @@
       "_active_steward",
       "_create_or_update_data_steward",
       "_render_custom_fields",
-      "_render_maintenance_widget",
+      "_render_maintenance_widget_workflow",
       "_standard_widget"
     ]
   },
@@ -3270,7 +3350,7 @@
     "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.data_agreement._collect_custom_fields",
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_maintenance_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -3297,7 +3377,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_collect_custom_fields",
-      "_render_maintenance_widget"
+      "_render_maintenance_widget_workflow"
     ]
   },
   {
@@ -3308,7 +3388,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.data_agreement._render_agreement_evidence_widget",
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
       "fabricops_kit.data_agreement._render_custom_fields",
       "fabricops_kit.data_agreement._render_searchable_selector",
       "fabricops_kit.data_agreement._standard_widget"
@@ -3337,7 +3417,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_render_agreement_evidence_widget",
+      "_render_agreement_evidence_widget_workflow",
       "_render_custom_fields",
       "_render_searchable_selector",
       "_standard_widget"
@@ -3436,7 +3516,7 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.data_agreement._render_agreement_evidence_widget"
+      "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow"
     ],
     "used_in_templates": [
       "01_agreement"
@@ -3448,9 +3528,9 @@
     "expanded_purpose": "Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.",
     "when_to_use": "Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.",
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1407,
-    "source_end_line": 1440,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1407-L1440",
+    "source_start_line": 1429,
+    "source_end_line": 1462,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1429-L1462",
     "docs_path": "api/reference/widget_render_agreement_evidence.md",
     "summary": "Render the standalone agreement-evidence widget.",
     "use_when": "Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.",
@@ -3476,7 +3556,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "resolve_fabric_context",
-      "_render_agreement_evidence_widget"
+      "_render_agreement_evidence_widget_workflow"
     ]
   },
   {
@@ -3489,7 +3569,7 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_data_agreement_widget_workflow"
     ],
     "used_in_templates": [
       "01_agreement"
@@ -3500,9 +3580,9 @@
     "expanded_purpose": "Renders the data agreement intake widget used to capture agreement identity, scope, and business metadata for later notebook workflows.",
     "when_to_use": "Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.",
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1464,
-    "source_end_line": 1482,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1464-L1482",
+    "source_start_line": 1486,
+    "source_end_line": 1504,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1486-L1504",
     "docs_path": "api/reference/widget_render_data_agreement.md",
     "summary": "Render the standalone data-agreement intake widget.",
     "use_when": "Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.",
@@ -3524,7 +3604,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "resolve_fabric_context",
-      "_render_maintenance_widget"
+      "_render_data_agreement_widget_workflow"
     ]
   },
   {
@@ -3537,7 +3617,7 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.data_agreement._render_maintenance_widget"
+      "fabricops_kit.data_agreement._render_data_steward_widget_workflow"
     ],
     "used_in_templates": [
       "01_agreement"
@@ -3548,9 +3628,9 @@
     "expanded_purpose": "Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.",
     "when_to_use": "Use in 01_agreement when collecting or updating data steward details before creating a data agreement.",
     "source_file": "src/fabricops_kit/data_agreement.py",
-    "source_start_line": 1443,
-    "source_end_line": 1461,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1443-L1461",
+    "source_start_line": 1465,
+    "source_end_line": 1483,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1465-L1483",
     "docs_path": "api/reference/widget_render_data_steward.md",
     "summary": "Render the standalone data-steward intake widget.",
     "use_when": "Use in 01_agreement when collecting or updating data steward details before creating a data agreement.",
@@ -3572,7 +3652,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "resolve_fabric_context",
-      "_render_maintenance_widget"
+      "_render_data_steward_widget_workflow"
     ]
   },
   {
@@ -4754,7 +4834,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.get_latest_metadata_catalogue"
+      "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -4780,7 +4860,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "get_latest_metadata_catalogue"
+      "_latest_metadata_catalogue_lookup_workflow"
     ]
   },
   {
@@ -4872,10 +4952,10 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
+      "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
       "fabricops_kit.governance_review._load_active_dq_rules",
       "fabricops_kit.governance_review._read_metadata_rows",
       "fabricops_kit.governance_review._read_metadata_table_or_empty",
-      "fabricops_kit.governance_review.get_latest_metadata_catalogue",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
       "fabricops_kit.governance_review.resolve_table_governance_policy"
     ],
@@ -4903,10 +4983,10 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "_latest_metadata_catalogue_lookup_workflow",
       "_load_active_dq_rules",
       "_read_metadata_rows",
       "_read_metadata_table_or_empty",
-      "get_latest_metadata_catalogue",
       "load_catalogue_profile_rows",
       "resolve_table_governance_policy"
     ]
@@ -4919,7 +4999,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -4945,7 +5025,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_enrich_table_metadata"
+      "_table_metadata_enrichment_widget_workflow"
     ]
   },
   {
@@ -5081,7 +5161,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_author_dq_rules"
+      "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._base_guardrail_rule_record"
@@ -5109,8 +5189,56 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_author_dq_rules",
+      "_dq_rule_authoring_widget_workflow",
       "_base_guardrail_rule_record"
+    ]
+  },
+  {
+    "name": "_dq_rule_authoring_widget_workflow",
+    "qualified_name": "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.governance_review.widget_author_dq_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.config.resolve_fabric_context",
+      "fabricops_kit.governance_review._dq_records_from_selection",
+      "fabricops_kit.governance_review._latest_rule",
+      "fabricops_kit.governance_review._rule_params",
+      "fabricops_kit.governance_review._write_rule_records"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 2329,
+    "source_end_line": 2497,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
+    "docs_path": null,
+    "summary": "Render interactive manual DQ rule authoring UI.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "state : mapping\n    Handover state from :func:`widget_select_guardrail_target`.\ndq_authoring_mode : {\"manual\"}, default=\"manual\"\n    Manual DQ authoring mode.\nrule_type : str, default=\"not_null\"\n    Initial DQ rule type for manual mode.\nselected_columns : iterable of str, optional\n    Initial batch-selected columns. Defaults to all selected table columns.\nparameters : mapping, optional\n    Initial JSON rule parameters.\nseverity : str, default=\"warning\"\n    Initial rule severity.\nspark_session : Any, optional\n    Spark session used for saves.\ncontext : dict[str, Any], optional\n    Advanced override for the active Fabric context. When omitted, the\n    helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.\nbypass_reason : str, optional\n    Initial approval-bypass reason.\nsource_notebook_type : {\"02_pipeline\", \"03_governance\"}, default=\"02_pipeline\"\n    Notebook type stamped on authored records.\ncreated_by_role : {\"engineering\", \"governance\", \"system\"}, default=\"engineering\"\n    Role stamped on authored records.\ncommit : bool, default=False\n    Whether to save the initial generated records immediately.",
+    "output": "dict[str, Any]\n    Widget state containing controls, generated records, and callable\n    helpers for tests and notebook automation.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_author_dq_rules",
+      "resolve_fabric_context",
+      "_dq_records_from_selection",
+      "_latest_rule",
+      "_rule_params",
+      "_write_rule_records"
     ]
   },
   {
@@ -5244,7 +5372,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -5270,7 +5398,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_enrich_table_metadata"
+      "_table_metadata_enrichment_widget_workflow"
     ]
   },
   {
@@ -5376,7 +5504,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_select_guardrail_target"
+      "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -5402,7 +5530,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_select_guardrail_target"
+      "_guardrail_target_selection_widget_workflow"
     ]
   },
   {
@@ -5489,6 +5617,100 @@
       "_setup_metadata_tables_workflow",
       "_schema",
       "_spark_types"
+    ]
+  },
+  {
+    "name": "_guardrail_governance_review_widget_workflow",
+    "qualified_name": "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.governance_review.widget_review_guardrail_governance"
+    ],
+    "outbound": [
+      "fabricops_kit.config.resolve_fabric_context",
+      "fabricops_kit.governance_review.apply_governance_enrichment_action",
+      "fabricops_kit.governance_review.apply_governance_rule_action",
+      "fabricops_kit.governance_review.load_rule_review_history"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 2568,
+    "source_end_line": 2668,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2568-L2668",
+    "docs_path": null,
+    "summary": "Render interactive 03 governance policy and shared rule-review controls.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "state : mapping\n    Handover state from :func:`widget_select_guardrail_target`. The state may\n    include ``existing_rules`` from ``METADATA_GUARDRAIL_RULES`` and\n    ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT_RULES``.\nspark_session : Any, optional\n    Spark session used for save actions.\ncontext : dict[str, Any], optional\n    Advanced override for the active Fabric context. When omitted, the\n    helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.",
+    "output": "dict[str, Any]\n    Widget state with controls and callable action helpers for guardrail and\n    enrichment lifecycle decisions.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_review_guardrail_governance",
+      "resolve_fabric_context",
+      "apply_governance_enrichment_action",
+      "apply_governance_rule_action",
+      "load_rule_review_history"
+    ]
+  },
+  {
+    "name": "_guardrail_target_selection_widget_workflow",
+    "qualified_name": "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.governance_review.widget_select_guardrail_target"
+    ],
+    "outbound": [
+      "fabricops_kit.config.resolve_fabric_context",
+      "fabricops_kit.governance_review._filter_table_rows",
+      "fabricops_kit.governance_review._read_metadata_table_or_empty",
+      "fabricops_kit.governance_review.resolve_table_governance_policy",
+      "fabricops_kit.metadata._build_metadata_table_key"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 1990,
+    "source_end_line": 2071,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
+    "docs_path": null,
+    "summary": "Render an interactive guardrail target selector and return handover state.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark_session : Any\n    Spark session for metadata reads.\ncontext : dict, optional\n    Advanced override context. Defaults to the active ``FABRIC_CONTEXT``\n    initialized by ``00_env_config``.",
+    "output": "dict[str, Any]\n    Mutable handover state containing table identity, catalogue profile rows,\n    existing rules, and effective table governance policy. The returned\n    state updates when the user changes the selected target.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_select_guardrail_target",
+      "resolve_fabric_context",
+      "_filter_table_rows",
+      "_read_metadata_table_or_empty",
+      "resolve_table_governance_policy",
+      "_build_metadata_table_key"
     ]
   },
   {
@@ -5689,6 +5911,54 @@
     ]
   },
   {
+    "name": "_latest_metadata_catalogue_lookup_workflow",
+    "qualified_name": "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.governance_review.get_latest_metadata_catalogue"
+    ],
+    "outbound": [
+      "fabricops_kit.config.resolve_fabric_context",
+      "fabricops_kit.governance_review._catalogue_lookup_value",
+      "fabricops_kit.governance_review._coerce_rows",
+      "fabricops_kit.io_core.configured_lakehouse_schema",
+      "fabricops_kit.io_core.read_lakehouse_table_core"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 96,
+    "source_end_line": 194,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L96-L194",
+    "docs_path": null,
+    "summary": "Return the latest metadata catalogue rows for an exploratory table lookup.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "table_name : str\n    Source table name to look up in ``METADATA_DATA_CATALOGUE``.\nagreement : mapping, optional\n    Selected agreement context from :func:`get_selected_agreement`. When an\n    agreement id or contract version is present, matching catalogue rows are\n    preferred.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema from ``00_env_config``. When omitted,\n    the configured metadata schema is resolved from the active context.\nspark_session : Any, optional\n    Spark session used to read metadata and return display-friendly rows.\ncontext : dict, optional\n    Advanced FabricOps context override. Defaults to the active\n    ``FABRIC_CONTEXT`` initialized by ``00_env_config``.",
+    "output": "Any\n    A Spark DataFrame when ``spark_session`` can create one; otherwise a\n    list of dictionaries. Existing catalogue rows are limited to the latest\n    profile group for the table. Missing metadata returns one friendly\n    ``not_found`` row instead of raising.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "get_latest_metadata_catalogue",
+      "resolve_fabric_context",
+      "_catalogue_lookup_value",
+      "_coerce_rows",
+      "configured_lakehouse_schema",
+      "read_lakehouse_table_core"
+    ]
+  },
+  {
     "name": "_latest_row",
     "qualified_name": "fabricops_kit.governance_review._latest_row",
     "module": "governance_review",
@@ -5736,8 +6006,8 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_author_dq_rules",
-      "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
+      "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+      "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -5763,8 +6033,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_author_dq_rules",
-      "widget_author_schema_freshness_profile_rules"
+      "_dq_rule_authoring_widget_workflow",
+      "_schema_freshness_profile_rule_authoring_widget_workflow"
     ]
   },
   {
@@ -6036,7 +6306,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_select_guardrail_target"
+      "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._coerce_rows",
@@ -6067,7 +6337,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_select_guardrail_target",
+      "_guardrail_target_selection_widget_workflow",
       "_coerce_rows",
       "_is_table_not_found_error",
       "configured_lakehouse_schema",
@@ -6121,7 +6391,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -6147,7 +6417,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_enrich_table_metadata"
+      "_table_metadata_enrichment_widget_workflow"
     ]
   },
   {
@@ -6158,8 +6428,8 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_author_dq_rules",
-      "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
+      "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+      "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -6185,8 +6455,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_author_dq_rules",
-      "widget_author_schema_freshness_profile_rules"
+      "_dq_rule_authoring_widget_workflow",
+      "_schema_freshness_profile_rule_authoring_widget_workflow"
     ]
   },
   {
@@ -6341,7 +6611,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
+      "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._base_guardrail_rule_record"
@@ -6369,8 +6639,56 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_author_schema_freshness_profile_rules",
+      "_schema_freshness_profile_rule_authoring_widget_workflow",
       "_base_guardrail_rule_record"
+    ]
+  },
+  {
+    "name": "_schema_freshness_profile_rule_authoring_widget_workflow",
+    "qualified_name": "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
+    ],
+    "outbound": [
+      "fabricops_kit.config.resolve_fabric_context",
+      "fabricops_kit.governance_review._latest_rule",
+      "fabricops_kit.governance_review._rule_params",
+      "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
+      "fabricops_kit.governance_review._write_rule_records"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 2143,
+    "source_end_line": 2288,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
+    "docs_path": null,
+    "summary": "Render interactive schema, freshness, and profile behavior authoring UI.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "state : mapping\n    Handover state from :func:`widget_select_guardrail_target`.\nspark_session : Any, optional\n    Spark session used for save actions.\ncontext : dict[str, Any], optional\n    Advanced override for the active Fabric context. When omitted, the\n    helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.\nbypass_reason : str, optional\n    Initial approval-bypass reason.\nsource_notebook_type : {\"02_pipeline\", \"03_governance\"}, default=\"02_pipeline\"\n    Notebook type stamped on authored records.\ncreated_by_role : {\"engineering\", \"governance\", \"system\"}, default=\"engineering\"\n    Role stamped on authored records.\ncommit : bool, default=False\n    Whether to save the initial generated records immediately.",
+    "output": "dict[str, Any]\n    Widget state containing controls, generated records, and callable\n    ``build_records``/``save`` helpers for tests and notebook automation.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_author_schema_freshness_profile_rules",
+      "resolve_fabric_context",
+      "_latest_rule",
+      "_rule_params",
+      "_schema_freshness_profile_records_from_selection",
+      "_write_rule_records"
     ]
   },
   {
@@ -6381,7 +6699,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._value"
@@ -6409,7 +6727,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_enrich_table_metadata",
+      "_table_metadata_enrichment_widget_workflow",
       "_value"
     ]
   },
@@ -6617,6 +6935,60 @@
     ]
   },
   {
+    "name": "_table_metadata_enrichment_widget_workflow",
+    "qualified_name": "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+    "module": "governance_review",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+    ],
+    "outbound": [
+      "fabricops_kit.config.resolve_fabric_context",
+      "fabricops_kit.governance_review._collect_enrichment_extra_fields",
+      "fabricops_kit.governance_review._enrichment_options",
+      "fabricops_kit.governance_review._render_enrichment_extra_fields",
+      "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
+      "fabricops_kit.governance_review._value",
+      "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
+      "fabricops_kit.governance_review.build_enrichment_rule_records"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/governance_review.py",
+    "source_start_line": 704,
+    "source_end_line": 838,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
+    "docs_path": null,
+    "summary": "Render one consolidated governed table metadata enrichment widget.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "guardrail_state : Mapping[str, Any]\n    Target handover state returned by :func:`widget_select_guardrail_target`.\nspark_session : Any\n    Spark session used to create write DataFrames.\ncontext : dict[str, Any], optional\n    Advanced override for the active Fabric context. When omitted, the\n    helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.\nsource_notebook_type : {\"02_pipeline\", \"03_governance\"}, default=\"02_pipeline\"\n    Notebook type stamped on authored records.\ncreated_by_role : {\"engineering\", \"governance\", \"system\"}, default=\"engineering\"\n    Role stamped on authored records.",
+    "output": "dict[str, Any]\n    Widget state with rendered row controls, record builders, and save\n    callbacks. Saves write reviewable enrichment intent to\n    ``METADATA_ENRICHMENT_RULES``. The widget does not write to removed\n    split enrichment metadata tables and uses the same approval lifecycle as\n    guardrail rules.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "widget_enrich_table_metadata",
+      "resolve_fabric_context",
+      "_collect_enrichment_extra_fields",
+      "_enrichment_options",
+      "_render_enrichment_extra_fields",
+      "_selected_catalogue_rows_for_enrichment",
+      "_value",
+      "_write_table_metadata_enrichment_records",
+      "build_enrichment_rule_records"
+    ]
+  },
+  {
     "name": "_validate_dq_rules",
     "qualified_name": "fabricops_kit.governance_review._validate_dq_rules",
     "module": "governance_review",
@@ -6680,8 +7052,8 @@
       "fabricops_kit.governance_review._is_success",
       "fabricops_kit.governance_review._latest_row",
       "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
-      "fabricops_kit.governance_review.load_catalogue_profile_rows",
-      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+      "fabricops_kit.governance_review.load_catalogue_profile_rows"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -6715,8 +7087,8 @@
       "_is_success",
       "_latest_row",
       "_selected_catalogue_rows_for_enrichment",
-      "load_catalogue_profile_rows",
-      "widget_enrich_table_metadata"
+      "_table_metadata_enrichment_widget_workflow",
+      "load_catalogue_profile_rows"
     ]
   },
   {
@@ -6764,8 +7136,8 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review.widget_author_dq_rules",
-      "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules"
+      "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
+      "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -6794,8 +7166,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_author_dq_rules",
-      "widget_author_schema_freshness_profile_rules",
+      "_dq_rule_authoring_widget_workflow",
+      "_schema_freshness_profile_rule_authoring_widget_workflow",
       "configured_lakehouse_schema",
       "write_lakehouse_table_core"
     ]
@@ -6808,8 +7180,8 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.governance_review._write_enrichment_records",
-      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+      "fabricops_kit.governance_review._write_enrichment_records"
     ],
     "outbound": [
       "fabricops_kit.io_core.configured_lakehouse_schema",
@@ -6838,8 +7210,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "_table_metadata_enrichment_widget_workflow",
       "_write_enrichment_records",
-      "widget_enrich_table_metadata",
       "configured_lakehouse_schema",
       "write_lakehouse_table_core"
     ]
@@ -6852,7 +7224,7 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
-      "fabricops_kit.governance_review.widget_review_guardrail_governance"
+      "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._assert_governance_review_context",
@@ -6883,7 +7255,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_review_guardrail_governance",
+      "_guardrail_governance_review_widget_workflow",
       "_assert_governance_review_context",
       "_record_identity",
       "_now_utc_iso",
@@ -6898,7 +7270,7 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
-      "fabricops_kit.governance_review.widget_review_guardrail_governance"
+      "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._assert_governance_review_context",
@@ -6929,7 +7301,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_review_guardrail_governance",
+      "_guardrail_governance_review_widget_workflow",
       "_assert_governance_review_context",
       "_record_identity",
       "_now_utc_iso",
@@ -6944,8 +7316,8 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
-      "fabricops_kit.governance_review.record_table_governance",
-      "fabricops_kit.governance_review.widget_enrich_table_metadata"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+      "fabricops_kit.governance_review.record_table_governance"
     ],
     "outbound": [
       "fabricops_kit.governance_review._approved_column_identity",
@@ -6978,8 +7350,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "_table_metadata_enrichment_widget_workflow",
       "record_table_governance",
-      "widget_enrich_table_metadata",
       "_approved_column_identity",
       "_approved_review_context",
       "_enrichment_payload_from_review",
@@ -7041,11 +7413,7 @@
     "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review._catalogue_lookup_value",
-      "fabricops_kit.governance_review._coerce_rows",
-      "fabricops_kit.io_core.configured_lakehouse_schema",
-      "fabricops_kit.io_core.read_lakehouse_table_core"
+      "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow"
     ],
     "used_in_templates": [
       "99_explore"
@@ -7058,9 +7426,9 @@
     "expanded_purpose": "Fetches existing METADATA_DATA_CATALOGUE evidence for a selected table and agreement context so 99_explore can stay context-aware and read-only.",
     "when_to_use": "Use in 99_explore for discovery, profiling, troubleshooting, or investigation when existing catalogue context may help.",
     "source_file": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 96,
-    "source_end_line": 194,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L96-L194",
+    "source_start_line": 2675,
+    "source_end_line": 2690,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2675-L2690",
     "docs_path": "api/reference/get_latest_metadata_catalogue.md",
     "summary": "Fetch the latest metadata catalogue rows for a table without writing metadata.",
     "use_when": "Use in 99_explore for discovery, profiling, troubleshooting, or investigation when existing catalogue context may help.",
@@ -7188,7 +7556,7 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
-      "fabricops_kit.governance_review.widget_review_guardrail_governance"
+      "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -7214,7 +7582,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_review_guardrail_governance"
+      "_guardrail_governance_review_widget_workflow"
     ]
   },
   {
@@ -7348,7 +7716,7 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
-      "fabricops_kit.governance_review.widget_select_guardrail_target"
+      "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._coerce_rows"
@@ -7376,7 +7744,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "widget_select_guardrail_target",
+      "_guardrail_target_selection_widget_workflow",
       "_coerce_rows"
     ]
   },
@@ -7389,11 +7757,7 @@
     "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review._dq_records_from_selection",
-      "fabricops_kit.governance_review._latest_rule",
-      "fabricops_kit.governance_review._rule_params",
-      "fabricops_kit.governance_review._write_rule_records"
+      "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow"
     ],
     "used_in_templates": [
       "02_pipeline",
@@ -7408,9 +7772,9 @@
     "expanded_purpose": "Renders manual DQ authoring controls that produce editable guardrail rule intent rows under the selected table governance policy.",
     "when_to_use": "Use in 02_pipeline after target selection when engineering needs to batch-create, edit, clear, or draft DQ guardrail rules.",
     "source_file": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 2329,
-    "source_end_line": 2497,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2329-L2497",
+    "source_start_line": 2738,
+    "source_end_line": 2767,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2738-L2767",
     "docs_path": "api/reference/widget_author_dq_rules.md",
     "summary": "Render interactive manual DQ guardrail authoring controls.",
     "use_when": "Use in 02_pipeline after target selection when engineering needs to batch-create, edit, clear, or draft DQ guardrail rules.",
@@ -7439,11 +7803,7 @@
     "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review._latest_rule",
-      "fabricops_kit.governance_review._rule_params",
-      "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
-      "fabricops_kit.governance_review._write_rule_records"
+      "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow"
     ],
     "used_in_templates": [
       "02_pipeline",
@@ -7458,9 +7818,9 @@
     "expanded_purpose": "Renders interactive controls for authoring schema, freshness, and profile-behavior guardrail rule intent while applying the selected table governance policy.",
     "when_to_use": "Use in 02_pipeline after selecting a guardrail target to save active self-approved rules, submit proposed rules, or bypass approval with a required reason.",
     "source_file": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 2143,
-    "source_end_line": 2288,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2143-L2288",
+    "source_start_line": 2716,
+    "source_end_line": 2735,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2716-L2735",
     "docs_path": "api/reference/widget_author_schema_freshness_profile_rules.md",
     "summary": "Render interactive schema, freshness, and profile-behavior guardrail authoring controls.",
     "use_when": "Use in 02_pipeline after selecting a guardrail target to save active self-approved rules, submit proposed rules, or bypass approval with a required reason.",
@@ -7489,14 +7849,7 @@
     "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review._collect_enrichment_extra_fields",
-      "fabricops_kit.governance_review._enrichment_options",
-      "fabricops_kit.governance_review._render_enrichment_extra_fields",
-      "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
-      "fabricops_kit.governance_review._value",
-      "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-      "fabricops_kit.governance_review.build_enrichment_rule_records"
+      "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow"
     ],
     "used_in_templates": [
       "02_pipeline",
@@ -7510,9 +7863,9 @@
     "expanded_purpose": "Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.",
     "when_to_use": "Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.",
     "source_file": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 704,
-    "source_end_line": 838,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L704-L838",
+    "source_start_line": 2693,
+    "source_end_line": 2708,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2693-L2708",
     "docs_path": "api/reference/widget_enrich_table_metadata.md",
     "summary": "Render a consolidated column enrichment widget.",
     "use_when": "Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.",
@@ -7541,10 +7894,7 @@
     "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review.apply_governance_enrichment_action",
-      "fabricops_kit.governance_review.apply_governance_rule_action",
-      "fabricops_kit.governance_review.load_rule_review_history"
+      "fabricops_kit.governance_review._guardrail_governance_review_widget_workflow"
     ],
     "used_in_templates": [
       "02_pipeline",
@@ -7558,9 +7908,9 @@
     "expanded_purpose": "Renders governance review controls for reviewing proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or supersede actions.",
     "when_to_use": "Use in 03_governance after selecting a guardrail target to perform human review of enrichment and guardrail rule intent.",
     "source_file": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 2568,
-    "source_end_line": 2668,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2568-L2668",
+    "source_start_line": 2770,
+    "source_end_line": 2772,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2770-L2772",
     "docs_path": "api/reference/widget_review_guardrail_governance.md",
     "summary": "Render interactive controls for reviewing proposed and bypassed guardrail rules.",
     "use_when": "Use in 03_governance after selecting a guardrail target to perform human review of enrichment and guardrail rule intent.",
@@ -7589,11 +7939,7 @@
     "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.governance_review._filter_table_rows",
-      "fabricops_kit.governance_review._read_metadata_table_or_empty",
-      "fabricops_kit.governance_review.resolve_table_governance_policy",
-      "fabricops_kit.metadata._build_metadata_table_key"
+      "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow"
     ],
     "used_in_templates": [
       "02_pipeline",
@@ -7608,9 +7954,9 @@
     "expanded_purpose": "Renders an interactive selector that reads catalogue profiles, existing guardrail rules, and table governance policy to create the handover state for guardrail authoring or review.",
     "when_to_use": "Use at the start of 02_pipeline authoring or 03_governance review when a user must choose which profiled table to work on.",
     "source_file": "src/fabricops_kit/governance_review.py",
-    "source_start_line": 1990,
-    "source_end_line": 2071,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1990-L2071",
+    "source_start_line": 2711,
+    "source_end_line": 2713,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2711-L2713",
     "docs_path": "api/reference/widget_select_guardrail_target.md",
     "summary": "Render an interactive target selector for guardrail authoring and governance review.",
     "use_when": "Use at the start of 02_pipeline authoring or 03_governance review when a user must choose which profiled table to work on.",
@@ -10164,12 +10510,12 @@
     "inbound": [
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
       "fabricops_kit.data_agreement._write_row",
+      "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
       "fabricops_kit.governance_review._read_guardrail_rule_metadata",
       "fabricops_kit.governance_review._read_metadata_rows",
       "fabricops_kit.governance_review._read_metadata_table_or_empty",
       "fabricops_kit.governance_review._write_rule_records",
       "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
-      "fabricops_kit.governance_review.get_latest_metadata_catalogue",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
       "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.guardrails.enforce_profile_behavior",
@@ -10209,12 +10555,12 @@
     "related_functions": [
       "_list_all_data_agreement_rows",
       "_write_row",
+      "_latest_metadata_catalogue_lookup_workflow",
       "_read_guardrail_rule_metadata",
       "_read_metadata_rows",
       "_read_metadata_table_or_empty",
       "_write_rule_records",
       "_write_table_metadata_enrichment_records",
-      "get_latest_metadata_catalogue",
       "load_catalogue_profile_rows",
       "record_table_governance",
       "enforce_profile_behavior",
@@ -10381,10 +10727,10 @@
       "fabricops_kit.data_agreement._list_all_data_agreement_rows",
       "fabricops_kit.data_agreement._list_data_stewards",
       "fabricops_kit.fabric_input_output.read_lakehouse_table",
+      "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
       "fabricops_kit.governance_review._read_guardrail_rule_metadata",
       "fabricops_kit.governance_review._read_metadata_rows",
       "fabricops_kit.governance_review._read_metadata_table_or_empty",
-      "fabricops_kit.governance_review.get_latest_metadata_catalogue",
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
       "fabricops_kit.guardrails.enforce_profile_behavior",
       "fabricops_kit.metadata._load_notebook_registry"
@@ -10423,10 +10769,10 @@
       "_list_all_data_agreement_rows",
       "_list_data_stewards",
       "read_lakehouse_table",
+      "_latest_metadata_catalogue_lookup_workflow",
       "_read_guardrail_rule_metadata",
       "_read_metadata_rows",
       "_read_metadata_table_or_empty",
-      "get_latest_metadata_catalogue",
       "load_catalogue_profile_rows",
       "enforce_profile_behavior",
       "_load_notebook_registry",
@@ -10740,7 +11086,7 @@
       "fabricops_kit.governance_review._base_guardrail_rule_record",
       "fabricops_kit.governance_review._catalogue_physical_identity",
       "fabricops_kit.governance_review._evaluate_governance_readiness",
-      "fabricops_kit.governance_review.widget_select_guardrail_target",
+      "fabricops_kit.governance_review._guardrail_target_selection_widget_workflow",
       "fabricops_kit.pipeline.run_table_guardrails",
       "fabricops_kit.pipeline.write_catalogue_evidence",
       "fabricops_kit.pipeline.write_pipeline_lineage"
@@ -10775,7 +11121,7 @@
       "_base_guardrail_rule_record",
       "_catalogue_physical_identity",
       "_evaluate_governance_readiness",
-      "widget_select_guardrail_target",
+      "_guardrail_target_selection_widget_workflow",
       "run_table_guardrails",
       "write_catalogue_evidence",
       "write_pipeline_lineage",
