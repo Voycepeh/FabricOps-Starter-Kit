@@ -29,6 +29,10 @@ _ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "active_
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
 
+# ---------------------------------------------------------------------------
+# Resolver layer
+# ---------------------------------------------------------------------------
+
 def _rule_review_status(row: dict) -> str:
     return _string_value(_catalogue_value(row, "review_state", "review_status")).lower()
 
@@ -79,6 +83,10 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
     return candidates[0]
 
 
+# ---------------------------------------------------------------------------
+# Normalizer layer
+# ---------------------------------------------------------------------------
+
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     if rule and _rule_review_status(rule) == "active_pending_governance_review":
         reason = str(result.get("reason") or result.get("message") or "")
@@ -88,6 +96,10 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
         result["bypass_warning"] = _BYPASS_POST_REVIEW_WARNING
     return result
 
+
+# ---------------------------------------------------------------------------
+# Internal workflow layer
+# ---------------------------------------------------------------------------
 
 def _check_schema_rule_runtime(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
     """Apply an internal runtime schema rule check for ``run_table_guardrails``.
@@ -131,6 +143,10 @@ def enforce_freshness_rule(dataframe, rules_df, *, dataset_name: str, table_name
     return _apply_bypass_post_review_warning(result, rule)
 
 
+# ---------------------------------------------------------------------------
+# Public/shared guardrail exception model
+# ---------------------------------------------------------------------------
+
 class SchemaDriftError(Exception):
     """Raised when a guardrail check is configured to stop execution.
 
@@ -141,6 +157,10 @@ class SchemaDriftError(Exception):
 
     """
 
+
+# ---------------------------------------------------------------------------
+# Schema resolver and normalizer helpers
+# ---------------------------------------------------------------------------
 
 def _normalize_datatype(data_type) -> str:
     raw = str(data_type).strip().lower()
@@ -309,6 +329,10 @@ def _accepted_profile_rows(catalogue_df, *, environment_name: str, dataset_name:
 
 _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 
+
+# ---------------------------------------------------------------------------
+# Validator layer
+# ---------------------------------------------------------------------------
 
 def _check_schema_runtime(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
     """Apply an internal runtime schema check for ``run_table_guardrails``.
@@ -670,6 +694,10 @@ def enforce_freshness(
     return base_result
 
 
+# ---------------------------------------------------------------------------
+# Utility layer
+# ---------------------------------------------------------------------------
+
 def _catalogue_value(row: dict, *names: str):
     for name in names:
         if name in row:
@@ -687,6 +715,10 @@ def _catalogue_value(row: dict, *names: str):
 def _string_value(value) -> str:
     return "" if value is None else str(value)
 
+
+# ---------------------------------------------------------------------------
+# Internal workflow layer
+# ---------------------------------------------------------------------------
 
 def enforce_profile_behavior(
     spark,
@@ -917,6 +949,10 @@ def _is_missing_table_error(exc: Exception) -> bool:
     patterns = ["not found", "table or view not found", "no such table", "cannot resolve", "missing"]
     return any(pattern in text for pattern in patterns)
 
+
+# ---------------------------------------------------------------------------
+# Public API layer
+# ---------------------------------------------------------------------------
 
 def stop_if_failed(result) -> None:
     """Stop notebook execution when a guardrail result is blocking.

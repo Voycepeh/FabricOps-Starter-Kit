@@ -52,7 +52,7 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
     </tr>
     <tr>
       <td>External modules using this module</td>
-      <td><code>DataAgreementConfig</code>, <code>FrameworkConfig</code>, <code>GovernanceConfig</code>, <code>data_agreement</code>, <code>data_lineage</code>, <code>data_profiling</code>, <code>governance_review</code>, <code>io_core</code>, <code>metadata</code>, <code>pipeline</code></td>
+      <td><code>DataAgreementConfig</code>, <code>FrameworkConfig</code>, <code>GovernanceConfig</code>, <code>_profiling_workflows</code>, <code>data_agreement</code>, <code>data_lineage</code>, <code>governance_review</code>, <code>io_core</code>, <code>metadata</code>, <code>pipeline</code></td>
     </tr>
     <tr>
       <td>External modules this module uses</td>
@@ -332,14 +332,14 @@ Owns environment setup, runtime initialization, paths, and notebook-wide configu
 
 ### External callers
 
+**_profiling_workflows**
+<a class="reference-chip" href="_profiling_workflows/#profile_dataframe_core"><code>profile_dataframe_core</code></a>
+
 **data_agreement**
 <a class="reference-chip" href="../reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a>, <a class="reference-chip" href="../reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a>, <a class="reference-chip" href="../reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a>, <a class="reference-chip" href="data_agreement/#widget_select_agreement"><code>widget_select_agreement</code></a>
 
 **data_lineage**
 <a class="reference-chip" href="data_lineage/#_build_lineage_records"><code>_build_lineage_records</code></a>
-
-**data_profiling**
-<a class="reference-chip" href="data_profiling/#profile_dataframe_core"><code>profile_dataframe_core</code></a>
 
 **governance_review**
 <a class="reference-chip" href="governance_review/#_dq_rule_authoring_widget_workflow"><code>_dq_rule_authoring_widget_workflow</code></a>, <a class="reference-chip" href="governance_review/#_dq_summary"><code>_dq_summary</code></a>, <a class="reference-chip" href="governance_review/#_guardrail_governance_review_widget_workflow"><code>_guardrail_governance_review_widget_workflow</code></a>, <a class="reference-chip" href="governance_review/#_guardrail_target_selection_widget_workflow"><code>_guardrail_target_selection_widget_workflow</code></a>, <a class="reference-chip" href="governance_review/#_latest_metadata_catalogue_lookup_workflow"><code>_latest_metadata_catalogue_lookup_workflow</code></a>, <a class="reference-chip" href="governance_review/#_prepare_dq_profile_input_rows"><code>_prepare_dq_profile_input_rows</code></a>, <a class="reference-chip" href="governance_review/#_schema_freshness_profile_rule_authoring_widget_workflow"><code>_schema_freshness_profile_rule_authoring_widget_workflow</code></a>, <a class="reference-chip" href="governance_review/#_table_metadata_enrichment_widget_workflow"><code>_table_metadata_enrichment_widget_workflow</code></a>

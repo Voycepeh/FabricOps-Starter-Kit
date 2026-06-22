@@ -51,7 +51,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 
   <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT -->26 public Starter Kit functions<!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body">Supported by <!-- FABRICOPS_INTERNAL_FUNCTION_COUNT -->284 supporting internal functions<!-- /FABRICOPS_INTERNAL_FUNCTION_COUNT -->.</span>
+    <span class="fabricops-landing-card__body">Supported by <!-- FABRICOPS_INTERNAL_FUNCTION_COUNT -->285 supporting internal functions<!-- /FABRICOPS_INTERNAL_FUNCTION_COUNT -->.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
