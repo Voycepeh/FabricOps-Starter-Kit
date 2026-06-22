@@ -245,6 +245,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "callable-functions-inventory.html" in dashboard_text
     assert "data-public-flow" in dashboard_text
     assert 'href="${esc(flow.source_url' not in dashboard_text
+    assert '<button type=\"button\" class=\"callable-button\" data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert "decisionSearchBox" in dashboard_text
     assert "decisionModuleFilter" in dashboard_text
@@ -296,6 +297,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Search/filter all callables, select rows, and export AI refactor packets." in inventory_text
     assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
+    assert "function sourceCallableLink(i)" in inventory_text
+    assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
+    assert "i.source_url" in inventory_text
+    assert "GITHUB_SOURCE_BASE" in inventory_text
+    assert "<td>${sourceCallableLink(i)}</td>" in inventory_text
+    assert "data-select-row" in inventory_text
+    assert "selectAllVisible" in inventory_text
+    assert "copyJson" in inventory_text
+    assert "copyMarkdown" in inventory_text
+    assert "downloadJson" in inventory_text
     assert "searchBox" in inventory_text
     assert "kindFilter" in inventory_text
     assert "typeFilter" in inventory_text
