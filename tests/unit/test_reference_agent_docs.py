@@ -81,16 +81,16 @@ def test_landing_page_counts_match_generated_stats() -> None:
     index_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
 
     assert "<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>" in index_text
-    assert "</strong><span> public callables,</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
+    assert "</strong><span> public callables</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
     assert "FABRICOPS_CALLABLE_RECORD_COUNT" in index_text
     assert "Callable metrics are generated from the callable inventory data." in index_text
     assert "283 supporting internal functions" not in index_text
     assert "supporting internal functions" not in index_text
 
     expected = {
-        "FABRICOPS_PUBLIC_FUNCTION_COUNT": f"{stats['public_function_count']} public callables,",
+        "FABRICOPS_PUBLIC_FUNCTION_COUNT": f"{stats['public_function_count']} public callables",
         "FABRICOPS_CALLABLE_RECORD_COUNT": (
-            f"supported by {stats['supporting_function_count']} functions and "
+            f"Supported by {stats['supporting_function_count']} functions and "
             f"{stats['non_function_record_count']} non-function records"
         ),
         "FABRICOPS_METADATA_TABLE_COUNT": f"{stats['metadata_table_count']} metadata tables",

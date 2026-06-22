@@ -3834,7 +3834,7 @@ def _landing_count_text(count: int, label: str) -> str:
 def _landing_callable_support_text(supporting_functions: int, non_function_records: int) -> str:
     """Return landing-page callable support text from canonical inventory metrics."""
     return (
-        f"supported by <strong>{supporting_functions}</strong><span> functions and </span>"
+        f"Supported by <strong>{supporting_functions}</strong><span> functions and </span>"
         f"<strong>{non_function_records}</strong><span> non-function records</span>"
     )
 
@@ -3867,7 +3867,7 @@ def update_landing_page_counts(stats: dict[str, int]) -> None:
     text = LANDING_PAGE_PATH.read_text(encoding="utf-8")
     replacements = {
         "FABRICOPS_PUBLIC_FUNCTION_COUNT": _landing_count_text(
-            stats["public_function_count"], " public callables,"
+            stats["public_function_count"], " public callables"
         ),
         "FABRICOPS_CALLABLE_RECORD_COUNT": _landing_callable_support_text(
             stats["supporting_function_count"], stats["non_function_record_count"]
