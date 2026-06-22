@@ -180,15 +180,19 @@
   box-shadow: 0 1px 0 color-mix(in srgb, rgb(99, 102, 241) 18%, transparent);
 }
 
+.reference-kpi-card strong,
 .reference-kpi-value {
-  margin: 0;
+  display: block;
+  margin: 0 0 0.25rem;
   color: var(--md-primary-fg-color);
   font-size: 1.9rem;
   font-weight: 700;
   line-height: 1;
 }
 
+.reference-kpi-card span,
 .reference-kpi-title {
+  display: block;
   margin: 0.35rem 0 0;
   font-size: 1rem;
   line-height: 1.25;
