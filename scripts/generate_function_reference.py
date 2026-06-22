@@ -4451,10 +4451,6 @@ def main() -> None:
             f'title="Open {module} module page" aria-label="Open {module} module page">{_esc(module)}</a>'
         )
 
-    supporting_internal_count = len([
-        node for node in node_by_qn.values()
-        if not node.get("exported") and node["callable_name"] in module_data[node["module_name"]]["functions"]
-    ])
 
     public_flow_qns = sorted(
         [qn for qn, node in node_by_qn.items() if node.get("exported")],

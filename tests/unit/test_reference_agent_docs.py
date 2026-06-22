@@ -242,8 +242,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
     inventory_text = inventory_path.read_text(encoding="utf-8")
     reference_text = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
-    api_chips_css = (ROOT / "docs" / "stylesheets" / "api-chips.css").read_text(encoding="utf-8")
-    fabric_theme_css = (ROOT / "docs" / "stylesheets" / "fabric-theme.css").read_text(encoding="utf-8")
 
     assert "Callable Architecture" in dashboard_text
     assert "Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations." in dashboard_text
