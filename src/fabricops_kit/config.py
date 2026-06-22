@@ -23,6 +23,11 @@ DEFAULT_AUDIT_TIMEZONE = "UTC"
 _DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
 
 
+# ---------------------------------------------------------------------------
+# Resolver layer: Fabric runtime context
+# ---------------------------------------------------------------------------
+
+
 def get_default_fabric_context() -> dict[str, Any]:
     """Return the active Fabric context created by ``00_env_config``.
 
@@ -161,6 +166,11 @@ def resolve_fabric_context(
     return config, str(resolved_env), resolved
 
 
+# ---------------------------------------------------------------------------
+# Validator layer: audit and framework validation
+# ---------------------------------------------------------------------------
+
+
 def _validate_audit_timezone(timezone_name: str | None) -> str:
     """Return a valid IANA audit timezone name.
 
@@ -196,6 +206,11 @@ def _validate_audit_timezone(timezone_name: str | None) -> str:
     return value
 
 
+# ---------------------------------------------------------------------------
+# Utility and resolver layer: audit timestamps
+# ---------------------------------------------------------------------------
+
+
 def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
     """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
     if timezone_name is not None:
@@ -221,6 +236,11 @@ def _audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
 
     tz_name = _get_audit_timezone(config, timezone_name)
     return F.current_timestamp() if tz_name == "UTC" else F.from_utc_timestamp(F.current_timestamp(), tz_name)
+
+
+# ---------------------------------------------------------------------------
+# Model layer: config dataclasses and setup result dataclasses
+# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
@@ -297,6 +317,11 @@ class QualityConfig:
         object.__setattr__(self, "default_severity", severity)
         object.__setattr__(self, "fail_on_critical", bool(self.fail_on_critical))
         object.__setattr__(self, "quarantine_on_failure", bool(self.quarantine_on_failure))
+
+
+# ---------------------------------------------------------------------------
+# Normalizer layer: widget configuration
+# ---------------------------------------------------------------------------
 
 
 def _normalize_widget_config(widget: dict[str, Any] | None) -> dict[str, Any]:
@@ -636,6 +661,11 @@ def _validate_framework_config(config: FrameworkConfig | dict[str, Any]) -> Fram
     return normalized
 
 
+# ---------------------------------------------------------------------------
+# Normalizer and resolver layer: paths and stores
+# ---------------------------------------------------------------------------
+
+
 def _normalize_path_config(config: Any | None, *, require_paths: bool = True) -> PathConfig:
     """Return the shared runtime path configuration for accepted config shapes."""
     if config is None:
@@ -721,6 +751,11 @@ def _get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | Non
     return paths[env][target]
 
 
+# ---------------------------------------------------------------------------
+# Validator layer: notebook naming
+# ---------------------------------------------------------------------------
+
+
 def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None = None) -> list[str]:
     name = "_".join(str(notebook_name or "").strip().lower().split())
     patterns = [
@@ -733,6 +768,11 @@ def _validate_notebook_name(notebook_name: str, config: FrameworkConfig | None =
     if any(__import__("re").match(p, name) for p in patterns):
         return []
     return ["Notebook name does not match accepted FabricOps naming patterns."]
+
+
+# ---------------------------------------------------------------------------
+# Internal workflow layer: config smoke tests
+# ---------------------------------------------------------------------------
 
 
 def _run_config_smoke_tests(
@@ -838,7 +878,12 @@ def _run_config_smoke_tests(
     return results
 
 
-def setup_notebook(
+# ---------------------------------------------------------------------------
+# Internal workflow layer: notebook setup
+# ---------------------------------------------------------------------------
+
+
+def _setup_notebook_workflow(
     config: FrameworkConfig | dict[str, Any],
     env: str = "Sandbox",
     required_targets: list[str] | None = None,
@@ -846,45 +891,7 @@ def setup_notebook(
     run_id_prefix: str = "run",
     local_fallback_name: str | None = None,
 ) -> NotebookSetupContext:
-    """Run consolidated FabricOps startup for delivery and optional support notebooks.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict[str, Any]
-        Framework configuration object or compatible mapping. The setup flow
-        validates required sections and configured Fabric targets before
-        running readiness checks.
-    env : str, default="Sandbox"
-        Environment key used to resolve target paths.
-    required_targets : list[str] | None, optional
-        Target names that must resolve for ``env``. Defaults to
-        ``["Source", "Unified"]``.
-    notebook_name : str | None, optional
-        Explicit notebook name used for runtime metadata and naming checks.
-    run_id_prefix : str, default="run"
-        Prefix used when a Fabric runtime run identifier is unavailable.
-    local_fallback_name : str | None, optional
-        Notebook name used when neither ``notebook_name`` nor Fabric runtime
-        context provides one.
-
-    Returns
-    -------
-    NotebookSetupContext
-        Validated runtime context with resolved paths, smoke-check results,
-        runtime metadata, and overall readiness status.
-
-    Raises
-    ------
-    ValueError
-        Raised when config sections are invalid or required targets cannot be
-        resolved for the selected environment.
-
-    Notes
-    -----
-    Validation and smoke checks are local to notebook startup. This helper does
-    not provision Fabric resources or persist metadata.
-
-    """
+    """Own setup_notebook orchestration behind the frozen public API."""
     from uuid import uuid4
     from datetime import datetime, timezone
 
@@ -949,6 +956,73 @@ def setup_notebook(
         runtime_metadata=runtime_meta,
         readiness_status=readiness_status,
     )
+
+
+# ---------------------------------------------------------------------------
+# Public API layer
+# ---------------------------------------------------------------------------
+
+
+def setup_notebook(
+    config: FrameworkConfig | dict[str, Any],
+    env: str = "Sandbox",
+    required_targets: list[str] | None = None,
+    notebook_name: str | None = None,
+    run_id_prefix: str = "run",
+    local_fallback_name: str | None = None,
+) -> NotebookSetupContext:
+    """Run consolidated FabricOps startup for delivery and optional support notebooks.
+
+    Parameters
+    ----------
+    config : FrameworkConfig | dict[str, Any]
+        Framework configuration object or compatible mapping. The setup flow
+        validates required sections and configured Fabric targets before
+        running readiness checks.
+    env : str, default="Sandbox"
+        Environment key used to resolve target paths.
+    required_targets : list[str] | None, optional
+        Target names that must resolve for ``env``. Defaults to
+        ``["Source", "Unified"]``.
+    notebook_name : str | None, optional
+        Explicit notebook name used for runtime metadata and naming checks.
+    run_id_prefix : str, default="run"
+        Prefix used when a Fabric runtime run identifier is unavailable.
+    local_fallback_name : str | None, optional
+        Notebook name used when neither ``notebook_name`` nor Fabric runtime
+        context provides one.
+
+    Returns
+    -------
+    NotebookSetupContext
+        Validated runtime context with resolved paths, smoke-check results,
+        runtime metadata, and overall readiness status.
+
+    Raises
+    ------
+    ValueError
+        Raised when config sections are invalid or required targets cannot be
+        resolved for the selected environment.
+
+    Notes
+    -----
+    Validation and smoke checks are local to notebook startup. This helper does
+    not provision Fabric resources or persist metadata.
+
+    """
+    return _setup_notebook_workflow(
+        config=config,
+        env=env,
+        required_targets=required_targets,
+        notebook_name=notebook_name,
+        run_id_prefix=run_id_prefix,
+        local_fallback_name=local_fallback_name,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Resolver and utility layer: metadata table setup
+# ---------------------------------------------------------------------------
 
 
 def _get_active_metadata_tables(config: FrameworkConfig | dict[str, Any]) -> list[str]:
@@ -1198,7 +1272,7 @@ def _validate_metadata_table_registration(
     }
 
 
-def setup_metadata_tables(
+def _setup_metadata_tables_workflow(
     *,
     spark: Any,
     config: FrameworkConfig | dict[str, Any],
@@ -1206,47 +1280,7 @@ def setup_metadata_tables(
     metadata_schema: str | None = None,
     require_active_steward: bool = False,
 ) -> dict[str, Any]:
-    """Prepare all FabricOps metadata tables for the configured environment.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used by the table setup helpers.
-    config : FrameworkConfig or dict
-        Shared ``00_env_config`` configuration containing the metadata target.
-    env : str
-        Environment key to prepare.
-    metadata_schema : str or None, default=None
-        Optional schema name for schema-enabled Fabric Lakehouses. Keep
-        ``None`` for classic Lakehouses that store metadata tables under
-        ``Tables/<table_name>``. Use a simple schema such as ``"METADATA"``
-        to create and validate registered tables such as
-        ``METADATA.METADATA_DATA_AGREEMENT``.
-    require_active_steward : bool, default=False
-        Forwarded to the agreement metadata setup to optionally require an
-        active steward before returning success.
-
-    Returns
-    -------
-    dict[str, Any]
-        Combined setup summary keyed by ``data_agreement``,
-        ``notebook_registry``, and ``governance``. The payload also includes
-        ``metadata_schema`` and ``fully_qualified_tables`` for schema-enabled
-        Lakehouse visibility.
-
-    Notes
-    -----
-    This is the v1 notebook setup action for metadata provisioning. It keeps
-    ``00_env_config`` simple while delegating to internal helpers that route all
-    metadata reads and writes through the configured metadata target. With
-    ``metadata_schema=None``, setup preserves classic path-based Lakehouse
-    behavior under ``Tables/<table_name>``. With ``metadata_schema`` set, setup
-    uses schema-aware Lakehouse paths such as ``Tables/<schema>/<table>`` and
-    does not bake the schema into configured metadata table names. FabricOps may warn about
-    legacy nested or unidentified Delta folders, but it does not delete or
-    migrate user data automatically.
-
-    """
+    """Own metadata table setup orchestration behind the frozen public API."""
     from fabricops_kit.data_agreement import (
         DATA_AGREEMENT_EVIDENCE_TABLE,
         DATA_AGREEMENT_TABLE,
@@ -1347,6 +1381,74 @@ def setup_metadata_tables(
         "created_or_checked_tables": created_or_checked,
         "registration_validation": registration_validation,
     }
+
+
+# ---------------------------------------------------------------------------
+# Public API layer
+# ---------------------------------------------------------------------------
+
+
+def setup_metadata_tables(
+    *,
+    spark: Any,
+    config: FrameworkConfig | dict[str, Any],
+    env: str,
+    metadata_schema: str | None = None,
+    require_active_steward: bool = False,
+) -> dict[str, Any]:
+    """Prepare all FabricOps metadata tables for the configured environment.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used by the table setup helpers.
+    config : FrameworkConfig or dict
+        Shared ``00_env_config`` configuration containing the metadata target.
+    env : str
+        Environment key to prepare.
+    metadata_schema : str or None, default=None
+        Optional schema name for schema-enabled Fabric Lakehouses. Keep
+        ``None`` for classic Lakehouses that store metadata tables under
+        ``Tables/<table_name>``. Use a simple schema such as ``"METADATA"``
+        to create and validate registered tables such as
+        ``METADATA.METADATA_DATA_AGREEMENT``.
+    require_active_steward : bool, default=False
+        Forwarded to the agreement metadata setup to optionally require an
+        active steward before returning success.
+
+    Returns
+    -------
+    dict[str, Any]
+        Combined setup summary keyed by ``data_agreement``,
+        ``notebook_registry``, and ``governance``. The payload also includes
+        ``metadata_schema`` and ``fully_qualified_tables`` for schema-enabled
+        Lakehouse visibility.
+
+    Notes
+    -----
+    This is the v1 notebook setup action for metadata provisioning. It keeps
+    ``00_env_config`` simple while delegating to internal helpers that route all
+    metadata reads and writes through the configured metadata target. With
+    ``metadata_schema=None``, setup preserves classic path-based Lakehouse
+    behavior under ``Tables/<table_name>``. With ``metadata_schema`` set, setup
+    uses schema-aware Lakehouse paths such as ``Tables/<schema>/<table>`` and
+    does not bake the schema into configured metadata table names. FabricOps may warn about
+    legacy nested or unidentified Delta folders, but it does not delete or
+    migrate user data automatically.
+
+    """
+    return _setup_metadata_tables_workflow(
+        spark=spark,
+        config=config,
+        env=env,
+        metadata_schema=metadata_schema,
+        require_active_steward=require_active_steward,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Utility layer: Spark/Fabric runtime probes
+# ---------------------------------------------------------------------------
 
 
 def _check_spark_session() -> tuple[bool, str]:

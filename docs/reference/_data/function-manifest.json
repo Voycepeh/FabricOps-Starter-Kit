@@ -19,9 +19,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 519,
-    "source_end_line": 524,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L519-L524",
+    "source_start_line": 544,
+    "source_end_line": 549,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L544-L549",
     "docs_path": null,
     "summary": "Represent one readiness or smoke-test check."
   },
@@ -43,9 +43,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 375,
-    "source_end_line": 436,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L375-L436",
+    "source_start_line": 400,
+    "source_end_line": 461,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L400-L461",
     "docs_path": null,
     "summary": "Editable ``01_agreement`` table names and widget definitions."
   },
@@ -69,9 +69,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 430,
-    "source_end_line": 436,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L430-L436",
+    "source_start_line": 455,
+    "source_end_line": 461,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L455-L461",
     "docs_path": null,
     "summary": "Validate and normalize initialized values."
   },
@@ -95,9 +95,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 473,
-    "source_end_line": 515,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L473-L515",
+    "source_start_line": 498,
+    "source_end_line": 540,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L498-L540",
     "docs_path": null,
     "summary": "Top-level framework configuration object."
   },
@@ -121,9 +121,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 513,
-    "source_end_line": 515,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L513-L515",
+    "source_start_line": 538,
+    "source_end_line": 540,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L538-L540",
     "docs_path": null,
     "summary": "Validate and normalize initialized values."
   },
@@ -145,9 +145,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 318,
-    "source_end_line": 362,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L318-L362",
+    "source_start_line": 343,
+    "source_end_line": 387,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L343-L387",
     "docs_path": null,
     "summary": "Default governance-policy options for metadata/classification checks."
   },
@@ -171,9 +171,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 345,
-    "source_end_line": 362,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L345-L362",
+    "source_start_line": 370,
+    "source_end_line": 387,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L370-L387",
     "docs_path": null,
     "summary": "Validate and normalize initialized values."
   },
@@ -195,9 +195,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 454,
-    "source_end_line": 469,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L454-L469",
+    "source_start_line": 479,
+    "source_end_line": 494,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L479-L494",
     "docs_path": null,
     "summary": "Default lineage-capture behavior for pipeline traceability."
   },
@@ -219,9 +219,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 467,
-    "source_end_line": 469,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L467-L469",
+    "source_start_line": 492,
+    "source_end_line": 494,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L492-L494",
     "docs_path": null,
     "summary": "Validate and normalize initialized values."
   },
@@ -243,9 +243,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 252,
-    "source_end_line": 268,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L252-L268",
+    "source_start_line": 272,
+    "source_end_line": 288,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L272-L288",
     "docs_path": null,
     "summary": "Runtime options used by notebook-oriented helpers."
   },
@@ -267,9 +267,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 263,
-    "source_end_line": 268,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L263-L268",
+    "source_start_line": 283,
+    "source_end_line": 288,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L283-L288",
     "docs_path": null,
     "summary": "Validate and normalize initialized values."
   },
@@ -282,7 +282,7 @@
     "function_category": "utility",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.config.setup_notebook"
+      "fabricops_kit.config._setup_notebook_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -293,9 +293,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 528,
-    "source_end_line": 562,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L528-L562",
+    "source_start_line": 553,
+    "source_end_line": 587,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L553-L587",
     "docs_path": null,
     "summary": "Consolidated startup context returned by :func:`setup_notebook`."
   },
@@ -319,9 +319,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 227,
-    "source_end_line": 248,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L227-L248",
+    "source_start_line": 247,
+    "source_end_line": 268,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L247-L268",
     "docs_path": null,
     "summary": "Environment-to-target mapping used for lakehouse/warehouse routing."
   },
@@ -343,9 +343,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 245,
-    "source_end_line": 248,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L245-L248",
+    "source_start_line": 265,
+    "source_end_line": 268,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L265-L268",
     "docs_path": null,
     "summary": "Validate and normalize initialized values."
   },
@@ -367,9 +367,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 272,
-    "source_end_line": 299,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L272-L299",
+    "source_start_line": 292,
+    "source_end_line": 319,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L292-L319",
     "docs_path": null,
     "summary": "Default quality-policy options for FabricOps validation stages."
   },
@@ -391,9 +391,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 292,
-    "source_end_line": 299,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L292-L299",
+    "source_start_line": 312,
+    "source_end_line": 319,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L312-L319",
     "docs_path": null,
     "summary": "Validate and normalize initialized values."
   },
@@ -415,9 +415,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 440,
-    "source_end_line": 450,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L440-L450",
+    "source_start_line": 465,
+    "source_end_line": 475,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L465-L475",
     "docs_path": null,
     "summary": "Notebook-local review settings for suggestion staging and approval."
   },
@@ -443,9 +443,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 218,
-    "source_end_line": 223,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L218-L223",
+    "source_start_line": 233,
+    "source_end_line": 238,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L233-L238",
     "docs_path": null,
     "summary": "Return a Spark expression for the current audit timestamp timezone."
   },
@@ -469,9 +469,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1352,
-    "source_end_line": 1357,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1352-L1357",
+    "source_start_line": 1454,
+    "source_end_line": 1459,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1454-L1459",
     "docs_path": null,
     "summary": "Check whether a Spark session is available."
   },
@@ -495,9 +495,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1069,
-    "source_end_line": 1075,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1069-L1075",
+    "source_start_line": 1143,
+    "source_end_line": 1149,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1143-L1149",
     "docs_path": null,
     "summary": "Return row dictionaries from Spark-like row collections."
   },
@@ -530,9 +530,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 207,
-    "source_end_line": 215,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L207-L215",
+    "source_start_line": 222,
+    "source_end_line": 230,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L222-L230",
     "docs_path": null,
     "summary": "Return the current audit timestamp in the configured audit timezone."
   },
@@ -558,9 +558,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 983,
-    "source_end_line": 1009,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L983-L1009",
+    "source_start_line": 1057,
+    "source_end_line": 1083,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1057-L1083",
     "docs_path": null,
     "summary": "Best-effort warning detector for legacy nested metadata Delta folders."
   },
@@ -587,9 +587,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 954,
-    "source_end_line": 980,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L954-L980",
+    "source_start_line": 1028,
+    "source_end_line": 1054,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1028-L1054",
     "docs_path": null,
     "summary": "Return the canonical active metadata tables prepared by ``00_env_config``."
   },
@@ -617,9 +617,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 199,
-    "source_end_line": 204,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L199-L204",
+    "source_start_line": 214,
+    "source_end_line": 219,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L214-L219",
     "docs_path": null,
     "summary": "Resolve the configured FabricOps audit timezone, defaulting to UTC."
   },
@@ -643,9 +643,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1360,
-    "source_end_line": 1399,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1360-L1399",
+    "source_start_line": 1462,
+    "source_end_line": 1501,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1462-L1501",
     "docs_path": null,
     "summary": "Best-effort retrieval of Fabric runtime metadata."
   },
@@ -658,7 +658,7 @@
     "function_category": "internal-private",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.config.setup_metadata_tables"
+      "fabricops_kit.config._setup_metadata_tables_workflow"
     ],
     "outbound": [
       "fabricops_kit.config._string_metadata_schema",
@@ -673,9 +673,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1037,
-    "source_end_line": 1066,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1037-L1066",
+    "source_start_line": 1111,
+    "source_end_line": 1140,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1111-L1140",
     "docs_path": null,
     "summary": "Return the canonical metadata setup registry as table names mapped to schemas."
   },
@@ -691,8 +691,8 @@
       "fabricops_kit.config._detect_nested_metadata_delta_folders",
       "fabricops_kit.config._resolve_metadata_schema",
       "fabricops_kit.config._run_config_smoke_tests",
+      "fabricops_kit.config._setup_notebook_workflow",
       "fabricops_kit.config._validate_metadata_table_registration",
-      "fabricops_kit.config.setup_notebook",
       "fabricops_kit.io_core.configured_lakehouse_schema",
       "fabricops_kit.io_core.read_lakehouse_csv_core",
       "fabricops_kit.io_core.read_lakehouse_excel_core",
@@ -715,9 +715,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 682,
-    "source_end_line": 721,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L682-L721",
+    "source_start_line": 712,
+    "source_end_line": 751,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L712-L751",
     "docs_path": null,
     "summary": "Resolve a configured Fabric path for an environment and target."
   },
@@ -731,7 +731,7 @@
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.config._setup_metadata_table_registry",
-      "fabricops_kit.config.setup_metadata_tables"
+      "fabricops_kit.config._setup_metadata_tables_workflow"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -742,9 +742,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1012,
-    "source_end_line": 1016,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1012-L1016",
+    "source_start_line": 1086,
+    "source_end_line": 1090,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1086-L1090",
     "docs_path": null,
     "summary": "Return field names from a Spark StructType-like schema."
   },
@@ -770,9 +770,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 639,
-    "source_end_line": 679,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L639-L679",
+    "source_start_line": 669,
+    "source_end_line": 709,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L669-L709",
     "docs_path": null,
     "summary": "Return the shared runtime path configuration for accepted config shapes."
   },
@@ -797,9 +797,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 302,
-    "source_end_line": 314,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L302-L314",
+    "source_start_line": 327,
+    "source_end_line": 339,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L327-L339",
     "docs_path": null,
     "summary": "Return a widget config with validated custom-field dictionaries."
   },
@@ -812,8 +812,8 @@
     "function_category": "internal-private",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.config._validate_metadata_table_registration",
-      "fabricops_kit.config.setup_metadata_tables"
+      "fabricops_kit.config._setup_metadata_tables_workflow",
+      "fabricops_kit.config._validate_metadata_table_registration"
     ],
     "outbound": [
       "fabricops_kit.config._get_store"
@@ -826,9 +826,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1078,
-    "source_end_line": 1087,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1078-L1087",
+    "source_start_line": 1152,
+    "source_end_line": 1161,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1152-L1161",
     "docs_path": null,
     "summary": "Return explicit metadata schema or configured metadata target schema."
   },
@@ -841,7 +841,7 @@
     "function_category": "internal-private",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.config.setup_notebook"
+      "fabricops_kit.config._setup_notebook_workflow"
     ],
     "outbound": [
       "fabricops_kit.config.ConfigSmokeCheckResult",
@@ -858,9 +858,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 738,
-    "source_end_line": 838,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L738-L838",
+    "source_start_line": 778,
+    "source_end_line": 878,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L778-L878",
     "docs_path": null,
     "summary": "Run 00_env_config readiness smoke checks for configuration bootstrap."
   },
@@ -873,7 +873,7 @@
     "function_category": "internal-private",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.config.setup_metadata_tables"
+      "fabricops_kit.config._setup_metadata_tables_workflow"
     ],
     "outbound": [
       "fabricops_kit.config._coerce_row_dicts",
@@ -890,11 +890,78 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1090,
-    "source_end_line": 1143,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1090-L1143",
+    "source_start_line": 1164,
+    "source_end_line": 1217,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1164-L1217",
     "docs_path": null,
     "summary": "Create missing metadata tables through configured lakehouse IO helpers."
+  },
+  {
+    "id": "fabricops_kit.config._setup_metadata_tables_workflow",
+    "name": "_setup_metadata_tables_workflow",
+    "qualified_name": "fabricops_kit.config._setup_metadata_tables_workflow",
+    "module": "config",
+    "classification": "Internal",
+    "function_category": "internal-private",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.config._get_metadata_table_schema_registry",
+      "fabricops_kit.config._metadata_schema_field_names",
+      "fabricops_kit.config._resolve_metadata_schema",
+      "fabricops_kit.config._setup_metadata_table_registry",
+      "fabricops_kit.config._validate_framework_config",
+      "fabricops_kit.config._validate_metadata_table_registration",
+      "fabricops_kit.data_agreement._list_data_stewards",
+      "fabricops_kit.data_agreement.get",
+      "fabricops_kit.governance_review._get_governance_metadata_schemas"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/config.py",
+    "source_start_line": 1275,
+    "source_end_line": 1383,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1275-L1383",
+    "docs_path": null,
+    "summary": "Own metadata table setup orchestration behind the frozen public API."
+  },
+  {
+    "id": "fabricops_kit.config._setup_notebook_workflow",
+    "name": "_setup_notebook_workflow",
+    "qualified_name": "fabricops_kit.config._setup_notebook_workflow",
+    "module": "config",
+    "classification": "Internal",
+    "function_category": "internal-private",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.config.setup_notebook"
+    ],
+    "outbound": [
+      "fabricops_kit.config.NotebookSetupContext",
+      "fabricops_kit.config._get_store",
+      "fabricops_kit.config._run_config_smoke_tests",
+      "fabricops_kit.config._validate_framework_config"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/config.py",
+    "source_start_line": 886,
+    "source_end_line": 958,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L886-L958",
+    "docs_path": null,
+    "summary": "Own setup_notebook orchestration behind the frozen public API."
   },
   {
     "id": "fabricops_kit.config._string_metadata_schema",
@@ -916,9 +983,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1019,
-    "source_end_line": 1034,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1019-L1034",
+    "source_start_line": 1093,
+    "source_end_line": 1108,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1093-L1108",
     "docs_path": null,
     "summary": "Build an explicit all-string Spark schema for lightweight metadata tables."
   },
@@ -944,9 +1011,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 164,
-    "source_end_line": 196,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L164-L196",
+    "source_start_line": 174,
+    "source_end_line": 206,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L174-L206",
     "docs_path": null,
     "summary": "Return a valid IANA audit timezone name."
   },
@@ -961,9 +1028,9 @@
     "inbound": [
       "fabricops_kit.config._get_active_metadata_tables",
       "fabricops_kit.config._get_metadata_table_schema_registry",
-      "fabricops_kit.config._validate_metadata_table_registration",
-      "fabricops_kit.config.setup_metadata_tables",
-      "fabricops_kit.config.setup_notebook"
+      "fabricops_kit.config._setup_metadata_tables_workflow",
+      "fabricops_kit.config._setup_notebook_workflow",
+      "fabricops_kit.config._validate_metadata_table_registration"
     ],
     "outbound": [
       "fabricops_kit.config.FrameworkConfig",
@@ -978,9 +1045,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 565,
-    "source_end_line": 636,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L565-L636",
+    "source_start_line": 590,
+    "source_end_line": 661,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L590-L661",
     "docs_path": null,
     "summary": "Validate and normalize framework configuration input."
   },
@@ -993,7 +1060,7 @@
     "function_category": "internal-private",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.config.setup_metadata_tables"
+      "fabricops_kit.config._setup_metadata_tables_workflow"
     ],
     "outbound": [
       "fabricops_kit.config._detect_nested_metadata_delta_folders",
@@ -1011,9 +1078,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1146,
-    "source_end_line": 1198,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1146-L1198",
+    "source_start_line": 1220,
+    "source_end_line": 1272,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1220-L1272",
     "docs_path": null,
     "summary": "Validate active metadata tables through configured metadata target reads."
   },
@@ -1037,9 +1104,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 724,
-    "source_end_line": 735,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L724-L735",
+    "source_start_line": 759,
+    "source_end_line": 770,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L759-L770",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1064,9 +1131,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 26,
-    "source_end_line": 83,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L26-L83",
+    "source_start_line": 31,
+    "source_end_line": 88,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
     "docs_path": null,
     "summary": "Return the active Fabric context created by ``00_env_config``."
   },
@@ -1090,9 +1157,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 86,
-    "source_end_line": 138,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L86-L138",
+    "source_start_line": 91,
+    "source_end_line": 143,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L91-L143",
     "docs_path": null,
     "summary": "Build a Fabric context from explicit values or the active default."
   },
@@ -1138,9 +1205,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 141,
-    "source_end_line": 161,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L141-L161",
+    "source_start_line": 146,
+    "source_end_line": 166,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
     "docs_path": null,
     "summary": "Resolve explicit or default FabricOps config and environment values."
   },
@@ -1156,15 +1223,7 @@
     ],
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config._get_metadata_table_schema_registry",
-      "fabricops_kit.config._metadata_schema_field_names",
-      "fabricops_kit.config._resolve_metadata_schema",
-      "fabricops_kit.config._setup_metadata_table_registry",
-      "fabricops_kit.config._validate_framework_config",
-      "fabricops_kit.config._validate_metadata_table_registration",
-      "fabricops_kit.data_agreement._list_data_stewards",
-      "fabricops_kit.data_agreement.get",
-      "fabricops_kit.governance_review._get_governance_metadata_schemas"
+      "fabricops_kit.config._setup_metadata_tables_workflow"
     ],
     "used_in_templates": [
       "00_env_config"
@@ -1193,9 +1252,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1201,
-    "source_end_line": 1349,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1201-L1349",
+    "source_start_line": 1391,
+    "source_end_line": 1446,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1391-L1446",
     "docs_path": "api/reference/setup_metadata_tables.md",
     "summary": "Create or validate all FabricOps metadata tables through one setup action."
   },
@@ -1211,10 +1270,7 @@
     ],
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config.NotebookSetupContext",
-      "fabricops_kit.config._get_store",
-      "fabricops_kit.config._run_config_smoke_tests",
-      "fabricops_kit.config._validate_framework_config"
+      "fabricops_kit.config._setup_notebook_workflow"
     ],
     "used_in_templates": [
       "00_env_config"
@@ -1247,9 +1303,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 841,
-    "source_end_line": 951,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L841-L951",
+    "source_start_line": 966,
+    "source_end_line": 1020,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L966-L1020",
     "docs_path": "api/reference/setup_notebook.md",
     "summary": "Shared environment setup and runtime validation for notebook templates."
   },
@@ -1791,7 +1847,7 @@
     "function_category": "internal-private",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.config.setup_metadata_tables",
+      "fabricops_kit.config._setup_metadata_tables_workflow",
       "fabricops_kit.data_agreement._create_or_update_data_agreement",
       "fabricops_kit.data_agreement._render_maintenance_widget"
     ],
@@ -3836,7 +3892,7 @@
     "inbound": [
       "fabricops_kit.config._get_active_metadata_tables",
       "fabricops_kit.config._get_metadata_table_schema_registry",
-      "fabricops_kit.config.setup_metadata_tables"
+      "fabricops_kit.config._setup_metadata_tables_workflow"
     ],
     "outbound": [
       "fabricops_kit.governance_review._schema",

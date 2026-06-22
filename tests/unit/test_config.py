@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 from pathlib import Path
@@ -32,6 +33,21 @@ from tests.helpers import framework_config, store
 
 pytestmark = pytest.mark.unit
 
+
+
+def test_config_setup_public_api_signatures_match_frozen_contract():
+    """Verify config setup public API signatures match the frozen contract."""
+    assert str(inspect.signature(setup_notebook)) == (
+        "(config: 'FrameworkConfig | dict[str, Any]', env: 'str' = 'Sandbox', "
+        "required_targets: 'list[str] | None' = None, notebook_name: 'str | None' = None, "
+        "run_id_prefix: 'str' = 'run', local_fallback_name: 'str | None' = None) -> 'NotebookSetupContext'"
+    )
+    assert str(inspect.signature(setup_metadata_tables)) == (
+        "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
+        "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False) -> 'dict[str, Any]'"
+    )
+    assert setup_notebook.__module__ == "fabricops_kit.config"
+    assert setup_metadata_tables.__module__ == "fabricops_kit.config"
 
 def test_get_fabric_context_uses_env_as_primary_key():
     """Verify explicit Fabric contexts expose env as the primary environment key."""
@@ -548,3 +564,42 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
     assert "pipeline_started_at=_now_iso()" in pipeline_helper_source
     assert "def _now_iso(config: Any = None) -> str:" in pipeline_helper_source
     assert "return _current_audit_timestamp(config=config)" in pipeline_helper_source
+
+
+def test_config_workflow_role_boundaries_do_not_add_workflow_to_workflow_signal():
+    """Verify config setup role tags avoid workflow-to-workflow architecture signals."""
+    from scripts.generate_function_reference import ROLE_TAGS_BY_NAME, _role_dependency_signals
+
+    config_roles = {
+        name: tags[0]
+        for name, tags in ROLE_TAGS_BY_NAME.items()
+        if name in {
+            "_setup_notebook_workflow",
+            "_setup_metadata_tables_workflow",
+            "_setup_metadata_table_registry",
+            "_validate_metadata_table_registration",
+            "_run_config_smoke_tests",
+            "_get_store",
+            "_resolve_metadata_schema",
+        }
+    }
+
+    assert config_roles["_setup_notebook_workflow"] == "internal_workflow"
+    assert config_roles["_setup_metadata_tables_workflow"] == "internal_workflow"
+    assert config_roles["_setup_metadata_table_registry"] == "internal_adapter"
+    assert config_roles["_validate_metadata_table_registration"] == "internal_validator"
+    assert config_roles["_run_config_smoke_tests"] == "internal_validator"
+    assert (
+        _role_dependency_signals(
+            config_roles["_setup_metadata_tables_workflow"],
+            config_roles["_validate_metadata_table_registration"],
+        )
+        == ["allowed_internal_role_call"]
+    )
+    assert (
+        _role_dependency_signals(
+            config_roles["_setup_metadata_tables_workflow"],
+            config_roles["_setup_metadata_table_registry"],
+        )
+        == ["allowed_internal_role_call"]
+    )

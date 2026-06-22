@@ -1,7 +1,7 @@
 {
   "setup_metadata_tables": {
     "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-    "unique_internal_helper_count": 30,
+    "unique_internal_helper_count": 31,
     "repeated_helpers": [
       {
         "helper": "_get_store",
@@ -69,6 +69,40 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.config.setup_metadata_tables",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
+          "fabricops_kit.config._get_metadata_table_schema_registry",
+          "fabricops_kit.governance_review._get_governance_metadata_schemas",
+          "fabricops_kit.governance_review._schema",
+          "fabricops_kit.governance_review._check_metadata_schema_field_names"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.config.setup_metadata_tables",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
+          "fabricops_kit.config._get_metadata_table_schema_registry",
+          "fabricops_kit.governance_review._get_governance_metadata_schemas",
+          "fabricops_kit.governance_review._schema",
+          "fabricops_kit.governance_review._spark_types"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.config.setup_metadata_tables",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
+          "fabricops_kit.data_agreement._list_data_stewards",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.config.setup_metadata_tables",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
           "fabricops_kit.data_agreement._list_data_stewards",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.config._get_store",
@@ -80,62 +114,18 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.config.setup_metadata_tables",
-          "fabricops_kit.config._setup_metadata_table_registry",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
+          "fabricops_kit.data_agreement._list_data_stewards",
           "fabricops_kit.io_core.read_lakehouse_table_core",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
+          "fabricops_kit.config.resolve_fabric_context",
+          "fabricops_kit.config.get_default_fabric_context"
         ]
       },
       {
         "depth": 5,
         "chain": [
           "fabricops_kit.config.setup_metadata_tables",
-          "fabricops_kit.config._setup_metadata_table_registry",
-          "fabricops_kit.io_core.write_lakehouse_table_core",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.config.setup_metadata_tables",
-          "fabricops_kit.config._validate_metadata_table_registration",
-          "fabricops_kit.config._detect_nested_metadata_delta_folders",
-          "fabricops_kit.config._get_store",
-          "fabricops_kit.config._normalize_path_config",
-          "fabricops_kit.config.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.config.setup_metadata_tables",
-          "fabricops_kit.config._validate_metadata_table_registration",
-          "fabricops_kit.config._get_active_metadata_tables",
-          "fabricops_kit.governance_review._get_governance_metadata_schemas",
-          "fabricops_kit.governance_review._schema",
-          "fabricops_kit.governance_review._check_metadata_schema_field_names"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.config.setup_metadata_tables",
-          "fabricops_kit.config._validate_metadata_table_registration",
-          "fabricops_kit.config._get_active_metadata_tables",
-          "fabricops_kit.governance_review._get_governance_metadata_schemas",
-          "fabricops_kit.governance_review._schema",
-          "fabricops_kit.governance_review._spark_types"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.config.setup_metadata_tables",
-          "fabricops_kit.config._validate_metadata_table_registration",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
           "fabricops_kit.config._resolve_metadata_schema",
           "fabricops_kit.config._get_store",
           "fabricops_kit.config._normalize_path_config",
@@ -146,7 +136,19 @@
         "depth": 5,
         "chain": [
           "fabricops_kit.config.setup_metadata_tables",
-          "fabricops_kit.config._validate_metadata_table_registration",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
+          "fabricops_kit.config._setup_metadata_table_registry",
+          "fabricops_kit.io_core.read_lakehouse_table_core",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.config.setup_metadata_tables",
+          "fabricops_kit.config._setup_metadata_tables_workflow",
+          "fabricops_kit.config._setup_metadata_table_registry",
           "fabricops_kit.io_core.read_lakehouse_table_core",
           "fabricops_kit.config._get_store",
           "fabricops_kit.config._normalize_path_config",
@@ -190,7 +192,7 @@
   },
   "setup_notebook": {
     "qualified_name": "fabricops_kit.config.setup_notebook",
-    "unique_internal_helper_count": 8,
+    "unique_internal_helper_count": 9,
     "repeated_helpers": [
       {
         "helper": "_get_store",
@@ -203,7 +205,19 @@
         "branch_count": 2
       }
     ],
-    "deep_call_chains": [],
+    "deep_call_chains": [
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.config.setup_notebook",
+          "fabricops_kit.config._setup_notebook_workflow",
+          "fabricops_kit.config._run_config_smoke_tests",
+          "fabricops_kit.config._get_store",
+          "fabricops_kit.config._normalize_path_config",
+          "fabricops_kit.config.PathConfig"
+        ]
+      }
+    ],
     "single_delegate_helpers": [
       {
         "helper": "_get_store",
