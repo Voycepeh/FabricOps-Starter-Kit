@@ -444,7 +444,7 @@ Owns agreement metadata capture, audited record building, metadata commit helper
 <a class="reference-chip" href="config/#_setup_metadata_tables_workflow"><code>_setup_metadata_tables_workflow</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../reference/start_pipeline_run/"><code>start_pipeline_run</code></a>
+<a class="reference-chip" href="pipeline/#_start_pipeline_run_workflow"><code>_start_pipeline_run_workflow</code></a>
 
 ### External callees
 

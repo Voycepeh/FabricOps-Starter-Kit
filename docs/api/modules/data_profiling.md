@@ -182,7 +182,7 @@ Owns deterministic profiling evidence such as schema, nulls, distincts, min/max,
 <a class="reference-chip" href="guardrails/#enforce_profile_behavior"><code>enforce_profile_behavior</code></a>
 
 **pipeline**
-<a class="reference-chip" href="../reference/run_table_guardrails/"><code>run_table_guardrails</code></a>
+<a class="reference-chip" href="pipeline/#_run_table_guardrails_workflow"><code>_run_table_guardrails_workflow</code></a>
 
 ### External callees
 
