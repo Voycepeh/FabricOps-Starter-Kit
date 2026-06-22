@@ -142,7 +142,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
     Qualified name: fabricops_kit.config._audit_timestamp_expr
     Module: config
-    Callable layer: Internal helper
+    Layer: Internal helper
     Recommended action: Architecture violation
     Priority: High
     Signal reason: Architecture violation: Callable dependency direction breaks the public → internal → utility layer rule.
