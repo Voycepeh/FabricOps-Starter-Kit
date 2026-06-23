@@ -1940,6 +1940,10 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
     assert "stylesheets/table-controls.css" in mkdocs_text
     assert "../javascripts/table-controls.js" in dashboard_text
     assert "../stylesheets/table-controls.css" in dashboard_text
+    assert 'data-table-controls="excel"' in dashboard_text
+    assert "querySelectorAll('table[data-table-controls=\"excel\"]')" in script
+    assert "function enhance(table)" in script
+    assert "isOptInTable" in script
     assert "fo-table-menu-button" in script
     assert "Sort A to Z" in script
     assert "Sort Z to A" in script
@@ -1965,9 +1969,45 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
     assert "Escape" in script
     assert "function resetAll" in script
     assert "cfg.filters.clear()" in script
+    assert 'querySelectorAll("table").forEach(enhanceTable)' not in script
     assert "@media(max-width:720px)" in styles
     assert "bottom:.5rem!important" in styles
 
+
+
+def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
+    """Verify inventory dashboard renders dynamic rows, KPIs, statuses, and scoped controls."""
+    inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
+
+    assert "../reference/_data/callable-flow.json" in inventory_text
+    assert "Loading callable-flow data..." in inventory_text
+    assert "Loaded ${inventory.length} callable records" in inventory_text
+    assert "No callable records match current filters" in inventory_text
+    assert "Failed to load callable-flow data:" in inventory_text
+    assert 'id="inventorySummaryCards"' in inventory_text
+    for label in [
+        "Total callables",
+        "Public callables",
+        "Supporting callables",
+        "Review candidates",
+        "Healthy callables",
+    ]:
+        assert label in inventory_text
+    assert 'data-table-controls="excel"' in inventory_text
+    assert "$('inventoryBody').innerHTML=visibleRows.map" in inventory_text
+    assert "window.FabricOpsTableControls.enhance(document.querySelector('table[data-table-controls=\"excel\"]'))" in inventory_text
+    assert "enhanceAll(document)" not in inventory_text
+
+
+def test_table_controls_are_opt_in_and_safe_for_dynamic_rows() -> None:
+    """Verify table controls stay scoped and refresh existing controls without duplicates."""
+    script = (ROOT / "docs" / "javascripts" / "table-controls.js").read_text(encoding="utf-8")
+
+    assert 'table[data-table-controls="excel"]' in script
+    assert "if (!isOptInTable(table)) return" in script
+    assert "cfg.originalRows = currentRows(table)" in script
+    assert 'th.querySelector(":scope > .fo-table-menu-button")' in script
+    assert 'querySelectorAll("table")' not in script
 
 def test_global_table_controls_core_sort_and_filter_helpers() -> None:
     """Exercise shared table utility helpers for sort and filter behavior."""
