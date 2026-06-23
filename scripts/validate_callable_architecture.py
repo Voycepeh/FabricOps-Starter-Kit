@@ -12,6 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src" / "fabricops_kit"
 CALLABLE_FLOW_PATH = ROOT / "docs" / "reference" / "_data" / "callable-flow.json"
+OWNERSHIP_PLAN_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-ownership-plan.json"
 DASHBOARD_PATH = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
 INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
 
@@ -32,6 +33,7 @@ class SourceFunction:
     layer: str
     node: ast.FunctionDef | ast.AsyncFunctionDef
     imports: dict[str, str]
+    path: Path
 
 
 def _load_flow() -> dict[str, Any]:
@@ -55,19 +57,25 @@ def _load_public_exports() -> set[str]:
     return exports
 
 
-def _imports_for_module(tree: ast.Module) -> dict[str, str]:
+def _imports_for_module(tree: ast.Module, current_module: str) -> dict[str, str]:
     imports: dict[str, str] = {}
     for node in tree.body:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name.startswith("fabricops_kit"):
                     imports[alias.asname or alias.name.split(".")[-1]] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith("fabricops_kit"):
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if node.level:
+                current_parts = current_module.split(".")
+                package_parts = current_parts[:-node.level]
+                module_parts = [*package_parts, *([module] if module else [])]
+                module = ".".join(part for part in module_parts if part)
+            if module.startswith("fabricops_kit"):
                 for alias in node.names:
                     if alias.name == "*":
                         continue
-                    imports[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+                    imports[alias.asname or alias.name] = f"{module}.{alias.name}"
     return imports
 
 
@@ -79,7 +87,7 @@ def _source_functions() -> dict[str, SourceFunction]:
             continue
         module = _module_name(path)
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        imports = _imports_for_module(tree)
+        imports = _imports_for_module(tree, module)
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 qn = f"{module}.{node.name}"
@@ -89,7 +97,7 @@ def _source_functions() -> dict[str, SourceFunction]:
                     layer = "public"
                 else:
                     layer = "internal"
-                functions[qn] = SourceFunction(qn, module, node.name, layer, node, imports)
+                functions[qn] = SourceFunction(qn, module, node.name, layer, node, imports, path)
     return functions
 
 
@@ -110,32 +118,172 @@ def _resolve_call(call: ast.Call, caller: SourceFunction, functions: dict[str, S
     return None
 
 
+
+
+def _matching_public_passthrough_name(function_name: str, public_names: set[str]) -> str | None:
+    """Return the public function name mirrored by a one-to-one shared/core wrapper."""
+    for suffix in ("_shared", "_core"):
+        if function_name.endswith(suffix):
+            candidate = function_name[: -len(suffix)]
+            if candidate in public_names:
+                return candidate
+    return None
+
+
+def _is_direct_passthrough(fn: SourceFunction) -> bool:
+    """Return whether a function only returns or calls a single implementation function."""
+    executable = [
+        node
+        for node in fn.node.body
+        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str))
+    ]
+    if len(executable) != 1:
+        return False
+    node = executable[0]
+    if isinstance(node, ast.Return) and isinstance(node.value, ast.Call):
+        return True
+    if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+        return True
+    return False
+
+def _load_ownership_plan() -> dict[str, Any]:
+    if not OWNERSHIP_PLAN_PATH.exists():
+        return {"migration_files": {}, "facade_files": []}
+    return json.loads(OWNERSHIP_PLAN_PATH.read_text(encoding="utf-8"))
+
+
+def _relative_source_path(path: Path) -> str:
+    return path.relative_to(ROOT).as_posix()
+
+
+def _public_owner_file(path: Path) -> str:
+    return _relative_source_path(path)
+
+
+def _owning_public_file_for_helper(
+    helper_qn: str,
+    inbound_by_qn: dict[str, set[str]],
+    functions: dict[str, SourceFunction],
+) -> str:
+    helper = functions[helper_qn]
+    public_callers = [functions[caller] for caller in inbound_by_qn.get(helper_qn, set()) if functions[caller].layer == "public"]
+    same_file_public_callers = [caller for caller in public_callers if caller.path == helper.path]
+    candidates = same_file_public_callers or public_callers
+    if not candidates:
+        return _public_owner_file(helper.path)
+    return _public_owner_file(sorted(candidates, key=lambda item: (str(item.path), item.name))[0].path)
+
+
+def _source_call_edges(
+    functions: dict[str, SourceFunction],
+    by_module_name: dict[tuple[str, str], str],
+) -> dict[str, set[str]]:
+    edges: dict[str, set[str]] = {qn: set() for qn in functions}
+    for fn in functions.values():
+        for call in ast.walk(fn.node):
+            if isinstance(call, ast.Call):
+                callee_qn = _resolve_call(call, fn, functions, by_module_name)
+                if callee_qn:
+                    edges[fn.qualified_name].add(callee_qn)
+    return edges
+
 def _source_failures() -> list[str]:
     failures: list[str] = []
     functions = _source_functions()
     by_module_name = {(fn.module, fn.name): qn for qn, fn in functions.items()}
+    call_edges = _source_call_edges(functions, by_module_name)
+    inbound_by_qn: dict[str, set[str]] = {qn: set() for qn in functions}
+    for caller, callees in call_edges.items():
+        for callee in callees:
+            inbound_by_qn.setdefault(callee, set()).add(caller)
+
+    ownership_plan = _load_ownership_plan()
+    completed_migrations = ownership_plan.get("completed_migrations") or {}
+    enforced_owner_roots = [
+        ROOT / migration["owner_package"]
+        for migration in completed_migrations.values()
+        if migration.get("owner_package")
+    ]
+
+    def enforces_helper_boundary(helper: SourceFunction) -> bool:
+        if not enforced_owner_roots:
+            return True
+        return any(helper.path == root or root in helper.path.parents for root in enforced_owner_roots)
+    migration_files = set((ownership_plan.get("migration_files") or {}).keys())
+    facade_files = set(ownership_plan.get("facade_files") or []) | {"src/fabricops_kit/__init__.py"}
+
+    public_by_file: dict[str, list[SourceFunction]] = {}
+    for fn in functions.values():
+        if fn.layer == "public":
+            public_by_file.setdefault(_public_owner_file(fn.path), []).append(fn)
+
+    for completed_file, migration in completed_migrations.items():
+        if migration.get("status") == "facade_only" and completed_file in public_by_file:
+            names = ", ".join(sorted(fn.name for fn in public_by_file[completed_file]))
+            failures.append(f"Completed migration facade still defines public functions: {completed_file} ({names})")
+
+    for source_path, public_functions in public_by_file.items():
+        if len(public_functions) > 1 and source_path not in facade_files and source_path not in migration_files:
+            names = ", ".join(sorted(fn.name for fn in public_functions))
+            failures.append(f"Public function file contains multiple public functions: {source_path} ({names})")
+
     for fn in functions.values():
         if fn.name.startswith("_") and fn.layer != PRIVATE_HELPER_LAYER:
             failures.append(f"Architecture-visible internal function is underscore-prefixed: {fn.qualified_name}")
         if fn.name.startswith("_") and fn.layer == "public":
             failures.append(f"Public function is underscore-prefixed: {fn.qualified_name}")
-        if fn.layer == PRIVATE_HELPER_LAYER:
-            continue
-        for call in ast.walk(fn.node):
-            if not isinstance(call, ast.Call):
-                continue
-            callee_qn = _resolve_call(call, fn, functions, by_module_name)
-            if not callee_qn:
-                continue
+
+        for local_name, imported_qn in fn.imports.items():
+            if imported_qn in functions and functions[imported_qn].layer == PRIVATE_HELPER_LAYER and enforces_helper_boundary(functions[imported_qn]):
+                owner_file = _owning_public_file_for_helper(imported_qn, inbound_by_qn, functions)
+                if _relative_source_path(fn.path) != owner_file:
+                    failures.append(
+                        "Private helper imported outside owner file: "
+                        f"{fn.qualified_name} imports {imported_qn} as {local_name}"
+                    )
+
+        for callee_qn in call_edges.get(fn.qualified_name, set()):
             callee = functions[callee_qn]
-            if callee.layer == PRIVATE_HELPER_LAYER:
-                continue
+            if callee.layer == PRIVATE_HELPER_LAYER and enforces_helper_boundary(callee) and fn.path != callee.path:
+                failures.append(f"Private helper called outside owner file: {fn.qualified_name} -> {callee.qualified_name}")
             if fn.layer == "public" and callee.layer == "public":
                 failures.append(f"Public function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
             if fn.layer == "internal" and callee.layer == "public":
                 failures.append(f"Internal function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
-    return failures
 
+    public_names = {fn.name for fn in functions.values() if fn.layer == "public"}
+    migrated_public_names = {
+        name
+        for migration in completed_migrations.values()
+        for name in migration.get("public_functions", [])
+    }
+    for qn, fn in functions.items():
+        mirrored_public_name = _matching_public_passthrough_name(fn.name, public_names)
+        if mirrored_public_name not in migrated_public_names:
+            continue
+        if not mirrored_public_name:
+            continue
+        public_callers = [functions[caller] for caller in inbound_by_qn.get(qn, set()) if functions[caller].layer == "public"]
+        if len(public_callers) == 1 and public_callers[0].name == mirrored_public_name and _is_direct_passthrough(fn):
+            failures.append(
+                "One-to-one public pass-through helper should be inlined into the owner file: "
+                f"{public_callers[0].qualified_name} -> {fn.qualified_name}"
+            )
+
+    for helper_qn, helper in functions.items():
+        if helper.layer != PRIVATE_HELPER_LAYER or not enforces_helper_boundary(helper):
+            continue
+        public_owner_files = {
+            _public_owner_file(functions[caller].path)
+            for caller in inbound_by_qn.get(helper_qn, set())
+            if functions[caller].layer == "public"
+        }
+        if len(public_owner_files) > 1:
+            failures.append(
+                "Shared helper is underscore-prefixed but used by multiple public function files: "
+                f"{helper_qn} ({', '.join(sorted(public_owner_files))})"
+            )
+    return failures
 
 def _generated_failures(flow: dict[str, Any]) -> list[str]:
     failures: list[str] = []

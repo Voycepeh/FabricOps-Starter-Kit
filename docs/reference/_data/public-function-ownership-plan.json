@@ -1,0 +1,71 @@
+{
+  "schema": "fabricops_public_function_ownership_plan_v1",
+  "status": "migration_plan",
+  "notes": [
+    "PR #704 is merged; this follow-up adds enforceable guardrails and documents remaining multi-public-function files before physical file moves.",
+    "Files listed in migration_files are current broad modules that intentionally need follow-up ownership splits; new multi-public-function files must be added here deliberately or validation fails."
+  ],
+  "facade_files": [
+    "src/fabricops_kit/__init__.py"
+  ],
+  "migration_files": {
+    "src/fabricops_kit/pipeline.py": {
+      "public_functions": [
+        "display_guardrail_results",
+        "prepare_pipeline_table_configs",
+        "run_table_guardrails",
+        "start_pipeline_run",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary"
+      ],
+      "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
+    },
+    "src/fabricops_kit/governance_review.py": {
+      "public_functions": [
+        "get_latest_metadata_catalogue",
+        "widget_author_dq_rules",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_enrich_table_metadata",
+        "widget_review_guardrail_governance",
+        "widget_select_guardrail_target"
+      ],
+      "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
+    },
+    "src/fabricops_kit/data_agreement.py": {
+      "public_functions": [
+        "widget_render_agreement_evidence",
+        "widget_render_data_agreement",
+        "widget_render_data_steward"
+      ],
+      "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
+    },
+    "src/fabricops_kit/config.py": {
+      "public_functions": [
+        "setup_metadata_tables",
+        "setup_notebook"
+      ],
+      "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
+    }
+  },
+  "completed_migrations": {
+    "src/fabricops_kit/fabric_input_output.py": {
+      "status": "facade_only",
+      "owner_package": "src/fabricops_kit/io",
+      "public_functions": [
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_query",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table"
+      ],
+      "stable_import_paths": [
+        "fabricops_kit.<function>",
+        "fabricops_kit.fabric_input_output.<function>",
+        "fabricops_kit.io.<function>"
+      ]
+    }
+  }
+}

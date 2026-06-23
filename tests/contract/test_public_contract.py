@@ -241,7 +241,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "categorical_top_n", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.fabric_input_output.read_lakehouse_csv": {
+        "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv": {
             "parameters": [
                 {"name": "relative_path", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
@@ -251,7 +251,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "options", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
-        "fabricops_kit.fabric_input_output.read_lakehouse_excel": {
+        "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel": {
             "parameters": [
                 {"name": "relative_path", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
@@ -261,7 +261,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "read_excel_kwargs", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
-        "fabricops_kit.fabric_input_output.read_lakehouse_parquet": {
+        "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet": {
             "parameters": [
                 {"name": "relative_path", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
@@ -270,7 +270,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.fabric_input_output.read_lakehouse_table": {
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table": {
             "parameters": [
                 {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
@@ -279,7 +279,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.fabric_input_output.read_warehouse_query": {
+        "fabricops_kit.io.read_warehouse_query.read_warehouse_query": {
             "parameters": [
                 {"name": "query", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
@@ -287,7 +287,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.fabric_input_output.read_warehouse_table": {
+        "fabricops_kit.io.read_warehouse_table.read_warehouse_table": {
             "parameters": [
                 {"name": "schema", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
@@ -296,7 +296,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.fabric_input_output.write_lakehouse_table": {
+        "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table": {
             "parameters": [
                 {"name": "df", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
@@ -310,7 +310,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.fabric_input_output.write_warehouse_table": {
+        "fabricops_kit.io.write_warehouse_table.write_warehouse_table": {
             "parameters": [
                 {"name": "df", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "schema", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
@@ -588,6 +588,7 @@ def test_generated_module_docs_surface_only_active_v1_modules():
         "governance_review",
         "data_profiling",
         "fabric_input_output",
+        "io",
         "io_core",
         "guardrails",
         "metadata",

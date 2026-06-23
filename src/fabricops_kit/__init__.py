@@ -11,7 +11,7 @@ from .data_agreement import (
     widget_render_data_steward,
 )
 from .data_profiling import profile_dataframe
-from .fabric_input_output import (
+from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,
     read_lakehouse_parquet,

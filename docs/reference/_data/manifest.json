@@ -43,6 +43,13 @@
       "sidebar_include": true
     },
     {
+      "module_name": "io",
+      "visibility": "internal",
+      "module_summary": "Owns shared internal IO helpers used by one-function IO owner modules.",
+      "sidebar_group": "Internal architecture",
+      "sidebar_include": false
+    },
+    {
       "module_name": "io_core",
       "visibility": "internal",
       "module_summary": "Owns lower-level Fabric IO implementations shared by package internals.",

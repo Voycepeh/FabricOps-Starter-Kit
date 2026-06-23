@@ -9,6 +9,7 @@ Zero-callable modules are hidden unless explicitly allowlisted as major internal
 - [`governance_review`](governance_review.md)
 - [`data_profiling`](data_profiling.md)
 - [`fabric_input_output`](fabric_input_output.md)
+- [`io`](io.md)
 - [`io_core`](io_core.md)
 - [`guardrails`](guardrails.md)
 - [`metadata`](metadata.md)

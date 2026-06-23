@@ -2009,153 +2009,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.fabric_input_output.read_lakehouse_csv": {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-      "short_name": "read_lakehouse_csv",
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_csv",
-      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_csv/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.read_lakehouse_csv_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.read_lakehouse_excel": {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-      "short_name": "read_lakehouse_excel",
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_excel",
-      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_excel/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.read_lakehouse_excel_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.read_lakehouse_parquet": {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-      "short_name": "read_lakehouse_parquet",
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_parquet",
-      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_parquet/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.read_lakehouse_parquet_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.read_lakehouse_table": {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-      "short_name": "read_lakehouse_table",
-      "module": "fabric_input_output",
-      "callable": "read_lakehouse_table",
-      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_table/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.read_lakehouse_table_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.read_warehouse_query": {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_query",
-      "short_name": "read_warehouse_query",
-      "module": "fabric_input_output",
-      "callable": "read_warehouse_query",
-      "docs_url": "/FabricOps-Starter-Kit/reference/read_warehouse_query/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.read_warehouse_query_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline"
-      ],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.read_warehouse_table": {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-      "short_name": "read_warehouse_table",
-      "module": "fabric_input_output",
-      "callable": "read_warehouse_table",
-      "docs_url": "/FabricOps-Starter-Kit/reference/read_warehouse_table/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.read_warehouse_table_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline"
-      ],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.write_lakehouse_table": {
-      "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-      "short_name": "write_lakehouse_table",
-      "module": "fabric_input_output",
-      "callable": "write_lakehouse_table",
-      "docs_url": "/FabricOps-Starter-Kit/reference/write_lakehouse_table/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.write_lakehouse_table_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [
-        "02_pipeline",
-        "example_pipeline_demo",
-        "example_dq_rule_smoke_test"
-      ],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.fabric_input_output.write_warehouse_table": {
-      "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-      "short_name": "write_warehouse_table",
-      "module": "fabric_input_output",
-      "callable": "write_warehouse_table",
-      "docs_url": "/FabricOps-Starter-Kit/reference/write_warehouse_table/",
-      "classification": "callable",
-      "calls": [
-        "fabricops_kit.io_core.write_warehouse_table_core"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.governance_review._approved_column_identity": {
       "qualified_name": "fabricops_kit.governance_review._approved_column_identity",
       "short_name": "_approved_column_identity",
@@ -4629,6 +4482,681 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.io.convert_single_parquet_ns_to_us": {
+      "qualified_name": "fabricops_kit.io.convert_single_parquet_ns_to_us",
+      "short_name": "convert_single_parquet_ns_to_us",
+      "module": "io",
+      "callable": "convert_single_parquet_ns_to_us",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._convert_single_parquet_ns_to_us"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.get_spark_session": {
+      "qualified_name": "fabricops_kit.io.get_spark_session",
+      "short_name": "get_spark_session",
+      "module": "io",
+      "callable": "get_spark_session",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._get_spark"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.normalize_write_mode": {
+      "qualified_name": "fabricops_kit.io.normalize_write_mode",
+      "short_name": "normalize_write_mode",
+      "module": "io",
+      "callable": "normalize_write_mode",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._normalize_write_mode"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_csv_path": {
+      "qualified_name": "fabricops_kit.io.read_csv_path",
+      "short_name": "read_csv_path",
+      "module": "io",
+      "callable": "read_csv_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_csv_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_delta_path": {
+      "qualified_name": "fabricops_kit.io.read_delta_path",
+      "short_name": "read_delta_path",
+      "module": "io",
+      "callable": "read_delta_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_delta_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_excel_file": {
+      "qualified_name": "fabricops_kit.io.read_excel_file",
+      "short_name": "read_excel_file",
+      "module": "io",
+      "callable": "read_excel_file",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_excel_file"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv": {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+      "short_name": "read_lakehouse_csv",
+      "module": "io.read_lakehouse_csv",
+      "callable": "read_lakehouse_csv",
+      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_csv/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel": {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+      "short_name": "read_lakehouse_excel",
+      "module": "io.read_lakehouse_excel",
+      "callable": "read_lakehouse_excel",
+      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_excel/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet": {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+      "short_name": "read_lakehouse_parquet",
+      "module": "io.read_lakehouse_parquet",
+      "callable": "read_lakehouse_parquet",
+      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_parquet/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table": {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "short_name": "read_lakehouse_table",
+      "module": "io.read_lakehouse_table",
+      "callable": "read_lakehouse_table",
+      "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_table/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [
+        "02_pipeline",
+        "99_explore"
+      ],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_warehouse_query.read_warehouse_query": {
+      "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+      "short_name": "read_warehouse_query",
+      "module": "io.read_warehouse_query",
+      "callable": "read_warehouse_query",
+      "docs_url": "/FabricOps-Starter-Kit/reference/read_warehouse_query/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [
+        "02_pipeline"
+      ],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_warehouse_synapsesql": {
+      "qualified_name": "fabricops_kit.io.read_warehouse_synapsesql",
+      "short_name": "read_warehouse_synapsesql",
+      "module": "io",
+      "callable": "read_warehouse_synapsesql",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_warehouse_synapsesql"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.read_warehouse_table.read_warehouse_table": {
+      "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+      "short_name": "read_warehouse_table",
+      "module": "io.read_warehouse_table",
+      "callable": "read_warehouse_table",
+      "docs_url": "/FabricOps-Starter-Kit/reference/read_warehouse_table/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [
+        "02_pipeline"
+      ],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_lakehouse_file_location": {
+      "qualified_name": "fabricops_kit.io.resolve_lakehouse_file_location",
+      "short_name": "resolve_lakehouse_file_location",
+      "module": "io",
+      "callable": "resolve_lakehouse_file_location",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_file_location"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_lakehouse_file_path": {
+      "qualified_name": "fabricops_kit.io.resolve_lakehouse_file_path",
+      "short_name": "resolve_lakehouse_file_path",
+      "module": "io",
+      "callable": "resolve_lakehouse_file_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._lakehouse_file_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_lakehouse_table_location": {
+      "qualified_name": "fabricops_kit.io.resolve_lakehouse_table_location",
+      "short_name": "resolve_lakehouse_table_location",
+      "module": "io",
+      "callable": "resolve_lakehouse_table_location",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_table_location"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_target_store": {
+      "qualified_name": "fabricops_kit.io.resolve_target_store",
+      "short_name": "resolve_target_store",
+      "module": "io",
+      "callable": "resolve_target_store",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_warehouse_table_location": {
+      "qualified_name": "fabricops_kit.io.resolve_warehouse_table_location",
+      "short_name": "resolve_warehouse_table_location",
+      "module": "io",
+      "callable": "resolve_warehouse_table_location",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_warehouse_table_location"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.convert_single_parquet_ns_to_us": {
+      "qualified_name": "fabricops_kit.io.shared.convert_single_parquet_ns_to_us",
+      "short_name": "convert_single_parquet_ns_to_us",
+      "module": "io.shared",
+      "callable": "convert_single_parquet_ns_to_us",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._convert_single_parquet_ns_to_us"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.get_spark_session": {
+      "qualified_name": "fabricops_kit.io.shared.get_spark_session",
+      "short_name": "get_spark_session",
+      "module": "io.shared",
+      "callable": "get_spark_session",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._get_spark"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.normalize_write_mode": {
+      "qualified_name": "fabricops_kit.io.shared.normalize_write_mode",
+      "short_name": "normalize_write_mode",
+      "module": "io.shared",
+      "callable": "normalize_write_mode",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._normalize_write_mode"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.read_csv_path": {
+      "qualified_name": "fabricops_kit.io.shared.read_csv_path",
+      "short_name": "read_csv_path",
+      "module": "io.shared",
+      "callable": "read_csv_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_csv_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.read_delta_path": {
+      "qualified_name": "fabricops_kit.io.shared.read_delta_path",
+      "short_name": "read_delta_path",
+      "module": "io.shared",
+      "callable": "read_delta_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_delta_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.read_excel_file": {
+      "qualified_name": "fabricops_kit.io.shared.read_excel_file",
+      "short_name": "read_excel_file",
+      "module": "io.shared",
+      "callable": "read_excel_file",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_excel_file"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.read_warehouse_synapsesql": {
+      "qualified_name": "fabricops_kit.io.shared.read_warehouse_synapsesql",
+      "short_name": "read_warehouse_synapsesql",
+      "module": "io.shared",
+      "callable": "read_warehouse_synapsesql",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._read_warehouse_synapsesql"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_lakehouse_file_location": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_file_location",
+      "short_name": "resolve_lakehouse_file_location",
+      "module": "io.shared",
+      "callable": "resolve_lakehouse_file_location",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_file_location"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_lakehouse_file_path": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_file_path",
+      "short_name": "resolve_lakehouse_file_path",
+      "module": "io.shared",
+      "callable": "resolve_lakehouse_file_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._lakehouse_file_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_lakehouse_table_location": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+      "short_name": "resolve_lakehouse_table_location",
+      "module": "io.shared",
+      "callable": "resolve_lakehouse_table_location",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_table_location"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_target_store": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "short_name": "resolve_target_store",
+      "module": "io.shared",
+      "callable": "resolve_target_store",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_warehouse_table_location": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_warehouse_table_location",
+      "short_name": "resolve_warehouse_table_location",
+      "module": "io.shared",
+      "callable": "resolve_warehouse_table_location",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_warehouse_table_location"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.validate_dataframe_writer": {
+      "qualified_name": "fabricops_kit.io.shared.validate_dataframe_writer",
+      "short_name": "validate_dataframe_writer",
+      "module": "io.shared",
+      "callable": "validate_dataframe_writer",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._validate_dataframe_writer"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.validate_select_query": {
+      "qualified_name": "fabricops_kit.io.shared.validate_select_query",
+      "short_name": "validate_select_query",
+      "module": "io.shared",
+      "callable": "validate_select_query",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._validate_select_query"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.write_delta_path": {
+      "qualified_name": "fabricops_kit.io.shared.write_delta_path",
+      "short_name": "write_delta_path",
+      "module": "io.shared",
+      "callable": "write_delta_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._write_delta_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.write_warehouse_synapsesql": {
+      "qualified_name": "fabricops_kit.io.shared.write_warehouse_synapsesql",
+      "short_name": "write_warehouse_synapsesql",
+      "module": "io.shared",
+      "callable": "write_warehouse_synapsesql",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._write_warehouse_synapsesql"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.validate_dataframe_writer": {
+      "qualified_name": "fabricops_kit.io.validate_dataframe_writer",
+      "short_name": "validate_dataframe_writer",
+      "module": "io",
+      "callable": "validate_dataframe_writer",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._validate_dataframe_writer"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.validate_select_query": {
+      "qualified_name": "fabricops_kit.io.validate_select_query",
+      "short_name": "validate_select_query",
+      "module": "io",
+      "callable": "validate_select_query",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._validate_select_query"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.write_delta_path": {
+      "qualified_name": "fabricops_kit.io.write_delta_path",
+      "short_name": "write_delta_path",
+      "module": "io",
+      "callable": "write_delta_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._write_delta_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table": {
+      "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+      "short_name": "write_lakehouse_table",
+      "module": "io.write_lakehouse_table",
+      "callable": "write_lakehouse_table",
+      "docs_url": "/FabricOps-Starter-Kit/reference/write_lakehouse_table/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [
+        "02_pipeline",
+        "example_pipeline_demo",
+        "example_dq_rule_smoke_test"
+      ],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.write_warehouse_synapsesql": {
+      "qualified_name": "fabricops_kit.io.write_warehouse_synapsesql",
+      "short_name": "write_warehouse_synapsesql",
+      "module": "io",
+      "callable": "write_warehouse_synapsesql",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._write_warehouse_synapsesql"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.write_warehouse_table.write_warehouse_table": {
+      "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+      "short_name": "write_warehouse_table",
+      "module": "io.write_warehouse_table",
+      "callable": "write_warehouse_table",
+      "docs_url": "/FabricOps-Starter-Kit/reference/write_warehouse_table/",
+      "classification": "callable",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.io_core.FabricStore": {
       "qualified_name": "fabricops_kit.io_core.FabricStore",
       "short_name": "FabricStore",
@@ -4701,9 +5229,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.io_core.read_lakehouse_parquet_core"
+        "fabricops_kit.io.convert_single_parquet_ns_to_us",
+        "fabricops_kit.io.shared.convert_single_parquet_ns_to_us"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4718,14 +5247,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.io_core.read_lakehouse_csv_core",
-        "fabricops_kit.io_core.read_lakehouse_excel_core",
-        "fabricops_kit.io_core.read_lakehouse_parquet_core",
-        "fabricops_kit.io_core.read_lakehouse_table_core",
-        "fabricops_kit.io_core.read_warehouse_query_core",
-        "fabricops_kit.io_core.read_warehouse_table_core"
+        "fabricops_kit.io.get_spark_session",
+        "fabricops_kit.io.shared.get_spark_session",
+        "fabricops_kit.io_core.read_lakehouse_table_core"
       ],
-      "used_by_count": 6,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4761,10 +5287,11 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.io_core._resolve_lakehouse_file_location",
-        "fabricops_kit.io_core.read_lakehouse_parquet_core"
+        "fabricops_kit.io.resolve_lakehouse_file_path",
+        "fabricops_kit.io.shared.resolve_lakehouse_file_path",
+        "fabricops_kit.io_core._resolve_lakehouse_file_location"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._join_lakehouse_area_path",
@@ -4836,9 +5363,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.io.normalize_write_mode",
+        "fabricops_kit.io.shared.normalize_write_mode",
         "fabricops_kit.io_core.write_lakehouse_table_core"
       ],
-      "used_by_count": 1,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4853,9 +5382,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.io_core.read_lakehouse_csv_core"
+        "fabricops_kit.io.read_csv_path",
+        "fabricops_kit.io.shared.read_csv_path"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4870,9 +5400,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.io.read_delta_path",
+        "fabricops_kit.io.shared.read_delta_path",
         "fabricops_kit.io_core.read_lakehouse_table_core"
       ],
-      "used_by_count": 1,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4889,9 +5421,10 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.io_core.read_lakehouse_excel_core"
+        "fabricops_kit.io.read_excel_file",
+        "fabricops_kit.io.shared.read_excel_file"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._load_pandas"
@@ -4910,8 +5443,8 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.io_core.read_warehouse_query_core",
-        "fabricops_kit.io_core.read_warehouse_table_core"
+        "fabricops_kit.io.read_warehouse_synapsesql",
+        "fabricops_kit.io.shared.read_warehouse_synapsesql"
       ],
       "used_by_count": 2,
       "used_in_templates": [],
@@ -4951,11 +5484,10 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.io_core.read_lakehouse_csv_core",
-        "fabricops_kit.io_core.read_lakehouse_excel_core",
-        "fabricops_kit.io_core.read_lakehouse_parquet_core"
+        "fabricops_kit.io.resolve_lakehouse_file_location",
+        "fabricops_kit.io.shared.resolve_lakehouse_file_location"
       ],
-      "used_by_count": 3,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._lakehouse_file_path",
@@ -5013,10 +5545,12 @@
       ],
       "calls_count": 3,
       "used_by": [
+        "fabricops_kit.io.resolve_lakehouse_table_location",
+        "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io_core.read_lakehouse_table_core",
         "fabricops_kit.io_core.write_lakehouse_table_core"
       ],
-      "used_by_count": 2,
+      "used_by_count": 4,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._normalize_table_name",
@@ -5061,16 +5595,12 @@
       ],
       "calls_count": 4,
       "used_by": [
-        "fabricops_kit.io_core.read_lakehouse_csv_core",
-        "fabricops_kit.io_core.read_lakehouse_excel_core",
-        "fabricops_kit.io_core.read_lakehouse_parquet_core",
+        "fabricops_kit.io.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_target_store",
         "fabricops_kit.io_core.read_lakehouse_table_core",
-        "fabricops_kit.io_core.read_warehouse_query_core",
-        "fabricops_kit.io_core.read_warehouse_table_core",
-        "fabricops_kit.io_core.write_lakehouse_table_core",
-        "fabricops_kit.io_core.write_warehouse_table_core"
+        "fabricops_kit.io_core.write_lakehouse_table_core"
       ],
-      "used_by_count": 8,
+      "used_by_count": 4,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._validate_lakehouse_store",
@@ -5092,8 +5622,8 @@
       ],
       "calls_count": 3,
       "used_by": [
-        "fabricops_kit.io_core.read_warehouse_table_core",
-        "fabricops_kit.io_core.write_warehouse_table_core"
+        "fabricops_kit.io.resolve_warehouse_table_location",
+        "fabricops_kit.io.shared.resolve_warehouse_table_location"
       ],
       "used_by_count": 2,
       "used_in_templates": [],
@@ -5114,10 +5644,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.io_core.write_lakehouse_table_core",
-        "fabricops_kit.io_core.write_warehouse_table_core"
+        "fabricops_kit.io.shared.validate_dataframe_writer",
+        "fabricops_kit.io.validate_dataframe_writer",
+        "fabricops_kit.io_core.write_lakehouse_table_core"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -5167,9 +5698,10 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.io_core.read_warehouse_query_core"
+        "fabricops_kit.io.shared.validate_select_query",
+        "fabricops_kit.io.validate_select_query"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -5201,9 +5733,11 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
+        "fabricops_kit.io.shared.write_delta_path",
+        "fabricops_kit.io.write_delta_path",
         "fabricops_kit.io_core.write_lakehouse_table_core"
       ],
-      "used_by_count": 1,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -5220,9 +5754,10 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.io_core.write_warehouse_table_core"
+        "fabricops_kit.io.shared.write_warehouse_synapsesql",
+        "fabricops_kit.io.write_warehouse_synapsesql"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._require_fabric_connector"
@@ -5267,89 +5802,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.io_core.read_lakehouse_csv_core": {
-      "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
-      "short_name": "read_lakehouse_csv_core",
-      "module": "io_core",
-      "callable": "read_lakehouse_csv_core",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_csv_path",
-        "fabricops_kit.io_core._resolve_lakehouse_file_location",
-        "fabricops_kit.io_core._resolve_target_store"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_csv"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_csv_path",
-        "fabricops_kit.io_core._resolve_lakehouse_file_location",
-        "fabricops_kit.io_core._resolve_target_store"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.io_core.read_lakehouse_excel_core": {
-      "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
-      "short_name": "read_lakehouse_excel_core",
-      "module": "io_core",
-      "callable": "read_lakehouse_excel_core",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_excel_file",
-        "fabricops_kit.io_core._resolve_lakehouse_file_location",
-        "fabricops_kit.io_core._resolve_target_store"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_excel"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_excel_file",
-        "fabricops_kit.io_core._resolve_lakehouse_file_location",
-        "fabricops_kit.io_core._resolve_target_store"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.io_core.read_lakehouse_parquet_core": {
-      "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
-      "short_name": "read_lakehouse_parquet_core",
-      "module": "io_core",
-      "callable": "read_lakehouse_parquet_core",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._convert_single_parquet_ns_to_us",
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._lakehouse_file_path",
-        "fabricops_kit.io_core._resolve_lakehouse_file_location",
-        "fabricops_kit.io_core._resolve_target_store"
-      ],
-      "calls_count": 5,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_lakehouse_parquet"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._convert_single_parquet_ns_to_us",
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._lakehouse_file_path",
-        "fabricops_kit.io_core._resolve_lakehouse_file_location",
-        "fabricops_kit.io_core._resolve_target_store"
-      ],
-      "internal_helper_count": 5
-    },
     "fabricops_kit.io_core.read_lakehouse_table_core": {
       "qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
       "short_name": "read_lakehouse_table_core",
@@ -5369,7 +5821,6 @@
         "fabricops_kit.config._validate_metadata_table_registration",
         "fabricops_kit.data_agreement._list_all_data_agreement_rows",
         "fabricops_kit.data_agreement._list_data_stewards",
-        "fabricops_kit.fabric_input_output.read_lakehouse_table",
         "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
         "fabricops_kit.governance_review._read_guardrail_rule_metadata",
         "fabricops_kit.governance_review._read_metadata_rows",
@@ -5378,67 +5829,13 @@
         "fabricops_kit.guardrails.enforce_profile_behavior",
         "fabricops_kit.metadata._load_notebook_registry"
       ],
-      "used_by_count": 12,
+      "used_by_count": 11,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._get_spark",
         "fabricops_kit.io_core._read_delta_path",
         "fabricops_kit.io_core._resolve_lakehouse_table_location",
         "fabricops_kit.io_core._resolve_target_store"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.io_core.read_warehouse_query_core": {
-      "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
-      "short_name": "read_warehouse_query_core",
-      "module": "io_core",
-      "callable": "read_warehouse_query_core",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_warehouse_synapsesql",
-        "fabricops_kit.io_core._resolve_target_store",
-        "fabricops_kit.io_core._validate_select_query"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_warehouse_query"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_warehouse_synapsesql",
-        "fabricops_kit.io_core._resolve_target_store",
-        "fabricops_kit.io_core._validate_select_query"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.io_core.read_warehouse_table_core": {
-      "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
-      "short_name": "read_warehouse_table_core",
-      "module": "io_core",
-      "callable": "read_warehouse_table_core",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_warehouse_synapsesql",
-        "fabricops_kit.io_core._resolve_target_store",
-        "fabricops_kit.io_core._resolve_warehouse_table_location"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.read_warehouse_table"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._get_spark",
-        "fabricops_kit.io_core._read_warehouse_synapsesql",
-        "fabricops_kit.io_core._resolve_target_store",
-        "fabricops_kit.io_core._resolve_warehouse_table_location"
       ],
       "internal_helper_count": 4
     },
@@ -5460,7 +5857,6 @@
       "used_by": [
         "fabricops_kit.config._setup_metadata_table_registry",
         "fabricops_kit.data_agreement._write_row",
-        "fabricops_kit.fabric_input_output.write_lakehouse_table",
         "fabricops_kit.governance_review._write_rule_records",
         "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
         "fabricops_kit.governance_review.record_table_governance",
@@ -5470,7 +5866,7 @@
         "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
         "fabricops_kit.pipeline.write_catalogue_evidence"
       ],
-      "used_by_count": 11,
+      "used_by_count": 10,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._normalize_write_mode",
@@ -5480,33 +5876,6 @@
         "fabricops_kit.io_core._write_delta_path"
       ],
       "internal_helper_count": 5
-    },
-    "fabricops_kit.io_core.write_warehouse_table_core": {
-      "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
-      "short_name": "write_warehouse_table_core",
-      "module": "io_core",
-      "callable": "write_warehouse_table_core",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._resolve_target_store",
-        "fabricops_kit.io_core._resolve_warehouse_table_location",
-        "fabricops_kit.io_core._validate_dataframe_writer",
-        "fabricops_kit.io_core._write_warehouse_synapsesql"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.fabric_input_output.write_warehouse_table"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._resolve_target_store",
-        "fabricops_kit.io_core._resolve_warehouse_table_location",
-        "fabricops_kit.io_core._validate_dataframe_writer",
-        "fabricops_kit.io_core._write_warehouse_synapsesql"
-      ],
-      "internal_helper_count": 4
     },
     "fabricops_kit.metadata._build_dq_rule_key": {
       "qualified_name": "fabricops_kit.metadata._build_dq_rule_key",
@@ -6894,16 +7263,6 @@
       "outbound_count": 1,
       "inbound_count": 3
     },
-    "fabric_input_output": {
-      "callable_count": 8,
-      "internal_count": 0,
-      "outbound_modules": [
-        "io_core"
-      ],
-      "inbound_modules": [],
-      "outbound_count": 1,
-      "inbound_count": 0
-    },
     "governance_review": {
       "callable_count": 6,
       "internal_count": 63,
@@ -6934,6 +7293,88 @@
       "outbound_count": 3,
       "inbound_count": 1
     },
+    "io": {
+      "callable_count": 0,
+      "internal_count": 0,
+      "outbound_modules": [
+        "io_core"
+      ],
+      "inbound_modules": [],
+      "outbound_count": 1,
+      "inbound_count": 0
+    },
+    "io.read_lakehouse_csv": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.read_lakehouse_excel": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.read_lakehouse_parquet": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.read_lakehouse_table": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.read_warehouse_query": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.read_warehouse_table": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.shared": {
+      "callable_count": 0,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.write_lakehouse_table": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "io.write_warehouse_table": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
     "io_core": {
       "callable_count": 0,
       "internal_count": 28,
@@ -6943,14 +7384,15 @@
       "inbound_modules": [
         "config",
         "data_agreement",
-        "fabric_input_output",
         "governance_review",
         "guardrails",
+        "io",
         "metadata",
-        "pipeline"
+        "pipeline",
+        "shared"
       ],
       "outbound_count": 1,
-      "inbound_count": 7
+      "inbound_count": 8
     },
     "metadata": {
       "callable_count": 0,

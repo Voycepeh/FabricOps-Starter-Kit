@@ -325,3 +325,77 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
     with pytest.raises(ValueError, match="SELECT statement"):
         io.read_warehouse_query("DELETE FROM dbo.orders", target="warehouse", spark_session=spark, context=context)
 
+
+
+def test_migrated_io_public_import_paths_remain_stable():
+    """Verify migrated IO public functions remain importable from stable paths."""
+    import fabricops_kit
+    import fabricops_kit.io as owner_package
+    import fabricops_kit.fabric_input_output as facade
+
+    for helper_name in PUBLIC_IO_CALLABLES:
+        root_func = getattr(fabricops_kit, helper_name)
+        facade_func = getattr(facade, helper_name)
+        owner_func = getattr(owner_package, helper_name)
+        assert root_func is owner_func
+        assert facade_func is owner_func
+
+
+def test_migrated_io_owner_files_have_exactly_one_public_function():
+    """Verify every migrated IO owner file defines exactly one public function."""
+    owner_dir = Path("src/fabricops_kit/io")
+    for helper_name in PUBLIC_IO_CALLABLES:
+        path = owner_dir / f"{helper_name}.py"
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        public_defs = [node.name for node in tree.body if isinstance(node, ast.FunctionDef) and not node.name.startswith("_")]
+        assert public_defs == [helper_name]
+
+
+def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
+    """Verify shared IO logic is non-underscore and not one-to-one public mirrors."""
+    shared_path = Path("src/fabricops_kit/io/shared.py")
+    tree = ast.parse(shared_path.read_text(encoding="utf-8"))
+    shared_defs = [node.name for node in tree.body if isinstance(node, ast.FunctionDef)]
+
+    for helper_name in PUBLIC_IO_CALLABLES:
+        assert f"{helper_name}_shared" not in shared_defs
+    assert all(not name.startswith("_") for name in shared_defs)
+    assert {
+        "resolve_target_store",
+        "resolve_lakehouse_table_location",
+        "resolve_lakehouse_file_location",
+        "read_warehouse_synapsesql",
+        "write_warehouse_synapsesql",
+    }.issubset(shared_defs)
+
+
+def test_io_core_has_no_public_function_mirror_core_wrappers():
+    """Verify migrated public function implementations are not parked in one-to-one core wrappers."""
+    source = Path("src/fabricops_kit/io_core.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+    reused_internal_workflows = {"read_lakehouse_table", "write_lakehouse_table"}
+    for helper_name in PUBLIC_IO_CALLABLES - reused_internal_workflows:
+        assert f"{helper_name}_core" not in defined_functions
+    assert "metadata and orchestration internals" in source
+
+
+def test_fabric_input_output_is_facade_only_after_io_migration():
+    """Verify the legacy fabric_input_output module no longer owns implementations."""
+    source = Path("src/fabricops_kit/fabric_input_output.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    defined_functions = [node.name for node in tree.body if isinstance(node, ast.FunctionDef)]
+
+    assert defined_functions == []
+    assert "from .io import" in source
+    assert "Compatibility facade" in source
+
+
+def test_migrated_io_owner_files_do_not_import_private_helpers():
+    """Verify migrated IO owner files do not import cross-file private helpers."""
+    owner_dir = Path("src/fabricops_kit/io")
+    for helper_name in PUBLIC_IO_CALLABLES:
+        tree = ast.parse((owner_dir / f"{helper_name}.py").read_text(encoding="utf-8"))
+        imported_names = [alias.name for node in tree.body if isinstance(node, ast.ImportFrom) for alias in node.names]
+        assert not any(name.startswith("_") for name in imported_names)
