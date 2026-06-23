@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import read_lakehouse_excel_shared
+from .shared import get_spark_session, read_excel_file, resolve_lakehouse_file_location, resolve_target_store
 
 
 def read_lakehouse_excel(relative_path: str, *, target: str = "source", sheet_name=0, spark_session=None, context: dict[str, Any] | None = None, **read_excel_kwargs):
@@ -31,4 +31,6 @@ def read_lakehouse_excel(relative_path: str, *, target: str = "source", sheet_na
         Spark DataFrame converted from the selected Excel worksheet.
 
     """
-    return read_lakehouse_excel_shared(relative_path, target=target, sheet_name=sheet_name, spark_session=spark_session, context=context, **read_excel_kwargs)
+    store, _env = resolve_target_store(target, "lakehouse", context=context)
+    _relative_path, lakehouse_path = resolve_lakehouse_file_location(store, relative_path)
+    return read_excel_file(get_spark_session(spark_session), lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs)

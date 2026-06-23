@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import read_warehouse_table_shared
+from .shared import get_spark_session, read_warehouse_synapsesql, resolve_target_store, resolve_warehouse_table_location
 
 
 def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehouse", spark_session=None, context: dict[str, Any] | None = None):
@@ -45,4 +45,6 @@ def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehou
         Spark DataFrame loaded through the Fabric warehouse connector.
 
     """
-    return read_warehouse_table_shared(schema, table_name, target=target, spark_session=spark_session, context=context)
+    store, _env = resolve_target_store(target, "warehouse", context=context)
+    _schema_value, _table_value, object_name = resolve_warehouse_table_location(store, schema, table_name)
+    return read_warehouse_synapsesql(get_spark_session(spark_session), store, object_name)

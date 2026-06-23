@@ -119,6 +119,33 @@ def _resolve_call(call: ast.Call, caller: SourceFunction, functions: dict[str, S
 
 
 
+
+def _matching_public_passthrough_name(function_name: str, public_names: set[str]) -> str | None:
+    """Return the public function name mirrored by a one-to-one shared/core wrapper."""
+    for suffix in ("_shared", "_core"):
+        if function_name.endswith(suffix):
+            candidate = function_name[: -len(suffix)]
+            if candidate in public_names:
+                return candidate
+    return None
+
+
+def _is_direct_passthrough(fn: SourceFunction) -> bool:
+    """Return whether a function only returns or calls a single implementation function."""
+    executable = [
+        node
+        for node in fn.node.body
+        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str))
+    ]
+    if len(executable) != 1:
+        return False
+    node = executable[0]
+    if isinstance(node, ast.Return) and isinstance(node.value, ast.Call):
+        return True
+    if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+        return True
+    return False
+
 def _load_ownership_plan() -> dict[str, Any]:
     if not OWNERSHIP_PLAN_PATH.exists():
         return {"migration_files": {}, "facade_files": []}
@@ -223,6 +250,25 @@ def _source_failures() -> list[str]:
                 failures.append(f"Public function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
             if fn.layer == "internal" and callee.layer == "public":
                 failures.append(f"Internal function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
+
+    public_names = {fn.name for fn in functions.values() if fn.layer == "public"}
+    migrated_public_names = {
+        name
+        for migration in completed_migrations.values()
+        for name in migration.get("public_functions", [])
+    }
+    for qn, fn in functions.items():
+        mirrored_public_name = _matching_public_passthrough_name(fn.name, public_names)
+        if mirrored_public_name not in migrated_public_names:
+            continue
+        if not mirrored_public_name:
+            continue
+        public_callers = [functions[caller] for caller in inbound_by_qn.get(qn, set()) if functions[caller].layer == "public"]
+        if len(public_callers) == 1 and public_callers[0].name == mirrored_public_name and _is_direct_passthrough(fn):
+            failures.append(
+                "One-to-one public pass-through helper should be inlined into the owner file: "
+                f"{public_callers[0].qualified_name} -> {fn.qualified_name}"
+            )
 
     for helper_qn, helper in functions.items():
         if helper.layer != PRIVATE_HELPER_LAYER or not enforces_helper_boundary(helper):

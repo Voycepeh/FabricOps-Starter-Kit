@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import read_warehouse_query_shared
+from .shared import get_spark_session, read_warehouse_synapsesql, resolve_target_store, validate_select_query
 
 
 def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session=None, context: dict[str, Any] | None = None):
@@ -41,4 +41,6 @@ def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session
         Spark DataFrame returned by the SQL serving engine.
 
     """
-    return read_warehouse_query_shared(query, target=target, spark_session=spark_session, context=context)
+    store, _env = resolve_target_store(target, "warehouse", context=context)
+    sql = validate_select_query(query)
+    return read_warehouse_synapsesql(get_spark_session(spark_session), store, sql)

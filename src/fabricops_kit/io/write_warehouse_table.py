@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import write_warehouse_table_shared
+from .shared import resolve_target_store, resolve_warehouse_table_location, validate_dataframe_writer, write_warehouse_synapsesql
 
 
 def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "warehouse", mode: str = "append", context: dict[str, Any] | None = None):
@@ -38,4 +38,7 @@ def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "wa
         The DataFrame is written through the Fabric warehouse connector.
 
     """
-    return write_warehouse_table_shared(df, schema, table_name, target=target, mode=mode, context=context)
+    validate_dataframe_writer(df)
+    store, _env = resolve_target_store(target, "warehouse", context=context)
+    _schema_value, _table_value, object_name = resolve_warehouse_table_location(store, schema, table_name)
+    write_warehouse_synapsesql(df, store, object_name, mode=mode)

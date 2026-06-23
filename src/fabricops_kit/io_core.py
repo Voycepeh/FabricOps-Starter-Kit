@@ -313,21 +313,32 @@ def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True
     except Exception as exc:
         print(f"FAILED converting ns to us for file {local_in_path}: {exc}")
 
-
 # ---------------------------------------------------------------------------
-# Internal workflow layer: public wrappers delegate one-to-one to these.
+# Shared metadata IO workflows used by non-public orchestration modules.
 # ---------------------------------------------------------------------------
 
 
 def read_lakehouse_table_core(table_name: str, *, target: str, schema: str | None = None, spark_session=None, context: dict[str, Any] | None = None):
-    """Read a Lakehouse Delta table for package-internal callers."""
+    """Read a Lakehouse Delta table for metadata and orchestration internals.
+
+    This remains in ``io_core`` because governance, metadata, pipeline, config,
+    guardrail, and data-agreement internals share configured metadata table
+    reads. Notebook-facing IO public functions own their implementation in
+    ``fabricops_kit.io`` and do not call this compatibility workflow.
+    """
     store, _env = _resolve_target_store(target, "lakehouse", context=context)
     _table_value, _schema_value, path = _resolve_lakehouse_table_location(store, table_name, schema)
     return _read_delta_path(_get_spark(spark_session), path)
 
 
-def write_lakehouse_table_core(df, table_name: str, *, target: str, schema: str | None, mode: str, partition_by=None, repartition_by=None, options=None, verbose: bool = True, context=None):
-    """Write a Lakehouse Delta table for package-internal callers."""
+def write_lakehouse_table_core(df, table_name: str, *, target: str, schema: str | None = None, mode: str = "append", partition_by=None, repartition_by=None, options=None, verbose: bool = True, context=None):
+    """Write a Lakehouse Delta table for metadata and orchestration internals.
+
+    This remains in ``io_core`` because governance, metadata, pipeline, config,
+    guardrail, and data-agreement internals share configured metadata table
+    writes. Notebook-facing IO public functions own their implementation in
+    ``fabricops_kit.io`` and do not call this compatibility workflow.
+    """
     _validate_dataframe_writer(df)
     store, _env = _resolve_target_store(target, "lakehouse", context=context)
     _table_value, _schema_value, path = _resolve_lakehouse_table_location(store, table_name, schema)
@@ -340,90 +351,3 @@ def write_lakehouse_table_core(df, table_name: str, *, target: str, schema: str 
     if verbose:
         print(f"Writing Lakehouse table to {path}")
     _write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
-
-
-def read_lakehouse_csv_core(relative_path: str, *, target: str, spark_session=None, header: bool = True, context: dict[str, Any] | None = None, **options):
-    """Read Lakehouse CSV files for package-internal callers."""
-    store, _env = _resolve_target_store(target, "lakehouse", context=context)
-    _relative_path, path = _resolve_lakehouse_file_location(store, relative_path)
-    return _read_csv_path(_get_spark(spark_session), path, header=header, options=options)
-
-
-def read_lakehouse_parquet_core(relative_path: str, *, target: str, verbose: bool = True, spark_session=None, context: dict[str, Any] | None = None):
-    """Read Lakehouse Parquet files for package-internal callers."""
-    store, _env = _resolve_target_store(target, "lakehouse", context=context)
-    normalized_relative_path, orig_spark_path = _resolve_lakehouse_file_location(store, relative_path)
-    spark_obj = _get_spark(spark_session)
-    parts = normalized_relative_path.split("/")
-    if len(parts) < 2:
-        raise ValueError("relative_path should look like folder/file.parquet or folder/subfolder/file.parquet.")
-    tsus_dir = parts[:-2] + [parts[-2] + "_tsus"]
-    tsus_relative_path = "/".join(tsus_dir + [parts[-1]])
-    tsus_spark_path = _lakehouse_file_path(store, tsus_relative_path)
-    orig_local_path = f"/lakehouse/default/Files/{normalized_relative_path}"
-    tsus_local_path = f"/lakehouse/default/Files/{tsus_relative_path}"
-    if verbose:
-        print(f"Try Spark read: {orig_spark_path}")
-    try:
-        df = spark_obj.read.parquet(orig_spark_path)
-        _ = df.limit(1).collect()
-        if verbose:
-            print("SUCCESS: Spark read original path.")
-        return df
-    except Exception as exc:
-        if verbose:
-            print(f"Original Parquet read failed. Will try fallback path. Exception: {exc}")
-    for try_convert in range(2):
-        if verbose:
-            print(f"Try Spark read: {tsus_spark_path}{' after single-file convert' if try_convert else ''}")
-        try:
-            df = spark_obj.read.parquet(tsus_spark_path)
-            _ = df.limit(1).collect()
-            if verbose:
-                print("SUCCESS: Spark read _tsus path.")
-            return df
-        except Exception as exc:
-            msg = str(exc)
-            path_not_found = "[PATH_NOT_FOUND]" in msg or "Path does not exist" in msg or "No such file or directory" in msg
-            if try_convert == 0 and path_not_found:
-                if verbose:
-                    print("PATH NOT FOUND for _tsus parquet. Will convert one file and retry.")
-                try:
-                    mssparkutils.fs.mkdirs(_lakehouse_file_path(store, "/".join(tsus_dir)))
-                except Exception:
-                    pass
-                _convert_single_parquet_ns_to_us(local_in_path=orig_local_path, local_out_path=tsus_local_path, verbose=verbose)
-            else:
-                if verbose:
-                    print(f"FAILED: Spark read _tsus path. Exception: {exc}")
-                break
-    raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
-
-
-def read_lakehouse_excel_core(relative_path: str, *, target: str, sheet_name=0, spark_session=None, context: dict[str, Any] | None = None, **read_excel_kwargs):
-    """Read Lakehouse Excel files for package-internal callers."""
-    store, _env = _resolve_target_store(target, "lakehouse", context=context)
-    _relative_path, lakehouse_path = _resolve_lakehouse_file_location(store, relative_path)
-    return _read_excel_file(_get_spark(spark_session), lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs)
-
-
-def read_warehouse_table_core(schema: str, table_name: str, *, target: str, spark_session=None, context: dict[str, Any] | None = None):
-    """Read a Warehouse table for package-internal callers."""
-    store, _env = _resolve_target_store(target, "warehouse", context=context)
-    _schema_value, _table_value, object_name = _resolve_warehouse_table_location(store, schema, table_name)
-    return _read_warehouse_synapsesql(_get_spark(spark_session), store, object_name)
-
-
-def read_warehouse_query_core(query: str, *, target: str, spark_session=None, context: dict[str, Any] | None = None):
-    """Read a Warehouse SQL query for package-internal callers."""
-    store, _env = _resolve_target_store(target, "warehouse", context=context)
-    sql = _validate_select_query(query)
-    return _read_warehouse_synapsesql(_get_spark(spark_session), store, sql)
-
-
-def write_warehouse_table_core(df, schema: str, table_name: str, *, target: str, mode: str, context: dict[str, Any] | None = None):
-    """Write a Warehouse table for package-internal callers."""
-    _validate_dataframe_writer(df)
-    store, _env = _resolve_target_store(target, "warehouse", context=context)
-    _schema_value, _table_value, object_name = _resolve_warehouse_table_location(store, schema, table_name)
-    _write_warehouse_synapsesql(df, store, object_name, mode=mode)

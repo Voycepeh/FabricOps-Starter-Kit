@@ -352,14 +352,33 @@ def test_migrated_io_owner_files_have_exactly_one_public_function():
 
 
 def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
-    """Verify reusable migrated IO logic is promoted to non-underscore shared functions."""
+    """Verify shared IO logic is non-underscore and not one-to-one public mirrors."""
     shared_path = Path("src/fabricops_kit/io/shared.py")
     tree = ast.parse(shared_path.read_text(encoding="utf-8"))
     shared_defs = [node.name for node in tree.body if isinstance(node, ast.FunctionDef)]
 
     for helper_name in PUBLIC_IO_CALLABLES:
-        assert f"{helper_name}_shared" in shared_defs
+        assert f"{helper_name}_shared" not in shared_defs
     assert all(not name.startswith("_") for name in shared_defs)
+    assert {
+        "resolve_target_store",
+        "resolve_lakehouse_table_location",
+        "resolve_lakehouse_file_location",
+        "read_warehouse_synapsesql",
+        "write_warehouse_synapsesql",
+    }.issubset(shared_defs)
+
+
+def test_io_core_has_no_public_function_mirror_core_wrappers():
+    """Verify migrated public function implementations are not parked in one-to-one core wrappers."""
+    source = Path("src/fabricops_kit/io_core.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+    reused_internal_workflows = {"read_lakehouse_table", "write_lakehouse_table"}
+    for helper_name in PUBLIC_IO_CALLABLES - reused_internal_workflows:
+        assert f"{helper_name}_core" not in defined_functions
+    assert "metadata and orchestration internals" in source
 
 
 def test_fabric_input_output_is_facade_only_after_io_migration():
