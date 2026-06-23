@@ -4766,11 +4766,7 @@ def main() -> None:
     start_marker = "          # AUTO-GENERATED-MODULES-START"
     end_marker = "      # AUTO-GENERATED-MODULES-END"
     if start_marker in mkdocs_text and end_marker in mkdocs_text:
-        generated_lines = []
-        for modules in module_sidebar_groups.values():
-            for module in modules:
-                generated_lines.append(f"          - {module}: api/modules/{module}.md")
-        generated = "\n".join(generated_lines)
+        generated = ""
         before, rest = mkdocs_text.split(start_marker, 1)
         middle, after = rest.split(end_marker, 1)
         mkdocs_text = before + start_marker + "\n" + generated + "\n" + end_marker + after
@@ -5007,11 +5003,8 @@ def main() -> None:
         content = f"<code>{_esc(text)}</code>" if code else _esc(text)
         return f'<a href="{_esc(href)}">{content}</a>'
 
-    def _module_link(module: str, *, base_prefix: str = "../") -> str:
-        return (
-            f'<a class="reference-module-link" href="{_esc(base_prefix)}api/modules/{_esc(module)}/" '
-            f'title="Open {module} module page" aria-label="Open {module} module page">{_esc(module)}</a>'
-        )
+    def _module_label(module: str) -> str:
+        return f'<span class="reference-module-label">{_esc(module)}</span>'
 
 
     public_flow_qns = sorted(
@@ -5089,7 +5082,6 @@ def main() -> None:
             '    - [Public callable flow map](callable-flow.md): global public callable dependency view and nested internal helper summary.',
             '    - [Architecture](../assets/callable-functions-dashboard.html): review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations.',
             '    - [Inventory](../assets/callable-functions-inventory.html): search/filter all callables, select rows, and export AI refactor packets.',
-            '    - [Implementation modules](../api/modules/): source ownership, module-level dependencies, and utility/internal relationships.',
             '    - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.',
             '    - Agent metadata: `_data/automation-manifest.json`.',
             '    - Implementation contracts: expectations maintainers must satisfy before using or changing a function.',
@@ -5168,7 +5160,6 @@ def main() -> None:
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
-                    f'{_module_link(display_module)}'
                     f'<span class="reference-chip">Public Starter Kit function</span>'
                     f'<span class="reference-chip">{_esc(usage_source)}</span>'
                     "</p>"
@@ -5219,7 +5210,7 @@ def main() -> None:
         docs_path = f"api/reference/{short_name}.md" if node["exported"] else (
             f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
         )
-        source_path = f"src/fabricops_kit/{module_name}.py"
+        source_path = f"src/fabricops_kit/{module_name.replace('.', '/')}.py"
         source_location = module_info.get("source_locations", {}).get(short_name, {})
         source_start_line = source_location.get("start_line")
         source_end_line = source_location.get("end_line")
@@ -5289,7 +5280,6 @@ def main() -> None:
             ] or ['<span class="reference-chip">No starter notebook usage detected</span>']
             page_chip_lines = [
                 '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
-                f'<span class="reference-chip">Module: <code>{html_escape(rel_module)}</code></span>',
                 '<span class="reference-chip">Public Starter Kit function</span>',
                 *notebook_usage_chips,
                 '</p>',
@@ -5336,6 +5326,8 @@ def main() -> None:
                 *call_flow_lines,
                 "",
                 purpose,
+                "",
+                *_source_card_lines(source_path=source_path, source_start_line=source_start_line, source_ref=source_ref, short_name=short_name),
                 "",
                 *page_chip_lines,
                 "",

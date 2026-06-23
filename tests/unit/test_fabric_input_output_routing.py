@@ -327,6 +327,112 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
 
 
 
+
+def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypatch):
+    """Verify public IO functions use the shared configured resolver boundaries."""
+    from fabricops_kit.io_core import FabricStore
+    import importlib
+
+    csv_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_csv")
+    excel_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_excel")
+    parquet_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_parquet")
+    lakehouse_read_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
+    lakehouse_write_owner = importlib.import_module("fabricops_kit.io.write_lakehouse_table")
+    warehouse_query_owner = importlib.import_module("fabricops_kit.io.read_warehouse_query")
+    warehouse_read_owner = importlib.import_module("fabricops_kit.io.read_warehouse_table")
+    warehouse_write_owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
+
+    calls = []
+    store = FabricStore(env="dev", workspace_id="workspace", item_id="item", name="warehouse", kind="warehouse")
+    lakehouse_store = FabricStore(env="dev", workspace_id="workspace", item_id="item", name="lakehouse", kind="lakehouse")
+
+    monkeypatch.setattr(csv_owner, "resolve_configured_file_path", lambda target, relative_path, *, context=None: calls.append(("file", target, relative_path, context)) or (lakehouse_store, relative_path, "resolved://csv"))
+    monkeypatch.setattr(csv_owner, "read_csv_path", lambda spark, path, *, header, options: calls.append(("csv_reader", path, header, options)) or "csv")
+    assert csv_owner.read_lakehouse_csv("raw/orders.csv", target="custom", spark_session=object(), context={"sentinel": True}, header=False, delimiter="|") == "csv"
+
+    monkeypatch.setattr(excel_owner, "resolve_configured_file_path", lambda target, relative_path, *, context=None: calls.append(("file", target, relative_path, context)) or (lakehouse_store, relative_path, "resolved://excel"))
+    monkeypatch.setattr(excel_owner, "read_excel_file", lambda spark, path, *, sheet_name, read_excel_kwargs: calls.append(("excel_reader", path, sheet_name, read_excel_kwargs)) or "excel")
+    assert excel_owner.read_lakehouse_excel("raw/orders.xlsx", target="custom", spark_session=object(), context={"sentinel": True}, sheet_name="S") == "excel"
+
+    class ParquetFrame:
+        def limit(self, _count):
+            return self
+
+        def collect(self):
+            return []
+
+    class ParquetReader:
+        def parquet(self, path):
+            calls.append(("parquet_reader", path))
+            return ParquetFrame()
+
+    class ParquetSpark:
+        read = ParquetReader()
+
+    monkeypatch.setattr(parquet_owner, "resolve_configured_file_path", lambda target, relative_path, *, context=None: calls.append(("file", target, relative_path, context)) or (lakehouse_store, "raw/orders.parquet", "resolved://parquet"))
+    assert isinstance(parquet_owner.read_lakehouse_parquet("raw/orders.parquet", target="custom", spark_session=ParquetSpark(), context={"sentinel": True}, verbose=False), ParquetFrame)
+
+    monkeypatch.setattr(lakehouse_read_owner, "resolve_configured_lakehouse_table", lambda target, table_name, schema, *, context=None: calls.append(("lakehouse_table", target, table_name, schema, context)) or (lakehouse_store, table_name, schema, "resolved://table"))
+    monkeypatch.setattr(lakehouse_read_owner, "read_delta_path", lambda spark, path: calls.append(("read_delta", path)) or "lakehouse_read")
+    assert lakehouse_read_owner.read_lakehouse_table("orders", target="custom", schema="dbo", spark_session=object(), context={"sentinel": True}) == "lakehouse_read"
+
+    frame = _Frame()
+    monkeypatch.setattr(lakehouse_write_owner, "resolve_configured_lakehouse_table", lambda target, table_name, schema, *, context=None: calls.append(("lakehouse_table", target, table_name, schema, context)) or (lakehouse_store, table_name, schema, "resolved://write_table"))
+    monkeypatch.setattr(lakehouse_write_owner, "write_delta_path", lambda df, path, *, mode, partition_by=None, options=None: calls.append(("write_delta", path, mode, partition_by, options)))
+    lakehouse_write_owner.write_lakehouse_table(frame, "orders", target="custom", schema="dbo", mode="overwrite", verbose=False, context={"sentinel": True})
+
+    monkeypatch.setattr(warehouse_query_owner, "resolve_configured_warehouse_query_target", lambda target, *, context=None: calls.append(("warehouse_query", target, context)) or store)
+    monkeypatch.setattr(warehouse_query_owner, "read_warehouse_synapsesql", lambda spark, store, sql: calls.append(("warehouse_sql", store.name, sql)) or "query")
+    assert warehouse_query_owner.read_warehouse_query("SELECT 1", target="custom", spark_session=object(), context={"sentinel": True}) == "query"
+
+    monkeypatch.setattr(warehouse_read_owner, "resolve_configured_warehouse_table", lambda target, schema, table_name, *, context=None: calls.append(("warehouse_table", target, schema, table_name, context)) or (store, schema, table_name, "warehouse.dbo.orders"))
+    monkeypatch.setattr(warehouse_read_owner, "read_warehouse_synapsesql", lambda spark, store, sql: calls.append(("warehouse_read", store.name, sql)) or "warehouse_read")
+    assert warehouse_read_owner.read_warehouse_table("dbo", "orders", target="custom", spark_session=object(), context={"sentinel": True}) == "warehouse_read"
+
+    monkeypatch.setattr(warehouse_write_owner, "resolve_configured_warehouse_table", lambda target, schema, table_name, *, context=None: calls.append(("warehouse_table", target, schema, table_name, context)) or (store, schema, table_name, "warehouse.dbo.orders"))
+    monkeypatch.setattr(warehouse_write_owner, "write_warehouse_synapsesql", lambda df, store, sql, *, mode: calls.append(("warehouse_write", store.name, sql, mode)))
+    warehouse_write_owner.write_warehouse_table(frame, "dbo", "orders", target="custom", mode="overwrite", context={"sentinel": True})
+
+    assert ("csv_reader", "resolved://csv", False, {"delimiter": "|"}) in calls
+    assert ("excel_reader", "resolved://excel", "S", {}) in calls
+    assert ("parquet_reader", "resolved://parquet") in calls
+    assert ("read_delta", "resolved://table") in calls
+    assert ("write_delta", "resolved://write_table", "overwrite", None, None) in calls
+    assert ("warehouse_query", "custom", {"sentinel": True}) in calls
+    assert ("warehouse_read", "warehouse", "warehouse.dbo.orders") in calls
+    assert ("warehouse_write", "warehouse", "warehouse.dbo.orders", "overwrite") in calls
+
+
+def test_public_io_owner_files_do_not_duplicate_stale_resolver_patterns():
+    """Verify public IO owner files avoid stale low-level resolver duplication."""
+    stale_patterns = (
+        'resolve_target_store(target, "lakehouse"',
+        'resolve_target_store(target, "warehouse"',
+        "resolve_lakehouse_file_location",
+        '"/Tables/"',
+        '"/Files/"',
+        'f"Files/',
+        'f"Tables/',
+    )
+    owner_dir = Path("src/fabricops_kit/io")
+    for helper_name in PUBLIC_IO_CALLABLES:
+        source = (owner_dir / f"{helper_name}.py").read_text(encoding="utf-8")
+        for pattern in stale_patterns:
+            assert pattern not in source
+
+
+def test_public_io_functions_allow_shared_resolvers_to_handle_configured_target(monkeypatch):
+    """Verify public functions do not reject logical targets before shared resolution."""
+    import importlib
+
+    lakehouse_read_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
+
+    monkeypatch.setattr(lakehouse_read_owner, "resolve_configured_lakehouse_table", lambda target, table_name, schema, *, context=None: (_store(target, "lakehouse", "lh"), table_name, schema, "resolved://table"))
+    monkeypatch.setattr(lakehouse_read_owner, "read_delta_path", lambda spark, path: path)
+
+    assert lakehouse_read_owner.read_lakehouse_table("orders", target="configured_alias", spark_session=object()) == "resolved://table"
+
+
 def test_migrated_io_public_import_paths_remain_stable():
     """Verify migrated IO public functions remain importable from stable paths."""
     import fabricops_kit

@@ -3,8 +3,15 @@
 
 Write a DataFrame to a configured Fabric warehouse target.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/write_warehouse_table.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L43">View on GitHub</a>
+</div>
+
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>io.write_warehouse_table</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">No starter notebook usage detected</span>
 </p>

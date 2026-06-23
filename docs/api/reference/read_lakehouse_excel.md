@@ -1,10 +1,17 @@
 # read_lakehouse_excel
 
 
-Read an Excel file from a configured Fabric lakehouse Files path.
+Read an Excel file from a configured Fabric-resolved path.
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/read_lakehouse_excel.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L35">View on GitHub</a>
+</div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>io.read_lakehouse_excel</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">No starter notebook usage detected</span>
 </p>
@@ -57,7 +64,7 @@ mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx"
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Excel file path under the lakehouse ``Files`` area. |
+| `relative_path` | `str` | Yes | Excel file path resolved by the Fabric resolver. |
 | `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
 | `sheet_name` | `str or int, default=0` | No | Worksheet name or index to read. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |

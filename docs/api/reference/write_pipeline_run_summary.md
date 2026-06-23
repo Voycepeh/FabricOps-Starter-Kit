@@ -14,8 +14,15 @@
 
 Write one pipeline runtime summary row to metadata.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/pipeline.py:1627`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1627-L1676">View on GitHub</a>
+</div>
+
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>pipeline</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 </p>

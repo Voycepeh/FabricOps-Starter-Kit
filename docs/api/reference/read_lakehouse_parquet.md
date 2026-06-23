@@ -1,10 +1,17 @@
 # read_lakehouse_parquet
 
 
-Read a Parquet path from a configured Fabric lakehouse Files path.
+Read a Parquet path from a configured Fabric-resolved path.
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/read_lakehouse_parquet.py:15`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L82">View on GitHub</a>
+</div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>io.read_lakehouse_parquet</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">No starter notebook usage detected</span>
 </p>
@@ -23,7 +30,7 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 
 ### Additional context
 
-Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.
+Reads a Parquet file or folder from the configured file path resolved by the Fabric resolver into a Spark DataFrame.
 
 
 ## Signature
@@ -56,7 +63,7 @@ df = read_lakehouse_parquet(relative_path="raw/orders/orders.parquet", spark_ses
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Parquet file path under the lakehouse ``Files`` area. |
+| `relative_path` | `str` | Yes | Parquet file path resolved by the Fabric resolver. |
 | `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
 | `verbose` | `bool` | No | Whether to print read and timestamp-conversion fallback progress. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |

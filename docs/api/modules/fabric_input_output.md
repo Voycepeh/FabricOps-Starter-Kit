@@ -79,21 +79,21 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
       <td><a href="../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Read a CSV file from a configured Fabric lakehouse Files path.</td>
+      <td>Read a CSV file from a configured Fabric-resolved path.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Read an Excel file from a configured Fabric lakehouse Files path.</td>
+      <td>Read an Excel file from a configured Fabric-resolved path.</td>
       <td>—</td>
     </tr>
     <tr>
       <td><a href="../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></td>
       <td>Callable</td>
       <td>function</td>
-      <td>Read a Parquet path from a configured Fabric lakehouse Files path.</td>
+      <td>Read a Parquet path from a configured Fabric-resolved path.</td>
       <td>—</td>
     </tr>
     <tr>

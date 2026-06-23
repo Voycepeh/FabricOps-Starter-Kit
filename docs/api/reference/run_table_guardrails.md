@@ -24,8 +24,15 @@
 
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/pipeline.py:1554`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1554-L1588">View on GitHub</a>
+</div>
+
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>pipeline</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">example_dq_rule_smoke_test</span>
