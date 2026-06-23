@@ -4,12 +4,12 @@ Use this page to look up Starter Kit functions used by the template notebooks.
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">12</strong>
+    <strong class="reference-kpi-value">21</strong>
     <span class="reference-kpi-title">Modules</span>
     <p class="reference-kpi-note">Code areas represented.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">287</strong>
+    <strong class="reference-kpi-value">303</strong>
     <span class="reference-kpi-title">Total callables</span>
     <p class="reference-kpi-note">Complete discovered callable inventory.</p>
   </section>
@@ -19,7 +19,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
     <p class="reference-kpi-note">Notebook-facing entrypoints.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">34</strong>
+    <strong class="reference-kpi-value">50</strong>
     <span class="reference-kpi-title">Supporting functions</span>
     <p class="reference-kpi-note">Internal functions behind the public API.</p>
   </section>
@@ -103,64 +103,64 @@ Use the finder below to look up the 26 public Starter Kit functions. Internal he
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 2</span></summary><ul><li><code>profile_dataframe_core</code></li><li><code>profile_dataframe_core</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a configured Fabric lakehouse Files path.">
+<article id="io.read_lakehouse_csv-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a configured Fabric lakehouse Files path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a CSV file from a configured Fabric lakehouse Files path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
 
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>read_lakehouse_csv_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
-<article id="fabric_input_output-read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read an Excel file from a configured Fabric lakehouse Files path.">
+<article id="io.read_lakehouse_excel-read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read an Excel file from a configured Fabric lakehouse Files path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read an Excel file from a configured Fabric lakehouse Files path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
 
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>read_lakehouse_excel_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
-<article id="fabric_input_output-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a configured Fabric lakehouse Files path.">
+<article id="io.read_lakehouse_parquet-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a configured Fabric lakehouse Files path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a Parquet path from a configured Fabric lakehouse Files path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
 
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>read_lakehouse_parquet_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
-<article id="fabric_input_output-read_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read a Delta table from a configured Fabric lakehouse target.">
+<article id="io.read_lakehouse_table-read_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read a Delta table from a configured Fabric lakehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a Delta table from a configured Fabric lakehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>read_lakehouse_table_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
-<article id="fabric_input_output-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
+<article id="io.read_warehouse_query-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_query/"><code>read_warehouse_query</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>read_warehouse_query_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
-<article id="fabric_input_output-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
+<article id="io.read_warehouse_table-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_table/"><code>read_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a table from a configured Fabric warehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>read_warehouse_table_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
 <article id="pipeline-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
@@ -283,14 +283,14 @@ Use the finder below to look up the 26 public Starter Kit functions. Internal he
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 5</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>resolve_table_governance_policy</code></li><li><code>configured_lakehouse_schema</code></li><li><code>read_lakehouse_table_core</code></li><li><code>get_default_fabric_context</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Write a Spark DataFrame to a configured Fabric lakehouse Delta table.">
+<article id="io.write_lakehouse_table-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="fabric_input_output" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Write a Spark DataFrame to a configured Fabric lakehouse Delta table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a Spark DataFrame to a configured Fabric lakehouse Delta table.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, example_pipeline_demo, example_dq_rule_smoke_test</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>write_lakehouse_table_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
 <article id="pipeline-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
@@ -313,14 +313,14 @@ Use the finder below to look up the 26 public Starter Kit functions. Internal he
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 4</span></summary><ul><li><code>resolve_fabric_context</code></li><li><code>configured_lakehouse_schema</code></li><li><code>write_lakehouse_table_core</code></li><li><code>get_default_fabric_context</code></li></ul></details>
   </div>
 </article>
-<article id="fabric_input_output-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
+<article id="io.write_warehouse_table-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_warehouse_table/"><code>write_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><a class="reference-module-link" href="../api/modules/fabric_input_output/" title="Open fabric_input_output module page" aria-label="Open fabric_input_output module page">fabric_input_output</a><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
 
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>write_warehouse_table_core</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+
   </div>
 </article>
 </div>

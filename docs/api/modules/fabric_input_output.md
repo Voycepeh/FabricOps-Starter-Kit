@@ -10,7 +10,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 8</span><span class="reference-chip">Internal helpers: 0</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 0 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 0</span><span class="reference-chip">Uses 0 external modules</span><span class="reference-chip">Used by 0 external modules</span></div>
 
 ## Module purpose
 
@@ -36,7 +36,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Public callable count</td>
-      <td>8</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>Internal helper count</td>
@@ -48,7 +48,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>Uses external module count</td>
-      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>External modules using this module</td>
@@ -56,7 +56,7 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
     </tr>
     <tr>
       <td>External modules this module uses</td>
-      <td><code>io_core</code></td>
+      <td>—</td>
     </tr>
   </tbody>
 </table>
@@ -140,64 +140,4 @@ Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.
 
 ### Callable relationships
 
-
-#### Inside this module
-
-<section class="callable-relationship-card">
-<h5>fabric_input_output</h5>
-<h6>Public callables</h6>
-<ul class="callable-relationship-rows">
-<li>
-<a class="reference-chip" href="../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/read_warehouse_query/"><code>read_warehouse_query</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-<li>
-<a class="reference-chip" href="../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
- <span class="callable-relationship-uses">uses:</span>
-<span>None.</span>
-</li>
-</ul>
-</section>
-
-### Related internal helpers
-
-No module-level internal helpers detected.
-
-### External callers
-
-None.
-### External callees
-
-**io_core**
-<a class="reference-chip" href="io_core/#read_lakehouse_csv_core"><code>read_lakehouse_csv_core</code></a>, <a class="reference-chip" href="io_core/#read_lakehouse_excel_core"><code>read_lakehouse_excel_core</code></a>, <a class="reference-chip" href="io_core/#read_lakehouse_parquet_core"><code>read_lakehouse_parquet_core</code></a>, <a class="reference-chip" href="io_core/#read_lakehouse_table_core"><code>read_lakehouse_table_core</code></a>, <a class="reference-chip" href="io_core/#read_warehouse_query_core"><code>read_warehouse_query_core</code></a>, <a class="reference-chip" href="io_core/#read_warehouse_table_core"><code>read_warehouse_table_core</code></a>, <a class="reference-chip" href="io_core/#write_lakehouse_table_core"><code>write_lakehouse_table_core</code></a>, <a class="reference-chip" href="io_core/#write_warehouse_table_core"><code>write_warehouse_table_core</code></a>
+No callable relationships detected for this module.

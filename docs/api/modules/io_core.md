@@ -11,7 +11,7 @@ The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__al
 
 ## Module overview badges
 
-<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 28</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 7 external modules</span></div>
+<div class="module-summary-cards"><span class="reference-chip">Callable count: 0</span><span class="reference-chip">Internal helpers: 28</span><span class="reference-chip">Uses 1 external module</span><span class="reference-chip">Used by 8 external modules</span></div>
 
 ## Module purpose
 
@@ -45,7 +45,7 @@ Owns lower-level Fabric IO implementations shared by package internals.
     </tr>
     <tr>
       <td>Used by external module count</td>
-      <td>7</td>
+      <td>8</td>
     </tr>
     <tr>
       <td>Uses external module count</td>
@@ -53,7 +53,7 @@ Owns lower-level Fabric IO implementations shared by package internals.
     </tr>
     <tr>
       <td>External modules using this module</td>
-      <td><code>config</code>, <code>data_agreement</code>, <code>fabric_input_output</code>, <code>governance_review</code>, <code>guardrails</code>, <code>metadata</code>, <code>pipeline</code></td>
+      <td><code>config</code>, <code>data_agreement</code>, <code>governance_review</code>, <code>guardrails</code>, <code>io</code>, <code>metadata</code>, <code>pipeline</code>, <code>shared</code></td>
     </tr>
     <tr>
       <td>External modules this module uses</td>
@@ -327,14 +327,14 @@ No public exports in this module.
 **data_agreement**
 <a class="reference-chip" href="data_agreement/#_list_all_data_agreement_rows"><code>_list_all_data_agreement_rows</code></a>, <a class="reference-chip" href="data_agreement/#_list_data_stewards"><code>_list_data_stewards</code></a>, <a class="reference-chip" href="data_agreement/#_write_row"><code>_write_row</code></a>
 
-**fabric_input_output**
-<a class="reference-chip" href="../reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a>, <a class="reference-chip" href="../reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a>, <a class="reference-chip" href="../reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a>, <a class="reference-chip" href="../reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a>, <a class="reference-chip" href="../reference/read_warehouse_query/"><code>read_warehouse_query</code></a>, <a class="reference-chip" href="../reference/read_warehouse_table/"><code>read_warehouse_table</code></a>, <a class="reference-chip" href="../reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a>, <a class="reference-chip" href="../reference/write_warehouse_table/"><code>write_warehouse_table</code></a>
-
 **governance_review**
 <a class="reference-chip" href="governance_review/#_latest_metadata_catalogue_lookup_workflow"><code>_latest_metadata_catalogue_lookup_workflow</code></a>, <a class="reference-chip" href="governance_review/#_read_guardrail_rule_metadata"><code>_read_guardrail_rule_metadata</code></a>, <a class="reference-chip" href="governance_review/#_read_metadata_rows"><code>_read_metadata_rows</code></a>, <a class="reference-chip" href="governance_review/#_read_metadata_table_or_empty"><code>_read_metadata_table_or_empty</code></a>, <a class="reference-chip" href="governance_review/#_write_rule_records"><code>_write_rule_records</code></a>, <a class="reference-chip" href="governance_review/#_write_table_metadata_enrichment_records"><code>_write_table_metadata_enrichment_records</code></a>, <a class="reference-chip" href="governance_review/#load_catalogue_profile_rows"><code>load_catalogue_profile_rows</code></a>, <a class="reference-chip" href="governance_review/#record_table_governance"><code>record_table_governance</code></a>
 
 **guardrails**
 <a class="reference-chip" href="guardrails/#enforce_profile_behavior"><code>enforce_profile_behavior</code></a>
+
+**io**
+<a class="reference-chip" href="io/#read_lakehouse_csv_shared"><code>read_lakehouse_csv_shared</code></a>, <a class="reference-chip" href="io/#read_lakehouse_excel_shared"><code>read_lakehouse_excel_shared</code></a>, <a class="reference-chip" href="io/#read_lakehouse_parquet_shared"><code>read_lakehouse_parquet_shared</code></a>, <a class="reference-chip" href="io/#read_lakehouse_table_shared"><code>read_lakehouse_table_shared</code></a>, <a class="reference-chip" href="io/#read_warehouse_query_shared"><code>read_warehouse_query_shared</code></a>, <a class="reference-chip" href="io/#read_warehouse_table_shared"><code>read_warehouse_table_shared</code></a>, <a class="reference-chip" href="io/#read_lakehouse_csv_shared"><code>read_lakehouse_csv_shared</code></a>, <a class="reference-chip" href="io/#read_lakehouse_excel_shared"><code>read_lakehouse_excel_shared</code></a>, <a class="reference-chip" href="io/#read_lakehouse_parquet_shared"><code>read_lakehouse_parquet_shared</code></a>, <a class="reference-chip" href="io/#read_lakehouse_table_shared"><code>read_lakehouse_table_shared</code></a>, <a class="reference-chip" href="io/#read_warehouse_query_shared"><code>read_warehouse_query_shared</code></a>, <a class="reference-chip" href="io/#read_warehouse_table_shared"><code>read_warehouse_table_shared</code></a>, <a class="reference-chip" href="io/#write_lakehouse_table_shared"><code>write_lakehouse_table_shared</code></a>, <a class="reference-chip" href="io/#write_warehouse_table_shared"><code>write_warehouse_table_shared</code></a>, <a class="reference-chip" href="io/#write_lakehouse_table_shared"><code>write_lakehouse_table_shared</code></a>, <a class="reference-chip" href="io/#write_warehouse_table_shared"><code>write_warehouse_table_shared</code></a>
 
 **metadata**
 <a class="reference-chip" href="metadata/#_load_notebook_registry"><code>_load_notebook_registry</code></a>, <a class="reference-chip" href="metadata/#_register_current_notebook"><code>_register_current_notebook</code></a>, <a class="reference-chip" href="metadata/#_write_guardrail_result_row"><code>_write_guardrail_result_row</code></a>

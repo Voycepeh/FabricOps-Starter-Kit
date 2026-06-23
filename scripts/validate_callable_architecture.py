@@ -57,19 +57,25 @@ def _load_public_exports() -> set[str]:
     return exports
 
 
-def _imports_for_module(tree: ast.Module) -> dict[str, str]:
+def _imports_for_module(tree: ast.Module, current_module: str) -> dict[str, str]:
     imports: dict[str, str] = {}
     for node in tree.body:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name.startswith("fabricops_kit"):
                     imports[alias.asname or alias.name.split(".")[-1]] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith("fabricops_kit"):
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if node.level:
+                current_parts = current_module.split(".")
+                package_parts = current_parts[:-node.level]
+                module_parts = [*package_parts, *([module] if module else [])]
+                module = ".".join(part for part in module_parts if part)
+            if module.startswith("fabricops_kit"):
                 for alias in node.names:
                     if alias.name == "*":
                         continue
-                    imports[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+                    imports[alias.asname or alias.name] = f"{module}.{alias.name}"
     return imports
 
 
@@ -81,7 +87,7 @@ def _source_functions() -> dict[str, SourceFunction]:
             continue
         module = _module_name(path)
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        imports = _imports_for_module(tree)
+        imports = _imports_for_module(tree, module)
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 qn = f"{module}.{node.name}"
@@ -165,6 +171,17 @@ def _source_failures() -> list[str]:
             inbound_by_qn.setdefault(callee, set()).add(caller)
 
     ownership_plan = _load_ownership_plan()
+    completed_migrations = ownership_plan.get("completed_migrations") or {}
+    enforced_owner_roots = [
+        ROOT / migration["owner_package"]
+        for migration in completed_migrations.values()
+        if migration.get("owner_package")
+    ]
+
+    def enforces_helper_boundary(helper: SourceFunction) -> bool:
+        if not enforced_owner_roots:
+            return True
+        return any(helper.path == root or root in helper.path.parents for root in enforced_owner_roots)
     migration_files = set((ownership_plan.get("migration_files") or {}).keys())
     facade_files = set(ownership_plan.get("facade_files") or []) | {"src/fabricops_kit/__init__.py"}
 
@@ -172,6 +189,11 @@ def _source_failures() -> list[str]:
     for fn in functions.values():
         if fn.layer == "public":
             public_by_file.setdefault(_public_owner_file(fn.path), []).append(fn)
+
+    for completed_file, migration in completed_migrations.items():
+        if migration.get("status") == "facade_only" and completed_file in public_by_file:
+            names = ", ".join(sorted(fn.name for fn in public_by_file[completed_file]))
+            failures.append(f"Completed migration facade still defines public functions: {completed_file} ({names})")
 
     for source_path, public_functions in public_by_file.items():
         if len(public_functions) > 1 and source_path not in facade_files and source_path not in migration_files:
@@ -185,7 +207,7 @@ def _source_failures() -> list[str]:
             failures.append(f"Public function is underscore-prefixed: {fn.qualified_name}")
 
         for local_name, imported_qn in fn.imports.items():
-            if imported_qn in functions and functions[imported_qn].layer == PRIVATE_HELPER_LAYER:
+            if imported_qn in functions and functions[imported_qn].layer == PRIVATE_HELPER_LAYER and enforces_helper_boundary(functions[imported_qn]):
                 owner_file = _owning_public_file_for_helper(imported_qn, inbound_by_qn, functions)
                 if _relative_source_path(fn.path) != owner_file:
                     failures.append(
@@ -195,7 +217,7 @@ def _source_failures() -> list[str]:
 
         for callee_qn in call_edges.get(fn.qualified_name, set()):
             callee = functions[callee_qn]
-            if callee.layer == PRIVATE_HELPER_LAYER and fn.path != callee.path:
+            if callee.layer == PRIVATE_HELPER_LAYER and enforces_helper_boundary(callee) and fn.path != callee.path:
                 failures.append(f"Private helper called outside owner file: {fn.qualified_name} -> {callee.qualified_name}")
             if fn.layer == "public" and callee.layer == "public":
                 failures.append(f"Public function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
@@ -203,7 +225,7 @@ def _source_failures() -> list[str]:
                 failures.append(f"Internal function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
 
     for helper_qn, helper in functions.items():
-        if helper.layer != PRIVATE_HELPER_LAYER:
+        if helper.layer != PRIVATE_HELPER_LAYER or not enforces_helper_boundary(helper):
             continue
         public_owner_files = {
             _public_owner_file(functions[caller].path)

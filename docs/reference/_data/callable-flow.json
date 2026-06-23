@@ -7718,534 +7718,6 @@
       ]
     },
     {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-      "function_name": "read_lakehouse_csv",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L107-L131",
-      "source_start_line": 107,
-      "source_end_line": 131,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "read_lakehouse_csv_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "lakehouse_file_read_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/read_lakehouse_csv.md",
-      "docs_url": "../../api/reference/read_lakehouse_csv/"
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-      "function_name": "read_lakehouse_excel",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L159-L183",
-      "source_start_line": 159,
-      "source_end_line": 183,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "read_lakehouse_excel_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "lakehouse_file_read_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/read_lakehouse_excel.md",
-      "docs_url": "../../api/reference/read_lakehouse_excel/"
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-      "function_name": "read_lakehouse_parquet",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L134-L156",
-      "source_start_line": 134,
-      "source_end_line": 156,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "read_lakehouse_parquet_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "lakehouse_file_read_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/read_lakehouse_parquet.md",
-      "docs_url": "../../api/reference/read_lakehouse_parquet/"
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-      "function_name": "read_lakehouse_table",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L37-L64",
-      "source_start_line": 37,
-      "source_end_line": 64,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "read_lakehouse_table_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L322-L326",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "lakehouse_read_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/read_lakehouse_table.md",
-      "docs_url": "../../api/reference/read_lakehouse_table/"
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_query",
-      "function_name": "read_warehouse_query",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L227-L261",
-      "source_start_line": 227,
-      "source_end_line": 261,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "read_warehouse_query_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "warehouse_read_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/read_warehouse_query.md",
-      "docs_url": "../../api/reference/read_warehouse_query/"
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-      "function_name": "read_warehouse_table",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L186-L224",
-      "source_start_line": 186,
-      "source_end_line": 224,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "read_warehouse_table_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "warehouse_read_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/read_warehouse_table.md",
-      "docs_url": "../../api/reference/read_warehouse_table/"
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-      "function_name": "write_lakehouse_table",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L67-L104",
-      "source_start_line": 67,
-      "source_end_line": 104,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "write_lakehouse_table_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.write_lakehouse_table_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L329-L342",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "lakehouse_write_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/write_lakehouse_table.md",
-      "docs_url": "../../api/reference/write_lakehouse_table/"
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-      "function_name": "write_warehouse_table",
-      "module": "fabric_input_output",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L264-L295",
-      "source_start_line": 264,
-      "source_end_line": 295,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "public_stable",
-        "fabric_io_entrypoint"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Review",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 1,
-      "callers": [],
-      "callees": [
-        {
-          "function": "write_warehouse_table_core",
-          "module": "io_core",
-          "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "io_workflow",
-            "warehouse_write_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/write_warehouse_table.md",
-      "docs_url": "../../api/reference/write_warehouse_table/"
-    },
-    {
       "qualified_name": "fabricops_kit.governance_review._approved_column_identity",
       "function_name": "_approved_column_identity",
       "module": "governance_review",
@@ -19072,6 +18544,1386 @@
       "callees": []
     },
     {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_csv_shared",
+      "function_name": "read_lakehouse_csv_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L69-L86",
+      "source_start_line": 69,
+      "source_end_line": 86,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_csv_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_file_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_excel_shared",
+      "function_name": "read_lakehouse_excel_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L124",
+      "source_start_line": 107,
+      "source_end_line": 124,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_excel_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_file_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_parquet_shared",
+      "function_name": "read_lakehouse_parquet_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L89-L104",
+      "source_start_line": 89,
+      "source_end_line": 104,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_parquet_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_file_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_table_shared",
+      "function_name": "read_lakehouse_table_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L23-L38",
+      "source_start_line": 23,
+      "source_end_line": 38,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L322-L326",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_warehouse_query_shared",
+      "function_name": "read_warehouse_query_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L145-L158",
+      "source_start_line": 145,
+      "source_end_line": 158,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_warehouse_query_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "warehouse_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_warehouse_table_shared",
+      "function_name": "read_warehouse_table_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L127-L142",
+      "source_start_line": 127,
+      "source_end_line": 142,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_warehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "warehouse_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.write_lakehouse_table_shared",
+      "function_name": "write_lakehouse_table_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L41-L66",
+      "source_start_line": 41,
+      "source_end_line": 66,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "write_lakehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.write_lakehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L329-L342",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_write_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.write_warehouse_table_shared",
+      "function_name": "write_warehouse_table_shared",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L161-L178",
+      "source_start_line": 161,
+      "source_end_line": 178,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "write_warehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "warehouse_write_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+      "function_name": "read_lakehouse_csv",
+      "module": "io.read_lakehouse_csv",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/read_lakehouse_csv.md",
+      "docs_url": "../../api/reference/read_lakehouse_csv/"
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+      "function_name": "read_lakehouse_excel",
+      "module": "io.read_lakehouse_excel",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/read_lakehouse_excel.md",
+      "docs_url": "../../api/reference/read_lakehouse_excel/"
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+      "function_name": "read_lakehouse_parquet",
+      "module": "io.read_lakehouse_parquet",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/read_lakehouse_parquet.md",
+      "docs_url": "../../api/reference/read_lakehouse_parquet/"
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "function_name": "read_lakehouse_table",
+      "module": "io.read_lakehouse_table",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/read_lakehouse_table.md",
+      "docs_url": "../../api/reference/read_lakehouse_table/"
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+      "function_name": "read_warehouse_query",
+      "module": "io.read_warehouse_query",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/read_warehouse_query.md",
+      "docs_url": "../../api/reference/read_warehouse_query/"
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+      "function_name": "read_warehouse_table",
+      "module": "io.read_warehouse_table",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/read_warehouse_table.md",
+      "docs_url": "../../api/reference/read_warehouse_table/"
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.read_lakehouse_csv_shared",
+      "function_name": "read_lakehouse_csv_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_csv_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_file_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.read_lakehouse_excel_shared",
+      "function_name": "read_lakehouse_excel_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_excel_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_file_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.read_lakehouse_parquet_shared",
+      "function_name": "read_lakehouse_parquet_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_parquet_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_file_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.read_lakehouse_table_shared",
+      "function_name": "read_lakehouse_table_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_lakehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L322-L326",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.read_warehouse_query_shared",
+      "function_name": "read_warehouse_query_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_warehouse_query_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "warehouse_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.read_warehouse_table_shared",
+      "function_name": "read_warehouse_table_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "read_warehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "warehouse_read_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.write_lakehouse_table_shared",
+      "function_name": "write_lakehouse_table_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "write_lakehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.write_lakehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L329-L342",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "lakehouse_write_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.write_warehouse_table_shared",
+      "function_name": "write_warehouse_table_shared",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "write_warehouse_table_core",
+          "module": "io_core",
+          "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "io_workflow",
+            "warehouse_write_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+      "function_name": "write_lakehouse_table",
+      "module": "io.write_lakehouse_table",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/write_lakehouse_table.md",
+      "docs_url": "../../api/reference/write_lakehouse_table/"
+    },
+    {
+      "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+      "function_name": "write_warehouse_table",
+      "module": "io.write_warehouse_table",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "public_stable",
+        "fabric_io_entrypoint"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Public stable, Fabric io entrypoint",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Review",
+      "signals": [],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": [],
+      "docs_path": "docs/api/reference/write_warehouse_table.md",
+      "docs_url": "../../api/reference/write_warehouse_table/"
+    },
+    {
       "qualified_name": "fabricops_kit.io_core._build_warehouse_object_name",
       "function_name": "_build_warehouse_object_name",
       "module": "io_core",
@@ -19187,7 +20039,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -19249,7 +20101,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -19264,7 +20116,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -19279,7 +20131,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -19309,7 +20161,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -19324,7 +20176,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -19481,7 +20333,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -19877,7 +20729,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20005,7 +20857,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20081,7 +20933,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20096,7 +20948,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20251,7 +21103,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20266,7 +21118,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20281,7 +21133,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20712,7 +21564,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20727,7 +21579,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20742,7 +21594,7 @@
           "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20772,7 +21624,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20787,7 +21639,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20817,7 +21669,7 @@
           "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20944,7 +21796,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -20959,7 +21811,7 @@
           "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -21084,7 +21936,7 @@
           "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -21296,7 +22148,7 @@
           "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -21490,7 +22342,7 @@
           "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
           "layer": "internal",
-          "review_status": "classified",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow",
@@ -21838,8 +22690,8 @@
       "source_end_line": 349,
       "function_type": "Internal function",
       "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -21867,29 +22719,38 @@
       "priority": "Review",
       "signals": [
         "allowed_internal_role_call",
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
+      "called_by_count": 2,
       "calls_count": 4,
       "callers": [
         {
-          "function": "read_lakehouse_csv",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L107-L131",
-          "docs_path": "docs/api/reference/read_lakehouse_csv.md",
-          "docs_url": "../../api/reference/read_lakehouse_csv/",
-          "layer": "public",
-          "review_status": "classified",
+          "function": "read_lakehouse_csv_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L69-L86",
+          "layer": "internal",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
+            "internal_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "read_lakehouse_csv_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.read_lakehouse_csv_shared",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -21963,8 +22824,8 @@
       "source_end_line": 407,
       "function_type": "Internal function",
       "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -21992,29 +22853,38 @@
       "priority": "Review",
       "signals": [
         "allowed_internal_role_call",
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
+      "called_by_count": 2,
       "calls_count": 4,
       "callers": [
         {
-          "function": "read_lakehouse_excel",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L159-L183",
-          "docs_path": "docs/api/reference/read_lakehouse_excel.md",
-          "docs_url": "../../api/reference/read_lakehouse_excel/",
-          "layer": "public",
-          "review_status": "classified",
+          "function": "read_lakehouse_excel_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L124",
+          "layer": "internal",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
+            "internal_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "read_lakehouse_excel_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.read_lakehouse_excel_shared",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -22088,8 +22958,8 @@
       "source_end_line": 400,
       "function_type": "Internal function",
       "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -22117,29 +22987,38 @@
       "priority": "Review",
       "signals": [
         "allowed_internal_role_call",
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
+      "called_by_count": 2,
       "calls_count": 5,
       "callers": [
         {
-          "function": "read_lakehouse_parquet",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L134-L156",
-          "docs_path": "docs/api/reference/read_lakehouse_parquet.md",
-          "docs_url": "../../api/reference/read_lakehouse_parquet/",
-          "layer": "public",
-          "review_status": "classified",
+          "function": "read_lakehouse_parquet_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L89-L104",
+          "layer": "internal",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
+            "internal_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "read_lakehouse_parquet_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.read_lakehouse_parquet_shared",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -22261,7 +23140,7 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 12,
+      "called_by_count": 13,
       "calls_count": 4,
       "callers": [
         {
@@ -22319,23 +23198,6 @@
             "data_steward_resolver"
           ],
           "dependency_role": "internal_resolver"
-        },
-        {
-          "function": "read_lakehouse_table",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L37-L64",
-          "docs_path": "docs/api/reference/read_lakehouse_table.md",
-          "docs_url": "../../api/reference/read_lakehouse_table/",
-          "layer": "public",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
-          ],
-          "dependency_role": "public_api_entrypoint"
         },
         {
           "function": "_latest_metadata_catalogue_lookup_workflow",
@@ -22416,6 +23278,32 @@
           "callable_role": [
             "internal_workflow",
             "profile_behavior_guardrail_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "read_lakehouse_table_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L23-L38",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "read_lakehouse_table_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.read_lakehouse_table_shared",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
           ],
           "dependency_role": "internal_workflow"
         },
@@ -22504,8 +23392,8 @@
       "source_end_line": 421,
       "function_type": "Internal function",
       "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -22533,29 +23421,38 @@
       "priority": "Review",
       "signals": [
         "allowed_internal_role_call",
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
+      "called_by_count": 2,
       "calls_count": 4,
       "callers": [
         {
-          "function": "read_warehouse_query",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_query",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L227-L261",
-          "docs_path": "docs/api/reference/read_warehouse_query.md",
-          "docs_url": "../../api/reference/read_warehouse_query/",
-          "layer": "public",
-          "review_status": "classified",
+          "function": "read_warehouse_query_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L145-L158",
+          "layer": "internal",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
+            "internal_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "read_warehouse_query_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.read_warehouse_query_shared",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -22629,8 +23526,8 @@
       "source_end_line": 414,
       "function_type": "Internal function",
       "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -22658,29 +23555,38 @@
       "priority": "Review",
       "signals": [
         "allowed_internal_role_call",
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
+      "called_by_count": 2,
       "calls_count": 4,
       "callers": [
         {
-          "function": "read_warehouse_table",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L186-L224",
-          "docs_path": "docs/api/reference/read_warehouse_table.md",
-          "docs_url": "../../api/reference/read_warehouse_table/",
-          "layer": "public",
-          "review_status": "classified",
+          "function": "read_warehouse_table_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L127-L142",
+          "layer": "internal",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
+            "internal_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "read_warehouse_table_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.read_warehouse_table_shared",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -22787,7 +23693,7 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 11,
+      "called_by_count": 12,
       "calls_count": 5,
       "callers": [
         {
@@ -22817,23 +23723,6 @@
             "metadata_write_adapter"
           ],
           "dependency_role": "internal_adapter"
-        },
-        {
-          "function": "write_lakehouse_table",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L67-L104",
-          "docs_path": "docs/api/reference/write_lakehouse_table.md",
-          "docs_url": "../../api/reference/write_lakehouse_table/",
-          "layer": "public",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
-          ],
-          "dependency_role": "public_api_entrypoint"
         },
         {
           "function": "_write_rule_records",
@@ -22868,6 +23757,32 @@
           "module": "governance_review",
           "qualified_name": "fabricops_kit.governance_review.record_table_governance",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1004-L1115",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "write_lakehouse_table_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_table_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L41-L66",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "write_lakehouse_table_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.write_lakehouse_table_shared",
+          "source_url": null,
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function",
@@ -23030,8 +23945,8 @@
       "source_end_line": 429,
       "function_type": "Internal function",
       "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -23059,29 +23974,38 @@
       "priority": "Review",
       "signals": [
         "allowed_internal_role_call",
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
+      "called_by_count": 2,
       "calls_count": 4,
       "callers": [
         {
-          "function": "write_warehouse_table",
-          "module": "fabric_input_output",
-          "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L264-L295",
-          "docs_path": "docs/api/reference/write_warehouse_table.md",
-          "docs_url": "../../api/reference/write_warehouse_table/",
-          "layer": "public",
-          "review_status": "classified",
+          "function": "write_warehouse_table_shared",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.write_warehouse_table_shared",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L161-L178",
+          "layer": "internal",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
-            "public_api_entrypoint",
-            "public_stable",
-            "fabric_io_entrypoint"
+            "internal_workflow"
           ],
-          "dependency_role": "public_api_entrypoint"
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "write_warehouse_table_shared",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.write_warehouse_table_shared",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
         }
       ],
       "callees": [
@@ -29841,535 +30765,23 @@
       "private_helper_review_items": []
     },
     {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
+      "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
       "function_name": "read_lakehouse_csv",
-      "module": "fabric_input_output",
+      "module": "io.read_lakehouse_csv",
       "docs_path": "docs/api/reference/read_lakehouse_csv.md",
       "docs_url": "../../api/reference/read_lakehouse_csv/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L107-L131",
-      "source_start_line": 107,
-      "source_end_line": 131,
-      "priority": "Review",
-      "recommended_simplification_action": "Review merge candidates",
-      "warnings": [
-        "Merge candidates found"
-      ],
-      "downstream_count": 3,
-      "max_depth": 3,
-      "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
-      ],
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0
-      },
-      "helper_cleanup_candidates": 1,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
-          "function_name": "read_lakehouse_csv_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
-          "source_start_line": 345,
-          "source_end_line": 349,
-          "path_examples": [
-            [
-              "read_lakehouse_csv",
-              "read_lakehouse_csv_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
-          "function_name": "read_lakehouse_csv_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_csv",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L345-L349",
-          "source_start_line": 345,
-          "source_end_line": 349,
-          "path_examples": [
-            [
-              "read_lakehouse_csv",
-              "read_lakehouse_csv_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.read_lakehouse_csv_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "read_lakehouse_csv",
-              "read_lakehouse_csv_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "read_lakehouse_csv",
-              "read_lakehouse_csv_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
-      "private_helper_review_items": []
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-      "function_name": "read_lakehouse_excel",
-      "module": "fabric_input_output",
-      "docs_path": "docs/api/reference/read_lakehouse_excel.md",
-      "docs_url": "../../api/reference/read_lakehouse_excel/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L159-L183",
-      "source_start_line": 159,
-      "source_end_line": 183,
-      "priority": "Review",
-      "recommended_simplification_action": "Review merge candidates",
-      "warnings": [
-        "Merge candidates found"
-      ],
-      "downstream_count": 3,
-      "max_depth": 3,
-      "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
-      ],
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0
-      },
-      "helper_cleanup_candidates": 1,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
-          "function_name": "read_lakehouse_excel_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
-          "source_start_line": 403,
-          "source_end_line": 407,
-          "path_examples": [
-            [
-              "read_lakehouse_excel",
-              "read_lakehouse_excel_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
-          "function_name": "read_lakehouse_excel_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_excel",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L403-L407",
-          "source_start_line": 403,
-          "source_end_line": 407,
-          "path_examples": [
-            [
-              "read_lakehouse_excel",
-              "read_lakehouse_excel_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.read_lakehouse_excel_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "read_lakehouse_excel",
-              "read_lakehouse_excel_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "read_lakehouse_excel",
-              "read_lakehouse_excel_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
-      "private_helper_review_items": []
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-      "function_name": "read_lakehouse_parquet",
-      "module": "fabric_input_output",
-      "docs_path": "docs/api/reference/read_lakehouse_parquet.md",
-      "docs_url": "../../api/reference/read_lakehouse_parquet/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L134-L156",
-      "source_start_line": 134,
-      "source_end_line": 156,
-      "priority": "Review",
-      "recommended_simplification_action": "Review merge candidates",
-      "warnings": [
-        "Merge candidates found"
-      ],
-      "downstream_count": 3,
-      "max_depth": 3,
-      "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
-      ],
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0
-      },
-      "helper_cleanup_candidates": 1,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
-          "function_name": "read_lakehouse_parquet_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 5,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
-          "source_start_line": 352,
-          "source_end_line": 400,
-          "path_examples": [
-            [
-              "read_lakehouse_parquet",
-              "read_lakehouse_parquet_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
-          "function_name": "read_lakehouse_parquet_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_parquet",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 5,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L352-L400",
-          "source_start_line": 352,
-          "source_end_line": 400,
-          "path_examples": [
-            [
-              "read_lakehouse_parquet",
-              "read_lakehouse_parquet_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.read_lakehouse_parquet_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "read_lakehouse_parquet",
-              "read_lakehouse_parquet_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "read_lakehouse_parquet",
-              "read_lakehouse_parquet_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
-      "private_helper_review_items": []
-    },
-    {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-      "function_name": "read_lakehouse_table",
-      "module": "fabric_input_output",
-      "docs_path": "docs/api/reference/read_lakehouse_table.md",
-      "docs_url": "../../api/reference/read_lakehouse_table/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L37-L64",
-      "source_start_line": 37,
-      "source_end_line": 64,
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
       "priority": "Low",
       "recommended_simplification_action": "Keep public",
       "warnings": [],
-      "downstream_count": 3,
-      "max_depth": 3,
+      "downstream_count": 0,
+      "max_depth": 0,
       "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
+        "io.read_lakehouse_csv"
       ],
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
@@ -30377,485 +30789,153 @@
         "Internal -> Public": 0
       },
       "helper_cleanup_candidates": 0,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
-          "function_name": "read_lakehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L322-L326",
-          "source_start_line": 322,
-          "source_end_line": 326,
-          "path_examples": [
-            [
-              "read_lakehouse_table",
-              "read_lakehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
-          "function_name": "read_lakehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_lakehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L322-L326",
-          "source_start_line": 322,
-          "source_end_line": 326,
-          "path_examples": [
-            [
-              "read_lakehouse_table",
-              "read_lakehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "read_lakehouse_table",
-              "read_lakehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "read_lakehouse_table",
-              "read_lakehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
+      "direct_callees": [],
+      "transitive_callees": [],
       "private_helper_review_items": []
     },
     {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_query",
+      "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+      "function_name": "read_lakehouse_excel",
+      "module": "io.read_lakehouse_excel",
+      "docs_path": "docs/api/reference/read_lakehouse_excel.md",
+      "docs_url": "../../api/reference/read_lakehouse_excel/",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "priority": "Low",
+      "recommended_simplification_action": "Keep public",
+      "warnings": [],
+      "downstream_count": 0,
+      "max_depth": 0,
+      "modules_touched": [
+        "io.read_lakehouse_excel"
+      ],
+      "architecture_violation_count": 0,
+      "architecture_violation_breakdown": {
+        "Public -> Public": 0,
+        "Internal -> Public": 0
+      },
+      "helper_cleanup_candidates": 0,
+      "direct_callees": [],
+      "transitive_callees": [],
+      "private_helper_review_items": []
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+      "function_name": "read_lakehouse_parquet",
+      "module": "io.read_lakehouse_parquet",
+      "docs_path": "docs/api/reference/read_lakehouse_parquet.md",
+      "docs_url": "../../api/reference/read_lakehouse_parquet/",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "priority": "Low",
+      "recommended_simplification_action": "Keep public",
+      "warnings": [],
+      "downstream_count": 0,
+      "max_depth": 0,
+      "modules_touched": [
+        "io.read_lakehouse_parquet"
+      ],
+      "architecture_violation_count": 0,
+      "architecture_violation_breakdown": {
+        "Public -> Public": 0,
+        "Internal -> Public": 0
+      },
+      "helper_cleanup_candidates": 0,
+      "direct_callees": [],
+      "transitive_callees": [],
+      "private_helper_review_items": []
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "function_name": "read_lakehouse_table",
+      "module": "io.read_lakehouse_table",
+      "docs_path": "docs/api/reference/read_lakehouse_table.md",
+      "docs_url": "../../api/reference/read_lakehouse_table/",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "priority": "Low",
+      "recommended_simplification_action": "Keep public",
+      "warnings": [],
+      "downstream_count": 0,
+      "max_depth": 0,
+      "modules_touched": [
+        "io.read_lakehouse_table"
+      ],
+      "architecture_violation_count": 0,
+      "architecture_violation_breakdown": {
+        "Public -> Public": 0,
+        "Internal -> Public": 0
+      },
+      "helper_cleanup_candidates": 0,
+      "direct_callees": [],
+      "transitive_callees": [],
+      "private_helper_review_items": []
+    },
+    {
+      "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
       "function_name": "read_warehouse_query",
-      "module": "fabric_input_output",
+      "module": "io.read_warehouse_query",
       "docs_path": "docs/api/reference/read_warehouse_query.md",
       "docs_url": "../../api/reference/read_warehouse_query/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L227-L261",
-      "source_start_line": 227,
-      "source_end_line": 261,
-      "priority": "Review",
-      "recommended_simplification_action": "Review merge candidates",
-      "warnings": [
-        "Merge candidates found"
-      ],
-      "downstream_count": 3,
-      "max_depth": 3,
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "priority": "Low",
+      "recommended_simplification_action": "Keep public",
+      "warnings": [],
+      "downstream_count": 0,
+      "max_depth": 0,
       "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
+        "io.read_warehouse_query"
       ],
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
         "Public -> Public": 0,
         "Internal -> Public": 0
       },
-      "helper_cleanup_candidates": 1,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
-          "function_name": "read_warehouse_query_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_query",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
-          "source_start_line": 417,
-          "source_end_line": 421,
-          "path_examples": [
-            [
-              "read_warehouse_query",
-              "read_warehouse_query_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
-          "function_name": "read_warehouse_query_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_query",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L417-L421",
-          "source_start_line": 417,
-          "source_end_line": 421,
-          "path_examples": [
-            [
-              "read_warehouse_query",
-              "read_warehouse_query_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.read_warehouse_query_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "read_warehouse_query",
-              "read_warehouse_query_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "read_warehouse_query",
-              "read_warehouse_query_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
+      "helper_cleanup_candidates": 0,
+      "direct_callees": [],
+      "transitive_callees": [],
       "private_helper_review_items": []
     },
     {
-      "qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
+      "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
       "function_name": "read_warehouse_table",
-      "module": "fabric_input_output",
+      "module": "io.read_warehouse_table",
       "docs_path": "docs/api/reference/read_warehouse_table.md",
       "docs_url": "../../api/reference/read_warehouse_table/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L186-L224",
-      "source_start_line": 186,
-      "source_end_line": 224,
-      "priority": "Review",
-      "recommended_simplification_action": "Review merge candidates",
-      "warnings": [
-        "Merge candidates found"
-      ],
-      "downstream_count": 3,
-      "max_depth": 3,
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "priority": "Low",
+      "recommended_simplification_action": "Keep public",
+      "warnings": [],
+      "downstream_count": 0,
+      "max_depth": 0,
       "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
+        "io.read_warehouse_table"
       ],
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
         "Public -> Public": 0,
         "Internal -> Public": 0
       },
-      "helper_cleanup_candidates": 1,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
-          "function_name": "read_warehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
-          "source_start_line": 410,
-          "source_end_line": 414,
-          "path_examples": [
-            [
-              "read_warehouse_table",
-              "read_warehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
-          "function_name": "read_warehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.read_warehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L410-L414",
-          "source_start_line": 410,
-          "source_end_line": 414,
-          "path_examples": [
-            [
-              "read_warehouse_table",
-              "read_warehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.read_warehouse_table_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "read_warehouse_table",
-              "read_warehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "read_warehouse_table",
-              "read_warehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
+      "helper_cleanup_candidates": 0,
+      "direct_callees": [],
+      "transitive_callees": [],
       "private_helper_review_items": []
     },
     {
@@ -37728,25 +37808,23 @@
       ]
     },
     {
-      "qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
+      "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "function_name": "write_lakehouse_table",
-      "module": "fabric_input_output",
+      "module": "io.write_lakehouse_table",
       "docs_path": "docs/api/reference/write_lakehouse_table.md",
       "docs_url": "../../api/reference/write_lakehouse_table/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L67-L104",
-      "source_start_line": 67,
-      "source_end_line": 104,
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
       "priority": "Low",
       "recommended_simplification_action": "Keep public",
       "warnings": [],
-      "downstream_count": 3,
-      "max_depth": 3,
+      "downstream_count": 0,
+      "max_depth": 0,
       "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
+        "io.write_lakehouse_table"
       ],
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
@@ -37754,145 +37832,8 @@
         "Internal -> Public": 0
       },
       "helper_cleanup_candidates": 0,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.write_lakehouse_table_core",
-          "function_name": "write_lakehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 5,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L329-L342",
-          "source_start_line": 329,
-          "source_end_line": 342,
-          "path_examples": [
-            [
-              "write_lakehouse_table",
-              "write_lakehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.write_lakehouse_table_core",
-          "function_name": "write_lakehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.write_lakehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 5,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L329-L342",
-          "source_start_line": 329,
-          "source_end_line": 342,
-          "path_examples": [
-            [
-              "write_lakehouse_table",
-              "write_lakehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.write_lakehouse_table_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "write_lakehouse_table",
-              "write_lakehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "write_lakehouse_table",
-              "write_lakehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
+      "direct_callees": [],
+      "transitive_callees": [],
       "private_helper_review_items": []
     },
     {
@@ -38797,195 +38738,54 @@
       ]
     },
     {
-      "qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
+      "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
       "function_name": "write_warehouse_table",
-      "module": "fabric_input_output",
+      "module": "io.write_warehouse_table",
       "docs_path": "docs/api/reference/write_warehouse_table.md",
       "docs_url": "../../api/reference/write_warehouse_table/",
-      "source_path": "src/fabricops_kit/fabric_input_output.py",
-      "owner_file": "src/fabricops_kit/fabric_input_output.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/fabric_input_output.py#L264-L295",
-      "source_start_line": 264,
-      "source_end_line": 295,
-      "priority": "Review",
-      "recommended_simplification_action": "Review merge candidates",
-      "warnings": [
-        "Merge candidates found"
-      ],
-      "downstream_count": 3,
-      "max_depth": 3,
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "priority": "Low",
+      "recommended_simplification_action": "Keep public",
+      "warnings": [],
+      "downstream_count": 0,
+      "max_depth": 0,
       "modules_touched": [
-        "config",
-        "fabric_input_output",
-        "io_core"
+        "io.write_warehouse_table"
       ],
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
         "Public -> Public": 0,
         "Internal -> Public": 0
       },
-      "helper_cleanup_candidates": 1,
-      "direct_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
-          "function_name": "write_warehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
-          "source_start_line": 424,
-          "source_end_line": 429,
-          "path_examples": [
-            [
-              "write_warehouse_table",
-              "write_warehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        }
-      ],
-      "transitive_callees": [
-        {
-          "qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
-          "function_name": "write_warehouse_table_core",
-          "module": "io_core",
-          "depth": 1,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_workflow",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.fabric_input_output.write_warehouse_table",
-          "caller_type": "Public",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "allowed_internal_role_call",
-            "Possible inline/private helper"
-          ],
-          "recommended_action": "Review manually",
-          "downstream_count": 4,
-          "source_path": "src/fabricops_kit/io_core.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429",
-          "source_start_line": 424,
-          "source_end_line": 429,
-          "path_examples": [
-            [
-              "write_warehouse_table",
-              "write_warehouse_table_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "function_name": "resolve_fabric_context",
-          "module": "config",
-          "depth": 2,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.io_core.write_warehouse_table_core",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Promote candidate"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166",
-          "source_start_line": 146,
-          "source_end_line": 166,
-          "path_examples": [
-            [
-              "write_warehouse_table",
-              "write_warehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.get_default_fabric_context",
-          "function_name": "get_default_fabric_context",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Internal function",
-          "layer": "internal",
-          "layer_group": "Internal function",
-          "dependency_role": "internal_resolver",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.resolve_fabric_context",
-          "caller_type": "Internal",
-          "callee_type": "Internal",
-          "architecture_result": "Allowed",
-          "violation_type": "",
-          "signals": [
-            "Shared helper"
-          ],
-          "recommended_action": "Shared internal helper",
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88",
-          "source_start_line": 31,
-          "source_end_line": 88,
-          "path_examples": [
-            [
-              "write_warehouse_table",
-              "write_warehouse_table_core",
-              "_resolve_target_store",
-              "resolve_fabric_context",
-              "get_default_fabric_context"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        }
-      ],
+      "helper_cleanup_candidates": 0,
+      "direct_callees": [],
+      "transitive_callees": [],
       "private_helper_review_items": []
     }
   ],
   "summary_counts": {
-    "total_callables": 287,
+    "total_callables": 303,
     "function_type": {
       "Public function": 26,
-      "Internal function": 34
+      "Internal function": 50
     },
     "layer": {
       "public": 26,
-      "internal": 34
+      "internal": 50
     },
     "review_status": {
-      "classified": 281,
-      "classification_pending": 6,
+      "classified": 275,
+      "classification_pending": 28,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
       "unreachable": 0
     },
     "callable_kind": {
-      "function": 60
+      "function": 76
     },
     "callable_role_group": {
       "adapter": 23,
@@ -38995,7 +38795,7 @@
       "resolver": 38,
       "utility": 125,
       "validator": 17,
-      "workflow": 37
+      "workflow": 53
     },
     "dependency_role": {
       "audit_time_utility": 2,
@@ -39003,7 +38803,7 @@
       "internal_normalizer": 20,
       "internal_resolver": 38,
       "internal_validator": 15,
-      "internal_workflow": 37,
+      "internal_workflow": 53,
       "public_api_entrypoint": 26,
       "registry_builder": 1,
       "schema_utility": 2,
@@ -39016,7 +38816,7 @@
       "Public API entrypoint": 26,
       "Remove redundant wrapper": 3,
       "Rename to internal function": 21,
-      "Review manually": 23,
+      "Review manually": 39,
       "Shared internal helper": 11
     },
     "public_api_surface": {
@@ -39024,15 +38824,15 @@
       "long_call_chains": 0,
       "architecture_violations": 0,
       "architecture_findings": 0,
-      "merge_candidates": 11,
-      "suggested_inline_or_privatize": 11
+      "merge_candidates": 5,
+      "suggested_inline_or_privatize": 5
     },
     "callable_inventory_metrics": {
-      "module_count": 12,
-      "total_callables": 287,
+      "module_count": 21,
+      "total_callables": 303,
       "public_api_entrypoints": 26,
-      "function_callables": 60,
-      "supporting_functions": 34,
+      "function_callables": 76,
+      "supporting_functions": 50,
       "non_function_records": 22,
       "hidden_private_helpers": 227,
       "private_helpers_to_review": 227

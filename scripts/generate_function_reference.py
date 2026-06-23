@@ -77,6 +77,7 @@ MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "governance_review",
     "data_profiling",
     "fabric_input_output",
+    "io",
     "io_core",
     "guardrails",
     "metadata",
@@ -286,6 +287,23 @@ def _is_property_method(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     )
 
 
+
+def source_module_name(path: Path) -> str:
+    """Return a dotted package-relative source module name."""
+    return ".".join(path.relative_to(PKG_DIR).with_suffix("").parts)
+
+
+def source_module_paths() -> list[Path]:
+    """Return package source files that participate in generated callable metadata."""
+    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py")
+
+
+def source_module_path(module: str) -> Path:
+    """Return the source path for a dotted package-relative module name."""
+    if module == "io":
+        return PKG_DIR / "io" / "shared.py"
+    return PKG_DIR.joinpath(*module.split(".")).with_suffix(".py")
+
 def parse_module(path: Path) -> dict[str, Any]:
     """Parse module."""
     source_text = path.read_text(encoding="utf-8")
@@ -488,7 +506,7 @@ def build_callable_graph(
     called_by_modules: dict[str, set[str]] = {m: set() for m in package_modules}
 
     for module, info in module_data.items():
-        module_tree = ast.parse((PKG_DIR / f"{module}.py").read_text(encoding="utf-8"))
+        module_tree = ast.parse(source_module_path(module).read_text(encoding="utf-8"))
         module_aliases, symbol_aliases = parse_import_aliases(list(getattr(module_tree, "body", [])))
         functions = info.get("functions", {})
         classes = info.get("classes", {})
@@ -4301,9 +4319,11 @@ def main() -> None:
     """Run the command-line workflow."""
     REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
     public = parse_public_exports()
-    module_data = {p.stem: parse_module(p) for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
+    module_data = {source_module_name(p): parse_module(p) for p in source_module_paths()}
+    if "io.shared" in module_data:
+        module_data["io"] = module_data["io.shared"]
 
-    source_modules = {p.stem for p in PKG_DIR.glob("*.py") if p.name != "__init__.py"}
+    source_modules = set(module_data)
     discovered_modules = [module for module in MAJOR_IMPLEMENTATION_MODULE_ORDER if module in source_modules]
 
     docs_metadata = parse_docs_metadata()

@@ -45,8 +45,12 @@
         "setup_notebook"
       ],
       "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
-    },
+    }
+  },
+  "completed_migrations": {
     "src/fabricops_kit/fabric_input_output.py": {
+      "status": "facade_only",
+      "owner_package": "src/fabricops_kit/io",
       "public_functions": [
         "read_lakehouse_csv",
         "read_lakehouse_excel",
@@ -57,7 +61,11 @@
         "write_lakehouse_table",
         "write_warehouse_table"
       ],
-      "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
+      "stable_import_paths": [
+        "fabricops_kit.<function>",
+        "fabricops_kit.fabric_input_output.<function>",
+        "fabricops_kit.io.<function>"
+      ]
     }
   }
 }

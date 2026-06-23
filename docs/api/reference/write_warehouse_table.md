@@ -1,20 +1,10 @@
 # write_warehouse_table
 
-??? info "Downstream callables: 3"
-
-    Dependency data is generated from the callable architecture inventory.
-
-    <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>write_warehouse_table(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L424-L429"><code>write_warehouse_table_core(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L146-L166"><code>resolve_fabric_context(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L31-L88"><code>get_default_fabric_context(...)</code></a></div>
-    </div>
 
 Write a DataFrame to a configured Fabric warehouse target.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>fabric_input_output</code></span>
+<span class="reference-chip">Module: <code>io.write_warehouse_table</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">No starter notebook usage detected</span>
 </p>

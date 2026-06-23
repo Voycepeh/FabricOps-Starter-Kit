@@ -51,7 +51,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 
   <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>26</strong><span> public callables</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body"><!-- FABRICOPS_CALLABLE_RECORD_COUNT -->Supported by <strong>34</strong><span> functions and </span><strong>22</strong><span> non-function records</span><!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
+    <span class="fabricops-landing-card__body"><!-- FABRICOPS_CALLABLE_RECORD_COUNT -->Supported by <strong>50</strong><span> functions and </span><strong>22</strong><span> non-function records</span><!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
