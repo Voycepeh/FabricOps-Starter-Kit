@@ -3297,6 +3297,20 @@ def _render_callable_generation_banner(flow_data: dict[str, Any]) -> str:
 
 def _format_generated_html_for_review(markup: str) -> str:
     """Return generated HTML formatted for stable human review."""
+    try:
+        completed = subprocess.run(
+            ["npx", "--yes", "prettier", "--parser", "html"],
+            input=markup,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        completed = None
+    if completed and completed.returncode == 0 and completed.stdout.strip():
+        return completed.stdout.rstrip() + "\n"
+
     parts = re.split(r"(<(?:script|style)\b[^>]*>.*?</(?:script|style)>)", markup, flags=re.IGNORECASE | re.DOTALL)
     formatted_parts: list[str] = []
     for part in parts:
