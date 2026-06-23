@@ -13,10 +13,10 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">No starter notebook usage detected</span>
+<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
 </p>
 
-**Used in notebooks:** Not currently detected in starter notebooks.
+**Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage guidance
 

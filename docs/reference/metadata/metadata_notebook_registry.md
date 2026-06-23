@@ -5,8 +5,8 @@
 ## Starter Kit usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb
-- **Written by function or widget:** [`widget_select_agreement`](../../api/modules/data_agreement.md#widgetselectagreement)
-- **Read by function or widget:** [`get_selected_agreement`](../../api/modules/data_agreement.md#getselectedagreement), [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md), [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)
+- **Written by function or widget:** `widget_select_agreement`
+- **Read by function or widget:** `get_selected_agreement`, [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md), [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)
 - **Related template step:** 02_pipeline.ipynb
 
 ## Implemented schema
@@ -37,7 +37,7 @@
 
 ## Related function reference
 
-- [`get_selected_agreement`](../../api/modules/data_agreement.md#getselectedagreement)
-- [`widget_select_agreement`](../../api/modules/data_agreement.md#widgetselectagreement)
+- `get_selected_agreement`
+- `widget_select_agreement`
 - [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)
 - [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)

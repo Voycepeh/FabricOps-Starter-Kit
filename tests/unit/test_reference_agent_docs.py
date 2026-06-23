@@ -390,7 +390,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "file_path:row.source_path||null" in dashboard_text
     assert "line_start:row.source_start_line||null" in dashboard_text
     assert "function moduleLink(module)" in dashboard_text
-    assert "function moduleHref(module){return module?`../api/modules/${module}/`:''}" in dashboard_text
+    assert "function moduleHref(module){return ''}" in dashboard_text
+    assert "../api/modules/${module}/" not in dashboard_text
     assert "../../api/modules/${module}/" not in dashboard_text
     assert "GITHUB_SOURCE_BASE" in dashboard_text
     assert "return `${GITHUB_SOURCE_BASE}${path}${anchor}`" in dashboard_text
@@ -1325,13 +1326,9 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "<code>profile_dataframe</code>" in text
 
 
-def test_module_badges_pluralize_external_module_counts() -> None:
-    """Verify module overview badges use singular labels for one external module."""
-    module_text = (ROOT / "docs" / "api" / "modules" / "guardrails.md").read_text(encoding="utf-8")
-
-    assert "Used by 1 external module" in module_text
-    assert "Used by 1 external modules" not in module_text
-    assert "Uses 3 external modules" in module_text
+def test_module_pages_are_removed_from_public_docs_output() -> None:
+    """Verify module pages are removed from public docs output."""
+    assert not (ROOT / "docs" / "api" / "modules" / "guardrails.md").exists()
 
 
 def test_setup_notebook_reference_uses_human_first_source_documentation() -> None:
@@ -1704,6 +1701,7 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
     assert "      - Implementation Appendix:" in mkdocs_text
     assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text
     assert "api/modules/config.md" not in mkdocs_text
+    assert "api/modules/" not in mkdocs_text
     assert "api/reference/" not in mkdocs_text
 
 
