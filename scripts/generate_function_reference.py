@@ -4157,8 +4157,6 @@ def _function_link(symbol: str, relative_prefix: str = "../") -> str:
     """Return a markdown link to a public page or module anchor for internal support."""
     if symbol in public_callable_names():
         return f"[`{symbol}`]({relative_prefix}api/reference/{symbol}.md)"
-    metadata = parse_docs_metadata().get(symbol, {})
-    module_name = canonical_public_module(str(metadata.get("module") or "data_agreement"))
     return f"`{symbol}`"
 
 
