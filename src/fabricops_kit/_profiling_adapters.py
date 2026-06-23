@@ -4,6 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
+# Private helper review decisions for the callable inventory. These helpers are
+# intentionally underscore-prefixed because they are owned by the profiling
+# adapter flow and are not Public/Internal architecture layers.
+PROFILING_ADAPTER_REVIEW_DECISIONS = {
+    "_numeric_bin_edges": "keep private helper: computes Spark quantile bin edges and handles runtime fallback",
+    "_build_numeric_distribution": "keep private helper: converts numeric bins into Spark bucket counts",
+    "_build_categorical_distribution": "keep private helper: normalizes top-N/category distribution summaries",
+    "_build_distribution_summaries": "keep private helper: owns the distribution summary flow for profiling adapters",
+}
+
 
 def _numeric_bin_edges(df, column_name: str, *, bin_count: int = 10) -> list[float]:
     values = df.select(column_name).where(f"`{column_name}` is not null")
