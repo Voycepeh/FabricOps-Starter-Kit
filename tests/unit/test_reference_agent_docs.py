@@ -1980,10 +1980,14 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
 
     assert "../reference/_data/callable-flow.json" in inventory_text
+    assert "function callableFlowDataUrl()" in inventory_text
+    assert "new URL('../reference/_data/callable-flow.json',document.baseURI).href" in inventory_text
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} callable records" in inventory_text
     assert "No callable records match current filters" in inventory_text
     assert "Failed to load callable-flow data:" in inventory_text
+    assert "Attempted URL: ${attemptedUrl}" in inventory_text
+    assert "Invalid JSON:" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
         "Total callables",
