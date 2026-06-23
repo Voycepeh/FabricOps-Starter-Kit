@@ -1,4 +1,10 @@
 {
+  "metadata": {
+    "generated_at_utc": "2026-06-23T16:44:59.698608Z",
+    "data_source": "callable-flow.json",
+    "commit": "f2c1c49",
+    "branch": "work"
+  },
   "architecture_thresholds": {
     "long_call_chain_depth": 4,
     "large_dependency_surface": 10

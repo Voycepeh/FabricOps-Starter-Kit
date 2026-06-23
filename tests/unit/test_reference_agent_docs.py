@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import html
 import json
+import subprocess
 import re
 from pathlib import Path
 
@@ -253,6 +254,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "High-level triage for notebook-facing public APIs, dependency depth, and architecture risk." in dashboard_text
     assert "Inventory" in dashboard_text
     assert "Decision mode: Public API Surface" in dashboard_text
+    assert "Generated at:" in dashboard_text
+    assert "Data source:" in dashboard_text
+    assert "callable-flow.json" in dashboard_text
+    assert "new Date()" not in dashboard_text
+    assert "Date.now" not in dashboard_text
     assert "publicSurfaceCards" in dashboard_text
     assert "publicCallableList" in dashboard_text
     assert "publicFlowDetails" in dashboard_text
@@ -302,7 +308,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Show all public callables</button>`:'';const inline" not in dashboard_text
     assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in dashboard_text
     assert ".surface-card span{display:block;line-height:1.2" in dashboard_text
-    assert "<th>Public callable</th><th>Owner file</th><th>Module</th><th>Findings</th><th>Why review</th><th>Suggested action</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th>" in dashboard_text
+    assert "Review note" in dashboard_text
+    assert "data-sort-key=\"callable\"" in dashboard_text
+    assert "data-sort-key=\"module\"" in dashboard_text
+    assert "data-sort-key=\"findings\"" in dashboard_text
+    assert "data-sort-key=\"suggested_action\"" in dashboard_text
+    assert "data-sort-key=\"downstream\"" in dashboard_text
+    assert "data-sort-key=\"depth\"" in dashboard_text
+    assert "function stableSortRows(rows)" in dashboard_text
+    assert "a.index-b.index" in dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
@@ -412,7 +426,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "matchesBand(f,state.decisionDepthBand,DEPTH_BANDS,'depth')" in dashboard_text
     assert "matchesBand(f,state.decisionIssueBand,issueBandsForRows(publicEntryFlows),'issues')" in dashboard_text
     assert "['decisionMinDownstream','decisionDownstreamBand']" in dashboard_text
-    assert "decisionDownstreamBand:'',decisionDepthBand:'',decisionIssueBand:'',collapsedPublicList:false" in dashboard_text
+    assert "decisionDownstreamBand:'',decisionDepthBand:'',decisionIssueBand:'',sortKey:'callable',sortDirection:'asc'" in dashboard_text
     assert "populateBandFilter('decisionMinDownstream',DOWNSTREAM_BANDS,publicEntryFlows,'downstream')" in dashboard_text
     assert "populateBandFilter('decisionMinDepth',DEPTH_BANDS,publicEntryFlows,'depth')" in dashboard_text
     assert "populateBandFilter('decisionMinIssues',issueBandsForRows(publicEntryFlows),publicEntryFlows,'issues')" in dashboard_text
@@ -467,6 +481,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Helper-level architecture findings found" in dashboard_text
     assert "architectureFindings.length?architectureFindings" in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
+    assert "return reasons.length?reasons.join(' '):'Clear'" in dashboard_text
+    assert "No decision findings." not in dashboard_text
+    assert "'None':'Healthy'" in dashboard_text
+    assert '<span class="badge keep">Healthy</span>' in dashboard_text
+    assert "Merge candidate found" in dashboard_text
+    assert "Review merge candidate" in dashboard_text
+    assert "Review merge candidates" in dashboard_text
     assert "reasons.join(' ')" in dashboard_text
     assert "Contains ${violations} architecture violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
@@ -475,12 +496,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "longThreshold!==null" in dashboard_text
     assert "largeThreshold!==null" in dashboard_text
     assert "long call chain threshold unavailable" in dashboard_text
-    assert "Contains ${flow.helper_cleanup_candidates} merge candidates inside this flow." in dashboard_text
+    assert "mergeCount===1?'Contains 1 merge candidate inside this flow.'" in dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
 
     assert "Callable Inventory" in inventory_text
     assert "Search/filter callables with maintainer-friendly role groups, reachability, and refactor signals." in inventory_text
+    assert "Generated at:" in inventory_text
+    assert "Data source:" in inventory_text
+    assert "callable-flow.json" in inventory_text
+    assert "new Date()" not in inventory_text
+    assert "Date.now" not in inventory_text
     assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
     assert "inventorySummaryCards" in inventory_text
@@ -517,19 +543,36 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "copyMarkdown" in inventory_text
     assert "downloadJson" in inventory_text
     assert "searchBox" in inventory_text
-    assert "moduleFilter" in inventory_text
-    assert "roleGroupFilter" in inventory_text
-    assert "reachabilityFilter" in inventory_text
-    assert "signalFilter" in inventory_text
-    assert "priorityFilter" in inventory_text
-    assert "Advanced / Debug filters" in inventory_text
-    assert "callableRoleFilter" in inventory_text
-    assert "dependencyRoleFilter" in inventory_text
-    assert "kindFilter" in inventory_text
-    assert "typeFilter" in inventory_text
-    assert "reviewStatusFilter" in inventory_text
-    assert "minInboundFilter" in inventory_text
-    assert "minOutboundFilter" in inventory_text
+    assert "Search all callables" in inventory_text
+    assert 'data-quick-filter="all"' in inventory_text
+    assert 'data-quick-filter="public_api"' in inventory_text
+    assert 'data-quick-filter="supporting"' in inventory_text
+    assert 'data-quick-filter="review_candidates"' in inventory_text
+    assert 'data-quick-filter="healthy"' in inventory_text
+    assert 'data-quick-filter="selected"' in inventory_text
+    assert "function matchesQuickFilter(i)" in inventory_text
+    assert "function updateQuickFilterChips()" in inventory_text
+    assert "resetAll(document)" in inventory_text
+    assert "state.quickFilter=chip.dataset.quickFilter" in inventory_text
+    assert "matchesQuickFilter(i))" in inventory_text
+    assert "state.quickFilter='all'" in inventory_text
+    assert "selectedItems()" in inventory_text
+    for removed_filter in [
+        "moduleFilter",
+        "roleGroupFilter",
+        "reachabilityFilter",
+        "signalFilter",
+        "priorityFilter",
+        "Advanced / Debug filters",
+        "callableRoleFilter",
+        "dependencyRoleFilter",
+        "kindFilter",
+        "typeFilter",
+        "reviewStatusFilter",
+        "minInboundFilter",
+        "minOutboundFilter",
+    ]:
+        assert removed_filter not in inventory_text
     assert "selectedCount" in inventory_text
     assert "compatibilityMode" in inventory_text
     assert "Select visible" in inventory_text
@@ -623,7 +666,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "[Inventory](../assets/callable-functions-inventory.html)" in maintainer_text
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert set(flow_data) == {"function_inventory", "public_entrypoint_flow", "summary_counts", "architecture_thresholds"}
+    assert set(flow_data) == {"metadata", "function_inventory", "public_entrypoint_flow", "summary_counts", "architecture_thresholds"}
+    assert flow_data["metadata"]["generated_at_utc"].endswith("Z")
+    assert flow_data["metadata"]["data_source"] == "callable-flow.json"
     assert flow_data["architecture_thresholds"] == {"long_call_chain_depth": 4, "large_dependency_surface": 10}
 
     summary_counts = flow_data["summary_counts"]
@@ -1875,3 +1920,66 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
 
     assert flows[0]["owner_file"] == "src/fabricops_kit/public_api.py"
     assert [item["function_name"] for item in flows[0]["private_helper_review_items"]] == ["_helper"]
+
+
+def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
+    """Verify the shared table utility exposes site-wide Excel-style table controls."""
+    script = (ROOT / "docs" / "javascripts" / "table-controls.js").read_text(encoding="utf-8")
+    styles = (ROOT / "docs" / "stylesheets" / "table-controls.css").read_text(encoding="utf-8")
+    mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    dashboard_text = (ROOT / "docs" / "assets" / "callable-functions-dashboard.html").read_text(encoding="utf-8")
+
+    assert "javascripts/table-controls.js" in mkdocs_text
+    assert "stylesheets/table-controls.css" in mkdocs_text
+    assert "../javascripts/table-controls.js" in dashboard_text
+    assert "../stylesheets/table-controls.css" in dashboard_text
+    assert "fo-table-menu-button" in script
+    assert "Sort A to Z" in script
+    assert "Sort Z to A" in script
+    assert "Sort smallest to largest" in script
+    assert "Sort largest to smallest" in script
+    assert "Clear sort" in script
+    assert "Search values" in script
+    assert "Select all" in script
+    assert "Value" not in script or "fo-value-list" in script
+    assert "Equals" in script
+    assert "Greater than" in script
+    assert "Less than" in script
+    assert "Between" in script
+    assert "Clear filter" in script
+    assert "Clear all filters" in script
+    assert "rowMatchesFilter" in script
+    assert "cfg.filters.values" in script
+    assert "left.index - right.index" in script
+    assert "Number.isFinite" in script
+    assert "(blank)" in script
+    assert "fo-filter-active" in script
+    assert "fo-sort-active" in script
+    assert "Escape" in script
+    assert "function resetAll" in script
+    assert "cfg.filters.clear()" in script
+    assert "@media(max-width:720px)" in styles
+    assert "bottom:.5rem!important" in styles
+
+
+def test_global_table_controls_core_sort_and_filter_helpers() -> None:
+    """Exercise shared table utility helpers for sort and filter behavior."""
+    node_script = """
+    global.window = {};
+    global.document = {addEventListener(){}, querySelectorAll(){return []}, body:{appendChild(){}}};
+    require('./docs/javascripts/table-controls.js');
+    const t = window.FabricOpsTableControls._test;
+    function assert(condition, message){ if(!condition){ throw new Error(message); } }
+    assert(t.compareValues('Alpha','Beta',false) < 0, 'text sort ascending');
+    assert(t.compareValues('Beta','Alpha',false) > 0, 'text sort descending');
+    assert(t.compareValues('2','10',true) < 0, 'numeric sort ascending');
+    assert(t.compareValues('10','2',true) > 0, 'numeric sort descending');
+    assert(t.displayValue('') === '(blank)', 'blank value filtering');
+    const row = {cells:[{textContent:'Healthy'}, {textContent:'7'}, {textContent:''}, {textContent:'Public'}]};
+    assert(t.rowMatchesFilter(row,{column:0,kind:'values',values:new Set(['Healthy'])}), 'value checkbox filtering');
+    assert(t.rowMatchesFilter(row,{column:1,kind:'numeric',operator:'greater',a:'5'}), 'numeric condition filtering');
+    assert(t.rowMatchesFilter(row,{column:1,kind:'numeric',operator:'between',a:'5',b:'8'}), 'numeric between filtering');
+    assert(t.rowMatchesFilter(row,{column:2,kind:'values',values:new Set(['(blank)'])}), 'blank value filtering');
+    assert(t.rowMatchesFilter(row,{column:3,kind:'values',values:new Set(['Public'])}) && t.rowMatchesFilter(row,{column:0,kind:'values',values:new Set(['Healthy'])}), 'multiple column filters AND logic');
+    """
+    subprocess.run(["node", "-e", node_script], cwd=ROOT, check=True)
