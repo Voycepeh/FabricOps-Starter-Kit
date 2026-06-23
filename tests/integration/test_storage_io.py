@@ -336,6 +336,50 @@ def test_warehouse_read_write_delegate_to_shared_resolvers(monkeypatch):
     assert ("synapsesql", "wh.dbo.orders") in frame.write.calls
 
 
+
+def test_fabric_input_output_exports_all_public_io_functions():
+    """Verify fabric_input_output preserves all public IO compatibility exports."""
+    expected_exports = [
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_query",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+    ]
+
+    for name in expected_exports:
+        assert callable(getattr(io, name)), name
+
+
+def test_each_public_io_owner_uses_expected_shared_resolver_boundary():
+    """Verify each public IO owner file uses the expected shared resolver boundary."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    expectations = {
+        "read_lakehouse_csv.py": ("get_path(", "read_csv_path("),
+        "read_lakehouse_excel.py": ("get_path(", "read_excel_file("),
+        "read_lakehouse_parquet.py": ("get_path(", "spark_obj.read.parquet("),
+        "read_lakehouse_table.py": ("resolve_configured_lakehouse_table(", "read_delta_path("),
+        "read_warehouse_query.py": ("resolve_configured_warehouse_query_target(", "read_warehouse_synapsesql("),
+        "read_warehouse_table.py": ("resolve_configured_warehouse_table(", "read_warehouse_synapsesql("),
+        "write_lakehouse_table.py": ("resolve_configured_lakehouse_table(", "write_delta_path("),
+        "write_warehouse_table.py": ("resolve_configured_warehouse_table(", "write_warehouse_synapsesql("),
+    }
+
+    failures = []
+    for filename, patterns in expectations.items():
+        path = root / "src/fabricops_kit/io" / filename
+        text = path.read_text(encoding="utf-8")
+        for pattern in patterns:
+            if pattern not in text:
+                failures.append(f"{path.relative_to(root)} is missing {pattern}")
+
+    assert failures == []
+
 def test_public_io_owner_files_do_not_duplicate_resolution_patterns():
     """Verify public IO owner files delegate to shared resolver boundaries."""
     from pathlib import Path
