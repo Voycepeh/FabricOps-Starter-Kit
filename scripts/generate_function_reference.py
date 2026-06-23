@@ -3293,6 +3293,25 @@ def _render_callable_generation_banner(flow_data: dict[str, Any]) -> str:
         parts.append(f"<span><strong>Commit:</strong> {html.escape(metadata['commit'])}</span>")
     return f'<p class="generation-banner">{"".join(parts)}</p>'
 
+
+def _format_generated_html_for_review(markup: str) -> str:
+    """Return generated HTML formatted for stable human review."""
+    parts = re.split(r"(<(?:script|style)\b[^>]*>.*?</(?:script|style)>)", markup, flags=re.IGNORECASE | re.DOTALL)
+    formatted_parts: list[str] = []
+    for part in parts:
+        if re.match(r"<(?:script|style)\b", part, flags=re.IGNORECASE):
+            if part.lower().startswith("<style"):
+                open_tag, body, close_tag = re.match(r"(<style\b[^>]*>)(.*?)(</style>)", part, flags=re.IGNORECASE | re.DOTALL).groups()
+                body = body.replace("}", "}\n").strip()
+                formatted_parts.append(f"{open_tag}\n{body}\n{close_tag}")
+            else:
+                formatted_parts.append(part)
+            continue
+        formatted = re.sub(r">\s*<", ">\n<", part.strip())
+        formatted = re.sub(r"(</th>)\n(<th)", r"\1\2", formatted)
+        formatted_parts.append(formatted)
+    return "\n".join(piece for piece in formatted_parts if piece) + "\n"
+
 def _dashboard_contract_row(row: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
     """Return ``row`` trimmed to the public dashboard data contract."""
     return {key: row[key] for key in keys if key in row}
@@ -5497,8 +5516,16 @@ def main() -> None:
     )
     CALLABLE_FLOW_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
     CALLABLE_FLOW_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
-    REFACTOR_DASHBOARD_PATH.write_text(_render_refactor_dashboard_html(callable_flow_data), encoding="utf-8", newline="\n")
-    REFACTOR_INVENTORY_PATH.write_text(_render_refactor_inventory_html(callable_flow_data), encoding="utf-8", newline="\n")
+    REFACTOR_DASHBOARD_PATH.write_text(
+        _format_generated_html_for_review(_render_refactor_dashboard_html(callable_flow_data)),
+        encoding="utf-8",
+        newline="\n",
+    )
+    REFACTOR_INVENTORY_PATH.write_text(
+        _format_generated_html_for_review(_render_refactor_inventory_html(callable_flow_data)),
+        encoding="utf-8",
+        newline="\n",
+    )
     _remove_stale_function_taxonomy_audit()
 
 
