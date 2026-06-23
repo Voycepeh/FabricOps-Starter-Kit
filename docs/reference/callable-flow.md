@@ -7,9 +7,10 @@ AI coding tools make it easy to add callables quickly. That speed is useful, but
 [Architecture Page](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
 [Inventory Page](../assets/callable-functions-inventory.html){ .md-button }
 
+![Dashboard](../assets/fabricops-refactor-risk-dashboard.png)
+
 </div>
 
-![Dashboard](../assets/fabricops-refactor-risk-dashboard.png)
 
 
 ## Why callable flow matters
