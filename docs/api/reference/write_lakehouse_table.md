@@ -14,7 +14,7 @@ Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L58">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L57">View source on GitHub</a>
 
 Implemented in `src/fabricops_kit/io/write_lakehouse_table.py`:10.
 
@@ -70,7 +70,7 @@ write_lakehouse_table(df_orders, "orders_clean", target="unified", schema=UNIFIE
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to write. |
 | `table_name` | `str` | Yes | Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. |
-| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `target` | `str` | No | Logical target from ``00_env_config``. |
 | `schema` | `str or None` | No | Optional schema override for schema-enabled lakehouses. |
 | `mode` | `str, default="append"` | No | Spark write mode: ``append``, ``overwrite``, ``errorifexists``, or ``ignore``. |
 | `partition_by` | `str or list[str]` | No | Column or columns used to physically partition the Delta table. |

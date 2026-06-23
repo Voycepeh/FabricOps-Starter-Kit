@@ -104,6 +104,25 @@ def get_path(relative_path: str, *, target: str = DEFAULT_TARGET, context: dict[
     return _resolve_config_path(relative_path, target=target, context=context)
 
 
+def resolve_configured_lakehouse_table(table_name: str, *, target: str, schema: str | None = None, context: dict[str, Any] | None = None) -> tuple[str, str | None, str]:
+    """Resolve a logical lakehouse table target through the shared configured resolver."""
+    store, _env = resolve_target_store(target, "lakehouse", context=context)
+    return resolve_lakehouse_table_location(store, table_name, schema)
+
+
+def resolve_configured_warehouse_table(schema: str, table_name: str, *, target: str, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str, str]:
+    """Resolve a logical warehouse table target through the shared configured resolver."""
+    store, _env = resolve_target_store(target, "warehouse", context=context)
+    schema_value, table_value, object_name = resolve_warehouse_table_location(store, schema, table_name)
+    return store, schema_value, table_value, object_name
+
+
+def resolve_configured_warehouse_query_target(query: str, *, target: str, context: dict[str, Any] | None = None) -> tuple[FabricStore, str]:
+    """Resolve a logical warehouse query target through the shared configured resolver."""
+    store, _env = resolve_target_store(target, "warehouse", context=context)
+    return store, validate_select_query(query)
+
+
 def read_excel_file(spark_obj, resolved_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):
     """Read Excel binary content from a resolved Fabric path and return a Spark DataFrame."""
     return _read_excel_file(spark_obj, resolved_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs)

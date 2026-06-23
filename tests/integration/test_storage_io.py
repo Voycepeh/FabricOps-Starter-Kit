@@ -246,6 +246,127 @@ def test_read_lakehouse_csv_accepts_non_lakehouse_configured_path_target():
     assert ("csv", "abfss://configured-export/Files/path/to/orders.csv") in spark.read.calls
 
 
+def test_read_lakehouse_parquet_delegates_to_get_path(monkeypatch):
+    """Verify Parquet reads use the configured path resolver output directly."""
+    spark = _Spark()
+    calls = []
+    from importlib import import_module
+
+    parquet_module = import_module("fabricops_kit.io.read_lakehouse_parquet")
+
+    def fake_get_path(relative_path, *, target="source", context=None):
+        calls.append((relative_path, target, context))
+        return f"abfss://configured-target/{relative_path}"
+
+    monkeypatch.setattr(parquet_module, "get_path", fake_get_path)
+
+    io.read_lakehouse_parquet("custom/orders.parquet", target="source", spark_session=spark, context={"env": "dev"})
+
+    assert calls[:2] == [
+        ("custom/orders.parquet", "source", {"env": "dev"}),
+        ("custom_tsus/orders.parquet", "source", {"env": "dev"}),
+    ]
+    assert ("parquet", "abfss://configured-target/custom/orders.parquet") in spark.read.calls
+
+
+def test_lakehouse_table_read_write_delegate_to_shared_resolver(monkeypatch):
+    """Verify lakehouse table public functions use the shared table resolver."""
+    spark = _Spark()
+    frame = _Frame()
+    calls = []
+    from importlib import import_module
+
+    read_module = import_module("fabricops_kit.io.read_lakehouse_table")
+    write_module = import_module("fabricops_kit.io.write_lakehouse_table")
+
+    def fake_resolver(table_name, *, target, schema=None, context=None):
+        calls.append((table_name, target, schema, context))
+        return table_name, schema, f"abfss://configured-tables/{target}/{schema or 'default'}/{table_name}"
+
+    monkeypatch.setattr(read_module, "resolve_configured_lakehouse_table", fake_resolver)
+    monkeypatch.setattr(write_module, "resolve_configured_lakehouse_table", fake_resolver)
+
+    io.read_lakehouse_table("orders", target="source", schema="dbo", spark_session=spark, context={"env": "dev"})
+    io.write_lakehouse_table(frame, "orders_clean", target="unified", schema="curated", mode="overwrite", verbose=False, context={"env": "dev"})
+
+    assert calls == [
+        ("orders", "source", "dbo", {"env": "dev"}),
+        ("orders_clean", "unified", "curated", {"env": "dev"}),
+    ]
+    assert ("load", "abfss://configured-tables/source/dbo/orders") in spark.read.calls
+    assert ("save", "abfss://configured-tables/unified/curated/orders_clean") in frame.write.calls
+
+
+def test_warehouse_read_write_delegate_to_shared_resolvers(monkeypatch):
+    """Verify warehouse public functions use shared warehouse resolvers."""
+    spark = _Spark()
+    frame = _Frame()
+    calls = []
+    store = SimpleNamespace(workspace_id="workspace", item_id="warehouse", name="wh", kind="warehouse")
+    from importlib import import_module
+
+    query_module = import_module("fabricops_kit.io.read_warehouse_query")
+    table_module = import_module("fabricops_kit.io.read_warehouse_table")
+    write_module = import_module("fabricops_kit.io.write_warehouse_table")
+
+    def fake_query_resolver(query, *, target, context=None):
+        calls.append(("query", query, target, context))
+        return store, query
+
+    def fake_table_resolver(schema, table_name, *, target, context=None):
+        calls.append(("table", schema, table_name, target, context))
+        return store, schema, table_name, f"wh.{schema}.{table_name}"
+
+    monkeypatch.setattr(query_module, "resolve_configured_warehouse_query_target", fake_query_resolver)
+    monkeypatch.setattr(table_module, "resolve_configured_warehouse_table", fake_table_resolver)
+    monkeypatch.setattr(write_module, "resolve_configured_warehouse_table", fake_table_resolver)
+    monkeypatch.setattr(io_core, "_require_fabric_connector", lambda: SimpleNamespace(WorkspaceId="workspace", DatawarehouseId="warehouse"))
+
+    io.read_warehouse_query("select * from dbo.orders", target="warehouse", spark_session=spark, context={"env": "dev"})
+    io.read_warehouse_table("dbo", "orders", target="warehouse", spark_session=spark, context={"env": "dev"})
+    io.write_warehouse_table(frame, "dbo", "orders", target="warehouse", mode="overwrite", context={"env": "dev"})
+
+    assert calls == [
+        ("query", "select * from dbo.orders", "warehouse", {"env": "dev"}),
+        ("table", "dbo", "orders", "warehouse", {"env": "dev"}),
+        ("table", "dbo", "orders", "warehouse", {"env": "dev"}),
+    ]
+    assert ("synapsesql", "select * from dbo.orders") in spark.read.calls
+    assert ("synapsesql", "wh.dbo.orders") in spark.read.calls
+    assert ("synapsesql", "wh.dbo.orders") in frame.write.calls
+
+
+def test_public_io_owner_files_do_not_duplicate_resolution_patterns():
+    """Verify public IO owner files delegate to shared resolver boundaries."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    owner_files = [
+        root / "src/fabricops_kit/io/read_lakehouse_csv.py",
+        root / "src/fabricops_kit/io/read_lakehouse_excel.py",
+        root / "src/fabricops_kit/io/read_lakehouse_parquet.py",
+        root / "src/fabricops_kit/io/read_lakehouse_table.py",
+        root / "src/fabricops_kit/io/read_warehouse_query.py",
+        root / "src/fabricops_kit/io/read_warehouse_table.py",
+        root / "src/fabricops_kit/io/write_lakehouse_table.py",
+        root / "src/fabricops_kit/io/write_warehouse_table.py",
+    ]
+    forbidden = [
+        'resolve_target_store(target, "lakehouse"',
+        'resolve_target_store(target, "warehouse"',
+        "resolve_lakehouse_file_location",
+        "_join_lakehouse_area_path",
+        "/Tables/",
+    ]
+    failures = []
+    for path in owner_files:
+        text = path.read_text(encoding="utf-8")
+        for pattern in forbidden:
+            if pattern in text:
+                failures.append(f"{path.relative_to(root)} contains {pattern}")
+    assert failures == []
+
+
 def test_read_lakehouse_excel_reports_missing_resolved_path():
     """Verify invalid resolved Excel paths fail with a useful path error."""
     config = framework_config()

@@ -9,7 +9,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
     <p class="reference-kpi-note">Code areas represented.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">319</strong>
+    <strong class="reference-kpi-value">325</strong>
     <span class="reference-kpi-title">Total callables</span>
     <p class="reference-kpi-note">Complete discovered callable inventory.</p>
   </section>
@@ -19,7 +19,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
     <p class="reference-kpi-note">Notebook-facing entrypoints.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">63</strong>
+    <strong class="reference-kpi-value">69</strong>
     <span class="reference-kpi-title">Supporting functions</span>
     <p class="reference-kpi-note">Internal functions behind the public API.</p>
   </section>

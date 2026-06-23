@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import get_spark_session, read_warehouse_synapsesql, resolve_target_store, resolve_warehouse_table_location
+from .shared import get_spark_session, read_warehouse_synapsesql, resolve_configured_warehouse_table
 
 
 def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehouse", spark_session=None, context: dict[str, Any] | None = None):
-    """Read a full table from a Microsoft Fabric warehouse.
+    """Read a full table from a configured Microsoft Fabric warehouse target.
 
     Use this callable for intentional full extracts, such as small reference
     tables or cases where the complete warehouse table is required. Prefer
@@ -33,7 +33,7 @@ def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehou
     table_name : str
         Warehouse table name.
     target : str, default="warehouse"
-        Logical warehouse target from ``00_env_config``.
+        Logical target from ``00_env_config``.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
@@ -45,6 +45,5 @@ def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehou
         Spark DataFrame loaded through the Fabric warehouse connector.
 
     """
-    store, _env = resolve_target_store(target, "warehouse", context=context)
-    _schema_value, _table_value, object_name = resolve_warehouse_table_location(store, schema, table_name)
+    store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(schema, table_name, target=target, context=context)
     return read_warehouse_synapsesql(get_spark_session(spark_session), store, object_name)

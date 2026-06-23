@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import get_spark_session, read_delta_path, resolve_lakehouse_table_location, resolve_target_store
+from .shared import get_spark_session, read_delta_path, resolve_configured_lakehouse_table
 
 
 def read_lakehouse_table(table_name: str, *, target: str = "source", schema: str | None = None, spark_session=None, context: dict[str, Any] | None = None):
-    """Read a Delta table from a Fabric lakehouse.
+    """Read a Delta table from a configured Fabric lakehouse target.
 
     Lakehouse Delta is the preferred source for repeated PySpark
     transformations in FabricOps. When source data starts in a Fabric Warehouse,
@@ -20,7 +20,7 @@ def read_lakehouse_table(table_name: str, *, target: str = "source", schema: str
     table_name : str
         Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name.
     target : str, default="source"
-        Logical lakehouse target from ``00_env_config``.
+        Logical target from ``00_env_config``.
     schema : str or None, default=None
         Optional schema override for schema-enabled lakehouses.
     spark_session : object, optional
@@ -34,6 +34,5 @@ def read_lakehouse_table(table_name: str, *, target: str = "source", schema: str
         Spark DataFrame loaded from the configured Delta table path.
 
     """
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
-    _table_value, _schema_value, path = resolve_lakehouse_table_location(store, table_name, schema)
+    _table_value, _schema_value, path = resolve_configured_lakehouse_table(table_name, target=target, schema=schema, context=context)
     return read_delta_path(get_spark_session(spark_session), path)

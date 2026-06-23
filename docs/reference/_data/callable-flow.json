@@ -18826,9 +18826,9 @@
       "module": "io",
       "source_path": "src/fabricops_kit/io.py",
       "owner_file": "src/fabricops_kit/io.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L112-L114",
-      "source_start_line": 112,
-      "source_end_line": 114,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L131-L133",
+      "source_start_line": 131,
+      "source_end_line": 133,
       "function_type": "Internal function",
       "layer": "internal",
       "review_status": "classification_pending",
@@ -19187,9 +19187,9 @@
       "module": "io",
       "source_path": "src/fabricops_kit/io.py",
       "owner_file": "src/fabricops_kit/io.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L109",
-      "source_start_line": 107,
-      "source_end_line": 109,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L126-L128",
+      "source_start_line": 126,
+      "source_end_line": 128,
       "function_type": "Internal function",
       "layer": "internal",
       "review_status": "classification_pending",
@@ -19298,6 +19298,228 @@
             "fabric_warehouse_adapter"
           ],
           "dependency_role": "internal_adapter"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.resolve_configured_lakehouse_table",
+      "function_name": "resolve_configured_lakehouse_table",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L110",
+      "source_start_line": 107,
+      "source_end_line": 110,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 2,
+      "callers": [],
+      "callees": [
+        {
+          "function": "resolve_lakehouse_table_location",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_lakehouse_table_location",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L42-L44",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_target_store",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_target_store",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L37-L39",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_query_target",
+      "function_name": "resolve_configured_warehouse_query_target",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L120-L123",
+      "source_start_line": 120,
+      "source_end_line": 123,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 2,
+      "callers": [],
+      "callees": [
+        {
+          "function": "resolve_target_store",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_target_store",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L37-L39",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "validate_select_query",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.validate_select_query",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L72-L74",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_table",
+      "function_name": "resolve_configured_warehouse_table",
+      "module": "io",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L113-L117",
+      "source_start_line": 113,
+      "source_end_line": 117,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 2,
+      "callers": [],
+      "callees": [
+        {
+          "function": "resolve_target_store",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_target_store",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L37-L39",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_warehouse_table_location",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_warehouse_table_location",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L57-L59",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
         }
       ]
     },
@@ -19451,8 +19673,8 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
@@ -19460,9 +19682,23 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 1,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_lakehouse_table",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_configured_lakehouse_table",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L110",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_resolve_lakehouse_table_location",
@@ -19511,18 +19747,58 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 3,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_lakehouse_table",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_configured_lakehouse_table",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L110",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_configured_warehouse_query_target",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_query_target",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L120-L123",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_configured_warehouse_table",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_table",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L113-L117",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_resolve_target_store",
@@ -19571,8 +19847,8 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
@@ -19580,9 +19856,23 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 1,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_warehouse_table",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_table",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L113-L117",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_resolve_warehouse_table_location",
@@ -19692,8 +19982,8 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
@@ -19702,9 +19992,23 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 1,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_warehouse_query_target",
+          "module": "io",
+          "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_query_target",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L120-L123",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_validate_select_query",
@@ -20693,6 +20997,228 @@
       ]
     },
     {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "function_name": "resolve_configured_lakehouse_table",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 2,
+      "callers": [],
+      "callees": [
+        {
+          "function": "resolve_lakehouse_table_location",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_target_store",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+      "function_name": "resolve_configured_warehouse_query_target",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 2,
+      "callers": [],
+      "callees": [
+        {
+          "function": "resolve_target_store",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "validate_select_query",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.validate_select_query",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+      "function_name": "resolve_configured_warehouse_table",
+      "module": "io.shared",
+      "source_path": "src/fabricops_kit/io.py",
+      "owner_file": "src/fabricops_kit/io.py",
+      "source_url": null,
+      "source_start_line": null,
+      "source_end_line": null,
+      "function_type": "Internal function",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Review manually",
+      "priority": "Review",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "calls_count": 2,
+      "callers": [],
+      "callees": [
+        {
+          "function": "resolve_target_store",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_warehouse_table_location",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_warehouse_table_location",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ]
+    },
+    {
       "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_file_location",
       "function_name": "resolve_lakehouse_file_location",
       "module": "io.shared",
@@ -20842,8 +21368,8 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
@@ -20851,9 +21377,23 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 1,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_lakehouse_table",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_resolve_lakehouse_table_location",
@@ -20902,18 +21442,58 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
-        "Possible inline/private helper"
+        "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 3,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_lakehouse_table",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_configured_warehouse_query_target",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_configured_warehouse_table",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_resolve_target_store",
@@ -20962,8 +21542,8 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
@@ -20971,9 +21551,23 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 1,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_warehouse_table",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_resolve_warehouse_table_location",
@@ -21083,8 +21677,8 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
       "recommended_action": "Review manually",
       "priority": "Review",
       "signals": [
@@ -21093,9 +21687,23 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 0,
+      "called_by_count": 1,
       "calls_count": 1,
-      "callers": [],
+      "callers": [
+        {
+          "function": "resolve_configured_warehouse_query_target",
+          "module": "io.shared",
+          "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+          "source_url": null,
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ],
       "callees": [
         {
           "function": "_validate_select_query",
@@ -21443,7 +22051,7 @@
           "function": "convert_single_parquet_ns_to_us",
           "module": "io",
           "qualified_name": "fabricops_kit.io.convert_single_parquet_ns_to_us",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L112-L114",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L131-L133",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function",
@@ -22291,7 +22899,7 @@
           "function": "read_excel_file",
           "module": "io",
           "qualified_name": "fabricops_kit.io.read_excel_file",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L109",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L126-L128",
           "layer": "internal",
           "review_status": "classification_pending",
           "callable_kind": "function",
@@ -39396,31 +40004,31 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 319,
+    "total_callables": 325,
     "function_type": {
       "Public function": 26,
-      "Internal function": 63
+      "Internal function": 69
     },
     "layer": {
       "public": 26,
-      "internal": 63
+      "internal": 69
     },
     "review_status": {
       "classified": 278,
-      "classification_pending": 41,
+      "classification_pending": 47,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
       "unreachable": 0
     },
     "callable_kind": {
-      "function": 89
+      "function": 95
     },
     "callable_role_group": {
       "adapter": 23,
       "normalizer": 21,
       "public_entrypoint": 26,
       "registry_builder": 1,
-      "resolver": 48,
+      "resolver": 54,
       "utility": 127,
       "validator": 17,
       "workflow": 56
@@ -39429,7 +40037,7 @@
       "audit_time_utility": 2,
       "internal_adapter": 23,
       "internal_normalizer": 21,
-      "internal_resolver": 48,
+      "internal_resolver": 54,
       "internal_validator": 15,
       "internal_workflow": 56,
       "public_api_entrypoint": 26,
@@ -39444,7 +40052,7 @@
       "Public API entrypoint": 26,
       "Remove redundant wrapper": 3,
       "Rename to internal function": 37,
-      "Review manually": 52,
+      "Review manually": 58,
       "Shared internal helper": 11
     },
     "public_api_surface": {
@@ -39457,10 +40065,10 @@
     },
     "callable_inventory_metrics": {
       "module_count": 21,
-      "total_callables": 319,
+      "total_callables": 325,
       "public_api_entrypoints": 26,
-      "function_callables": 89,
-      "supporting_functions": 63,
+      "function_callables": 95,
+      "supporting_functions": 69,
       "non_function_records": 22,
       "hidden_private_helpers": 230,
       "private_helpers_to_review": 230

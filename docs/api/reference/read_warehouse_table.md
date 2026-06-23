@@ -12,7 +12,7 @@ Read a table from a configured Fabric warehouse target.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L50">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L49">View source on GitHub</a>
 
 Implemented in `src/fabricops_kit/io/read_warehouse_table.py`:10.
 
@@ -63,7 +63,7 @@ df = read_warehouse_table(schema="dbo", table="orders", spark_session=spark)
 | --- | --- | --- | --- |
 | `schema` | `str` | Yes | Warehouse schema name. |
 | `table_name` | `str` | Yes | Warehouse table name. |
-| `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
+| `target` | `str` | No | Logical target from ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 

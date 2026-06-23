@@ -12,7 +12,7 @@ Read warehouse rows with SQL pushdown through a configured Fabric warehouse targ
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L10-L46">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L10-L45">View source on GitHub</a>
 
 Implemented in `src/fabricops_kit/io/read_warehouse_query.py`:10.
 
@@ -61,7 +61,7 @@ df = read_warehouse_query("SELECT order_id, status FROM dbo.orders WHERE status 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `query` | `str` | Yes | SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric warehouse connector. |
-| `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
+| `target` | `str` | No | Logical target from ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 

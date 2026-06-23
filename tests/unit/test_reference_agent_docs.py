@@ -603,9 +603,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<span class="reference-kpi-title">Supporting functions</span>' in reference_text
     assert '<span class="reference-kpi-title">Private helpers to review</span>' in reference_text
     assert '<strong class="reference-kpi-value">21</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">319</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">325</strong>' in reference_text
     assert '<strong class="reference-kpi-value">26</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">63</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">69</strong>' in reference_text
     assert '<strong class="reference-kpi-value">230</strong>' in reference_text
     assert "Callable metrics are generated from the callable inventory data." in reference_text
     assert "270 Supporting internal functions" not in reference_text
@@ -652,7 +652,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 89
+    assert summary_counts["callable_kind"]["function"] == 95
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0

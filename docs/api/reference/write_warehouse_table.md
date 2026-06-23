@@ -12,7 +12,7 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L44">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L43">View source on GitHub</a>
 
 Implemented in `src/fabricops_kit/io/write_warehouse_table.py`:10.
 
@@ -65,7 +65,7 @@ write_warehouse_table(serving_df, target="Warehouse", schema="dbo", table="order
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to publish. |
 | `schema` | `str` | Yes | Warehouse schema name. |
 | `table_name` | `str` | Yes | Warehouse table name. |
-| `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
+| `target` | `str` | No | Logical target from ``00_env_config``. |
 | `mode` | `str` | No | Spark writer mode supported by the Fabric connector. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 

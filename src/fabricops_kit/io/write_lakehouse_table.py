@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import normalize_write_mode, resolve_lakehouse_table_location, resolve_target_store, validate_dataframe_writer, write_delta_path
+from .shared import normalize_write_mode, resolve_configured_lakehouse_table, validate_dataframe_writer, write_delta_path
 
 
 def write_lakehouse_table(df, table_name: str, *, target: str = "unified", schema=None, mode="append", partition_by=None, repartition_by=None, options=None, verbose=True, context=None):
-    """Write a Spark DataFrame to a Fabric lakehouse Delta table.
+    """Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
     Lakehouse Delta is optimized for FabricOps PySpark processing and reuse.
     Prefer this callable for intermediate, Unified, Product, and metadata Delta
@@ -22,7 +22,7 @@ def write_lakehouse_table(df, table_name: str, *, target: str = "unified", schem
     table_name : str
         Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name.
     target : str, default="unified"
-        Logical lakehouse target from ``00_env_config``.
+        Logical target from ``00_env_config``.
     schema : str or None, default=None
         Optional schema override for schema-enabled lakehouses.
     mode : str, default="append"
@@ -45,8 +45,7 @@ def write_lakehouse_table(df, table_name: str, *, target: str = "unified", schem
 
     """
     validate_dataframe_writer(df)
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
-    _table_value, _schema_value, path = resolve_lakehouse_table_location(store, table_name, schema)
+    _table_value, _schema_value, path = resolve_configured_lakehouse_table(table_name, target=target, schema=schema, context=context)
     normalized_mode = normalize_write_mode(mode)
     if repartition_by is not None:
         if isinstance(repartition_by, (list, tuple)):

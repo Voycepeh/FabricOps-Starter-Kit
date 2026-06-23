@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import get_spark_session, read_warehouse_synapsesql, resolve_target_store, validate_select_query
+from .shared import get_spark_session, read_warehouse_synapsesql, resolve_configured_warehouse_query_target
 
 
 def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session=None, context: dict[str, Any] | None = None):
@@ -29,7 +29,7 @@ def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session
         SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in
         a ``SELECT``, to execute through the Fabric warehouse connector.
     target : str, default="warehouse"
-        Logical warehouse target from ``00_env_config``.
+        Logical target from ``00_env_config``.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
@@ -41,6 +41,5 @@ def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session
         Spark DataFrame returned by the SQL serving engine.
 
     """
-    store, _env = resolve_target_store(target, "warehouse", context=context)
-    sql = validate_select_query(query)
+    store, sql = resolve_configured_warehouse_query_target(query, target=target, context=context)
     return read_warehouse_synapsesql(get_spark_session(spark_session), store, sql)

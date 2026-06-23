@@ -6230,9 +6230,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io.py",
-    "source_start_line": 112,
-    "source_end_line": 114,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L112-L114",
+    "source_start_line": 131,
+    "source_end_line": 133,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L131-L133",
     "docs_path": null,
     "summary": "Convert one local Parquet file from nanosecond to microsecond timestamps."
   },
@@ -6386,9 +6386,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io.py",
-    "source_start_line": 107,
-    "source_end_line": 109,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L109",
+    "source_start_line": 126,
+    "source_end_line": 128,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L126-L128",
     "docs_path": null,
     "summary": "Read Excel binary content from a resolved Fabric path and return a Spark DataFrame."
   },
@@ -6569,8 +6569,8 @@
     ],
     "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
     "source_start_line": 10,
-    "source_end_line": 39,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L39",
+    "source_end_line": 38,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L38",
     "docs_path": "api/reference/read_lakehouse_table.md",
     "summary": "Read a Delta table from a configured Fabric lakehouse target."
   },
@@ -6610,8 +6610,8 @@
     ],
     "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
     "source_start_line": 10,
-    "source_end_line": 46,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L10-L46",
+    "source_end_line": 45,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L10-L45",
     "docs_path": "api/reference/read_warehouse_query.md",
     "summary": "Read warehouse rows with SQL pushdown through a configured Fabric warehouse target."
   },
@@ -6677,10 +6677,91 @@
     ],
     "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
     "source_start_line": 10,
-    "source_end_line": 50,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L50",
+    "source_end_line": 49,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L49",
     "docs_path": "api/reference/read_warehouse_table.md",
     "summary": "Read a table from a configured Fabric warehouse target."
+  },
+  {
+    "id": "fabricops_kit.io.resolve_configured_lakehouse_table",
+    "name": "resolve_configured_lakehouse_table",
+    "qualified_name": "fabricops_kit.io.resolve_configured_lakehouse_table",
+    "module": "io",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.io.resolve_lakehouse_table_location",
+      "fabricops_kit.io.resolve_target_store"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io.py",
+    "source_start_line": 107,
+    "source_end_line": 110,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L110",
+    "docs_path": null,
+    "summary": "Resolve a logical lakehouse table target through the shared configured resolver."
+  },
+  {
+    "id": "fabricops_kit.io.resolve_configured_warehouse_query_target",
+    "name": "resolve_configured_warehouse_query_target",
+    "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_query_target",
+    "module": "io",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.io.resolve_target_store",
+      "fabricops_kit.io.validate_select_query"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io.py",
+    "source_start_line": 120,
+    "source_end_line": 123,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L120-L123",
+    "docs_path": null,
+    "summary": "Resolve a logical warehouse query target through the shared configured resolver."
+  },
+  {
+    "id": "fabricops_kit.io.resolve_configured_warehouse_table",
+    "name": "resolve_configured_warehouse_table",
+    "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_table",
+    "module": "io",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.io.resolve_target_store",
+      "fabricops_kit.io.resolve_warehouse_table_location"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io.py",
+    "source_start_line": 113,
+    "source_end_line": 117,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L113-L117",
+    "docs_path": null,
+    "summary": "Resolve a logical warehouse table target through the shared configured resolver."
   },
   {
     "id": "fabricops_kit.io.resolve_lakehouse_file_location",
@@ -6742,7 +6823,9 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.resolve_configured_lakehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_lakehouse_table_location"
     ],
@@ -6768,7 +6851,11 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.resolve_configured_lakehouse_table",
+      "fabricops_kit.io.resolve_configured_warehouse_query_target",
+      "fabricops_kit.io.resolve_configured_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_target_store"
     ],
@@ -6794,7 +6881,9 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.resolve_configured_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_warehouse_table_location"
     ],
@@ -6832,9 +6921,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io/shared.py",
-    "source_start_line": 112,
-    "source_end_line": 114,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L112-L114",
+    "source_start_line": 131,
+    "source_end_line": 133,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L131-L133",
     "docs_path": null,
     "summary": "Convert one local Parquet file from nanosecond to microsecond timestamps."
   },
@@ -6988,9 +7077,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io/shared.py",
-    "source_start_line": 107,
-    "source_end_line": 109,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L107-L109",
+    "source_start_line": 126,
+    "source_end_line": 128,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L126-L128",
     "docs_path": null,
     "summary": "Read Excel binary content from a resolved Fabric path and return a Spark DataFrame."
   },
@@ -7019,6 +7108,87 @@
     "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L92-L94",
     "docs_path": null,
     "summary": "Read from Fabric Warehouse through the Spark connector."
+  },
+  {
+    "id": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+    "name": "resolve_configured_lakehouse_table",
+    "qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+    "module": "io.shared",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+      "fabricops_kit.io.shared.resolve_target_store"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io/shared.py",
+    "source_start_line": 107,
+    "source_end_line": 110,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L107-L110",
+    "docs_path": null,
+    "summary": "Resolve a logical lakehouse table target through the shared configured resolver."
+  },
+  {
+    "id": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+    "name": "resolve_configured_warehouse_query_target",
+    "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+    "module": "io.shared",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.resolve_target_store",
+      "fabricops_kit.io.shared.validate_select_query"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io/shared.py",
+    "source_start_line": 120,
+    "source_end_line": 123,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L120-L123",
+    "docs_path": null,
+    "summary": "Resolve a logical warehouse query target through the shared configured resolver."
+  },
+  {
+    "id": "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+    "name": "resolve_configured_warehouse_table",
+    "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+    "module": "io.shared",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.resolve_target_store",
+      "fabricops_kit.io.shared.resolve_warehouse_table_location"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io/shared.py",
+    "source_start_line": 113,
+    "source_end_line": 117,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L113-L117",
+    "docs_path": null,
+    "summary": "Resolve a logical warehouse table target through the shared configured resolver."
   },
   {
     "id": "fabricops_kit.io.shared.resolve_lakehouse_file_location",
@@ -7080,7 +7250,9 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.shared.resolve_configured_lakehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_lakehouse_table_location"
     ],
@@ -7106,7 +7278,11 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+      "fabricops_kit.io.shared.resolve_configured_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_target_store"
     ],
@@ -7132,7 +7308,9 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.shared.resolve_configured_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_warehouse_table_location"
     ],
@@ -7184,7 +7362,9 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.shared.resolve_configured_warehouse_query_target"
+    ],
     "outbound": [
       "fabricops_kit.io_core._validate_select_query"
     ],
@@ -7288,7 +7468,9 @@
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.resolve_configured_warehouse_query_target"
+    ],
     "outbound": [
       "fabricops_kit.io_core._validate_select_query"
     ],
@@ -7373,8 +7555,8 @@
     ],
     "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
     "source_start_line": 10,
-    "source_end_line": 58,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L58",
+    "source_end_line": 57,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L57",
     "docs_path": "api/reference/write_lakehouse_table.md",
     "summary": "Write a Spark DataFrame to a configured Fabric lakehouse Delta table."
   },
@@ -7436,8 +7618,8 @@
     ],
     "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
     "source_start_line": 10,
-    "source_end_line": 44,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L44",
+    "source_end_line": 43,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L43",
     "docs_path": "api/reference/write_warehouse_table.md",
     "summary": "Write a DataFrame to a configured Fabric warehouse target."
   },
