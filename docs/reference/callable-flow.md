@@ -15,19 +15,19 @@ AI coding tools make it easy to add callables quickly. That speed is useful, but
 FabricOps keeps notebook-facing APIs small and explainable. A callable should have a clear role in the role-aware callable model:
 
 ```text
-Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers
+Public functions → Internal functions (supporting objects allowed)
 ```
 
-Callable review is role-aware. Internal-to-internal calls are valid when the roles and direction are clear. Callable review is no longer based on a blanket "internal calls internal is bad" rule. The current classifier distinguishes public API entrypoints, internal workflows, adapters, validators, resolvers, normalizers, services, utilities, model classes, lifecycle methods, property accessors, reachability kinds, dependency roles, and allowed internal role calls.
+Callable review is function-layer focused. Internal-to-internal calls are valid, public functions may call internal functions, and supporting objects are allowed dependencies. The current classifier still keeps helper tags such as adapters, validators, utilities, model classes, lifecycle methods, property accessors, reachability kinds, and dependency roles for review context, but those tags are not architecture layers.
 
 The intent is:
 
-- Public API entrypoints should remain stable notebook-facing surfaces.
-- Internal workflows may orchestrate lower-level implementation roles.
-- Validators, resolvers, normalizers, adapters, and services may support workflows when their direction is intentional.
-- Utilities and model/lifecycle helpers should stay low-level and avoid depending upward on workflows.
+- Public functions should remain stable notebook-facing surfaces.
+- Internal functions may orchestrate implementation helpers.
+- Classes, dataclasses, enums, constants, protocols, config objects, validators, resolvers, adapters, utilities, models, lifecycle methods, and property accessors are supporting context rather than architecture layers.
+- Architecture violations are limited to public-function-to-public-function and internal-function-to-public-function call edges.
 
-This keeps public callables stable, lets purposeful internal implementation roles collaborate, and still flags dependency direction that makes the architecture harder to maintain.
+This keeps public callables stable, lets purposeful internal implementation roles collaborate, and avoids treating object usage as a boundary issue.
 
 ## How the dashboard is generated
 
@@ -108,7 +108,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
     Prompt for AI
 
-    Review the assigned layer against the usage evidence. Do not assume that a Utility layer is correct when inbound count is low. Do not assume that a highly reused Internal helper must remain internal. Do not treat all internal-to-internal calls as violations. Only flag role-aware upward dependencies, workflow-to-workflow coupling, or project-callable dependencies from utility/model layers. Protect public APIs, lifecycle hooks, property accessors, model classes, and high-fanout shared services unless tests and caller review justify changes. Respect compatibility mode, batch accounting, and completion accounting.
+    Review the assigned function layer against the usage evidence. Architecture findings use only function-to-function calls: public functions should not call public functions, and internal functions should not call public functions. Do not treat classes, dataclasses, enums, constants, protocols, config objects, lifecycle hooks, property accessors, or other supporting objects as architecture-layer violations. Respect compatibility mode, batch accounting, and completion accounting.
 
     Refactor context
 
@@ -128,7 +128,7 @@ Selected callables can be exported as a structured AI refactor packet. The expor
     Qualified name: fabricops_kit.config._audit_timestamp_expr
     Module: config
     Kind: function
-    Layer: Internal helper
+    Layer: Internal function
     Callable role: internal_adapter, shared_internal_service
     Architectural role: shared_internal_service
     Reachability kind: public_api_reachable
@@ -154,6 +154,6 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
 ## Conclusion
 
-The Callable Flow Dashboard is not only a dependency viewer. It is an architecture guardrail for keeping FabricOps maintainable as the kit grows. The main rule is role-aware: public API entrypoints should remain stable notebook-facing surfaces; internal workflows may orchestrate lower-level implementation roles; validators, resolvers, normalizers, adapters, and services may support workflows when their direction is intentional; and utilities plus model/lifecycle helpers should stay low-level and avoid depending upward on workflows. Repeated workflow-to-workflow chains, upward dependencies, or project-callable dependencies from utility/model layers should be reviewed, but allowed internal role calls can be valid.
+The Callable Flow Dashboard is not only a dependency viewer. It is an architecture guardrail for keeping FabricOps maintainable as the kit grows. The main rule is function-layer focused: public functions should remain stable notebook-facing surfaces, public functions may call internal functions, and internal functions should not call public functions. Supporting objects and helper role tags provide review context without becoming architecture layers or boundary violations.
 
 The exported refactor packet gives AI tools enough context to reason safely from the call graph instead of guessing from isolated code snippets. This makes the workflow useful for planned refactors, code review, and future architecture governance.

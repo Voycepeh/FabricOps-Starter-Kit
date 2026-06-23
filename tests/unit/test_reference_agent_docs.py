@@ -637,7 +637,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callable_inventory_metrics",
         "callable_role_group",
     } <= set(summary_counts)
-    assert set(summary_counts["function_type"]) == {"Public API", "Internal helper", "Utility"}
+    assert set(summary_counts["function_type"]) == {"Public function", "Internal function", "Supporting object"}
     assert set(summary_counts["review_status"]) == {
         "classified",
         "classification_pending",
@@ -695,13 +695,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     }
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
-    assert {"Public API", "Internal helper", "Utility"} <= {row["function_type"] for row in function_inventory}
+    assert {"Public function", "Internal function", "Supporting object"} <= {row["function_type"] for row in function_inventory}
     assert {"classified", "classification_pending", "implicit_lifecycle", "property_accessor", "unreachable"} <= {
         row["review_status"] for row in function_inventory
     }
     assert sum(1 for row in function_inventory if row["layer"] == "public") == summary_counts["layer"]["public"]
     assert sum(1 for row in function_inventory if row["layer"] == "internal") == summary_counts["layer"]["internal"]
-    assert sum(1 for row in function_inventory if row["layer"] == "utility") == summary_counts["layer"]["utility"]
+    assert sum(1 for row in function_inventory if row["layer"] == "supporting_object") == summary_counts["layer"]["supporting_object"]
     assert (
         sum(1 for row in function_inventory if row["review_status"] == "unreachable")
         == summary_counts["review_status"]["unreachable"]
@@ -713,9 +713,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     }
     assert all(row["recommended_action"] for row in function_inventory)
     assert any(
-        row["function_type"] == "Utility"
+        row["function_type"] == "Internal function"
         and row["called_by_count"] <= 1
-        and "Utility but low reuse" in row["signals"]
+        and "Possible inline/private helper" in row["signals"]
         for row in function_inventory
     )
     lifecycle_names = {
@@ -730,7 +730,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     }
     lifecycle_rows = {row["function_name"]: row for row in function_inventory if row["function_name"] in lifecycle_names}
     assert set(lifecycle_rows) == lifecycle_names
-    assert all(row["function_type"] == "Internal helper" for row in lifecycle_rows.values())
+    assert all(row["function_type"] == "Internal function" for row in lifecycle_rows.values())
     assert all(row["layer"] == "internal" for row in lifecycle_rows.values())
     assert all(row["review_status"] == "implicit_lifecycle" for row in lifecycle_rows.values())
     assert all(row["callable_kind"] == "implicit_lifecycle_method" for row in lifecycle_rows.values())
@@ -746,7 +746,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all("Utility but low reuse" not in row["signals"] for row in lifecycle_rows.values())
     root_row = next(row for row in function_inventory if row["qualified_name"] == "fabricops_kit.io_core.FabricStore.root")
     assert root_row["function_name"] == "FabricStore.root"
-    assert root_row["function_type"] == "Internal helper"
+    assert root_row["function_type"] == "Internal function"
     assert root_row["layer"] == "internal"
     assert root_row["callable_kind"] == "property_accessor"
     assert root_row["review_status"] == "property_accessor"
@@ -756,7 +756,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
     assert "config_model_class" in rows_by_qn["fabricops_kit.config.FrameworkConfig"]["callable_role"]
     assert "utility_function" not in rows_by_qn["fabricops_kit.config.FrameworkConfig"]["callable_role"]
-    assert rows_by_qn["fabricops_kit.config.FrameworkConfig"]["function_type"] != "Utility"
+    assert rows_by_qn["fabricops_kit.config.FrameworkConfig"]["function_type"] == "Supporting object"
     assert "context_model_class" in rows_by_qn["fabricops_kit.config.NotebookSetupContext"]["callable_role"]
     assert "result_model_class" in rows_by_qn["fabricops_kit.config.ConfigSmokeCheckResult"]["callable_role"]
     assert {"internal_resolver", "shared_internal_service", "store_resolver"} <= set(rows_by_qn["fabricops_kit.config._get_store"]["callable_role"])
@@ -804,10 +804,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all({"function_type", "layer", "dependency_role", "callable_kind"} <= set(item) for item in function_inventory)
 
     callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
-    assert "Public API entrypoints → Internal workflows/adapters/validators/resolvers/services → Utilities/models/lifecycle helpers" in callable_flow_text
+    assert "Public functions → Internal functions (supporting objects allowed)" in callable_flow_text
     assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
     assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
-    assert "Callable review is role-aware" in callable_flow_text
+    assert "Callable review is function-layer focused" in callable_flow_text
     assert "Internal-to-internal calls are valid" in callable_flow_text
     assert "Role group = broad job of the callable." in callable_flow_text
     assert "Findings / Signal = review hints or actions, not automatic refactor commands." in callable_flow_text
@@ -1713,14 +1713,11 @@ def test_callable_layer_dependency_rule_matrix() -> None:
     )
 
     assert _architecture_dependency_signals("public", "internal") == []
-    assert _architecture_dependency_signals("public", "utility") == []
     assert _architecture_dependency_signals("public", "public") == ["public_calls_public"]
-    assert _architecture_dependency_signals("internal", "utility") == []
     assert _architecture_dependency_signals("internal", "public") == ["internal_calls_public"]
     assert _architecture_dependency_signals("internal", "internal") == []
-    assert _architecture_dependency_signals("utility", "public") == ["utility_calls_project_callable"]
-    assert _architecture_dependency_signals("utility", "internal") == ["utility_calls_project_callable"]
-    assert _architecture_dependency_signals("utility", "utility") == ["utility_calls_project_callable"]
+    assert _architecture_dependency_signals("public", "supporting_object") == []
+    assert _architecture_dependency_signals("internal", "supporting_object") == []
     assert _dependency_review_signals("classification_pending") == ["callee_classification_pending"]
     assert _dependency_review_signals("unreachable") == ["callee_unreachable"]
     assert _dependency_review_signals("classified") == []
@@ -1740,17 +1737,15 @@ def test_callable_architecture_layer_rules_and_labels():
     import scripts.generate_function_reference as generator
 
     allowed = [
-        ("Public", "Public", "Review"),
         ("Public", "Internal", "Allowed"),
-        ("Public", "Utility", "Allowed"),
         ("Internal", "Internal", "Allowed"),
-        ("Internal", "Utility", "Allowed"),
-        ("Utility", "Utility", "Allowed"),
+        ("Public", "Supporting object", "Allowed"),
+        ("Internal", "Supporting object", "Allowed"),
     ]
     for caller, callee, result in allowed:
         assert generator._classify_architecture_edge(caller, callee)["result"] == result
 
-    for caller, callee in [("Internal", "Public"), ("Utility", "Public"), ("Utility", "Internal")]:
+    for caller, callee in [("Public", "Public"), ("Internal", "Public")]:
         edge = generator._classify_architecture_edge(caller, callee)
         assert edge["result"] == "Violation"
         assert edge["violation_type"] == f"{caller} -> {callee}"
