@@ -302,7 +302,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Show all public callables</button>`:'';const inline" not in dashboard_text
     assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in dashboard_text
     assert ".surface-card span{display:block;line-height:1.2" in dashboard_text
-    assert "<th>Public callable</th><th>Module</th><th>Findings</th><th>Why review</th><th>Suggested action</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th>" in dashboard_text
+    assert "<th>Public callable</th><th>Owner file</th><th>Module</th><th>Findings</th><th>Why review</th><th>Suggested action</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th>" in dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
@@ -677,6 +677,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         flow["helper_cleanup_candidates"] for flow in public_flows
     )
     for flow in public_flows:
+        assert "owner_file" in flow
+        assert "private_helper_review_items" in flow
         assert "max_depth" in flow
         assert "downstream_count" in flow
         assert "children" not in flow
@@ -722,6 +724,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["function_name"].split(".")[-1].startswith("_") for row in private_helper_rows)
     assert all(row["architecture_signals"] == [] for row in private_helper_rows)
     assert all(row["owner_function"] or row["usage_scope"] == "unused" for row in private_helper_rows)
+    assert all(row["owner_file"] for row in private_helper_rows)
+    assert any(row["leaks_outside_owner_file"] for row in private_helper_rows)
     assert {"Keep private helper", "Merge into owner", "Rename to internal function", "Move closer to owner", "Remove redundant wrapper"} & {row["recommended_action"] for row in private_helper_rows}
     assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
     assert sum(1 for row in function_inventory if row["function_type"] == "Internal function") == summary_counts["function_type"]["Internal function"]
@@ -736,6 +740,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "function_name",
         "module",
         "source_path",
+        "owner_file",
         "source_url",
         "source_start_line",
         "source_end_line",
@@ -753,6 +758,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "owner_qualified_name",
         "owner_function",
         "owner_module",
+        "owner_file",
+        "leaks_outside_owner_file",
         "usage_scope",
         "usage_scope_label",
         "architecture_signals",
@@ -792,6 +799,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "docs_path",
         "docs_url",
         "source_path",
+        "owner_file",
         "source_url",
         "source_start_line",
         "source_end_line",
@@ -806,6 +814,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "helper_cleanup_candidates",
         "direct_callees",
         "transitive_callees",
+        "private_helper_review_items",
     }
     expected_callee_keys = {
         "qualified_name",
@@ -1767,3 +1776,102 @@ def test_callable_architecture_validation_allows_private_helper_review_rows(monk
     monkeypatch.setattr(validator, "_source_failures", lambda: [])
 
     assert validator._failures(flow) == []
+
+
+def test_callable_architecture_validation_allows_same_file_private_helper(monkeypatch, tmp_path) -> None:
+    """Verify a public owner can call a private helper in the same file."""
+    import scripts.validate_callable_architecture as validator
+
+    src = tmp_path / "src" / "fabricops_kit"
+    src.mkdir(parents=True)
+    (src / "__init__.py").write_text('__all__ = ["public_api"]\nfrom .public_api import public_api\n', encoding="utf-8")
+    (src / "public_api.py").write_text('def public_api():\n    return _helper()\n\ndef _helper():\n    return 1\n', encoding="utf-8")
+    plan = tmp_path / "plan.json"
+    plan.write_text('{"migration_files": {}, "facade_files": ["src/fabricops_kit/__init__.py"]}', encoding="utf-8")
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    monkeypatch.setattr(validator, "SRC_DIR", src)
+    monkeypatch.setattr(validator, "OWNERSHIP_PLAN_PATH", plan)
+
+    assert validator._source_failures() == []
+
+
+def test_callable_architecture_validation_rejects_private_helper_import(monkeypatch, tmp_path) -> None:
+    """Verify private helpers cannot be imported outside their owner file."""
+    import scripts.validate_callable_architecture as validator
+
+    src = tmp_path / "src" / "fabricops_kit"
+    src.mkdir(parents=True)
+    (src / "__init__.py").write_text('__all__ = ["public_api"]\nfrom .public_api import public_api\n', encoding="utf-8")
+    (src / "public_api.py").write_text('def public_api():\n    return _helper()\n\ndef _helper():\n    return 1\n', encoding="utf-8")
+    (src / "other.py").write_text('from fabricops_kit.public_api import _helper\n\ndef internal_use():\n    return _helper()\n', encoding="utf-8")
+    plan = tmp_path / "plan.json"
+    plan.write_text('{"migration_files": {}, "facade_files": ["src/fabricops_kit/__init__.py"]}', encoding="utf-8")
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    monkeypatch.setattr(validator, "SRC_DIR", src)
+    monkeypatch.setattr(validator, "OWNERSHIP_PLAN_PATH", plan)
+
+    failures = validator._source_failures()
+
+    assert any("Private helper imported outside owner file" in failure for failure in failures)
+    assert any("Private helper called outside owner file" in failure for failure in failures)
+
+
+def test_callable_architecture_validation_requires_internal_shared_logic(monkeypatch, tmp_path) -> None:
+    """Verify cross-public-file shared logic cannot remain underscore-prefixed."""
+    import scripts.validate_callable_architecture as validator
+
+    src = tmp_path / "src" / "fabricops_kit"
+    src.mkdir(parents=True)
+    (src / "__init__.py").write_text('__all__ = ["public_a", "public_b"]\n', encoding="utf-8")
+    (src / "public_a.py").write_text('from fabricops_kit.shared import _shared\n\ndef public_a():\n    return _shared()\n', encoding="utf-8")
+    (src / "public_b.py").write_text('from fabricops_kit.shared import _shared\n\ndef public_b():\n    return _shared()\n', encoding="utf-8")
+    (src / "shared.py").write_text('def _shared():\n    return 1\n', encoding="utf-8")
+    plan = tmp_path / "plan.json"
+    plan.write_text('{"migration_files": {}, "facade_files": ["src/fabricops_kit/__init__.py"]}', encoding="utf-8")
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    monkeypatch.setattr(validator, "SRC_DIR", src)
+    monkeypatch.setattr(validator, "OWNERSHIP_PLAN_PATH", plan)
+
+    failures = validator._source_failures()
+
+    assert any("Shared helper is underscore-prefixed" in failure for failure in failures)
+
+
+def test_callable_architecture_validation_rejects_multiple_public_functions_per_file(monkeypatch, tmp_path) -> None:
+    """Verify public function owner files expose only one public function."""
+    import scripts.validate_callable_architecture as validator
+
+    src = tmp_path / "src" / "fabricops_kit"
+    src.mkdir(parents=True)
+    (src / "__init__.py").write_text('__all__ = ["public_a", "public_b"]\n', encoding="utf-8")
+    (src / "owners.py").write_text('def public_a():\n    return 1\n\ndef public_b():\n    return 2\n', encoding="utf-8")
+    plan = tmp_path / "plan.json"
+    plan.write_text('{"migration_files": {}, "facade_files": ["src/fabricops_kit/__init__.py"]}', encoding="utf-8")
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+    monkeypatch.setattr(validator, "SRC_DIR", src)
+    monkeypatch.setattr(validator, "OWNERSHIP_PLAN_PATH", plan)
+
+    failures = validator._source_failures()
+
+    assert any("Public function file contains multiple public functions" in failure for failure in failures)
+
+
+def test_public_api_surface_records_owner_file_and_private_helper_items() -> None:
+    """Verify public flow records expose owner files and private helper review items."""
+    import scripts.generate_function_reference as generator
+
+    public_qns = ["fabricops_kit.public_api.public_api"]
+    node_by_qn = {
+        "fabricops_kit.public_api.public_api": {"callable_name": "public_api", "module_name": "public_api", "callable_kind": "function", "is_underscore": False},
+        "fabricops_kit.public_api._helper": {"callable_name": "_helper", "module_name": "public_api", "callable_kind": "function", "is_underscore": True},
+    }
+    calls_by_qn = {"fabricops_kit.public_api.public_api": ["fabricops_kit.public_api._helper"], "fabricops_kit.public_api._helper": []}
+    inventory = [
+        {"qualified_name": public_qns[0], "function_name": "public_api", "module": "public_api", "layer": "public", "function_type": "Public function", "callable_kind": "function"},
+        {"qualified_name": "fabricops_kit.public_api._helper", "function_name": "_helper", "module": "public_api", "layer": "private_helper", "function_type": "Private helper", "callable_kind": "function", "owner_qualified_name": public_qns[0]},
+    ]
+
+    flows = generator._build_public_entrypoint_flow(public_qns, calls_by_qn, node_by_qn, {}, inventory)
+
+    assert flows[0]["owner_file"] == "src/fabricops_kit/public_api.py"
+    assert [item["function_name"] for item in flows[0]["private_helper_review_items"]] == ["_helper"]

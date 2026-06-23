@@ -12,6 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src" / "fabricops_kit"
 CALLABLE_FLOW_PATH = ROOT / "docs" / "reference" / "_data" / "callable-flow.json"
+OWNERSHIP_PLAN_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-ownership-plan.json"
 DASHBOARD_PATH = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
 INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
 
@@ -32,6 +33,7 @@ class SourceFunction:
     layer: str
     node: ast.FunctionDef | ast.AsyncFunctionDef
     imports: dict[str, str]
+    path: Path
 
 
 def _load_flow() -> dict[str, Any]:
@@ -89,7 +91,7 @@ def _source_functions() -> dict[str, SourceFunction]:
                     layer = "public"
                 else:
                     layer = "internal"
-                functions[qn] = SourceFunction(qn, module, node.name, layer, node, imports)
+                functions[qn] = SourceFunction(qn, module, node.name, layer, node, imports, path)
     return functions
 
 
@@ -110,32 +112,110 @@ def _resolve_call(call: ast.Call, caller: SourceFunction, functions: dict[str, S
     return None
 
 
+
+def _load_ownership_plan() -> dict[str, Any]:
+    if not OWNERSHIP_PLAN_PATH.exists():
+        return {"migration_files": {}, "facade_files": []}
+    return json.loads(OWNERSHIP_PLAN_PATH.read_text(encoding="utf-8"))
+
+
+def _relative_source_path(path: Path) -> str:
+    return path.relative_to(ROOT).as_posix()
+
+
+def _public_owner_file(path: Path) -> str:
+    return _relative_source_path(path)
+
+
+def _owning_public_file_for_helper(
+    helper_qn: str,
+    inbound_by_qn: dict[str, set[str]],
+    functions: dict[str, SourceFunction],
+) -> str:
+    helper = functions[helper_qn]
+    public_callers = [functions[caller] for caller in inbound_by_qn.get(helper_qn, set()) if functions[caller].layer == "public"]
+    same_file_public_callers = [caller for caller in public_callers if caller.path == helper.path]
+    candidates = same_file_public_callers or public_callers
+    if not candidates:
+        return _public_owner_file(helper.path)
+    return _public_owner_file(sorted(candidates, key=lambda item: (str(item.path), item.name))[0].path)
+
+
+def _source_call_edges(
+    functions: dict[str, SourceFunction],
+    by_module_name: dict[tuple[str, str], str],
+) -> dict[str, set[str]]:
+    edges: dict[str, set[str]] = {qn: set() for qn in functions}
+    for fn in functions.values():
+        for call in ast.walk(fn.node):
+            if isinstance(call, ast.Call):
+                callee_qn = _resolve_call(call, fn, functions, by_module_name)
+                if callee_qn:
+                    edges[fn.qualified_name].add(callee_qn)
+    return edges
+
 def _source_failures() -> list[str]:
     failures: list[str] = []
     functions = _source_functions()
     by_module_name = {(fn.module, fn.name): qn for qn, fn in functions.items()}
+    call_edges = _source_call_edges(functions, by_module_name)
+    inbound_by_qn: dict[str, set[str]] = {qn: set() for qn in functions}
+    for caller, callees in call_edges.items():
+        for callee in callees:
+            inbound_by_qn.setdefault(callee, set()).add(caller)
+
+    ownership_plan = _load_ownership_plan()
+    migration_files = set((ownership_plan.get("migration_files") or {}).keys())
+    facade_files = set(ownership_plan.get("facade_files") or []) | {"src/fabricops_kit/__init__.py"}
+
+    public_by_file: dict[str, list[SourceFunction]] = {}
+    for fn in functions.values():
+        if fn.layer == "public":
+            public_by_file.setdefault(_public_owner_file(fn.path), []).append(fn)
+
+    for source_path, public_functions in public_by_file.items():
+        if len(public_functions) > 1 and source_path not in facade_files and source_path not in migration_files:
+            names = ", ".join(sorted(fn.name for fn in public_functions))
+            failures.append(f"Public function file contains multiple public functions: {source_path} ({names})")
+
     for fn in functions.values():
         if fn.name.startswith("_") and fn.layer != PRIVATE_HELPER_LAYER:
             failures.append(f"Architecture-visible internal function is underscore-prefixed: {fn.qualified_name}")
         if fn.name.startswith("_") and fn.layer == "public":
             failures.append(f"Public function is underscore-prefixed: {fn.qualified_name}")
-        if fn.layer == PRIVATE_HELPER_LAYER:
-            continue
-        for call in ast.walk(fn.node):
-            if not isinstance(call, ast.Call):
-                continue
-            callee_qn = _resolve_call(call, fn, functions, by_module_name)
-            if not callee_qn:
-                continue
+
+        for local_name, imported_qn in fn.imports.items():
+            if imported_qn in functions and functions[imported_qn].layer == PRIVATE_HELPER_LAYER:
+                owner_file = _owning_public_file_for_helper(imported_qn, inbound_by_qn, functions)
+                if _relative_source_path(fn.path) != owner_file:
+                    failures.append(
+                        "Private helper imported outside owner file: "
+                        f"{fn.qualified_name} imports {imported_qn} as {local_name}"
+                    )
+
+        for callee_qn in call_edges.get(fn.qualified_name, set()):
             callee = functions[callee_qn]
-            if callee.layer == PRIVATE_HELPER_LAYER:
-                continue
+            if callee.layer == PRIVATE_HELPER_LAYER and fn.path != callee.path:
+                failures.append(f"Private helper called outside owner file: {fn.qualified_name} -> {callee.qualified_name}")
             if fn.layer == "public" and callee.layer == "public":
                 failures.append(f"Public function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
             if fn.layer == "internal" and callee.layer == "public":
                 failures.append(f"Internal function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
-    return failures
 
+    for helper_qn, helper in functions.items():
+        if helper.layer != PRIVATE_HELPER_LAYER:
+            continue
+        public_owner_files = {
+            _public_owner_file(functions[caller].path)
+            for caller in inbound_by_qn.get(helper_qn, set())
+            if functions[caller].layer == "public"
+        }
+        if len(public_owner_files) > 1:
+            failures.append(
+                "Shared helper is underscore-prefixed but used by multiple public function files: "
+                f"{helper_qn} ({', '.join(sorted(public_owner_files))})"
+            )
+    return failures
 
 def _generated_failures(flow: dict[str, Any]) -> list[str]:
     failures: list[str] = []
