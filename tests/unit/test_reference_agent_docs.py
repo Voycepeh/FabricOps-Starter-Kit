@@ -269,19 +269,28 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<button type=\"button\" class=\"callable-button\" data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert "decisionSearchBox" in dashboard_text
-    assert "decisionModuleFilter" in dashboard_text
-    assert "decisionRecommendationFilter" in dashboard_text
-    assert "decisionWarningFilter" in dashboard_text
-    assert "decisionMinDownstream" in dashboard_text
-    assert "decisionMinDepth" in dashboard_text
-    assert "Architecture finding count" in dashboard_text
-    assert "Architecture violation count<select" not in dashboard_text
-    assert '<option value="">All modules</option>' in dashboard_text
-    assert '<option value="">All recommendations</option>' in dashboard_text
-    assert '<option value="">All findings</option>' in dashboard_text
-    assert '<select id="decisionMinDownstream"><option value="">All downstream counts</option></select>' in dashboard_text
-    assert '<select id="decisionMinDepth"><option value="">All call depths</option></select>' in dashboard_text
-    assert 'Architecture finding count<select id="decisionMinIssues"><option value="">All architecture findings</option></select>' in dashboard_text
+    assert 'data-architecture-quick-filter="all"' in dashboard_text
+    assert 'data-architecture-quick-filter="high_priority"' in dashboard_text
+    assert 'data-architecture-quick-filter="architecture_violations"' in dashboard_text
+    assert 'data-architecture-quick-filter="long_flows"' in dashboard_text
+    assert 'data-architecture-quick-filter="healthy"' in dashboard_text
+    assert 'data-architecture-quick-filter="selected"' in dashboard_text
+    assert "function matchesQuickFilter(flow)" in dashboard_text
+    assert "function updateQuickFilterChips()" in dashboard_text
+    assert "resetAll(document)" in dashboard_text
+    for removed_filter in [
+        "decisionModuleFilter",
+        "decisionRecommendationFilter",
+        "decisionWarningFilter",
+        "decisionMinDownstream",
+        "decisionMinDepth",
+        "decisionMinIssues",
+        "Architecture finding count<select",
+        "All downstream counts",
+        "All call depths",
+        "All architecture findings",
+    ]:
+        assert removed_filter not in dashboard_text
     assert 'id="decisionMinDownstream" type="number"' not in dashboard_text
     assert 'id="decisionMinDepth" type="number"' not in dashboard_text
     assert 'id="decisionMinIssues" type="number"' not in dashboard_text
@@ -398,7 +407,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in dashboard_text
-    assert "decisionDownstreamBand:''" in dashboard_text
+    assert "quickFilter:'all'" in dashboard_text
     assert "const DOWNSTREAM_BANDS=" in dashboard_text
     assert "['downstream_0','0',v=>v===0]" in dashboard_text
     assert "['downstream_1_2','1–2',v=>v>=1&&v<=2]" in dashboard_text
@@ -421,15 +430,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function issueBandsForRows(rows)" in dashboard_text
     assert "?ISSUE_BANDS:ISSUE_BOOLEAN_BANDS" in dashboard_text
     assert "function matchesBand(flow,bandValue,bands,metric)" in dashboard_text
-    assert "function populateBandFilter(id,bands,rows,metric)" in dashboard_text
-    assert "matchesBand(f,state.decisionDownstreamBand,DOWNSTREAM_BANDS,'downstream')" in dashboard_text
-    assert "matchesBand(f,state.decisionDepthBand,DEPTH_BANDS,'depth')" in dashboard_text
-    assert "matchesBand(f,state.decisionIssueBand,issueBandsForRows(publicEntryFlows),'issues')" in dashboard_text
-    assert "['decisionMinDownstream','decisionDownstreamBand']" in dashboard_text
-    assert "decisionDownstreamBand:'',decisionDepthBand:'',decisionIssueBand:'',sortKey:'callable',sortDirection:'asc'" in dashboard_text
-    assert "populateBandFilter('decisionMinDownstream',DOWNSTREAM_BANDS,publicEntryFlows,'downstream')" in dashboard_text
-    assert "populateBandFilter('decisionMinDepth',DEPTH_BANDS,publicEntryFlows,'depth')" in dashboard_text
-    assert "populateBandFilter('decisionMinIssues',issueBandsForRows(publicEntryFlows),publicEntryFlows,'issues')" in dashboard_text
+    assert "function populateBandFilter" not in dashboard_text
+    assert "matchesBand(f,state.decisionDownstreamBand" not in dashboard_text
+    assert "matchesBand(f,state.decisionDepthBand" not in dashboard_text
+    assert "matchesBand(f,state.decisionIssueBand" not in dashboard_text
+    assert "['decisionMinDownstream','decisionDownstreamBand']" not in dashboard_text
+    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" in dashboard_text
+    assert "populateBandFilter('decisionMinDownstream'" not in dashboard_text
+    assert "populateBandFilter('decisionMinDepth'" not in dashboard_text
+    assert "populateBandFilter('decisionMinIssues'" not in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
     card_order = [

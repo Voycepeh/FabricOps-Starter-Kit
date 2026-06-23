@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-23T16:56:25.610010Z",
+    "generated_at_utc": "2026-06-23T17:05:55.293374Z",
     "data_source": "callable-flow.json",
-    "commit": "a541fb3",
+    "commit": "87420b5",
     "branch": "work"
   },
   "architecture_thresholds": {
