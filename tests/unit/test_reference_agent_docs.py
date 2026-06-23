@@ -268,13 +268,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionWarningFilter" in dashboard_text
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
-    assert "Architecture violation count" in dashboard_text
+    assert "Architecture finding count" in dashboard_text
+    assert "Architecture violation count" not in dashboard_text
     assert '<option value="">All modules</option>' in dashboard_text
     assert '<option value="">All recommendations</option>' in dashboard_text
     assert '<option value="">All findings</option>' in dashboard_text
     assert '<select id="decisionMinDownstream"><option value="">All downstream counts</option></select>' in dashboard_text
     assert '<select id="decisionMinDepth"><option value="">All call depths</option></select>' in dashboard_text
-    assert '<select id="decisionMinIssues"><option value="">All architecture violations</option></select>' in dashboard_text
+    assert 'Architecture finding count<select id="decisionMinIssues"><option value="">All architecture findings</option></select>' in dashboard_text
     assert 'id="decisionMinDownstream" type="number"' not in dashboard_text
     assert 'id="decisionMinDepth" type="number"' not in dashboard_text
     assert 'id="decisionMinIssues" type="number"' not in dashboard_text
@@ -316,6 +317,27 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "max_depth" in dashboard_text
     assert "modules_touched" in dashboard_text
     assert "architecture_violation_count" in dashboard_text
+    assert "boundary_violations" in dashboard_text
+    assert "architecture_findings" in dashboard_text
+    assert "flow_tree" in dashboard_text
+    assert "internal_helper_cleanup_candidates" in dashboard_text
+    assert "planning_instructions" in dashboard_text
+    assert "required_tests" in dashboard_text
+    assert "source_url:row.source_url||null" in dashboard_text
+    assert "docs_url:row.docs_url||null" in dashboard_text
+    assert "file_path:row.source_path||null" in dashboard_text
+    assert "line_start:row.source_start_line||null" in dashboard_text
+    assert "function moduleLink(module)" in dashboard_text
+    assert "function moduleHref(module){return module?`../api/modules/${module}/`:''}" in dashboard_text
+    assert "../../api/modules/${module}/" not in dashboard_text
+    assert "GITHUB_SOURCE_BASE" in dashboard_text
+    assert "return `${GITHUB_SOURCE_BASE}${path}${anchor}`" in dashboard_text
+    assert "boundaryCount=s.boundary_violations??s.architecture_violations??0" in dashboard_text
+    assert "cls:boundaryCount?'risk':'good'" in dashboard_text
+    assert "function architectureFindingRows(flow)" in dashboard_text
+    assert "function architectureFindingCount(flow)" in dashboard_text
+    assert "c.architecture_result==='Violation'||c.recommended_action==='Architecture violation'" in dashboard_text
+    assert "function markdownLink(i,label)" in dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
     assert "direct callees" in dashboard_text
     assert "disabled>Copy JSON" in dashboard_text
@@ -358,7 +380,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
     assert "High-priority public callables" in dashboard_text
-    assert "Architecture violations" in dashboard_text
+    assert "Boundary violations" in dashboard_text
     assert "Long public flows" in dashboard_text
     assert "Merge candidates" in dashboard_text
     assert "Public callables scanned" in dashboard_text
@@ -391,9 +413,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architecture_violation_count??0" in dashboard_text
     assert "down>=12" not in dashboard_text
     assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
+    assert "Helper-level architecture findings found" in dashboard_text
+    assert "architectureFindings.length?architectureFindings" in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
     assert "reasons.join(' ')" in dashboard_text
-    assert "Contains ${violations} architecture violations." in dashboard_text
+    assert "Contains ${violations} boundary violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
     assert "Public callables whose call depth exceeds the threshold >= ${longCallChainThreshold()}." in dashboard_text
@@ -693,6 +717,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "module",
         "source_path",
         "source_url",
+        "source_start_line",
+        "source_end_line",
         "function_type",
         "layer",
         "review_status",
@@ -714,7 +740,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callers",
         "callees",
     }
-    public_inventory_keys = expected_inventory_keys | {"docs_path"}
+    public_inventory_keys = expected_inventory_keys | {"docs_path", "docs_url"}
     assert all(set(item) == expected_inventory_keys or set(item) == public_inventory_keys for item in function_inventory)
     assert all({"function_type", "layer", "dependency_role", "callable_kind"} <= set(item) for item in function_inventory)
 
@@ -737,7 +763,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "function_name",
         "module",
         "docs_path",
+        "docs_url",
+        "source_path",
         "source_url",
+        "source_start_line",
+        "source_end_line",
         "priority",
         "recommended_simplification_action",
         "warnings",
@@ -768,12 +798,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "signals",
         "recommended_action",
         "downstream_count",
+        "source_path",
         "source_url",
+        "source_start_line",
+        "source_end_line",
+        "docs_path",
+        "docs_url",
         "path_examples",
         "helper_cleanup_candidate",
     }
     assert all(set(flow) == expected_public_flow_keys for flow in public_flows)
-    assert all(set(callee) == expected_callee_keys for flow in public_flows for callee in flow["transitive_callees"])
+    required_callee_keys = expected_callee_keys - {"docs_path", "docs_url"}
+    assert all(required_callee_keys <= set(callee) <= expected_callee_keys for flow in public_flows for callee in flow["transitive_callees"])
 
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
