@@ -3,8 +3,15 @@
 
 Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/write_lakehouse_table.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L57">View on GitHub</a>
+</div>
+
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>io.write_lakehouse_table</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">example_pipeline_demo</span>

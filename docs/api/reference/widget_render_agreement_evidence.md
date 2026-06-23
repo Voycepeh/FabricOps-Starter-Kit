@@ -15,8 +15,15 @@
 
 Render the standalone agreement-evidence widget.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/data_agreement.py:1407`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1407-L1440">View on GitHub</a>
+</div>
+
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>data_agreement</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">01_agreement</span>
 </p>

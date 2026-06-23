@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import normalize_write_mode, resolve_lakehouse_table_location, resolve_target_store, validate_dataframe_writer, write_delta_path
+from .shared import normalize_write_mode, resolve_configured_lakehouse_table, validate_dataframe_writer, write_delta_path
 
 
 def write_lakehouse_table(df, table_name: str, *, target: str = "unified", schema=None, mode="append", partition_by=None, repartition_by=None, options=None, verbose=True, context=None):
@@ -45,8 +45,7 @@ def write_lakehouse_table(df, table_name: str, *, target: str = "unified", schem
 
     """
     validate_dataframe_writer(df)
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
-    _table_value, _schema_value, path = resolve_lakehouse_table_location(store, table_name, schema)
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
     normalized_mode = normalize_write_mode(mode)
     if repartition_by is not None:
         if isinstance(repartition_by, (list, tuple)):

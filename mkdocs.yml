@@ -79,15 +79,7 @@ nav:
       - Documentation Versioning: development/docs-versioning.md
       - Implementation Appendix:
           # AUTO-GENERATED-MODULES-START
-          - config: api/modules/config.md
-          - data_agreement: api/modules/data_agreement.md
-          - governance_review: api/modules/governance_review.md
-          - data_profiling: api/modules/data_profiling.md
-          - fabric_input_output: api/modules/fabric_input_output.md
-          - guardrails: api/modules/guardrails.md
-          - pipeline: api/modules/pipeline.md
-          - io_core: api/modules/io_core.md
-          - metadata: api/modules/metadata.md
+
       # AUTO-GENERATED-MODULES-END
 
 extra:

@@ -3,8 +3,15 @@
 
 Prepare source or target table configs for 02_pipeline.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/pipeline.py:1536`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1536-L1551">View on GitHub</a>
+</div>
+
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>pipeline</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 </p>

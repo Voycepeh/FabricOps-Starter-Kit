@@ -7,19 +7,18 @@ from typing import Any
 from .shared import (
     convert_single_parquet_ns_to_us,
     get_spark_session,
-    resolve_lakehouse_file_location,
+    resolve_configured_file_path,
     resolve_lakehouse_file_path,
-    resolve_target_store,
 )
 
 
 def read_lakehouse_parquet(relative_path: str, *, target: str = "source", verbose: bool = True, spark_session=None, context: dict[str, Any] | None = None):
-    """Read a Parquet file from a Fabric lakehouse Files path.
+    """Read a Parquet file from a configured Fabric-resolved path.
 
     Parameters
     ----------
     relative_path : str
-        Parquet file path under the lakehouse ``Files`` area.
+        Parquet file path resolved by the Fabric resolver.
     target : str, default="source"
         Logical lakehouse target from ``00_env_config``.
     verbose : bool, default=True
@@ -35,8 +34,7 @@ def read_lakehouse_parquet(relative_path: str, *, target: str = "source", verbos
         Spark DataFrame loaded from the Parquet path.
 
     """
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
-    normalized_relative_path, orig_spark_path = resolve_lakehouse_file_location(store, relative_path)
+    store, normalized_relative_path, orig_spark_path = resolve_configured_file_path(target, relative_path, context=context)
     spark_obj = get_spark_session(spark_session)
     parts = normalized_relative_path.split("/")
     if len(parts) < 2:

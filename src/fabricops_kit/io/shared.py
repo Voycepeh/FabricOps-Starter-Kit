@@ -33,6 +33,33 @@ def get_spark_session(spark_session=None):
     return _get_spark(spark_session)
 
 
+def resolve_configured_file_path(target: str, relative_path: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str]:
+    """Resolve a logical target and relative file path through Fabric config."""
+    store, _env = _resolve_target_store(target, "lakehouse", context=context)
+    normalized_relative_path, path = _resolve_lakehouse_file_location(store, relative_path)
+    return store, normalized_relative_path, path
+
+
+def resolve_configured_lakehouse_table(target: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str | None, str]:
+    """Resolve a logical target and table through configured lakehouse metadata."""
+    store, _env = _resolve_target_store(target, "lakehouse", context=context)
+    table_value, schema_value, path = _resolve_lakehouse_table_location(store, table_name, schema)
+    return store, table_value, schema_value, path
+
+
+def resolve_configured_warehouse_table(target: str, schema: str, table_name: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str, str]:
+    """Resolve a logical target and table through configured warehouse metadata."""
+    store, _env = _resolve_target_store(target, "warehouse", context=context)
+    schema_value, table_value, object_name = _resolve_warehouse_table_location(store, schema, table_name)
+    return store, schema_value, table_value, object_name
+
+
+def resolve_configured_warehouse_query_target(target: str, *, context: dict[str, Any] | None = None) -> FabricStore:
+    """Resolve a logical target for Fabric warehouse query execution."""
+    store, _env = _resolve_target_store(target, "warehouse", context=context)
+    return store
+
+
 def resolve_target_store(target: str, expected_kind: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str]:
     """Resolve and validate a configured Fabric target store."""
     return _resolve_target_store(target, expected_kind, context=context)

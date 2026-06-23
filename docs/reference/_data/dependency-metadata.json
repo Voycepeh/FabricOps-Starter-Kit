@@ -4698,6 +4698,77 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.io.resolve_configured_file_path": {
+      "qualified_name": "fabricops_kit.io.resolve_configured_file_path",
+      "short_name": "resolve_configured_file_path",
+      "module": "io",
+      "callable": "resolve_configured_file_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_file_location",
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_configured_lakehouse_table": {
+      "qualified_name": "fabricops_kit.io.resolve_configured_lakehouse_table",
+      "short_name": "resolve_configured_lakehouse_table",
+      "module": "io",
+      "callable": "resolve_configured_lakehouse_table",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_table_location",
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_configured_warehouse_query_target": {
+      "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_query_target",
+      "short_name": "resolve_configured_warehouse_query_target",
+      "module": "io",
+      "callable": "resolve_configured_warehouse_query_target",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.resolve_configured_warehouse_table": {
+      "qualified_name": "fabricops_kit.io.resolve_configured_warehouse_table",
+      "short_name": "resolve_configured_warehouse_table",
+      "module": "io",
+      "callable": "resolve_configured_warehouse_table",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_target_store",
+        "fabricops_kit.io_core._resolve_warehouse_table_location"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.io.resolve_lakehouse_file_location": {
       "qualified_name": "fabricops_kit.io.resolve_lakehouse_file_location",
       "short_name": "resolve_lakehouse_file_location",
@@ -4896,6 +4967,77 @@
         "fabricops_kit.io_core._read_warehouse_synapsesql"
       ],
       "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_configured_file_path": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_file_path",
+      "short_name": "resolve_configured_file_path",
+      "module": "io.shared",
+      "callable": "resolve_configured_file_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_file_location",
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_configured_lakehouse_table": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "short_name": "resolve_configured_lakehouse_table",
+      "module": "io.shared",
+      "callable": "resolve_configured_lakehouse_table",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_lakehouse_table_location",
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_configured_warehouse_query_target": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+      "short_name": "resolve_configured_warehouse_query_target",
+      "module": "io.shared",
+      "callable": "resolve_configured_warehouse_query_target",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_target_store"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_configured_warehouse_table": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+      "short_name": "resolve_configured_warehouse_table",
+      "module": "io.shared",
+      "callable": "resolve_configured_warehouse_table",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io_core._resolve_target_store",
+        "fabricops_kit.io_core._resolve_warehouse_table_location"
+      ],
+      "calls_count": 2,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
@@ -5484,10 +5626,12 @@
       ],
       "calls_count": 2,
       "used_by": [
+        "fabricops_kit.io.resolve_configured_file_path",
         "fabricops_kit.io.resolve_lakehouse_file_location",
+        "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io.shared.resolve_lakehouse_file_location"
       ],
-      "used_by_count": 2,
+      "used_by_count": 4,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._lakehouse_file_path",
@@ -5545,12 +5689,14 @@
       ],
       "calls_count": 3,
       "used_by": [
+        "fabricops_kit.io.resolve_configured_lakehouse_table",
         "fabricops_kit.io.resolve_lakehouse_table_location",
+        "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io_core.read_lakehouse_table_core",
         "fabricops_kit.io_core.write_lakehouse_table_core"
       ],
-      "used_by_count": 4,
+      "used_by_count": 6,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._normalize_table_name",
@@ -5595,12 +5741,20 @@
       ],
       "calls_count": 4,
       "used_by": [
+        "fabricops_kit.io.resolve_configured_file_path",
+        "fabricops_kit.io.resolve_configured_lakehouse_table",
+        "fabricops_kit.io.resolve_configured_warehouse_query_target",
+        "fabricops_kit.io.resolve_configured_warehouse_table",
         "fabricops_kit.io.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_configured_file_path",
+        "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+        "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+        "fabricops_kit.io.shared.resolve_configured_warehouse_table",
         "fabricops_kit.io.shared.resolve_target_store",
         "fabricops_kit.io_core.read_lakehouse_table_core",
         "fabricops_kit.io_core.write_lakehouse_table_core"
       ],
-      "used_by_count": 4,
+      "used_by_count": 12,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._validate_lakehouse_store",
@@ -5622,10 +5776,12 @@
       ],
       "calls_count": 3,
       "used_by": [
+        "fabricops_kit.io.resolve_configured_warehouse_table",
         "fabricops_kit.io.resolve_warehouse_table_location",
+        "fabricops_kit.io.shared.resolve_configured_warehouse_table",
         "fabricops_kit.io.shared.resolve_warehouse_table_location"
       ],
-      "used_by_count": 2,
+      "used_by_count": 4,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.io_core._build_warehouse_object_name",

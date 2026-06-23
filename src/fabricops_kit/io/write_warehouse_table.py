@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import resolve_target_store, resolve_warehouse_table_location, validate_dataframe_writer, write_warehouse_synapsesql
+from .shared import resolve_configured_warehouse_table, validate_dataframe_writer, write_warehouse_synapsesql
 
 
 def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "warehouse", mode: str = "append", context: dict[str, Any] | None = None):
@@ -39,6 +39,5 @@ def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "wa
 
     """
     validate_dataframe_writer(df)
-    store, _env = resolve_target_store(target, "warehouse", context=context)
-    _schema_value, _table_value, object_name = resolve_warehouse_table_location(store, schema, table_name)
+    store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(target, schema, table_name, context=context)
     write_warehouse_synapsesql(df, store, object_name, mode=mode)
