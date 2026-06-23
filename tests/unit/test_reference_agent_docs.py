@@ -268,13 +268,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionWarningFilter" in dashboard_text
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
-    assert "Architecture violation count" in dashboard_text
+    assert "Architecture finding count" in dashboard_text
+    assert "Architecture violation count" not in dashboard_text
     assert '<option value="">All modules</option>' in dashboard_text
     assert '<option value="">All recommendations</option>' in dashboard_text
     assert '<option value="">All findings</option>' in dashboard_text
     assert '<select id="decisionMinDownstream"><option value="">All downstream counts</option></select>' in dashboard_text
     assert '<select id="decisionMinDepth"><option value="">All call depths</option></select>' in dashboard_text
-    assert '<select id="decisionMinIssues"><option value="">All architecture findings</option></select>' in dashboard_text
+    assert 'Architecture finding count<select id="decisionMinIssues"><option value="">All architecture findings</option></select>' in dashboard_text
     assert 'id="decisionMinDownstream" type="number"' not in dashboard_text
     assert 'id="decisionMinDepth" type="number"' not in dashboard_text
     assert 'id="decisionMinIssues" type="number"' not in dashboard_text
@@ -327,6 +328,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "file_path:row.source_path||null" in dashboard_text
     assert "line_start:row.source_start_line||null" in dashboard_text
     assert "function moduleLink(module)" in dashboard_text
+    assert "GITHUB_SOURCE_BASE" in dashboard_text
+    assert "return `${GITHUB_SOURCE_BASE}${path}${anchor}`" in dashboard_text
+    assert "boundaryCount=s.boundary_violations??s.architecture_violations??0" in dashboard_text
+    assert "cls:boundaryCount?'risk':'good'" in dashboard_text
+    assert "function architectureFindingRows(flow)" in dashboard_text
+    assert "function architectureFindingCount(flow)" in dashboard_text
+    assert "c.architecture_result==='Violation'||c.recommended_action==='Architecture violation'" in dashboard_text
     assert "function markdownLink(i,label)" in dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
     assert "direct callees" in dashboard_text
@@ -403,6 +411,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architecture_violation_count??0" in dashboard_text
     assert "down>=12" not in dashboard_text
     assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
+    assert "Helper-level architecture findings found" in dashboard_text
+    assert "architectureFindings.length?architectureFindings" in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
     assert "reasons.join(' ')" in dashboard_text
     assert "Contains ${violations} boundary violations." in dashboard_text
