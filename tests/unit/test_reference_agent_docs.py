@@ -269,7 +269,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
     assert "Architecture finding count" in dashboard_text
-    assert "Architecture violation count" not in dashboard_text
+    assert "Architecture violation count<select" not in dashboard_text
     assert '<option value="">All modules</option>' in dashboard_text
     assert '<option value="">All recommendations</option>' in dashboard_text
     assert '<option value="">All findings</option>' in dashboard_text
@@ -331,8 +331,22 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architecture_findings" in dashboard_text
     assert "flow_tree" in dashboard_text
     assert "internal_helper_cleanup_candidates" in dashboard_text
+    assert "public_callable_findings" in dashboard_text
+    assert "merge_shortening_candidate_count" in dashboard_text
     assert "planning_instructions" in dashboard_text
     assert "required_tests" in dashboard_text
+    assert "function publicCallableFindingRows(flow)" in dashboard_text
+    assert "publicFindings=publicCallableFindingRows(f)" in dashboard_text
+    assert "#### Public callable findings" in dashboard_text
+    assert "#### Architecture findings" in dashboard_text
+    assert "#### Internal helper cleanup candidates" in dashboard_text
+    assert "#### Full nested flow tree" in dashboard_text
+    assert "helper_tags" in dashboard_text
+    assert "Group functions by refactor action before proposing code changes." in dashboard_text
+    assert "Identify helpers that can be merged into parent callables and helpers that should remain separate." in dashboard_text
+    assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode explicitly allows it." in dashboard_text
+    assert "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and flow tree tags as grounding evidence." in dashboard_text
+    assert "Propose an ordered implementation plan, list tests required before and after refactor, and call out migration risks." in dashboard_text
     assert "source_url:row.source_url||null" in dashboard_text
     assert "docs_url:row.docs_url||null" in dashboard_text
     assert "file_path:row.source_path||null" in dashboard_text
