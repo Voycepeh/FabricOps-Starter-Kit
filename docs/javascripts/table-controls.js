@@ -41,6 +41,14 @@
     return state.get(table);
   }
 
+  function isOptInTable(table) {
+    return table && table.dataset && table.dataset.tableControls === "excel";
+  }
+
+  function currentRows(table) {
+    return Array.from(table.tBodies[0]?.rows || []);
+  }
+
   function uniqueValues(table, column) {
     const rows = tableState(table).originalRows;
     return [...new Set(rows.map((row) => displayValue(cellText(row, column))))].sort((a, b) => compareValues(a, b, false));
@@ -190,9 +198,10 @@
 
   function enhanceTable(table) {
     if (!table.tHead || !table.tBodies[0]) return;
+    if (!isOptInTable(table)) return;
     if (table.classList.contains(TABLE_CLASS)) {
       const cfg = tableState(table);
-      cfg.originalRows = Array.from(table.tBodies[0].rows);
+      cfg.originalRows = currentRows(table);
       applyTable(table);
       return;
     }
@@ -207,18 +216,22 @@
         event.stopPropagation();
         openMenu(table, th, index, button);
       });
-      th.appendChild(button);
+      if (!th.querySelector(":scope > .fo-table-menu-button")) th.appendChild(button);
     });
     renderClearAll(table);
     updateHeaderStates(table);
   }
 
+  function enhance(table) {
+    enhanceTable(table);
+  }
+
   function enhanceAll(root = document) {
-    root.querySelectorAll("table").forEach(enhanceTable);
+    root.querySelectorAll('table[data-table-controls="excel"]').forEach(enhanceTable);
   }
 
   function resetAll(root = document) {
-    root.querySelectorAll("table").forEach((table) => {
+    root.querySelectorAll('table[data-table-controls="excel"]').forEach((table) => {
       const cfg = tableState(table);
       cfg.filters.clear();
       cfg.sort = null;
@@ -232,5 +245,5 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenus(); });
   document.addEventListener("DOMContentLoaded", () => enhanceAll());
 
-  window.FabricOpsTableControls = { enhanceAll, resetAll, _test: { compareValues, displayValue, numericValue, rowMatchesFilter } };
+  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, _test: { compareValues, displayValue, numericValue, rowMatchesFilter } };
 })();
