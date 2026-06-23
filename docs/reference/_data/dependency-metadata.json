@@ -614,16 +614,34 @@
         "fabricops_kit.config._run_config_smoke_tests",
         "fabricops_kit.config._setup_notebook_workflow",
         "fabricops_kit.config._validate_metadata_table_registration",
+        "fabricops_kit.config.get_path",
         "fabricops_kit.io_core._resolve_target_store",
         "fabricops_kit.io_core.configured_lakehouse_schema",
         "fabricops_kit.metadata._build_runtime_audit_fields"
       ],
-      "used_by_count": 8,
+      "used_by_count": 9,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.config._normalize_path_config"
       ],
       "internal_helper_count": 1
+    },
+    "fabricops_kit.config._join_configured_path": {
+      "qualified_name": "fabricops_kit.config._join_configured_path",
+      "short_name": "_join_configured_path",
+      "module": "config",
+      "callable": "_join_configured_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.get_path"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.config._metadata_schema_field_names": {
       "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
@@ -961,6 +979,30 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.get_path": {
+      "qualified_name": "fabricops_kit.config.get_path",
+      "short_name": "get_path",
+      "module": "config",
+      "callable": "get_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._join_configured_path"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.io.resolve_configured_file_path",
+        "fabricops_kit.io.shared.resolve_configured_file_path"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.config._get_store",
+        "fabricops_kit.config._join_configured_path"
+      ],
+      "internal_helper_count": 2
+    },
     "fabricops_kit.config.resolve_fabric_context": {
       "qualified_name": "fabricops_kit.config.resolve_fabric_context",
       "short_name": "resolve_fabric_context",
@@ -983,12 +1025,14 @@
         "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
         "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
         "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
+        "fabricops_kit.io.resolve_configured_file_path",
+        "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io_core._resolve_target_store",
         "fabricops_kit.pipeline._run_table_guardrails_workflow",
         "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
         "fabricops_kit.pipeline._write_pipeline_run_summary_workflow"
       ],
-      "used_by_count": 14,
+      "used_by_count": 16,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4698,6 +4742,24 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.io.resolve_configured_file_path": {
+      "qualified_name": "fabricops_kit.io.resolve_configured_file_path",
+      "short_name": "resolve_configured_file_path",
+      "module": "io",
+      "callable": "resolve_configured_file_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.get_path",
+        "fabricops_kit.config.resolve_fabric_context"
+      ],
+      "calls_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.io.resolve_lakehouse_file_location": {
       "qualified_name": "fabricops_kit.io.resolve_lakehouse_file_location",
       "short_name": "resolve_lakehouse_file_location",
@@ -4896,6 +4958,24 @@
         "fabricops_kit.io_core._read_warehouse_synapsesql"
       ],
       "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.io.shared.resolve_configured_file_path": {
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_file_path",
+      "short_name": "resolve_configured_file_path",
+      "module": "io.shared",
+      "callable": "resolve_configured_file_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.get_path",
+        "fabricops_kit.config.resolve_fabric_context"
+      ],
+      "calls_count": 2,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
@@ -7214,7 +7294,7 @@
     },
     "config": {
       "callable_count": 2,
-      "internal_count": 23,
+      "internal_count": 24,
       "outbound_modules": [
         "data_agreement",
         "governance_review",
@@ -7227,12 +7307,14 @@
         "_profiling_workflows",
         "data_agreement",
         "governance_review",
+        "io",
         "io_core",
         "metadata",
-        "pipeline"
+        "pipeline",
+        "shared"
       ],
       "outbound_count": 3,
-      "inbound_count": 9
+      "inbound_count": 11
     },
     "data_agreement": {
       "callable_count": 3,
@@ -7297,10 +7379,11 @@
       "callable_count": 0,
       "internal_count": 0,
       "outbound_modules": [
+        "config",
         "io_core"
       ],
       "inbound_modules": [],
-      "outbound_count": 1,
+      "outbound_count": 2,
       "inbound_count": 0
     },
     "io.read_lakehouse_csv": {

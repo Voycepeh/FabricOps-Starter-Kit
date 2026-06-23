@@ -15,12 +15,17 @@
 Fetch the latest metadata catalogue rows for a table without writing metadata.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>governance_review</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
 **Used in notebooks:** `99_explore`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2675-L2690">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/governance_review.py`:2675.
 
 ## Usage guidance
 

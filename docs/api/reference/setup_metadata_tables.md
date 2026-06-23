@@ -15,12 +15,17 @@
 Create or validate all FabricOps metadata tables through one setup action.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>config</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">00_env_config</span>
 </p>
 
 **Used in notebooks:** `00_env_config`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1441-L1496">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/config.py`:1441.
 
 ## Usage guidance
 

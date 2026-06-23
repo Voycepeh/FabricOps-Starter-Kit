@@ -13,12 +13,17 @@
 Return summary, detailed, or debug guardrail display output for Fabric notebooks.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>pipeline</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 </p>
 
 **Used in notebooks:** `02_pipeline`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1529-L1533">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/pipeline.py`:1529.
 
 ## Usage guidance
 

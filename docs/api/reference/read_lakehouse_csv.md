@@ -4,12 +4,17 @@
 Read a CSV file from a configured Fabric lakehouse Files path.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>io.read_lakehouse_csv</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">No starter notebook usage detected</span>
+<span class="reference-chip">Usage detection may exclude indirect references</span>
 </p>
 
-**Used in notebooks:** Not currently detected in starter notebooks.
+**Used in notebooks:** Starter notebook usage is generated from detected notebook references and may exclude indirect or generated usage.
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L36">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/io/read_lakehouse_csv.py`:10.
 
 ## Usage guidance
 

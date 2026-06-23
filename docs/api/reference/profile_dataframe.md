@@ -13,12 +13,17 @@
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>data_profiling</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
 **Used in notebooks:** `99_explore`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L80-L135">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/data_profiling.py`:80.
 
 ## Usage guidance
 

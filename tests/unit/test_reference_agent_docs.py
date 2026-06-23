@@ -367,7 +367,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "file_path:row.source_path||null" in dashboard_text
     assert "line_start:row.source_start_line||null" in dashboard_text
     assert "function moduleLink(module)" in dashboard_text
-    assert "function moduleHref(module){return module?`../api/modules/${module}/`:''}" in dashboard_text
+    assert "function moduleHref(module){return ''}" in dashboard_text
+    assert "../api/modules/${module}/" not in dashboard_text
     assert "../../api/modules/${module}/" not in dashboard_text
     assert "GITHUB_SOURCE_BASE" in dashboard_text
     assert "return `${GITHUB_SOURCE_BASE}${path}${anchor}`" in dashboard_text
@@ -602,10 +603,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<span class="reference-kpi-title">Supporting functions</span>' in reference_text
     assert '<span class="reference-kpi-title">Private helpers to review</span>' in reference_text
     assert '<strong class="reference-kpi-value">21</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">313</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">317</strong>' in reference_text
     assert '<strong class="reference-kpi-value">26</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">60</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">227</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">63</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">228</strong>' in reference_text
     assert "Callable metrics are generated from the callable inventory data." in reference_text
     assert "270 Supporting internal functions" not in reference_text
     assert "Supporting internal functions" not in reference_text.split("## Find a function", 1)[0]
@@ -651,7 +652,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 86
+    assert summary_counts["callable_kind"]["function"] == 89
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
@@ -892,7 +893,9 @@ def test_every_callable_page_has_curated_public_reference_sections() -> None:
         assert "## See also" in text, page
         assert "**Used in notebooks:**" in text, page
         assert "Public Starter Kit function" in text, page
-        assert "Module: <code>" in text, page
+        assert "Module: <code>" not in text, page
+        assert "## Source" in text, page
+        assert "View source on GitHub" in text, page
         assert "## Relationships" not in text, page
         assert "## Maintainer/developer implementation details" not in text, page
         assert "## Source link" not in text, page
@@ -900,7 +903,6 @@ def test_every_callable_page_has_curated_public_reference_sections() -> None:
         assert '??? example "View helper source by area"' not in text, page
         assert '<div class="reference-source-card" markdown="1">' not in text, page
         assert "## Nested helper functions" not in text, page
-        assert "\n## Source\n" not in text, page
         assert "\n## What this is for\n" not in text, page
         assert "\n## When to use it\n" not in text, page
         assert "\n## Raises\n" not in text, page
@@ -1232,10 +1234,9 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
     title_index = text.index("# prepare_pipeline_table_configs")
     description_index = text.index("Prepare source or target table configs for 02_pipeline.")
-    chips_index = text.index('<span class="reference-chip">Module: <code>pipeline</code></span>')
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
-    assert title_index < description_index < chips_index < usage_index
+    assert title_index < description_index < usage_index
     assert '??? info "Downstream callables:' not in text
 
 
@@ -1275,13 +1276,11 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "<code>profile_dataframe</code>" in text
 
 
-def test_module_badges_pluralize_external_module_counts() -> None:
-    """Verify module overview badges use singular labels for one external module."""
-    module_text = (ROOT / "docs" / "api" / "modules" / "guardrails.md").read_text(encoding="utf-8")
+def test_module_pages_are_not_generated() -> None:
+    """Verify module-first public reference pages are not generated."""
+    module_dir = ROOT / "docs" / "api" / "modules"
 
-    assert "Used by 1 external module" in module_text
-    assert "Used by 1 external modules" not in module_text
-    assert "Uses 3 external modules" in module_text
+    assert not any(module_dir.glob("*.md"))
 
 
 def test_setup_notebook_reference_uses_human_first_source_documentation() -> None:
@@ -1653,8 +1652,7 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
     assert "      - Callable Functions Flow: reference/callable-flow.md" in mkdocs_text
     assert "      - Implementation Appendix:" in mkdocs_text
     assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text
-    assert "api/modules/config.md" in mkdocs_text
-    assert "api/reference/" not in mkdocs_text
+    assert "api/modules/config.md" not in mkdocs_text
 
 
 def test_callable_layer_dependency_rule_matrix() -> None:

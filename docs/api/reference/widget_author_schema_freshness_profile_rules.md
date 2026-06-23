@@ -16,13 +16,18 @@
 Render interactive schema, freshness, and profile-behavior guardrail authoring controls.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>governance_review</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">03_governance</span>
 </p>
 
 **Used in notebooks:** `02_pipeline`, `03_governance`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2716-L2735">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/governance_review.py`:2716.
 
 ## Usage guidance
 

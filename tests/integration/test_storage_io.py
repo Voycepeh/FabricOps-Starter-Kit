@@ -166,6 +166,41 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
     assert captured["kwargs"] == {"skiprows": 1}
 
 
+def test_read_lakehouse_excel_delegates_to_get_path(monkeypatch):
+    """Verify Excel reads use the configured path resolver output directly."""
+    config = framework_config()
+    spark = _Spark()
+    calls = {}
+
+    import fabricops_kit.io.shared as shared
+
+    def fake_get_path(env, target, *, config, relative_path=None, area=None):
+        calls.update({"env": env, "target": target, "relative_path": relative_path, "area": area})
+        return "abfss://configured-target/custom/input.xlsx"
+
+    monkeypatch.setattr(shared, "get_path", fake_get_path)
+    monkeypatch.setattr(
+        io_core,
+        "_load_pandas",
+        lambda: SimpleNamespace(read_excel=lambda path, sheet_name=0, **kwargs: [{"sheet": sheet_name}]),
+    )
+
+    io.read_lakehouse_excel("custom/input.xlsx", target="source", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env": "dev"})
+
+    assert calls == {"env": "dev", "target": "source", "relative_path": "custom/input.xlsx", "area": "Files"}
+    assert ("load", "abfss://configured-target/custom/input.xlsx") in spark.read.calls
+
+
+def test_read_lakehouse_excel_reports_missing_resolved_path():
+    """Verify invalid resolved Excel paths fail with a useful path error."""
+    config = framework_config()
+    spark = _Spark()
+    spark.read.load = lambda path: SimpleNamespace(count=lambda: 0)
+
+    with pytest.raises(FileNotFoundError, match="No file found at path: .*missing.xlsx"):
+        io.read_lakehouse_excel("missing.xlsx", target="source", spark_session=spark, context={"config": config, "env": "dev"})
+
+
 def test_warehouse_helpers_fail_clearly_outside_fabric_runtime():
     """Verify warehouse helpers fail clearly outside fabric runtime."""
     config = framework_config()

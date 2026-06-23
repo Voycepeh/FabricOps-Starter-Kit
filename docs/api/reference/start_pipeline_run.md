@@ -18,13 +18,18 @@
 Start a guided notebook run and store runtime defaults.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>pipeline</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
 **Used in notebooks:** `02_pipeline`, `99_explore`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L34-L98">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/pipeline.py`:34.
 
 ## Usage guidance
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..config import get_path, resolve_fabric_context
 from ..io_core import (
     FabricStore,
     _get_spark,
@@ -98,9 +99,15 @@ def write_warehouse_synapsesql(df, store: FabricStore, synapsesql_target: str, *
     _write_warehouse_synapsesql(df, store, synapsesql_target, mode=mode)
 
 
-def read_excel_file(spark_obj, lakehouse_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):
-    """Read Excel binary content from Lakehouse Files and return a Spark DataFrame."""
-    return _read_excel_file(spark_obj, lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs)
+def resolve_configured_file_path(relative_path: str, *, target: str, context: dict[str, Any] | None = None) -> str:
+    """Resolve a Fabric file path through the configured path resolver."""
+    config, env, _resolved_context = resolve_fabric_context(context=context)
+    return get_path(env, target, config=config, relative_path=relative_path, area="Files")
+
+
+def read_excel_file(spark_obj, resolved_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):
+    """Read Excel binary content from a resolved Fabric path and return a Spark DataFrame."""
+    return _read_excel_file(spark_obj, resolved_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs)
 
 
 def convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True):
