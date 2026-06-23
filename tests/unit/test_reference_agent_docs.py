@@ -269,6 +269,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
     assert "Architecture violation count" in dashboard_text
+    assert '<option value="">All modules</option>' in dashboard_text
+    assert '<option value="">All recommendations</option>' in dashboard_text
+    assert '<option value="">All findings</option>' in dashboard_text
+    assert '<select id="decisionMinDownstream"><option value="">All downstream counts</option></select>' in dashboard_text
+    assert '<select id="decisionMinDepth"><option value="">All call depths</option></select>' in dashboard_text
+    assert '<select id="decisionMinIssues"><option value="">All architecture violations</option></select>' in dashboard_text
+    assert 'id="decisionMinDownstream" type="number"' not in dashboard_text
+    assert 'id="decisionMinDepth" type="number"' not in dashboard_text
+    assert 'id="decisionMinIssues" type="number"' not in dashboard_text
     assert "Architecture violation type<input" not in dashboard_text
     assert "resetDecisionFilters" in dashboard_text
     assert "compactList" in dashboard_text
@@ -314,6 +323,40 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in dashboard_text
+    assert "decisionDownstreamBand:''" in dashboard_text
+    assert "const DOWNSTREAM_BANDS=" in dashboard_text
+    assert "['downstream_0','0',v=>v===0]" in dashboard_text
+    assert "['downstream_1_2','1–2',v=>v>=1&&v<=2]" in dashboard_text
+    assert "['downstream_3_5','3–5',v=>v>=3&&v<=5]" in dashboard_text
+    assert "['downstream_6_10','6–10',v=>v>=6&&v<=10]" in dashboard_text
+    assert "['downstream_gt_10','>10',v=>v>10]" in dashboard_text
+    assert "const DEPTH_BANDS=" in dashboard_text
+    assert "['depth_0_1','0–1',v=>v>=0&&v<=1]" in dashboard_text
+    assert "['depth_2_3','2–3',v=>v>=2&&v<=3]" in dashboard_text
+    assert "['depth_4_5','4–5',v=>v>=4&&v<=5]" in dashboard_text
+    assert "['depth_gte_6','>=6',v=>v>=6]" in dashboard_text
+    assert "const ISSUE_BANDS=" in dashboard_text
+    assert "['issues_0','No violations',v=>v===0]" in dashboard_text
+    assert "['issues_1','1 violation',v=>v===1]" in dashboard_text
+    assert "['issues_gte_2','2+ violations',v=>v>=2]" in dashboard_text
+    assert "const ISSUE_BOOLEAN_BANDS=" in dashboard_text
+    assert "['issues_gte_1','1+ violations',v=>v>=1]" in dashboard_text
+    assert "function architectureViolationCount(flow)" in dashboard_text
+    assert "if(typeof value==='boolean')return value?1:0" in dashboard_text
+    assert "function issueBandsForRows(rows)" in dashboard_text
+    assert "?ISSUE_BANDS:ISSUE_BOOLEAN_BANDS" in dashboard_text
+    assert "function matchesBand(flow,bandValue,bands,metric)" in dashboard_text
+    assert "function populateBandFilter(id,bands,rows,metric)" in dashboard_text
+    assert "matchesBand(f,state.decisionDownstreamBand,DOWNSTREAM_BANDS,'downstream')" in dashboard_text
+    assert "matchesBand(f,state.decisionDepthBand,DEPTH_BANDS,'depth')" in dashboard_text
+    assert "matchesBand(f,state.decisionIssueBand,issueBandsForRows(publicEntryFlows),'issues')" in dashboard_text
+    assert "['decisionMinDownstream','decisionDownstreamBand']" in dashboard_text
+    assert "decisionDownstreamBand:'',decisionDepthBand:'',decisionIssueBand:'',collapsedPublicList:false" in dashboard_text
+    assert "populateBandFilter('decisionMinDownstream',DOWNSTREAM_BANDS,publicEntryFlows,'downstream')" in dashboard_text
+    assert "populateBandFilter('decisionMinDepth',DEPTH_BANDS,publicEntryFlows,'depth')" in dashboard_text
+    assert "populateBandFilter('decisionMinIssues',issueBandsForRows(publicEntryFlows),publicEntryFlows,'issues')" in dashboard_text
+    assert "function numericFilterValue(value)" not in dashboard_text
+    assert "Number(e.target.value||0)" not in dashboard_text
     assert "High-priority public callables" in dashboard_text
     assert "Architecture violations" in dashboard_text
     assert "Long public flows" in dashboard_text
@@ -346,7 +389,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function positiveThreshold(value)" in dashboard_text
     assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in dashboard_text
     assert "architecture_violation_count??0" in dashboard_text
-    assert ">=3" not in dashboard_text
     assert "down>=12" not in dashboard_text
     assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
