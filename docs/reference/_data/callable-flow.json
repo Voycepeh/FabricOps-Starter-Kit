@@ -61854,8 +61854,8 @@
       "long_call_chains": 26,
       "architecture_violations": 0,
       "boundary_violations": 0,
-      "architecture_findings": 103,
-      "merge_candidates": 305,
+      "architecture_findings": 0,
+      "merge_candidates": 26,
       "suggested_inline_or_privatize": 26
     },
     "callable_inventory_metrics": {
