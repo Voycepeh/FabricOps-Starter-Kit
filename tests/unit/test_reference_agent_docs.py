@@ -328,6 +328,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "file_path:row.source_path||null" in dashboard_text
     assert "line_start:row.source_start_line||null" in dashboard_text
     assert "function moduleLink(module)" in dashboard_text
+    assert "function moduleHref(module){return module?`../api/modules/${module}/`:''}" in dashboard_text
+    assert "../../api/modules/${module}/" not in dashboard_text
     assert "GITHUB_SOURCE_BASE" in dashboard_text
     assert "return `${GITHUB_SOURCE_BASE}${path}${anchor}`" in dashboard_text
     assert "boundaryCount=s.boundary_violations??s.architecture_violations??0" in dashboard_text
