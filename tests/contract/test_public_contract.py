@@ -579,10 +579,10 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
 
 
-def test_generated_module_docs_surface_only_active_v1_modules():
-    """Verify generated module docs surface only active v1 modules."""
+def test_generated_module_docs_are_not_public_surface():
+    """Verify generated module docs are no longer part of the public docs surface."""
     root = Path(__file__).parents[2]
-    expected_modules = {
+    stale_modules = {
         "config",
         "data_agreement",
         "governance_review",
@@ -594,8 +594,13 @@ def test_generated_module_docs_surface_only_active_v1_modules():
         "metadata",
         "pipeline",
     }
-    module_docs = {path.stem for path in (root / "docs" / "api" / "modules").glob("*.md") if path.stem != "index"}
-    assert module_docs == expected_modules
+    module_dir = root / "docs" / "api" / "modules"
+    module_docs = set() if not module_dir.exists() else {path.stem for path in module_dir.glob("*.md") if path.stem != "index"}
+    mkdocs_text = (root / "mkdocs.yml").read_text(encoding="utf-8")
+
+    assert module_docs == set()
+    assert not any((module_dir / f"{module}.md").exists() for module in stale_modules)
+    assert "api/modules/" not in mkdocs_text
 
 
 def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exported():
@@ -631,4 +636,12 @@ def test_reference_generation_script_succeeds_for_reference_and_module_docs():
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert not (root / "docs" / "reference" / "template-function-map.md").exists()
-    assert (root / "docs" / "api" / "modules" / "config.md").exists()
+    public_function_page = root / "docs" / "api" / "reference" / "read_lakehouse_csv.md"
+    mkdocs_text = (root / "mkdocs.yml").read_text(encoding="utf-8")
+
+    assert public_function_page.exists()
+    function_text = public_function_page.read_text(encoding="utf-8")
+    assert '<div class="reference-source-card" markdown="1">' in function_text
+    assert "api-chip-module" not in function_text
+    assert not (root / "docs" / "api" / "modules" / "config.md").exists()
+    assert "api/modules/config.md" not in mkdocs_text

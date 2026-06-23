@@ -513,6 +513,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Callable Inventory" in inventory_text
     assert "Search callables, inspect health signals, and export focused AI refactor plans." in inventory_text
     assert "Generated at:" in inventory_text
+    assert "Generated at:</strong>" in inventory_text
+    assert "SGT" in inventory_text
+    assert " UTC" not in inventory_text
     assert "Data source:" in inventory_text
     assert "callable-flow.json" in inventory_text
     assert "new Date()" not in inventory_text
@@ -1975,11 +1978,16 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     """Verify inventory dashboard renders dynamic rows, KPIs, statuses, and scoped controls."""
     inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
 
-    assert "../reference/_data/callable-flow.json" in inventory_text
+    assert "function callableFlowUrl()" in inventory_text
+    assert "new URL('../reference/_data/callable-flow.json',window.location.href).href" in inventory_text
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} callable records" in inventory_text
     assert "No callable records match current filters" in inventory_text
-    assert "Failed to load callable-flow data:" in inventory_text
+    assert "No callable records loaded." in inventory_text
+    assert "Failed to load callable-flow data. Attempted URL:" in inventory_text
+    assert "Could not parse callable-flow.json from ${attemptedUrl}" in inventory_text
+    assert "did not include a function_inventory array" in inventory_text
+    assert "inventory=data.function_inventory" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
         "Total callables",
