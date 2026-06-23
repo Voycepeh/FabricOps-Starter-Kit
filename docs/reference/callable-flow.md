@@ -4,13 +4,10 @@ AI coding tools make it easy to add callables quickly. That speed is useful, but
 
 <div align="center" markdown="1">
 
-[Architecture Page](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
-[Inventory Page](../assets/callable-functions-inventory.html){ .md-button }
-
-![Dashboard](../assets/fabricops-refactor-risk-dashboard.png)
+[Architecture](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+[Inventory](../assets/callable-functions-inventory.html){ .md-button }
 
 </div>
-
 
 
 ## Why callable flow matters
@@ -58,7 +55,7 @@ Refactor signals are warnings generated from the callable graph. They do not aut
 
 ### EG. Pointless wrapper
 
-![Possible wrapper or inline candidates](../assets/fabricops-bad-example-nested-functions.png)
+![Possible wrapper or inline candidates](../assets/fabricops-bad-example-pointless-wrapper-functions.png)
 
 *Guardrail: Warn when a helper appears to add little abstraction value. Single-use or thin wrapper callables may still be valid, but they should earn their place through clearer naming, validation, readability, or reuse.*
 
@@ -73,6 +70,12 @@ Refactor signals are warnings generated from the callable graph. They do not aut
 ![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)
 
 *Guardrail: Warn when one public callable depends on another public callable. Public callables should usually be entry points. Shared logic should usually move into an internal workflow, service, adapter, validator, resolver, normalizer, or utility according to its role.*
+
+### EG. Nested helper chain
+
+![Nested helper chain](../assets/fabricops-bad-example-nested-functions.png)
+
+*Guardrail: Repeated workflow-to-workflow chains or upward dependency patterns need review because they make orchestration harder to reason about. Allowed internal role calls can be valid when validators, resolvers, normalizers, adapters, services, utilities, models, lifecycle hooks, or property accessors support the intended lower-level direction.*
 
 ## Selecting refactor candidates
 

@@ -269,7 +269,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "decisionMinDownstream" in dashboard_text
     assert "decisionMinDepth" in dashboard_text
     assert "Architecture finding count" in dashboard_text
-    assert "Architecture violation count" not in dashboard_text
+    assert "Architecture violation count<select" not in dashboard_text
     assert '<option value="">All modules</option>' in dashboard_text
     assert '<option value="">All recommendations</option>' in dashboard_text
     assert '<option value="">All findings</option>' in dashboard_text
@@ -290,6 +290,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "scrollIntoView" in dashboard_text
     assert "Callable flow" in dashboard_text
     assert "Showing flow for" in dashboard_text
+    assert "callable-flow-filter-banner" in dashboard_text
+    assert "justify-content:space-between" in dashboard_text
+    assert "callable-flow-reset-button" in dashboard_text
+    assert "background:#15803d" in dashboard_text
+    assert "Back to all public callables" in dashboard_text
+    assert "showSelectedBanner=Boolean(state.collapsedPublicList&&active)" in dashboard_text
+    assert 'id="backToAllPublicCallables"' in dashboard_text
+    assert "reset.onclick=showAllPublicCallables" in dashboard_text
+    assert "showAllPublicCallablesInline" not in dashboard_text
+    assert "Show all public callables</button>`:'';const inline" not in dashboard_text
     assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in dashboard_text
     assert ".surface-card span{display:block;line-height:1.2" in dashboard_text
     assert "<th>Public callable</th><th>Module</th><th>Findings</th><th>Why review</th><th>Suggested action</th><th class=\"num\">Downstream</th><th class=\"num\">Depth</th>" in dashboard_text
@@ -321,8 +331,37 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architecture_findings" in dashboard_text
     assert "flow_tree" in dashboard_text
     assert "internal_helper_cleanup_candidates" in dashboard_text
+    assert "public_callable_findings" in dashboard_text
+    assert "merge_shortening_candidate_count" in dashboard_text
     assert "planning_instructions" in dashboard_text
     assert "required_tests" in dashboard_text
+    assert "function publicCallableFindingRows(flow)" in dashboard_text
+    assert "publicFindings=publicCallableFindingRows(f)" in dashboard_text
+    assert "#### Public callable findings" in dashboard_text
+    assert "#### Architecture findings" in dashboard_text
+    assert "#### Internal helper cleanup candidates" in dashboard_text
+    assert "#### Full nested flow tree" in dashboard_text
+    assert "helper_tags" in dashboard_text
+    assert "Group functions by refactor action before proposing code changes." in dashboard_text
+    assert "Identify helpers that can be merged into parent callables and helpers that should remain separate." in dashboard_text
+    assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode explicitly allows it." in dashboard_text
+    assert "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and flow tree tags as grounding evidence." in dashboard_text
+    assert "Propose an ordered implementation plan, list tests required before and after refactor, and call out migration risks." in dashboard_text
+    assert "final_output_required" in dashboard_text
+    assert "## Final output required" in dashboard_text
+    assert "Write the final output as instructions that can be pasted into Codex, Claude Code, Cursor, or another coding agent." in dashboard_text
+    assert "Produce a PR execution plan for a coding agent targeting the main branch." in dashboard_text
+    assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode allows it." in dashboard_text
+    assert "Group refactor actions by helper/function." in dashboard_text
+    assert "Identify architecture violations to address." in dashboard_text
+    assert "Identify helpers to merge, move, or keep." in dashboard_text
+    assert "List implementation steps in order." in dashboard_text
+    assert "List tests to add, update, and run." in dashboard_text
+    assert "Define acceptance criteria." in dashboard_text
+    assert "Call out risks and rollback notes." in dashboard_text
+    assert "Do not write code yet and do not generate a patch." in dashboard_text
+    assert dashboard_text.index("## Final output required") > dashboard_text.index("## Batch accounting")
+    assert "Do not write code yet and do not generate a patch.\n`;" in dashboard_text
     assert "source_url:row.source_url||null" in dashboard_text
     assert "docs_url:row.docs_url||null" in dashboard_text
     assert "file_path:row.source_path||null" in dashboard_text
@@ -332,8 +371,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "../../api/modules/${module}/" not in dashboard_text
     assert "GITHUB_SOURCE_BASE" in dashboard_text
     assert "return `${GITHUB_SOURCE_BASE}${path}${anchor}`" in dashboard_text
-    assert "boundaryCount=s.boundary_violations??s.architecture_violations??0" in dashboard_text
-    assert "cls:boundaryCount?'risk':'good'" in dashboard_text
+    assert "architectureViolationFlows=flows.filter" in dashboard_text
+    assert "shortenableFlowCount=flows.filter" in dashboard_text
     assert "function architectureFindingRows(flow)" in dashboard_text
     assert "function architectureFindingCount(flow)" in dashboard_text
     assert "c.architecture_result==='Violation'||c.recommended_action==='Architecture violation'" in dashboard_text
@@ -379,16 +418,28 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "populateBandFilter('decisionMinIssues',issueBandsForRows(publicEntryFlows),publicEntryFlows,'issues')" in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
-    assert "High-priority public callables" in dashboard_text
-    assert "Boundary violations" in dashboard_text
-    assert "Long public flows" in dashboard_text
-    assert "Merge candidates" in dashboard_text
-    assert "Public callables scanned" in dashboard_text
+    card_order = [
+        dashboard_text.index("label:'Public callables scanned'"),
+        dashboard_text.index("label:'High-priority public callables'"),
+        dashboard_text.index("label:'Architecture violations'"),
+        dashboard_text.index("label:'Long public flows'"),
+        dashboard_text.index("label:'Public flows that can be shortened'"),
+    ]
+    assert card_order == sorted(card_order)
+    assert "Notebook-facing APIs included in this decision view." in dashboard_text
+    assert "Public APIs to review first." in dashboard_text
+    assert "Public callable flows with architecture violations." in dashboard_text
+    assert "Public callable flows whose depth exceeds the threshold." in dashboard_text
+    assert "Public callable flows with internal helpers that may be simplified, merged, or moved closer to their caller." in dashboard_text
     assert "Clean public flows" not in dashboard_text
     assert "Public flows with warnings" not in dashboard_text
     assert "Callables flagged as single-use helper candidates" not in dashboard_text
+    assert "label:'Merge candidates'" not in dashboard_text
+    assert "value:s.merge_candidates" not in dashboard_text
     assert "305 Merge candidates" not in dashboard_text
-    assert "Architecture metrics summarize public entrypoint flow risk." in dashboard_text
+    assert "Architecture metrics summarize public entrypoint flow risk. Use Inventory for helper-level cleanup details." in dashboard_text
+    assert "Review detailed callable actions in Inventory" not in dashboard_text
+    assert "architecture-cta" not in dashboard_text
 
     assert "dataLoadStatus" in dashboard_text
     assert "function callableFlowDataUrl()" in dashboard_text
@@ -420,7 +471,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Contains ${violations} boundary violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
-    assert "Public callables whose call depth exceeds the threshold >= ${longCallChainThreshold()}." in dashboard_text
     assert "Depth; long call chain threshold >= ${longThreshold}" in dashboard_text
     assert "longThreshold!==null" in dashboard_text
     assert "largeThreshold!==null" in dashboard_text
@@ -615,6 +665,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     public_flows = flow_data["public_entrypoint_flow"]
     assert len(public_flows) == summary_counts["layer"]["public"]
     assert len(public_flows) == public_api_surface["public_api_entrypoints"]
+    assert public_api_surface["architecture_violations"] == sum(
+        1 for flow in public_flows if flow["architecture_violation_count"]
+    )
+    assert public_api_surface["merge_candidates"] == sum(
+        1 for flow in public_flows if flow["helper_cleanup_candidates"]
+    )
+    assert public_api_surface["merge_candidates"] < sum(
+        flow["helper_cleanup_candidates"] for flow in public_flows
+    )
     for flow in public_flows:
         assert "max_depth" in flow
         assert "downstream_count" in flow
