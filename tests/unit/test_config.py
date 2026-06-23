@@ -637,5 +637,5 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
     assert "fabricops_kit.data_agreement._render_maintenance_widget_workflow" not in rows
     assert "fabricops_kit.data_agreement._render_data_steward_widget_workflow" not in rows
     assert "fabricops_kit.data_agreement._render_data_agreement_widget_workflow" not in rows
-    assert rows["fabricops_kit.data_agreement.widget_render_data_steward"]["architecture_signals"] == []
-    assert rows["fabricops_kit.data_agreement.widget_render_data_agreement"]["architecture_signals"] == []
+    assert rows["fabricops_kit.data_agreement.widget_render_data_steward"]["signals"] == ["allowed_internal_role_call"]
+    assert rows["fabricops_kit.data_agreement.widget_render_data_agreement"]["signals"] == ["allowed_internal_role_call"]
