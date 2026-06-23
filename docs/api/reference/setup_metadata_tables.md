@@ -23,9 +23,9 @@ Create or validate all FabricOps metadata tables through one setup action.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1441-L1496">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1471-L1526">View source on GitHub</a>
 
-Implemented in `src/fabricops_kit/config.py`:1441.
+Implemented in `src/fabricops_kit/config.py`:1471.
 
 ## Usage guidance
 

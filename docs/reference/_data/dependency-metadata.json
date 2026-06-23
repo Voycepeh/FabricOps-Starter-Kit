@@ -463,6 +463,23 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config._configured_target_root": {
+      "qualified_name": "fabricops_kit.config._configured_target_root",
+      "short_name": "_configured_target_root",
+      "module": "config",
+      "callable": "_configured_target_root",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.get_path"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config._current_audit_timestamp": {
       "qualified_name": "fabricops_kit.config._current_audit_timestamp",
       "short_name": "_current_audit_timestamp",
@@ -987,21 +1004,24 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
+        "fabricops_kit.config._configured_target_root",
         "fabricops_kit.config._get_store",
-        "fabricops_kit.config._join_configured_path"
+        "fabricops_kit.config._join_configured_path",
+        "fabricops_kit.config.resolve_fabric_context"
       ],
-      "calls_count": 2,
+      "calls_count": 4,
       "used_by": [
-        "fabricops_kit.io.resolve_configured_file_path",
-        "fabricops_kit.io.shared.resolve_configured_file_path"
+        "fabricops_kit.io.get_path",
+        "fabricops_kit.io.shared.get_path"
       ],
       "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [
+        "fabricops_kit.config._configured_target_root",
         "fabricops_kit.config._get_store",
         "fabricops_kit.config._join_configured_path"
       ],
-      "internal_helper_count": 2
+      "internal_helper_count": 3
     },
     "fabricops_kit.config.resolve_fabric_context": {
       "qualified_name": "fabricops_kit.config.resolve_fabric_context",
@@ -1015,6 +1035,7 @@
       ],
       "calls_count": 1,
       "used_by": [
+        "fabricops_kit.config.get_path",
         "fabricops_kit.data_agreement.widget_render_agreement_evidence",
         "fabricops_kit.data_agreement.widget_render_data_agreement",
         "fabricops_kit.data_agreement.widget_render_data_steward",
@@ -1025,14 +1046,12 @@
         "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
         "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
         "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
-        "fabricops_kit.io.resolve_configured_file_path",
-        "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io_core._resolve_target_store",
         "fabricops_kit.pipeline._run_table_guardrails_workflow",
         "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
         "fabricops_kit.pipeline._write_pipeline_run_summary_workflow"
       ],
-      "used_by_count": 16,
+      "used_by_count": 15,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -4543,6 +4562,23 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.io.get_path": {
+      "qualified_name": "fabricops_kit.io.get_path",
+      "short_name": "get_path",
+      "module": "io",
+      "callable": "get_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.get_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.io.get_spark_session": {
       "qualified_name": "fabricops_kit.io.get_spark_session",
       "short_name": "get_spark_session",
@@ -4658,6 +4694,23 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.io.read_lakehouse_parquet._normalize_file_relative_path": {
+      "qualified_name": "fabricops_kit.io.read_lakehouse_parquet._normalize_file_relative_path",
+      "short_name": "_normalize_file_relative_path",
+      "module": "io.read_lakehouse_parquet",
+      "callable": "_normalize_file_relative_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet": {
       "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
       "short_name": "read_lakehouse_parquet",
@@ -4665,13 +4718,17 @@
       "callable": "read_lakehouse_parquet",
       "docs_url": "/FabricOps-Starter-Kit/reference/read_lakehouse_parquet/",
       "classification": "callable",
-      "calls": [],
-      "calls_count": 0,
+      "calls": [
+        "fabricops_kit.io.read_lakehouse_parquet._normalize_file_relative_path"
+      ],
+      "calls_count": 1,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helpers_used": [
+        "fabricops_kit.io.read_lakehouse_parquet._normalize_file_relative_path"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table": {
       "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -4739,24 +4796,6 @@
       "used_in_templates": [
         "02_pipeline"
       ],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.io.resolve_configured_file_path": {
-      "qualified_name": "fabricops_kit.io.resolve_configured_file_path",
-      "short_name": "resolve_configured_file_path",
-      "module": "io",
-      "callable": "resolve_configured_file_path",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.get_path",
-        "fabricops_kit.config.resolve_fabric_context"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -4862,6 +4901,23 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.io.shared.get_path": {
+      "qualified_name": "fabricops_kit.io.shared.get_path",
+      "short_name": "get_path",
+      "module": "io.shared",
+      "callable": "get_path",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.get_path"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.io.shared.get_spark_session": {
       "qualified_name": "fabricops_kit.io.shared.get_spark_session",
       "short_name": "get_spark_session",
@@ -4958,24 +5014,6 @@
         "fabricops_kit.io_core._read_warehouse_synapsesql"
       ],
       "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.io.shared.resolve_configured_file_path": {
-      "qualified_name": "fabricops_kit.io.shared.resolve_configured_file_path",
-      "short_name": "resolve_configured_file_path",
-      "module": "io.shared",
-      "callable": "resolve_configured_file_path",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.get_path",
-        "fabricops_kit.config.resolve_fabric_context"
-      ],
-      "calls_count": 2,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
@@ -7294,7 +7332,7 @@
     },
     "config": {
       "callable_count": 2,
-      "internal_count": 24,
+      "internal_count": 25,
       "outbound_modules": [
         "data_agreement",
         "governance_review",
@@ -7404,7 +7442,7 @@
     },
     "io.read_lakehouse_parquet": {
       "callable_count": 1,
-      "internal_count": 0,
+      "internal_count": 1,
       "outbound_modules": [],
       "inbound_modules": [],
       "outbound_count": 0,

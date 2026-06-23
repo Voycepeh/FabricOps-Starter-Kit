@@ -488,48 +488,44 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
-  'summary_override': 'Read a CSV file from a configured Fabric lakehouse Files path.',
+  'summary_override': 'Read a CSV file from a Fabric resolved path.',
   'symbol_name': 'read_lakehouse_csv',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when reading a CSV file from a configured Fabric lakehouse Files path.',
+  'use_when': 'Use when reading a CSV file from a relative path resolved through get_path.',
   'do_not_use_when': 'Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL '
                      'tables.',
   'parameters': 'config, env, target, relative_path, CSV read options, verbose flag, and optional '
                 'spark_session.',
-  'returns': 'Spark DataFrame loaded from the lakehouse Files CSV path.',
+  'returns': 'Spark DataFrame loaded from the resolved CSV path.',
   'raises': 'Raises ValueError for invalid file paths and configuration/Spark errors when the file '
             'cannot be read.',
-  'side_effects': 'Reads from lakehouse Files; it does not write metadata, tables, or files.',
+  'side_effects': 'Reads from the resolved Fabric path; it does not write metadata, tables, or files.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
-  'ai_verification': 'Verify relative_path points under Files, then check row count and schema '
-                     'after reading.',
+  'ai_verification': 'Verify relative_path resolves through get_path, then check row count and schema after reading.',
   'preferred_example': 'df = read_lakehouse_csv('
                        'relative_path="raw/orders/orders.csv", header=True, spark_session=spark)',
   'related_functions': ['read_lakehouse_table', 'read_lakehouse_parquet', 'read_lakehouse_excel'],
-  'expanded_purpose': 'Reads a CSV file from the Files area of a configured Fabric lakehouse and '
-                      'returns it as a Spark DataFrame.',
-  'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be '
-                 'resolved through configured lakehouse paths.',
+  'expanded_purpose': 'Reads a CSV file from a Fabric resolved path and returns it as a Spark DataFrame.',
+  'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be resolved through get_path.',
   'glossary_terms': ['source data', 'notebook template'],
   'return_interpretation': 'The returned DataFrame reflects Spark CSV parsing options; inspect '
                            'schema and sample rows before profiling or writing.',
-  'common_failure_causes': ['The file path is wrong or outside the configured lakehouse.',
+  'common_failure_causes': ['The resolved file path is wrong or unavailable.',
                             'CSV options do not match the file shape.',
                             'Spark cannot access the file.',
-                            'The selected environment is missing the source lakehouse target.'],
+                            'The selected environment is missing the configured source target.'],
   'related_guides': [{'title': 'Notebook Templates Implementation Guide',
                       'path': '../../notebook-templates-implementation-guide/index.md'}]},
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
-  'summary_override': 'Read a Parquet path from a configured Fabric lakehouse Files path.',
+  'summary_override': 'Read a Parquet path from a Fabric resolved path.',
   'symbol_name': 'read_lakehouse_parquet',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when reading a Parquet file or path from a configured Fabric lakehouse Files '
-              'path.',
+  'use_when': 'Use when reading a Parquet file or path from a relative path resolved through get_path.',
   'do_not_use_when': 'Do not use for Delta tables, CSV files, Excel files, or warehouse SQL '
                      'tables.',
   'parameters': 'config, env, target, relative_path, verbose flag, and optional spark_session.',
@@ -537,17 +533,14 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
              'fallback path.',
   'raises': 'Raises ValueError for invalid relative paths and Spark/read errors when the Parquet '
             'path cannot be loaded.',
-  'side_effects': 'Reads from lakehouse Files and may create a local timestamp-converted fallback '
-                  'for single-file Parquet precision issues; it does not write metadata tables.',
+  'side_effects': 'Reads from the resolved Fabric path and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
-  'ai_verification': 'Verify the file path is a lakehouse Files Parquet path and check row '
-                     'count/schema after reading.',
+  'ai_verification': 'Verify the resolved Parquet path and check row count/schema after reading.',
   'preferred_example': 'df = read_lakehouse_parquet('
                        'relative_path="raw/orders/orders.parquet", spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_excel', 'read_lakehouse_table'],
-  'expanded_purpose': 'Reads a Parquet file or folder from the Files area of a configured Fabric '
-                      'lakehouse into a Spark DataFrame.',
+  'expanded_purpose': 'Reads a Parquet file or folder from a Fabric resolved path into a Spark DataFrame.',
   'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a '
                  'managed table.',
   'glossary_terms': ['source data', 'notebook template'],
@@ -555,7 +548,7 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
                            'it before downstream profile or guardrail checks.',
   'common_failure_causes': ['The Parquet path is missing or misspelled.',
                             'The file is not valid Parquet.',
-                            'The configured lakehouse target is unavailable.',
+                            'The configured target cannot be resolved or read.',
                             'The caller lacks read permission.'],
   'related_guides': [{'title': 'Notebook Templates Implementation Guide',
                       'path': '../../notebook-templates-implementation-guide/index.md'}]},
@@ -1457,10 +1450,8 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                      'destination.',
                                                      'The caller lacks write permission or Spark '
                                                      'cannot create the table.']},
- 'read_lakehouse_csv': {'expanded_purpose': 'Reads a CSV file from the Files area of a configured '
-                                            'Fabric lakehouse and returns it as a Spark DataFrame.',
-                        'when_to_use': 'Use for file-based source ingestion when the source is CSV '
-                                       'and should be resolved through configured lakehouse paths.',
+ 'read_lakehouse_csv': {'expanded_purpose': 'Reads a CSV file from a Fabric resolved path and returns it as a Spark DataFrame.',
+                        'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be resolved through get_path.',
                         'glossary_terms': ['source data', 'notebook template'],
                         'return_interpretation': 'The returned DataFrame reflects Spark CSV '
                                                  'parsing options; inspect schema and sample rows '
@@ -1471,9 +1462,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                   'Spark cannot access the file.',
                                                   'The selected environment is missing the source '
                                                   'lakehouse target.']},
- 'read_lakehouse_parquet': {'expanded_purpose': 'Reads a Parquet file or folder from the Files '
-                                                'area of a configured Fabric lakehouse into a '
-                                                'Spark DataFrame.',
+ 'read_lakehouse_parquet': {'expanded_purpose': 'Reads a Parquet file or folder from a Fabric resolved path into a Spark DataFrame.',
                             'when_to_use': 'Use for file-based source ingestion when the source is '
                                            'Parquet rather than a managed table.',
                             'glossary_terms': ['source data', 'notebook template'],
@@ -1482,8 +1471,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                      'downstream profile or guardrail checks.',
                             'common_failure_causes': ['The Parquet path is missing or misspelled.',
                                                       'The file is not valid Parquet.',
-                                                      'The configured lakehouse target is '
-                                                      'unavailable.',
+                                                      'The configured target cannot be resolved or read.',
                                                       'The caller lacks read permission.']},
  'read_lakehouse_excel': {'expanded_purpose': 'Reads an Excel workbook from a Fabric resolved path and returns a Spark DataFrame for the selected worksheet. Path resolution is delegated to get_path; callers provide a relative path or configured target understood by the Fabric path resolver. The workbook is read with Excel parsing dependencies and converted into a Spark DataFrame.',
                           'when_to_use': 'Use when source data arrives as an Excel workbook and should follow configured Fabric path routing.',

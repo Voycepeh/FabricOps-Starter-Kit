@@ -12,9 +12,9 @@ Shared environment setup and runtime validation for notebook templates.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1016-L1070">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1046-L1100">View source on GitHub</a>
 
-Implemented in `src/fabricops_kit/config.py`:1016.
+Implemented in `src/fabricops_kit/config.py`:1046.
 
 ## Usage guidance
 

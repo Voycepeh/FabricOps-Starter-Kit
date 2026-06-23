@@ -166,29 +166,84 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
     assert captured["kwargs"] == {"skiprows": 1}
 
 
-def test_read_lakehouse_excel_delegates_to_get_path(monkeypatch):
-    """Verify Excel reads use the configured path resolver output directly."""
-    config = framework_config()
+def test_read_lakehouse_csv_delegates_to_get_path(monkeypatch):
+    """Verify CSV reads use the configured path resolver output directly."""
     spark = _Spark()
     calls = {}
 
-    import fabricops_kit.io.shared as shared
+    from importlib import import_module
 
-    def fake_get_path(env, target, *, config, relative_path=None, area=None):
-        calls.update({"env": env, "target": target, "relative_path": relative_path, "area": area})
+    csv_module = import_module("fabricops_kit.io.read_lakehouse_csv")
+
+    def fake_get_path(relative_path, *, target="source", context=None):
+        calls.update({"relative_path": relative_path, "target": target, "context": context})
+        return "abfss://configured-target/custom/orders.csv"
+
+    monkeypatch.setattr(csv_module, "get_path", fake_get_path)
+
+    io.read_lakehouse_csv("custom/orders.csv", target="source", spark_session=spark, context={"env": "dev"})
+
+    assert calls == {"relative_path": "custom/orders.csv", "target": "source", "context": {"env": "dev"}}
+    assert ("csv", "abfss://configured-target/custom/orders.csv") in spark.read.calls
+
+
+def test_read_lakehouse_excel_delegates_to_get_path(monkeypatch):
+    """Verify Excel reads use the configured path resolver output directly."""
+    spark = _Spark()
+    calls = {}
+
+    from importlib import import_module
+
+    excel_module = import_module("fabricops_kit.io.read_lakehouse_excel")
+
+    def fake_get_path(relative_path, *, target="source", context=None):
+        calls.update({"relative_path": relative_path, "target": target, "context": context})
         return "abfss://configured-target/custom/input.xlsx"
 
-    monkeypatch.setattr(shared, "get_path", fake_get_path)
+    monkeypatch.setattr(excel_module, "get_path", fake_get_path)
     monkeypatch.setattr(
         io_core,
         "_load_pandas",
         lambda: SimpleNamespace(read_excel=lambda path, sheet_name=0, **kwargs: [{"sheet": sheet_name}]),
     )
 
-    io.read_lakehouse_excel("custom/input.xlsx", target="source", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env": "dev"})
+    io.read_lakehouse_excel("custom/input.xlsx", target="source", sheet_name="Sheet1", spark_session=spark, context={"env": "dev"})
 
-    assert calls == {"env": "dev", "target": "source", "relative_path": "custom/input.xlsx", "area": "Files"}
+    assert calls == {"relative_path": "custom/input.xlsx", "target": "source", "context": {"env": "dev"}}
     assert ("load", "abfss://configured-target/custom/input.xlsx") in spark.read.calls
+
+
+def test_public_file_readers_do_not_call_lakehouse_resolvers(monkeypatch):
+    """Verify public file readers do not force lakehouse target resolution."""
+    spark = _Spark()
+    from importlib import import_module
+
+    csv_module = import_module("fabricops_kit.io.read_lakehouse_csv")
+    excel_module = import_module("fabricops_kit.io.read_lakehouse_excel")
+
+    monkeypatch.setattr(csv_module, "get_path", lambda relative_path, *, target="source", context=None: "abfss://configured-target/custom/orders.csv")
+    monkeypatch.setattr(excel_module, "get_path", lambda relative_path, *, target="source", context=None: "abfss://configured-target/custom/input.xlsx")
+    monkeypatch.setattr(csv_module, "resolve_target_store", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("resolve_target_store should not be called")), raising=False)
+    monkeypatch.setattr(csv_module, "resolve_lakehouse_file_location", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("resolve_lakehouse_file_location should not be called")), raising=False)
+    monkeypatch.setattr(excel_module, "resolve_target_store", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("resolve_target_store should not be called")), raising=False)
+    monkeypatch.setattr(excel_module, "resolve_lakehouse_file_location", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("resolve_lakehouse_file_location should not be called")), raising=False)
+    monkeypatch.setattr(io_core, "_load_pandas", lambda: SimpleNamespace(read_excel=lambda path, sheet_name=0, **kwargs: [{"a": 1}]))
+
+    io.read_lakehouse_csv("custom/orders.csv", target="warehouse", spark_session=spark, context={"env": "dev"})
+    io.read_lakehouse_excel("custom/input.xlsx", target="warehouse", spark_session=spark, context={"env": "dev"})
+
+    assert ("csv", "abfss://configured-target/custom/orders.csv") in spark.read.calls
+    assert ("load", "abfss://configured-target/custom/input.xlsx") in spark.read.calls
+
+
+def test_read_lakehouse_csv_accepts_non_lakehouse_configured_path_target():
+    """Verify readers let get_path resolve non-lakehouse path-like targets."""
+    spark = _Spark()
+    config = SimpleNamespace(path_config=SimpleNamespace(paths={"dev": {"source": SimpleNamespace(kind="warehouse", path="abfss://configured-export")}}))
+
+    io.read_lakehouse_csv("path/to/orders.csv", target="source", spark_session=spark, context={"config": config, "env": "dev"})
+
+    assert ("csv", "abfss://configured-export/Files/path/to/orders.csv") in spark.read.calls
 
 
 def test_read_lakehouse_excel_reports_missing_resolved_path():

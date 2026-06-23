@@ -9,7 +9,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
     <p class="reference-kpi-note">Code areas represented.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">317</strong>
+    <strong class="reference-kpi-value">319</strong>
     <span class="reference-kpi-title">Total callables</span>
     <p class="reference-kpi-note">Complete discovered callable inventory.</p>
   </section>
@@ -24,7 +24,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
     <p class="reference-kpi-note">Internal functions behind the public API.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">228</strong>
+    <strong class="reference-kpi-value">230</strong>
     <span class="reference-kpi-title">Private helpers to review</span>
     <p class="reference-kpi-note">Excluded from default architecture counts.</p>
   </section>
@@ -102,9 +102,9 @@ Use the finder below to look up the 26 public Starter Kit functions. Internal he
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 2</span></summary><ul><li><code>profile_dataframe_core</code></li><li><code>profile_dataframe_core</code></li></ul></details>
   </div>
 </article>
-<article id="io.read_lakehouse_csv-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a configured Fabric lakehouse Files path.">
+<article id="io.read_lakehouse_csv-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a Fabric resolved path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Read a CSV file from a configured Fabric lakehouse Files path.</p>
+  <p class="reference-catalogue-item-purpose">Read a CSV file from a Fabric resolved path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
 
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
@@ -122,9 +122,9 @@ Use the finder below to look up the 26 public Starter Kit functions. Internal he
 
   </div>
 </article>
-<article id="io.read_lakehouse_parquet-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a configured Fabric lakehouse Files path.">
+<article id="io.read_lakehouse_parquet-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="fabric_input_output" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a Fabric resolved path.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Read a Parquet path from a configured Fabric lakehouse Files path.</p>
+  <p class="reference-catalogue-item-purpose">Read a Parquet path from a Fabric resolved path.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
 
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>

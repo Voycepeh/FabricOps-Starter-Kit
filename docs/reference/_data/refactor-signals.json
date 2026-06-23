@@ -2067,7 +2067,7 @@
   },
   "read_lakehouse_parquet": {
     "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
-    "unique_internal_helper_count": 0,
+    "unique_internal_helper_count": 1,
     "repeated_helpers": [],
     "deep_call_chains": [],
     "single_delegate_helpers": [],

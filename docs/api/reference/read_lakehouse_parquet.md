@@ -1,7 +1,7 @@
 # read_lakehouse_parquet
 
 
-Read a Parquet path from a configured Fabric lakehouse Files path.
+Read a Parquet path from a Fabric resolved path.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
@@ -12,9 +12,9 @@ Read a Parquet path from a configured Fabric lakehouse Files path.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L16-L84">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L20-L88">View source on GitHub</a>
 
-Implemented in `src/fabricops_kit/io/read_lakehouse_parquet.py`:16.
+Implemented in `src/fabricops_kit/io/read_lakehouse_parquet.py`:20.
 
 ## Usage guidance
 
@@ -28,7 +28,7 @@ Implemented in `src/fabricops_kit/io/read_lakehouse_parquet.py`:16.
 
 ### Additional context
 
-Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.
+Reads a Parquet file or folder from a Fabric resolved path into a Spark DataFrame.
 
 
 ## Signature
@@ -61,8 +61,8 @@ df = read_lakehouse_parquet(relative_path="raw/orders/orders.parquet", spark_ses
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Parquet file path under the lakehouse ``Files`` area. |
-| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `relative_path` | `str` | Yes | Parquet file path resolved through ``get_path``. |
+| `target` | `str` | No | Logical target from ``00_env_config``. |
 | `verbose` | `bool` | No | Whether to print read and timestamp-conversion fallback progress. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
@@ -83,7 +83,7 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 
 - The Parquet path is missing or misspelled.
 - The file is not valid Parquet.
-- The configured lakehouse target is unavailable.
+- The configured target cannot be resolved or read.
 - The caller lacks read permission.
 
 ## Glossary

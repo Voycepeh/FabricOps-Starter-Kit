@@ -603,10 +603,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<span class="reference-kpi-title">Supporting functions</span>' in reference_text
     assert '<span class="reference-kpi-title">Private helpers to review</span>' in reference_text
     assert '<strong class="reference-kpi-value">21</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">317</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">319</strong>' in reference_text
     assert '<strong class="reference-kpi-value">26</strong>' in reference_text
     assert '<strong class="reference-kpi-value">63</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">228</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">230</strong>' in reference_text
     assert "Callable metrics are generated from the callable inventory data." in reference_text
     assert "270 Supporting internal functions" not in reference_text
     assert "Supporting internal functions" not in reference_text.split("## Find a function", 1)[0]

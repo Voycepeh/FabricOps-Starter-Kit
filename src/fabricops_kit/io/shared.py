@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..config import get_path, resolve_fabric_context
+from ..config import get_path as _resolve_config_path
 from ..io_core import (
     FabricStore,
     _get_spark,
@@ -99,10 +99,9 @@ def write_warehouse_synapsesql(df, store: FabricStore, synapsesql_target: str, *
     _write_warehouse_synapsesql(df, store, synapsesql_target, mode=mode)
 
 
-def resolve_configured_file_path(relative_path: str, *, target: str, context: dict[str, Any] | None = None) -> str:
-    """Resolve a Fabric file path through the configured path resolver."""
-    config, env, _resolved_context = resolve_fabric_context(context=context)
-    return get_path(env, target, config=config, relative_path=relative_path, area="Files")
+def get_path(relative_path: str, *, target: str = DEFAULT_TARGET, context: dict[str, Any] | None = None) -> str:
+    """Resolve a relative file path through the configured Fabric path resolver."""
+    return _resolve_config_path(relative_path, target=target, context=context)
 
 
 def read_excel_file(spark_obj, resolved_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):

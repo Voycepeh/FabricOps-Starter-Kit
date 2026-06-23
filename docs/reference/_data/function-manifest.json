@@ -661,9 +661,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1504,
-    "source_end_line": 1509,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1504-L1509",
+    "source_start_line": 1534,
+    "source_end_line": 1539,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1534-L1539",
     "docs_path": null,
     "summary": "Check whether a Spark session is available."
   },
@@ -687,11 +687,37 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1193,
-    "source_end_line": 1199,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1193-L1199",
+    "source_start_line": 1223,
+    "source_end_line": 1229,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1223-L1229",
     "docs_path": null,
     "summary": "Return row dictionaries from Spark-like row collections."
+  },
+  {
+    "id": "fabricops_kit.config._configured_target_root",
+    "name": "_configured_target_root",
+    "qualified_name": "fabricops_kit.config._configured_target_root",
+    "module": "config",
+    "classification": "Internal",
+    "function_category": "internal-private",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.config.get_path"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/config.py",
+    "source_start_line": 769,
+    "source_end_line": 784,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L769-L784",
+    "docs_path": null,
+    "summary": "Return a configured target root path without validating a lakehouse kind."
   },
   {
     "id": "fabricops_kit.config._current_audit_timestamp",
@@ -749,9 +775,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1107,
-    "source_end_line": 1133,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1107-L1133",
+    "source_start_line": 1137,
+    "source_end_line": 1163,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1137-L1163",
     "docs_path": null,
     "summary": "Best-effort warning detector for legacy nested metadata Delta folders."
   },
@@ -778,9 +804,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1078,
-    "source_end_line": 1104,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1078-L1104",
+    "source_start_line": 1108,
+    "source_end_line": 1134,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1108-L1134",
     "docs_path": null,
     "summary": "Return the canonical active metadata tables prepared by ``00_env_config``."
   },
@@ -834,9 +860,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1512,
-    "source_end_line": 1551,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1512-L1551",
+    "source_start_line": 1542,
+    "source_end_line": 1581,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1542-L1581",
     "docs_path": null,
     "summary": "Best-effort retrieval of Fabric runtime metadata."
   },
@@ -864,9 +890,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1161,
-    "source_end_line": 1190,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1161-L1190",
+    "source_start_line": 1191,
+    "source_end_line": 1220,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1191-L1220",
     "docs_path": null,
     "summary": "Return the canonical metadata setup registry as table names mapped to schemas."
   },
@@ -953,9 +979,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1136,
-    "source_end_line": 1140,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1136-L1140",
+    "source_start_line": 1166,
+    "source_end_line": 1170,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1166-L1170",
     "docs_path": null,
     "summary": "Return field names from a Spark StructType-like schema."
   },
@@ -1037,9 +1063,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1202,
-    "source_end_line": 1211,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1202-L1211",
+    "source_start_line": 1232,
+    "source_end_line": 1241,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1232-L1241",
     "docs_path": null,
     "summary": "Return explicit metadata schema or configured metadata target schema."
   },
@@ -1069,9 +1095,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 828,
-    "source_end_line": 928,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L828-L928",
+    "source_start_line": 858,
+    "source_end_line": 958,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L858-L958",
     "docs_path": null,
     "summary": "Run 00_env_config readiness smoke checks for configuration bootstrap."
   },
@@ -1101,9 +1127,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1214,
-    "source_end_line": 1267,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1214-L1267",
+    "source_start_line": 1244,
+    "source_end_line": 1297,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1244-L1297",
     "docs_path": null,
     "summary": "Create missing metadata tables through configured lakehouse IO helpers."
   },
@@ -1137,9 +1163,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1325,
-    "source_end_line": 1433,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1325-L1433",
+    "source_start_line": 1355,
+    "source_end_line": 1463,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1355-L1463",
     "docs_path": null,
     "summary": "Own metadata table setup orchestration behind the frozen public API."
   },
@@ -1168,9 +1194,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 936,
-    "source_end_line": 1008,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L936-L1008",
+    "source_start_line": 966,
+    "source_end_line": 1038,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L966-L1038",
     "docs_path": null,
     "summary": "Own setup_notebook orchestration behind the frozen public API."
   },
@@ -1194,9 +1220,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1143,
-    "source_end_line": 1158,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1143-L1158",
+    "source_start_line": 1173,
+    "source_end_line": 1188,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1173-L1188",
     "docs_path": null,
     "summary": "Build an explicit all-string Spark schema for lightweight metadata tables."
   },
@@ -1289,9 +1315,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1270,
-    "source_end_line": 1322,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1270-L1322",
+    "source_start_line": 1300,
+    "source_end_line": 1352,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1300-L1352",
     "docs_path": null,
     "summary": "Validate active metadata tables through configured metadata target reads."
   },
@@ -1315,9 +1341,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 809,
-    "source_end_line": 820,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L809-L820",
+    "source_start_line": 839,
+    "source_end_line": 850,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L839-L850",
     "docs_path": null,
     "summary": "No summary available."
   },
@@ -1383,12 +1409,14 @@
     "function_category": "utility",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.io.resolve_configured_file_path",
-      "fabricops_kit.io.shared.resolve_configured_file_path"
+      "fabricops_kit.io.get_path",
+      "fabricops_kit.io.shared.get_path"
     ],
     "outbound": [
+      "fabricops_kit.config._configured_target_root",
       "fabricops_kit.config._get_store",
-      "fabricops_kit.config._join_configured_path"
+      "fabricops_kit.config._join_configured_path",
+      "fabricops_kit.config.resolve_fabric_context"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -1398,11 +1426,11 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 769,
-    "source_end_line": 801,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L769-L801",
+    "source_start_line": 787,
+    "source_end_line": 831,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L787-L831",
     "docs_path": null,
-    "summary": "Resolve a configured Fabric path for an environment and target."
+    "summary": "Resolve a configured Fabric path."
   },
   {
     "id": "fabricops_kit.config.resolve_fabric_context",
@@ -1413,6 +1441,7 @@
     "function_category": "utility",
     "usage_sources": [],
     "inbound": [
+      "fabricops_kit.config.get_path",
       "fabricops_kit.data_agreement.widget_render_agreement_evidence",
       "fabricops_kit.data_agreement.widget_render_data_agreement",
       "fabricops_kit.data_agreement.widget_render_data_steward",
@@ -1423,8 +1452,6 @@
       "fabricops_kit.governance_review._latest_metadata_catalogue_lookup_workflow",
       "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow",
       "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
-      "fabricops_kit.io.resolve_configured_file_path",
-      "fabricops_kit.io.shared.resolve_configured_file_path",
       "fabricops_kit.io_core._resolve_target_store",
       "fabricops_kit.pipeline._run_table_guardrails_workflow",
       "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
@@ -1488,9 +1515,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1441,
-    "source_end_line": 1496,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1441-L1496",
+    "source_start_line": 1471,
+    "source_end_line": 1526,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1471-L1526",
     "docs_path": "api/reference/setup_metadata_tables.md",
     "summary": "Create or validate all FabricOps metadata tables through one setup action."
   },
@@ -1539,9 +1566,9 @@
       }
     ],
     "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 1016,
-    "source_end_line": 1070,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1016-L1070",
+    "source_start_line": 1046,
+    "source_end_line": 1100,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1046-L1100",
     "docs_path": "api/reference/setup_notebook.md",
     "summary": "Shared environment setup and runtime validation for notebook templates."
   },
@@ -6203,11 +6230,37 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io.py",
-    "source_start_line": 113,
-    "source_end_line": 115,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L113-L115",
+    "source_start_line": 112,
+    "source_end_line": 114,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L112-L114",
     "docs_path": null,
     "summary": "Convert one local Parquet file from nanosecond to microsecond timestamps."
+  },
+  {
+    "id": "fabricops_kit.io.get_path",
+    "name": "get_path",
+    "qualified_name": "fabricops_kit.io.get_path",
+    "module": "io",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.config.get_path"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io.py",
+    "source_start_line": 102,
+    "source_end_line": 104,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L102-L104",
+    "docs_path": null,
+    "summary": "Resolve a relative file path through the configured Fabric path resolver."
   },
   {
     "id": "fabricops_kit.io.get_spark_session",
@@ -6333,9 +6386,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io.py",
-    "source_start_line": 108,
-    "source_end_line": 110,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L108-L110",
+    "source_start_line": 107,
+    "source_end_line": 109,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L107-L109",
     "docs_path": null,
     "summary": "Read Excel binary content from a resolved Fabric path and return a Spark DataFrame."
   },
@@ -6354,14 +6407,14 @@
       "source data",
       "notebook template"
     ],
-    "expanded_purpose": "Reads a CSV file from the Files area of a configured Fabric lakehouse and returns it as a Spark DataFrame.",
-    "when_to_use": "Use for file-based source ingestion when the source is CSV and should be resolved through configured lakehouse paths.",
+    "expanded_purpose": "Reads a CSV file from a Fabric resolved path and returns it as a Spark DataFrame.",
+    "when_to_use": "Use for file-based source ingestion when the source is CSV and should be resolved through get_path.",
     "return_interpretation": "The returned DataFrame reflects Spark CSV parsing options; inspect schema and sample rows before profiling or writing.",
     "common_failure_causes": [
-      "The file path is wrong or outside the configured lakehouse.",
+      "The resolved file path is wrong or unavailable.",
       "CSV options do not match the file shape.",
       "Spark cannot access the file.",
-      "The selected environment is missing the source lakehouse target."
+      "The selected environment is missing the configured source target."
     ],
     "related_guides": [
       {
@@ -6371,10 +6424,10 @@
     ],
     "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
     "source_start_line": 10,
-    "source_end_line": 36,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L36",
+    "source_end_line": 35,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L35",
     "docs_path": "api/reference/read_lakehouse_csv.md",
-    "summary": "Read a CSV file from a configured Fabric lakehouse Files path."
+    "summary": "Read a CSV file from a Fabric resolved path."
   },
   {
     "id": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -6408,10 +6461,36 @@
     ],
     "source_path": "src/fabricops_kit/io/read_lakehouse_excel.py",
     "source_start_line": 10,
-    "source_end_line": 44,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L44",
+    "source_end_line": 41,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L41",
     "docs_path": "api/reference/read_lakehouse_excel.md",
     "summary": "Read an Excel workbook from a Fabric resolved path."
+  },
+  {
+    "id": "fabricops_kit.io.read_lakehouse_parquet._normalize_file_relative_path",
+    "name": "_normalize_file_relative_path",
+    "qualified_name": "fabricops_kit.io.read_lakehouse_parquet._normalize_file_relative_path",
+    "module": "io.read_lakehouse_parquet",
+    "classification": "Internal",
+    "function_category": "internal-private",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
+    "source_start_line": 10,
+    "source_end_line": 17,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L10-L17",
+    "docs_path": null,
+    "summary": "Return a non-empty relative file path for configured path resolution."
   },
   {
     "id": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
@@ -6422,19 +6501,21 @@
     "function_category": "public_starter_kit",
     "usage_sources": [],
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.read_lakehouse_parquet._normalize_file_relative_path"
+    ],
     "used_in_templates": [],
     "glossary_terms": [
       "source data",
       "notebook template"
     ],
-    "expanded_purpose": "Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.",
+    "expanded_purpose": "Reads a Parquet file or folder from a Fabric resolved path into a Spark DataFrame.",
     "when_to_use": "Use for file-based source ingestion when the source is Parquet rather than a managed table.",
     "return_interpretation": "The returned DataFrame uses the Parquet schema read by Spark; validate it before downstream profile or guardrail checks.",
     "common_failure_causes": [
       "The Parquet path is missing or misspelled.",
       "The file is not valid Parquet.",
-      "The configured lakehouse target is unavailable.",
+      "The configured target cannot be resolved or read.",
       "The caller lacks read permission."
     ],
     "related_guides": [
@@ -6444,11 +6525,11 @@
       }
     ],
     "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
-    "source_start_line": 16,
-    "source_end_line": 84,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L16-L84",
+    "source_start_line": 20,
+    "source_end_line": 88,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L20-L88",
     "docs_path": "api/reference/read_lakehouse_parquet.md",
-    "summary": "Read a Parquet path from a configured Fabric lakehouse Files path."
+    "summary": "Read a Parquet path from a Fabric resolved path."
   },
   {
     "id": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -6602,33 +6683,6 @@
     "summary": "Read a table from a configured Fabric warehouse target."
   },
   {
-    "id": "fabricops_kit.io.resolve_configured_file_path",
-    "name": "resolve_configured_file_path",
-    "qualified_name": "fabricops_kit.io.resolve_configured_file_path",
-    "module": "io",
-    "classification": "Internal",
-    "function_category": "utility",
-    "usage_sources": [],
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config.get_path",
-      "fabricops_kit.config.resolve_fabric_context"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/io.py",
-    "source_start_line": 102,
-    "source_end_line": 105,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.py#L102-L105",
-    "docs_path": null,
-    "summary": "Resolve a Fabric file path through the configured path resolver."
-  },
-  {
     "id": "fabricops_kit.io.resolve_lakehouse_file_location",
     "name": "resolve_lakehouse_file_location",
     "qualified_name": "fabricops_kit.io.resolve_lakehouse_file_location",
@@ -6778,11 +6832,37 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io/shared.py",
-    "source_start_line": 113,
-    "source_end_line": 115,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L113-L115",
+    "source_start_line": 112,
+    "source_end_line": 114,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L112-L114",
     "docs_path": null,
     "summary": "Convert one local Parquet file from nanosecond to microsecond timestamps."
+  },
+  {
+    "id": "fabricops_kit.io.shared.get_path",
+    "name": "get_path",
+    "qualified_name": "fabricops_kit.io.shared.get_path",
+    "module": "io.shared",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.config.get_path"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/io/shared.py",
+    "source_start_line": 102,
+    "source_end_line": 104,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L102-L104",
+    "docs_path": null,
+    "summary": "Resolve a relative file path through the configured Fabric path resolver."
   },
   {
     "id": "fabricops_kit.io.shared.get_spark_session",
@@ -6908,9 +6988,9 @@
     "common_failure_causes": [],
     "related_guides": [],
     "source_path": "src/fabricops_kit/io/shared.py",
-    "source_start_line": 108,
-    "source_end_line": 110,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L108-L110",
+    "source_start_line": 107,
+    "source_end_line": 109,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L107-L109",
     "docs_path": null,
     "summary": "Read Excel binary content from a resolved Fabric path and return a Spark DataFrame."
   },
@@ -6939,33 +7019,6 @@
     "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L92-L94",
     "docs_path": null,
     "summary": "Read from Fabric Warehouse through the Spark connector."
-  },
-  {
-    "id": "fabricops_kit.io.shared.resolve_configured_file_path",
-    "name": "resolve_configured_file_path",
-    "qualified_name": "fabricops_kit.io.shared.resolve_configured_file_path",
-    "module": "io.shared",
-    "classification": "Internal",
-    "function_category": "utility",
-    "usage_sources": [],
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.config.get_path",
-      "fabricops_kit.config.resolve_fabric_context"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/io/shared.py",
-    "source_start_line": 102,
-    "source_end_line": 105,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L102-L105",
-    "docs_path": null,
-    "summary": "Resolve a Fabric file path through the configured path resolver."
   },
   {
     "id": "fabricops_kit.io.shared.resolve_lakehouse_file_location",

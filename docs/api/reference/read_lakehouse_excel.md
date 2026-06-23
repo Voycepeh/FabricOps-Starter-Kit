@@ -12,7 +12,7 @@ Read an Excel workbook from a Fabric resolved path.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L44">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L41">View source on GitHub</a>
 
 Implemented in `src/fabricops_kit/io/read_lakehouse_excel.py`:10.
 
@@ -62,8 +62,8 @@ mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx"
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Relative workbook path or configured child target understood by the Fabric path resolver. |
-| `target` | `str` | No | Logical target from ``00_env_config`` to pass to the Fabric path resolver. |
+| `relative_path` | `str` | Yes | Relative workbook path resolved through ``get_path``. |
+| `target` | `str` | No | Logical target from ``00_env_config``. |
 | `sheet_name` | `str or int, default=0` | No | Worksheet name or index to read. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **read_excel_kwargs Additional keyword arguments passed to ``pandas.read_excel``. |

@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import get_spark_session, read_csv_path, resolve_lakehouse_file_location, resolve_target_store
+from .shared import get_path, get_spark_session, read_csv_path
 
 
 def read_lakehouse_csv(relative_path: str, *, target: str = "source", spark_session=None, header: bool = True, context: dict[str, Any] | None = None, **options):
-    """Read a CSV file from a Fabric lakehouse Files path.
+    """Read a CSV file from a Fabric resolved path.
 
     Parameters
     ----------
     relative_path : str
-        CSV file or folder path under the lakehouse ``Files`` area.
+        CSV file or folder path resolved through ``get_path``.
     target : str, default="source"
-        Logical lakehouse target from ``00_env_config``.
+        Logical target from ``00_env_config``.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.
     header : bool, default=True
@@ -28,9 +28,8 @@ def read_lakehouse_csv(relative_path: str, *, target: str = "source", spark_sess
     Returns
     -------
     pyspark.sql.DataFrame
-        Spark DataFrame loaded from the CSV path.
+        Spark DataFrame loaded from the resolved CSV path.
 
     """
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
-    _relative_path, path = resolve_lakehouse_file_location(store, relative_path)
+    path = get_path(relative_path, target=target, context=context)
     return read_csv_path(get_spark_session(spark_session), path, header=header, options=options)

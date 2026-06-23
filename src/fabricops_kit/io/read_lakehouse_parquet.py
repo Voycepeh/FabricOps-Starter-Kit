@@ -4,24 +4,28 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import (
-    convert_single_parquet_ns_to_us,
-    get_spark_session,
-    resolve_lakehouse_file_location,
-    resolve_lakehouse_file_path,
-    resolve_target_store,
-)
+from .shared import convert_single_parquet_ns_to_us, get_path, get_spark_session
+
+
+def _normalize_file_relative_path(relative_path: str) -> str:
+    """Return a non-empty relative file path for configured path resolution."""
+    value = str(relative_path or "").strip().lstrip("/")
+    if not value:
+        raise ValueError("relative_path must be a non-empty string.")
+    if value.startswith("Files/"):
+        value = value[len("Files/") :]
+    return value
 
 
 def read_lakehouse_parquet(relative_path: str, *, target: str = "source", verbose: bool = True, spark_session=None, context: dict[str, Any] | None = None):
-    """Read a Parquet file from a Fabric lakehouse Files path.
+    """Read a Parquet file from a Fabric resolved path.
 
     Parameters
     ----------
     relative_path : str
-        Parquet file path under the lakehouse ``Files`` area.
+        Parquet file path resolved through ``get_path``.
     target : str, default="source"
-        Logical lakehouse target from ``00_env_config``.
+        Logical target from ``00_env_config``.
     verbose : bool, default=True
         Whether to print read and timestamp-conversion fallback progress.
     spark_session : object, optional
@@ -32,18 +36,18 @@ def read_lakehouse_parquet(relative_path: str, *, target: str = "source", verbos
     Returns
     -------
     pyspark.sql.DataFrame
-        Spark DataFrame loaded from the Parquet path.
+        Spark DataFrame loaded from the resolved Parquet path.
 
     """
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
-    normalized_relative_path, orig_spark_path = resolve_lakehouse_file_location(store, relative_path)
+    normalized_relative_path = _normalize_file_relative_path(relative_path)
+    orig_spark_path = get_path(normalized_relative_path, target=target, context=context)
     spark_obj = get_spark_session(spark_session)
     parts = normalized_relative_path.split("/")
     if len(parts) < 2:
         raise ValueError("relative_path should look like folder/file.parquet or folder/subfolder/file.parquet.")
     tsus_dir = parts[:-2] + [parts[-2] + "_tsus"]
     tsus_relative_path = "/".join(tsus_dir + [parts[-1]])
-    tsus_spark_path = resolve_lakehouse_file_path(store, tsus_relative_path)
+    tsus_spark_path = get_path(tsus_relative_path, target=target, context=context)
     orig_local_path = f"/lakehouse/default/Files/{normalized_relative_path}"
     tsus_local_path = f"/lakehouse/default/Files/{tsus_relative_path}"
     if verbose:
@@ -73,7 +77,7 @@ def read_lakehouse_parquet(relative_path: str, *, target: str = "source", verbos
                 if verbose:
                     print("PATH NOT FOUND for _tsus parquet. Will convert one file and retry.")
                 try:
-                    mssparkutils.fs.mkdirs(resolve_lakehouse_file_path(store, "/".join(tsus_dir)))
+                    mssparkutils.fs.mkdirs(get_path("/".join(tsus_dir), target=target, context=context))
                 except Exception:
                     pass
                 convert_single_parquet_ns_to_us(local_in_path=orig_local_path, local_out_path=tsus_local_path, verbose=verbose)

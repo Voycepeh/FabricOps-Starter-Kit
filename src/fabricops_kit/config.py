@@ -766,39 +766,69 @@ def _join_configured_path(base_path: str, relative_path: str | None = None, *, a
     return path
 
 
-def get_path(env: str, target: str, *, config: Any, relative_path: str | None = None, area: str | None = None) -> str:
-    """Resolve a configured Fabric path for an environment and target.
+def _configured_target_root(target_value: Any, env: str, target: str) -> str:
+    """Return a configured target root path without validating a lakehouse kind."""
+    if isinstance(target_value, (str, Path)):
+        return str(target_value)
+    for attr in ("path", "base_path", "uri", "url"):
+        if hasattr(target_value, attr):
+            value = getattr(target_value, attr)
+            if value:
+                return str(value)
+    try:
+        root_value = getattr(target_value, "root")
+    except Exception as exc:
+        raise ValueError(f"Target '{env}/{target}' does not expose a resolvable Fabric path.") from exc
+    if root_value:
+        return str(root_value)
+    raise ValueError(f"Target '{env}/{target}' does not expose a resolvable Fabric path.")
+
+
+def get_path(
+    path_or_env: str,
+    target: str = "source",
+    *,
+    context: dict[str, Any] | None = None,
+    config: Any | None = None,
+    env: str | None = None,
+    relative_path: str | None = None,
+    area: str | None = "Files",
+) -> str:
+    """Resolve a configured Fabric path.
 
     Parameters
     ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key understood by ``00_env_config``.
-    config : Any
-        Configuration that contains environment-to-target path mappings.
+    path_or_env : str
+        Relative path to resolve through ``00_env_config``. For legacy internal
+        calls that pass ``config`` and ``relative_path``, this may be the
+        environment name.
+    target : str, default="source"
+        Logical target from ``00_env_config``.
+    context : dict[str, Any], optional
+        Active Fabric context override containing ``config`` and ``env``.
+    config : Any, optional
+        Explicit configuration for legacy internal resolver calls.
+    env : str, optional
+        Explicit environment for legacy internal resolver calls.
     relative_path : str, optional
-        Child path to append to the configured target.
+        Child path to resolve when ``path_or_env`` is used as the environment.
     area : str, optional
-        Fabric area, such as ``Files`` or ``Tables``, to append before the
-        relative child path when the configured target is a Fabric store.
+        Fabric area appended before the relative path for FabricStore targets.
 
     Returns
     -------
     str
-        Resolved Fabric path. For configured lakehouse stores this is an
-        ABFSS path rooted at the store; string-like targets are joined
-        directly.
+        Resolved Fabric path.
     """
-    target_value = _get_store(config, env, target)
-    if hasattr(target_value, "root"):
-        return _join_configured_path(target_value.root, relative_path, area=area)
-    for attr in ("path", "base_path", "uri", "url"):
-        if hasattr(target_value, attr):
-            return _join_configured_path(getattr(target_value, attr), relative_path, area=area)
-    if isinstance(target_value, (str, Path)):
-        return _join_configured_path(str(target_value), relative_path, area=area)
-    raise ValueError(f"Target '{env}/{target}' does not expose a resolvable Fabric path.")
+    if relative_path is None:
+        relative_child = path_or_env
+        config_value, env_value, _resolved_context = resolve_fabric_context(config=config, env=env, context=context)
+    else:
+        relative_child = relative_path
+        config_value, env_value, _resolved_context = resolve_fabric_context(config=config, env=env or path_or_env, context=context)
+    target_value = _get_store(config_value, env_value, target)
+    root_path = _configured_target_root(target_value, env_value, target)
+    return _join_configured_path(root_path, relative_child, area=area)
 
 
 # ---------------------------------------------------------------------------

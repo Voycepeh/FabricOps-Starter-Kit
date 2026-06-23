@@ -1,7 +1,7 @@
 # read_lakehouse_csv
 
 
-Read a CSV file from a configured Fabric lakehouse Files path.
+Read a CSV file from a Fabric resolved path.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
@@ -12,7 +12,7 @@ Read a CSV file from a configured Fabric lakehouse Files path.
 
 ## Source
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L36">View source on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L35">View source on GitHub</a>
 
 Implemented in `src/fabricops_kit/io/read_lakehouse_csv.py`:10.
 
@@ -20,7 +20,7 @@ Implemented in `src/fabricops_kit/io/read_lakehouse_csv.py`:10.
 
 ### Use when
 
-- Use for file-based source ingestion when the source is CSV and should be resolved through configured lakehouse paths.
+- Use for file-based source ingestion when the source is CSV and should be resolved through get_path.
 
 ### Do not use when
 
@@ -28,7 +28,7 @@ Implemented in `src/fabricops_kit/io/read_lakehouse_csv.py`:10.
 
 ### Additional context
 
-Reads a CSV file from the Files area of a configured Fabric lakehouse and returns it as a Spark DataFrame.
+Reads a CSV file from a Fabric resolved path and returns it as a Spark DataFrame.
 
 
 ## Signature
@@ -62,15 +62,15 @@ df = read_lakehouse_csv(relative_path="raw/orders/orders.csv", header=True, spar
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | CSV file or folder path under the lakehouse ``Files`` area. |
-| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `relative_path` | `str` | Yes | CSV file or folder path resolved through ``get_path``. |
+| `target` | `str` | No | Logical target from ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `header` | `bool` | No | Whether the first row contains column names. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options. |
 
 ## Returns
 
-Spark DataFrame loaded from the lakehouse Files CSV path.
+Spark DataFrame loaded from the resolved CSV path.
 
 ### Return interpretation
 
@@ -82,10 +82,10 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 
 ### Common failure causes
 
-- The file path is wrong or outside the configured lakehouse.
+- The resolved file path is wrong or unavailable.
 - CSV options do not match the file shape.
 - Spark cannot access the file.
-- The selected environment is missing the source lakehouse target.
+- The selected environment is missing the configured source target.
 
 ## Glossary
 
