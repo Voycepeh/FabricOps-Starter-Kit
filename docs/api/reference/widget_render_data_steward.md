@@ -16,12 +16,17 @@
 Render the standalone data-steward intake widget.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>data_agreement</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">01_agreement</span>
 </p>
 
 **Used in notebooks:** `01_agreement`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L1443-L1461">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/data_agreement.py`:1443.
 
 ## Usage guidance
 

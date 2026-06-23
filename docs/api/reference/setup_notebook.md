@@ -4,12 +4,17 @@
 Shared environment setup and runtime validation for notebook templates.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>config</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">00_env_config</span>
 </p>
 
 **Used in notebooks:** `00_env_config`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1016-L1070">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/config.py`:1016.
 
 ## Usage guidance
 

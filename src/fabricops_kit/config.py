@@ -751,6 +751,56 @@ def _get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | Non
     return paths[env][target]
 
 
+def _join_configured_path(base_path: str, relative_path: str | None = None, *, area: str | None = None) -> str:
+    """Return a configured Fabric path with an optional relative child path."""
+    path = str(base_path).rstrip("/")
+    if area:
+        path = f"{path}/{str(area).strip('/')}"
+    if relative_path is not None:
+        child = str(relative_path or "").strip().lstrip("/")
+        if not child:
+            raise ValueError("relative_path must be a non-empty string.")
+        if area and child.startswith(f"{area.strip('/')}/"):
+            child = child[len(area.strip('/')) + 1 :]
+        path = f"{path}/{child}"
+    return path
+
+
+def get_path(env: str, target: str, *, config: Any, relative_path: str | None = None, area: str | None = None) -> str:
+    """Resolve a configured Fabric path for an environment and target.
+
+    Parameters
+    ----------
+    env : str
+        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+    target : str
+        Target key understood by ``00_env_config``.
+    config : Any
+        Configuration that contains environment-to-target path mappings.
+    relative_path : str, optional
+        Child path to append to the configured target.
+    area : str, optional
+        Fabric area, such as ``Files`` or ``Tables``, to append before the
+        relative child path when the configured target is a Fabric store.
+
+    Returns
+    -------
+    str
+        Resolved Fabric path. For configured lakehouse stores this is an
+        ABFSS path rooted at the store; string-like targets are joined
+        directly.
+    """
+    target_value = _get_store(config, env, target)
+    if hasattr(target_value, "root"):
+        return _join_configured_path(target_value.root, relative_path, area=area)
+    for attr in ("path", "base_path", "uri", "url"):
+        if hasattr(target_value, attr):
+            return _join_configured_path(getattr(target_value, attr), relative_path, area=area)
+    if isinstance(target_value, (str, Path)):
+        return _join_configured_path(str(target_value), relative_path, area=area)
+    raise ValueError(f"Target '{env}/{target}' does not expose a resolvable Fabric path.")
+
+
 # ---------------------------------------------------------------------------
 # Validator layer: notebook naming
 # ---------------------------------------------------------------------------

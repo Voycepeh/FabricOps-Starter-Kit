@@ -4,13 +4,18 @@
 Read a Delta table from a configured Fabric lakehouse target.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>io.read_lakehouse_table</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
 **Used in notebooks:** `02_pipeline`, `99_explore`
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L39">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/io/read_lakehouse_table.py`:10.
 
 ## Usage guidance
 

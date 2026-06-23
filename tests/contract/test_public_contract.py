@@ -579,42 +579,11 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
         assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
 
 
-def test_generated_module_docs_surface_only_active_v1_modules():
-    """Verify generated module docs surface only active v1 modules."""
+def test_generated_module_docs_are_removed_from_public_reference():
+    """Verify generated module-first docs are no longer emitted."""
     root = Path(__file__).parents[2]
-    expected_modules = {
-        "config",
-        "data_agreement",
-        "governance_review",
-        "data_profiling",
-        "fabric_input_output",
-        "io",
-        "io_core",
-        "guardrails",
-        "metadata",
-        "pipeline",
-    }
-    module_docs = {path.stem for path in (root / "docs" / "api" / "modules").glob("*.md") if path.stem != "index"}
-    assert module_docs == expected_modules
-
-
-def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exported():
-    """Verify required v1 imports remain and prompt helpers are not exported."""
-    from fabricops_kit import read_lakehouse_table, setup_metadata_tables, setup_notebook
-
-    assert callable(setup_notebook)
-    assert callable(setup_metadata_tables)
-    assert callable(read_lakehouse_table)
-    forbidden = {
-        "AIPromptConfig",
-        "draft_dq_rules",
-        "BUSINESS_CONTEXT_PROMPT",
-        "PDPA_PERSONAL_IDENTIFIER_PROMPT",
-        "DQ_RULE_SUGGESTION_PROMPT",
-    }
-    assert forbidden.isdisjoint(set(fabricops_kit.__all__))
-    for name in forbidden:
-        assert not hasattr(fabricops_kit, name)
+    module_docs = {path.stem for path in (root / "docs" / "api" / "modules").glob("*.md")}
+    assert module_docs == set()
 
 
 def test_reference_generation_script_succeeds_for_reference_and_module_docs():
@@ -631,4 +600,4 @@ def test_reference_generation_script_succeeds_for_reference_and_module_docs():
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert not (root / "docs" / "reference" / "template-function-map.md").exists()
-    assert (root / "docs" / "api" / "modules" / "config.md").exists()
+    assert not any((root / "docs" / "api" / "modules").glob("*.md"))

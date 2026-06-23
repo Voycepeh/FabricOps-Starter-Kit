@@ -562,41 +562,33 @@ PUBLIC_SYMBOL_DOCS = [{'kind': 'function',
  {'kind': 'function',
   'module': 'fabric_input_output',
   'function_type': 'callable',
-  'summary_override': 'Read an Excel file from a configured Fabric lakehouse Files path.',
+  'summary_override': 'Read an Excel workbook from a Fabric resolved path.',
   'symbol_name': 'read_lakehouse_excel',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when reading .xlsx files from a configured Fabric lakehouse Files path, '
-              'especially small reference files, mapping tables, or manually maintained business '
-              'inputs.',
+  'use_when': 'Use when reading .xlsx workbooks from a relative path or configured target understood by the Fabric path resolver, especially small reference files, mapping tables, or manually maintained business inputs.',
   'do_not_use_when': 'Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL '
                      'tables.',
   'parameters': 'config, env, target, relative_path, optional sheet_name, optional spark_session, '
                 'and pandas read_excel keyword arguments.',
   'returns': 'Spark DataFrame converted from the selected Excel worksheet.',
-  'raises': 'Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when '
-            'the file cannot be read.',
-  'side_effects': 'Reads from lakehouse Files through a temporary local Excel file; it does not '
-                  'write metadata, tables, or files.',
-  'fabric_context': 'Requires 00_env_config config/env/target context for resolving the configured '
-                    'lakehouse Files path.',
+  'raises': 'Raises path resolution, missing file, Spark, pandas, or Excel parser errors when the target cannot be resolved or the workbook cannot be read.',
+  'side_effects': 'Reads from the resolved Fabric path through a temporary local Excel file; it does not write metadata, tables, or files.',
+  'fabric_context': 'Requires 00_env_config config/env/target context for Fabric path resolution.',
   'ai_verification': 'Verify the DataFrame row count and schema after reading, and confirm the '
                      'Excel file is appropriate for a small reference-style input.',
   'preferred_example': 'mapping_df = read_lakehouse_excel('
                        'relative_path="reference/faculty_mapping.xlsx", sheet_name=0, '
                        'spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_lakehouse_table'],
-  'expanded_purpose': 'Reads an Excel file from a configured lakehouse Files path and converts it '
-                      'into a Spark DataFrame for notebook processing.',
-  'when_to_use': 'Use when source data arrives as an Excel workbook and should still follow '
-                 'configured Fabric lakehouse routing.',
+  'expanded_purpose': 'Reads an Excel workbook from a Fabric resolved path and returns a Spark DataFrame for the selected worksheet. Path resolution is delegated to get_path; callers provide a relative path or configured target understood by the Fabric path resolver. The workbook is read with Excel parsing dependencies and converted into a Spark DataFrame.',
+  'when_to_use': 'Use when source data arrives as an Excel workbook and should follow configured Fabric path routing.',
   'glossary_terms': ['source data', 'notebook template'],
-  'return_interpretation': 'The returned DataFrame depends on workbook sheet and parsing options; '
-                           'confirm headers and types before using it as pipeline input.',
+  'return_interpretation': 'The returned DataFrame depends on workbook sheet and parsing options; validate headers and inferred types before using it as pipeline input.',
   'common_failure_causes': ['The workbook path or sheet name is incorrect.',
                             'Excel parsing dependencies are unavailable.',
                             'The workbook layout does not match expected headers.',
-                            'The configured lakehouse target cannot be read.'],
+                            'The configured target cannot be resolved or read.'],
   'related_guides': [{'title': 'Notebook Templates Implementation Guide',
                       'path': '../../notebook-templates-implementation-guide/index.md'}]},
  {'kind': 'function',
@@ -1493,21 +1485,15 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                       'The configured lakehouse target is '
                                                       'unavailable.',
                                                       'The caller lacks read permission.']},
- 'read_lakehouse_excel': {'expanded_purpose': 'Reads an Excel file from a configured lakehouse '
-                                              'Files path and converts it into a Spark DataFrame '
-                                              'for notebook processing.',
-                          'when_to_use': 'Use when source data arrives as an Excel workbook and '
-                                         'should still follow configured Fabric lakehouse routing.',
+ 'read_lakehouse_excel': {'expanded_purpose': 'Reads an Excel workbook from a Fabric resolved path and returns a Spark DataFrame for the selected worksheet. Path resolution is delegated to get_path; callers provide a relative path or configured target understood by the Fabric path resolver. The workbook is read with Excel parsing dependencies and converted into a Spark DataFrame.',
+                          'when_to_use': 'Use when source data arrives as an Excel workbook and should follow configured Fabric path routing.',
                           'glossary_terms': ['source data', 'notebook template'],
-                          'return_interpretation': 'The returned DataFrame depends on workbook '
-                                                   'sheet and parsing options; confirm headers and '
-                                                   'types before using it as pipeline input.',
+                          'return_interpretation': 'The returned DataFrame depends on workbook sheet and parsing options; validate headers and inferred types before using it as pipeline input.',
                           'common_failure_causes': ['The workbook path or sheet name is incorrect.',
                                                     'Excel parsing dependencies are unavailable.',
                                                     'The workbook layout does not match expected '
                                                     'headers.',
-                                                    'The configured lakehouse target cannot be '
-                                                    'read.']},
+                                                    'The configured target cannot be resolved or read.']},
  'read_warehouse_table': {'expanded_purpose': 'Reads data from a configured Fabric Warehouse table '
                                               'or query target into a Spark DataFrame.',
                           'when_to_use': 'Use when source data lives in a Fabric Warehouse rather '

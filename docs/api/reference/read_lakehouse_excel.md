@@ -1,21 +1,26 @@
 # read_lakehouse_excel
 
 
-Read an Excel file from a configured Fabric lakehouse Files path.
+Read an Excel workbook from a Fabric resolved path.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Module: <code>io.read_lakehouse_excel</code></span>
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">No starter notebook usage detected</span>
+<span class="reference-chip">Usage detection may exclude indirect references</span>
 </p>
 
-**Used in notebooks:** Not currently detected in starter notebooks.
+**Used in notebooks:** Starter notebook usage is generated from detected notebook references and may exclude indirect or generated usage.
+
+## Source
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L44">View source on GitHub</a>
+
+Implemented in `src/fabricops_kit/io/read_lakehouse_excel.py`:10.
 
 ## Usage guidance
 
 ### Use when
 
-- Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.
+- Use when source data arrives as an Excel workbook and should follow configured Fabric path routing.
 
 ### Do not use when
 
@@ -23,7 +28,7 @@ Read an Excel file from a configured Fabric lakehouse Files path.
 
 ### Additional context
 
-Reads an Excel file from a configured lakehouse Files path and converts it into a Spark DataFrame for notebook processing.
+Reads an Excel workbook from a Fabric resolved path and returns a Spark DataFrame for the selected worksheet. Path resolution is delegated to get_path; callers provide a relative path or configured target understood by the Fabric path resolver. The workbook is read with Excel parsing dependencies and converted into a Spark DataFrame.
 
 
 ## Signature
@@ -57,8 +62,8 @@ mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx"
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Excel file path under the lakehouse ``Files`` area. |
-| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `relative_path` | `str` | Yes | Relative workbook path or configured child target understood by the Fabric path resolver. |
+| `target` | `str` | No | Logical target from ``00_env_config`` to pass to the Fabric path resolver. |
 | `sheet_name` | `str or int, default=0` | No | Worksheet name or index to read. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **read_excel_kwargs Additional keyword arguments passed to ``pandas.read_excel``. |
@@ -69,18 +74,18 @@ Spark DataFrame converted from the selected Excel worksheet.
 
 ### Return interpretation
 
-The returned DataFrame depends on workbook sheet and parsing options; confirm headers and types before using it as pipeline input.
+The returned DataFrame depends on workbook sheet and parsing options; validate headers and inferred types before using it as pipeline input.
 
 ## Raises / Errors
 
-Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.
+Raises path resolution, missing file, Spark, pandas, or Excel parser errors when the target cannot be resolved or the workbook cannot be read.
 
 ### Common failure causes
 
 - The workbook path or sheet name is incorrect.
 - Excel parsing dependencies are unavailable.
 - The workbook layout does not match expected headers.
-- The configured lakehouse target cannot be read.
+- The configured target cannot be resolved or read.
 
 ## Glossary
 

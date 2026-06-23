@@ -121,11 +121,9 @@ def test_generated_reference_includes_every_exported_public_callable_page() -> N
     assert (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
 
 
-def test_generated_relationship_links_respect_public_and_internal_routes() -> None:
-    """Verify public callables link to public pages and private helpers stay chips."""
-    pipeline_page = (DOCS / "api" / "modules" / "pipeline.md").read_text(encoding="utf-8")
+def test_generated_relationship_links_respect_public_routes_without_module_pages() -> None:
+    """Verify public references avoid module-first relationship pages."""
+    reference_text = (DOCS / "reference" / "index.md").read_text(encoding="utf-8")
 
-    assert 'href="../reference/display_guardrail_results/"' in pipeline_page
-    assert "_rows_for_display" not in pipeline_page
-    assert 'href="../reference/build_guardrail_summary_rows/"' not in pipeline_page
-    assert 'href="../reference/build_guardrail_detail_rows/"' not in pipeline_page
+    assert "api/modules" not in reference_text
+    assert "api/reference/profile_dataframe" in reference_text
