@@ -142,9 +142,11 @@ extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
   - javascripts/mermaid-init.js
   - javascripts/callable-finder.js
+  - javascripts/table-controls.js
 
 extra_css:
   - stylesheets/breadcrumbs.css
   - stylesheets/api-chips.css
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
+  - stylesheets/table-controls.css
