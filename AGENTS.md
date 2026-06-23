@@ -21,6 +21,32 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Keep metadata responsibilities separated: `METADATA_DATA_CATALOGUE` stores observed table and column profiles, `METADATA_GUARDRAIL_RULES` is approved
   guardrail intent, and `METADATA_GUARDRAIL_RESULTS` is runtime outcomes.
 
+
+## Function architecture rules
+
+- Public functions use non-underscore names and are notebook-facing or user-facing API entrypoints.
+- Internal functions use non-underscore names and are architecture-visible implementation units.
+- Private helper functions use leading underscores and are hidden implementation details.
+- New architecture-visible internal functions must not be created with leading underscores.
+- New underscore-prefixed functions must be private helpers only.
+- Public functions must not call other public functions.
+- Internal functions must not call public functions.
+- Public and internal functions may call their own private helpers.
+- Classes, dataclasses, enums, constants, protocols, config objects, and external libraries are supporting objects, not architecture layers.
+- Dashboard counts must not include private helpers.
+- New dashboard metrics must be public-callable-centric unless explicitly marked as internal/debug.
+- Coding agents must update tests and snapshots whenever architecture classification or dashboard outputs change.
+
+## Before opening a PR
+
+- Run the architecture guardrail tests.
+- Run the dashboard snapshot tests.
+- Confirm no new underscore function is surfaced as an Internal function.
+- Confirm no private helper appears in Public API Surface KPIs.
+- Confirm public-to-public calls are not introduced.
+- Confirm internal-to-public calls are not introduced.
+- Confirm public notebook-facing API behavior is intentionally preserved or explicitly documented as breaking.
+
 ## Public safety and positioning
 
 - Keep all examples and guidance generic and public-safe.

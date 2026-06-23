@@ -489,7 +489,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Total callables" in inventory_text
     assert "Public API" in inventory_text
     assert "Supporting functions" in inventory_text
-    assert "Non-function records" in inventory_text
+    assert "Hidden private helpers" in inventory_text
     assert "Complete discovered callable inventory." in inventory_text
     assert "Internal functions behind the public API." in inventory_text
     assert "callable_inventory_metrics" in inventory_text
@@ -600,12 +600,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<span class="reference-kpi-title">Total callables</span>' in reference_text
     assert '<span class="reference-kpi-title">Public API</span>' in reference_text
     assert '<span class="reference-kpi-title">Supporting functions</span>' in reference_text
-    assert '<span class="reference-kpi-title">Non-function records</span>' in reference_text
-    assert '<strong class="reference-kpi-value">12</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">309</strong>' in reference_text
+    assert '<span class="reference-kpi-title">Hidden private helpers</span>' in reference_text
+    assert '<strong class="reference-kpi-value">9</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">60</strong>' in reference_text
     assert '<strong class="reference-kpi-value">26</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">261</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">22</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">34</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">227</strong>' in reference_text
     assert "Callable metrics are generated from the callable inventory data." in reference_text
     assert "270 Supporting internal functions" not in reference_text
     assert "Supporting internal functions" not in reference_text.split("## Find a function", 1)[0]
@@ -637,7 +637,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callable_inventory_metrics",
         "callable_role_group",
     } <= set(summary_counts)
-    assert set(summary_counts["function_type"]) == {"Public function", "Internal function", "Supporting object"}
+    assert set(summary_counts["function_type"]) == {"Public function", "Internal function"}
     assert set(summary_counts["review_status"]) == {
         "classified",
         "classification_pending",
@@ -650,9 +650,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert summary_counts["callable_role_group"]
 
     public_api_surface = summary_counts["public_api_surface"]
-    assert summary_counts["total_callables"] == 309
-    assert summary_counts["callable_kind"]["function"] == 287
-    assert summary_counts["total_callables"] - summary_counts["callable_kind"]["function"] == 22
+    assert summary_counts["total_callables"] == 60
+    assert summary_counts["callable_kind"]["function"] == 60
+    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
+    assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
     assert {
         "public_api_entrypoints",
         "long_call_chains",
@@ -695,17 +696,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     }
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
-    assert {"Public function", "Internal function", "Supporting object"} <= {row["function_type"] for row in function_inventory}
-    assert {"classified", "classification_pending", "implicit_lifecycle", "property_accessor", "unreachable"} <= {
+    assert {"Public function", "Internal function"} <= {row["function_type"] for row in function_inventory}
+    assert {"classified", "classification_pending"} <= {
         row["review_status"] for row in function_inventory
     }
     assert sum(1 for row in function_inventory if row["layer"] == "public") == summary_counts["layer"]["public"]
     assert sum(1 for row in function_inventory if row["layer"] == "internal") == summary_counts["layer"]["internal"]
-    assert sum(1 for row in function_inventory if row["layer"] == "supporting_object") == summary_counts["layer"]["supporting_object"]
-    assert (
-        sum(1 for row in function_inventory if row["review_status"] == "unreachable")
-        == summary_counts["review_status"]["unreachable"]
-    )
+    assert summary_counts["review_status"]["unreachable"] == 0
     assert {row["function_name"] for row in function_inventory if row["layer"] == "public"} == exported_symbols
     assert summary_counts["recommended_action"] == {
         action: sum(1 for row in function_inventory if row["recommended_action"] == action)
@@ -718,58 +715,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         and "Possible inline/private helper" in row["signals"]
         for row in function_inventory
     )
-    lifecycle_names = {
-        "DataAgreementConfig.__post_init__",
-        "FrameworkConfig.__post_init__",
-        "GovernanceConfig.__post_init__",
-        "LineageConfig.__post_init__",
-        "NotebookRuntimeConfig.__post_init__",
-        "PathConfig.__post_init__",
-        "QualityConfig.__post_init__",
-        "FabricStore.__post_init__",
-    }
-    lifecycle_rows = {row["function_name"]: row for row in function_inventory if row["function_name"] in lifecycle_names}
-    assert set(lifecycle_rows) == lifecycle_names
-    assert all(row["function_type"] == "Internal function" for row in lifecycle_rows.values())
-    assert all(row["layer"] == "internal" for row in lifecycle_rows.values())
-    assert all(row["review_status"] == "implicit_lifecycle" for row in lifecycle_rows.values())
-    assert all(row["callable_kind"] == "implicit_lifecycle_method" for row in lifecycle_rows.values())
-    assert all(row["recommended_action"] == "Keep lifecycle method" for row in lifecycle_rows.values())
-    assert all("lifecycle_method" in row["callable_role"] for row in lifecycle_rows.values())
-    assert all("implicit_lifecycle_reachable" in row["callable_role"] for row in lifecycle_rows.values())
-    assert all(row["callable_role_group"] == "lifecycle_method" for row in lifecycle_rows.values())
-    assert all(row["callable_role_group_label"] == "Lifecycle method" for row in lifecycle_rows.values())
-    assert all("lifecycle_method" in row["callable_role_detail"] for row in lifecycle_rows.values())
-    assert all(row["reachability_kind"] == "implicit_lifecycle_reachable" for row in lifecycle_rows.values())
-    assert all(row["reachability_label"] == "Lifecycle reachable" for row in lifecycle_rows.values())
-    assert all("implicit_lifecycle_reachability" in row["signals"] for row in lifecycle_rows.values())
-    assert all("Utility but low reuse" not in row["signals"] for row in lifecycle_rows.values())
-    root_row = next(row for row in function_inventory if row["qualified_name"] == "fabricops_kit.io_core.FabricStore.root")
-    assert root_row["function_name"] == "FabricStore.root"
-    assert root_row["function_type"] == "Internal function"
-    assert root_row["layer"] == "internal"
-    assert root_row["callable_kind"] == "property_accessor"
-    assert root_row["review_status"] == "property_accessor"
-    assert root_row["recommended_action"] == "Keep property accessor"
-    assert "Utility but low reuse" not in root_row["signals"]
-    assert root_row["recommended_action"] != "Orphaned callable"
+    assert all(not row["function_name"].split(".")[-1].startswith("_") for row in function_inventory)
     rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
-    assert "config_model_class" in rows_by_qn["fabricops_kit.config.FrameworkConfig"]["callable_role"]
-    assert "utility_function" not in rows_by_qn["fabricops_kit.config.FrameworkConfig"]["callable_role"]
-    assert rows_by_qn["fabricops_kit.config.FrameworkConfig"]["function_type"] == "Supporting object"
-    assert "context_model_class" in rows_by_qn["fabricops_kit.config.NotebookSetupContext"]["callable_role"]
-    assert "result_model_class" in rows_by_qn["fabricops_kit.config.ConfigSmokeCheckResult"]["callable_role"]
-    assert {"internal_resolver", "shared_internal_service", "store_resolver"} <= set(rows_by_qn["fabricops_kit.config._get_store"]["callable_role"])
-    assert rows_by_qn["fabricops_kit.config._get_store"]["recommended_action"] != "Architecture violation"
-    assert {"internal_resolver", "runtime_context_resolver", "shared_internal_service"} <= set(rows_by_qn["fabricops_kit.config.resolve_fabric_context"]["callable_role"])
-    assert rows_by_qn["fabricops_kit.config.resolve_fabric_context"]["recommended_action"] != "Architecture violation"
-    assert {"audit_time_utility", "shared_internal_service"} <= set(rows_by_qn["fabricops_kit.config._current_audit_timestamp"]["callable_role"])
-    assert rows_by_qn["fabricops_kit.config._current_audit_timestamp"]["recommended_action"] != "Architecture violation"
-    assert rows_by_qn["fabricops_kit.config._normalize_widget_config"]["recommended_action"] != "Orphaned callable"
-    assert "implicit_lifecycle_reachable" in rows_by_qn["fabricops_kit.config._normalize_widget_config"]["callable_role"]
-    assert "implicit_lifecycle_reachable" not in rows_by_qn["fabricops_kit.config._normalize_path_config"]["callable_role"]
+    assert "fabricops_kit.config.FrameworkConfig" not in rows_by_qn
+    assert "fabricops_kit.io_core.FabricStore.root" not in rows_by_qn
     assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
-    assert any(row["review_status"] == "unreachable" and row["recommended_action"] == "Orphaned callable" and "unreachable_candidate" in row["callable_role"] for row in function_inventory)
+    assert all(row["review_status"] != "unreachable" for row in function_inventory)
     expected_inventory_keys = {
         "qualified_name",
         "function_name",
@@ -1128,7 +1079,7 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Downstream callables: 14"') == 1
+    assert text.count('??? info "Downstream callables: 2"') == 1
     assert "Dependency data is generated from the callable architecture inventory." in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
@@ -1139,20 +1090,9 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
         implementation_section,
     )
 
-    for helper_name in [
-        "_guardrail_reason",
-        "_dq_reason",
-        "_freshness_reason",
-        "_profile_behavior_reason",
-        "_result_reason",
-        "_result_status",
-        "_schema_reason",
-        "_next_action",
-        "_result_can_continue",
-        "_table_keys",
-        "_yes_no",
-    ]:
+    for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
+    assert "_guardrail_reason" not in implementation_section
 
 
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
@@ -1160,7 +1100,7 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Downstream callables: 14"') == 1
+    assert implementation_section.count('??? info "Downstream callables: 2"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
     assert (
@@ -1172,22 +1112,9 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
-    for helper_name in [
-        "build_guardrail_detail_rows",
-        "_guardrail_reason",
-        "_dq_reason",
-        "_result_reason",
-        "_freshness_reason",
-        "_result_status",
-        "_profile_behavior_reason",
-        "_schema_reason",
-        "_next_action",
-        "_result_can_continue",
-        "_table_keys",
-        "_yes_no",
-        "build_guardrail_summary_rows",
-    ]:
+    for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
+    assert "_guardrail_reason" not in implementation_section
 
 
 def _reference_call_tree_rows(text: str) -> list[str]:
@@ -1244,10 +1171,10 @@ def test_display_guardrail_results_dependency_count_matches_callable_architectur
     reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
     detail_page = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
 
-    assert flow["downstream_count"] == 14
+    assert flow["downstream_count"] == 2
     assert 'data-callable-name="display_guardrail_results"' in reference_index
-    assert "Downstream callables: 14" in reference_index
-    assert '??? info "Downstream callables: 14"' in detail_page
+    assert "Downstream callables: 2" in reference_index
+    assert '??? info "Downstream callables: 2"' in detail_page
     assert _reference_call_tree_rows(detail_page) == _dashboard_flow_tree_rows(flow)
 
 
@@ -1265,7 +1192,8 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         match = re.search(r'<div class="reference-call-tree" role="tree"[^>]*>(?P<body>.*?)</div>', text, re.DOTALL)
-        assert match, page
+        if not match:
+            continue
         slug = page.stem
         first_row = match.group("body").split("\n", 2)[1]
         assert f'href="{slug}/"' not in match.group("body"), page
@@ -1277,13 +1205,12 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     """Verify public callable helper trees appear directly below the title."""
     text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
     title_index = text.index("# prepare_pipeline_table_configs")
-    call_tree_index = text.index('??? info "Downstream callables: 5"')
     description_index = text.index("Prepare source or target table configs for 02_pipeline.")
     chips_index = text.index('<span class="reference-chip">Module: <code>pipeline</code></span>')
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
-    assert title_index < call_tree_index < description_index < chips_index < usage_index
-    assert text.count('??? info "Downstream callables: 5"') == 1
+    assert title_index < description_index < chips_index < usage_index
+    assert '??? info "Downstream callables:' not in text
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
@@ -1753,3 +1680,37 @@ def test_callable_architecture_layer_rules_and_labels():
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long call chain"
     assert generator._display_label("Single-use helper candidate") == "Merge candidate"
+
+
+def test_callable_architecture_validation_rejects_private_visible_rows(monkeypatch, tmp_path) -> None:
+    """Verify callable architecture validation fails when private helpers surface."""
+    import scripts.validate_callable_architecture as validator
+
+    flow = {
+        "function_inventory": [
+            {
+                "qualified_name": "fabricops_kit.example._private_helper",
+                "function_name": "_private_helper",
+                "function_type": "Internal function",
+                "layer": "internal",
+                "callable_kind": "function",
+            }
+        ],
+        "summary_counts": {
+            "function_type": {"Internal function": 1},
+            "layer": {"internal": 1},
+            "public_api_surface": {"public_api_entrypoints": 0},
+            "callable_inventory_metrics": {"total_callables": 1},
+        },
+        "public_entrypoint_flow": [],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("", encoding="utf-8")
+    inventory.write_text("", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+
+    failures = validator._failures(flow)
+
+    assert any("Private helper surfaced" in failure for failure in failures)

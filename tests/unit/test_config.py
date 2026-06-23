@@ -629,11 +629,7 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
 
     inventory = json.loads(Path("docs/reference/_data/callable-flow.json").read_text(encoding="utf-8"))["function_inventory"]
     rows = {row["qualified_name"]: row for row in inventory}
-    shared = rows["fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow"]
-
-    assert shared["dependency_role"] == "internal_workflow"
-    assert "shared_widget_rendering_workflow" in shared["callable_role"]
-    assert "internal_adapter" not in shared["callable_role"]
+    assert "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow" not in rows
     assert "fabricops_kit.data_agreement._render_maintenance_widget_workflow" not in rows
     assert "fabricops_kit.data_agreement._render_data_steward_widget_workflow" not in rows
     assert "fabricops_kit.data_agreement._render_data_agreement_widget_workflow" not in rows
