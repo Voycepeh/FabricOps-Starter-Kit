@@ -347,6 +347,21 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode explicitly allows it." in dashboard_text
     assert "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and flow tree tags as grounding evidence." in dashboard_text
     assert "Propose an ordered implementation plan, list tests required before and after refactor, and call out migration risks." in dashboard_text
+    assert "final_output_required" in dashboard_text
+    assert "## Final output required" in dashboard_text
+    assert "Write the final output as instructions that can be pasted into Codex, Claude Code, Cursor, or another coding agent." in dashboard_text
+    assert "Produce a PR execution plan for a coding agent targeting the main branch." in dashboard_text
+    assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode allows it." in dashboard_text
+    assert "Group refactor actions by helper/function." in dashboard_text
+    assert "Identify architecture violations to address." in dashboard_text
+    assert "Identify helpers to merge, move, or keep." in dashboard_text
+    assert "List implementation steps in order." in dashboard_text
+    assert "List tests to add, update, and run." in dashboard_text
+    assert "Define acceptance criteria." in dashboard_text
+    assert "Call out risks and rollback notes." in dashboard_text
+    assert "Do not write code yet and do not generate a patch." in dashboard_text
+    assert dashboard_text.index("## Final output required") > dashboard_text.index("## Batch accounting")
+    assert "Do not write code yet and do not generate a patch.\n`;" in dashboard_text
     assert "source_url:row.source_url||null" in dashboard_text
     assert "docs_url:row.docs_url||null" in dashboard_text
     assert "file_path:row.source_path||null" in dashboard_text
