@@ -1705,7 +1705,7 @@ Keep public API flow clear, simplify long call chains, and reduce confusing arch
 ## Selected callables
 ${packet.callables.map(callableMarkdown).join("\n")}
 
-## Requested restore-io-resolver-contract
+## Requested work
 Review each callable and preserve expected public behavior unless the selected mode allows otherwise.
 
 ## Output required from AI
@@ -1834,7 +1834,7 @@ Write the final output as instructions that can be pasted into Codex, Claude Cod
           const status =
             error && error.message && error.message.startsWith("HTTP ")
               ? error.message
-              : "Netrestore-io-resolver-contract/parse error";
+              : "Network/parse error";
           renderLoadStatus(
             `Failed to load callable-flow data. Attempted URL: ${attemptedUrl}. HTTP status: ${status}. Error message: ${error && error.message ? error.message : String(error)}`,
             true,

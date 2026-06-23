@@ -52,6 +52,16 @@ def _subsection_text(page_text: str, subsection: str) -> str:
     return after.split("\n### ", 1)[0].strip()
 
 
+def _normalize_whitespace(value: str) -> str:
+    """Return text with formatter-introduced whitespace collapsed."""
+    return " ".join(value.split())
+
+
+def _remove_whitespace(value: str) -> str:
+    """Return text with whitespace removed for formatted HTML/JS assertions."""
+    return re.sub(r"\s+", "", value)
+
+
 def _exported_symbols() -> list[str]:
     """Return exported public symbol names from the package root."""
     init_path = ROOT / "src" / "fabricops_kit" / "__init__.py"
@@ -249,9 +259,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
     inventory_text = inventory_path.read_text(encoding="utf-8")
     reference_text = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
+    normalized_dashboard_text = _normalize_whitespace(dashboard_text)
+    compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
+    compact_inventory_text = _remove_whitespace(inventory_text).replace('"', "'")
+    normalized_inventory_text = _normalize_whitespace(inventory_text)
 
     assert "Callable Architecture" in dashboard_text
-    assert "High-level triage for notebook-facing public APIs, dependency depth, and architecture risk." in dashboard_text
+    assert (
+        "High-level triage for notebook-facing public APIs, dependency depth, and architecture risk."
+        in normalized_dashboard_text
+    )
     assert "Inventory" in dashboard_text
     assert "Decision mode: Public API Surface" in dashboard_text
     assert "Generated at:" in dashboard_text
@@ -306,17 +323,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Callable flow" in dashboard_text
     assert "Showing flow for" in dashboard_text
     assert "callable-flow-filter-banner" in dashboard_text
-    assert "justify-content:space-between" in dashboard_text
+    assert "justify-content:space-between" in compact_dashboard_text
     assert "callable-flow-reset-button" in dashboard_text
-    assert "background:#15803d" in dashboard_text
+    assert "background:#15803d" in compact_dashboard_text
     assert "Back to all public callables" in dashboard_text
-    assert "showSelectedBanner=Boolean(state.collapsedPublicList&&active)" in dashboard_text
+    assert "showSelectedBanner=Boolean(state.collapsedPublicList&&active)" in compact_dashboard_text
     assert 'id="backToAllPublicCallables"' in dashboard_text
-    assert "reset.onclick=showAllPublicCallables" in dashboard_text
+    assert "reset.onclick=showAllPublicCallables" in compact_dashboard_text
     assert "showAllPublicCallablesInline" not in dashboard_text
     assert "Show all public callables</button>`:'';const inline" not in dashboard_text
-    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1" in dashboard_text
-    assert ".surface-card span{display:block;line-height:1.2" in dashboard_text
+    assert ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1" in compact_dashboard_text
+    assert ".surface-cardspan{display:block;line-height:1.2" in compact_dashboard_text
     assert "Review note" in dashboard_text
     assert "data-sort-key=\"callable\"" in dashboard_text
     assert "data-sort-key=\"module\"" in dashboard_text
@@ -325,7 +342,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "data-sort-key=\"downstream\"" in dashboard_text
     assert "data-sort-key=\"depth\"" in dashboard_text
     assert "function stableSortRows(rows)" in dashboard_text
-    assert "a.index-b.index" in dashboard_text
+    assert "a.index-b.index" in compact_dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Copy Markdown" in dashboard_text
@@ -359,7 +376,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "planning_instructions" in dashboard_text
     assert "required_tests" in dashboard_text
     assert "function publicCallableFindingRows(flow)" in dashboard_text
-    assert "publicFindings=publicCallableFindingRows(f)" in dashboard_text
+    assert "publicFindings=publicCallableFindingRows(f)" in compact_dashboard_text
     assert "#### Public callable findings" in dashboard_text
     assert "#### Architecture findings" in dashboard_text
     assert "#### Internal helper cleanup candidates" in dashboard_text
@@ -385,69 +402,69 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Do not write code yet and do not generate a patch." in dashboard_text
     assert dashboard_text.index("## Final output required") > dashboard_text.index("## Batch accounting")
     assert "Do not write code yet and do not generate a patch.\n`;" in dashboard_text
-    assert "source_url:row.source_url||null" in dashboard_text
-    assert "docs_url:row.docs_url||null" in dashboard_text
-    assert "file_path:row.source_path||null" in dashboard_text
-    assert "line_start:row.source_start_line||null" in dashboard_text
+    assert "source_url:row.source_url||null" in compact_dashboard_text
+    assert "docs_url:row.docs_url||null" in compact_dashboard_text
+    assert "file_path:row.source_path||null" in compact_dashboard_text
+    assert "line_start:row.source_start_line||null" in compact_dashboard_text
     assert "function moduleLink(module)" in dashboard_text
-    assert "function moduleHref(module){return ''}" in dashboard_text
+    assert re.search(r"function moduleHref\(module\)\s*\{\s*return ['\"]{2};?\s*\}", dashboard_text)
     assert "../api/modules/${module}/" not in dashboard_text
     assert "../../api/modules/${module}/" not in dashboard_text
     assert "GITHUB_SOURCE_BASE" in dashboard_text
-    assert "return `${GITHUB_SOURCE_BASE}${path}${anchor}`" in dashboard_text
-    assert "architectureViolationFlows=flows.filter" in dashboard_text
-    assert "shortenableFlowCount=flows.filter" in dashboard_text
+    assert "return`${GITHUB_SOURCE_BASE}${path}${anchor}`" in compact_dashboard_text
+    assert "architectureViolationFlows=flows.filter" in compact_dashboard_text
+    assert "shortenableFlowCount=flows.filter" in compact_dashboard_text
     assert "function architectureFindingRows(flow)" in dashboard_text
     assert "function architectureFindingCount(flow)" in dashboard_text
-    assert "c.architecture_result==='Violation'||c.recommended_action==='Architecture violation'" in dashboard_text
-    assert "function markdownLink(i,label)" in dashboard_text
+    assert "c.architecture_result==='Violation'||c.recommended_action==='Architectureviolation'" in compact_dashboard_text
+    assert "functionmarkdownLink(i,label)" in compact_dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
     assert "direct callees" in dashboard_text
-    assert "disabled>Copy JSON" in dashboard_text
-    assert "disabled>Copy Markdown" in dashboard_text
-    assert "disabled>Download JSON" in dashboard_text
+    assert "disabled>CopyJSON" in compact_dashboard_text
+    assert "disabled>CopyMarkdown" in compact_dashboard_text
+    assert "disabled>DownloadJSON" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
-    assert "decisionSearch:''" in dashboard_text
-    assert "quickFilter:'all'" in dashboard_text
-    assert "const DOWNSTREAM_BANDS=" in dashboard_text
-    assert "['downstream_0','0',v=>v===0]" in dashboard_text
-    assert "['downstream_1_2','1–2',v=>v>=1&&v<=2]" in dashboard_text
-    assert "['downstream_3_5','3–5',v=>v>=3&&v<=5]" in dashboard_text
-    assert "['downstream_6_10','6–10',v=>v>=6&&v<=10]" in dashboard_text
-    assert "['downstream_gt_10','>10',v=>v>10]" in dashboard_text
-    assert "const DEPTH_BANDS=" in dashboard_text
-    assert "['depth_0_1','0–1',v=>v>=0&&v<=1]" in dashboard_text
-    assert "['depth_2_3','2–3',v=>v>=2&&v<=3]" in dashboard_text
-    assert "['depth_4_5','4–5',v=>v>=4&&v<=5]" in dashboard_text
-    assert "['depth_gte_6','>=6',v=>v>=6]" in dashboard_text
-    assert "const ISSUE_BANDS=" in dashboard_text
-    assert "['issues_0','No violations',v=>v===0]" in dashboard_text
-    assert "['issues_1','1 violation',v=>v===1]" in dashboard_text
-    assert "['issues_gte_2','2+ violations',v=>v>=2]" in dashboard_text
-    assert "const ISSUE_BOOLEAN_BANDS=" in dashboard_text
-    assert "['issues_gte_1','1+ violations',v=>v>=1]" in dashboard_text
+    assert "decisionSearch:''" in compact_dashboard_text
+    assert "quickFilter:'all'" in compact_dashboard_text
+    assert "constDOWNSTREAM_BANDS=" in compact_dashboard_text
+    assert "['downstream_0','0',(v)=>v===0]" in compact_dashboard_text
+    assert "['downstream_1_2','1–2',(v)=>v>=1&&v<=2]" in compact_dashboard_text
+    assert "['downstream_3_5','3–5',(v)=>v>=3&&v<=5]" in compact_dashboard_text
+    assert "['downstream_6_10','6–10',(v)=>v>=6&&v<=10]" in compact_dashboard_text
+    assert "['downstream_gt_10','>10',(v)=>v>10]" in compact_dashboard_text
+    assert "constDEPTH_BANDS=" in compact_dashboard_text
+    assert "['depth_0_1','0–1',(v)=>v>=0&&v<=1]" in compact_dashboard_text
+    assert "['depth_2_3','2–3',(v)=>v>=2&&v<=3]" in compact_dashboard_text
+    assert "['depth_4_5','4–5',(v)=>v>=4&&v<=5]" in compact_dashboard_text
+    assert "['depth_gte_6','>=6',(v)=>v>=6]" in compact_dashboard_text
+    assert "constISSUE_BANDS=" in compact_dashboard_text
+    assert "['issues_0','Noviolations',(v)=>v===0]" in compact_dashboard_text
+    assert "['issues_1','1violation',(v)=>v===1]" in compact_dashboard_text
+    assert "['issues_gte_2','2+violations',(v)=>v>=2]" in compact_dashboard_text
+    assert "constISSUE_BOOLEAN_BANDS=" in compact_dashboard_text
+    assert "['issues_gte_1','1+violations',(v)=>v>=1]" in compact_dashboard_text
     assert "function architectureViolationCount(flow)" in dashboard_text
-    assert "if(typeof value==='boolean')return value?1:0" in dashboard_text
+    assert "if(typeofvalue==='boolean')returnvalue?1:0" in compact_dashboard_text
     assert "function issueBandsForRows(rows)" in dashboard_text
-    assert "?ISSUE_BANDS:ISSUE_BOOLEAN_BANDS" in dashboard_text
-    assert "function matchesBand(flow,bandValue,bands,metric)" in dashboard_text
+    assert "?ISSUE_BANDS:ISSUE_BOOLEAN_BANDS" in compact_dashboard_text
+    assert "functionmatchesBand(flow,bandValue,bands,metric)" in compact_dashboard_text
     assert "function populateBandFilter" not in dashboard_text
     assert "matchesBand(f,state.decisionDownstreamBand" not in dashboard_text
     assert "matchesBand(f,state.decisionDepthBand" not in dashboard_text
     assert "matchesBand(f,state.decisionIssueBand" not in dashboard_text
     assert "['decisionMinDownstream','decisionDownstreamBand']" not in dashboard_text
-    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" in dashboard_text
+    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" in compact_dashboard_text
     assert "populateBandFilter('decisionMinDownstream'" not in dashboard_text
     assert "populateBandFilter('decisionMinDepth'" not in dashboard_text
     assert "populateBandFilter('decisionMinIssues'" not in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
     card_order = [
-        dashboard_text.index("label:'Public callables scanned'"),
-        dashboard_text.index("label:'High-priority public callables'"),
-        dashboard_text.index("label:'Architecture violations'"),
-        dashboard_text.index("label:'Long public flows'"),
-        dashboard_text.index("label:'Public flows that can be shortened'"),
+        compact_dashboard_text.index("label:'Publiccallablesscanned'"),
+        compact_dashboard_text.index("label:'High-prioritypubliccallables'"),
+        compact_dashboard_text.index("label:'Architectureviolations'"),
+        compact_dashboard_text.index("label:'Longpublicflows'"),
+        compact_dashboard_text.index("label:'Publicflowsthatcanbeshortened'"),
     ]
     assert card_order == sorted(card_order)
     assert "Notebook-facing APIs included in this decision view." in dashboard_text
@@ -461,57 +478,57 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "label:'Merge candidates'" not in dashboard_text
     assert "value:s.merge_candidates" not in dashboard_text
     assert "305 Merge candidates" not in dashboard_text
-    assert "Architecture metrics summarize public entrypoint flow risk. Use Inventory for helper-level cleanup details." in dashboard_text
+    assert "Architecture metrics summarize public entrypoint flow risk. Use Inventory for helper-level cleanup details." in normalized_dashboard_text
     assert "Review detailed callable actions in Inventory" not in dashboard_text
     assert "architecture-cta" not in dashboard_text
 
     assert "dataLoadStatus" in dashboard_text
     assert "function callableFlowDataUrl()" in dashboard_text
-    assert "referenceMarker='/reference/'" in dashboard_text
-    assert "assetsMarker='/assets/'" in dashboard_text
-    assert "+'_data/callable-flow.json'" in dashboard_text
-    assert "+'reference/_data/callable-flow.json'" in dashboard_text
-    assert "new URL('reference/_data/callable-flow.json',document.baseURI).href" in dashboard_text
+    assert "referenceMarker='/reference/'" in compact_dashboard_text
+    assert "assetsMarker='/assets/'" in compact_dashboard_text
+    assert "+'_data/callable-flow.json'" in compact_dashboard_text
+    assert "+'reference/_data/callable-flow.json'" in compact_dashboard_text
+    assert "newURL('reference/_data/callable-flow.json',document.baseURI).href" in compact_dashboard_text
     assert "Failed to load callable-flow data. Attempted URL:" in dashboard_text
     assert "HTTP status:" in dashboard_text
     assert "Error message:" in dashboard_text
     assert "function renderLoadedCount()" in dashboard_text
     assert "total callables; ${publicEntryFlows.length} public callables available; ${visibleFlows.length} rows after filters" in dashboard_text
-    assert "renderLoadedCount();$('publicCallableList').innerHTML" in dashboard_text
-    assert "architectureThresholds=data.architecture_thresholds||architectureThresholds" in dashboard_text
+    assert "renderLoadedCount();$('publicCallableList').innerHTML" in compact_dashboard_text
+    assert "architectureThresholds=data.architecture_thresholds||architectureThresholds" in compact_dashboard_text
     assert "function longCallChainThreshold()" in dashboard_text
     assert "function largeDependencySurfaceThreshold()" in dashboard_text
-    assert "long_call_chain_depth:null" in dashboard_text
-    assert "large_dependency_surface:null" in dashboard_text
+    assert "long_call_chain_depth:null" in compact_dashboard_text
+    assert "large_dependency_surface:null" in compact_dashboard_text
     assert "function positiveThreshold(value)" in dashboard_text
-    assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in dashboard_text
-    assert "architecture_violation_count??0" in dashboard_text
+    assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in compact_dashboard_text
+    assert "architecture_violation_count??0" in compact_dashboard_text
     assert "down>=12" not in dashboard_text
     assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
     assert "Helper-level architecture findings found" in dashboard_text
-    assert "architectureFindings.length?architectureFindings" in dashboard_text
+    assert "architectureFindings.length?architectureFindings" in compact_dashboard_text
     assert "function whyReview(flow)" in dashboard_text
-    assert "return reasons.length?reasons.join(' '):'Clear'" in dashboard_text
+    assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
-    assert "'None':'Healthy'" in dashboard_text
+    assert "None:'Healthy'" in compact_dashboard_text
     assert '<span class="badge keep">Healthy</span>' in dashboard_text
     assert "Merge candidate found" in dashboard_text
     assert "Review merge candidate" in dashboard_text
     assert "Review merge candidates" in dashboard_text
-    assert "reasons.join(' ')" in dashboard_text
+    assert "reasons.join('')" in compact_dashboard_text
     assert "Contains ${violations} architecture violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
     assert "Depth; long call chain threshold >= ${longThreshold}" in dashboard_text
-    assert "longThreshold!==null" in dashboard_text
-    assert "largeThreshold!==null" in dashboard_text
+    assert "longThreshold!==null" in compact_dashboard_text
+    assert "largeThreshold!==null" in compact_dashboard_text
     assert "long call chain threshold unavailable" in dashboard_text
-    assert "mergeCount===1?'Contains 1 merge candidate inside this flow.'" in dashboard_text
+    assert "mergeCount===1?'Contains1mergecandidateinsidethisflow.'" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
 
     assert "Callable Inventory" in inventory_text
-    assert "Search callables, inspect health signals, and export focused AI refactor plans." in inventory_text
+    assert "Search callables, inspect health signals, and export focused AI refactor plans." in normalized_inventory_text
     assert "Generated at:" in inventory_text
     assert "Generated at:</strong>" in inventory_text
     assert "SGT" in inventory_text
@@ -532,7 +549,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "All callables in the architecture inventory." in inventory_text
     assert "Notebook-facing API entrypoints." in inventory_text
     assert "Helpers and implementation callables." in inventory_text
-    assert "Use this inventory to find public callables, supporting helpers, health signals, and refactor candidates." in inventory_text
+    assert "Use this inventory to find public callables, supporting helpers, health signals, and refactor candidates." in normalized_inventory_text
     assert "Modules" not in inventory_text
     assert "Supporting functions" not in inventory_text
     assert "Private helpers to review" not in inventory_text
@@ -543,19 +560,22 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Function callables" not in inventory_text
     assert "Non-function callable records" not in inventory_text
     assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
-    assert ".surface-card strong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem}" in inventory_text
-    assert ".surface-card span{display:block;line-height:1.2;font-weight:700}" in inventory_text
+    assert (
+        ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1;font-size:1.45rem;"
+        in compact_inventory_text
+    )
+    assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700;" in compact_inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
     assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
-    assert "if(i.source_url)return i.source_url" in inventory_text
-    assert "const start=i.source_start_line" in inventory_text
+    assert "if(i.source_url)returni.source_url" in compact_inventory_text
+    assert "conststart=i.source_start_line" in compact_inventory_text
     assert "#L${start}" in inventory_text
     assert "GITHUB_SOURCE_BASE" in inventory_text
-    assert "Showing ${visibleRows.length} callable records of ${total} total discovered callable records." in inventory_text
+    assert "Showing ${visibleRows.length} callable records of ${total} total discovered callable records." in normalized_inventory_text
     assert "Showing ${visibleRows.length} of ${inventory.length} discovered callables" not in inventory_text
-    assert "Callable metrics are generated from the callable inventory data." in inventory_text
-    assert "<td>${sourceCallableLink(i)}</td>" in inventory_text
-    assert "<th>Callable</th><th>File / Area</th><th>Public API</th><th>Health</th><th>Finding</th><th>Review note</th><th>Suggested action</th><th>Downstream</th><th>Depth</th>" in inventory_text
+    assert "Callable metrics are generated from the callable inventory data." in normalized_inventory_text
+    assert "<td>${sourceCallableLink(i)}</td>" in compact_inventory_text
+    assert "<th>Callable</th><th>File/Area</th><th>PublicAPI</th><th>Health</th><th>Finding</th><th>Reviewnote</th><th>Suggestedaction</th><th>Downstream</th><th>Depth</th>" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
     assert "findingBadge(i)" in inventory_text
     assert "data-select-row" in inventory_text
@@ -574,9 +594,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function matchesQuickFilter(i)" in inventory_text
     assert "function updateQuickFilterChips()" in inventory_text
     assert "resetAll(document)" in inventory_text
-    assert "state.quickFilter=chip.dataset.quickFilter" in inventory_text
-    assert "matchesQuickFilter(i))" in inventory_text
-    assert "state.quickFilter='all'" in inventory_text
+    assert "state.quickFilter=chip.dataset.quickFilter" in compact_inventory_text
+    assert "matchesQuickFilter(i),)" in compact_inventory_text
+    assert "state.quickFilter='all'" in compact_inventory_text
     assert "selectedItems()" in inventory_text
     for removed_filter in [
         "moduleFilter",
@@ -620,11 +640,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Requested work" in inventory_text
     assert "Output required from AI" in inventory_text
     assert "Batch accounting" in inventory_text
-    assert "disabled>Copy JSON" in inventory_text
-    assert "disabled>Copy Markdown" in inventory_text
-    assert "disabled>Download JSON" in inventory_text
+    assert "disabled>CopyJSON" in compact_inventory_text
+    assert "disabled>CopyMarkdown" in compact_inventory_text
+    assert "disabled>DownloadJSON" in compact_inventory_text
     assert "selectAllVisible" in inventory_text
-    assert "$('selectAllVisible').onchange" in inventory_text
+    assert "$('selectAllVisible').onchange" in compact_inventory_text
     assert "ROLE_GROUP_FILTER_OPTIONS" not in inventory_text
     assert "Public entrypoint" not in inventory_text
     assert "Workflow" not in inventory_text
@@ -646,7 +666,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<th>Debug details</th>" not in inventory_text
     assert "function debugCell" not in inventory_text
     assert "DISPLAY_LABEL_MAP" in inventory_text
-    assert "tag,.badge" in inventory_text
+    assert ".tag,.badge" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
     assert "findingBadge(i)" in inventory_text
     assert "displayLabel(i.recommended_action" in inventory_text
@@ -1977,9 +1997,13 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
 def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     """Verify inventory dashboard renders dynamic rows, KPIs, statuses, and scoped controls."""
     inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
+    compact_inventory_text = _remove_whitespace(inventory_text).replace('"', "'")
 
     assert "function callableFlowUrl()" in inventory_text
-    assert "new URL('../reference/_data/callable-flow.json',window.location.href).href" in inventory_text
+    assert re.search(
+        r"new URL\(\s*['\"]\.\./reference/_data/callable-flow\.json['\"]\s*,\s*window\.location\.href\s*,?\s*\)\.href",
+        inventory_text,
+    )
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} callable records" in inventory_text
     assert "No callable records match current filters" in inventory_text
@@ -1987,7 +2011,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "Failed to load callable-flow data. Attempted URL:" in inventory_text
     assert "Could not parse callable-flow.json from ${attemptedUrl}" in inventory_text
     assert "did not include a function_inventory array" in inventory_text
-    assert "inventory=data.function_inventory" in inventory_text
+    assert "inventory=data.function_inventory" in compact_inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
         "Total callables",
@@ -1998,8 +2022,11 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
-    assert "$('inventoryBody').innerHTML=visibleRows.map" in inventory_text
-    assert "window.FabricOpsTableControls.enhance(document.querySelector('table[data-table-controls=\"excel\"]'))" in inventory_text
+    assert re.search(r"\$\(['\"]inventoryBody['\"]\)\.innerHTML\s*=\s*visibleRows\s*\.map", inventory_text)
+    assert re.search(
+        r"window\.FabricOpsTableControls\.enhance\(\s*document\.querySelector\(['\"]table\[data-table-controls=\"excel\"\]['\"]\s*,?\s*\)\s*,?\s*\)",
+        inventory_text,
+    )
     assert "enhanceAll(document)" not in inventory_text
 
 
