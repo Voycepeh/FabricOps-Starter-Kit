@@ -501,7 +501,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "inline single-use helper" not in dashboard_text
 
     assert "Callable Inventory" in inventory_text
-    assert "Search/filter callables with maintainer-friendly role groups, reachability, and refactor signals." in inventory_text
+    assert "Search callables, inspect health signals, and export focused AI refactor plans." in inventory_text
     assert "Generated at:" in inventory_text
     assert "Data source:" in inventory_text
     assert "callable-flow.json" in inventory_text
@@ -511,14 +511,19 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "callable-functions-dashboard.html" in inventory_text
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
-    assert "Modules" in inventory_text
     assert "Total callables" in inventory_text
-    assert "Public API" in inventory_text
-    assert "Supporting functions" in inventory_text
-    assert "Private helpers to review" in inventory_text
-    assert "Complete discovered callable inventory." in inventory_text
-    assert "Internal functions behind the public API." in inventory_text
-    assert "callable_inventory_metrics" in inventory_text
+    assert "Public callables" in inventory_text
+    assert "Supporting callables" in inventory_text
+    assert "Review candidates" in inventory_text
+    assert "Healthy callables" in inventory_text
+    assert "All callables in the architecture inventory." in inventory_text
+    assert "Notebook-facing API entrypoints." in inventory_text
+    assert "Helpers and implementation callables." in inventory_text
+    assert "Use this inventory to find public callables, supporting helpers, health signals, and refactor candidates." in inventory_text
+    assert "Modules" not in inventory_text
+    assert "Supporting functions" not in inventory_text
+    assert "Private helpers to review" not in inventory_text
+    assert "callable_inventory_metrics" not in inventory_text
     assert "deep cross-module helper chains" not in inventory_text
     assert "inline single-use helper" not in inventory_text
     assert "Total discovered callable records" not in inventory_text
@@ -537,6 +542,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Showing ${visibleRows.length} of ${inventory.length} discovered callables" not in inventory_text
     assert "Callable metrics are generated from the callable inventory data." in inventory_text
     assert "<td>${sourceCallableLink(i)}</td>" in inventory_text
+    assert "<th>Callable</th><th>File / Area</th><th>Public API</th><th>Health</th><th>Finding</th><th>Review note</th><th>Suggested action</th><th>Downstream</th><th>Depth</th>" in inventory_text
+    assert "healthBadge(i)" in inventory_text
+    assert "findingBadge(i)" in inventory_text
     assert "data-select-row" in inventory_text
     assert "selectAllVisible" in inventory_text
     assert "copyJson" in inventory_text
@@ -604,41 +612,31 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>Download JSON" in inventory_text
     assert "selectAllVisible" in inventory_text
     assert "$('selectAllVisible').onchange" in inventory_text
-    assert "ROLE_GROUP_FILTER_OPTIONS" in inventory_text
-    for role_group_label in [
-        "Public entrypoint",
-        "Workflow",
-        "Resolver",
-        "Normalizer",
-        "Validator",
-        "Adapter",
-        "Utility",
-        "Model class",
-        "Registry builder",
-        "Lifecycle method",
-        "Property method",
-        "Other",
-    ]:
-        assert role_group_label in inventory_text
-    signal_options = inventory_text.split("const USER_FACING_RECOMMENDED_ACTIONS=", 1)[1].split(";", 1)[0]
-    assert "Public API entrypoint" not in signal_options
-    assert "Priority is generated from callable inventory signals, architecture findings" in inventory_text
-    assert "strongest review/refactor signal; inspect first" in inventory_text
-    assert "Findings / Signal" in inventory_text
-    assert "Role group" in inventory_text
-    assert "Role detail" in inventory_text
+    assert "ROLE_GROUP_FILTER_OPTIONS" not in inventory_text
+    assert "Public entrypoint" not in inventory_text
+    assert "Workflow" not in inventory_text
+    assert "Resolver" not in inventory_text
+    assert "Normalizer" not in inventory_text
+    assert "Validator" not in inventory_text
+    assert "Adapter" not in inventory_text
+    assert "Model class" not in inventory_text
+    assert "Priority is generated from callable inventory signals, architecture findings" not in inventory_text
+    assert "strongest review/refactor signal; inspect first" not in inventory_text
+    assert "Findings / Signal" not in inventory_text
+    assert "Role group" not in inventory_text
+    assert "Role detail" not in inventory_text
     assert "Suggested action" in inventory_text
-    assert "Inbound" in inventory_text
-    assert "Outbound" in inventory_text
-    assert "Dependency role" in inventory_text
-    assert "Kind / Layer" in inventory_text
+    assert "Inbound" not in inventory_text
+    assert "Outbound" not in inventory_text
+    assert "Dependency role" not in inventory_text
+    assert "Kind / Layer" not in inventory_text
     assert "<th>Debug details</th>" not in inventory_text
     assert "function debugCell" not in inventory_text
     assert "DISPLAY_LABEL_MAP" in inventory_text
     assert "tag,.badge" in inventory_text
-    assert "priority-high" in inventory_text
-    assert ".badge.issue" in inventory_text
-    assert "displayLabel(i.recommended_action)" in inventory_text
+    assert "healthBadge(i)" in inventory_text
+    assert "findingBadge(i)" in inventory_text
+    assert "displayLabel(i.recommended_action" in inventory_text
     assert '<span class="reference-kpi-title">Modules</span>' in reference_text
     assert '<span class="reference-kpi-title">Total callables</span>' in reference_text
     assert '<span class="reference-kpi-title">Public API</span>' in reference_text
