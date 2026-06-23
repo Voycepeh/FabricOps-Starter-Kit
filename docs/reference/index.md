@@ -4,12 +4,12 @@ Use this page to look up Starter Kit functions used by the template notebooks.
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">9</strong>
+    <strong class="reference-kpi-value">12</strong>
     <span class="reference-kpi-title">Modules</span>
     <p class="reference-kpi-note">Code areas represented.</p>
   </section>
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">60</strong>
+    <strong class="reference-kpi-value">287</strong>
     <span class="reference-kpi-title">Total callables</span>
     <p class="reference-kpi-note">Complete discovered callable inventory.</p>
   </section>
@@ -25,7 +25,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
   </section>
   <section class="reference-kpi-card surface-card">
     <strong class="reference-kpi-value">227</strong>
-    <span class="reference-kpi-title">Hidden private helpers</span>
+    <span class="reference-kpi-title">Private helpers to review</span>
     <p class="reference-kpi-note">Excluded from default architecture counts.</p>
   </section>
 </div>

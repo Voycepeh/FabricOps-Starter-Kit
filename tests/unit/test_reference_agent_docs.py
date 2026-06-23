@@ -250,7 +250,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     reference_text = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
 
     assert "Callable Architecture" in dashboard_text
-    assert "High-level triage for notebook-facing public APIs, dependency depth, and architecture boundary risk." in dashboard_text
+    assert "High-level triage for notebook-facing public APIs, dependency depth, and architecture risk." in dashboard_text
     assert "Inventory" in dashboard_text
     assert "Decision mode: Public API Surface" in dashboard_text
     assert "publicSurfaceCards" in dashboard_text
@@ -327,7 +327,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "max_depth" in dashboard_text
     assert "modules_touched" in dashboard_text
     assert "architecture_violation_count" in dashboard_text
-    assert "boundary_violations" in dashboard_text
+    assert "boundary_violations" not in dashboard_text
     assert "architecture_findings" in dashboard_text
     assert "flow_tree" in dashboard_text
     assert "internal_helper_cleanup_candidates" in dashboard_text
@@ -468,7 +468,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architectureFindings.length?architectureFindings" in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
     assert "reasons.join(' ')" in dashboard_text
-    assert "Contains ${violations} boundary violations." in dashboard_text
+    assert "Contains ${violations} architecture violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
     assert "Depth; long call chain threshold >= ${longThreshold}" in dashboard_text
@@ -489,7 +489,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Total callables" in inventory_text
     assert "Public API" in inventory_text
     assert "Supporting functions" in inventory_text
-    assert "Hidden private helpers" in inventory_text
+    assert "Private helpers to review" in inventory_text
     assert "Complete discovered callable inventory." in inventory_text
     assert "Internal functions behind the public API." in inventory_text
     assert "callable_inventory_metrics" in inventory_text
@@ -600,9 +600,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<span class="reference-kpi-title">Total callables</span>' in reference_text
     assert '<span class="reference-kpi-title">Public API</span>' in reference_text
     assert '<span class="reference-kpi-title">Supporting functions</span>' in reference_text
-    assert '<span class="reference-kpi-title">Hidden private helpers</span>' in reference_text
-    assert '<strong class="reference-kpi-value">9</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">60</strong>' in reference_text
+    assert '<span class="reference-kpi-title">Private helpers to review</span>' in reference_text
+    assert '<strong class="reference-kpi-value">227</strong>' in reference_text
+    assert '<strong class="reference-kpi-value">287</strong>' in reference_text
     assert '<strong class="reference-kpi-value">26</strong>' in reference_text
     assert '<strong class="reference-kpi-value">34</strong>' in reference_text
     assert '<strong class="reference-kpi-value">227</strong>' in reference_text
@@ -646,12 +646,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "unreachable",
     }
     assert summary_counts["layer"]["public"] == len(exported_symbols)
-    assert summary_counts["total_callables"] == sum(summary_counts["function_type"].values())
+    assert summary_counts["callable_inventory_metrics"]["function_callables"] == sum(summary_counts["function_type"].values())
     assert summary_counts["callable_role_group"]
 
     public_api_surface = summary_counts["public_api_surface"]
-    assert summary_counts["total_callables"] == 60
+    assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
     assert summary_counts["callable_kind"]["function"] == 60
+    assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
     assert {
@@ -715,7 +716,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         and "Possible inline/private helper" in row["signals"]
         for row in function_inventory
     )
-    assert all(not row["function_name"].split(".")[-1].startswith("_") for row in function_inventory)
+    private_helper_rows = [row for row in function_inventory if row["layer"] == "private_helper"]
+    assert private_helper_rows
+    assert all(row["function_type"] == "Private helper" for row in private_helper_rows)
+    assert all(row["function_name"].split(".")[-1].startswith("_") for row in private_helper_rows)
+    assert all(row["architecture_signals"] == [] for row in private_helper_rows)
+    assert all(row["owner_function"] or row["usage_scope"] == "unused" for row in private_helper_rows)
+    assert {"Keep private helper", "Merge into owner", "Rename to internal function", "Move closer to owner", "Remove redundant wrapper"} & {row["recommended_action"] for row in private_helper_rows}
+    assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
+    assert sum(1 for row in function_inventory if row["function_type"] == "Internal function") == summary_counts["function_type"]["Internal function"]
+    assert all(not callee["function_name"].split(".")[-1].startswith("_") for flow in public_flows for callee in flow["transitive_callees"])
     rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
     assert "fabricops_kit.config.FrameworkConfig" not in rows_by_qn
     assert "fabricops_kit.io_core.FabricStore.root" not in rows_by_qn
@@ -740,6 +750,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callable_role_detail",
         "callable_role_detail_label",
         "dependency_role",
+        "owner_qualified_name",
+        "owner_function",
+        "owner_module",
+        "usage_scope",
+        "usage_scope_label",
+        "architecture_signals",
+        "review_signals",
         "reachability_kind",
         "reachability_label",
         "recommended_action",
@@ -1710,7 +1727,43 @@ def test_callable_architecture_validation_rejects_private_visible_rows(monkeypat
     inventory.write_text("", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
 
     failures = validator._failures(flow)
 
-    assert any("Private helper surfaced" in failure for failure in failures)
+    assert any("Private helper is counted as Public/Internal" in failure for failure in failures)
+
+
+def test_callable_architecture_validation_allows_private_helper_review_rows(monkeypatch, tmp_path) -> None:
+    """Verify review-only private helpers can appear without affecting architecture counts."""
+    import scripts.validate_callable_architecture as validator
+
+    flow = {
+        "function_inventory": [
+            {
+                "qualified_name": "fabricops_kit.example._private_helper",
+                "function_name": "_private_helper",
+                "function_type": "Private helper",
+                "layer": "private_helper",
+                "callable_kind": "function",
+                "architecture_signals": [],
+                "recommended_action": "Keep private helper",
+            }
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 0, "Internal function": 0},
+            "layer": {"public": 0, "internal": 0},
+            "public_api_surface": {"public_api_entrypoints": 0, "architecture_violations": 0},
+            "callable_inventory_metrics": {"function_callables": 0, "private_helpers_to_review": 1},
+        },
+        "public_entrypoint_flow": [],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("Private helper", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    assert validator._failures(flow) == []
