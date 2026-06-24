@@ -270,7 +270,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         in normalized_dashboard_text
     )
     assert "Inventory" in dashboard_text
-    assert "Decision mode: Public API Surface" in dashboard_text
+    assert "Public callable overview" in dashboard_text
+    assert "Decision mode: Public API Surface" not in dashboard_text
+    assert "Search public callables" in dashboard_text
+    assert "Search by callable, module, finding, or recommendation..." in dashboard_text
+    assert "Export cleanup packet" in dashboard_text
     assert "Generated at:" in dashboard_text
     assert "Data source:" in dashboard_text
     assert "callable-flow.json" in dashboard_text
@@ -336,7 +340,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "reset.onclick=showAllPublicCallables" in compact_dashboard_text
     assert "showAllPublicCallablesInline" not in dashboard_text
     assert "Show all public callables</button>`:'';const inline" not in dashboard_text
-    assert ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1" in compact_dashboard_text
+    assert ".surface-cardstrong{display:block;margin-bottom:0.2rem;line-height:1" in compact_dashboard_text
     assert ".surface-cardspan{display:block;line-height:1.2" in compact_dashboard_text
     assert "Review note" in dashboard_text
     assert "data-sort-key=\"callable\"" in dashboard_text
@@ -380,7 +384,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "planning_instructions" in dashboard_text
     assert "required_tests" in dashboard_text
     assert "function publicCallableFindingRows(flow)" in dashboard_text
-    assert "publicFindings=publicCallableFindingRows(f)" in compact_dashboard_text
+    assert "flow-summary-card" in dashboard_text
+    assert "flow-key-signals" in dashboard_text
+    assert "flow-next-step" in dashboard_text
+    assert "functionflowHealth(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "functionflowReason(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "functionflowNextStep(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "functionflowSignalChips(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "Public callable findings</h3>" not in dashboard_text
+    assert "Architecture findings inside this flow" not in dashboard_text
+    assert "Internal helper cleanup candidates</h3>" not in dashboard_text
     assert "#### Public callable findings" in dashboard_text
     assert "#### Architecture findings" in dashboard_text
     assert "#### Internal helper cleanup candidates" in dashboard_text
@@ -417,13 +430,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "GITHUB_SOURCE_BASE" in dashboard_text
     assert "return`${GITHUB_SOURCE_BASE}${path}${anchor}`" in compact_dashboard_text
     assert "architectureViolationFlows=flows.filter" in compact_dashboard_text
-    assert "shortenableFlowCount=flows.filter" in compact_dashboard_text
     assert "function architectureFindingRows(flow)" in dashboard_text
     assert "function architectureFindingCount(flow)" in dashboard_text
     assert "c.architecture_result==='Violation'||c.recommended_action==='Architectureviolation'" in compact_dashboard_text
     assert "functionmarkdownLink(i,label)" in compact_dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
-    assert "direct callees" in dashboard_text
+    assert "Suggested next step" in dashboard_text
+    assert "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details." in dashboard_text
     assert "disabled>CopyJSON" in compact_dashboard_text
     assert "disabled>CopyMarkdown" in compact_dashboard_text
     assert "disabled>DownloadJSON" in compact_dashboard_text
@@ -464,25 +477,25 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
     card_order = [
-        compact_dashboard_text.index("label:'Publiccallablesscanned'"),
-        compact_dashboard_text.index("label:'High-prioritypubliccallables'"),
-        compact_dashboard_text.index("label:'Architectureviolations'"),
-        compact_dashboard_text.index("label:'Longpublicflows'"),
-        compact_dashboard_text.index("label:'Publicflowsthatcanbeshortened'"),
+        compact_dashboard_text.index("label:'Publiccallables'"),
+        compact_dashboard_text.index("label:'Witharchitectureviolations'"),
     ]
     assert card_order == sorted(card_order)
-    assert "Notebook-facing APIs included in this decision view." in dashboard_text
-    assert "Public APIs to review first." in dashboard_text
-    assert "Public callable flows with architecture violations." in dashboard_text
-    assert "Public callable flows whose depth exceeds the threshold." in dashboard_text
-    assert "Public callable flows with internal helpers that may be simplified, merged, or moved closer to their caller." in dashboard_text
+    assert "Notebook-facing APIs scanned in this review workspace." in dashboard_text
+    assert "No architecture violations found." in dashboard_text
+    assert "High-priority public callables" not in dashboard_text
+    assert "Long public flows" not in dashboard_text
+    assert "Public flows that can be shortened" not in dashboard_text
+    assert "Public APIs to review first." not in dashboard_text
+    assert "Public callable flows whose depth exceeds the threshold." not in dashboard_text
+    assert "Public callable flows with internal helpers that may be simplified, merged, or moved closer to their caller." not in dashboard_text
     assert "Clean public flows" not in dashboard_text
     assert "Public flows with warnings" not in dashboard_text
     assert "Callables flagged as single-use helper candidates" not in dashboard_text
     assert "label:'Merge candidates'" not in dashboard_text
     assert "value:s.merge_candidates" not in dashboard_text
     assert "305 Merge candidates" not in dashboard_text
-    assert "Architecture metrics summarize public entrypoint flow risk. Use Inventory for helper-level cleanup details." in normalized_dashboard_text
+    assert "Review notebook-facing public callables, search for risks, and inspect the selected flow below." in normalized_dashboard_text
     assert "Review detailed callable actions in Inventory" not in dashboard_text
     assert "architecture-cta" not in dashboard_text
 
@@ -508,9 +521,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in compact_dashboard_text
     assert "architecture_violation_count??0" in compact_dashboard_text
     assert "down>=12" not in dashboard_text
-    assert "Architecture violation reason" in dashboard_text
+    assert "Violation reason" in dashboard_text
     assert "Helper-level architecture findings found" in dashboard_text
-    assert "architectureFindings.length?architectureFindings" in compact_dashboard_text
+    assert "No architecture violations found in this flow." in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
     assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
@@ -548,6 +561,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<aclass='callable-page-tabis-active'href='callable-functions-inventory.html'aria-current='page'>Inventory</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
+    for common_shell in [compact_dashboard_text, compact_inventory_text]:
+        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a;}" in common_shell
+        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem;}" in common_shell
+        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef;}" in common_shell
+        assert "headerh1{margin:0.1rem00.35rem;}" in common_shell
+        assert "headerp{margin:0.25rem0;color:#475569;}" in common_shell
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
     assert "Support code assets" in inventory_text
@@ -2249,18 +2268,27 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "label(n.dependency_role)" not in dashboard_text
     assert "flow-tree-main" in dashboard_text
     assert "flow-tree-details" in dashboard_text
+    assert "flow-tree-detail-strip" in dashboard_text
+    assert "flow-tree-detail-chip" in dashboard_text
+    assert "flow-tree-detail-grid" not in dashboard_text
     assert "flowTreeDetailRows(n)" in dashboard_text
-    assert "Called inside this flow by count" in dashboard_text
-    assert "Calls inside this flow count" in dashboard_text
-    assert "Used outside this flow count" in dashboard_text
-    assert "End node status" in dashboard_text
-    assert "Merge candidate reason" in dashboard_text
-    assert "Architecture violation reason" in dashboard_text
+    assert "Called inside this flow by count" not in dashboard_text
+    assert "Calls inside this flow count" not in dashboard_text
+    assert "Used outside this flow count" not in dashboard_text
+    assert "End node status" not in dashboard_text
+    assert "Source module" not in dashboard_text
+    assert "Called by" in dashboard_text
+    assert "Used outside" in dashboard_text
+    assert "End" in dashboard_text
+    assert "Merge candidate" in dashboard_text
+    assert "Violation reason" in dashboard_text
+    assert "Warning reason" in dashboard_text
     assert "Path example" in dashboard_text
     assert "node-signals" not in dashboard_text
     assert "called by count" not in dashboard_text.lower()
     assert "<th>Called by</th>" not in dashboard_text
     assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
+    assert "n.is_end_node ? '<span class=\"badge muted\">end</span>'" in dashboard_text
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
@@ -2337,6 +2365,12 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
+    assert "max-width:100%;overflow-x:auto;overflow-y:visible" in compact_inventory_text
+    assert ".callable-review-table{width:max-content;min-width:100%;table-layout:auto" in compact_inventory_text
+    assert ".callable-review-table.col-item-type,.callable-review-table.col-flow,.callable-review-table.col-health{white-space:nowrap" in compact_inventory_text
+    assert ".callable-review-table.col-finding{min-width:12rem;max-width:18rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
+    assert ".callable-review-table.col-review-note{min-width:20rem;max-width:30rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
+    assert ".callable-review-table.col-suggested-action{min-width:16rem;max-width:24rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
     assert re.search(r"\$\(['\"]inventoryBody['\"]\)\.innerHTML\s*=\s*visibleRows\s*\.map", inventory_text)
     assert re.search(
         r"window\.FabricOpsTableControls\.enhance\(\s*document\.querySelector\(['\"]table\[data-table-controls=\"excel\"\]['\"]\s*,?\s*\)\s*,?\s*\)",

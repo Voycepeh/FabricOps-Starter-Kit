@@ -14,9 +14,21 @@
       }
       header,
       main {
-        max-width: 1500px;
+        box-sizing: border-box;
+        max-width: 1480px;
         margin: 0 auto;
         padding: 1rem;
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid #dbe3ef;
+      }
+      header h1 {
+        margin: 0.1rem 0 0.35rem;
+      }
+      header p {
+        margin: 0.25rem 0;
+        color: #475569;
       }
       .generation-banner {
         display: flex;
@@ -115,6 +127,16 @@
         .callable-page-action {
           width: 100%;
           box-sizing: border-box;
+        }
+      }
+      @media (max-width: 720px) {
+        main,
+        header {
+          padding: 0.75rem;
+        }
+        .generation-banner {
+          width: auto;
+          border-radius: 0.75rem;
         }
       }
       .surface-cards {
@@ -294,23 +316,69 @@
         cursor: not-allowed;
       }
       .table-wrap {
-        overflow: auto;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
         background: #fff;
         border: 1px solid #dbe3ef;
         border-radius: 0.75rem;
+        -webkit-overflow-scrolling: touch;
       }
-      table {
-        width: 100%;
-        min-width: 1320px;
+      .callable-review-table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .callable-review-table {
+        width: max-content;
+        min-width: 100%;
+        table-layout: auto;
         border-collapse: collapse;
       }
-      th,
-      td {
+      .callable-review-table th,
+      .callable-review-table td {
         padding: 0.42rem 0.45rem;
         border-bottom: 1px solid #dbe3ef;
         text-align: left;
         font-size: 0.84rem;
         vertical-align: top;
+      }
+      .callable-review-table .col-select {
+        width: 4.5rem;
+        white-space: nowrap;
+      }
+      .callable-review-table .col-callable {
+        min-width: 18rem;
+        white-space: nowrap;
+      }
+      .callable-review-table .col-file-area {
+        min-width: 18rem;
+        white-space: nowrap;
+      }
+      .callable-review-table .col-item-type,
+      .callable-review-table .col-flow,
+      .callable-review-table .col-health {
+        white-space: nowrap;
+      }
+      .callable-review-table .col-code-role {
+        min-width: 13rem;
+      }
+      .callable-review-table .col-finding {
+        min-width: 12rem;
+        max-width: 18rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      .callable-review-table .col-review-note {
+        min-width: 20rem;
+        max-width: 30rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      .callable-review-table .col-suggested-action {
+        min-width: 16rem;
+        max-width: 24rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
       }
       .tag,
       .badge {
@@ -350,14 +418,6 @@
         min-height: 8rem;
       }
       @media (max-width: 720px) {
-        main,
-        header {
-          padding: 0.75rem;
-        }
-        .generation-banner {
-          width: auto;
-          border-radius: 0.75rem;
-        }
         .inventory-filter-grid,
         .toolbar-card-grid {
           grid-template-columns: 1fr;
@@ -383,7 +443,7 @@
         .toolbar-group .toolbar-row button {
           flex: 1 1 9rem;
         }
-        table {
+        .callable-review-table {
           min-width: 1100px;
         }
       }
@@ -397,7 +457,7 @@
         flow architecture view.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 18:05 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 18:27 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
