@@ -1801,8 +1801,15 @@ def test_callable_architecture_layer_rules_and_labels():
 
     for caller, callee in [("Public", "Public"), ("Internal", "Public")]:
         edge = generator._classify_architecture_edge(caller, callee)
-        assert edge["result"] == "Violation"
-        assert edge["violation_type"] == f"{caller} -> {callee}"
+        assert edge == {"result": "Allowed", "violation_type": ""}
+
+    assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {
+        "Shared helper calls private implementation",
+        "Shared helper calls public callable",
+        "Cross-callable private dependency",
+        "Single-use shared helper",
+        "Hidden nested helper chain",
+    }
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long call chain"

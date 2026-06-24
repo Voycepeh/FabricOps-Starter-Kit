@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-24T08:02:22.122159Z",
+    "generated_at_utc": "2026-06-24T08:15:46.679858Z",
     "data_source": "callable-flow.json"
   },
   "architecture_thresholds": {
@@ -31558,9 +31558,6 @@
       "end_node_count": 7,
       "architecture_violation_count": 11,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 6,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 5,
@@ -32372,9 +32369,6 @@
       "end_node_count": 11,
       "architecture_violation_count": 15,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 6,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 9,
@@ -33420,9 +33414,6 @@
       "end_node_count": 1,
       "architecture_violation_count": 4,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 0,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 4,
@@ -33782,9 +33773,6 @@
       "end_node_count": 6,
       "architecture_violation_count": 9,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 5,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 4,
@@ -34317,9 +34305,6 @@
       "end_node_count": 8,
       "architecture_violation_count": 12,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 4,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 7,
@@ -35098,9 +35083,6 @@
       "end_node_count": 8,
       "architecture_violation_count": 13,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 4,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 8,
@@ -35918,9 +35900,6 @@
       "end_node_count": 8,
       "architecture_violation_count": 13,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 5,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 6,
@@ -36788,9 +36767,6 @@
       "end_node_count": 9,
       "architecture_violation_count": 14,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 4,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 9,
@@ -37645,9 +37621,6 @@
       "end_node_count": 7,
       "architecture_violation_count": 11,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 4,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 5,
@@ -38415,9 +38388,6 @@
       "end_node_count": 9,
       "architecture_violation_count": 12,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 4,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 8,
@@ -39235,9 +39205,6 @@
       "end_node_count": 51,
       "architecture_violation_count": 102,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 35,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 62,
@@ -45092,9 +45059,6 @@
       "end_node_count": 22,
       "architecture_violation_count": 38,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 7,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 31,
@@ -47414,9 +47378,6 @@
       "end_node_count": 5,
       "architecture_violation_count": 8,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 0,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 8,
@@ -47979,9 +47940,6 @@
       "end_node_count": 25,
       "architecture_violation_count": 41,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 16,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 23,
@@ -50465,9 +50423,6 @@
       "end_node_count": 17,
       "architecture_violation_count": 33,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 9,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 24,
@@ -52406,9 +52361,6 @@
       "end_node_count": 17,
       "architecture_violation_count": 33,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 9,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 24,
@@ -54347,9 +54299,6 @@
       "end_node_count": 22,
       "architecture_violation_count": 41,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 14,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 26,
@@ -56691,9 +56640,6 @@
       "end_node_count": 21,
       "architecture_violation_count": 34,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 9,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 25,
@@ -58744,9 +58690,6 @@
       "end_node_count": 28,
       "architecture_violation_count": 54,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 8,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 46,
@@ -62049,9 +61992,6 @@
       "end_node_count": 28,
       "architecture_violation_count": 54,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 8,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 46,
@@ -65071,9 +65011,6 @@
       "end_node_count": 6,
       "architecture_violation_count": 12,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 4,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 5,
@@ -65937,9 +65874,6 @@
       "end_node_count": 13,
       "architecture_violation_count": 20,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 6,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 13,
@@ -67204,9 +67138,6 @@
       "end_node_count": 10,
       "architecture_violation_count": 16,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 5,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 9,
@@ -68173,9 +68104,6 @@
       "end_node_count": 15,
       "architecture_violation_count": 26,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 7,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 19,
@@ -69750,9 +69678,6 @@
       "end_node_count": 14,
       "architecture_violation_count": 21,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 7,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 14,
@@ -71054,9 +70979,6 @@
       "end_node_count": 9,
       "architecture_violation_count": 13,
       "architecture_violation_breakdown": {
-        "Public -> Public": 0,
-        "Internal -> Public": 0,
-        "Internal layering violation": 0,
         "Shared helper calls private implementation": 4,
         "Shared helper calls public callable": 0,
         "Cross-callable private dependency": 8,
