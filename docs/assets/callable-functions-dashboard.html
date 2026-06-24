@@ -553,10 +553,9 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 02:23 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 13:20 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
-        ><span><strong>Branch:</strong> restore-io-resolver-contract</span
-        ><span><strong>Commit:</strong> 460986a</span>
+        >
       </p>
       <p>
         <a href="callable-functions-inventory.html">Inventory</a> -
@@ -769,6 +768,11 @@
       </section>
     </main>
     <script>
+      const FLOW_LAYER_LABELS = [
+        "Public function",
+        "Internal function",
+        "Private helper",
+      ];
       const DISPLAY_LABEL_MAP = {
         "Architecture violation": "Architecture violation",
         "Long call chain": "Long call chain",
@@ -1427,6 +1431,9 @@
             qualified_name: flow.qualified_name,
             function_name: flow.function_name,
             module: flow.module,
+            function_type: "Public function",
+            layer_group: "Public function",
+            dependency_role: "public_api",
             docs_url: flow.docs_url,
             docs_path: flow.docs_path,
             source_url: flow.source_url,
@@ -1448,6 +1455,10 @@
         return attach(root);
       }
       function renderTreeNode(n) {
+        const type = n.function_type || n.layer_group || "Public function";
+        const role = n.dependency_role
+          ? ` <span class="tag">${esc(label(n.dependency_role))}</span>`
+          : "";
         const violation =
           n.architecture_result === "Violation" && n.violation_type
             ? ` <span class="badge issue">Architecture violation: ${esc(n.violation_type)}</span>`
@@ -1455,7 +1466,7 @@
         const action = n.recommended_action
           ? ` <span class="tag">${esc(findingLabel(n.recommended_action))}</span>`
           : "";
-        return `<li><strong>${sourceCallableLink(n)}</strong> <small>${esc(n.module || "")}</small>${violation}${action}${n.children?.length ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>` : ""}</li>`;
+        return `<li><strong>${sourceCallableLink(n)}</strong> <small>${esc(n.module || "")}</small> <span class="badge muted">${esc(type)}</span>${role}${violation}${action}${n.children?.length ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>` : ""}</li>`;
       }
       function renderFlowDetails() {
         const f = publicEntryFlows.find(
@@ -1542,6 +1553,10 @@
           function_name: n.function_name,
           module: n.module,
           function_type: n.function_type || n.layer_group || "Public function",
+          layer: n.layer || null,
+          layer_group: n.layer_group || n.function_type || "Public function",
+          dependency_role: n.dependency_role || null,
+          callable_role: n.callable_role || [],
           helper_tags: [
             ...(n.architecture_result === "Violation" && n.violation_type
               ? [`Architecture violation: ${n.violation_type}`]

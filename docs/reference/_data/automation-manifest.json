@@ -8997,7 +8997,11 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.get_spark_session",
+      "fabricops_kit.io.shared.read_csv_path",
+      "fabricops_kit.io.shared.resolve_configured_file_path"
+    ],
     "used_in_templates": [],
     "glossary_terms": [
       "source data",
@@ -9042,7 +9046,11 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.get_spark_session",
+      "fabricops_kit.io.shared.read_excel_file",
+      "fabricops_kit.io.shared.resolve_configured_file_path"
+    ],
     "used_in_templates": [],
     "glossary_terms": [
       "source data",
@@ -9087,7 +9095,12 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.convert_single_parquet_ns_to_us",
+      "fabricops_kit.io.shared.get_spark_session",
+      "fabricops_kit.io.shared.resolve_configured_file_path",
+      "fabricops_kit.io.shared.resolve_lakehouse_file_path"
+    ],
     "used_in_templates": [],
     "glossary_terms": [
       "source data",
@@ -9132,7 +9145,11 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.get_spark_session",
+      "fabricops_kit.io.shared.read_delta_path",
+      "fabricops_kit.io.shared.resolve_configured_lakehouse_table"
+    ],
     "used_in_templates": [
       "02_pipeline",
       "99_explore"
@@ -9180,7 +9197,12 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.get_spark_session",
+      "fabricops_kit.io.shared.read_warehouse_synapsesql",
+      "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+      "fabricops_kit.io.shared.validate_select_query"
+    ],
     "used_in_templates": [
       "02_pipeline"
     ],
@@ -9263,7 +9285,11 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.get_spark_session",
+      "fabricops_kit.io.shared.read_warehouse_synapsesql",
+      "fabricops_kit.io.shared.resolve_configured_warehouse_table"
+    ],
     "used_in_templates": [
       "02_pipeline"
     ],
@@ -9647,7 +9673,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+    ],
     "outbound": [
       "fabricops_kit.io_core._convert_single_parquet_ns_to_us"
     ],
@@ -9674,6 +9702,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_parquet",
       "_convert_single_parquet_ns_to_us"
     ]
   },
@@ -9684,7 +9713,14 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+      "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+      "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+      "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+      "fabricops_kit.io.read_warehouse_table.read_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._get_spark"
     ],
@@ -9711,6 +9747,12 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_parquet",
+      "read_lakehouse_table",
+      "read_warehouse_query",
+      "read_warehouse_table",
       "_get_spark"
     ]
   },
@@ -9721,7 +9763,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._normalize_write_mode"
     ],
@@ -9748,6 +9792,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "write_lakehouse_table",
       "_normalize_write_mode"
     ]
   },
@@ -9758,7 +9803,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv"
+    ],
     "outbound": [
       "fabricops_kit.io_core._read_csv_path"
     ],
@@ -9785,6 +9832,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_csv",
       "_read_csv_path"
     ]
   },
@@ -9795,7 +9843,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._read_delta_path"
     ],
@@ -9822,6 +9872,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_table",
       "_read_delta_path"
     ]
   },
@@ -9832,7 +9883,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
+    ],
     "outbound": [
       "fabricops_kit.io_core._read_excel_file"
     ],
@@ -9859,6 +9912,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_excel",
       "_read_excel_file"
     ]
   },
@@ -9869,7 +9923,10 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+      "fabricops_kit.io.read_warehouse_table.read_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._read_warehouse_synapsesql"
     ],
@@ -9896,6 +9953,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_warehouse_query",
+      "read_warehouse_table",
       "_read_warehouse_synapsesql"
     ]
   },
@@ -9906,7 +9965,11 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+      "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+      "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_lakehouse_file_location",
       "fabricops_kit.io_core._resolve_target_store"
@@ -9934,6 +9997,9 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_parquet",
       "_resolve_lakehouse_file_location",
       "_resolve_target_store"
     ]
@@ -9945,7 +10011,10 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_lakehouse_table_location",
       "fabricops_kit.io_core._resolve_target_store"
@@ -9973,6 +10042,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_table",
+      "write_lakehouse_table",
       "_resolve_lakehouse_table_location",
       "_resolve_target_store"
     ]
@@ -9984,7 +10055,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_target_store"
     ],
@@ -10011,6 +10084,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_warehouse_query",
       "_resolve_target_store"
     ]
   },
@@ -10021,7 +10095,10 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+      "fabricops_kit.io.write_warehouse_table.write_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._resolve_target_store",
       "fabricops_kit.io_core._resolve_warehouse_table_location"
@@ -10049,6 +10126,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_warehouse_table",
+      "write_warehouse_table",
       "_resolve_target_store",
       "_resolve_warehouse_table_location"
     ]
@@ -10097,7 +10176,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+    ],
     "outbound": [
       "fabricops_kit.io_core._lakehouse_file_path"
     ],
@@ -10124,6 +10205,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_lakehouse_parquet",
       "_lakehouse_file_path"
     ]
   },
@@ -10245,7 +10327,10 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+      "fabricops_kit.io.write_warehouse_table.write_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._validate_dataframe_writer"
     ],
@@ -10272,6 +10357,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "write_lakehouse_table",
+      "write_warehouse_table",
       "_validate_dataframe_writer"
     ]
   },
@@ -10282,7 +10369,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
+    ],
     "outbound": [
       "fabricops_kit.io_core._validate_select_query"
     ],
@@ -10309,6 +10398,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "read_warehouse_query",
       "_validate_select_query"
     ]
   },
@@ -10319,7 +10409,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._write_delta_path"
     ],
@@ -10346,6 +10438,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "write_lakehouse_table",
       "_write_delta_path"
     ]
   },
@@ -10356,7 +10449,9 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [],
+    "inbound": [
+      "fabricops_kit.io.write_warehouse_table.write_warehouse_table"
+    ],
     "outbound": [
       "fabricops_kit.io_core._write_warehouse_synapsesql"
     ],
@@ -10383,6 +10478,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "write_warehouse_table",
       "_write_warehouse_synapsesql"
     ]
   },
@@ -10505,7 +10601,12 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.normalize_write_mode",
+      "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "fabricops_kit.io.shared.validate_dataframe_writer",
+      "fabricops_kit.io.shared.write_delta_path"
+    ],
     "used_in_templates": [
       "02_pipeline",
       "example_pipeline_demo",
@@ -10592,7 +10693,11 @@
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
-    "outbound": [],
+    "outbound": [
+      "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+      "fabricops_kit.io.shared.validate_dataframe_writer",
+      "fabricops_kit.io.shared.write_warehouse_synapsesql"
+    ],
     "used_in_templates": [],
     "glossary_terms": [
       "target table",
