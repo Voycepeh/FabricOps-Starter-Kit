@@ -932,6 +932,19 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     required_callee_keys = expected_callee_keys - {"docs_path", "docs_url"}
     assert all(required_callee_keys <= set(callee) <= expected_callee_keys for flow in public_flows for callee in flow["transitive_callees"])
 
+    read_csv_row = rows_by_qn["fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv"]
+    assert "src/fabricops_kit/io/read_lakehouse_csv.py" in read_csv_row["source_url"]
+    spark_row = rows_by_qn["fabricops_kit.io.shared.get_spark_session"]
+    assert "src/fabricops_kit/io/shared.py" in spark_row["source_url"]
+    config_store_row = rows_by_qn["fabricops_kit.config._get_store"]
+    assert "src/fabricops_kit/config.py" in config_store_row["source_url"]
+    flow_source_urls = [
+        row.get("source_url") or ""
+        for flow in public_flows
+        for row in [flow, *flow["direct_callees"], *flow["transitive_callees"]]
+    ]
+    assert all("src/fabricops_kit/io.py" not in source_url for source_url in flow_source_urls)
+
 
 def test_refactor_signals_json_includes_run_table_guardrails() -> None:
     """Verify structured refactor signals are generated for public guardrail orchestration."""
