@@ -553,7 +553,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 13:51 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 16:02 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -770,9 +770,14 @@
     <script>
       const FLOW_LAYER_LABELS = [
         "Public function",
-        "Internal function",
+        "Shared helper",
         "Private helper",
+        "Class",
+        "Method",
+        "Unknown",
       ];
+      const INTERNAL_LAYERING_SUGGESTED_FIX =
+        "Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.";
       const DISPLAY_LABEL_MAP = {
         "Architecture violation": "Architecture violation",
         "Long call chain": "Long call chain",
@@ -1066,7 +1071,15 @@
         return displayLabel(v);
       }
       function architectureViolationBreakdown(flows = publicEntryFlows) {
-        const counts = { "Public -> Public": 0, "Internal -> Public": 0 };
+        const counts = {
+          "Public -> Public": 0,
+          "Internal -> Public": 0,
+          "Shared helper calls private implementation": 0,
+          "Shared helper calls public callable": 0,
+          "Cross-callable private dependency": 0,
+          "Single-use shared helper": 0,
+          "Hidden nested helper chain": 0,
+        };
         flows.forEach((f) =>
           (f.transitive_callees || []).forEach((c) => {
             if (
@@ -1084,18 +1097,28 @@
             "Public function is calling another public notebook-facing API.",
           "Internal -> Public":
             "Internal function is calling a notebook-facing public API.",
+          "Shared helper calls private implementation":
+            "A shared helper reaches into private implementation details.",
+          "Shared helper calls public callable":
+            "A shared helper calls a notebook-facing public callable.",
+          "Cross-callable private dependency":
+            "A callable reaches into another callable private helper.",
+          "Single-use shared helper":
+            "A shared/internal helper is only used by one public callable.",
+          "Hidden nested helper chain":
+            "Nested helpers create an extra hidden architecture layer.",
         };
         const rows = Object.entries(architectureViolationBreakdown()).filter(
           ([, count]) => count > 0,
         );
         $("architectureViolationSection").innerHTML =
-          `<h2>Architecture violations</h2><p>Architecture violation: a call goes in the wrong direction between Public and Internal function layers.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length ? rows : Object.entries(meanings).map(([k]) => [k, 0])).map(([type, count]) => `<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join("")}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints. Internal functions are implementation details. Supporting objects are allowed dependencies and are not counted as architecture violations.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[
-            ["Public", "Public", "Violation"],
-            ["Public", "Internal", "Allowed"],
-            ["Internal", "Internal", "Allowed"],
-            ["Internal", "Public", "Violation"],
-            ["Public", "Supporting object", "Allowed"],
-            ["Internal", "Supporting object", "Allowed"],
+          `<h2>Architecture violations</h2><p>Architecture violations show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length ? rows : Object.entries(meanings).map(([k]) => [k, 0])).map(([type, count]) => `<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join("")}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[
+            ["Public function", "Public function", "Violation"],
+            ["Public function", "Shared helper", "Allowed"],
+            ["Public function", "Private helper in same file", "Allowed"],
+            ["Shared helper", "Public function", "Violation"],
+            ["Shared helper", "Private implementation", "Violation"],
+            ["Private helper", "Shared helper", "Allowed"],
           ]
             .map(
               (r) =>
@@ -1158,7 +1181,7 @@
                     finding: "Helper-level architecture findings found",
                     evidence: `${findings.length - architectureViolationCount(flow)} helper-level architecture finding(s) are visible in this flow.`,
                     suggested_action:
-                      "Review the architecture findings table and helper tags below.",
+                      "Review the architecture findings table and simple classifications below.",
                   },
                 ]
               : []),
@@ -1180,6 +1203,16 @@
                     evidence: `${flow.downstream_count} downstream functions, threshold >= ${largeThreshold}`,
                     suggested_action:
                       "Many functions depend on this flow. Refactor carefully.",
+                  },
+                ]
+              : []),
+            ...((flow.external_dependents_count || 0) > 0
+              ? [
+                  {
+                    finding: "Shared impact warning",
+                    evidence: `${flow.external_dependents_count} function(s) in this flow are used outside this flow.`,
+                    suggested_action:
+                      "Check outside dependents before refactoring shared helpers.",
                   },
                 ]
               : []),
@@ -1433,7 +1466,12 @@
             module: flow.module,
             function_type: "Public function",
             layer_group: "Public function",
-            dependency_role: "public_api",
+            simple_classification: "Public function",
+            source_path: flow.source_path,
+            calls_inside_flow: (flow.direct_callees || []).length,
+            called_inside_flow_by: 0,
+            used_outside_flow: 0,
+            is_end_node: !(flow.direct_callees || []).length,
             docs_url: flow.docs_url,
             docs_path: flow.docs_path,
             source_url: flow.source_url,
@@ -1455,18 +1493,27 @@
         return attach(root);
       }
       function renderTreeNode(n) {
-        const type = n.function_type || n.layer_group || "Public function";
-        const role = n.dependency_role
-          ? ` <span class="tag">${esc(label(n.dependency_role))}</span>`
+        const type = n.simple_classification || "Unknown",
+          file = n.source_path
+            ? ` <small>${esc(String(n.source_path).replace(/^src\/fabricops_kit\//, ""))}</small>`
+            : "",
+          metrics = [];
+        if ((n.called_inside_flow_by ?? 0) > 0)
+          metrics.push(
+            `called inside this flow by: ${n.called_inside_flow_by}`,
+          );
+        if ((n.calls_inside_flow ?? 0) > 0)
+          metrics.push(`calls inside this flow: ${n.calls_inside_flow}`);
+        if ((n.used_outside_flow ?? 0) > 0)
+          metrics.push(`used outside this flow: ${n.used_outside_flow}`);
+        if (n.is_end_node) metrics.push("end node");
+        if (n.helper_cleanup_candidate) metrics.push("merge candidate");
+        if (n.architecture_result === "Violation" && n.violation_type)
+          metrics.push(`architecture violation: ${n.violation_type}`);
+        const metricText = metrics.length
+          ? ` <span class="node-signals">${metrics.map(esc).join(" · ")}</span>`
           : "";
-        const violation =
-          n.architecture_result === "Violation" && n.violation_type
-            ? ` <span class="badge issue">Architecture violation: ${esc(n.violation_type)}</span>`
-            : "";
-        const action = n.recommended_action
-          ? ` <span class="tag">${esc(findingLabel(n.recommended_action))}</span>`
-          : "";
-        return `<li><strong>${sourceCallableLink(n)}</strong> <small>${esc(n.module || "")}</small> <span class="badge muted">${esc(type)}</span>${role}${violation}${action}${n.children?.length ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>` : ""}</li>`;
+        return `<li><strong>${sourceCallableLink(n)}</strong> <span class="badge muted">${esc(type)}</span>${file}${metricText}${n.children?.length ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>` : ""}</li>`;
       }
       function renderFlowDetails() {
         const f = publicEntryFlows.find(
@@ -1489,7 +1536,7 @@
           ),
           publicFindings = publicCallableFindingRows(f);
         $("publicFlowDetails").innerHTML =
-          `<h2>Callable flow</h2><p><strong>Selected callable:</strong> ${sourceCallableLink(f)} <small>${esc(f.qualified_name)}</small></p><p><strong>Recommendation:</strong> <span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "warn"}">${esc(suggestedActionLabel(f))}</span></p><p>${compactBadges((f.warnings || []).map(findingLabel), "warn", 99)}</p><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Depth; long call chain threshold unavailable" : `Depth; long call chain threshold >= ${longThreshold}`}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div></div><h3>Public callable findings</h3><div class="table-wrap"><table><thead><tr><th>Finding</th><th>Evidence</th><th>Suggested action</th></tr></thead><tbody>${publicFindings.map((r) => `<tr><td>${esc(r.finding)}</td><td>${esc(r.evidence)}</td><td>${esc(r.suggested_action)}</td></tr>`).join("")}</tbody></table></div><h3>Architecture findings inside this flow</h3><div class="table-wrap"><table><thead><tr><th>Source function</th><th>Source type</th><th>Target function</th><th>Target type</th><th>Finding type</th><th>Suggested fix</th></tr></thead><tbody>${(architectureFindings.length ? architectureFindings : [{}]).map((v) => (v.qualified_name ? `<tr><td>${sourceCallableLink(inventoryByQn.get(v.parent_qualified_name) || { qualified_name: v.parent_qualified_name, function_name: v.parent_qualified_name })}</td><td>${esc(v.caller_type || "Helper")}</td><td>${sourceCallableLink(v)}</td><td>${esc(v.callee_type || v.layer_group || v.function_type || "Helper")}</td><td>${esc(v.violation_type || findingLabel(v.recommended_action || "Architecture violation"))}</td><td>${esc(v.violation_type === "Internal -> Public" ? "Move shared logic behind an internal helper, then let the public API call that helper." : v.violation_type === "Public -> Public" ? "Move the shared implementation behind an internal helper so each public API remains an entrypoint." : "Review function placement and keep supporting objects out of violation counts.")}</td></tr>` : '<tr><td colspan="6">No architecture findings found in this flow.</td></tr>')).join("")}</tbody></table></div><h3>Internal helper cleanup candidates</h3><div class="table-wrap"><table><thead><tr><th>Function</th><th>Function type</th><th>Called by</th><th>Finding</th><th>Suggested action</th></tr></thead><tbody>${(mergeCandidates.length ? mergeCandidates : [{}]).map((c) => (c.qualified_name ? `<tr><td>${sourceCallableLink(c)}</td><td>${esc(c.layer_group)}</td><td>${sourceCallableLink(inventoryByQn.get(c.parent_qualified_name) || { qualified_name: c.parent_qualified_name, function_name: c.parent_qualified_name })}</td><td>${esc(findingLabel(c.recommended_action || "Merge candidate"))}</td><td>${esc((c.recommended_action || "").includes("Shared") ? "Keep as shared internal helper." : (c.recommended_action || "").includes("Review") ? "Keep only if the helper improves readability or reuse." : "Consider merging into parent.")}</td></tr>` : '<tr><td colspan="5">No internal helper cleanup candidates found.</td></tr>')).join("")}</tbody></table></div><p><strong>direct callees</strong> are included in the flow tree.</p><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
+          `<h2>Callable flow</h2><p><strong>Selected callable:</strong> ${sourceCallableLink(f)} <small>${esc(f.qualified_name)}</small></p><p><strong>Recommendation:</strong> <span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "warn"}">${esc(suggestedActionLabel(f))}</span></p><p>${compactBadges((f.warnings || []).map(findingLabel), "warn", 99)}</p><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long call chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External dependents / shared impact</span></div></div><h3>Public callable findings</h3><div class="table-wrap"><table><thead><tr><th>Finding</th><th>Evidence</th><th>Suggested action</th></tr></thead><tbody>${publicFindings.map((r) => `<tr><td>${esc(r.finding)}</td><td>${esc(r.evidence)}</td><td>${esc(r.suggested_action)}</td></tr>`).join("")}</tbody></table></div><h3>Architecture findings inside this flow</h3><div class="table-wrap"><table><thead><tr><th>Source function</th><th>Target function</th><th>Finding type</th><th>Evidence</th><th>Suggested fix</th></tr></thead><tbody>${(architectureFindings.length ? architectureFindings : [{}]).map((v) => (v.qualified_name ? `<tr><td>${sourceCallableLink(inventoryByQn.get(v.parent_qualified_name) || { qualified_name: v.parent_qualified_name, function_name: v.parent_qualified_name })}</td><td>${sourceCallableLink(v)}</td><td>${esc(v.violation_type || findingLabel(v.recommended_action || "Architecture violation"))}</td><td>${esc(v.path_examples && v.path_examples.length ? v.path_examples[0].join(" -> ") : "Dependency breaks the callable architecture rule.")}</td><td>${esc(v.violation_type === "Single-use shared helper" ? "Move this helper into the owning public callable file or keep it only if it is genuinely reused." : v.violation_type === "Public -> Public" ? "Move the shared implementation behind an internal helper so each public API remains an entrypoint." : v.violation_type === "Shared helper calls public callable" ? "Move shared logic behind a shared helper instead of calling the public API." : v.violation_type === "Cross-callable private dependency" ? "Move the private helper into the caller or promote it to a shared helper if reused." : v.violation_type === "Shared helper calls private implementation" ? "Keep private implementation details inside their owner; promote reusable logic to a shared helper." : v.violation_type === "Hidden nested helper chain" ? "Flatten nested helper chains that do not provide reusable shared behavior." : INTERNAL_LAYERING_SUGGESTED_FIX)}</td></tr>` : '<tr><td colspan="6">No architecture findings found in this flow.</td></tr>')).join("")}</tbody></table></div><h3>Internal helper cleanup candidates</h3><div class="table-wrap"><table><thead><tr><th>Function</th><th>Function type</th><th>Only caller</th><th>Finding</th><th>Suggested action</th></tr></thead><tbody>${(mergeCandidates.length ? mergeCandidates : [{}]).map((c) => (c.qualified_name ? `<tr><td>${sourceCallableLink(c)}</td><td>${esc(c.layer_group)}</td><td>${sourceCallableLink(inventoryByQn.get(c.parent_qualified_name) || { qualified_name: c.parent_qualified_name, function_name: c.parent_qualified_name })}</td><td>${esc(findingLabel(c.recommended_action || "Merge candidate"))}</td><td>${esc((c.recommended_action || "").includes("Shared") ? "Keep as shared internal helper." : (c.recommended_action || "").includes("Review") ? "Keep only if the helper improves readability or reuse." : "Consider absorbing this helper into its only caller if it does not improve readability or reuse.")}</td></tr>` : '<tr><td colspan="5">No internal helper cleanup candidates found.</td></tr>')).join("")}</tbody></table></div><p><strong>direct callees</strong> are included in the flow tree.</p><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
       function selectedItems() {
         const byQn = new Map(
@@ -1502,10 +1549,13 @@
           source_function:
             (inventoryByQn.get(v.parent_qualified_name) || {}).function_name ||
             v.parent_qualified_name,
-          source_type: v.caller_type || "Helper",
+          source_type:
+            (inventoryByQn.get(v.parent_qualified_name) || {})
+              .simple_classification ||
+            v.caller_type ||
+            "Unknown",
           target_function: v.function_name,
-          target_type:
-            v.callee_type || v.layer_group || v.function_type || "Helper",
+          target_type: v.simple_classification || "Unknown",
           finding_type:
             v.violation_type ||
             findingLabel(v.recommended_action || "Architecture violation"),
@@ -1514,7 +1564,7 @@
               ? "Move shared logic behind an internal helper, then let the public API call that helper."
               : v.violation_type === "Public -> Public"
                 ? "Move the shared implementation behind an internal helper so each public API remains an entrypoint."
-                : "Review function placement and keep supporting objects out of violation counts.",
+                : INTERNAL_LAYERING_SUGGESTED_FIX,
           source_link: linkMetadata(
             inventoryByQn.get(v.parent_qualified_name) || {
               qualified_name: v.parent_qualified_name,
@@ -1528,7 +1578,7 @@
           .filter((c) => c.helper_cleanup_candidate)
           .map((c) => ({
             function: c.function_name,
-            function_type: c.layer_group,
+            function_type: c.simple_classification || c.layer_group,
             called_by:
               (inventoryByQn.get(c.parent_qualified_name) || {})
                 .function_name || c.parent_qualified_name,
@@ -1537,7 +1587,7 @@
               ? "Keep as shared internal helper."
               : (c.recommended_action || "").includes("Review")
                 ? "Keep only if the helper improves readability or reuse."
-                : "Consider merging into parent.",
+                : "Consider absorbing this helper into its only caller if it does not improve readability or reuse.",
             link: linkMetadata(c),
             called_by_link: linkMetadata(
               inventoryByQn.get(c.parent_qualified_name) || {
@@ -1553,16 +1603,18 @@
           function_name: n.function_name,
           module: n.module,
           function_type: n.function_type || n.layer_group || "Public function",
+          classification: n.simple_classification || "Unknown",
+          source_path: n.source_path || null,
+          called_inside_flow_by: n.called_inside_flow_by || 0,
+          calls_inside_flow: n.calls_inside_flow || 0,
+          used_outside_flow: n.used_outside_flow || 0,
+          is_end_node: Boolean(n.is_end_node),
+          merge_candidate: Boolean(n.helper_cleanup_candidate),
           layer: n.layer || null,
           layer_group: n.layer_group || n.function_type || "Public function",
-          dependency_role: n.dependency_role || null,
-          callable_role: n.callable_role || [],
           helper_tags: [
             ...(n.architecture_result === "Violation" && n.violation_type
               ? [`Architecture violation: ${n.violation_type}`]
-              : []),
-            ...(n.recommended_action
-              ? [findingLabel(n.recommended_action)]
               : []),
           ],
           children: (n.children || []).map(serializeTree),
@@ -1639,7 +1691,7 @@
             "Identify helpers that can be merged into parent callables and helpers that should remain separate.",
             "Identify architecture violations, explain why they matter, and propose safe fixes.",
             "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode explicitly allows it.",
-            "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and flow tree tags as grounding evidence.",
+            "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and simple flow classifications as grounding evidence.",
             "Propose an ordered implementation plan, list tests required before and after refactor, and call out migration risks.",
           ],
           required_tests: [
@@ -1668,7 +1720,22 @@
         const tags = (n.helper_tags || []).length
           ? ` — ${(n.helper_tags || []).join(", ")}`
           : "";
-        return `${pad}- ${markdownLink(n, n.function_name)} (${n.qualified_name})${tags}${(n.children || []).length ? "\n" + n.children.map((c) => treeMarkdown(c, level + 1)).join("\n") : ""}`;
+        const cls = n.classification ? ` — ${n.classification}` : "";
+        const metrics = [
+          n.called_inside_flow_by
+            ? `called inside this flow by: ${n.called_inside_flow_by}`
+            : "",
+          n.calls_inside_flow
+            ? `calls inside this flow: ${n.calls_inside_flow}`
+            : "",
+          n.used_outside_flow
+            ? `used outside this flow: ${n.used_outside_flow}`
+            : "",
+          n.is_end_node ? "end node" : "",
+          n.merge_candidate ? "merge candidate" : "",
+        ].filter(Boolean);
+        const metricText = metrics.length ? ` — ${metrics.join(" · ")}` : "";
+        return `${pad}- ${markdownLink(n, n.function_name)} (${n.qualified_name})${cls}${metricText}${tags}${(n.children || []).length ? "\n" + n.children.map((c) => treeMarkdown(c, level + 1)).join("\n") : ""}`;
       }
       function callableMarkdown(item) {
         return [
@@ -1698,7 +1765,7 @@
           "#### Internal helper cleanup candidates",
           ...(item.internal_helper_cleanup_candidates || []).map(
             (c) =>
-              `- ${c.function} (${c.function_type}), called by ${c.called_by}: ${c.finding}; ${c.suggested_action}`,
+              `- ${c.function} (${c.function_type}), only caller ${c.called_by}: ${c.finding}; ${c.suggested_action}`,
           ),
           "#### Full nested flow tree",
           treeMarkdown(item.flow_tree),

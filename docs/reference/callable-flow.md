@@ -15,19 +15,20 @@ AI coding tools make it easy to add callables quickly. That speed is useful, but
 FabricOps keeps notebook-facing APIs small and explainable. A callable should have a clear role in the role-aware callable model:
 
 ```text
-Public functions → Internal functions (supporting objects allowed)
+Public callables → Shared internal helpers (private helpers stay owner-local)
 ```
 
-Callable review is function-layer focused. Internal-to-internal calls are valid, public functions may call internal functions, and supporting objects are allowed dependencies. The current classifier still keeps helper tags such as adapters, validators, utilities, model classes, lifecycle methods, property accessors, reachability kinds, and dependency roles for review context, but those tags are not architecture layers.
+Callable review uses a lightweight model: public functions, shared helpers, private helpers, and Unknown when the generator cannot confidently classify a node. Fine-grained maintainer taxonomy is not rendered in callable-flow docs.
 
 The intent is:
 
-- Public functions should remain stable notebook-facing surfaces.
-- Internal functions may orchestrate implementation helpers.
-- Classes, dataclasses, enums, constants, protocols, config objects, validators, resolvers, adapters, utilities, models, lifecycle methods, and property accessors are supporting context rather than architecture layers.
-- Architecture violations are limited to public-function-to-public-function and internal-function-to-public-function call edges.
+- Public callables should remain stable notebook-facing surfaces.
+- Shared helpers should remain reusable across multiple public callables.
+- Private helpers should stay local to their owning public callable file.
+- Classes, dataclasses, enums, constants, protocols, config objects, lifecycle methods, and property accessors are supporting context rather than architecture layers.
+- Architecture violations flag unsafe dependency direction, single-use shared helpers, cross-callable private dependencies, and hidden nested helper chains.
 
-This keeps public callables stable, lets purposeful internal implementation roles collaborate, and avoids treating object usage as a boundary issue.
+This keeps public callables stable, preserves intentionally shared helpers, and avoids treating object usage as a boundary issue.
 
 ## How the dashboard is generated
 
@@ -95,7 +96,6 @@ Selected callables can be exported as a structured AI refactor packet. The expor
 
 ## Inventory terms
 
-- Role group = broad job of the callable.
 - Role detail = specific detected purpose.
 - Reachability = whether it can be reached from public or notebook-facing API.
 - Findings / Signal = review hints or actions, not automatic refactor commands.
