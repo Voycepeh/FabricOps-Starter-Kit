@@ -4,29 +4,9 @@ Use this page to look up Starter Kit functions used by the template notebooks.
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">21</strong>
-    <span class="reference-kpi-title">Modules</span>
-    <p class="reference-kpi-note">Code areas represented.</p>
-  </section>
-  <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">321</strong>
-    <span class="reference-kpi-title">Total callables</span>
-    <p class="reference-kpi-note">Complete discovered callable inventory.</p>
-  </section>
-  <section class="reference-kpi-card surface-card">
     <strong class="reference-kpi-value">26</strong>
-    <span class="reference-kpi-title">Public API</span>
-    <p class="reference-kpi-note">Notebook-facing entrypoints.</p>
-  </section>
-  <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">68</strong>
-    <span class="reference-kpi-title">Supporting functions</span>
-    <p class="reference-kpi-note">Internal functions behind the public API.</p>
-  </section>
-  <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">227</strong>
-    <span class="reference-kpi-title">Private helpers to review</span>
-    <p class="reference-kpi-note">Excluded from default architecture counts.</p>
+    <span class="reference-kpi-title">Public functions</span>
+    <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
 </div>
 
@@ -47,6 +27,13 @@ Use the finder below to look up the 26 public Starter Kit functions. Internal he
 
 ??? info "Maintainer tools"
     Use these links and notes when maintaining the reference system.
+
+    Maintainer inventory metrics:
+
+    - Modules: 21
+    - Total callables: 321
+    - Supporting functions: 68
+    - Private helpers to review: 227
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Public callable flow map](callable-flow.md): global public callable dependency view and nested internal helper summary.
