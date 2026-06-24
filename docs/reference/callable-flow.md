@@ -1,15 +1,12 @@
 # Callable Flow
 
-Callable Flow is the generated review surface for keeping FabricOps notebook-facing APIs small, explainable, and safe to maintain. It is split into two linked pages:
-
-- **Callable Architecture** reviews public callable flows from the notebook-facing entry point down through its dependencies.
-- **Code Inventory** inspects supporting implementation assets such as helpers, private functions, methods, classes, and orphaned or unreached code.
+Callable Flow is the generated review surface for keeping FabricOps notebook-facing APIs small, explainable, and safe to maintain. Open the dashboard to review public callable architecture, inspect supporting implementation assets, and export focused cleanup packets when needed.
 
 <div align="center" markdown="1">
 
-[Open Callable Architecture](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
-[Open Code Inventory](../assets/callable-functions-inventory.html){ .md-button }
-[Open callable-flow.json](_data/callable-flow.json){ .md-button }
+[Open Dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+
+![Callable Flow dashboard preview](../assets/fabricops-refactor-risk-dashboard.png){ loading=lazy }
 
 </div>
 
@@ -75,7 +72,7 @@ Both pages export action-ready Markdown and JSON packages for Codex or another A
 
 ### Architecture export: `fabricops_public_callable_flow_cleanup_packet`
 
-Use **Export flow cleanup packet** after choosing a **Selected public callable flow**. The package includes:
+Use **Export flow cleanup packet** after reviewing a public callable flow. The package includes:
 
 - selected public callable name, qualified name, source file, and source URL when available;
 - recommendation, overall health, suggested next step, and key signals;

@@ -151,8 +151,7 @@
         }
       }
       .surface-card,
-      .flow-details,
-      .selected-summary {
+      .flow-details {
         background: #fff;
         border: 1px solid #dbe3ef;
         border-radius: 0.75rem;
@@ -258,13 +257,6 @@
         margin: 0.55rem 0;
         color: #64748b;
         font-size: 0.82rem;
-      }
-      .selected-summary {
-        display: none;
-        background: #eff6ff;
-      }
-      .selected-summary.is-visible {
-        display: block;
       }
       .callable-flow-filter-banner {
         display: flex;
@@ -816,7 +808,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 19:03 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 19:57 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -868,77 +860,9 @@
         </button>
       </section>
       <section id="architectureViolationSection" class="flow-details"></section>
-      <section class="export-toolbar">
-        <div class="toolbar-card-grid">
-          <div
-            class="toolbar-card toolbar-card--selection"
-            aria-label="Selection"
-          >
-            <strong id="selectedCount">Selected flow: none</strong>
-            <div class="toolbar-row">
-              <button
-                id="clearSelected"
-                class="danger-action"
-                type="button"
-                disabled
-              >
-                Clear selection
-              </button>
-            </div>
-          </div>
-          <div class="toolbar-card toolbar-card--compatibility">
-            <label class="toolbar-field"
-              >Compatibility mode
-              <select id="compatibilityMode">
-                <option value="internal_cleanup" selected>
-                  Internal cleanup
-                </option>
-                <option value="stable_api_safe">Stable API safe</option>
-                <option value="development_breaking_allowed">
-                  Development breaking allowed
-                </option></select
-              ><small class="toolbar-help"
-                >Sets the API safety assumptions for generated refactor
-                packages.</small
-              ></label
-            >
-          </div>
-        </div>
-        <div class="toolbar-card toolbar-card--prompt">
-          <div class="toolbar-group">
-            <div>
-              <strong>Export flow cleanup packet</strong><br /><small
-                class="group-help"
-                >Copy or download the selected public callable flow for
-                AI-assisted cleanup planning.</small
-              >
-            </div>
-            <div class="toolbar-row">
-              <button id="copyJson" type="button" disabled>
-                Copy flow JSON</button
-              ><button id="copyMarkdown" type="button" disabled>
-                Copy flow Markdown</button
-              ><button id="downloadJson" type="button" disabled>
-                Download flow JSON
-              </button>
-            </div>
-          </div>
-          <small id="exportStatus"></small
-          ><textarea
-            id="manualCopy"
-            class="manual-copy"
-            hidden
-            readonly
-          ></textarea>
-        </div>
-      </section>
-      <section
-        id="selectedPublicFlowSummary"
-        class="selected-summary"
-      ></section>
       <section class="table-actions">
         <button id="showAllPublicCallables" type="button" hidden>
-          Show all public callables</button
+          Back to all public callables</button
         ><button id="collapsePublicList" type="button" hidden>
           Collapse list</button
         ><small id="publicListStatus"></small
@@ -1010,6 +934,59 @@
       </section>
       <section id="publicFlowDetails" class="flow-details">
         <p>Select a public callable to inspect its flow.</p>
+      </section>
+      <section class="export-toolbar" aria-label="Advanced cleanup actions">
+        <h2>Cleanup package</h2>
+        <p class="toolbar-help">
+          Use this after reviewing the callable flow when you want Codex or
+          another AI tool to plan a focused refactor.
+        </p>
+        <div class="toolbar-card-grid">
+          <div class="toolbar-card toolbar-card--compatibility">
+            <label class="toolbar-field"
+              >Compatibility mode
+              <select id="compatibilityMode">
+                <option value="internal_cleanup" selected>
+                  Internal cleanup
+                </option>
+                <option value="stable_api_safe">Stable API safe</option>
+                <option value="development_breaking_allowed">
+                  Development breaking allowed
+                </option></select
+              ><small class="toolbar-help"
+                >Sets the API safety assumptions for generated refactor
+                packages.</small
+              ></label
+            >
+          </div>
+        </div>
+        <div class="toolbar-card toolbar-card--prompt">
+          <div class="toolbar-group">
+            <div>
+              <strong>Export flow cleanup packet</strong><br /><small
+                class="group-help"
+                >Copy or download the inspected public callable flow for
+                AI-assisted cleanup planning.</small
+              >
+            </div>
+            <div class="toolbar-row">
+              <button id="copyJson" type="button" disabled>
+                Copy flow JSON</button
+              ><button id="copyMarkdown" type="button" disabled>
+                Copy flow Markdown</button
+              ><button id="downloadJson" type="button" disabled>
+                Download flow JSON
+              </button>
+            </div>
+          </div>
+          <small id="exportStatus"></small
+          ><textarea
+            id="manualCopy"
+            class="manual-copy"
+            hidden
+            readonly
+          ></textarea>
+        </div>
       </section>
     </main>
     <script>
@@ -1529,20 +1506,10 @@
         );
         $("showAllPublicCallables").hidden = !state.collapsedPublicList;
         $("collapsePublicList").hidden = state.collapsedPublicList || !active;
-        $("publicListStatus").textContent =
+        $("publicListStatus").innerHTML =
           state.collapsedPublicList && active
-            ? `Showing selected callable from ${visibleFlows.length} matching public callables.`
+            ? `<strong>Showing flow for <code>${esc(active.function_name)}</code></strong> from ${visibleFlows.length} matching public callables.`
             : `Showing ${visibleFlows.length} matching public callables.`;
-        const showSelectedBanner = Boolean(state.collapsedPublicList && active);
-        $("selectedPublicFlowSummary").classList.toggle(
-          "is-visible",
-          showSelectedBanner,
-        );
-        $("selectedPublicFlowSummary").innerHTML = showSelectedBanner
-          ? `<div class="callable-flow-filter-banner"><strong>Showing flow for <code>${esc(active.function_name)}</code></strong><button type="button" id="backToAllPublicCallables" class="callable-flow-reset-button">Back to all public callables</button></div>`
-          : "";
-        const reset = $("backToAllPublicCallables");
-        if (reset) reset.onclick = showAllPublicCallables;
       }
       function renderLoadStatus(message, isError = false) {
         const el = $("dataLoadStatus");
@@ -1599,7 +1566,7 @@
               strong = p === "Critical" || p === "High",
               active =
                 f.qualified_name === state.activePublicFlow ? "active" : "";
-            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}"><td><input type="radio" name="selectedPublicFlow" data-select-row="${esc(f.qualified_name)}" ${state.selectedFlow === f.qualified_name ? "checked" : ""} aria-label="Select flow ${esc(f.function_name)}"></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)} <button type="button" class="callable-button" data-public-flow="${esc(f.qualified_name)}">Inspect flow</button></td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
+            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}"><td><input type="radio" name="selectedPublicFlow" data-select-row="${esc(f.qualified_name)}" ${state.activePublicFlow === f.qualified_name ? "checked" : ""} aria-label="Select flow ${esc(f.function_name)}"></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)}</td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
           })
           .join("");
         setPublicListControls();
@@ -1821,7 +1788,7 @@
         const byQn = new Map(
           publicEntryFlows.map((r) => [r.qualified_name, r]),
         );
-        return state.selectedFlow ? byQn.get(state.selectedFlow) : null;
+        return state.activePublicFlow ? byQn.get(state.activePublicFlow) : null;
       }
       function selectedItems() {
         const item = selectedItem();
@@ -2136,28 +2103,20 @@ Return summary, changed functions, tests, risks, and skipped items.
       }
       function updateExportControls() {
         const item = selectedItem();
-        $("selectedCount").textContent = item
-          ? `Selected flow: ${item.function_name}`
-          : "Selected flow: none";
         ["copyJson", "copyMarkdown", "downloadJson"].forEach(
           (id) => ($(id).disabled = !item),
         );
-        $("clearSelected").disabled = !item;
       }
       $("showAllPublicCallables").onclick = showAllPublicCallables;
       $("collapsePublicList").onclick = collapsePublicList;
-      $("clearSelected").onclick = () => {
-        state.selectedFlow = "";
-        renderPublicCallableList();
-      };
       $("copyJson").onclick = () => copyExport("json");
       $("copyMarkdown").onclick = () => copyExport("markdown");
       $("downloadJson").onclick = downloadJson;
       document.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-public-flow]");
-        if (b) {
-          state.activePublicFlow = b.dataset.publicFlow;
-          state.selectedFlow = b.dataset.publicFlow;
+        const row = e.target.closest("[data-public-flow-row]");
+        if (row && !e.target.closest("a, button, input, select, textarea")) {
+          state.activePublicFlow = row.dataset.publicFlowRow;
+          state.selectedFlow = row.dataset.publicFlowRow;
           state.collapsedPublicList = true;
           renderPublicCallableList();
           $("publicFlowDetails").scrollIntoView({
@@ -2171,7 +2130,12 @@ Return summary, changed functions, tests, risks, and skipped items.
         if (r) {
           state.selectedFlow = r.dataset.selectRow;
           state.activePublicFlow = r.dataset.selectRow;
+          state.collapsedPublicList = true;
           renderPublicCallableList();
+          $("publicFlowDetails").scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         }
       });
       $("decisionSearchBox").addEventListener("input", (e) => {
