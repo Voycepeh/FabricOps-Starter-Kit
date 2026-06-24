@@ -2226,6 +2226,36 @@ def test_table_controls_are_opt_in_and_safe_for_dynamic_rows() -> None:
     assert 'th.querySelector(":scope > .fo-table-menu-button")' in script
     assert 'querySelectorAll("table")' not in script
 
+
+def test_global_table_controls_keep_filter_menu_inside_viewport() -> None:
+    """Verify right-edge table filter menus are clamped inside the viewport."""
+    node_script = """
+    const menu = {
+      offsetWidth: 256,
+      offsetHeight: 240,
+      style: {},
+      getBoundingClientRect(){ return {width: 256, height: 240}; },
+    };
+    global.window = {innerWidth: 320, innerHeight: 600};
+    global.document = {
+      addEventListener(){},
+      querySelectorAll(){return []},
+      body:{appendChild(){}},
+      documentElement:{clientWidth: 320, clientHeight: 600},
+    };
+    require('./docs/javascripts/table-controls.js');
+    const t = window.FabricOpsTableControls._test;
+    function assert(condition, message){ if(!condition){ throw new Error(message); } }
+    const rightEdgeButton = {getBoundingClientRect(){ return {left: 292, right: 312, bottom: 40}; }};
+    t.positionMenu(rightEdgeButton, menu);
+    const left = Number.parseFloat(menu.style.left);
+    assert(left >= 8, 'menu left is clamped to viewport margin');
+    assert(left + 256 <= 312, 'menu flips left from right-edge trigger');
+    assert(left + 256 <= 320 - 8, 'menu stays inside right viewport margin');
+    assert(menu.style.top === '44px', 'menu keeps the configured side offset below the trigger');
+    """
+    subprocess.run(["node", "-e", node_script], cwd=ROOT, check=True)
+
 def test_global_table_controls_core_sort_and_filter_helpers() -> None:
     """Exercise shared table utility helpers for sort and filter behavior."""
     node_script = """
