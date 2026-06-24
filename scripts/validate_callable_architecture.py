@@ -18,6 +18,7 @@ INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
 
 VISIBLE_FUNCTION_TYPES = {"Public function", "Internal function"}
 PRIVATE_HELPER_TYPE = "Private helper"
+PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Internal", PRIVATE_HELPER_TYPE}
 VISIBLE_LAYERS = {"public", "internal"}
 PRIVATE_HELPER_LAYER = "private_helper"
 OLD_VISIBLE_LAYER_LABELS = {"Public API", "Internal helper", "Utility", "Adapter", "Workflow", "Private"}
@@ -341,11 +342,10 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
     architecture_violation_edges = 0
     for flow_row in flow.get("public_entrypoint_flow", []):
         for callee in [*flow_row.get("direct_callees", []), *flow_row.get("transitive_callees", [])]:
-            name = str(callee.get("callable", ""))
-            if name.split(".")[-1].startswith("_") or callee.get("layer") == PRIVATE_HELPER_LAYER:
-                failures.append(f"Private helper surfaced in default public flow: {flow_row.get('qualified_name')} -> {callee.get('qualified_name')}")
-            if callee.get("callee_type") not in {"Public", "Internal"}:
-                failures.append(f"Non Public/Internal callee type in public flow: {callee.get('qualified_name')}={callee.get('callee_type')!r}")
+            if callee.get("function_type") == "Supporting object" or callee.get("layer") == "supporting_object":
+                failures.append(f"Supporting object surfaced in public flow: {callee.get('qualified_name')}")
+            if callee.get("callee_type") not in PUBLIC_FLOW_CALLEE_TYPES:
+                failures.append(f"Non callable-layer callee type in public flow: {callee.get('qualified_name')}={callee.get('callee_type')!r}")
             if callee.get("architecture_result") == "Violation":
                 architecture_violation_edges += 1
                 if callee.get("violation_type") not in {"Public -> Public", "Internal -> Public"}:

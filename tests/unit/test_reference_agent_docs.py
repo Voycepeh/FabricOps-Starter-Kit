@@ -1768,6 +1768,8 @@ def test_callable_architecture_layer_rules_and_labels():
     allowed = [
         ("Public", "Internal", "Allowed"),
         ("Internal", "Internal", "Allowed"),
+        ("Public", "Private helper", "Allowed"),
+        ("Private helper", "Private helper", "Allowed"),
         ("Public", "Supporting object", "Allowed"),
         ("Internal", "Supporting object", "Allowed"),
     ]
@@ -1852,6 +1854,133 @@ def test_callable_architecture_validation_allows_private_helper_review_rows(monk
     monkeypatch.setattr(validator, "_source_failures", lambda: [])
 
     assert validator._failures(flow) == []
+
+
+def test_callable_graph_resolves_relative_import_alias_forms() -> None:
+    """Verify callable graph resolution handles explicit and module relative imports."""
+    import ast
+
+    import scripts.generate_function_reference as generator
+
+    tree = ast.parse(
+        "from .shared import get_spark_session\n"
+        "from . import shared\n"
+        "from ..io_core import _get_spark\n"
+    )
+    module_aliases, symbol_aliases = generator.parse_import_aliases(tree.body)
+    package_modules = {"io.shared", "io_core"}
+
+    assert symbol_aliases["get_spark_session"] == ".shared.get_spark_session"
+    assert module_aliases["shared"] == ".shared"
+    assert symbol_aliases["_get_spark"] == "..io_core._get_spark"
+    assert generator.resolve_call_target(
+        "io.read_lakehouse_csv",
+        "get_spark_session",
+        module_aliases,
+        symbol_aliases,
+        set(),
+        {},
+        package_modules,
+    ) == ("fabricops_kit.io.shared.get_spark_session", "cross_module", "internal_callable")
+    assert generator.resolve_call_target(
+        "io.read_lakehouse_csv",
+        "shared.get_spark_session",
+        module_aliases,
+        symbol_aliases,
+        set(),
+        {},
+        package_modules,
+    ) == ("fabricops_kit.io.shared.get_spark_session", "cross_module", "internal_callable")
+    assert generator.resolve_call_target(
+        "io.read_lakehouse_csv",
+        "_get_spark",
+        module_aliases,
+        symbol_aliases,
+        set(),
+        {},
+        package_modules,
+    ) == ("fabricops_kit.io_core._get_spark", "cross_module", "internal_helper")
+
+
+def test_callable_architecture_validation_allows_private_helpers_in_public_flow(monkeypatch, tmp_path) -> None:
+    """Verify generated validation accepts public flows with visible private helpers."""
+    import scripts.validate_callable_architecture as validator
+
+    public_qn = "fabricops_kit.example.public_api"
+    first_helper_qn = "fabricops_kit.example._helper"
+    second_helper_qn = "fabricops_kit.example._nested_helper"
+    flow = {
+        "function_inventory": [
+            {"qualified_name": public_qn, "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+            {"qualified_name": first_helper_qn, "function_name": "_helper", "function_type": "Private helper", "layer": "private_helper", "callable_kind": "function", "architecture_signals": [], "recommended_action": "Keep private helper"},
+            {"qualified_name": second_helper_qn, "function_name": "_nested_helper", "function_type": "Private helper", "layer": "private_helper", "callable_kind": "function", "architecture_signals": [], "recommended_action": "Keep private helper"},
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 1, "Internal function": 0},
+            "layer": {"public": 1, "internal": 0},
+            "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 0},
+            "callable_inventory_metrics": {"function_callables": 1, "private_helpers_to_review": 2},
+        },
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": public_qn,
+                "direct_callees": [
+                    {"qualified_name": first_helper_qn, "function_name": "_helper", "function_type": "Private helper", "layer": "private_helper", "callee_type": "Private helper", "architecture_result": "Allowed"}
+                ],
+                "transitive_callees": [
+                    {"qualified_name": first_helper_qn, "function_name": "_helper", "function_type": "Private helper", "layer": "private_helper", "callee_type": "Private helper", "parent_qualified_name": public_qn, "architecture_result": "Allowed"},
+                    {"qualified_name": second_helper_qn, "function_name": "_nested_helper", "function_type": "Private helper", "layer": "private_helper", "callee_type": "Private helper", "parent_qualified_name": first_helper_qn, "architecture_result": "Allowed"},
+                ],
+            }
+        ],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("Private helper", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    assert validator._failures(flow) == []
+
+
+def test_callable_architecture_validation_rejects_supporting_objects_in_public_flow(monkeypatch, tmp_path) -> None:
+    """Verify generated validation still rejects supporting objects in public flows."""
+    import scripts.validate_callable_architecture as validator
+
+    flow = {
+        "function_inventory": [
+            {"qualified_name": "fabricops_kit.example.public_api", "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 1, "Internal function": 0},
+            "layer": {"public": 1, "internal": 0},
+            "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 0},
+            "callable_inventory_metrics": {"function_callables": 1, "private_helpers_to_review": 0},
+        },
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": "fabricops_kit.example.public_api",
+                "direct_callees": [],
+                "transitive_callees": [
+                    {"qualified_name": "fabricops_kit.example.Model", "function_name": "Model", "function_type": "Supporting object", "layer": "supporting_object", "callee_type": "Supporting object", "architecture_result": "Allowed"}
+                ],
+            }
+        ],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    failures = validator._failures(flow)
+
+    assert any("Supporting object surfaced in public flow" in failure for failure in failures)
+    assert any("Non callable-layer callee type" in failure for failure in failures)
 
 
 def test_callable_architecture_validation_allows_same_file_private_helper(monkeypatch, tmp_path) -> None:

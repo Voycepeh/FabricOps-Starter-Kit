@@ -404,13 +404,16 @@ def parse_import_aliases(nodes: list[ast.stmt]) -> tuple[dict[str, str], dict[st
                 name = alias.asname or alias.name
                 module_aliases[name] = alias.name
         elif isinstance(node, ast.ImportFrom):
-            if not node.module:
-                continue
+            module = node.module or ""
+            prefix = "." * node.level
             for alias in node.names:
                 if alias.name == "*":
                     continue
                 name = alias.asname or alias.name
-                symbol_aliases[name] = f"{'.' * node.level}{node.module}.{alias.name}"
+                if module:
+                    symbol_aliases[name] = f"{prefix}{module}.{alias.name}"
+                else:
+                    module_aliases[name] = f"{prefix}{alias.name}"
     return module_aliases, symbol_aliases
 
 
@@ -437,6 +440,17 @@ def collect_function_calls(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list
     return calls
 
 
+def _resolve_relative_import_name(module: str, imported: str) -> str:
+    """Resolve a possibly relative import target against a module name."""
+    if not imported.startswith("."):
+        return imported
+    level = len(imported) - len(imported.lstrip("."))
+    relative_name = imported[level:]
+    module_parts = module.split(".")
+    base_parts = module_parts[: max(len(module_parts) - level, 0)]
+    return ".".join([*base_parts, relative_name]) if base_parts else relative_name
+
+
 def resolve_call_target(
     module: str,
     raw_name: str,
@@ -460,13 +474,7 @@ def resolve_call_target(
 
     # explicit import alias from "from x import y as z"
     if raw_name in symbol_aliases:
-        imported = symbol_aliases[raw_name]
-        if imported.startswith("."):
-            level = len(imported) - len(imported.lstrip("."))
-            relative_name = imported[level:]
-            module_parts = module.split(".")
-            base_parts = module_parts[: max(len(module_parts) - level, 0)]
-            imported = ".".join([*base_parts, relative_name]) if base_parts else relative_name
+        imported = _resolve_relative_import_name(module, symbol_aliases[raw_name])
         imported_short = imported.split(".")
         if len(imported_short) >= 2:
             resolved_symbol = imported_short[-1]
@@ -483,10 +491,11 @@ def resolve_call_target(
     # module/alias call like alias.func() or module.func()
     if "." in raw_name:
         owner, member = raw_name.split(".", 1)
-        mapped_owner = module_aliases.get(owner, owner)
+        mapped_owner = _resolve_relative_import_name(module, module_aliases.get(owner, owner))
         short_owner = mapped_owner.split(".")[-1]
-        if mapped_owner.startswith(PACKAGE_NAME) or short_owner in package_module_names:
-            resolved_module = short_owner if short_owner in package_module_names else mapped_owner.rsplit(".", 1)[-1]
+        resolved_owner = mapped_owner.removeprefix(f"{PACKAGE_NAME}.")
+        if mapped_owner.startswith(PACKAGE_NAME) or resolved_owner in package_module_names or short_owner in package_module_names:
+            resolved_module = resolved_owner if resolved_owner in package_module_names else short_owner
             callee_kind = _classify_callee(resolved_module, member)
             return f"{PACKAGE_NAME}.{resolved_module}.{member}", "cross_module" if resolved_module != module else "same_module", callee_kind
         return None, "unresolved", "unresolved"
@@ -2918,8 +2927,10 @@ def _decision_layer_group(row: dict[str, Any]) -> str:
 
 
 def _architecture_layer(row: dict[str, Any]) -> str:
-    """Return the two-layer function architecture label for a flow row."""
-    if row.get("callable_kind") != "function" or row.get("layer") == HIDDEN_PRIVATE_LAYER:
+    """Return the callable architecture label for a flow row."""
+    if row.get("layer") == HIDDEN_PRIVATE_LAYER or row.get("function_type") == PRIVATE_HELPER_LABEL:
+        return PRIVATE_HELPER_LABEL
+    if row.get("callable_kind") != "function":
         return "Supporting object"
     group = _decision_layer_group(row)
     if group == "Public function":
@@ -3277,7 +3288,6 @@ def _callable_flow_metadata(generated_at_utc: datetime) -> dict[str, Any]:
         "generated_at_utc": generated_at_utc.isoformat().replace("+00:00", "Z"),
         "data_source": "callable-flow.json",
     }
-    metadata.update(_callable_flow_source_context())
     return metadata
 
 
