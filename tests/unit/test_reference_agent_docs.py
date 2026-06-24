@@ -274,7 +274,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Decision mode: Public API Surface" not in dashboard_text
     assert "Search public callables" in dashboard_text
     assert "Search by callable, module, finding, or recommendation..." in dashboard_text
-    assert "Export cleanup packet" in dashboard_text
+    assert "Export flow cleanup packet" in dashboard_text
+    assert "Export cleanup packet" not in dashboard_text
     assert "Generated at:" in dashboard_text
     assert "Data source:" in dashboard_text
     assert "callable-flow.json" in dashboard_text
@@ -352,24 +353,34 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function stableSortRows(rows)" in dashboard_text
     assert "a.index-b.index" in compact_dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
-    assert "Copy JSON" in dashboard_text
-    assert "Copy Markdown" in dashboard_text
-    assert "Download JSON" in dashboard_text
+    assert "Copy flow JSON" in dashboard_text
+    assert "Copy flow Markdown" in dashboard_text
+    assert "Download flow JSON" in dashboard_text
     assert "compatibilityMode" in dashboard_text
     assert "COMPATIBILITY_INSTRUCTIONS" in dashboard_text
     assert "function callableMarkdown(item)" in dashboard_text
     assert "function markdownPacket(packet)" in dashboard_text
     assert "Objective" in dashboard_text
-    assert "Architecture intent" in dashboard_text
+    assert "Implementation instruction" in dashboard_text
     assert "Compatibility mode" in dashboard_text
     assert "toolbar-card-grid" in dashboard_text
     assert "toolbar-card--selection" in dashboard_text
     assert "toolbar-card--compatibility" in dashboard_text
     assert "toolbar-card--prompt" in dashboard_text
     assert "toolbar-row--top" not in dashboard_text
-    assert "Selected callables" in dashboard_text
+    assert "Selected public callable flow" in dashboard_text
+    assert "Selected callables" not in dashboard_text
+    assert "Selected flow: none" in dashboard_text
+    assert "Select visible" not in dashboard_text
+    assert "selected:newSet()" not in compact_dashboard_text
+    assert "selectedFlow:''" in compact_dashboard_text
+    assert "fabricops_public_callable_flow_cleanup_packet" in dashboard_text
     assert "Requested work" in dashboard_text
-    assert "Output required from AI" in dashboard_text
+    assert "Safety constraints" in dashboard_text
+    assert "Expected output" in dashboard_text
+    assert "Same-file private dependency is warning only" in dashboard_text
+    assert "Cross-file private dependency is an architecture violation" in dashboard_text
+    assert "Requested work" in dashboard_text
     assert "Batch accounting" in dashboard_text
     assert "downstream_count" in dashboard_text
     assert "max_depth" in dashboard_text
@@ -378,11 +389,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "boundary_violations" not in dashboard_text
     assert "architecture_findings" in dashboard_text
     assert "flow_tree" in dashboard_text
-    assert "internal_helper_cleanup_candidates" in dashboard_text
+    assert "merge_candidates" in dashboard_text
     assert "public_callable_findings" in dashboard_text
-    assert "merge_shortening_candidate_count" in dashboard_text
-    assert "planning_instructions" in dashboard_text
-    assert "required_tests" in dashboard_text
+    assert "merge_candidate_count" in dashboard_text
+    assert "requested_work" in dashboard_text
+    assert "safety_constraints" in dashboard_text
     assert "function publicCallableFindingRows(flow)" in dashboard_text
     assert "flow-summary-card" in dashboard_text
     assert "flow-key-signals" in dashboard_text
@@ -396,29 +407,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Internal helper cleanup candidates</h3>" not in dashboard_text
     assert "#### Public callable findings" in dashboard_text
     assert "#### Architecture findings" in dashboard_text
-    assert "#### Internal helper cleanup candidates" in dashboard_text
+    assert "#### Merge candidates" in dashboard_text
     assert "#### Full nested flow tree" in dashboard_text
     assert "helper_tags" in dashboard_text
-    assert "Group functions by refactor action before proposing code changes." in dashboard_text
-    assert "Identify helpers that can be merged into parent callables and helpers that should remain separate." in dashboard_text
-    assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode explicitly allows it." in dashboard_text
-    assert "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and simple flow classifications as grounding evidence." in dashboard_text
-    assert "Propose an ordered implementation plan, list tests required before and after refactor, and call out migration risks." in dashboard_text
-    assert "final_output_required" in dashboard_text
-    assert "## Final output required" in dashboard_text
-    assert "Write the final output as instructions that can be pasted into Codex, Claude Code, Cursor, or another coding agent." in dashboard_text
-    assert "Produce a PR execution plan for a coding agent targeting the main branch." in dashboard_text
-    assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode allows it." in dashboard_text
-    assert "Group refactor actions by helper/function." in dashboard_text
-    assert "Identify architecture violations to address." in dashboard_text
-    assert "Identify helpers to merge, move, or keep." in dashboard_text
-    assert "List implementation steps in order." in dashboard_text
-    assert "List tests to add, update, and run." in dashboard_text
-    assert "Define acceptance criteria." in dashboard_text
-    assert "Call out risks and rollback notes." in dashboard_text
-    assert "Do not write code yet and do not generate a patch." in dashboard_text
-    assert dashboard_text.index("## Final output required") > dashboard_text.index("## Batch accounting")
-    assert "Do not write code yet and do not generate a patch.\n`;" in dashboard_text
+    assert "Inspect the selected public callable and its call flow." in dashboard_text
+    assert "Resolve true cross-file private dependency violations first." in dashboard_text
+    assert "For same-file private dependencies, treat as warning only." in dashboard_text
+    assert "Merge or inline helpers only when readability improves." in dashboard_text
+    assert "Preserve notebook-facing behavior." in dashboard_text
+    assert "Return summary, changed functions, tests, risks, and skipped items." in dashboard_text
+    assert "You are cleaning up a selected public callable flow." in dashboard_text
+    assert "Do not casually change public function signatures." in dashboard_text
     assert "source_url:row.source_url||null" in compact_dashboard_text
     assert "docs_url:row.docs_url||null" in compact_dashboard_text
     assert "file_path:row.source_path||null" in compact_dashboard_text
@@ -437,9 +436,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "cross_layer_issue_count" not in dashboard_text
     assert "Suggested next step" in dashboard_text
     assert "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details." in dashboard_text
-    assert "disabled>CopyJSON" in compact_dashboard_text
-    assert "disabled>CopyMarkdown" in compact_dashboard_text
-    assert "disabled>DownloadJSON" in compact_dashboard_text
+    assert "disabled>CopyflowJSON" in compact_dashboard_text
+    assert "disabled>CopyflowMarkdown" in compact_dashboard_text
+    assert "disabled>DownloadflowJSON" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in compact_dashboard_text
     assert "quickFilter:'all'" not in compact_dashboard_text
@@ -661,7 +660,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "toolbar-card--prompt" in inventory_text
     assert "toolbar-row--top" not in inventory_text
     assert "Selected code assets" in inventory_text
+    assert "Selected code asset" in inventory_text
+    assert "fabricops_support_inventory_cleanup_packet" in inventory_text
+    assert "Selected code asset(s):" in inventory_text
     assert "Requested work" in inventory_text
+    assert "Safety constraints" in inventory_text
+    assert "Expected output" in inventory_text
     assert "Batch accounting" in inventory_text
     assert "disabled>CopyJSON" in compact_inventory_text
     assert "disabled>CopyMarkdown" in compact_inventory_text

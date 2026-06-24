@@ -816,7 +816,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 18:37 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 19:03 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -874,11 +874,9 @@
             class="toolbar-card toolbar-card--selection"
             aria-label="Selection"
           >
-            <strong id="selectedCount">Selected: 0 callables</strong>
+            <strong id="selectedCount">Selected flow: none</strong>
             <div class="toolbar-row">
-              <button id="selectVisible" class="primary-action" type="button">
-                Select visible</button
-              ><button
+              <button
                 id="clearSelected"
                 class="danger-action"
                 type="button"
@@ -909,18 +907,19 @@
         <div class="toolbar-card toolbar-card--prompt">
           <div class="toolbar-group">
             <div>
-              <strong>Export cleanup packet</strong><br /><small
+              <strong>Export flow cleanup packet</strong><br /><small
                 class="group-help"
-                >Copy or download selected callables for AI-assisted cleanup
-                planning.</small
+                >Copy or download the selected public callable flow for
+                AI-assisted cleanup planning.</small
               >
             </div>
             <div class="toolbar-row">
-              <button id="copyJson" type="button" disabled>Copy JSON</button
+              <button id="copyJson" type="button" disabled>
+                Copy flow JSON</button
               ><button id="copyMarkdown" type="button" disabled>
-                Copy Markdown</button
+                Copy flow Markdown</button
               ><button id="downloadJson" type="button" disabled>
-                Download JSON
+                Download flow JSON
               </button>
             </div>
           </div>
@@ -1040,7 +1039,7 @@
         summaryCounts = {},
         inventoryByQn = new Map();
       const state = {
-        selected: new Set(),
+        selectedFlow: "",
         activePublicFlow: "",
         collapsedPublicList: false,
         decisionSearch: "",
@@ -1600,7 +1599,7 @@
               strong = p === "Critical" || p === "High",
               active =
                 f.qualified_name === state.activePublicFlow ? "active" : "";
-            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}"><td><input type="checkbox" data-select-row="${esc(f.qualified_name)}" ${state.selected.has(f.qualified_name) ? "checked" : ""}></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)} <button type="button" class="callable-button" data-public-flow="${esc(f.qualified_name)}">Inspect flow</button></td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
+            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}"><td><input type="radio" name="selectedPublicFlow" data-select-row="${esc(f.qualified_name)}" ${state.selectedFlow === f.qualified_name ? "checked" : ""} aria-label="Select flow ${esc(f.function_name)}"></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)} <button type="button" class="callable-button" data-public-flow="${esc(f.qualified_name)}">Inspect flow</button></td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
           })
           .join("");
         setPublicListControls();
@@ -1818,11 +1817,19 @@
         $("publicFlowDetails").innerHTML =
           `<h2>Callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long call chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} internal helpers may be reviewed for possible merge. Open the flow tree to inspect helper placement.`) : "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details."}</p></section><section class="flow-next-step"><h3>Suggested next step</h3><p>${esc(nextStep)}</p></section><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
-      function selectedItems() {
+      function selectedItem() {
         const byQn = new Map(
           publicEntryFlows.map((r) => [r.qualified_name, r]),
         );
-        return [...state.selected].map((q) => byQn.get(q)).filter(Boolean);
+        return state.selectedFlow ? byQn.get(state.selectedFlow) : null;
+      }
+      function selectedItems() {
+        const item = selectedItem();
+        return item ? [item] : [];
+      }
+      function selectedFlowName() {
+        const item = selectedItem();
+        return item ? item.function_name : "none";
       }
       function findingRows(f) {
         return architectureFindingRows(f).map((v) => ({
@@ -1902,30 +1909,36 @@
         const tree = buildFlowTree(f),
           row = inventoryByQn.get(f.qualified_name) || f,
           cleanup = cleanupRows(f),
-          publicFindings = publicCallableFindingRows(f);
+          publicFindings = publicCallableFindingRows(f),
+          architectureFindings = findingRows(f),
+          health = flowHealth(f, architectureFindingRows(f), cleanup),
+          nextStep = flowNextStep(f, architectureFindingRows(f), cleanup);
         return {
           selected_public_callable_name: f.function_name,
-          function_name: f.function_name,
           qualified_name: f.qualified_name,
-          module: f.module,
-          module_docs_url: moduleHref(f.module) || null,
-          callable_type:
-            row.function_type || row.callable_kind || "Public function",
+          source_file: row.source_path || null,
+          source_url: row.source_url || null,
           recommendation: suggestedActionLabel(f),
-          tags: f.warnings || [],
-          findings: f.warnings || [],
-          why_review: whyReview(f),
-          depth: f.max_depth,
-          call_depth: f.max_depth,
+          overall_health: health,
+          suggested_next_step: nextStep,
+          key_signals: (f.warnings || []).map(findingLabel),
           downstream_count: f.downstream_count,
-          modules_touched: f.modules_touched || [],
+          max_depth: f.max_depth,
           architecture_violation_count: f.architecture_violation_count || 0,
-          merge_shortening_candidate_count:
-            f.helper_cleanup_candidates || cleanup.length,
+          merge_candidate_count: f.helper_cleanup_candidates || cleanup.length,
+          modules_touched: f.modules_touched || [],
+          external_shared_impact_count: f.external_dependents_count || 0,
+          direct_callees: f.direct_callees || [],
+          transitive_callees: f.transitive_callees || [],
+          architecture_findings: architectureFindings,
+          merge_candidates: cleanup,
           public_callable_findings: publicFindings,
-          architecture_findings: findingRows(f),
-          internal_helper_cleanup_candidates: cleanup,
           flow_tree: serializeTree(tree),
+          flow_context: {
+            direct_callees: f.direct_callees || [],
+            transitive_callees: f.transitive_callees || [],
+            flow_tree: serializeTree(tree),
+          },
           ...linkMetadata(f),
         };
       }
@@ -1936,61 +1949,51 @@
         development_breaking_allowed:
           "Breaking changes require updated callers, tests, and docs.",
       };
-      function refactorContext(callables) {
+      function refactorContext() {
         const mode = $("compatibilityMode").value;
         return {
           compatibility_mode: mode,
           compatibility_instruction: COMPATIBILITY_INSTRUCTIONS[mode],
-          planning_only: true,
+          implementation_instruction:
+            "You are cleaning up a selected public callable flow. Preserve public callable behavior and external API compatibility. Inspect the selected callable and its dependencies. Apply only focused changes that improve readability, reduce unnecessary helper depth, or resolve true architecture violations. Do not casually change public function signatures.",
         };
       }
-      function batchAccounting(callables) {
+      function batchAccounting(item) {
         return {
-          selected_callable_count: callables.length,
-          planned_batch_count: callables.length,
-          batch_id: null,
-          batch_scope: "selected / handled / remaining counts",
-          batch_strategy: "Completion accounting required in PR description",
-          completed_or_refactored_count: null,
-          remaining_selected_count: null,
-          deferred_selected_callables: [],
+          selected_public_callable_count: item ? 1 : 0,
+          planned_flow_count: item ? 1 : 0,
+          completed_or_refactored_count: "fill in after implementation",
+          deferred_items: "fill in after implementation",
         };
       }
       function refactorPacket() {
-        const callables = selectedItems().map(exportItem);
+        const item = selectedItem(),
+          selected = item ? exportItem(item) : null;
         return {
-          schema: "fabricops_callable_refactor_packet",
-          callables,
-          functions: callables,
-          batch_accounting: batchAccounting(callables),
-          refactor_context: refactorContext(callables),
-          planning_instructions: [
-            "Group functions by refactor action before proposing code changes.",
-            "Identify helpers that can be merged into parent callables and helpers that should remain separate.",
-            "Identify architecture violations, explain why they matter, and propose safe fixes.",
-            "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode explicitly allows it.",
-            "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and simple flow classifications as grounding evidence.",
-            "Propose an ordered implementation plan, list tests required before and after refactor, and call out migration risks.",
+          schema: "fabricops_public_callable_flow_cleanup_packet",
+          selected_public_callable: selected,
+          selected_flow: selected,
+          flow_context: selected ? selected.flow_context : null,
+          batch_accounting: batchAccounting(item),
+          refactor_context: refactorContext(),
+          requested_work: [
+            "Inspect the selected public callable and its call flow.",
+            "Identify whether the recommended action is safe.",
+            "Resolve true cross-file private dependency violations first.",
+            "For same-file private dependencies, treat as warning only.",
+            "Merge or inline helpers only when readability improves.",
+            "Preserve notebook-facing behavior.",
+            "Update tests where behavior could be affected.",
+            "Return summary, changed functions, tests, risks, and skipped items.",
           ],
-          required_tests: [
-            "Run relevant unit tests for changed helpers before and after refactor.",
-            "Run compile and docs checks when generated references or docs change.",
-          ],
-          final_output_required: [
-            "Write the final output as instructions that can be pasted into Codex, Claude Code, Cursor, or another coding agent.",
-            "Produce a PR execution plan for a coding agent targeting the main branch.",
-            "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode allows it.",
-            "Group refactor actions by helper/function.",
-            "Identify architecture violations to address.",
-            "Identify helpers to merge, move, or keep.",
-            "List implementation steps in order.",
-            "List tests to add, update, and run.",
-            "Define acceptance criteria.",
-            "Call out risks and rollback notes.",
-            "Do not write code yet and do not generate a patch.",
+          safety_constraints: [
+            "Preserve public callable behavior and external API compatibility.",
+            "Do not casually change public function signatures.",
+            "Same-file private dependency is warning only.",
+            "Cross-file private dependency is an architecture violation.",
           ],
           ai_prompt:
-            "Review selected public callable flows with the included callable-level evidence and produce a coding-agent PR execution plan.",
+            "You are cleaning up a selected public callable flow. Preserve public callable behavior and external API compatibility. Inspect the selected callable and its dependencies. Apply only focused changes that improve readability, reduce unnecessary helper depth, or resolve true architecture violations. Do not casually change public function signatures.",
         };
       }
       function treeMarkdown(n, level = 0) {
@@ -2016,21 +2019,26 @@
         return `${pad}- ${markdownLink(n, n.function_name)} (${n.qualified_name})${cls}${metricText}${tags}${(n.children || []).length ? "\n" + n.children.map((c) => treeMarkdown(c, level + 1)).join("\n") : ""}`;
       }
       function callableMarkdown(item) {
+        if (!item) return "No public callable flow selected.";
         return [
           `### ${markdownLink(item, item.selected_public_callable_name)}`,
-          `- Fully qualified name: ${item.qualified_name}`,
-          `- Module: ${item.module_docs_url ? `[${item.module}](${item.module_docs_url})` : item.module}`,
-          `- Callable type: ${item.callable_type}`,
+          `- Qualified name: ${item.qualified_name}`,
+          `- Source file: ${item.source_file || "None"}`,
+          `- Source URL: ${item.source_url || "None"}`,
           `- Recommendation: ${item.recommendation}`,
-          `- Tags: ${(item.tags || item.findings || []).join(", ") || "None"}`,
-          `- Why review: ${item.why_review}`,
+          `- Overall health: ${item.overall_health}`,
+          `- Suggested next step: ${item.suggested_next_step}`,
+          `- Key signals: ${(item.key_signals || []).join(", ") || "None"}`,
           `- Downstream count: ${item.downstream_count}`,
-          `- Call depth: ${item.call_depth}`,
+          `- Max depth: ${item.max_depth}`,
+          `- Architecture violation count: ${item.architecture_violation_count}`,
+          `- Merge candidate count: ${item.merge_candidate_count}`,
           `- Modules touched: ${(item.modules_touched || []).join(", ") || "None"}`,
-          `- Architecture violation count: ${item.architecture_violation_count ?? 0}`,
-          `- Merge/shortening candidate count: ${item.merge_shortening_candidate_count}`,
+          `- External/shared impact count: ${item.external_shared_impact_count}`,
+          `- Direct callees: ${(item.direct_callees || []).map((c) => c.function_name || c.qualified_name || c).join(", ") || "None"}`,
+          `- Transitive callees: ${(item.transitive_callees || []).length}`,
           `- Architecture findings: ${(item.architecture_findings || []).length}`,
-          `- Internal helper cleanup candidates: ${(item.internal_helper_cleanup_candidates || []).length}`,
+          `- Merge candidates: ${(item.merge_candidates || []).length}`,
           "#### Public callable findings",
           ...(item.public_callable_findings || []).map(
             (f) => `- ${f.finding}: ${f.evidence}; ${f.suggested_action}`,
@@ -2038,10 +2046,10 @@
           "#### Architecture findings",
           ...(item.architecture_findings || []).map(
             (f) =>
-              `- ${f.source_function} (${f.source_type}) -> ${f.target_function} (${f.target_type}): ${f.finding_type}; ${f.suggested_fix}`,
+              `- ${f.source_function} -> ${f.target_function}: ${f.finding_type}; ${f.suggested_fix}`,
           ),
-          "#### Internal helper cleanup candidates",
-          ...(item.internal_helper_cleanup_candidates || []).map(
+          "#### Merge candidates",
+          ...(item.merge_candidates || []).map(
             (c) =>
               `- ${c.function} (${c.function_type}), only caller ${c.called_by}: ${c.finding}; ${c.suggested_action}`,
           ),
@@ -2050,34 +2058,54 @@
         ].join("\n");
       }
       function markdownPacket(packet) {
-        return `# Callable refactor packet
+        return `# Public callable flow cleanup packet
 
 ## Objective
-Review selected FabricOps callables for maintainability and decision-ready architecture cleanup.
+You are cleaning up a selected public callable flow. Preserve public callable behavior and external API compatibility. Inspect the selected callable and its dependencies. Apply only focused changes that improve readability, reduce unnecessary helper depth, or resolve true architecture violations. Do not casually change public function signatures.
 
-## Architecture intent
-Keep public API flow clear, simplify long call chains, and reduce confusing architecture violations.
+## Selected target
+Selected public callable flow:
+${callableMarkdown(packet.selected_public_callable)}
 
-## Compatibility mode
-- selected mode: ${packet.refactor_context.compatibility_mode}
-- instruction: ${packet.refactor_context.compatibility_instruction}
+## Context
+- Compatibility mode: ${packet.refactor_context.compatibility_mode}
+- Compatibility instruction: ${packet.refactor_context.compatibility_instruction}
+- Implementation instruction: ${packet.refactor_context.implementation_instruction}
 
-## Selected callables
-${packet.callables.map(callableMarkdown).join("\n")}
+## Health / signals
+- Same-file private dependency: warning only.
+- Cross-file private dependency: architecture violation.
+- Public callable findings: ${(packet.selected_public_callable?.public_callable_findings || []).length}
+- Architecture findings: ${(packet.selected_public_callable?.architecture_findings || []).length}
+- Merge candidates: ${(packet.selected_public_callable?.merge_candidates || []).length}
+
+## Recommended action
+${packet.selected_public_callable?.recommendation || "No selected flow."}
 
 ## Requested work
-Review each callable and preserve expected public behavior unless the selected mode allows otherwise.
+1. Inspect the selected public callable and its call flow.
+2. Identify whether the recommended action is safe.
+3. Resolve true cross-file private dependency violations first.
+4. For same-file private dependencies, treat as warning only.
+5. Merge or inline helpers only when readability improves.
+6. Preserve notebook-facing behavior.
+7. Update tests where behavior could be affected.
+8. Return summary, changed functions, tests, risks, and skipped items.
 
-## Output required from AI
-Return summary, changed callables, tests, risks, follow-up items, and accounting.
+## Safety constraints
+- Preserve public callable behavior and external API compatibility.
+- Do not casually change public function signatures.
+- Same-file private dependency is warning only.
+- Cross-file private dependency is an architecture violation.
+
+## Expected output
+Return summary, changed functions, tests, risks, and skipped items.
 
 ## Batch accounting
-- Selected callable count: ${packet.batch_accounting.selected_callable_count}
-- Planned batch count: ${packet.batch_accounting.planned_batch_count}
-- Remaining selected count: fill in after implementation
-
-## Final output required
-Write the final output as instructions that can be pasted into Codex, Claude Code, Cursor, or another coding agent. Produce a PR execution plan for a coding agent targeting the main branch. Preserve public API behavior and avoid changing notebook-facing callable signatures unless the selected compatibility mode explicitly allows it. Group refactor actions by helper/function; identify architecture violations to address; identify helpers to merge, move, or keep; list implementation steps in order; list tests to add, update, and run; define acceptance criteria; and call out risks and rollback notes. Do not write code yet and do not generate a patch.
+- selected_public_callable_count: ${packet.batch_accounting.selected_public_callable_count}
+- planned_flow_count: ${packet.batch_accounting.planned_flow_count}
+- completed_or_refactored_count: fill in after implementation
+- deferred_items: fill in after implementation
 `;
       }
       async function copyExport(format) {
@@ -2103,25 +2131,23 @@ Write the final output as instructions that can be pasted into Codex, Claude Cod
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "fabricops-callable-refactor-packet.json";
+        a.download = "fabricops-public-callable-flow-cleanup-packet.json";
         a.click();
       }
       function updateExportControls() {
-        $("selectedCount").textContent =
-          `Selected: ${state.selected.size} callables`;
+        const item = selectedItem();
+        $("selectedCount").textContent = item
+          ? `Selected flow: ${item.function_name}`
+          : "Selected flow: none";
         ["copyJson", "copyMarkdown", "downloadJson"].forEach(
-          (id) => ($(id).disabled = state.selected.size === 0),
+          (id) => ($(id).disabled = !item),
         );
-        $("clearSelected").disabled = state.selected.size === 0;
+        $("clearSelected").disabled = !item;
       }
       $("showAllPublicCallables").onclick = showAllPublicCallables;
       $("collapsePublicList").onclick = collapsePublicList;
-      $("selectVisible").onclick = () => {
-        visibleFlows.forEach((f) => state.selected.add(f.qualified_name));
-        renderPublicCallableList();
-      };
       $("clearSelected").onclick = () => {
-        state.selected.clear();
+        state.selectedFlow = "";
         renderPublicCallableList();
       };
       $("copyJson").onclick = () => copyExport("json");
@@ -2131,6 +2157,7 @@ Write the final output as instructions that can be pasted into Codex, Claude Cod
         const b = e.target.closest("[data-public-flow]");
         if (b) {
           state.activePublicFlow = b.dataset.publicFlow;
+          state.selectedFlow = b.dataset.publicFlow;
           state.collapsedPublicList = true;
           renderPublicCallableList();
           $("publicFlowDetails").scrollIntoView({
@@ -2142,10 +2169,9 @@ Write the final output as instructions that can be pasted into Codex, Claude Cod
       document.addEventListener("change", (e) => {
         const r = e.target.closest("[data-select-row]");
         if (r) {
-          r.checked
-            ? state.selected.add(r.dataset.selectRow)
-            : state.selected.delete(r.dataset.selectRow);
-          updateExportControls();
+          state.selectedFlow = r.dataset.selectRow;
+          state.activePublicFlow = r.dataset.selectRow;
+          renderPublicCallableList();
         }
       });
       $("decisionSearchBox").addEventListener("input", (e) => {
