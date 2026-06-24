@@ -66,7 +66,7 @@ The important private-helper rule is file ownership:
 - Shared helpers should remain reusable and should not casually reach into another module's private implementation details.
 - Classes, dataclasses, enums, constants, protocols, config objects, lifecycle methods, and property accessors provide supporting context; they are not treated as public/internal function layers by themselves.
 
-## AI cleanup packets
+## Cleanup packets
 
 Both pages export action-ready JSON and YAML packages for Codex or another AI implementation tool.
 
@@ -78,9 +78,9 @@ Use **Export flow cleanup packet** after choosing a **Selected public callable f
 - recommendation, overall health, suggested next step, and key signals;
 - downstream count, max depth, architecture violation count, merge candidate count, modules touched, and external/shared impact count;
 - direct callees, transitive callees, architecture findings, merge candidates, public callable findings, and flow tree context;
-- compatibility mode, requested work, safety constraints, and expected output.
+- compatibility mode, export type, AI prompt, requested work, safety constraints, and expected output.
 
-The prompt tells the AI to preserve public callable behavior and external API compatibility, inspect the selected callable and its dependencies, resolve true cross-file private dependency violations first, treat same-file private dependencies as warnings only, and avoid casual public signature changes.
+The prompt tells the AI to use the selected compatibility mode as the rule for how aggressive cleanup can be: preserve backwards compatibility by default, or clearly label migration impact when breaking changes are allowed.
 
 ### Inventory export: `fabricops_support_inventory_cleanup_packet`
 
@@ -89,7 +89,7 @@ Use **Export support cleanup packet** after selecting one or more Code Inventory
 - selected code asset name, qualified name, item type, code role, source file, and source URL when available;
 - whether the asset is reached from public callable flows;
 - health, finding, codebase note, suggested cleanup action, callers, callees, related public flows, and signals;
-- compatibility mode, requested work, safety constraints, and expected output.
+- compatibility mode, export type, AI prompt, requested work, safety constraints, and expected output.
 
 The prompt tells the AI to open the selected code asset, check callers and public-flow reachability, verify orphaned assets before removal, merge single-use helpers only when readability improves, preserve public callable behavior, and update tests where needed.
 

@@ -596,10 +596,6 @@
         border-color: #cbd5e1;
         cursor: not-allowed;
       }
-      .manual-copy {
-        width: 100%;
-        min-height: 7rem;
-      }
       .flow-details {
         margin-top: 1rem;
       }
@@ -858,7 +854,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-25 00:19 SGT<span
+        <strong>Generated at:</strong> 2026-06-25 01:29 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -875,6 +871,7 @@
         </div>
         <div class="callable-page-actions">
           <a
+            id="openCallableFlowJson"
             class="callable-page-action"
             href="../reference/_data/callable-flow.json"
             >Open JSON data</a
@@ -999,19 +996,18 @@
             <label class="toolbar-field"
               >Compatibility mode
               <select id="compatibilityMode">
-                <option value="stable_api_safe" selected>
-                  Public callable review
+                <option value="preserve_backwards_compatibility" selected>
+                  Preserve backwards compatibility
                 </option>
-                <option value="internal_cleanup">Internal cleanup</option>
-                <option value="development_breaking_allowed">
-                  AI cleanup packet
+                <option value="allow_breaking_changes">
+                  Allow breaking changes
                 </option>
               </select></label
             ><small
               id="compatibilityModeSubtitle"
               class="compat-mode-subtitle compat-mode-safe"
-              >Exports selected public callable assets for callable architecture
-              review.</small
+              >Selected cleanup should preserve existing public callable
+              behavior and avoid breaking current users.</small
             >
           </div>
           <div class="toolbar-card toolbar-card--prompt">
@@ -1019,27 +1015,19 @@
               <div>
                 <strong>Export flow cleanup packet</strong><br /><small
                   class="group-help"
-                  >Copy or download the selected public callable flow for
-                  AI-assisted cleanup planning.</small
+                  >Download the selected public callable flow for AI-assisted
+                  cleanup planning.</small
                 >
               </div>
               <div class="toolbar-row">
-                <button id="copyJson" type="button" disabled>Copy JSON</button
-                ><button id="downloadJson" type="button" disabled>
+                <button id="downloadJson" type="button" disabled>
                   Download JSON</button
-                ><button id="copyYaml" type="button" disabled>Copy YAML</button
                 ><button id="downloadYaml" type="button" disabled>
                   Download YAML
                 </button>
               </div>
             </div>
-            <small id="exportStatus"></small
-            ><textarea
-              id="manualCopy"
-              class="manual-copy"
-              hidden
-              readonly
-            ></textarea>
+            <small id="exportStatus"></small>
           </div>
         </div>
       </section>
@@ -1053,23 +1041,21 @@
         "Method",
         "Unknown",
       ];
-      const COMPATIBILITY_MODE_META = {
-        stable_api_safe: {
-          label: "Public callable review",
+      const COMPATIBILITY_MODES = {
+        preserve_backwards_compatibility: {
+          label: "Preserve backwards compatibility",
           subtitle:
-            "Exports selected public callable assets for callable architecture review.",
+            "Selected cleanup should preserve existing public callable behavior and avoid breaking current users.",
+          promptInstruction:
+            "Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Internal helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.",
           className: "compat-mode-safe",
         },
-        internal_cleanup: {
-          label: "Internal cleanup",
+        allow_breaking_changes: {
+          label: "Allow breaking changes",
           subtitle:
-            "Exports selected support assets for internal cleanup planning.",
-          className: "compat-mode-review",
-        },
-        development_breaking_allowed: {
-          label: "AI cleanup packet",
-          subtitle:
-            "Exports selected records with enough context for assisted cleanup.",
+            "Selected cleanup may propose cleaner breaking changes when they improve the callable architecture.",
+          promptInstruction:
+            "Propose cleaner breaking changes where they improve architecture, naming, boundaries, maintainability, or long-term usability. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.",
           className: "compat-mode-breaking",
         },
       };
@@ -1499,6 +1485,10 @@
         }
         return new URL("reference/_data/callable-flow.json", document.baseURI)
           .href;
+      }
+      function updateCallableFlowDataLink(url) {
+        const link = $("openCallableFlowJson");
+        if (link) link.href = url;
       }
       function renderLoadedCount() {
         renderLoadStatus(
@@ -1942,21 +1932,21 @@
       function compatibilityModeMeta() {
         const mode = $("compatibilityMode")
           ? $("compatibilityMode").value
-          : "stable_api_safe";
+          : "preserve_backwards_compatibility";
         return (
-          COMPATIBILITY_MODE_META[mode] ||
-          COMPATIBILITY_MODE_META.stable_api_safe
+          COMPATIBILITY_MODES[mode] ||
+          COMPATIBILITY_MODES.preserve_backwards_compatibility
         );
       }
       function cleanupMode() {
         const mode = $("compatibilityMode")
           ? $("compatibilityMode").value
-          : "stable_api_safe";
+          : "preserve_backwards_compatibility";
         const meta = compatibilityModeMeta();
         return {
           compatibility_mode: mode,
-          compatibility_label: meta.label,
-          compatibility_instruction: meta.subtitle,
+          compatibility_mode_label: meta.label,
+          compatibility_instruction: meta.promptInstruction,
         };
       }
       function updateCompatibilityModeMeta() {
@@ -1966,11 +1956,31 @@
         el.textContent = meta.subtitle;
         el.className = `compat-mode-subtitle ${meta.className}`;
       }
+      function cleanupPrompt() {
+        const meta = compatibilityModeMeta();
+        return `You are reviewing a FabricOps callable cleanup packet.
+
+Use the selected public callables and supporting code inventory records to plan a safe cleanup. Group items by cleanup type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet.
+
+Compatibility mode:
+${meta.label}
+
+Compatibility instruction:
+${meta.promptInstruction}
+
+If compatibility mode is “Preserve backwards compatibility”, preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Internal helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.
+
+If compatibility mode is “Allow breaking changes”, propose cleaner breaking changes where they improve the architecture. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.
+
+Always call out tests required before changes.`;
+      }
       function refactorPacket() {
         const item = selectedItem(),
           selected = item ? exportItem(item) : null;
         return {
           schema: "fabricops_public_callable_flow_cleanup_packet",
+          export_type: "Public callable cleanup packet",
+          ai_prompt: cleanupPrompt(),
           selected_public_callable: selected,
           selected_flow: selected ? selected.flow_tree : null,
           flow_context: selected
@@ -2046,23 +2056,6 @@
       function yamlPacket(packet) {
         return yamlValue(packet) + "\n";
       }
-      async function copyExport(format) {
-        const packet = refactorPacket();
-        const v =
-          format === "yaml"
-            ? yamlPacket(packet)
-            : JSON.stringify(packet, null, 2);
-        try {
-          await navigator.clipboard.writeText(v);
-          $("exportStatus").textContent = `Copied ${format.toUpperCase()}.`;
-          $("manualCopy").hidden = true;
-        } catch (e) {
-          $("manualCopy").hidden = false;
-          $("manualCopy").value = v;
-          $("exportStatus").textContent =
-            "Clipboard unavailable; copy from the text area.";
-        }
-      }
       function downloadPacket(format) {
         const isYaml = format === "yaml";
         const blob = new Blob(
@@ -2080,15 +2073,13 @@
       }
       function updateExportControls() {
         const item = selectedItem();
-        ["copyJson", "downloadJson", "copyYaml", "downloadYaml"].forEach(
+        ["downloadJson", "downloadYaml"].forEach(
           (id) => ($(id).disabled = !item),
         );
       }
       $("showAllPublicCallables").onclick = showAllPublicCallables;
       $("collapsePublicList").onclick = collapsePublicList;
-      $("copyJson").onclick = () => copyExport("json");
       $("downloadJson").onclick = () => downloadPacket("json");
-      $("copyYaml").onclick = () => copyExport("yaml");
       $("downloadYaml").onclick = () => downloadPacket("yaml");
       document.addEventListener("click", (e) => {
         if (
@@ -2147,6 +2138,7 @@
       updateCompatibilityModeMeta();
       async function loadData() {
         const attemptedUrl = callableFlowDataUrl();
+        updateCallableFlowDataLink(attemptedUrl);
         try {
           const response = await fetch(attemptedUrl);
           if (!response.ok)
