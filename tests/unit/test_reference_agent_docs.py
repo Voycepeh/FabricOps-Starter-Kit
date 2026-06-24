@@ -638,6 +638,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Private function" in inventory_text
     assert "Non functions" in inventory_text
     assert "Usage scope" in inventory_text
+    assert "Boundary violation" in inventory_text
     assert "Recommended action" in inventory_text
     assert "Reached from public flow" not in inventory_text
     assert "function buildFlowSignals(flows)" in inventory_text
@@ -693,6 +694,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "item_name" in inventory_text
     assert "usage_scope" in inventory_text
     assert "action_details" in inventory_text
+    assert "function duplicateHelperEvidence(r)" in inventory_text
+    assert "return 'Boundary violation'" in inventory_text
+    assert "cleanup='Fix architecture boundary'" in inventory_text
+    assert "cleanup='Promote to shared utility'" in inventory_text
+    assert "Duplicate helper logic across callable files" in inventory_text
+    assert "cleanup='Keep private helper'" in inventory_text
+    assert "cleanup='Not in scope'" in inventory_text
+    assert "ACTIONABLE_ACTIONS=new Set(['Fix architecture boundary','Promote to shared utility','Refactor helper','Rename internal helper','Review manually','Remove orphaned asset','Warning'])" in inventory_text
     assert "Compatibility mode" in inventory_text
     assert "toolbar-card-grid" in inventory_text
     assert "toolbar-card--selection" in inventory_text
