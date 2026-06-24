@@ -331,10 +331,18 @@
         width: 4.5rem;
         white-space: nowrap;
       }
+      tr[data-public-flow-row] {
+        cursor: pointer;
+      }
+      tr[data-public-flow-row]:focus {
+        outline: 3px solid #2563eb;
+        outline-offset: -3px;
+      }
       tr.active {
         outline: 2px solid #1d4ed8;
         outline-offset: -2px;
         background: #eff6ff;
+        box-shadow: inset 0.25rem 0 #1d4ed8;
       }
       .callable-button {
         border: 0;
@@ -358,6 +366,34 @@
         display: block;
         max-width: 14rem;
         line-height: 1.35;
+      }
+      .review-note summary {
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+        cursor: pointer;
+        list-style: none;
+      }
+      .review-note summary::-webkit-details-marker {
+        display: none;
+      }
+      .review-note-toggle {
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #1d4ed8;
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+      .review-note-panel {
+        margin-top: 0.35rem;
+        padding: 0.5rem;
+        border: 1px solid #bfdbfe;
+        border-radius: 0.55rem;
+        background: #eff6ff;
+        color: #334155;
+        line-height: 1.4;
+        max-width: 28rem;
+        white-space: normal;
       }
       .inline-more {
         display: inline-block;
@@ -822,7 +858,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 21:19 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 21:42 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -889,7 +925,6 @@
         <table data-table-controls="excel">
           <thead>
             <tr>
-              <th>Select</th>
               <th>Priority</th>
               <th>
                 <button
@@ -1260,6 +1295,10 @@
           );
         return reasons.length ? reasons.join(" ") : "Clear";
       }
+      function reviewNoteControl(flow) {
+        const note = whyReview(flow);
+        return `<details class="review-note"><summary><span class="badge muted">Review note</span> <span class="review-note-toggle">View details</span></summary><div class="review-note-panel">${esc(note)}</div></details>`;
+      }
       function renderCards() {
         const s = summaryCounts.public_api_surface || {},
           flows = publicEntryFlows || [],
@@ -1485,7 +1524,7 @@
               strong = p === "Critical" || p === "High",
               active =
                 f.qualified_name === state.activePublicFlow ? "active" : "";
-            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}"><td><input type="radio" name="selectedPublicFlow" data-select-row="${esc(f.qualified_name)}" ${state.selectedFlow === f.qualified_name ? "checked" : ""} aria-label="Select flow ${esc(f.function_name)}"></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)}</td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
+            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}" tabindex="0" aria-selected="${state.selectedFlow === f.qualified_name ? "true" : "false"}"><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)}</td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${reviewNoteControl(f)}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
           })
           .join("");
         setPublicListControls();
@@ -2052,7 +2091,12 @@
       $("copyYaml").onclick = () => copyExport("yaml");
       $("downloadYaml").onclick = () => downloadPacket("yaml");
       document.addEventListener("click", (e) => {
-        if (e.target.closest("a,button,input,select,textarea,label")) return;
+        if (
+          e.target.closest(
+            "a,button,input,select,textarea,label,summary,.review-note",
+          )
+        )
+          return;
         const row = e.target.closest("[data-public-flow-row]");
         if (row) {
           state.activePublicFlow = row.dataset.publicFlowRow;
@@ -2065,12 +2109,18 @@
           });
         }
       });
-      document.addEventListener("change", (e) => {
-        const r = e.target.closest("[data-select-row]");
-        if (r) {
-          state.selectedFlow = r.dataset.selectRow;
-          state.activePublicFlow = r.dataset.selectRow;
+      document.addEventListener("keydown", (e) => {
+        const row = e.target.closest("[data-public-flow-row]");
+        if (row && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          state.activePublicFlow = row.dataset.publicFlowRow;
+          state.selectedFlow = row.dataset.publicFlowRow;
+          state.collapsedPublicList = true;
           renderPublicCallableList();
+          $("publicFlowDetails").scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         }
       });
       $("publicSearchBox").addEventListener("input", (e) => {

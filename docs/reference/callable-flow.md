@@ -4,7 +4,7 @@ Callable Flow is the generated review surface for keeping FabricOps notebook-fac
 
 <div align="center" markdown="1">
 
-[Open Dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+[Open Callable Architecture](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
 
 ![Callable Flow dashboard preview](../assets/fabricops-refactor-risk-dashboard.png)
 
@@ -109,7 +109,7 @@ The prompt tells the AI to open the selected code asset, check callers and publi
 Callable Flow is generated from repository scans. The generated outputs are:
 
 - [Callable Architecture](../assets/callable-functions-dashboard.html)
-- [Code Inventory](../assets/callable-functions-inventory.html)
-- [`callable-flow.json`](_data/callable-flow.json)
+- [Open Code Inventory](../assets/callable-functions-inventory.html)
+- [Open callable-flow.json](_data/callable-flow.json)
 
 Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.

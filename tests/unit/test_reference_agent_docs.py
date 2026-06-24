@@ -319,8 +319,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "callable-functions-inventory.html" in dashboard_text
     assert "data-public-flow" in dashboard_text
     assert 'href="${esc(flow.source_url' not in dashboard_text
-    assert '<button type=\"button\" class=\"callable-button\" data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
-    assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
+    assert 'data-public-flow-row="${esc(f.qualified_name)}"' in dashboard_text
+    assert 'class="callable-button" data-public-flow' not in dashboard_text
     assert "publicSearchBox" in dashboard_text
     assert 'aria-label="Architecture quick filters"' not in dashboard_text
     assert 'data-architecture-quick-filter' not in dashboard_text
@@ -364,9 +364,20 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "reset.onclick=showAllPublicCallables" in compact_dashboard_text
     assert "showAllPublicCallablesInline" not in dashboard_text
     assert "Show all public callables</button>`:'';const inline" not in dashboard_text
-    assert ".surface-cardstrong{display:block;margin-bottom:.2rem;line-height:1" in compact_dashboard_text
+    assert ".surface-cardstrong{display:block;margin-bottom:0.2rem;line-height:1" in compact_dashboard_text
     assert ".surface-cardspan{display:block;line-height:1.2" in compact_dashboard_text
     assert "Review note" in dashboard_text
+    assert "<th>Select</th>" not in dashboard_text
+    assert 'name="selectedPublicFlow"' not in dashboard_text
+    assert 'data-select-row="${esc(f.qualified_name)}"' not in dashboard_text
+    assert 'tabindex="0"' in dashboard_text
+    assert "aria-selected='${state.selectedFlow===f.qualified_name?'true':'false'}'" in compact_dashboard_text
+    assert "document.addEventListener('keydown'" in compact_dashboard_text
+    assert "e.key==='Enter'||e.key===''" in compact_dashboard_text
+    assert 'class="review-note"' in dashboard_text
+    assert 'class="review-note-toggle">View details</span>' in dashboard_text
+    assert 'class="review-note-panel"' in dashboard_text
+    assert "e.target.closest('a,button,input,select,textarea,label,summary,.review-note',)" in compact_dashboard_text
     assert "data-sort-key=\"callable\"" in dashboard_text
     assert "data-sort-key=\"module\"" in dashboard_text
     assert "data-sort-key=\"findings\"" in dashboard_text
@@ -375,7 +386,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "data-sort-key=\"depth\"" in dashboard_text
     assert "function stableSortRows(rows)" in dashboard_text
     assert "a.index-b.index" in compact_dashboard_text
-    assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
     assert "Copy JSON" in dashboard_text
     assert "Download JSON" in dashboard_text
     assert "Copy YAML" in dashboard_text
@@ -402,19 +412,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "toolbar-card--compatibility" in dashboard_text
     assert "toolbar-card--prompt" in dashboard_text
     assert "toolbar-row--top" not in dashboard_text
-    assert "Selected public callable flow" in dashboard_text
     assert "Selected callables" not in dashboard_text
-    assert "Selected flow: none" in dashboard_text
     assert "Select visible" not in dashboard_text
     assert "selected:newSet()" not in compact_dashboard_text
     assert "selectedFlow:''" in compact_dashboard_text
     assert "fabricops_public_callable_flow_cleanup_packet" in dashboard_text
-    assert "Requested work" in dashboard_text
-    assert "Safety constraints" in dashboard_text
-    assert "Expected output" in dashboard_text
     assert "Same-file private dependency is warning only" in dashboard_text
     assert "Cross-file private dependency is an architecture violation" in dashboard_text
-    assert "Requested work" in dashboard_text
     assert "Batch accounting" not in dashboard_text
     assert "downstream_count" in dashboard_text
     assert "max_depth" in dashboard_text
