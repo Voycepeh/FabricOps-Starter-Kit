@@ -341,7 +341,7 @@
         plans.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 13:51 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 16:15 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -491,22 +491,22 @@
       <p id="dataLoadStatus" class="load-status" aria-live="polite">
         Loading callable-flow data...
       </p>
-      <section class="table-wrap">
-        <table data-table-controls="excel">
+      <section class="table-wrap callable-review-table-wrap">
+        <table class="callable-review-table" data-table-controls="excel">
           <thead>
             <tr>
-              <th>
+              <th class="col-select">
                 Select<br /><input id="selectAllVisible" type="checkbox" />
               </th>
-              <th>Callable</th>
-              <th>File / Area</th>
-              <th>Public API</th>
-              <th>Health</th>
-              <th>Finding</th>
-              <th>Review note</th>
-              <th>Suggested action</th>
-              <th>Downstream</th>
-              <th>Depth</th>
+              <th class="col-callable">Callable</th>
+              <th class="col-file-area">File / Area</th>
+              <th class="col-public-api">Public API</th>
+              <th class="col-health">Health</th>
+              <th class="col-finding">Finding</th>
+              <th class="col-review-note">Review note</th>
+              <th class="col-suggested-action">Suggested action</th>
+              <th class="col-downstream">Downstream</th>
+              <th class="col-depth">Depth</th>
             </tr>
           </thead>
           <tbody id="inventoryBody"></tbody>
@@ -654,7 +654,7 @@
         ].join("\\n");
       }
       function markdownPacket(packet) {
-        return `# Callable refactor packet\n\n## Objective\nReview and refactor the selected FabricOps callables to improve maintainability, simplify long call chains, review architecture findings, and preserve expected public behavior.\n\n## Architecture intent\n- Keep the public API surface small and clear.\n- Public API callables may be heavier if that makes the code easier to follow.\n- Prefer public functions calling internal functions; supporting objects may be used freely.\n- Avoid long helper chains.\n- Merge small helper into parent when readability improves.\n- Move helpers closer to their caller when they are not genuinely reusable.\n- Keep genuinely shared utilities stable and generic.\n- Do not casually change public API behavior.\n\n## Compatibility mode\n- selected mode: ${packet.refactor_context.compatibility_mode}\n- instruction: ${packet.refactor_context.compatibility_instruction}\n\n## Selected callables\n${packet.callables.map(callableMarkdown).join("\n\n")}\n\n## Requested work\nFor each selected callable:\n1. Inspect the callable and its direct/downstream dependencies.\n2. Decide whether to keep public, flatten internals, merge candidates, move helper closer to caller, or review architecture findings.\n3. Preserve external behavior unless compatibility mode explicitly allows breaking changes.\n4. Prefer simpler, flatter code over long helper chains.\n5. Keep supporting helper tags descriptive without treating them as architecture layers.\n6. Update or add tests where needed.\n7. Avoid broad unrelated refactors.\n\n## Output required from AI\nReturn:\n- Summary of changes\n- Callables changed\n- Callables intentionally left unchanged\n- Tests added/updated\n- Risks\n- Remaining follow-up items\n- Batch accounting: completed, deferred, remaining\n\n## Batch accounting\n- selected_callable_count: ${packet.batch_accounting.selected_callable_count}\n- planned_batch_count: ${packet.batch_accounting.planned_batch_count}\n- completed_or_refactored_count: fill in after implementation\n- remaining_selected_count: fill in after implementation\n- deferred_selected_callables: fill in after implementation\n`;
+        return `# Callable refactor packet\n\n## Objective\nReview and refactor the selected FabricOps callables to improve maintainability, simplify long call chains, review architecture findings, and preserve expected public behavior.\n\n## Architecture intent\n- Keep the public API surface small and clear.\n- Public API callables may be heavier if that makes the code easier to follow.\n- Prefer public functions calling internal functions; supporting objects may be used freely.\n- Avoid long helper chains.\n- Merge small helper into parent when readability improves.\n- Move helpers closer to their caller when they are not genuinely reusable.\n- Keep genuinely shared utilities stable and generic.\n- Do not casually change public API behavior.\n\n## Compatibility mode\n- selected mode: ${packet.refactor_context.compatibility_mode}\n- instruction: ${packet.refactor_context.compatibility_instruction}\n\n## Selected callables\n${packet.callables.map(callableMarkdown).join("\n\n")}\n\n## Requested work\nFor each selected callable:\n1. Inspect the callable and its direct/downstream dependencies.\n2. Decide whether to keep public, flatten internals, merge candidates, move helper closer to caller, or review architecture findings.\n3. Preserve external behavior unless compatibility mode explicitly allows breaking changes.\n4. Prefer simpler, flatter code over long helper chains.\n5. Use only simple classifications: Public function, Shared helper, Private helper, Class, Method, or Unknown.\n6. Update or add tests where needed.\n7. Avoid broad unrelated refactors.\n\n## Output required from AI\nReturn:\n- Summary of changes\n- Callables changed\n- Callables intentionally left unchanged\n- Tests added/updated\n- Risks\n- Remaining follow-up items\n- Batch accounting: completed, deferred, remaining\n\n## Batch accounting\n- selected_callable_count: ${packet.batch_accounting.selected_callable_count}\n- planned_batch_count: ${packet.batch_accounting.planned_batch_count}\n- completed_or_refactored_count: fill in after implementation\n- remaining_selected_count: fill in after implementation\n- deferred_selected_callables: fill in after implementation\n`;
       }
       async function copyExport(format) {
         const packet = refactorPacket();
@@ -867,7 +867,7 @@
         $("inventoryBody").innerHTML = visibleRows
           .map(
             (i) =>
-              `<tr><td><input type="checkbox" data-select-row="${esc(i.qualified_name)}" ${state.selected.has(i.qualified_name) ? "checked" : ""}></td><td>${sourceCallableLink(i)}</td><td>${esc(fileArea(i))}</td><td>${esc(publicStatus(i))}</td><td>${healthBadge(i)}</td><td>${findingBadge(i)}</td><td>${esc(reviewNote(i))}</td><td>${suggestedActionCell(i)}</td><td>${esc(downstreamCount(i))}</td><td>${esc(depthValue(i))}</td></tr>`,
+              `<tr><td class="col-select"><input type="checkbox" data-select-row="${esc(i.qualified_name)}" ${state.selected.has(i.qualified_name) ? "checked" : ""}></td><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-file-area">${esc(fileArea(i))}</td><td class="col-public-api">${esc(publicStatus(i))}</td><td class="col-health">${healthBadge(i)}</td><td class="col-finding">${findingBadge(i)}</td><td class="col-review-note">${esc(reviewNote(i))}</td><td class="col-suggested-action">${suggestedActionCell(i)}</td><td class="col-downstream">${esc(downstreamCount(i))}</td><td class="col-depth">${esc(depthValue(i))}</td></tr>`,
           )
           .join("");
         updateExportControls();

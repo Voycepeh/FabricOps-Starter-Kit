@@ -119,7 +119,9 @@
       th.dataset.sortDirection = cfg.sort && cfg.sort.column === index ? cfg.sort.direction : "";
       const button = th.querySelector(".fo-table-menu-button");
       if (button) {
-        button.setAttribute("aria-label", `Sort and filter ${th.textContent.trim() || `column ${index + 1}`}`);
+        const label = th.querySelector(".table-header-label");
+        const labelText = label ? label.textContent.trim() : th.textContent.replace("▾", "").trim();
+        button.setAttribute("aria-label", `Sort and filter ${labelText || `column ${index + 1}`}`);
       }
     });
   }
@@ -149,6 +151,40 @@
     menu.insertAdjacentHTML("beforeend", `<button type="button" data-sort="asc">Sort smallest to largest</button><button type="button" data-sort="desc">Sort largest to smallest</button><button type="button" data-clear-sort>Clear sort</button><label>Equals<input type="number" data-op="equals"></label><label>Greater than<input type="number" data-op="greater"></label><label>Less than<input type="number" data-op="less"></label><fieldset><legend>Between</legend><input type="number" data-between="a"><input type="number" data-between="b"></fieldset><button type="button" data-apply>Apply</button><button type="button" data-clear-filter>Clear filter</button>`);
   }
 
+  function viewportSize() {
+    const doc = document.documentElement || {};
+    return {
+      width: window.innerWidth || doc.clientWidth || 1024,
+      height: window.innerHeight || doc.clientHeight || 768,
+    };
+  }
+
+  function menuSize(menu) {
+    const rect = menu.getBoundingClientRect ? menu.getBoundingClientRect() : {};
+    return {
+      width: rect.width || menu.offsetWidth || 256,
+      height: rect.height || menu.offsetHeight || 320,
+    };
+  }
+
+  function positionMenu(button, menu) {
+    const margin = 8;
+    const sideOffset = 4;
+    const viewport = viewportSize();
+    const trigger = button.getBoundingClientRect();
+    const size = menuSize(menu);
+    const maxLeft = Math.max(margin, viewport.width - size.width - margin);
+    let left = trigger.left;
+    if (left + size.width > viewport.width - margin) {
+      left = trigger.right - size.width;
+    }
+    left = Math.min(Math.max(margin, left), maxLeft);
+    const maxTop = Math.max(margin, viewport.height - size.height - margin);
+    const top = Math.min(Math.max(margin, trigger.bottom + sideOffset), maxTop);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+  }
+
   function openMenu(table, th, column, button) {
     closeMenus();
     const rows = tableState(table).originalRows;
@@ -159,9 +195,7 @@
     menu.dataset.columnType = numeric ? "numeric" : "text";
     numeric ? numericMenu(menu) : textMenu(table, column, menu);
     document.body.appendChild(menu);
-    const rect = button.getBoundingClientRect();
-    menu.style.left = `${Math.max(8, rect.left)}px`;
-    menu.style.top = `${rect.bottom + 4}px`;
+    positionMenu(button, menu);
     menu.addEventListener("click", (event) => {
       const cfg = tableState(table);
       const target = event.target;
@@ -216,7 +250,18 @@
         event.stopPropagation();
         openMenu(table, th, index, button);
       });
-      if (!th.querySelector(":scope > .fo-table-menu-button")) th.appendChild(button);
+      button.classList.add("filter-trigger");
+      if (!th.querySelector(":scope > .table-header-cell")) {
+        const headerCell = document.createElement("div");
+        headerCell.className = "table-header-cell";
+        const label = document.createElement("span");
+        label.className = "table-header-label";
+        while (th.firstChild) label.appendChild(th.firstChild);
+        headerCell.appendChild(label);
+        th.appendChild(headerCell);
+      }
+      const headerCell = th.querySelector(":scope > .table-header-cell");
+      if (headerCell && !headerCell.querySelector(":scope > .fo-table-menu-button")) headerCell.appendChild(button);
     });
     renderClearAll(table);
     updateHeaderStates(table);
@@ -245,5 +290,5 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenus(); });
   document.addEventListener("DOMContentLoaded", () => enhanceAll());
 
-  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, _test: { compareValues, displayValue, numericValue, rowMatchesFilter } };
+  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, _test: { compareValues, displayValue, numericValue, positionMenu, rowMatchesFilter } };
 })();
