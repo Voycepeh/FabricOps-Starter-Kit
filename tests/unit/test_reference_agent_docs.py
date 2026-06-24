@@ -246,7 +246,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## Callable Architecture" in flow_text
     assert "## Code Inventory" in flow_text
     assert "## Architecture rules" in flow_text
-    assert "## AI cleanup packets" in flow_text
+    assert "## Cleanup packets" in flow_text
     assert "## When to use which page" in flow_text
     assert "## Generated outputs" in flow_text
     assert "[Open Callable Architecture](../assets/callable-functions-dashboard.html)" in flow_text
@@ -307,7 +307,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<navclass='callable-page-nav'aria-label='Callablereferencenavigation'>" in compact_dashboard_text
     assert "<aclass='callable-page-tabis-active'href='callable-functions-dashboard.html'aria-current='page'>Architecture</a>" in compact_dashboard_text
     assert "<aclass='callable-page-tab'href='callable-functions-inventory.html'>Inventory</a>" in compact_dashboard_text
-    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_dashboard_text
+    assert "<aid='openCallableFlowJson'class='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_dashboard_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_dashboard_text
     assert '<a href="callable-functions-inventory.html">Inventory</a> -' not in dashboard_text
     assert "new Date()" not in dashboard_text
@@ -386,19 +386,23 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "data-sort-key=\"depth\"" in dashboard_text
     assert "function stableSortRows(rows)" in dashboard_text
     assert "a.index-b.index" in compact_dashboard_text
-    assert "Copy JSON" in dashboard_text
+    assert "Copy JSON" not in dashboard_text
     assert "Download JSON" in dashboard_text
-    assert "Copy YAML" in dashboard_text
+    assert "Copy YAML" not in dashboard_text
     assert "Download YAML" in dashboard_text
     assert "Copy flow Markdown" not in dashboard_text
     assert "compatibilityMode" in dashboard_text
-    assert "COMPATIBILITY_MODE_META" in dashboard_text
-    assert "Public callable review" in dashboard_text
-    assert "Exports selected public callable assets for callable architecture review." in dashboard_text
-    assert "Exports selected support assets for internal cleanup planning." in dashboard_text
-    assert "Exports selected records with enough context for assisted cleanup." in dashboard_text
+    assert "COMPATIBILITY_MODES" in dashboard_text
+    assert "Preserve backwards compatibility" in dashboard_text
+    assert "Allow breaking changes" in dashboard_text
+    assert "Selected cleanup should preserve existing public callable behavior and avoid breaking current users." in dashboard_text
+    assert "Selected cleanup may propose cleaner breaking changes when they improve the callable architecture." in dashboard_text
+    assert "promptInstruction" in dashboard_text
+    assert "ai_prompt: cleanupPrompt()" in dashboard_text
+    assert "Public callable review" not in dashboard_text
+    assert "Internal cleanup" not in dashboard_text
+    assert "AI cleanup packet" not in dashboard_text
     assert "compat-mode-safe" in dashboard_text
-    assert "compat-mode-review" in dashboard_text
     assert "compat-mode-breaking" in dashboard_text
     assert "CLEANUP_MODE_GUIDANCE" not in dashboard_text
     assert "COMPATIBILITY_INSTRUCTIONS" not in dashboard_text
@@ -469,9 +473,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "cross_layer_issue_count" not in dashboard_text
     assert "Suggested next step" in dashboard_text
     assert "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details." in dashboard_text
-    assert "disabled>CopyJSON" in compact_dashboard_text
+    assert "disabled>CopyJSON" not in compact_dashboard_text
     assert "disabled>DownloadJSON" in compact_dashboard_text
-    assert "disabled>CopyYAML" in compact_dashboard_text
+    assert "disabled>CopyYAML" not in compact_dashboard_text
     assert "disabled>DownloadYAML" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
     assert "publicSearch:''" in compact_dashboard_text
@@ -547,11 +551,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function whyReview(flow)" in dashboard_text
     assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
-    assert "Public callable review" in dashboard_text
-    assert "Exports selected public callable assets for callable architecture review." in dashboard_text
-    assert "Copy JSON" in dashboard_text
+    assert "Preserve backwards compatibility" in dashboard_text
+    assert "Selected cleanup should preserve existing public callable behavior and avoid breaking current users." in dashboard_text
+    assert "Copy JSON" not in dashboard_text
     assert "Download JSON" in dashboard_text
-    assert "Copy YAML" in dashboard_text
+    assert "Copy YAML" not in dashboard_text
     assert "Download YAML" in dashboard_text
     assert "Copy flow Markdown" not in dashboard_text
     assert "function markdownPacket(packet)" not in dashboard_text
@@ -587,7 +591,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "header-action" not in inventory_text
     assert "<aclass='callable-page-tab'href='callable-functions-dashboard.html'>Architecture</a>" in compact_inventory_text
     assert "<aclass='callable-page-tabis-active'href='callable-functions-inventory.html'aria-current='page'>Inventory</a>" in compact_inventory_text
-    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
+    assert "<aid='openCallableFlowJson'class='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     for common_shell in [compact_dashboard_text, compact_inventory_text]:
         assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a" in common_shell
@@ -633,9 +637,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "data-inventory-row" in inventory_text
     assert "data-select-row" not in inventory_text
     assert "selectAllVisible" not in inventory_text
-    assert "copyJson" in inventory_text
+    assert "copyJson" not in inventory_text
     assert "downloadJson" in inventory_text
-    assert "copyYaml" in inventory_text
+    assert "copyYaml" not in inventory_text
     assert "downloadYaml" in inventory_text
     assert "searchBox" in inventory_text
     assert "Search code inventory" in inventory_text
@@ -677,24 +681,28 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert removed_filter not in inventory_text
     assert "selectedCount" in inventory_text
     assert "compatibilityMode" in inventory_text
-    assert "COMPATIBILITY_MODE_META" in inventory_text
+    assert "COMPATIBILITY_MODES" in inventory_text
     assert "CLEANUP_MODE_GUIDANCE" not in inventory_text
-    assert "Public callable review" in inventory_text
-    assert "Exports selected public callable assets for callable architecture review." in inventory_text
-    assert "Exports selected support assets for internal cleanup planning." in inventory_text
-    assert "Exports selected records with enough context for assisted cleanup." in inventory_text
+    assert "Preserve backwards compatibility" in inventory_text
+    assert "Allow breaking changes" in inventory_text
+    assert "Selected cleanup should preserve existing public callable behavior and avoid breaking current users." in inventory_text
+    assert "Selected cleanup may propose cleaner breaking changes when they improve the callable architecture." in inventory_text
+    assert "promptInstruction" in inventory_text
+    assert "ai_prompt:cleanupPrompt()" in compact_inventory_text
+    assert "Public callable review" not in inventory_text
+    assert "Internal cleanup" not in inventory_text
+    assert "AI cleanup packet" not in inventory_text
     assert "compat-mode-safe" in inventory_text
-    assert "compat-mode-review" in inventory_text
     assert "compat-mode-breaking" in inventory_text
     assert "Select visible" in inventory_text
     assert "Clear selection" in inventory_text
-    assert "Copy JSON" in inventory_text
+    assert "Copy JSON" not in inventory_text
     assert "Download JSON" in inventory_text
-    assert "Copy YAML" in inventory_text
+    assert "Copy YAML" not in inventory_text
     assert "Download YAML" in inventory_text
     assert "selectedItems" in inventory_text
     assert "refactorPacket" in inventory_text
-    assert "copyExport" in inventory_text
+    assert "copyExport" not in inventory_text
     assert "downloadPacket" in inventory_text
     assert "COMPATIBILITY_INSTRUCTIONS" not in inventory_text
     assert "function yamlPacket(packet)" in inventory_text
@@ -725,8 +733,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "safety_constraints" in inventory_text
     assert "expected_output" in inventory_text
     assert "Batch accounting" not in inventory_text
-    assert "disabled>CopyJSON" in compact_inventory_text
-    assert "disabled>CopyYAML" in compact_inventory_text
+    assert "disabled>CopyJSON" not in compact_inventory_text
+    assert "disabled>CopyYAML" not in compact_inventory_text
     assert "disabled>DownloadJSON" in compact_inventory_text
     assert "disabled>DownloadYAML" in compact_inventory_text
     assert "ROLE_GROUP_FILTER_OPTIONS" not in inventory_text
@@ -2406,16 +2414,18 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
     compact_inventory_text = _remove_whitespace(inventory_text).replace('"', "'")
 
-    assert "function callableFlowUrl()" in inventory_text
+    assert "function callableFlowDataUrl()" in inventory_text
     assert "constpath=window.location.pathname" in compact_inventory_text
     assert "reference/_data/callable-flow.json" in inventory_text
-    assert "newURL('../reference/_data/callable-flow.json',window.location.href).href" in compact_inventory_text
+    assert "newURL('reference/_data/callable-flow.json',document.baseURI).href" in compact_inventory_text
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} code inventory records" in inventory_text
     assert "No supporting code assets found for the current filters." in inventory_text
     assert "Inventory data is missing from callable-flow.json. Regenerate the callable flow export." in inventory_text
-    assert "Failed to load callable-flow data. Attempted URL:" in inventory_text
+    assert "Failed to load callable-flow data. URL:" in inventory_text
     assert "Could not parse callable-flow.json from ${attemptedUrl}" in inventory_text
+    assert "updateCallableFlowDataLink(attemptedUrl)" in inventory_text
+    assert "Error: ${error&&error.message?error.message:String(error)}" in inventory_text
     assert "did not include a function_inventory array" not in inventory_text
     assert "inventoryDataMissing=true" in compact_inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text
@@ -2446,9 +2456,9 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "<thclass='col-suggested-action'>Suggestedcleanupaction</th>" not in compact_inventory_text
     assert "<thclass='col-code-role'>Coderole</th>" not in compact_inventory_text
     assert "<thclass='col-flow'>Reachedfrompublicflow</th>" not in compact_inventory_text
-    assert "Copy JSON" in inventory_text
+    assert "Copy JSON" not in inventory_text
     assert "Download JSON" in inventory_text
-    assert "Copy YAML" in inventory_text
+    assert "Copy YAML" not in inventory_text
     assert "Download YAML" in inventory_text
     assert "Copy Markdown" not in inventory_text
     assert "function markdownPacket(packet)" not in inventory_text
