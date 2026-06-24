@@ -670,19 +670,22 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "healthBadge(i)" in inventory_text
     assert "findingBadge(i)" in inventory_text
     assert "displayLabel(i.recommended_action" in inventory_text
-    assert '<span class="reference-kpi-title">Modules</span>' in reference_text
-    assert '<span class="reference-kpi-title">Total callables</span>' in reference_text
-    assert '<span class="reference-kpi-title">Public API</span>' in reference_text
-    assert '<span class="reference-kpi-title">Supporting functions</span>' in reference_text
-    assert '<span class="reference-kpi-title">Private helpers to review</span>' in reference_text
-    assert '<strong class="reference-kpi-value">21</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">321</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">26</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">68</strong>' in reference_text
-    assert '<strong class="reference-kpi-value">227</strong>' in reference_text
+    visible_reference_metrics = reference_text.split("## Find a function", 1)[0]
+    maintainer_tools_text = reference_text.split('??? info "Maintainer tools"', 1)[1].split("## Function catalogue", 1)[0]
+    assert '<span class="reference-kpi-title">Public functions</span>' in visible_reference_metrics
+    assert '<strong class="reference-kpi-value">26</strong>' in visible_reference_metrics
+    assert '<span class="reference-kpi-title">Modules</span>' not in visible_reference_metrics
+    assert '<span class="reference-kpi-title">Total callables</span>' not in visible_reference_metrics
+    assert '<span class="reference-kpi-title">Public API</span>' not in visible_reference_metrics
+    assert '<span class="reference-kpi-title">Supporting functions</span>' not in visible_reference_metrics
+    assert '<span class="reference-kpi-title">Private helpers to review</span>' not in visible_reference_metrics
+    assert "- Modules: 21" in maintainer_tools_text
+    assert "- Total callables: 321" in maintainer_tools_text
+    assert "- Supporting functions: 68" in maintainer_tools_text
+    assert "- Private helpers to review: 227" in maintainer_tools_text
     assert "Callable metrics are generated from the callable inventory data." in reference_text
     assert "270 Supporting internal functions" not in reference_text
-    assert "Supporting internal functions" not in reference_text.split("## Find a function", 1)[0]
+    assert "Supporting internal functions" not in visible_reference_metrics
 
     home_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     assert "assets/callable-functions-dashboard.html" in home_text
