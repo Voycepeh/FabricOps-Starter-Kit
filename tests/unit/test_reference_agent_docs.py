@@ -530,8 +530,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
 
-    assert "Callable Inventory" in inventory_text
-    assert "Search callables, inspect health signals, and export focused AI refactor plans." in normalized_inventory_text
+    assert "Code Inventory" in inventory_text
+    assert "Inspect supporting implementation details that complement the callable flow architecture view." in normalized_inventory_text
     assert "Generated at:" in inventory_text
     assert "Generated at:</strong>" in inventory_text
     assert "SGT" in inventory_text
@@ -550,64 +550,59 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
-    assert "Total callables" in inventory_text
+    assert "Support code assets" in inventory_text
+    assert "Not reached from public flow" in inventory_text
+    assert "Cleanup candidates" in inventory_text
     assert "Public callables" in inventory_text
-    assert "Supporting callables" in inventory_text
-    assert "Review candidates" in inventory_text
-    assert "Healthy callables" in inventory_text
-    assert "All callables in the architecture inventory." in inventory_text
-    assert "Notebook-facing API entrypoints." in inventory_text
-    assert "Helpers and implementation callables." in inventory_text
-    assert "Use this inventory to find public callables, supporting helpers, health signals, and refactor candidates." in normalized_inventory_text
-    assert "Modules" not in inventory_text
-    assert "Supporting functions" not in inventory_text
-    assert "Private helpers to review" not in inventory_text
+    assert "Total code assets" in inventory_text
+    assert "Shown for context; use Architecture for public callable flow review." in inventory_text
+    assert "The callable flow page is the source of truth for public callable architecture" in normalized_inventory_text
+    assert "Use this inventory to inspect supporting implementation details that are not fully visible in callable flows, including internal helpers, methods, classes, orphaned utilities, and refactor candidates." in normalized_inventory_text
+    assert "Architecture inventory" not in inventory_text
+    assert "giant review table" not in inventory_text
     assert "callable_inventory_metrics" not in inventory_text
-    assert "deep cross-module helper chains" not in inventory_text
-    assert "inline single-use helper" not in inventory_text
-    assert "Total discovered callable records" not in inventory_text
-    assert "Function callables" not in inventory_text
-    assert "Non-function callable records" not in inventory_text
     assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
-    assert (
-        ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1;font-size:1.45rem;"
-        in compact_inventory_text
-    )
+    assert ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1;font-size:1.45rem;" in compact_inventory_text
     assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700;" in compact_inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
-    assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
+    assert 'class="source-link" href="${esc(href)}"' in inventory_text
     assert "if(i.source_url)returni.source_url" in compact_inventory_text
     assert "conststart=i.source_start_line" in compact_inventory_text
     assert "#L${start}" in inventory_text
-    assert "GITHUB_SOURCE_BASE" in inventory_text
-    assert "Showing ${visibleRows.length} callable records of ${total} total discovered callable records." in normalized_inventory_text
-    assert "Showing ${visibleRows.length} of ${inventory.length} discovered callables" not in inventory_text
-    assert "Callable metrics are generated from the callable inventory data." in normalized_inventory_text
+    assert "Showing ${visibleRows.length} support inventory records of ${total} total generated code assets." in normalized_inventory_text
+    assert "Callable metrics are generated from the callable inventory data." not in normalized_inventory_text
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
     assert "callable-review-table-wrap" in inventory_text
-    assert "<thclass='col-callable'>Callable</th><thclass='col-file-area'>File/Area</th><thclass='col-public-api'>PublicAPI</th><thclass='col-health'>Health</th><thclass='col-finding'>Finding</th><thclass='col-review-note'>Reviewnote</th><thclass='col-suggested-action'>Suggestedaction</th><thclass='col-downstream'>Downstream</th><thclass='col-depth'>Depth</th>" in compact_inventory_text
+    assert "<thclass='col-callable'>Codeasset</th><thclass='col-file-area'>File/Area</th><thclass='col-item-type'>Itemtype</th><thclass='col-code-role'>Coderole</th><thclass='col-flow'>Reachedfrompublicflow</th><thclass='col-health'>Health</th><thclass='col-finding'>Finding</th><thclass='col-review-note'>Codebasenote</th><thclass='col-suggested-action'>Suggestedcleanupaction</th>" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
     assert "findingBadge(i)" in inventory_text
+    assert "flowBadge(i)" in inventory_text
     assert "data-select-row" in inventory_text
     assert "selectAllVisible" in inventory_text
     assert "copyJson" in inventory_text
     assert "copyMarkdown" in inventory_text
     assert "downloadJson" in inventory_text
     assert "searchBox" in inventory_text
-    assert "Search all callables" in inventory_text
-    assert 'data-quick-filter="all"' in inventory_text
-    assert 'data-quick-filter="public_api"' in inventory_text
-    assert 'data-quick-filter="supporting"' in inventory_text
-    assert 'data-quick-filter="review_candidates"' in inventory_text
-    assert 'data-quick-filter="healthy"' in inventory_text
-    assert 'data-quick-filter="selected"' in inventory_text
-    assert "function matchesQuickFilter(i)" in inventory_text
-    assert "function updateQuickFilterChips()" in inventory_text
+    assert "Search code inventory" in inventory_text
+    assert "Inventory focus" in inventory_text
+    assert "Item type" in inventory_text
+    assert "Support code needing visibility" in inventory_text
+    assert "Public callable" in inventory_text
+    assert "Supporting helper" in inventory_text
+    assert "Private function" in inventory_text
+    assert "Method" in inventory_text
+    assert "Class" in inventory_text
+    assert "Orphaned / not reached from public flow" in inventory_text
+    assert "function buildFlowSignals(flows)" in inventory_text
+    assert "function matchesFilters(i)" in inventory_text
+    assert "function supportFocus(i)" in inventory_text
+    assert "function rank(i)" in inventory_text
+    assert "state.quickFilter" not in compact_inventory_text
+    assert "function matchesQuickFilter(i)" not in inventory_text
+    assert "function updateQuickFilterChips()" not in inventory_text
+    assert 'data-quick-filter=' not in inventory_text
     assert "resetAll(document)" in inventory_text
-    assert "state.quickFilter=chip.dataset.quickFilter" in compact_inventory_text
-    assert "matchesQuickFilter(i),)" in compact_inventory_text
-    assert "state.quickFilter='all'" in compact_inventory_text
     assert "selectedItems()" in inventory_text
     for removed_filter in [
         "moduleFilter",
@@ -619,7 +614,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callableRoleFilter",
         "dependencyRoleFilter",
         "kindFilter",
-        "typeFilter",
         "reviewStatusFilter",
         "minInboundFilter",
         "minOutboundFilter",
@@ -640,16 +634,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function callableMarkdown(item)" in inventory_text
     assert "function markdownPacket(packet)" in inventory_text
     assert "Objective" in inventory_text
-    assert "Architecture intent" in inventory_text
+    assert "Selected code assets" in inventory_text
     assert "Compatibility mode" in inventory_text
     assert "toolbar-card-grid" in inventory_text
     assert "toolbar-card--selection" in inventory_text
     assert "toolbar-card--compatibility" in inventory_text
     assert "toolbar-card--prompt" in inventory_text
     assert "toolbar-row--top" not in inventory_text
-    assert "Selected callables" in inventory_text
+    assert "Selected code assets" in inventory_text
     assert "Requested work" in inventory_text
-    assert "Output required from AI" in inventory_text
     assert "Batch accounting" in inventory_text
     assert "disabled>CopyJSON" in compact_inventory_text
     assert "disabled>CopyMarkdown" in compact_inventory_text
@@ -669,7 +662,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Findings / Signal" not in inventory_text
     assert "Role group" not in inventory_text
     assert "Role detail" not in inventory_text
-    assert "Suggested action" in inventory_text
+    assert "Suggested cleanup action" in inventory_text
     assert "Inbound" not in inventory_text
     assert "Outbound" not in inventory_text
     assert "Dependency role" not in inventory_text
@@ -2327,20 +2320,20 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
         inventory_text,
     )
     assert "Loading callable-flow data..." in inventory_text
-    assert "Loaded ${inventory.length} callable records" in inventory_text
-    assert "No callable records match current filters" in inventory_text
-    assert "No callable records loaded." in inventory_text
+    assert "Loaded ${inventory.length} code inventory records" in inventory_text
+    assert "No code inventory records match current filters" in inventory_text
+    assert "No code inventory records loaded." in inventory_text
     assert "Failed to load callable-flow data. Attempted URL:" in inventory_text
     assert "Could not parse callable-flow.json from ${attemptedUrl}" in inventory_text
     assert "did not include a function_inventory array" in inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
-        "Total callables",
+        "Support code assets",
+        "Not reached from public flow",
+        "Cleanup candidates",
         "Public callables",
-        "Supporting callables",
-        "Review candidates",
-        "Healthy callables",
+        "Total code assets",
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
