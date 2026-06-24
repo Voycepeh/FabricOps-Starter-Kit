@@ -41,77 +41,84 @@
       .generation-banner span {
         display: inline-flex;
       }
-      .header-action-bar {
+      .callable-page-nav {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.45rem;
+        gap: 0.75rem;
         align-items: center;
+        justify-content: space-between;
         margin: 0.75rem 0 0;
+        padding: 0.45rem;
+        border: 1px solid #dbe3ef;
+        border-radius: 0.75rem;
+        background: #f8fafc;
       }
-      .header-action {
+      .callable-page-tabs,
+      .callable-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+      }
+      .callable-page-tabs {
+        padding: 0.2rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.55rem;
+        background: #fff;
+      }
+      .callable-page-tab,
+      .callable-page-action {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         min-height: 2rem;
-        padding: 0.38rem 0.72rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 999px;
-        background: #fff;
-        color: #1d4ed8;
-        font-size: 0.86rem;
+        padding: 0.36rem 0.7rem;
+        border-radius: 0.38rem;
+        font-size: 0.84rem;
         font-weight: 800;
         line-height: 1.2;
         text-decoration: none;
-        box-shadow: 0 1px 2px #0f172a0d;
       }
-      .header-action:hover {
-        border-color: #93c5fd;
-        background: #eff6ff;
-        color: #1e40af;
+      .callable-page-tab {
+        border: 1px solid transparent;
+        color: #1d4ed8;
       }
-      .header-action.is-active {
+      .callable-page-tab.is-active {
         border-color: #1d4ed8;
         background: #1d4ed8;
         color: #fff;
       }
-      .header-action:focus-visible {
-        outline: 2px solid #2563eb;
-        outline-offset: 2px;
+      .callable-page-action {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #475569;
       }
-      @media (prefers-color-scheme: dark) {
-        body {
-          background: #0f172a;
-          color: #e2e8f0;
+      .callable-page-action:hover,
+      .callable-page-tab:hover {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1e40af;
+      }
+      .callable-page-tab.is-active:hover {
+        border-color: #1d4ed8;
+        background: #1d4ed8;
+        color: #fff;
+      }
+      @media (max-width: 720px) {
+        .callable-page-nav {
+          align-items: stretch;
+          flex-direction: column;
         }
-        header,
-        .surface-card,
-        .flow-details,
-        .selected-summary,
-        .table-wrap {
-          background: #111827;
-          border-color: #334155;
+        .callable-page-tabs,
+        .callable-page-actions {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          width: 100%;
         }
-        .generation-banner,
-        .toolbar-card,
-        .flow-meta div {
-          background: #1e293b;
-          border-color: #475569;
-          color: #cbd5e1;
-        }
-        .header-action {
-          background: #1e293b;
-          border-color: #475569;
-          color: #93c5fd;
-        }
-        .header-action:hover {
-          background: #172554;
-          border-color: #60a5fa;
-          color: #bfdbfe;
-        }
-        .header-action.is-active {
-          background: #2563eb;
-          border-color: #60a5fa;
-          color: #fff;
+        .callable-page-tab,
+        .callable-page-action {
+          width: 100%;
+          box-sizing: border-box;
         }
       }
       .surface-cards {
@@ -187,26 +194,6 @@
         gap: 0.55rem;
         margin: 0.8rem 0;
         align-items: end;
-      }
-      .quick-filter-bar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        align-items: center;
-        margin: 0.65rem 0;
-      }
-      .quick-filter-chip {
-        border: 1px solid #cbd5e1;
-        border-radius: 999px;
-        background: #f8fafc;
-        color: #1d4ed8;
-        font-weight: 800;
-        cursor: pointer;
-      }
-      .quick-filter-chip.is-active {
-        background: #1d4ed8;
-        color: #fff;
-        border-color: #1d4ed8;
       }
       .architecture-clear-all {
         border: 1px solid #cbd5e1;
@@ -550,13 +537,111 @@
         overflow: auto;
         border: 1px solid #dbe3ef;
         border-radius: 0.5rem;
-        padding: 0.4rem;
+        padding: 0.45rem;
+        background: #fff;
       }
       .flow-tree ul {
         list-style: none;
-        margin: 0.2rem 0 0.2rem 1rem;
-        padding-left: 0.8rem;
+        margin: 0.35rem 0 0.35rem 1rem;
+        padding-left: 0.85rem;
         border-left: 1px solid #dbe3ef;
+      }
+      .flow-tree li {
+        margin: 0.28rem 0;
+      }
+      .flow-tree details {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.6rem;
+        background: #f8fafc;
+      }
+      .flow-tree details[open] {
+        background: #fff;
+      }
+      .flow-tree summary {
+        display: grid;
+        grid-template-columns: minmax(12rem, 1fr) auto;
+        gap: 0.4rem 0.7rem;
+        align-items: center;
+        padding: 0.45rem 0.55rem;
+        cursor: pointer;
+        list-style: none;
+      }
+      .flow-tree summary::-webkit-details-marker {
+        display: none;
+      }
+      .flow-tree summary::before {
+        content: "▸";
+        color: #64748b;
+        font-weight: 800;
+      }
+      .flow-tree details[open] > summary::before {
+        content: "▾";
+      }
+      .flow-tree-main {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.28rem 0.4rem;
+        align-items: center;
+        min-width: 0;
+      }
+      .flow-tree-main strong {
+        min-width: 0;
+      }
+      .flow-tree-status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        justify-content: flex-end;
+      }
+      .flow-tree-details {
+        margin: 0.1rem 0.55rem 0.55rem;
+        padding: 0.5rem;
+        border: 1px solid #dbe3ef;
+        border-radius: 0.5rem;
+        background: #fff;
+      }
+      .flow-tree-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+        gap: 0.35rem;
+      }
+      .flow-tree-detail {
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+        padding: 0.35rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.45rem;
+        background: #f8fafc;
+      }
+      .flow-tree-detail small {
+        color: #64748b;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+      .flow-tree-detail span {
+        overflow-wrap: anywhere;
+      }
+      .badge.critical {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .badge.info {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      @media (max-width: 720px) {
+        .flow-tree summary {
+          grid-template-columns: 1fr;
+        }
+        .flow-tree-status {
+          justify-content: flex-start;
+        }
+        .flow-tree ul {
+          margin-left: 0.45rem;
+          padding-left: 0.65rem;
+        }
       }
       @media (max-width: 720px) {
         main,
@@ -626,19 +711,28 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 16:15 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 17:52 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
-      <nav
-        class="header-action-bar"
-        aria-label="Callable architecture navigation"
-      >
-        <a class="header-action" href="callable-functions-inventory.html"
-          >Inventory</a
-        ><a class="header-action" href="../reference/_data/callable-flow.json"
-          >Open JSON data</a
-        ><a class="header-action" href="../">Back to Docs</a>
+      <nav class="callable-page-nav" aria-label="Callable reference navigation">
+        <div class="callable-page-tabs" role="list">
+          <a
+            class="callable-page-tab is-active"
+            href="callable-functions-dashboard.html"
+            aria-current="page"
+            >Architecture</a
+          ><a class="callable-page-tab" href="callable-functions-inventory.html"
+            >Inventory</a
+          >
+        </div>
+        <div class="callable-page-actions">
+          <a
+            class="callable-page-action"
+            href="../reference/_data/callable-flow.json"
+            >Open JSON data</a
+          ><a class="callable-page-action" href="../">Back to Docs</a>
+        </div>
       </nav>
     </header>
     <main>
@@ -660,45 +754,6 @@
           hidden
         >
           Clear all filters
-        </button>
-      </section>
-      <section class="quick-filter-bar" aria-label="Architecture quick filters">
-        <button
-          type="button"
-          class="quick-filter-chip is-active"
-          data-architecture-quick-filter="all"
-        >
-          All</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-architecture-quick-filter="high_priority"
-        >
-          High priority</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-architecture-quick-filter="architecture_violations"
-        >
-          Architecture violations</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-architecture-quick-filter="long_flows"
-        >
-          Long flows</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-architecture-quick-filter="healthy"
-        >
-          Healthy</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-architecture-quick-filter="selected"
-        >
-          Selected
         </button>
       </section>
       <section id="architectureViolationSection" class="flow-details"></section>
@@ -877,7 +932,6 @@
         activePublicFlow: "",
         collapsedPublicList: false,
         decisionSearch: "",
-        quickFilter: "all",
         sortKey: "callable",
         sortDirection: "asc",
       };
@@ -1151,7 +1205,6 @@
       }
       function architectureViolationBreakdown(flows = publicEntryFlows) {
         const counts = {
-          "Shared helper calls private implementation": 0,
           "Shared helper calls public callable": 0,
           "Cross-callable private dependency": 0,
           "Single-use shared helper": 0,
@@ -1170,8 +1223,6 @@
       }
       function renderArchitectureViolationSection() {
         const meanings = {
-          "Shared helper calls private implementation":
-            "A shared helper reaches into private implementation details.",
           "Shared helper calls public callable":
             "A shared helper calls a notebook-facing public callable.",
           "Cross-callable private dependency":
@@ -1188,9 +1239,10 @@
           `<h2>Architecture violations</h2><p>Architecture violations show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length ? rows : Object.entries(meanings).map(([k]) => [k, 0])).map(([type, count]) => `<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join("")}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[
             ["Public function", "Public function", "Violation"],
             ["Public function", "Shared helper", "Allowed"],
-            ["Public function", "Private helper in same file", "Allowed"],
+            ["Public function", "Private helper in same file", "Warning"],
             ["Shared helper", "Public function", "Violation"],
-            ["Shared helper", "Private implementation", "Violation"],
+            ["Shared helper", "Private helper in same file", "Warning"],
+            ["Shared helper", "Private helper in another file", "Violation"],
             ["Private helper", "Shared helper", "Allowed"],
           ]
             .map(
@@ -1336,49 +1388,17 @@
         const band = bands.find(([value]) => value === bandValue);
         return band ? band[2](metricValue(flow, metric)) : true;
       }
-      function matchesQuickFilter(flow) {
-        if (state.quickFilter === "high_priority")
-          return ["Critical", "High"].includes(architecturePriority(flow));
-        if (state.quickFilter === "architecture_violations")
-          return (
-            architectureFindingCount(flow) > 0 ||
-            architectureViolationCount(flow) > 0
-          );
-        if (state.quickFilter === "long_flows") {
-          const threshold = longCallChainThreshold();
-          return threshold !== null && (flow.max_depth || 0) >= threshold;
-        }
-        if (state.quickFilter === "healthy")
-          return (
-            architectureFindingCount(flow) === 0 &&
-            architectureViolationCount(flow) === 0 &&
-            !(flow.warnings || []).length
-          );
-        if (state.quickFilter === "selected")
-          return state.selected.has(flow.qualified_name);
-        return true;
-      }
-      function updateQuickFilterChips() {
-        document
-          .querySelectorAll("[data-architecture-quick-filter]")
-          .forEach((button) =>
-            button.classList.toggle(
-              "is-active",
-              button.dataset.architectureQuickFilter === state.quickFilter,
-            ),
-          );
-        $("resetDecisionFilters").hidden =
-          state.decisionSearch === "" && state.quickFilter === "all";
+      function updateDecisionFilterControls() {
+        $("resetDecisionFilters").hidden = state.decisionSearch === "";
       }
       function filteredPublicFlows() {
         const q = state.decisionSearch.toLowerCase();
         return publicEntryFlows.filter(
           (f) =>
-            (!q ||
-              text(f.function_name).toLowerCase().includes(q) ||
-              text(f.qualified_name).toLowerCase().includes(q) ||
-              text(f.module).toLowerCase().includes(q)) &&
-            matchesQuickFilter(f),
+            !q ||
+            text(f.function_name).toLowerCase().includes(q) ||
+            text(f.qualified_name).toLowerCase().includes(q) ||
+            text(f.module).toLowerCase().includes(q),
         );
       }
       function sortValue(flow, key) {
@@ -1487,7 +1507,7 @@
       }
       function renderPublicCallableList() {
         visibleFlows = stableSortRows(filteredPublicFlows());
-        updateQuickFilterChips();
+        updateDecisionFilterControls();
         if (!state.activePublicFlow && visibleFlows.length)
           state.activePublicFlow = visibleFlows[0].qualified_name;
         if (
@@ -1565,28 +1585,75 @@
         }
         return attach(root);
       }
+      function flowTreeStatusChips(n) {
+        const chips = [];
+        if (n.architecture_result === "Violation")
+          chips.push(
+            `<span class="badge critical">Architecture violation</span>`,
+          );
+        if (n.architecture_result === "Warning")
+          chips.push(
+            `<span class="badge warn">${esc(n.violation_type || "Warning")}</span>`,
+          );
+        if (n.helper_cleanup_candidate)
+          chips.push(`<span class="badge warn">Merge candidate</span>`);
+        if ((n.used_outside_flow ?? 0) > 0)
+          chips.push(`<span class="badge info">Used outside flow</span>`);
+        return chips.join("");
+      }
+      function flowTreeDetailRows(n) {
+        const rows = [
+          ["Called inside this flow by count", n.called_inside_flow_by ?? 0],
+          ["Calls inside this flow count", n.calls_inside_flow ?? 0],
+          ["Used outside this flow count", n.used_outside_flow ?? 0],
+          ["End node status", n.is_end_node ? "Yes" : "No"],
+        ];
+        if (n.source_path)
+          rows.push([
+            "Source module",
+            String(n.source_path).replace(/^src\/fabricops_kit\//, ""),
+          ]);
+        if (n.helper_cleanup_candidate)
+          rows.push([
+            "Merge candidate reason",
+            n.recommended_action || "Merge candidate",
+          ]);
+        if (n.architecture_result === "Violation")
+          rows.push([
+            "Architecture violation reason",
+            n.violation_type || "Architecture violation",
+          ]);
+        if (n.architecture_result === "Warning")
+          rows.push([
+            "Private dependency scope",
+            n.violation_type === "Same-file private dependency"
+              ? "Same-file private helper dependency; review for possible merge."
+              : n.violation_type || "Warning",
+          ]);
+        if (n.path_examples && n.path_examples.length)
+          rows.push(["Path example", n.path_examples[0].join(" -> ")]);
+        return rows;
+      }
+      function flowTreeDetails(n) {
+        return `<div class="flow-tree-details"><div class="flow-tree-detail-grid">${flowTreeDetailRows(
+          n,
+        )
+          .map(
+            ([label, value]) =>
+              `<div class="flow-tree-detail"><small>${esc(label)}</small><span>${esc(value)}</span></div>`,
+          )
+          .join("")}</div></div>`;
+      }
       function renderTreeNode(n) {
         const type = n.simple_classification || "Unknown",
-          file = n.source_path
-            ? ` <small>${esc(String(n.source_path).replace(/^src\/fabricops_kit\//, ""))}</small>`
-            : "",
-          metrics = [];
-        if ((n.called_inside_flow_by ?? 0) > 0)
-          metrics.push(
-            `called inside this flow by: ${n.called_inside_flow_by}`,
-          );
-        if ((n.calls_inside_flow ?? 0) > 0)
-          metrics.push(`calls inside this flow: ${n.calls_inside_flow}`);
-        if ((n.used_outside_flow ?? 0) > 0)
-          metrics.push(`used outside this flow: ${n.used_outside_flow}`);
-        if (n.is_end_node) metrics.push("end node");
-        if (n.helper_cleanup_candidate) metrics.push("merge candidate");
-        if (n.architecture_result === "Violation" && n.violation_type)
-          metrics.push(`architecture violation: ${n.violation_type}`);
-        const metricText = metrics.length
-          ? ` <span class="node-signals">${metrics.map(esc).join(" · ")}</span>`
-          : "";
-        return `<li><strong>${sourceCallableLink(n)}</strong> <span class="badge muted">${esc(type)}</span>${file}${metricText}${n.children?.length ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>` : ""}</li>`;
+          moduleText = n.source_path
+            ? String(n.source_path).replace(/^src\/fabricops_kit\//, "")
+            : n.module || "",
+          status = flowTreeStatusChips(n),
+          children = n.children?.length
+            ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>`
+            : "";
+        return `<li><details><summary><span class="flow-tree-main"><strong>${sourceCallableLink(n)}</strong><span class="badge muted">${esc(type)}</span>${moduleText ? `<span class="tag">${esc(moduleText)}</span>` : ""}</span><span class="flow-tree-status">${status}<span class="badge muted">Details</span></span></summary>${flowTreeDetails(n)}</details>${children}</li>`;
       }
       function renderFlowDetails() {
         const f = publicEntryFlows.find(
@@ -1609,7 +1676,7 @@
           ),
           publicFindings = publicCallableFindingRows(f);
         $("publicFlowDetails").innerHTML =
-          `<h2>Callable flow</h2><p><strong>Selected callable:</strong> ${sourceCallableLink(f)} <small>${esc(f.qualified_name)}</small></p><p><strong>Recommendation:</strong> <span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "warn"}">${esc(suggestedActionLabel(f))}</span></p><p>${compactBadges((f.warnings || []).map(findingLabel), "warn", 99)}</p><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long call chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External dependents / shared impact</span></div></div><h3>Public callable findings</h3><div class="table-wrap"><table><thead><tr><th>Finding</th><th>Evidence</th><th>Suggested action</th></tr></thead><tbody>${publicFindings.map((r) => `<tr><td>${esc(r.finding)}</td><td>${esc(r.evidence)}</td><td>${esc(r.suggested_action)}</td></tr>`).join("")}</tbody></table></div><h3>Architecture findings inside this flow</h3><div class="table-wrap"><table><thead><tr><th>Source function</th><th>Target function</th><th>Finding type</th><th>Evidence</th><th>Suggested fix</th></tr></thead><tbody>${(architectureFindings.length ? architectureFindings : [{}]).map((v) => (v.qualified_name ? `<tr><td>${sourceCallableLink(inventoryByQn.get(v.parent_qualified_name) || { qualified_name: v.parent_qualified_name, function_name: v.parent_qualified_name })}</td><td>${sourceCallableLink(v)}</td><td>${esc(v.violation_type || findingLabel(v.recommended_action || "Architecture violation"))}</td><td>${esc(v.path_examples && v.path_examples.length ? v.path_examples[0].join(" -> ") : "Dependency breaks the callable architecture rule.")}</td><td>${esc(v.violation_type === "Single-use shared helper" ? "Move this helper into the owning public callable file or keep it only if it is genuinely reused." : v.violation_type === "Shared helper calls public callable" ? "Move shared logic behind a shared helper instead of calling the public API." : v.violation_type === "Cross-callable private dependency" ? "Move the private helper into the caller or promote it to a shared helper if reused." : v.violation_type === "Shared helper calls private implementation" ? "Keep private implementation details inside their owner; promote reusable logic to a shared helper." : v.violation_type === "Hidden nested helper chain" ? "Flatten nested helper chains that do not provide reusable shared behavior." : INTERNAL_LAYERING_SUGGESTED_FIX)}</td></tr>` : '<tr><td colspan="6">No architecture findings found in this flow.</td></tr>')).join("")}</tbody></table></div><h3>Internal helper cleanup candidates</h3><div class="table-wrap"><table><thead><tr><th>Function</th><th>Function type</th><th>Only caller</th><th>Finding</th><th>Suggested action</th></tr></thead><tbody>${(mergeCandidates.length ? mergeCandidates : [{}]).map((c) => (c.qualified_name ? `<tr><td>${sourceCallableLink(c)}</td><td>${esc(c.layer_group)}</td><td>${sourceCallableLink(inventoryByQn.get(c.parent_qualified_name) || { qualified_name: c.parent_qualified_name, function_name: c.parent_qualified_name })}</td><td>${esc(findingLabel(c.recommended_action || "Merge candidate"))}</td><td>${esc((c.recommended_action || "").includes("Shared") ? "Keep as shared internal helper." : (c.recommended_action || "").includes("Review") ? "Keep only if the helper improves readability or reuse." : "Consider absorbing this helper into its only caller if it does not improve readability or reuse.")}</td></tr>` : '<tr><td colspan="5">No internal helper cleanup candidates found.</td></tr>')).join("")}</tbody></table></div><p><strong>direct callees</strong> are included in the flow tree.</p><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
+          `<h2>Callable flow</h2><p><strong>Selected callable:</strong> ${sourceCallableLink(f)} <small>${esc(f.qualified_name)}</small></p><p><strong>Recommendation:</strong> <span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "warn"}">${esc(suggestedActionLabel(f))}</span></p><p>${compactBadges((f.warnings || []).map(findingLabel), "warn", 99)}</p><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long call chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External dependents / shared impact</span></div></div><h3>Public callable findings</h3><div class="table-wrap"><table><thead><tr><th>Finding</th><th>Evidence</th><th>Suggested action</th></tr></thead><tbody>${publicFindings.map((r) => `<tr><td>${esc(r.finding)}</td><td>${esc(r.evidence)}</td><td>${esc(r.suggested_action)}</td></tr>`).join("")}</tbody></table></div><h3>Architecture findings inside this flow</h3><div class="table-wrap"><table><thead><tr><th>Source function</th><th>Target function</th><th>Finding type</th><th>Evidence</th><th>Suggested fix</th></tr></thead><tbody>${(architectureFindings.length ? architectureFindings : [{}]).map((v) => (v.qualified_name ? `<tr><td>${sourceCallableLink(inventoryByQn.get(v.parent_qualified_name) || { qualified_name: v.parent_qualified_name, function_name: v.parent_qualified_name })}</td><td>${sourceCallableLink(v)}</td><td>${esc(v.violation_type || findingLabel(v.recommended_action || "Architecture violation"))}</td><td>${esc(v.path_examples && v.path_examples.length ? v.path_examples[0].join(" -> ") : "Dependency breaks the callable architecture rule.")}</td><td>${esc(v.violation_type === "Single-use shared helper" ? "Move this helper into the owning public callable file or keep it only if it is genuinely reused." : v.violation_type === "Shared helper calls public callable" ? "Move shared logic behind a shared helper instead of calling the public API." : v.violation_type === "Cross-callable private dependency" ? "Move the private helper into the caller or promote it to a shared helper if reused." : v.violation_type === "Hidden nested helper chain" ? "Flatten nested helper chains that do not provide reusable shared behavior." : INTERNAL_LAYERING_SUGGESTED_FIX)}</td></tr>` : '<tr><td colspan="6">No architecture findings found in this flow.</td></tr>')).join("")}</tbody></table></div><h3>Internal helper cleanup candidates</h3><div class="table-wrap"><table><thead><tr><th>Function</th><th>Function type</th><th>Only caller</th><th>Finding</th><th>Suggested action</th></tr></thead><tbody>${(mergeCandidates.length ? mergeCandidates : [{}]).map((c) => (c.qualified_name ? `<tr><td>${sourceCallableLink(c)}</td><td>${esc(c.layer_group)}</td><td>${sourceCallableLink(inventoryByQn.get(c.parent_qualified_name) || { qualified_name: c.parent_qualified_name, function_name: c.parent_qualified_name })}</td><td>${esc(findingLabel(c.recommended_action || "Merge candidate"))}</td><td>${esc((c.recommended_action || "").includes("Shared") ? "Keep as shared internal helper." : (c.recommended_action || "").includes("Review") ? "Keep only if the helper improves readability or reuse." : "Consider absorbing this helper into its only caller if it does not improve readability or reuse.")}</td></tr>` : '<tr><td colspan="5">No internal helper cleanup candidates found.</td></tr>')).join("")}</tbody></table></div><p><strong>direct callees</strong> are included in the flow tree.</p><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
       function selectedItems() {
         const byQn = new Map(
@@ -1946,17 +2013,9 @@ Write the final output as instructions that can be pasted into Codex, Claude Cod
         state.collapsedPublicList = false;
         renderPublicCallableList();
       });
-      document.addEventListener("click", (e) => {
-        const chip = e.target.closest("[data-architecture-quick-filter]");
-        if (!chip) return;
-        state.quickFilter = chip.dataset.architectureQuickFilter;
-        state.collapsedPublicList = false;
-        renderPublicCallableList();
-      });
       $("resetDecisionFilters").onclick = () => {
         Object.assign(state, {
           decisionSearch: "",
-          quickFilter: "all",
           sortKey: "callable",
           sortDirection: "asc",
           collapsedPublicList: false,

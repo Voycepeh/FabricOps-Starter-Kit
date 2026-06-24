@@ -274,10 +274,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Generated at:" in dashboard_text
     assert "Data source:" in dashboard_text
     assert "callable-flow.json" in dashboard_text
-    assert "header-action-bar" in dashboard_text
-    assert "<aclass='header-action'href='callable-functions-inventory.html'" in compact_dashboard_text
-    assert "<aclass='header-action'href='../reference/_data/callable-flow.json'" in compact_dashboard_text
-    assert "<aclass='header-action'href='../'>BacktoDocs</a>" in compact_dashboard_text
+    assert "callable-page-nav" in dashboard_text
+    assert "header-action" not in dashboard_text
+    assert "<navclass='callable-page-nav'aria-label='Callablereferencenavigation'>" in compact_dashboard_text
+    assert "<aclass='callable-page-tabis-active'href='callable-functions-dashboard.html'aria-current='page'>Architecture</a>" in compact_dashboard_text
+    assert "<aclass='callable-page-tab'href='callable-functions-inventory.html'>Inventory</a>" in compact_dashboard_text
+    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_dashboard_text
+    assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_dashboard_text
     assert '<a href="callable-functions-inventory.html">Inventory</a> -' not in dashboard_text
     assert "new Date()" not in dashboard_text
     assert "Date.now" not in dashboard_text
@@ -291,14 +294,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<button type=\"button\" class=\"callable-button\" data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert "decisionSearchBox" in dashboard_text
-    assert 'data-architecture-quick-filter="all"' in dashboard_text
-    assert 'data-architecture-quick-filter="high_priority"' in dashboard_text
-    assert 'data-architecture-quick-filter="architecture_violations"' in dashboard_text
-    assert 'data-architecture-quick-filter="long_flows"' in dashboard_text
-    assert 'data-architecture-quick-filter="healthy"' in dashboard_text
-    assert 'data-architecture-quick-filter="selected"' in dashboard_text
-    assert "function matchesQuickFilter(flow)" in dashboard_text
-    assert "function updateQuickFilterChips()" in dashboard_text
+    assert 'aria-label="Architecture quick filters"' not in dashboard_text
+    assert 'data-architecture-quick-filter' not in dashboard_text
+    assert "function matchesQuickFilter(flow)" not in dashboard_text
+    assert "function updateDecisionFilterControls()" in dashboard_text
     assert "resetAll(document)" in dashboard_text
     for removed_filter in [
         "decisionModuleFilter",
@@ -430,7 +429,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>DownloadJSON" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in compact_dashboard_text
-    assert "quickFilter:'all'" in compact_dashboard_text
+    assert "quickFilter:'all'" not in compact_dashboard_text
     assert "constDOWNSTREAM_BANDS=" in compact_dashboard_text
     assert "['downstream_0','0',(v)=>v===0]" in compact_dashboard_text
     assert "['downstream_1_2','1–2',(v)=>v>=1&&v<=2]" in compact_dashboard_text
@@ -458,7 +457,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "matchesBand(f,state.decisionDepthBand" not in dashboard_text
     assert "matchesBand(f,state.decisionIssueBand" not in dashboard_text
     assert "['decisionMinDownstream','decisionDownstreamBand']" not in dashboard_text
-    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" in compact_dashboard_text
+    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" not in compact_dashboard_text
     assert "populateBandFilter('decisionMinDownstream'" not in dashboard_text
     assert "populateBandFilter('decisionMinDepth'" not in dashboard_text
     assert "populateBandFilter('decisionMinIssues'" not in dashboard_text
@@ -509,7 +508,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in compact_dashboard_text
     assert "architecture_violation_count??0" in compact_dashboard_text
     assert "down>=12" not in dashboard_text
-    assert "architecture violation: ${n.violation_type}" in dashboard_text
+    assert "Architecture violation reason" in dashboard_text
     assert "Helper-level architecture findings found" in dashboard_text
     assert "architectureFindings.length?architectureFindings" in compact_dashboard_text
     assert "function whyReview(flow)" in dashboard_text
@@ -531,8 +530,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
 
-    assert "Callable Inventory" in inventory_text
-    assert "Search callables, inspect health signals, and export focused AI refactor plans." in normalized_inventory_text
+    assert "Code Inventory" in inventory_text
+    assert "Inspect supporting implementation details that complement the callable flow architecture view." in normalized_inventory_text
     assert "Generated at:" in inventory_text
     assert "Generated at:</strong>" in inventory_text
     assert "SGT" in inventory_text
@@ -543,66 +542,67 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Date.now" not in inventory_text
     assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
+    assert "callable-page-nav" in inventory_text
+    assert "header-action" not in inventory_text
+    assert "<aclass='callable-page-tab'href='callable-functions-dashboard.html'>Architecture</a>" in compact_inventory_text
+    assert "<aclass='callable-page-tabis-active'href='callable-functions-inventory.html'aria-current='page'>Inventory</a>" in compact_inventory_text
+    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
+    assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
-    assert "Total callables" in inventory_text
+    assert "Support code assets" in inventory_text
+    assert "Not reached from public flow" in inventory_text
+    assert "Cleanup candidates" in inventory_text
     assert "Public callables" in inventory_text
-    assert "Supporting callables" in inventory_text
-    assert "Review candidates" in inventory_text
-    assert "Healthy callables" in inventory_text
-    assert "All callables in the architecture inventory." in inventory_text
-    assert "Notebook-facing API entrypoints." in inventory_text
-    assert "Helpers and implementation callables." in inventory_text
-    assert "Use this inventory to find public callables, supporting helpers, health signals, and refactor candidates." in normalized_inventory_text
-    assert "Modules" not in inventory_text
-    assert "Supporting functions" not in inventory_text
-    assert "Private helpers to review" not in inventory_text
+    assert "Total code assets" in inventory_text
+    assert "Shown for context; use Architecture for public callable flow review." in inventory_text
+    assert "The callable flow page is the source of truth for public callable architecture" in normalized_inventory_text
+    assert "Use this inventory to inspect supporting implementation details that are not fully visible in callable flows, including internal helpers, methods, classes, orphaned utilities, and refactor candidates." in normalized_inventory_text
+    assert "Architecture inventory" not in inventory_text
+    assert "giant review table" not in inventory_text
     assert "callable_inventory_metrics" not in inventory_text
-    assert "deep cross-module helper chains" not in inventory_text
-    assert "inline single-use helper" not in inventory_text
-    assert "Total discovered callable records" not in inventory_text
-    assert "Function callables" not in inventory_text
-    assert "Non-function callable records" not in inventory_text
     assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
-    assert (
-        ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1;font-size:1.45rem;"
-        in compact_inventory_text
-    )
+    assert ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1;font-size:1.45rem;" in compact_inventory_text
     assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700;" in compact_inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
-    assert "class=\"source-link\" href=\"${esc(href)}\"" in inventory_text
+    assert 'class="source-link" href="${esc(href)}"' in inventory_text
     assert "if(i.source_url)returni.source_url" in compact_inventory_text
     assert "conststart=i.source_start_line" in compact_inventory_text
     assert "#L${start}" in inventory_text
-    assert "GITHUB_SOURCE_BASE" in inventory_text
-    assert "Showing ${visibleRows.length} callable records of ${total} total discovered callable records." in normalized_inventory_text
-    assert "Showing ${visibleRows.length} of ${inventory.length} discovered callables" not in inventory_text
-    assert "Callable metrics are generated from the callable inventory data." in normalized_inventory_text
+    assert "Showing ${visibleRows.length} support inventory records of ${total} total generated code assets." in normalized_inventory_text
+    assert "Callable metrics are generated from the callable inventory data." not in normalized_inventory_text
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
     assert "callable-review-table-wrap" in inventory_text
-    assert "<thclass='col-callable'>Callable</th><thclass='col-file-area'>File/Area</th><thclass='col-public-api'>PublicAPI</th><thclass='col-health'>Health</th><thclass='col-finding'>Finding</th><thclass='col-review-note'>Reviewnote</th><thclass='col-suggested-action'>Suggestedaction</th><thclass='col-downstream'>Downstream</th><thclass='col-depth'>Depth</th>" in compact_inventory_text
+    assert "<thclass='col-callable'>Codeasset</th><thclass='col-file-area'>File/Area</th><thclass='col-item-type'>Itemtype</th><thclass='col-code-role'>Coderole</th><thclass='col-flow'>Reachedfrompublicflow</th><thclass='col-health'>Health</th><thclass='col-finding'>Finding</th><thclass='col-review-note'>Codebasenote</th><thclass='col-suggested-action'>Suggestedcleanupaction</th>" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
     assert "findingBadge(i)" in inventory_text
+    assert "flowBadge(i)" in inventory_text
     assert "data-select-row" in inventory_text
     assert "selectAllVisible" in inventory_text
     assert "copyJson" in inventory_text
     assert "copyMarkdown" in inventory_text
     assert "downloadJson" in inventory_text
     assert "searchBox" in inventory_text
-    assert "Search all callables" in inventory_text
-    assert 'data-quick-filter="all"' in inventory_text
-    assert 'data-quick-filter="public_api"' in inventory_text
-    assert 'data-quick-filter="supporting"' in inventory_text
-    assert 'data-quick-filter="review_candidates"' in inventory_text
-    assert 'data-quick-filter="healthy"' in inventory_text
-    assert 'data-quick-filter="selected"' in inventory_text
-    assert "function matchesQuickFilter(i)" in inventory_text
-    assert "function updateQuickFilterChips()" in inventory_text
+    assert "Search code inventory" in inventory_text
+    assert "Inventory focus" in inventory_text
+    assert "Item type" in inventory_text
+    assert "Support code needing visibility" in inventory_text
+    assert "Public callable" in inventory_text
+    assert "Supporting helper" in inventory_text
+    assert "Private function" in inventory_text
+    assert "Method" in inventory_text
+    assert "Class" in inventory_text
+    assert "Orphaned / not reached from public flow" in inventory_text
+    assert "function buildFlowSignals(flows)" in inventory_text
+    assert "function matchesFilters(i)" in inventory_text
+    assert "function supportFocus(i)" in inventory_text
+    assert "function rank(i)" in inventory_text
+    assert "state.quickFilter" not in compact_inventory_text
+    assert "function matchesQuickFilter(i)" not in inventory_text
+    assert "function updateQuickFilterChips()" not in inventory_text
+    assert 'data-quick-filter=' not in inventory_text
     assert "resetAll(document)" in inventory_text
-    assert "state.quickFilter=chip.dataset.quickFilter" in compact_inventory_text
-    assert "matchesQuickFilter(i),)" in compact_inventory_text
-    assert "state.quickFilter='all'" in compact_inventory_text
     assert "selectedItems()" in inventory_text
     for removed_filter in [
         "moduleFilter",
@@ -614,7 +614,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "callableRoleFilter",
         "dependencyRoleFilter",
         "kindFilter",
-        "typeFilter",
         "reviewStatusFilter",
         "minInboundFilter",
         "minOutboundFilter",
@@ -635,16 +634,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function callableMarkdown(item)" in inventory_text
     assert "function markdownPacket(packet)" in inventory_text
     assert "Objective" in inventory_text
-    assert "Architecture intent" in inventory_text
+    assert "Selected code assets" in inventory_text
     assert "Compatibility mode" in inventory_text
     assert "toolbar-card-grid" in inventory_text
     assert "toolbar-card--selection" in inventory_text
     assert "toolbar-card--compatibility" in inventory_text
     assert "toolbar-card--prompt" in inventory_text
     assert "toolbar-row--top" not in inventory_text
-    assert "Selected callables" in inventory_text
+    assert "Selected code assets" in inventory_text
     assert "Requested work" in inventory_text
-    assert "Output required from AI" in inventory_text
     assert "Batch accounting" in inventory_text
     assert "disabled>CopyJSON" in compact_inventory_text
     assert "disabled>CopyMarkdown" in compact_inventory_text
@@ -664,7 +662,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Findings / Signal" not in inventory_text
     assert "Role group" not in inventory_text
     assert "Role detail" not in inventory_text
-    assert "Suggested action" in inventory_text
+    assert "Suggested cleanup action" in inventory_text
     assert "Inbound" not in inventory_text
     assert "Outbound" not in inventory_text
     assert "Dependency role" not in inventory_text
@@ -1810,8 +1808,8 @@ def test_callable_architecture_layer_rules_and_labels():
         edge = generator._classify_architecture_edge(caller, callee)
         assert edge == {"result": "Allowed", "violation_type": ""}
 
+    assert set(generator.ARCHITECTURE_WARNING_TYPES) == {"Same-file private dependency"}
     assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {
-        "Shared helper calls private implementation",
         "Shared helper calls public callable",
         "Cross-callable private dependency",
         "Single-use shared helper",
@@ -2232,7 +2230,8 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
     assert transitive_by_qn[first_helper_qn]["simple_classification"] == "Private helper"
     assert "dependency_role" not in transitive_by_qn[first_helper_qn]
     assert flow["architecture_violation_count"] == 0
-    assert all(row["architecture_result"] == "Allowed" for row in flow["transitive_callees"])
+    assert all(row["architecture_result"] == "Warning" for row in flow["transitive_callees"])
+    assert {row["violation_type"] for row in flow["transitive_callees"]} == {"Same-file private dependency"}
 
 
 def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> None:
@@ -2248,11 +2247,17 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert 'consttype=n.simple_classification||"Unknown"' in compact_dashboard_text
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
-    assert "called inside this flow by:" in dashboard_text
-    assert "calls inside this flow:" in dashboard_text
-    assert "used outside this flow:" in dashboard_text
-    assert "end node" in dashboard_text
-    assert "merge candidate" in dashboard_text
+    assert "flow-tree-main" in dashboard_text
+    assert "flow-tree-details" in dashboard_text
+    assert "flowTreeDetailRows(n)" in dashboard_text
+    assert "Called inside this flow by count" in dashboard_text
+    assert "Calls inside this flow count" in dashboard_text
+    assert "Used outside this flow count" in dashboard_text
+    assert "End node status" in dashboard_text
+    assert "Merge candidate reason" in dashboard_text
+    assert "Architecture violation reason" in dashboard_text
+    assert "Path example" in dashboard_text
+    assert "node-signals" not in dashboard_text
     assert "called by count" not in dashboard_text.lower()
     assert "<th>Called by</th>" not in dashboard_text
     assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
@@ -2315,20 +2320,20 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
         inventory_text,
     )
     assert "Loading callable-flow data..." in inventory_text
-    assert "Loaded ${inventory.length} callable records" in inventory_text
-    assert "No callable records match current filters" in inventory_text
-    assert "No callable records loaded." in inventory_text
+    assert "Loaded ${inventory.length} code inventory records" in inventory_text
+    assert "No code inventory records match current filters" in inventory_text
+    assert "No code inventory records loaded." in inventory_text
     assert "Failed to load callable-flow data. Attempted URL:" in inventory_text
     assert "Could not parse callable-flow.json from ${attemptedUrl}" in inventory_text
     assert "did not include a function_inventory array" in inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
-        "Total callables",
+        "Support code assets",
+        "Not reached from public flow",
+        "Cleanup candidates",
         "Public callables",
-        "Supporting callables",
-        "Review candidates",
-        "Healthy callables",
+        "Total code assets",
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
@@ -2462,7 +2467,11 @@ def test_callable_flow_allows_two_layer_local_private_and_shared_internal_calls(
     flow = generator._build_public_entrypoint_flow([public_qn, other_public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
 
     assert flow["architecture_violation_count"] == 0
-    assert all(row["architecture_result"] == "Allowed" for row in flow["transitive_callees"])
+    rows = {row["qualified_name"]: row for row in flow["transitive_callees"]}
+    assert rows[private_qn]["architecture_result"] == "Warning"
+    assert rows[private_qn]["violation_type"] == "Same-file private dependency"
+    assert rows[nested_private_qn]["architecture_result"] == "Warning"
+    assert rows[shared_qn]["architecture_result"] == "Allowed"
 
 
 def test_callable_flow_flags_single_use_internal_helper_violation() -> None:
@@ -2529,11 +2538,13 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
     ]
 
     flow = generator._build_public_entrypoint_flow([public_qn, other_public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
-    violation_types = {row["violation_type"] for row in flow["transitive_callees"] if row["architecture_result"] == "Violation"}
+    rows = {row["qualified_name"]: row for row in flow["transitive_callees"]}
 
-    assert flow["architecture_violation_count"] >= 1
-    assert "Shared helper calls private implementation" in violation_types
-    assert "Cross-callable private dependency" in violation_types
+    assert flow["architecture_violation_count"] == 0
+    assert rows[private_core_qn]["architecture_result"] == "Warning"
+    assert rows[private_core_qn]["violation_type"] == "Same-file private dependency"
+    assert rows[distribution_qn]["architecture_result"] == "Warning"
+    assert rows[distribution_qn]["violation_type"] == "Same-file private dependency"
 
 
 def test_callable_flow_flags_private_helper_reused_across_public_callables() -> None:
@@ -2557,13 +2568,13 @@ def test_callable_flow_flags_private_helper_reused_across_public_callables() -> 
 
     flows = generator._build_public_entrypoint_flow([public_a, public_b], calls_by_qn, node_by_qn, {}, inventory)
 
-    assert [flow["architecture_violation_count"] for flow in flows] == [1, 1]
-    assert all(
-        row["violation_type"] == "Cross-callable private dependency"
-        for flow in flows
-        for row in flow["transitive_callees"]
-        if row["architecture_result"] == "Violation"
-    )
+    rows_by_flow = [{row["qualified_name"]: row for row in flow["transitive_callees"]} for flow in flows]
+
+    assert [flow["architecture_violation_count"] for flow in flows] == [0, 1]
+    assert rows_by_flow[0][private_qn]["architecture_result"] == "Warning"
+    assert rows_by_flow[0][private_qn]["violation_type"] == "Same-file private dependency"
+    assert rows_by_flow[1][private_qn]["architecture_result"] == "Violation"
+    assert rows_by_flow[1][private_qn]["violation_type"] == "Cross-callable private dependency"
 
 
 def test_callable_flow_ignores_call_graph_self_edges() -> None:
@@ -2669,7 +2680,9 @@ def test_callable_flow_private_helper_containment_uses_owner_file() -> None:
     rows_by_flow = [{row["qualified_name"]: row for row in flow["transitive_callees"]} for flow in flows]
 
     assert rows_by_flow[0][private_a]["simple_classification"] == "Private helper"
-    assert rows_by_flow[0][private_a]["violation_type"] == "Cross-callable private dependency"
+    assert rows_by_flow[0][private_a]["architecture_result"] == "Warning"
+    assert rows_by_flow[0][private_a]["violation_type"] == "Same-file private dependency"
     assert rows_by_flow[0][private_a]["used_outside_flow"] == 1
     assert rows_by_flow[1][private_a]["simple_classification"] == "Private helper"
+    assert rows_by_flow[1][private_a]["architecture_result"] == "Violation"
     assert rows_by_flow[1][private_a]["violation_type"] == "Cross-callable private dependency"

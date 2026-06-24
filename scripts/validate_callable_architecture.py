@@ -19,8 +19,8 @@ INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
 VISIBLE_FUNCTION_TYPES = {"Public function", "Internal function"}
 PRIVATE_HELPER_TYPE = "Private helper"
 PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Internal", PRIVATE_HELPER_TYPE}
+ALLOWED_ARCHITECTURE_WARNING_TYPES = {"Same-file private dependency"}
 ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {
-    "Shared helper calls private implementation",
     "Shared helper calls public callable",
     "Cross-callable private dependency",
     "Single-use shared helper",
@@ -356,6 +356,10 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
                 failures.append(f"Supporting object surfaced in public flow: {callee.get('qualified_name')}")
             if callee.get("callee_type") not in PUBLIC_FLOW_CALLEE_TYPES:
                 failures.append(f"Non callable-layer callee type in public flow: {callee.get('qualified_name')}={callee.get('callee_type')!r}")
+            if callee.get("architecture_result") == "Warning":
+                warning_type = callee.get("violation_type")
+                if warning_type not in ALLOWED_ARCHITECTURE_WARNING_TYPES:
+                    failures.append(f"Unsupported architecture warning type: {warning_type!r}")
             if callee.get("architecture_result") == "Violation":
                 architecture_violation_edges += 1
                 flow_violation_edges += 1

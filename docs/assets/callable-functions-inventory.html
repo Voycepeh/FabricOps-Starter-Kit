@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Callable Inventory</title>
+    <title>Code Inventory</title>
     <link rel="stylesheet" href="../stylesheets/table-controls.css" />
     <style>
       body {
@@ -37,13 +37,94 @@
       .generation-banner span {
         display: inline-flex;
       }
+      .callable-page-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0.75rem 0 0;
+        padding: 0.45rem;
+        border: 1px solid #dbe3ef;
+        border-radius: 0.75rem;
+        background: #f8fafc;
+      }
+      .callable-page-tabs,
+      .callable-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+      }
+      .callable-page-tabs {
+        padding: 0.2rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.55rem;
+        background: #fff;
+      }
+      .callable-page-tab,
+      .callable-page-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2rem;
+        padding: 0.36rem 0.7rem;
+        border-radius: 0.38rem;
+        font-size: 0.84rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-decoration: none;
+      }
+      .callable-page-tab {
+        border: 1px solid transparent;
+        color: #1d4ed8;
+      }
+      .callable-page-tab.is-active {
+        border-color: #1d4ed8;
+        background: #1d4ed8;
+        color: #fff;
+      }
+      .callable-page-action {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #475569;
+      }
+      .callable-page-action:hover,
+      .callable-page-tab:hover {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1e40af;
+      }
+      .callable-page-tab.is-active:hover {
+        border-color: #1d4ed8;
+        background: #1d4ed8;
+        color: #fff;
+      }
+      @media (max-width: 720px) {
+        .callable-page-nav {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .callable-page-tabs,
+        .callable-page-actions {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          width: 100%;
+        }
+        .callable-page-tab,
+        .callable-page-action {
+          width: 100%;
+          box-sizing: border-box;
+        }
+      }
       .surface-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 0.55rem;
         margin: 0.75rem 0;
       }
-      .surface-card {
+      .surface-card,
+      .toolbar-card {
         background: #fff;
         border: 1px solid #dbe3ef;
         border-radius: 0.75rem;
@@ -74,8 +155,13 @@
         border-color: #c7d2fe;
         background: #eef2ff;
       }
-      .surface-card.secondary {
-        background: #f8fafc;
+      .surface-card.review {
+        border-color: #fde68a;
+        background: #fffbeb;
+      }
+      .surface-card.risk {
+        border-color: #fecaca;
+        background: #fef2f2;
       }
       .surface-card.muted {
         background: #f1f5f9;
@@ -85,33 +171,21 @@
       .surface-card.primary strong {
         color: #1d4ed8;
       }
-      .surface-card.muted strong {
-        color: #475569;
+      .surface-card.review strong {
+        color: #92400e;
       }
-      .filter-panel {
+      .surface-card.risk strong {
+        color: #991b1b;
+      }
+      .inventory-filter-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 0.55rem;
+        margin: 0.75rem 0;
       }
-      .quick-filter-bar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        align-items: center;
-        margin: 0.65rem 0;
-      }
-      .quick-filter-chip {
-        border: 1px solid #cbd5e1;
-        border-radius: 999px;
-        background: #f8fafc;
-        color: #1d4ed8;
-        font-weight: 800;
-        cursor: pointer;
-      }
-      .quick-filter-chip.is-active {
-        background: #1d4ed8;
-        color: #fff;
-        border-color: #1d4ed8;
+      .inventory-note {
+        background: #eff6ff;
+        border-color: #bfdbfe;
       }
       .inventory-clear-all {
         border: 1px solid #cbd5e1;
@@ -151,9 +225,6 @@
       .toolbar-card {
         box-sizing: border-box;
         min-width: 0;
-        padding: 0.65rem 0.75rem;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.75rem;
         background: #f1f5f9;
       }
       .toolbar-card--selection,
@@ -226,10 +297,11 @@
         overflow: auto;
         background: #fff;
         border: 1px solid #dbe3ef;
+        border-radius: 0.75rem;
       }
       table {
         width: 100%;
-        min-width: 1500px;
+        min-width: 1320px;
         border-collapse: collapse;
       }
       th,
@@ -269,29 +341,9 @@
         background: #e2e8f0;
         color: #475569;
       }
-      .priority-high {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-      .priority-medium,
-      .priority-review {
-        background: #fef3c7;
-        color: #92400e;
-      }
-      .priority-low {
-        background: #e0f2fe;
-        color: #075985;
-      }
-      .priority-protect {
-        background: #dcfce7;
-        color: #166534;
-      }
-      .priority-help ul {
-        margin: 0.35rem 0 0.15rem 1.1rem;
-        padding: 0;
-      }
-      .priority-help li {
-        margin: 0.12rem 0;
+      .badge.info {
+        background: #dbeafe;
+        color: #1e40af;
       }
       .manual-copy {
         width: 100%;
@@ -306,6 +358,7 @@
           width: auto;
           border-radius: 0.75rem;
         }
+        .inventory-filter-grid,
         .toolbar-card-grid {
           grid-template-columns: 1fr;
         }
@@ -330,98 +383,113 @@
         .toolbar-group .toolbar-row button {
           flex: 1 1 9rem;
         }
+        table {
+          min-width: 1100px;
+        }
       }
     </style>
   </head>
   <body>
     <header>
-      <h1>Callable Inventory</h1>
+      <h1>Code Inventory</h1>
       <p>
-        Search callables, inspect health signals, and export focused AI refactor
-        plans.
+        Inspect supporting implementation details that complement the callable
+        flow architecture view.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 16:15 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 18:05 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
-      <p>
-        <a href="callable-functions-dashboard.html">Architecture</a> -
-        <a href="../reference/_data/callable-flow.json">Open JSON data</a>
-      </p>
+      <nav class="callable-page-nav" aria-label="Callable reference navigation">
+        <div class="callable-page-tabs" role="list">
+          <a class="callable-page-tab" href="callable-functions-dashboard.html"
+            >Architecture</a
+          ><a
+            class="callable-page-tab is-active"
+            href="callable-functions-inventory.html"
+            aria-current="page"
+            >Inventory</a
+          >
+        </div>
+        <div class="callable-page-actions">
+          <a
+            class="callable-page-action"
+            href="../reference/_data/callable-flow.json"
+            >Open JSON data</a
+          ><a class="callable-page-action" href="../">Back to Docs</a>
+        </div>
+      </nav>
     </header>
     <main>
       <section
         id="inventorySummaryCards"
         class="surface-cards"
-        aria-label="Callable inventory summary"
+        aria-label="Code inventory summary"
       ></section>
       <p>
         <small
-          >Callable metrics are generated from the callable inventory
-          data.</small
+          >The callable flow page is the source of truth for public callable
+          architecture; this inventory focuses on supporting code assets and
+          cleanup candidates.</small
         >
       </p>
-      <section class="filter-panel" aria-label="Inventory quick controls">
+      <section
+        class="toolbar-card inventory-note"
+        aria-label="Code inventory note"
+      >
+        <strong>Code inventory</strong>
+        <p>
+          Use this inventory to inspect supporting implementation details that
+          are not fully visible in callable flows, including internal helpers,
+          methods, classes, orphaned utilities, and refactor candidates.
+        </p>
+      </section>
+      <section class="inventory-filter-grid" aria-label="Inventory filters">
         <label class="filter-field"
-          >Search all callables <input id="searchBox" type="search" /></label
+          >Search code inventory <input id="searchBox" type="search" /></label
+        ><label class="filter-field"
+          >Inventory focus
+          <select id="focusFilter">
+            <option value="support_focus" selected>
+              Support code needing visibility
+            </option>
+            <option value="all">All code assets</option>
+            <option value="selected">Selected</option>
+          </select></label
+        ><label class="filter-field"
+          >Item type
+          <select id="typeFilter">
+            <option value="all">All item types</option>
+            <option value="public_callable">Public callable</option>
+            <option value="supporting_helper">Supporting helper</option>
+            <option value="private_function">Private function</option>
+            <option value="method">Method</option>
+            <option value="class">Class</option>
+            <option value="orphaned">
+              Orphaned / not reached from public flow
+            </option>
+          </select></label
+        ><label class="filter-field"
+          >Health
+          <select id="healthFilter">
+            <option value="all">All health states</option>
+            <option value="Architecture violation">
+              Architecture violation
+            </option>
+            <option value="Orphaned">Orphaned</option>
+            <option value="Refactor candidate">Refactor candidate</option>
+            <option value="Warning">Warning</option>
+            <option value="Healthy">Healthy</option>
+          </select></label
         ><button
           id="resetFilters"
           class="inventory-clear-all"
           type="button"
           hidden
         >
-          Clear all filters
+          Clear filters
         </button>
-      </section>
-      <section class="quick-filter-bar" aria-label="Quick filters">
-        <button
-          type="button"
-          class="quick-filter-chip is-active"
-          data-quick-filter="all"
-        >
-          All</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-quick-filter="public_api"
-        >
-          Public API</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-quick-filter="supporting"
-        >
-          Supporting</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-quick-filter="review_candidates"
-        >
-          Review candidates</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-quick-filter="healthy"
-        >
-          Healthy</button
-        ><button
-          type="button"
-          class="quick-filter-chip"
-          data-quick-filter="selected"
-        >
-          Selected
-        </button>
-      </section>
-      <section
-        class="toolbar-card architecture-note"
-        aria-label="Architecture inventory note"
-      >
-        <strong>Architecture inventory</strong>
-        <p>
-          Use this inventory to find public callables, supporting helpers,
-          health signals, and refactor candidates.
-        </p>
       </section>
       <section class="export-toolbar">
         <div class="toolbar-card-grid">
@@ -429,7 +497,7 @@
             class="toolbar-card toolbar-card--selection"
             aria-label="Selection"
           >
-            <strong id="selectedCount">Selected: 0 callables</strong>
+            <strong id="selectedCount">Selected: 0 code assets</strong>
             <div class="toolbar-row">
               <button id="selectVisible" class="primary-action" type="button">
                 Select visible</button
@@ -455,8 +523,8 @@
                   Development breaking allowed
                 </option></select
               ><small class="toolbar-help"
-                >Sets the API safety assumptions for generated refactor
-                packages.</small
+                >Sets cleanup assumptions for generated AI support-inventory
+                packets.</small
               ></label
             >
           </div>
@@ -464,8 +532,8 @@
         <div class="toolbar-card toolbar-card--prompt">
           <div class="toolbar-group">
             <div>
-              <strong>AI prompt</strong><br /><small class="group-help"
-                >Export selected callables for AI-assisted refactor
+              <strong>AI cleanup packet</strong><br /><small class="group-help"
+                >Export selected support assets for AI-assisted cleanup
                 planning.</small
               >
             </div>
@@ -498,15 +566,15 @@
               <th class="col-select">
                 Select<br /><input id="selectAllVisible" type="checkbox" />
               </th>
-              <th class="col-callable">Callable</th>
+              <th class="col-callable">Code asset</th>
               <th class="col-file-area">File / Area</th>
-              <th class="col-public-api">Public API</th>
+              <th class="col-item-type">Item type</th>
+              <th class="col-code-role">Code role</th>
+              <th class="col-flow">Reached from public flow</th>
               <th class="col-health">Health</th>
               <th class="col-finding">Finding</th>
-              <th class="col-review-note">Review note</th>
-              <th class="col-suggested-action">Suggested action</th>
-              <th class="col-downstream">Downstream</th>
-              <th class="col-depth">Depth</th>
+              <th class="col-review-note">Codebase note</th>
+              <th class="col-suggested-action">Suggested cleanup action</th>
             </tr>
           </thead>
           <tbody id="inventoryBody"></tbody>
@@ -522,11 +590,20 @@
         "Merge candidate": "Merge candidate",
         "Review abstraction": "Review abstraction",
         "Shared utility": "Shared utility",
+        "Same-file private dependency": "Same-file private dependency",
       };
       let inventory = [],
         visibleRows = [],
-        summaryCounts = {};
-      const state = { search: "", quickFilter: "all", selected: new Set() };
+        summaryCounts = {},
+        publicFlowQns = new Set(),
+        flowSignalsByQn = new Map();
+      const state = {
+        search: "",
+        focusFilter: "support_focus",
+        typeFilter: "all",
+        healthFilter: "all",
+        selected: new Set(),
+      };
       const $ = (id) => document.getElementById(id),
         text = (v) => String(v ?? ""),
         esc = (v) =>
@@ -549,64 +626,169 @@
         development_breaking_allowed:
           "Breaking changes are allowed only when they clearly simplify the design; update callers, tests, and documentation in the same change.",
       };
+      function displayLabel(v) {
+        return DISPLAY_LABEL_MAP[text(v)] || text(v);
+      }
+      function isPublicCallable(r) {
+        return r.layer === "public" || r.function_type === "Public function";
+      }
+      function inCallableFlow(r) {
+        return publicFlowQns.has(r.qualified_name);
+      }
+      function fileArea(r) {
+        return r.owner_file || r.source_path || r.docs_path || r.module || "";
+      }
+      function itemType(r) {
+        if (isPublicCallable(r)) return "Public callable";
+        if (r.callable_kind === "class" || r.function_type === "Class")
+          return "Class";
+        if (
+          r.callable_kind === "method" ||
+          String(r.function_type || "").includes("Method")
+        )
+          return "Method";
+        if (
+          r.layer === "private_helper" ||
+          r.function_type === "Private helper"
+        )
+          return "Private function";
+        return "Supporting helper";
+      }
+      function itemTypeKey(r) {
+        return itemType(r).toLowerCase().replace(/ /g, "_");
+      }
+      function codeRole(r) {
+        if (isPublicCallable(r)) return "Public callable";
+        if (!inCallableFlow(r)) return "Orphaned / not reached";
+        if (r.callable_role_group_label) return r.callable_role_group_label;
+        if (r.dependency_role) return displayLabel(r.dependency_role);
+        if (r.layer === "private_helper")
+          return "Private implementation detail";
+        return "Supporting implementation";
+      }
+      function flowSignal(r) {
+        return (
+          flowSignalsByQn.get(r.qualified_name) || {
+            violation: false,
+            warning: false,
+            types: [],
+          }
+        );
+      }
+      function isRefactorCandidate(r) {
+        const action = text(r.recommended_action);
+        return (
+          /(Merge|Move|Remove|Rename|Review)/.test(action) ||
+          ["High", "Medium", "Review"].includes(text(r.priority))
+        );
+      }
+      function healthLabel(r) {
+        const signal = flowSignal(r);
+        if (signal.violation) return "Architecture violation";
+        if (!isPublicCallable(r) && !inCallableFlow(r)) return "Orphaned";
+        if (isRefactorCandidate(r)) return "Refactor candidate";
+        if (
+          signal.warning ||
+          text(r.review_status) === "needs_review" ||
+          (r.signals || []).length > 0
+        )
+          return "Warning";
+        return "Healthy";
+      }
+      function findingLabelForRow(r) {
+        const signal = flowSignal(r);
+        if (signal.types.length)
+          return signal.types.map(displayLabel).join(", ");
+        if (healthLabel(r) === "Orphaned")
+          return "Not reached from public flow";
+        const action = displayLabel(r.recommended_action || "None");
+        return action === "Healthy" ? "Healthy" : action;
+      }
+      function reviewNote(r) {
+        const notes = [];
+        if (!inCallableFlow(r))
+          notes.push("Not reached from public callable flow");
+        if (flowSignal(r).warning)
+          notes.push("Same-file private dependency warning");
+        (r.signals || [])
+          .slice(0, 3)
+          .forEach((s) => notes.push(displayLabel(s)));
+        return notes.length ? notes.join("; ") : "Clear";
+      }
+      function healthClass(h) {
+        return h === "Architecture violation"
+          ? "issue"
+          : h === "Orphaned" || h === "Refactor candidate" || h === "Warning"
+            ? "warn"
+            : "keep";
+      }
+      function healthBadge(i) {
+        const health = healthLabel(i);
+        return `<span class="badge ${healthClass(health)}">${esc(health)}</span>`;
+      }
+      function flowBadge(i) {
+        return inCallableFlow(i)
+          ? '<span class="badge keep">In callable flow</span>'
+          : '<span class="badge warn">Not reached</span>';
+      }
+      function findingBadge(i) {
+        const finding = findingLabelForRow(i);
+        return `<span class="badge ${finding === "Healthy" ? "keep" : "muted"}">${esc(finding)}</span>`;
+      }
+      function suggestedActionCell(i) {
+        return esc(displayLabel(i.recommended_action || "Keep"));
+      }
+      function sourceHref(i) {
+        if (i.docs_path)
+          return (
+            "../" +
+            String(i.docs_path)
+              .replace(/^docs\//, "")
+              .replace(/\.md$/, "/")
+          );
+        if (i.source_url) return i.source_url;
+        const path = i.source_path;
+        if (!path) return "";
+        const start = i.source_start_line,
+          end = i.source_end_line;
+        let anchor = start ? `#L${start}` : "";
+        if (start && end && end !== start) anchor += `-L${end}`;
+        return (
+          "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/" +
+          path +
+          anchor
+        );
+      }
+      function sourceCallableLink(i) {
+        const href = sourceHref(i),
+          label = esc(i.function_name);
+        return href
+          ? `<a class="source-link" href="${esc(href)}" target="_blank" rel="noopener"><code>${label}</code></a>`
+          : `<code>${label}</code>`;
+      }
       function selectedItems() {
         return inventory.filter((row) =>
           state.selected.has(row.qualified_name),
         );
       }
-      function publicStatus(r) {
-        return r.layer === "public" || r.function_type === "Public function"
-          ? "Public"
-          : "Supporting";
-      }
-      function fileArea(r) {
-        return r.owner_file || r.source_path || r.docs_path || r.module || "";
-      }
-      function healthLabel(r) {
-        const action = displayLabel(r.recommended_action || "None"),
-          priority = text(r.priority || "");
-        return [
-          "Keep public",
-          "Shared utility",
-          "Shared internal helper",
-          "Protect public API",
-          "Healthy",
-        ].includes(action) && !["High", "Medium", "Review"].includes(priority)
-          ? "Healthy"
-          : "Review candidate";
-      }
-      function findingLabelForRow(r) {
-        const action = displayLabel(r.recommended_action || "None");
-        return action === "Healthy" ? "Healthy" : action;
-      }
-      function reviewNote(r) {
-        const signals = r.signals || [];
-        return signals.length ? signals.join(", ") : "Clear";
-      }
-      function downstreamCount(r) {
-        return Number(r.called_by_count ?? 0);
-      }
-      function depthValue(r) {
-        return Number(r.calls_count ?? 0);
-      }
       function exportItem(r) {
         return {
           qualified_name: r.qualified_name,
           function_name: r.function_name,
-          callable: r.function_name,
+          code_asset: r.function_name,
           file_area: fileArea(r),
-          public_api: publicStatus(r),
+          item_type: itemType(r),
+          code_role: codeRole(r),
+          in_callable_flow: inCallableFlow(r),
           health: healthLabel(r),
           finding: findingLabelForRow(r),
-          review_note: reviewNote(r),
-          suggested_action: displayLabel(r.recommended_action || "Keep public"),
-          downstream_count: downstreamCount(r),
-          depth: depthValue(r),
+          codebase_note: reviewNote(r),
+          suggested_action: displayLabel(r.recommended_action || "Keep"),
           source_url: r.source_url,
-          signals: r.signals,
+          signals: r.signals || [],
         };
       }
-      function refactorContext(callables) {
+      function refactorContext() {
         const mode = $("compatibilityMode").value;
         return {
           compatibility_mode: mode,
@@ -615,22 +797,23 @@
       }
       function batchAccounting(callables) {
         return {
-          selected_callable_count: callables.length,
+          selected_code_asset_count: callables.length,
           planned_batch_count: callables.length,
           completed_or_refactored_count: "fill in after implementation",
           remaining_selected_count: "fill in after implementation",
-          deferred_selected_callables: "fill in after implementation",
+          deferred_selected_code_assets: "fill in after implementation",
         };
       }
       function refactorPacket() {
         const callables = selectedItems().map(exportItem);
         return {
-          schema: "fabricops_callable_refactor_packet",
-          callables,
+          schema: "fabricops_support_inventory_cleanup_packet",
+          code_assets: callables,
           functions: callables,
           batch_accounting: batchAccounting(callables),
-          refactor_context: refactorContext(callables),
-          ai_prompt: "Review selected callables",
+          refactor_context: refactorContext(),
+          ai_prompt:
+            "Review selected support inventory assets for safe cleanup while preserving public callable behavior.",
         };
       }
       function mdField(label, value) {
@@ -640,21 +823,21 @@
       function callableMarkdown(item) {
         return [
           `### ${item.qualified_name}`,
-          mdField("callable", item.callable || item.function_name),
+          mdField("code_asset", item.code_asset),
           mdField("file_area", item.file_area),
-          mdField("public_api", item.public_api),
+          mdField("item_type", item.item_type),
+          mdField("code_role", item.code_role),
+          mdField("in_callable_flow", item.in_callable_flow),
           mdField("health", item.health),
           mdField("finding", item.finding),
-          mdField("review_note", item.review_note),
+          mdField("codebase_note", item.codebase_note),
           mdField("suggested_action", item.suggested_action),
-          mdField("downstream_count", item.downstream_count),
-          mdField("depth", item.depth),
           mdField("source_url", item.source_url),
           mdField("signals", item.signals),
-        ].join("\\n");
+        ].join("\n");
       }
       function markdownPacket(packet) {
-        return `# Callable refactor packet\n\n## Objective\nReview and refactor the selected FabricOps callables to improve maintainability, simplify long call chains, review architecture findings, and preserve expected public behavior.\n\n## Architecture intent\n- Keep the public API surface small and clear.\n- Public API callables may be heavier if that makes the code easier to follow.\n- Prefer public functions calling internal functions; supporting objects may be used freely.\n- Avoid long helper chains.\n- Merge small helper into parent when readability improves.\n- Move helpers closer to their caller when they are not genuinely reusable.\n- Keep genuinely shared utilities stable and generic.\n- Do not casually change public API behavior.\n\n## Compatibility mode\n- selected mode: ${packet.refactor_context.compatibility_mode}\n- instruction: ${packet.refactor_context.compatibility_instruction}\n\n## Selected callables\n${packet.callables.map(callableMarkdown).join("\n\n")}\n\n## Requested work\nFor each selected callable:\n1. Inspect the callable and its direct/downstream dependencies.\n2. Decide whether to keep public, flatten internals, merge candidates, move helper closer to caller, or review architecture findings.\n3. Preserve external behavior unless compatibility mode explicitly allows breaking changes.\n4. Prefer simpler, flatter code over long helper chains.\n5. Use only simple classifications: Public function, Shared helper, Private helper, Class, Method, or Unknown.\n6. Update or add tests where needed.\n7. Avoid broad unrelated refactors.\n\n## Output required from AI\nReturn:\n- Summary of changes\n- Callables changed\n- Callables intentionally left unchanged\n- Tests added/updated\n- Risks\n- Remaining follow-up items\n- Batch accounting: completed, deferred, remaining\n\n## Batch accounting\n- selected_callable_count: ${packet.batch_accounting.selected_callable_count}\n- planned_batch_count: ${packet.batch_accounting.planned_batch_count}\n- completed_or_refactored_count: fill in after implementation\n- remaining_selected_count: fill in after implementation\n- deferred_selected_callables: fill in after implementation\n`;
+        return `# Support inventory cleanup packet\n\n## Objective\nReview selected supporting code assets that are not fully visible in callable flows. Preserve public callable behavior while simplifying internal helpers, methods, classes, orphaned utilities, and refactor candidates.\n\n## Selected code assets\n${packet.code_assets.map(callableMarkdown).join("\n\n")}\n\n## Requested work\n1. Prioritize architecture violations, orphaned/unreached internals, concrete refactor candidates, warnings, then healthy items.\n2. Preserve public callable behavior unless compatibility mode explicitly allows breaking changes.\n3. Prefer small cleanup changes with targeted tests.\n\n## Batch accounting\n- selected_code_asset_count: ${packet.batch_accounting.selected_code_asset_count}\n- planned_batch_count: ${packet.batch_accounting.planned_batch_count}\n- completed_or_refactored_count: fill in after implementation\n- remaining_selected_count: fill in after implementation\n- deferred_selected_code_assets: fill in after implementation\n`;
       }
       async function copyExport(format) {
         const packet = refactorPacket();
@@ -679,95 +862,57 @@
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "fabricops-callable-refactor-packet.json";
+        a.download = "fabricops-support-inventory-cleanup-packet.json";
         a.click();
-      }
-      function unique(v) {
-        return [...new Set(v.filter(Boolean))].sort();
-      }
-      function displayLabel(v) {
-        return DISPLAY_LABEL_MAP[text(v)] || text(v);
-      }
-      function label(v) {
-        return displayLabel(
-          text(v)
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (ch) => ch.toUpperCase()),
-        );
-      }
-      function option(s, v, l) {
-        const o = document.createElement("option");
-        o.value = v;
-        o.textContent = l || v;
-        s.appendChild(o);
-      }
-      const GITHUB_SOURCE_BASE =
-        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/";
-      function sourceHref(i) {
-        if (i.docs_path)
-          return (
-            "../" +
-            String(i.docs_path)
-              .replace(/^docs\//, "")
-              .replace(/\.md$/, "/")
-          );
-        if (i.source_url) return i.source_url;
-        const path = i.source_path;
-        if (!path) return "";
-        const start = i.source_start_line;
-        const end = i.source_end_line;
-        let anchor = start ? `#L${start}` : "";
-        if (start && end && end !== start) anchor += `-L${end}`;
-        return GITHUB_SOURCE_BASE + path + anchor;
-      }
-      function sourceCallableLink(i) {
-        const href = sourceHref(i);
-        const label = esc(i.function_name);
-        return href
-          ? `<a class="source-link" href="${esc(href)}" target="_blank" rel="noopener"><code>${label}</code></a>`
-          : `<code>${label}</code>`;
       }
       function renderInventoryCards() {
         const total = inventory.length,
-          publicCount = inventory.filter(
-            (i) => publicStatus(i) === "Public",
+          publicCount = inventory.filter(isPublicCallable).length,
+          supportCount = total - publicCount,
+          unreached = inventory.filter(
+            (i) => !isPublicCallable(i) && !inCallableFlow(i),
           ).length,
-          supportingCount = total - publicCount,
-          reviewCount = inventory.filter(
-            (i) => healthLabel(i) === "Review candidate",
-          ).length,
-          healthyCount = inventory.filter(
-            (i) => healthLabel(i) === "Healthy",
+          refactorCount = inventory.filter((i) =>
+            [
+              "Architecture violation",
+              "Orphaned",
+              "Refactor candidate",
+              "Warning",
+            ].includes(healthLabel(i)),
           ).length,
           cards = [
             {
-              label: "Total callables",
-              value: total,
-              subtitle: "All callables in the architecture inventory.",
+              label: "Support code assets",
+              value: supportCount,
+              subtitle:
+                "Internal helpers, private functions, methods, classes, and supporting objects.",
               cls: "info",
+            },
+            {
+              label: "Not reached from public flow",
+              value: unreached,
+              subtitle:
+                "Orphaned or utility code that callable flows do not clearly show.",
+              cls: unreached ? "review" : "muted",
+            },
+            {
+              label: "Cleanup candidates",
+              value: refactorCount,
+              subtitle:
+                "Architecture violations, orphaned items, refactor candidates, and warnings.",
+              cls: refactorCount ? "risk" : "muted",
             },
             {
               label: "Public callables",
               value: publicCount,
-              subtitle: "Notebook-facing API entrypoints.",
+              subtitle:
+                "Shown for context; use Architecture for public callable flow review.",
               cls: "primary",
             },
             {
-              label: "Supporting callables",
-              value: supportingCount,
-              subtitle: "Helpers and implementation callables.",
-              cls: "secondary",
-            },
-            {
-              label: "Review candidates",
-              value: reviewCount,
-              subtitle: "Callables with findings or refactor signals.",
-              cls: reviewCount ? "review" : "secondary",
-            },
-            {
-              label: "Healthy callables",
-              value: healthyCount,
-              subtitle: "Callables with clear health signals.",
+              label: "Total code assets",
+              value: total,
+              subtitle: "All generated callable inventory records.",
               cls: "muted",
             },
           ];
@@ -778,46 +923,89 @@
           )
           .join("");
       }
-      function populateFilters() {}
-      function matchesQuickFilter(i) {
-        if (state.quickFilter === "public_api")
-          return publicStatus(i) === "Public";
-        if (state.quickFilter === "supporting")
-          return publicStatus(i) === "Supporting";
-        if (state.quickFilter === "review_candidates")
-          return healthLabel(i) === "Review candidate";
-        if (state.quickFilter === "healthy")
-          return healthLabel(i) === "Healthy";
-        if (state.quickFilter === "selected")
-          return state.selected.has(i.qualified_name);
-        return true;
-      }
-      function filteredRows() {
-        const q = state.search.toLowerCase();
-        return inventory.filter(
-          (i) =>
-            (!q ||
-              text(i.function_name).toLowerCase().includes(q) ||
-              text(i.qualified_name).toLowerCase().includes(q) ||
-              text(fileArea(i)).toLowerCase().includes(q)) &&
-            matchesQuickFilter(i),
+      function supportFocus(i) {
+        return (
+          !isPublicCallable(i) ||
+          !inCallableFlow(i) ||
+          [
+            "Architecture violation",
+            "Orphaned",
+            "Refactor candidate",
+            "Warning",
+          ].includes(healthLabel(i))
         );
       }
-      function updateQuickFilterChips() {
-        document
-          .querySelectorAll("[data-quick-filter]")
-          .forEach((button) =>
-            button.classList.toggle(
-              "is-active",
-              button.dataset.quickFilter === state.quickFilter,
-            ),
+      function matchesFilters(i) {
+        const q = state.search.toLowerCase();
+        if (
+          q &&
+          ![
+            i.function_name,
+            i.qualified_name,
+            fileArea(i),
+            itemType(i),
+            codeRole(i),
+            healthLabel(i),
+            findingLabelForRow(i),
+          ].some((v) => text(v).toLowerCase().includes(q))
+        )
+          return false;
+        if (state.focusFilter === "support_focus" && !supportFocus(i))
+          return false;
+        if (
+          state.focusFilter === "selected" &&
+          !state.selected.has(i.qualified_name)
+        )
+          return false;
+        if (
+          state.typeFilter === "orphaned" &&
+          (isPublicCallable(i) || inCallableFlow(i))
+        )
+          return false;
+        if (
+          !["all", "orphaned"].includes(state.typeFilter) &&
+          itemTypeKey(i) !== state.typeFilter
+        )
+          return false;
+        if (
+          state.healthFilter !== "all" &&
+          healthLabel(i) !== state.healthFilter
+        )
+          return false;
+        return true;
+      }
+      function rank(i) {
+        const h = healthLabel(i);
+        return (
+          ({
+            "Architecture violation": 0,
+            Orphaned: 1,
+            "Refactor candidate": 2,
+            Warning: 3,
+            Healthy: 4,
+          }[h] ?? 5) + (isPublicCallable(i) ? 0.25 : 0)
+        );
+      }
+      function filteredRows() {
+        return inventory
+          .filter(matchesFilters)
+          .sort(
+            (a, b) =>
+              rank(a) - rank(b) ||
+              itemType(a).localeCompare(itemType(b)) ||
+              text(a.function_name).localeCompare(text(b.function_name)),
           );
+      }
+      function updateFilterControls() {
         $("resetFilters").hidden =
-          state.search === "" && state.quickFilter === "all";
+          state.search === "" &&
+          state.focusFilter === "support_focus" &&
+          state.typeFilter === "all" &&
+          state.healthFilter === "all";
       }
       function updateExportControls() {
         $("selectedCount").textContent =
-          `Selected: ${state.selected.size} callables`;
+          `Selected: ${state.selected.size} code assets`;
         ["copyJson", "copyMarkdown", "downloadJson"].forEach(
           (id) => ($(id).disabled = state.selected.size === 0),
         );
@@ -829,45 +1017,27 @@
       }
       function resultCountText() {
         const total = summaryCounts.total_callables ?? inventory.length;
-        return `Showing ${visibleRows.length} callable records of ${total} total discovered callable records.`;
-      }
-      function healthBadge(i) {
-        const health = healthLabel(i);
-        return `<span class="badge ${health === "Healthy" ? "keep" : "warn"}">${esc(health)}</span>`;
-      }
-      function findingBadge(i) {
-        const finding = findingLabelForRow(i);
-        return `<span class="badge ${finding === "Healthy" ? "keep" : "warn"}">${esc(finding)}</span>`;
-      }
-      function suggestedActionCell(i) {
-        const action = displayLabel(i.recommended_action || "Keep public");
-        return esc(action);
+        return `Showing ${visibleRows.length} support inventory records of ${total} total generated code assets.`;
       }
       function renderLoadStatus(message, isError = false) {
         $("dataLoadStatus").textContent = message;
         $("dataLoadStatus").classList.toggle("error", Boolean(isError));
-      }
-      function callableFlowUrl() {
-        return new URL(
-          "../reference/_data/callable-flow.json",
-          window.location.href,
-        ).href;
       }
       function renderTable() {
         visibleRows = filteredRows();
         $("resultCount").textContent = resultCountText();
         renderLoadStatus(
           visibleRows.length
-            ? `Loaded ${inventory.length} callable records`
+            ? `Loaded ${inventory.length} code inventory records`
             : inventory.length
-              ? "No callable records match current filters"
-              : "No callable records loaded.",
+              ? "No code inventory records match current filters"
+              : "No code inventory records loaded.",
         );
-        updateQuickFilterChips();
+        updateFilterControls();
         $("inventoryBody").innerHTML = visibleRows
           .map(
             (i) =>
-              `<tr><td class="col-select"><input type="checkbox" data-select-row="${esc(i.qualified_name)}" ${state.selected.has(i.qualified_name) ? "checked" : ""}></td><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-file-area">${esc(fileArea(i))}</td><td class="col-public-api">${esc(publicStatus(i))}</td><td class="col-health">${healthBadge(i)}</td><td class="col-finding">${findingBadge(i)}</td><td class="col-review-note">${esc(reviewNote(i))}</td><td class="col-suggested-action">${suggestedActionCell(i)}</td><td class="col-downstream">${esc(downstreamCount(i))}</td><td class="col-depth">${esc(depthValue(i))}</td></tr>`,
+              `<tr><td class="col-select"><input type="checkbox" data-select-row="${esc(i.qualified_name)}" ${state.selected.has(i.qualified_name) ? "checked" : ""}></td><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-file-area">${esc(fileArea(i))}</td><td class="col-item-type">${esc(itemType(i))}</td><td class="col-code-role">${esc(codeRole(i))}</td><td class="col-flow">${flowBadge(i)}</td><td class="col-health">${healthBadge(i)}</td><td class="col-finding">${findingBadge(i)}</td><td class="col-review-note">${esc(reviewNote(i))}</td><td class="col-suggested-action">${suggestedActionCell(i)}</td></tr>`,
           )
           .join("");
         updateExportControls();
@@ -876,20 +1046,57 @@
             document.querySelector('table[data-table-controls="excel"]'),
           );
       }
+      function callableFlowUrl() {
+        return new URL(
+          "../reference/_data/callable-flow.json",
+          window.location.href,
+        ).href;
+      }
+      function buildFlowSignals(flows) {
+        publicFlowQns = new Set();
+        flowSignalsByQn = new Map();
+        (flows || []).forEach((flow) => {
+          publicFlowQns.add(flow.qualified_name);
+          (flow.transitive_callees || []).forEach((row) => {
+            publicFlowQns.add(row.qualified_name);
+            const signal = flowSignalsByQn.get(row.qualified_name) || {
+              violation: false,
+              warning: false,
+              types: [],
+            };
+            if (row.architecture_result === "Violation")
+              signal.violation = true;
+            if (row.architecture_result === "Warning") signal.warning = true;
+            if (
+              row.violation_type &&
+              !signal.types.includes(row.violation_type)
+            )
+              signal.types.push(row.violation_type);
+            flowSignalsByQn.set(row.qualified_name, signal);
+          });
+        });
+      }
       $("searchBox").addEventListener("input", (e) => {
         state.search = e.target.value;
         renderTable();
       });
-      document.addEventListener("click", (e) => {
-        const chip = e.target.closest("[data-quick-filter]");
-        if (!chip) return;
-        state.quickFilter = chip.dataset.quickFilter;
-        renderTable();
-      });
+      ["focusFilter", "typeFilter", "healthFilter"].forEach((id) =>
+        $(id).addEventListener("change", (e) => {
+          state[id] = e.target.value;
+          renderTable();
+        }),
+      );
       $("resetFilters").onclick = () => {
-        state.search = "";
-        state.quickFilter = "all";
+        Object.assign(state, {
+          search: "",
+          focusFilter: "support_focus",
+          typeFilter: "all",
+          healthFilter: "all",
+        });
         $("searchBox").value = "";
+        $("focusFilter").value = "support_focus";
+        $("typeFilter").value = "all";
+        $("healthFilter").value = "all";
         if (window.FabricOpsTableControls)
           window.FabricOpsTableControls.resetAll(document);
         renderTable();
@@ -940,8 +1147,8 @@
             );
           inventory = data.function_inventory;
           summaryCounts = data.summary_counts || {};
+          buildFlowSignals(data.public_entrypoint_flow || []);
           renderInventoryCards();
-          populateFilters();
           renderTable();
         } catch (error) {
           renderInventoryCards();
