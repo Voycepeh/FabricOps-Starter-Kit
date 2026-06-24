@@ -686,11 +686,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     home_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     assert "assets/callable-functions-dashboard.html" in home_text
-    assert "assets/callable-functions-inventory.html" in home_text
-    assert "Architecture" in home_text
-    assert "Inventory" in home_text
-    assert "High-level triage for notebook-facing public APIs, dependency depth, and architecture boundary risk." not in home_text or "Architecture" in home_text
-    assert "Search/filter all callables, select rows, and export AI refactor packets." in home_text
+    assert "assets/callable-functions-inventory.html" not in home_text
+    assert "Callable Flow Dashboard" in home_text
+    assert "Callable Flow Guide" not in home_text
+    assert "Inventory" not in home_text
+    assert "Review the public API shape, callable relationships, chain depth, fan out, modules touched, and architecture signals." in home_text
+    assert "Open Callable Flow Dashboard" in home_text
+    assert "Search/filter all callables, select rows, and export AI refactor packets." not in home_text
 
     maintainer_text = (REFERENCE_DIR / "maintainer-guide.md").read_text(encoding="utf-8")
     assert "[Architecture](../assets/callable-functions-dashboard.html)" in maintainer_text

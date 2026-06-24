@@ -70,22 +70,10 @@ They abstract the important but tedious work into a simplified plug and play wor
 FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the callable dashboards to review public API architecture and export raw callable inventory packets.
 
 <div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="/FabricOps-Starter-Kit/dev/reference/callable-flow/">
-    <span class="fabricops-landing-card__title">Callable Flow Guide</span>
-    <span class="fabricops-landing-card__body">Understand the Public, Internal, and Utility callable hierarchy, why the dashboard exists, and how to read its architecture signals.</span>
-    <span class="fabricops-landing-card__meta">Read the guide</span>
-  </a>
-
   <a class="fabricops-landing-card" href="assets/callable-functions-dashboard.html">
-    <span class="fabricops-landing-card__title">Architecture</span>
-    <span class="fabricops-landing-card__body">Review public API shape, chain depth, fan-out, modules touched, cross-layer warnings, and flattening recommendations.</span>
-    <span class="fabricops-landing-card__meta">Open Architecture</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="assets/callable-functions-inventory.html">
-    <span class="fabricops-landing-card__title">Inventory</span>
-    <span class="fabricops-landing-card__body">Search/filter all callables, select rows, and export AI refactor packets.</span>
-    <span class="fabricops-landing-card__meta">Open Inventory</span>
+    <span class="fabricops-landing-card__title">Callable Flow Dashboard</span>
+    <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, modules touched, and architecture signals.</span>
+    <span class="fabricops-landing-card__meta">Open Callable Flow Dashboard</span>
   </a>
 </div>
 
