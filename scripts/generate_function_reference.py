@@ -309,6 +309,7 @@ def source_module_path(module: str) -> Path:
 def parse_module(path: Path) -> dict[str, Any]:
     """Parse module."""
     source_text = path.read_text(encoding="utf-8")
+    source_path = path.relative_to(ROOT).as_posix()
     tree = ast.parse(source_text)
     functions: dict[str, str] = {}
     classes: dict[str, str] = {}
@@ -382,6 +383,7 @@ def parse_module(path: Path) -> dict[str, Any]:
             if callee in callees:
                 used_by.setdefault(callee, set()).add(caller)
     return {
+        "source_path": source_path,
         "functions": functions,
         "classes": classes,
         "constants": constants,
@@ -1751,28 +1753,56 @@ def _deepest_call_chain_depth(
     return depth(root_qn, {root_qn})
 
 
+def _callable_flow_source_metadata(qn: str, module_data: dict[str, dict[str, Any]]) -> tuple[str | None, str | None, dict[str, int]]:
+    """Return module key, callable name, and source location for a callable flow node."""
+    parts = qn.split(".")
+    package_parts = parts[1:] if parts and parts[0] == PACKAGE_NAME else parts
+    for split_at in range(len(package_parts) - 1, 0, -1):
+        module_key = ".".join(package_parts[:split_at])
+        callable_name = ".".join(package_parts[split_at:])
+        source_location = module_data.get(module_key, {}).get("source_locations", {}).get(callable_name)
+        if source_location:
+            return module_key, callable_name, source_location
+    return None, None, {}
+
+
 def _callable_flow_source_location(qn: str, module_data: dict[str, dict[str, Any]]) -> dict[str, int | None]:
     """Return source line metadata for a callable flow node when available."""
-    parts = qn.split(".")
-    module_name = parts[1] if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
-    callable_name = ".".join(parts[2:]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-1]
-    source_location = module_data.get(module_name, {}).get("source_locations", {}).get(callable_name, {})
+    _, _, source_location = _callable_flow_source_metadata(qn, module_data)
     return {
         "source_start_line": source_location.get("start_line"),
         "source_end_line": source_location.get("end_line"),
     }
 
 
+def _callable_flow_source_path(qn: str, module_data: dict[str, dict[str, Any]] | None = None) -> str | None:
+    """Return the repository source path for a package callable."""
+    module_key = None
+    if module_data is not None:
+        module_key, _, _ = _callable_flow_source_metadata(qn, module_data)
+    if module_key is None:
+        parts = qn.split(".")
+        package_parts = parts[1:] if parts and parts[0] == PACKAGE_NAME else parts
+        if len(package_parts) < 2:
+            return None
+        module_key = ".".join(package_parts[:-1])
+    module_info = module_data.get(module_key, {}) if module_data is not None else {}
+    source_path = module_info.get("source_path")
+    if source_path:
+        return source_path
+    return f"src/fabricops_kit/{module_key.replace('.', '/')}.py"
+
+
 def _callable_flow_source_link(qn: str, module_data: dict[str, dict[str, Any]]) -> str | None:
     """Return a source URL for a callable flow node when source metadata exists."""
-    parts = qn.split(".")
-    module_name = parts[1] if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
-    callable_name = ".".join(parts[2:]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-1]
-    source_location = module_data.get(module_name, {}).get("source_locations", {}).get(callable_name, {})
+    _, _, source_location = _callable_flow_source_metadata(qn, module_data)
     if not source_location:
         return None
+    source_path = _callable_flow_source_path(qn, module_data)
+    if not source_path:
+        return None
     return github_source_url(
-        f"src/fabricops_kit/{module_name}.py",
+        source_path,
         source_location.get("start_line"),
         source_location.get("end_line"),
     )
@@ -1837,15 +1867,6 @@ ACTION_LEGEND = {
     "Architecture violation": "Callable dependency direction breaks the public → internal → utility layer rule.",
     "Orphaned callable": "Private callable with no reachable public lineage; remove or reconnect if still needed.",
 }
-
-
-def _callable_flow_source_path(qn: str) -> str | None:
-    """Return the repository source path for a package callable."""
-    parts = qn.split(".")
-    if len(parts) < 3:
-        return None
-    module_name = parts[1] if parts[0] == PACKAGE_NAME else parts[-2]
-    return f"src/fabricops_kit/{module_name}.py"
 
 
 def _project_inbound_callers(
@@ -1980,7 +2001,7 @@ def _build_refactor_inventory(
                     }
                     for callee in outbound
                 ],
-                "source_path": _callable_flow_source_path(qn),
+                "source_path": _callable_flow_source_path(qn, module_data),
                 "source_url": _callable_flow_source_link(qn, module_data),
                 **_callable_flow_source_location(qn, module_data),
             }
@@ -2735,7 +2756,7 @@ def _build_function_inventory(
                 "owner_qualified_name": owner_qn,
                 "owner_function": node_by_qn[owner_qn]["callable_name"] if owner_qn else "",
                 "owner_module": node_by_qn[owner_qn]["module_name"] if owner_qn else "",
-                "owner_file": _callable_flow_source_path(owner_qn) if owner_qn else _callable_flow_source_path(qn),
+                "owner_file": _callable_flow_source_path(owner_qn, module_data) if owner_qn else _callable_flow_source_path(qn, module_data),
                 "leaks_outside_owner_file": bool(layer == HIDDEN_PRIVATE_LAYER and usage_scope == "cross_module"),
                 "usage_scope": usage_scope,
                 "usage_scope_label": _label_from_value(usage_scope) if usage_scope else "",
@@ -2756,7 +2777,7 @@ def _build_function_inventory(
                 "callers": linked(inbound),
                 "callees": linked(set(outbound)),
                 "direct_internal_helpers": linked(direct_helper_qns),
-                "source_path": _callable_flow_source_path(qn),
+                "source_path": _callable_flow_source_path(qn, module_data),
                 "source_url": _callable_flow_source_link(qn, module_data),
                 **_callable_flow_source_location(qn, module_data),
                 **(
@@ -3084,7 +3105,7 @@ def _build_public_entrypoint_flow(
                 "architecture_signals": row.get("architecture_signals", []),
                 "recommended_action": row.get("recommended_action"),
                 "downstream_count": row.get("calls_count", 0),
-                "source_path": _callable_flow_source_path(qn),
+                "source_path": _callable_flow_source_path(qn, module_data),
                 "source_url": _callable_flow_source_link(qn, module_data),
                 **_callable_flow_source_location(qn, module_data),
                 **({"docs_path": row["docs_path"], "docs_url": row["docs_url"]} if row.get("docs_url") else {}),
@@ -3109,8 +3130,8 @@ def _build_public_entrypoint_flow(
             "module": node_by_qn[public_qn]["module_name"],
             "docs_path": f"docs/api/reference/{node_by_qn[public_qn]['callable_name']}.md",
             "docs_url": _public_callable_docs_url(node_by_qn[public_qn]["callable_name"]),
-            "source_path": _callable_flow_source_path(public_qn),
-            "owner_file": _callable_flow_source_path(public_qn),
+            "source_path": _callable_flow_source_path(public_qn, module_data),
+            "owner_file": _callable_flow_source_path(public_qn, module_data),
             "source_url": _callable_flow_source_link(public_qn, module_data),
             **_callable_flow_source_location(public_qn, module_data),
             "downstream_callable_count": len(seen_depth),
@@ -4009,7 +4030,7 @@ def _helper_group_summary_lines(
             {
                 "name": helper_name,
                 "module_name": module_name,
-                "source_path": f"src/fabricops_kit/{module_name}.py",
+                "source_path": info.get("source_path") or f"src/fabricops_kit/{module_name.replace('.', '/')}.py",
                 "source_location": info.get("source_locations", {}).get(helper_name, {}),
             }
         )
