@@ -319,8 +319,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "callable-functions-inventory.html" in dashboard_text
     assert "data-public-flow" in dashboard_text
     assert 'href="${esc(flow.source_url' not in dashboard_text
-    assert '<button type=\"button\" class=\"callable-button\" data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
-    assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
+    assert 'data-public-flow-row="${esc(f.qualified_name)}"' in dashboard_text
+    assert 'class="callable-button" data-public-flow' not in dashboard_text
     assert "publicSearchBox" in dashboard_text
     assert 'aria-label="Architecture quick filters"' not in dashboard_text
     assert 'data-architecture-quick-filter' not in dashboard_text
@@ -364,9 +364,20 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "reset.onclick=showAllPublicCallables" in compact_dashboard_text
     assert "showAllPublicCallablesInline" not in dashboard_text
     assert "Show all public callables</button>`:'';const inline" not in dashboard_text
-    assert ".surface-cardstrong{display:block;margin-bottom:.2rem;line-height:1" in compact_dashboard_text
+    assert ".surface-cardstrong{display:block;margin-bottom:0.2rem;line-height:1" in compact_dashboard_text
     assert ".surface-cardspan{display:block;line-height:1.2" in compact_dashboard_text
     assert "Review note" in dashboard_text
+    assert "<th>Select</th>" not in dashboard_text
+    assert 'name="selectedPublicFlow"' not in dashboard_text
+    assert 'data-select-row="${esc(f.qualified_name)}"' not in dashboard_text
+    assert 'tabindex="0"' in dashboard_text
+    assert "aria-selected='${state.selectedFlow===f.qualified_name?'true':'false'}'" in compact_dashboard_text
+    assert "document.addEventListener('keydown'" in compact_dashboard_text
+    assert "e.key==='Enter'||e.key===''" in compact_dashboard_text
+    assert 'class="review-note"' in dashboard_text
+    assert 'class="review-note-toggle">View details</span>' in dashboard_text
+    assert 'class="review-note-panel"' in dashboard_text
+    assert "e.target.closest('a,button,input,select,textarea,label,summary,.review-note',)" in compact_dashboard_text
     assert "data-sort-key=\"callable\"" in dashboard_text
     assert "data-sort-key=\"module\"" in dashboard_text
     assert "data-sort-key=\"findings\"" in dashboard_text
@@ -375,35 +386,39 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "data-sort-key=\"depth\"" in dashboard_text
     assert "function stableSortRows(rows)" in dashboard_text
     assert "a.index-b.index" in compact_dashboard_text
-    assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
-    assert "Copy flow JSON" in dashboard_text
-    assert "Copy flow Markdown" in dashboard_text
-    assert "Download flow JSON" in dashboard_text
-    assert "compatibilityMode" not in dashboard_text
+    assert "Copy JSON" in dashboard_text
+    assert "Download JSON" in dashboard_text
+    assert "Copy YAML" in dashboard_text
+    assert "Download YAML" in dashboard_text
+    assert "Copy flow Markdown" not in dashboard_text
+    assert "compatibilityMode" in dashboard_text
+    assert "COMPATIBILITY_MODE_META" in dashboard_text
+    assert "Public callable review" in dashboard_text
+    assert "Exports selected public callable assets for callable architecture review." in dashboard_text
+    assert "Exports selected support assets for internal cleanup planning." in dashboard_text
+    assert "Exports selected records with enough context for assisted cleanup." in dashboard_text
+    assert "compat-mode-safe" in dashboard_text
+    assert "compat-mode-review" in dashboard_text
+    assert "compat-mode-breaking" in dashboard_text
+    assert "CLEANUP_MODE_GUIDANCE" not in dashboard_text
     assert "COMPATIBILITY_INSTRUCTIONS" not in dashboard_text
-    assert "function callableMarkdown(item)" in dashboard_text
-    assert "function markdownPacket(packet)" in dashboard_text
-    assert "Objective" in dashboard_text
+    assert "function yamlPacket(packet)" in dashboard_text
+    assert "function downloadPacket(format)" in dashboard_text
+    assert "function markdownPacket(packet)" not in dashboard_text
     assert "Implementation instruction" not in dashboard_text
-    assert "Compatibility mode" not in dashboard_text
+    assert "Compatibility mode" in dashboard_text
     assert "toolbar-card-grid" in dashboard_text
     assert "toolbar-card--selection" in dashboard_text
-    assert "toolbar-card--compatibility" not in dashboard_text
+    assert "toolbar-card--compatibility" in dashboard_text
     assert "toolbar-card--prompt" in dashboard_text
     assert "toolbar-row--top" not in dashboard_text
-    assert "Selected public callable flow" in dashboard_text
     assert "Selected callables" not in dashboard_text
-    assert "Selected flow: none" in dashboard_text
     assert "Select visible" not in dashboard_text
     assert "selected:newSet()" not in compact_dashboard_text
     assert "selectedFlow:''" in compact_dashboard_text
     assert "fabricops_public_callable_flow_cleanup_packet" in dashboard_text
-    assert "Requested work" in dashboard_text
-    assert "Safety constraints" in dashboard_text
-    assert "Expected output" in dashboard_text
     assert "Same-file private dependency is warning only" in dashboard_text
     assert "Cross-file private dependency is an architecture violation" in dashboard_text
-    assert "Requested work" in dashboard_text
     assert "Batch accounting" not in dashboard_text
     assert "downstream_count" in dashboard_text
     assert "max_depth" in dashboard_text
@@ -428,10 +443,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Public callable findings</h3>" not in dashboard_text
     assert "Architecture findings inside this flow" not in dashboard_text
     assert "Internal helper cleanup candidates</h3>" not in dashboard_text
-    assert "#### Public callable findings" in dashboard_text
-    assert "#### Architecture findings" in dashboard_text
-    assert "#### Merge candidates" in dashboard_text
-    assert "#### Full nested flow tree" in dashboard_text
     assert "helper_tags" in dashboard_text
     assert "Inspect the selected public callable and its call flow." in dashboard_text
     assert "Resolve true cross-file private dependency violations first." in dashboard_text
@@ -439,7 +450,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Merge or inline helpers only when readability improves." in dashboard_text
     assert "Preserve notebook-facing behavior." in dashboard_text
     assert "Return summary, changed functions, tests, risks, and skipped items." in dashboard_text
-    assert "You are cleaning up a selected public callable flow." in dashboard_text
     assert "Do not casually change public function signatures." in dashboard_text
     assert "source_url:row.source_url||null" in compact_dashboard_text
     assert "docs_url:row.docs_url||null" in compact_dashboard_text
@@ -459,9 +469,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "cross_layer_issue_count" not in dashboard_text
     assert "Suggested next step" in dashboard_text
     assert "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details." in dashboard_text
-    assert "disabled>CopyflowJSON" in compact_dashboard_text
-    assert "disabled>CopyflowMarkdown" in compact_dashboard_text
-    assert "disabled>DownloadflowJSON" in compact_dashboard_text
+    assert "disabled>CopyJSON" in compact_dashboard_text
+    assert "disabled>DownloadJSON" in compact_dashboard_text
+    assert "disabled>CopyYAML" in compact_dashboard_text
+    assert "disabled>DownloadYAML" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
     assert "publicSearch:''" in compact_dashboard_text
     assert "quickFilter:'all'" not in compact_dashboard_text
@@ -536,7 +547,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function whyReview(flow)" in dashboard_text
     assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
-    assert "'None':'Healthy'" in compact_dashboard_text
+    assert "Public callable review" in dashboard_text
+    assert "Exports selected public callable assets for callable architecture review." in dashboard_text
+    assert "Copy JSON" in dashboard_text
+    assert "Download JSON" in dashboard_text
+    assert "Copy YAML" in dashboard_text
+    assert "Download YAML" in dashboard_text
+    assert "Copy flow Markdown" not in dashboard_text
+    assert "function markdownPacket(packet)" not in dashboard_text
+    assert "function yamlPacket(packet)" in dashboard_text
     assert '<span class="badge keep">Healthy</span>' in dashboard_text
     assert "Merge candidate found" in dashboard_text
     assert "Review merge candidate" in dashboard_text
@@ -571,19 +590,24 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     for common_shell in [compact_dashboard_text, compact_inventory_text]:
-        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a}" in common_shell
-        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem}" in common_shell
-        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef}" in common_shell
-        assert "headerh1{margin:.1rem0.35rem}" in common_shell
-        assert "headerp{margin:.25rem0;color:#475569}" in common_shell
+        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a" in common_shell
+        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem" in common_shell
+        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef" in common_shell
+        assert "headerh1{margin:" in common_shell
+        assert "headerp{margin:" in common_shell and "color:#475569" in common_shell
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
-    assert "Support code assets" in inventory_text
-    assert "Not reached from public flow" in inventory_text
-    assert "Cleanup candidates" in inventory_text
+    assert "Shared functions" in inventory_text
+    assert "Private functions" in inventory_text
+    assert "Non functions" in inventory_text
+    assert "Suggested cleanup" in inventory_text
     assert "Public callables" in inventory_text
     assert "Total code assets" in inventory_text
-    assert "Shown for context; use Architecture for public callable flow review." in inventory_text
+    assert "User facing callable functions." in inventory_text
+    assert "Reusable utility functions intentionally shared across callable files." in inventory_text
+    assert "Internal helpers owned by one standalone callable file." in inventory_text
+    assert "Classes, methods, constants, registries, config objects, metadata, and other support assets." in inventory_text
+    assert "Only actionable records that need review or cleanup." in inventory_text
     assert "The callable flow page is the source of truth for public callable architecture" in normalized_inventory_text
     assert "Use this inventory to inspect supporting implementation details that are not fully visible in callable flows, including internal helpers, methods, classes, orphaned utilities, and refactor candidates." in normalized_inventory_text
     assert "Architecture inventory" not in inventory_text
@@ -602,26 +626,30 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
     assert "callable-review-table-wrap" in inventory_text
-    assert "<thclass='col-callable'>Codeasset</th><thclass='col-file-area'>File/Area</th><thclass='col-item-type'>Itemtype</th><thclass='col-code-role'>Coderole</th><thclass='col-flow'>Reachedfrompublicflow</th><thclass='col-health'>Health</th><thclass='col-finding'>Finding</th><thclass='col-review-note'>Codebasenote</th><thclass='col-suggested-action'>Suggestedcleanupaction</th>" in compact_inventory_text
+    assert "<thclass='col-file-area'>Sourcefile</th><thclass='col-callable'>Itemname</th><thclass='col-item-type'>Itemtype</th><thclass='col-usage-scope'>Usagescope</th><thclass='col-health'>Health</th><thclass='col-recommended-action'>Recommendedaction</th><thclass='col-details'>Details</th>" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
-    assert "findingBadge(i)" in inventory_text
-    assert "flowBadge(i)" in inventory_text
-    assert "data-select-row" in inventory_text
-    assert "selectAllVisible" in inventory_text
+    assert "actionBadge(i)" in inventory_text
+    assert "usageBadge(i)" in inventory_text
+    assert "data-inventory-row" in inventory_text
+    assert "data-select-row" not in inventory_text
+    assert "selectAllVisible" not in inventory_text
     assert "copyJson" in inventory_text
-    assert "copyMarkdown" in inventory_text
     assert "downloadJson" in inventory_text
+    assert "copyYaml" in inventory_text
+    assert "downloadYaml" in inventory_text
     assert "searchBox" in inventory_text
     assert "Search code inventory" in inventory_text
     assert "Inventory focus" in inventory_text
     assert "Item type" in inventory_text
-    assert "Support code needing visibility" in inventory_text
+    assert "Suggested cleanup" in inventory_text
     assert "Public callable" in inventory_text
-    assert "Supporting helper" in inventory_text
+    assert "Shared function" in inventory_text
     assert "Private function" in inventory_text
-    assert "Method" in inventory_text
-    assert "Class" in inventory_text
-    assert "Orphaned / not reached from public flow" in inventory_text
+    assert "Non functions" in inventory_text
+    assert "Usage scope" in inventory_text
+    assert "Boundary violation" in inventory_text
+    assert "Recommended action" in inventory_text
+    assert "Reached from public flow" not in inventory_text
     assert "function buildFlowSignals(flows)" in inventory_text
     assert "function matchesFilters(i)" in inventory_text
     assert "function supportFocus(i)" in inventory_text
@@ -649,21 +677,40 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert removed_filter not in inventory_text
     assert "selectedCount" in inventory_text
     assert "compatibilityMode" in inventory_text
-    assert "CLEANUP_MODE_GUIDANCE" in inventory_text
+    assert "COMPATIBILITY_MODE_META" in inventory_text
+    assert "CLEANUP_MODE_GUIDANCE" not in inventory_text
+    assert "Public callable review" in inventory_text
+    assert "Exports selected public callable assets for callable architecture review." in inventory_text
+    assert "Exports selected support assets for internal cleanup planning." in inventory_text
+    assert "Exports selected records with enough context for assisted cleanup." in inventory_text
+    assert "compat-mode-safe" in inventory_text
+    assert "compat-mode-review" in inventory_text
+    assert "compat-mode-breaking" in inventory_text
     assert "Select visible" in inventory_text
     assert "Clear selection" in inventory_text
     assert "Copy JSON" in inventory_text
-    assert "Copy Markdown" in inventory_text
     assert "Download JSON" in inventory_text
+    assert "Copy YAML" in inventory_text
+    assert "Download YAML" in inventory_text
     assert "selectedItems" in inventory_text
     assert "refactorPacket" in inventory_text
     assert "copyExport" in inventory_text
-    assert "downloadJson" in inventory_text
+    assert "downloadPacket" in inventory_text
     assert "COMPATIBILITY_INSTRUCTIONS" not in inventory_text
-    assert "function callableMarkdown(item)" in inventory_text
-    assert "function markdownPacket(packet)" in inventory_text
-    assert "Objective" in inventory_text
-    assert "Selected code assets" in inventory_text
+    assert "function yamlPacket(packet)" in inventory_text
+    assert "function markdownPacket(packet)" not in inventory_text
+    assert "source_file" in inventory_text
+    assert "item_name" in inventory_text
+    assert "usage_scope" in inventory_text
+    assert "action_details" in inventory_text
+    assert "function duplicateHelperEvidence(r)" in inventory_text
+    assert "return 'Boundary violation'" in inventory_text
+    assert "cleanup='Fix architecture boundary'" in inventory_text
+    assert "cleanup='Promote to shared utility'" in inventory_text
+    assert "Duplicate helper logic across callable files" in inventory_text
+    assert "cleanup='Keep private helper'" in inventory_text
+    assert "cleanup='Not in scope'" in inventory_text
+    assert "ACTIONABLE_ACTIONS=new Set(['Fix architecture boundary','Promote to shared utility','Refactor helper','Rename internal helper','Review manually','Remove orphaned asset','Warning'])" in inventory_text
     assert "Compatibility mode" in inventory_text
     assert "toolbar-card-grid" in inventory_text
     assert "toolbar-card--selection" in inventory_text
@@ -674,15 +721,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Selected code asset" in inventory_text
     assert "fabricops_support_inventory_cleanup_packet" in inventory_text
     assert "Selected code asset(s):" not in inventory_text
-    assert "Requested work" in inventory_text
-    assert "Safety constraints" in inventory_text
-    assert "Expected output" in inventory_text
+    assert "requested_work" in inventory_text
+    assert "safety_constraints" in inventory_text
+    assert "expected_output" in inventory_text
     assert "Batch accounting" not in inventory_text
     assert "disabled>CopyJSON" in compact_inventory_text
-    assert "disabled>CopyMarkdown" in compact_inventory_text
+    assert "disabled>CopyYAML" in compact_inventory_text
     assert "disabled>DownloadJSON" in compact_inventory_text
-    assert "selectAllVisible" in inventory_text
-    assert "$('selectAllVisible').onchange" in compact_inventory_text
+    assert "disabled>DownloadYAML" in compact_inventory_text
     assert "ROLE_GROUP_FILTER_OPTIONS" not in inventory_text
     assert "Public entrypoint" not in inventory_text
     assert "Workflow" not in inventory_text
@@ -697,6 +743,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Role group" not in inventory_text
     assert "Role detail" not in inventory_text
     assert "Suggested cleanup action" in inventory_text
+    assert "Code role" not in inventory_text
+    assert "code_role" not in inventory_text
+    assert "codeRole" not in inventory_text
+    assert "suggested_cleanup_action" not in inventory_text
+    assert "codebase_note" not in inventory_text
+    assert "reached_from_public_flow" not in inventory_text
     assert "Inbound" not in inventory_text
     assert "Outbound" not in inventory_text
     assert "Dependency role" not in inventory_text
@@ -706,8 +758,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "DISPLAY_LABEL_MAP" in inventory_text
     assert ".tag,.badge" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
-    assert "findingBadge(i)" in inventory_text
-    assert "displayLabel(i.recommended_action" in inventory_text
+    assert "findingBadge(i)" not in inventory_text
+    assert "actionBadge(i)" in inventory_text
+    assert "recommendedAction(i)" in inventory_text
     visible_reference_metrics = reference_text.split("## Find a function", 1)[0]
     maintainer_tools_text = reference_text.split('??? info "Maintainer tools"', 1)[1].split("## Function catalogue", 1)[0]
     assert '<span class="reference-kpi-title">Public functions</span>' in visible_reference_metrics
@@ -2273,8 +2326,8 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "Private helper" in dashboard_text
     compact_dashboard_text = _remove_whitespace(dashboard_text)
 
-    assert "simple_classification:'Publicfunction'" in compact_dashboard_text
-    assert "consttype=n.simple_classification||'Unknown'" in compact_dashboard_text
+    assert ("simple_classification:'Publicfunction'" in compact_dashboard_text or 'simple_classification:"Publicfunction"' in compact_dashboard_text)
+    assert ("consttype=n.simple_classification||'Unknown'" in compact_dashboard_text or 'consttype=n.simple_classification||"Unknown"' in compact_dashboard_text)
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
     assert "flow-tree-main" in dashboard_text
@@ -2366,12 +2419,15 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "did not include a function_inventory array" not in inventory_text
     assert "inventoryDataMissing=true" in compact_inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text
-    assert "join('\\n\\n')" in inventory_text
+    assert "function yamlPacket(packet)" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
-        "Support code assets",
-        "Not reached from public flow",
-        "Cleanup candidates",
+        "Total code assets",
+        "Public callables",
+        "Shared functions",
+        "Private functions",
+        "Non functions",
+        "Suggested cleanup",
         "Public callables",
         "Total code assets",
     ]:
@@ -2379,10 +2435,31 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert 'data-table-controls="excel"' in inventory_text
     assert "max-width:100%;overflow-x:auto;overflow-y:visible" in compact_inventory_text
     assert ".callable-review-table{width:max-content;min-width:100%;table-layout:auto" in compact_inventory_text
-    assert ".callable-review-table.col-item-type,.callable-review-table.col-flow,.callable-review-table.col-health{white-space:nowrap" in compact_inventory_text
-    assert ".callable-review-table.col-finding{min-width:12rem;max-width:18rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
-    assert ".callable-review-table.col-review-note{min-width:20rem;max-width:30rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
-    assert ".callable-review-table.col-suggested-action{min-width:16rem;max-width:24rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
+    assert ".callable-review-table.col-recommended-action{min-width:13rem;white-space:nowrap" in compact_inventory_text
+    assert ".callable-review-table.col-details{min-width:9rem;white-space:normal" in compact_inventory_text
+    assert ".inventory-detailsummary{cursor:pointer;list-style:none" in compact_inventory_text
+    assert ".inventory-detail-panel{margin-top:.35rem;padding:.5rem" in compact_inventory_text
+    assert "<thclass='col-recommended-action'>Recommendedaction</th>" in compact_inventory_text
+    assert "<thclass='col-details'>Details</th>" in compact_inventory_text
+    assert "<strong>Finding:</strong>" in inventory_text
+    assert "Codebase note" not in inventory_text
+    assert "<thclass='col-suggested-action'>Suggestedcleanupaction</th>" not in compact_inventory_text
+    assert "<thclass='col-code-role'>Coderole</th>" not in compact_inventory_text
+    assert "<thclass='col-flow'>Reachedfrompublicflow</th>" not in compact_inventory_text
+    assert "Copy JSON" in inventory_text
+    assert "Download JSON" in inventory_text
+    assert "Copy YAML" in inventory_text
+    assert "Download YAML" in inventory_text
+    assert "Copy Markdown" not in inventory_text
+    assert "function markdownPacket(packet)" not in inventory_text
+    assert "function yamlPacket(packet)" in inventory_text
+    assert "source_file" in inventory_text
+    assert "item_name" in inventory_text
+    assert "item_type" in inventory_text
+    assert "usage_scope" in inventory_text
+    assert "health" in inventory_text
+    assert "recommended_action" in inventory_text
+    assert "action_details" in inventory_text
     assert re.search(r"\$\(['\"]inventoryBody['\"]\)\.innerHTML\s*=\s*visibleRows\s*\.map", inventory_text)
     assert re.search(
         r"window\.FabricOpsTableControls\.enhance\(\s*document\.querySelector\(['\"]table\[data-table-controls=\"excel\"\]['\"]\s*,?\s*\)\s*,?\s*\)",

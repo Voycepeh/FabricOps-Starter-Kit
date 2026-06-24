@@ -331,10 +331,18 @@
         width: 4.5rem;
         white-space: nowrap;
       }
+      tr[data-public-flow-row] {
+        cursor: pointer;
+      }
+      tr[data-public-flow-row]:focus {
+        outline: 3px solid #2563eb;
+        outline-offset: -3px;
+      }
       tr.active {
         outline: 2px solid #1d4ed8;
         outline-offset: -2px;
         background: #eff6ff;
+        box-shadow: inset 0.25rem 0 #1d4ed8;
       }
       .callable-button {
         border: 0;
@@ -358,6 +366,34 @@
         display: block;
         max-width: 14rem;
         line-height: 1.35;
+      }
+      .review-note summary {
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+        cursor: pointer;
+        list-style: none;
+      }
+      .review-note summary::-webkit-details-marker {
+        display: none;
+      }
+      .review-note-toggle {
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #1d4ed8;
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+      .review-note-panel {
+        margin-top: 0.35rem;
+        padding: 0.5rem;
+        border: 1px solid #bfdbfe;
+        border-radius: 0.55rem;
+        background: #eff6ff;
+        color: #334155;
+        line-height: 1.4;
+        max-width: 28rem;
+        white-space: normal;
       }
       .inline-more {
         display: inline-block;
@@ -511,6 +547,20 @@
       .group-help {
         color: #475569;
         font-weight: 400;
+      }
+      .compat-mode-subtitle {
+        margin-top: 0.35rem;
+        font-size: 0.85rem;
+        line-height: 1.35;
+      }
+      .compat-mode-safe {
+        color: #1d4ed8;
+      }
+      .compat-mode-review {
+        color: #b45309;
+      }
+      .compat-mode-breaking {
+        color: #b91c1c;
       }
       .toolbar-group {
         display: flex;
@@ -808,7 +858,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 20:49 SGT<span
+        <strong>Generated at:</strong> 2026-06-25 00:19 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -875,7 +925,6 @@
         <table data-table-controls="excel">
           <thead>
             <tr>
-              <th>Select</th>
               <th>Priority</th>
               <th>
                 <button
@@ -950,17 +999,19 @@
             <label class="toolbar-field"
               >Compatibility mode
               <select id="compatibilityMode">
-                <option value="stable_public_api" selected>
-                  Stable public API
+                <option value="stable_api_safe" selected>
+                  Public callable review
                 </option>
                 <option value="internal_cleanup">Internal cleanup</option>
-                <option value="breaking_cleanup_allowed">
-                  Breaking cleanup allowed
+                <option value="development_breaking_allowed">
+                  AI cleanup packet
                 </option>
               </select></label
-            ><small class="toolbar-help"
-              >Compatibility mode applies only to exported cleanup
-              planning.</small
+            ><small
+              id="compatibilityModeSubtitle"
+              class="compat-mode-subtitle compat-mode-safe"
+              >Exports selected public callable assets for callable architecture
+              review.</small
             >
           </div>
           <div class="toolbar-card toolbar-card--prompt">
@@ -973,12 +1024,12 @@
                 >
               </div>
               <div class="toolbar-row">
-                <button id="copyJson" type="button" disabled>
-                  Copy flow JSON</button
-                ><button id="copyMarkdown" type="button" disabled>
-                  Copy flow Markdown</button
+                <button id="copyJson" type="button" disabled>Copy JSON</button
                 ><button id="downloadJson" type="button" disabled>
-                  Download flow JSON
+                  Download JSON</button
+                ><button id="copyYaml" type="button" disabled>Copy YAML</button
+                ><button id="downloadYaml" type="button" disabled>
+                  Download YAML
                 </button>
               </div>
             </div>
@@ -1002,13 +1053,25 @@
         "Method",
         "Unknown",
       ];
-      const CLEANUP_MODE_GUIDANCE = {
-        stable_public_api:
-          "Keep the public callable API stable and avoid broad support-code churn unless the selected flow is clearly unsafe.",
-        internal_cleanup:
-          "Preserve public callable behavior while allowing support assets to move, merge, or rename when callers and tests are updated.",
-        breaking_cleanup_allowed:
-          "Breaking cleanup is allowed only when the exported packet explicitly requests it and tests/docs are updated.",
+      const COMPATIBILITY_MODE_META = {
+        stable_api_safe: {
+          label: "Public callable review",
+          subtitle:
+            "Exports selected public callable assets for callable architecture review.",
+          className: "compat-mode-safe",
+        },
+        internal_cleanup: {
+          label: "Internal cleanup",
+          subtitle:
+            "Exports selected support assets for internal cleanup planning.",
+          className: "compat-mode-review",
+        },
+        development_breaking_allowed: {
+          label: "AI cleanup packet",
+          subtitle:
+            "Exports selected records with enough context for assisted cleanup.",
+          className: "compat-mode-breaking",
+        },
       };
       const INTERNAL_LAYERING_SUGGESTED_FIX =
         "Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.";
@@ -1231,6 +1294,10 @@
               : `Contains ${mergeCount} merge candidates inside this flow.`,
           );
         return reasons.length ? reasons.join(" ") : "Clear";
+      }
+      function reviewNoteControl(flow) {
+        const note = whyReview(flow);
+        return `<details class="review-note"><summary><span class="badge muted">Review note</span> <span class="review-note-toggle">View details</span></summary><div class="review-note-panel">${esc(note)}</div></details>`;
       }
       function renderCards() {
         const s = summaryCounts.public_api_surface || {},
@@ -1457,7 +1524,7 @@
               strong = p === "Critical" || p === "High",
               active =
                 f.qualified_name === state.activePublicFlow ? "active" : "";
-            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}"><td><input type="radio" name="selectedPublicFlow" data-select-row="${esc(f.qualified_name)}" ${state.selectedFlow === f.qualified_name ? "checked" : ""} aria-label="Select flow ${esc(f.function_name)}"></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)}</td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
+            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}" tabindex="0" aria-selected="${state.selectedFlow === f.qualified_name ? "true" : "false"}"><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)}</td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${reviewNoteControl(f)}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
           })
           .join("");
         setPublicListControls();
@@ -1872,16 +1939,32 @@
           ...linkMetadata(f),
         };
       }
+      function compatibilityModeMeta() {
+        const mode = $("compatibilityMode")
+          ? $("compatibilityMode").value
+          : "stable_api_safe";
+        return (
+          COMPATIBILITY_MODE_META[mode] ||
+          COMPATIBILITY_MODE_META.stable_api_safe
+        );
+      }
       function cleanupMode() {
         const mode = $("compatibilityMode")
           ? $("compatibilityMode").value
-          : "stable_public_api";
+          : "stable_api_safe";
+        const meta = compatibilityModeMeta();
         return {
           compatibility_mode: mode,
-          compatibility_instruction:
-            CLEANUP_MODE_GUIDANCE[mode] ||
-            CLEANUP_MODE_GUIDANCE.stable_public_api,
+          compatibility_label: meta.label,
+          compatibility_instruction: meta.subtitle,
         };
+      }
+      function updateCompatibilityModeMeta() {
+        const el = $("compatibilityModeSubtitle");
+        if (!el) return;
+        const meta = compatibilityModeMeta();
+        el.textContent = meta.subtitle;
+        el.className = `compat-mode-subtitle ${meta.className}`;
       }
       function refactorPacket() {
         const item = selectedItem(),
@@ -1923,120 +2006,55 @@
             "Return summary, changed functions, tests, risks, and skipped items.",
         };
       }
-      function treeMarkdown(n, level = 0) {
-        const pad = "  ".repeat(level);
-        const tags = (n.helper_tags || []).length
-          ? ` — ${(n.helper_tags || []).join(", ")}`
-          : "";
-        const cls = n.classification ? ` — ${n.classification}` : "";
-        const metrics = [
-          n.called_inside_flow_by
-            ? `called inside this flow by: ${n.called_inside_flow_by}`
-            : "",
-          n.calls_inside_flow
-            ? `calls inside this flow: ${n.calls_inside_flow}`
-            : "",
-          n.used_outside_flow
-            ? `used outside this flow: ${n.used_outside_flow}`
-            : "",
-          n.is_end_node ? "end node" : "",
-          n.merge_candidate ? "merge candidate" : "",
-        ].filter(Boolean);
-        const metricText = metrics.length ? ` — ${metrics.join(" · ")}` : "";
-        return `${pad}- ${markdownLink(n, n.function_name)} (${n.qualified_name})${cls}${metricText}${tags}${(n.children || []).length ? "\n" + n.children.map((c) => treeMarkdown(c, level + 1)).join("\n") : ""}`;
+      function yamlScalar(v) {
+        if (v === null || v === undefined) return "null";
+        if (typeof v === "number" || typeof v === "boolean") return String(v);
+        const value = String(v);
+        return /^[A-Za-z0-9_./:@ -]+$/.test(value) &&
+          value.trim() === value &&
+          value !== ""
+          ? value
+          : JSON.stringify(value);
       }
-      function callableMarkdown(item) {
-        if (!item) return "No public callable flow selected.";
-        return [
-          `### ${markdownLink(item, item.selected_public_callable_name)}`,
-          `- Qualified name: ${item.qualified_name}`,
-          `- Source file: ${item.source_file || "None"}`,
-          `- Source URL: ${item.source_url || "None"}`,
-          `- Recommendation: ${item.recommendation}`,
-          `- Overall health: ${item.overall_health}`,
-          `- Suggested next step: ${item.suggested_next_step}`,
-          `- Key signals: ${(item.key_signals || []).join(", ") || "None"}`,
-          `- Downstream count: ${item.downstream_count}`,
-          `- Max depth: ${item.max_depth}`,
-          `- Architecture violation count: ${item.architecture_violation_count}`,
-          `- Merge candidate count: ${item.merge_candidate_count}`,
-          `- Modules touched: ${(item.modules_touched || []).join(", ") || "None"}`,
-          `- External/shared impact count: ${item.external_shared_impact_count}`,
-          `- Direct callees: ${(item.direct_callees || []).map((c) => c.function_name || c.qualified_name || c).join(", ") || "None"}`,
-          `- Transitive callees: ${(item.transitive_callees || []).length}`,
-          `- Architecture findings: ${(item.architecture_findings || []).length}`,
-          `- Merge candidates: ${(item.merge_candidates || []).length}`,
-          "#### Public callable findings",
-          ...(item.public_callable_findings || []).map(
-            (f) => `- ${f.finding}: ${f.evidence}; ${f.suggested_action}`,
-          ),
-          "#### Architecture findings",
-          ...(item.architecture_findings || []).map(
-            (f) =>
-              `- ${f.source_function} -> ${f.target_function}: ${f.finding_type}; ${f.suggested_fix}`,
-          ),
-          "#### Merge candidates",
-          ...(item.merge_candidates || []).map(
-            (c) =>
-              `- ${c.function} (${c.function_type}), only caller ${c.called_by}: ${c.finding}; ${c.suggested_action}`,
-          ),
-          "#### Full nested flow tree",
-          treeMarkdown(item.flow_tree),
-        ].join("\n");
+      function yamlValue(value, indent = 0) {
+        const pad = "  ".repeat(indent);
+        if (Array.isArray(value)) {
+          if (!value.length) return "[]";
+          return value
+            .map((item) => {
+              if (item && typeof item === "object")
+                return `${pad}-\n${yamlValue(item, indent + 1)}`;
+              return `${pad}- ${yamlScalar(item)}`;
+            })
+            .join("\n");
+        }
+        if (value && typeof value === "object") {
+          const entries = Object.entries(value);
+          if (!entries.length) return "{}";
+          return entries
+            .map(([key, item]) => {
+              if (item && typeof item === "object") {
+                const rendered = yamlValue(item, indent + 1);
+                return `${pad}${key}:\n${rendered}`;
+              }
+              return `${pad}${key}: ${yamlScalar(item)}`;
+            })
+            .join("\n");
+        }
+        return `${pad}${yamlScalar(value)}`;
       }
-      function markdownPacket(packet) {
-        return `# Public callable flow cleanup packet
-
-## Objective
-You are cleaning up a selected public callable flow. Preserve public callable behavior and external API compatibility. Inspect the selected callable and its dependencies. Apply only focused changes that improve readability, reduce unnecessary helper depth, or resolve true architecture violations. Do not casually change public function signatures.
-
-## Selected target
-Selected public callable flow:
-${callableMarkdown(packet.selected_public_callable)}
-
-## Asset context
-- Selected code asset count: ${packet.asset_context.selected_code_asset_count}
-
-## Health / signals
-- Same-file private dependency: warning only.
-- Cross-file private dependency: architecture violation.
-- Public callable findings: ${(packet.selected_public_callable?.public_callable_findings || []).length}
-- Architecture findings: ${(packet.selected_public_callable?.architecture_findings || []).length}
-- Merge candidates: ${(packet.selected_public_callable?.merge_candidates || []).length}
-
-## Suggested cleanup action
-${packet.selected_public_callable?.recommendation || "No selected flow."}
-
-## Requested work
-1. Inspect the selected public callable and its call flow.
-2. Identify whether the recommended action is safe.
-3. Resolve true cross-file private dependency violations first.
-4. For same-file private dependencies, treat as warning only.
-5. Merge or inline helpers only when readability improves.
-6. Preserve notebook-facing behavior.
-7. Update tests where behavior could be affected.
-8. Return summary, changed functions, tests, risks, and skipped items.
-
-## Safety constraints
-- Preserve public callable behavior and external API compatibility.
-- Do not casually change public function signatures.
-- Same-file private dependency is warning only.
-- Cross-file private dependency is an architecture violation.
-
-## Expected output
-Return summary, changed functions, tests, risks, and skipped items.
-
-`;
+      function yamlPacket(packet) {
+        return yamlValue(packet) + "\n";
       }
       async function copyExport(format) {
         const packet = refactorPacket();
         const v =
-          format === "markdown"
-            ? markdownPacket(packet)
+          format === "yaml"
+            ? yamlPacket(packet)
             : JSON.stringify(packet, null, 2);
         try {
           await navigator.clipboard.writeText(v);
-          $("exportStatus").textContent = `Copied ${format}.`;
+          $("exportStatus").textContent = `Copied ${format.toUpperCase()}.`;
           $("manualCopy").hidden = true;
         } catch (e) {
           $("manualCopy").hidden = false;
@@ -2045,28 +2063,40 @@ Return summary, changed functions, tests, risks, and skipped items.
             "Clipboard unavailable; copy from the text area.";
         }
       }
-      function downloadJson() {
-        const blob = new Blob([JSON.stringify(refactorPacket(), null, 2)], {
-          type: "application/json",
-        });
+      function downloadPacket(format) {
+        const isYaml = format === "yaml";
+        const blob = new Blob(
+          [
+            isYaml
+              ? yamlPacket(refactorPacket())
+              : JSON.stringify(refactorPacket(), null, 2),
+          ],
+          { type: isYaml ? "application/x-yaml" : "application/json" },
+        );
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "fabricops-public-callable-flow-cleanup-packet.json";
+        a.download = `fabricops-public-callable-flow-cleanup-packet.${isYaml ? "yaml" : "json"}`;
         a.click();
       }
       function updateExportControls() {
         const item = selectedItem();
-        ["copyJson", "copyMarkdown", "downloadJson"].forEach(
+        ["copyJson", "downloadJson", "copyYaml", "downloadYaml"].forEach(
           (id) => ($(id).disabled = !item),
         );
       }
       $("showAllPublicCallables").onclick = showAllPublicCallables;
       $("collapsePublicList").onclick = collapsePublicList;
       $("copyJson").onclick = () => copyExport("json");
-      $("copyMarkdown").onclick = () => copyExport("markdown");
-      $("downloadJson").onclick = downloadJson;
+      $("downloadJson").onclick = () => downloadPacket("json");
+      $("copyYaml").onclick = () => copyExport("yaml");
+      $("downloadYaml").onclick = () => downloadPacket("yaml");
       document.addEventListener("click", (e) => {
-        if (e.target.closest("a,button,input,select,textarea,label")) return;
+        if (
+          e.target.closest(
+            "a,button,input,select,textarea,label,summary,.review-note",
+          )
+        )
+          return;
         const row = e.target.closest("[data-public-flow-row]");
         if (row) {
           state.activePublicFlow = row.dataset.publicFlowRow;
@@ -2079,12 +2109,18 @@ Return summary, changed functions, tests, risks, and skipped items.
           });
         }
       });
-      document.addEventListener("change", (e) => {
-        const r = e.target.closest("[data-select-row]");
-        if (r) {
-          state.selectedFlow = r.dataset.selectRow;
-          state.activePublicFlow = r.dataset.selectRow;
+      document.addEventListener("keydown", (e) => {
+        const row = e.target.closest("[data-public-flow-row]");
+        if (row && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          state.activePublicFlow = row.dataset.publicFlowRow;
+          state.selectedFlow = row.dataset.publicFlowRow;
+          state.collapsedPublicList = true;
           renderPublicCallableList();
+          $("publicFlowDetails").scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         }
       });
       $("publicSearchBox").addEventListener("input", (e) => {
@@ -2104,6 +2140,11 @@ Return summary, changed functions, tests, risks, and skipped items.
           window.FabricOpsTableControls.resetAll(document);
         renderPublicCallableList();
       };
+      $("compatibilityMode").addEventListener(
+        "change",
+        updateCompatibilityModeMeta,
+      );
+      updateCompatibilityModeMeta();
       async function loadData() {
         const attemptedUrl = callableFlowDataUrl();
         try {
