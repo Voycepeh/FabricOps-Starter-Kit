@@ -37,6 +37,86 @@
       .generation-banner span {
         display: inline-flex;
       }
+      .callable-page-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0.75rem 0 0;
+        padding: 0.45rem;
+        border: 1px solid #dbe3ef;
+        border-radius: 0.75rem;
+        background: #f8fafc;
+      }
+      .callable-page-tabs,
+      .callable-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+      }
+      .callable-page-tabs {
+        padding: 0.2rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.55rem;
+        background: #fff;
+      }
+      .callable-page-tab,
+      .callable-page-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2rem;
+        padding: 0.36rem 0.7rem;
+        border-radius: 0.38rem;
+        font-size: 0.84rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-decoration: none;
+      }
+      .callable-page-tab {
+        border: 1px solid transparent;
+        color: #1d4ed8;
+      }
+      .callable-page-tab.is-active {
+        border-color: #1d4ed8;
+        background: #1d4ed8;
+        color: #fff;
+      }
+      .callable-page-action {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #475569;
+      }
+      .callable-page-action:hover,
+      .callable-page-tab:hover {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1e40af;
+      }
+      .callable-page-tab.is-active:hover {
+        border-color: #1d4ed8;
+        background: #1d4ed8;
+        color: #fff;
+      }
+      @media (max-width: 720px) {
+        .callable-page-nav {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .callable-page-tabs,
+        .callable-page-actions {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          width: 100%;
+        }
+        .callable-page-tab,
+        .callable-page-action {
+          width: 100%;
+          box-sizing: border-box;
+        }
+      }
       .surface-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -341,14 +421,29 @@
         plans.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 16:15 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 17:23 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
-      <p>
-        <a href="callable-functions-dashboard.html">Architecture</a> -
-        <a href="../reference/_data/callable-flow.json">Open JSON data</a>
-      </p>
+      <nav class="callable-page-nav" aria-label="Callable reference navigation">
+        <div class="callable-page-tabs" role="list">
+          <a class="callable-page-tab" href="callable-functions-dashboard.html"
+            >Architecture</a
+          ><a
+            class="callable-page-tab is-active"
+            href="callable-functions-inventory.html"
+            aria-current="page"
+            >Inventory</a
+          >
+        </div>
+        <div class="callable-page-actions">
+          <a
+            class="callable-page-action"
+            href="../reference/_data/callable-flow.json"
+            >Open JSON data</a
+          ><a class="callable-page-action" href="../">Back to Docs</a>
+        </div>
+      </nav>
     </header>
     <main>
       <section

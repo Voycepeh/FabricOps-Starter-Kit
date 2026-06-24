@@ -274,10 +274,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Generated at:" in dashboard_text
     assert "Data source:" in dashboard_text
     assert "callable-flow.json" in dashboard_text
-    assert "header-action-bar" in dashboard_text
-    assert "<aclass='header-action'href='callable-functions-inventory.html'" in compact_dashboard_text
-    assert "<aclass='header-action'href='../reference/_data/callable-flow.json'" in compact_dashboard_text
-    assert "<aclass='header-action'href='../'>BacktoDocs</a>" in compact_dashboard_text
+    assert "callable-page-nav" in dashboard_text
+    assert "header-action" not in dashboard_text
+    assert "<navclass='callable-page-nav'aria-label='Callablereferencenavigation'>" in compact_dashboard_text
+    assert "<aclass='callable-page-tabis-active'href='callable-functions-dashboard.html'aria-current='page'>Architecture</a>" in compact_dashboard_text
+    assert "<aclass='callable-page-tab'href='callable-functions-inventory.html'>Inventory</a>" in compact_dashboard_text
+    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_dashboard_text
+    assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_dashboard_text
     assert '<a href="callable-functions-inventory.html">Inventory</a> -' not in dashboard_text
     assert "new Date()" not in dashboard_text
     assert "Date.now" not in dashboard_text
@@ -291,14 +294,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert '<button type=\"button\" class=\"callable-button\" data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert "decisionSearchBox" in dashboard_text
-    assert 'data-architecture-quick-filter="all"' in dashboard_text
-    assert 'data-architecture-quick-filter="high_priority"' in dashboard_text
-    assert 'data-architecture-quick-filter="architecture_violations"' in dashboard_text
-    assert 'data-architecture-quick-filter="long_flows"' in dashboard_text
-    assert 'data-architecture-quick-filter="healthy"' in dashboard_text
-    assert 'data-architecture-quick-filter="selected"' in dashboard_text
-    assert "function matchesQuickFilter(flow)" in dashboard_text
-    assert "function updateQuickFilterChips()" in dashboard_text
+    assert 'aria-label="Architecture quick filters"' not in dashboard_text
+    assert 'data-architecture-quick-filter' not in dashboard_text
+    assert "function matchesQuickFilter(flow)" not in dashboard_text
+    assert "function updateDecisionFilterControls()" in dashboard_text
     assert "resetAll(document)" in dashboard_text
     for removed_filter in [
         "decisionModuleFilter",
@@ -430,7 +429,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>DownloadJSON" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
     assert "decisionSearch:''" in compact_dashboard_text
-    assert "quickFilter:'all'" in compact_dashboard_text
+    assert "quickFilter:'all'" not in compact_dashboard_text
     assert "constDOWNSTREAM_BANDS=" in compact_dashboard_text
     assert "['downstream_0','0',(v)=>v===0]" in compact_dashboard_text
     assert "['downstream_1_2','1–2',(v)=>v>=1&&v<=2]" in compact_dashboard_text
@@ -458,7 +457,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "matchesBand(f,state.decisionDepthBand" not in dashboard_text
     assert "matchesBand(f,state.decisionIssueBand" not in dashboard_text
     assert "['decisionMinDownstream','decisionDownstreamBand']" not in dashboard_text
-    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" in compact_dashboard_text
+    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" not in compact_dashboard_text
     assert "populateBandFilter('decisionMinDownstream'" not in dashboard_text
     assert "populateBandFilter('decisionMinDepth'" not in dashboard_text
     assert "populateBandFilter('decisionMinIssues'" not in dashboard_text
@@ -509,7 +508,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in compact_dashboard_text
     assert "architecture_violation_count??0" in compact_dashboard_text
     assert "down>=12" not in dashboard_text
-    assert "architecture violation: ${n.violation_type}" in dashboard_text
+    assert "Architecture violation reason" in dashboard_text
     assert "Helper-level architecture findings found" in dashboard_text
     assert "architectureFindings.length?architectureFindings" in compact_dashboard_text
     assert "function whyReview(flow)" in dashboard_text
@@ -543,6 +542,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Date.now" not in inventory_text
     assert "Architecture" in inventory_text
     assert "callable-functions-dashboard.html" in inventory_text
+    assert "callable-page-nav" in inventory_text
+    assert "header-action" not in inventory_text
+    assert "<aclass='callable-page-tab'href='callable-functions-dashboard.html'>Architecture</a>" in compact_inventory_text
+    assert "<aclass='callable-page-tabis-active'href='callable-functions-inventory.html'aria-current='page'>Inventory</a>" in compact_inventory_text
+    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
+    assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
     assert "Total callables" in inventory_text
@@ -1810,8 +1815,8 @@ def test_callable_architecture_layer_rules_and_labels():
         edge = generator._classify_architecture_edge(caller, callee)
         assert edge == {"result": "Allowed", "violation_type": ""}
 
+    assert set(generator.ARCHITECTURE_WARNING_TYPES) == {"Same-file private dependency"}
     assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {
-        "Shared helper calls private implementation",
         "Shared helper calls public callable",
         "Cross-callable private dependency",
         "Single-use shared helper",
@@ -2232,7 +2237,8 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
     assert transitive_by_qn[first_helper_qn]["simple_classification"] == "Private helper"
     assert "dependency_role" not in transitive_by_qn[first_helper_qn]
     assert flow["architecture_violation_count"] == 0
-    assert all(row["architecture_result"] == "Allowed" for row in flow["transitive_callees"])
+    assert all(row["architecture_result"] == "Warning" for row in flow["transitive_callees"])
+    assert {row["violation_type"] for row in flow["transitive_callees"]} == {"Same-file private dependency"}
 
 
 def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> None:
@@ -2248,11 +2254,17 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert 'consttype=n.simple_classification||"Unknown"' in compact_dashboard_text
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
-    assert "called inside this flow by:" in dashboard_text
-    assert "calls inside this flow:" in dashboard_text
-    assert "used outside this flow:" in dashboard_text
-    assert "end node" in dashboard_text
-    assert "merge candidate" in dashboard_text
+    assert "flow-tree-main" in dashboard_text
+    assert "flow-tree-details" in dashboard_text
+    assert "flowTreeDetailRows(n)" in dashboard_text
+    assert "Called inside this flow by count" in dashboard_text
+    assert "Calls inside this flow count" in dashboard_text
+    assert "Used outside this flow count" in dashboard_text
+    assert "End node status" in dashboard_text
+    assert "Merge candidate reason" in dashboard_text
+    assert "Architecture violation reason" in dashboard_text
+    assert "Path example" in dashboard_text
+    assert "node-signals" not in dashboard_text
     assert "called by count" not in dashboard_text.lower()
     assert "<th>Called by</th>" not in dashboard_text
     assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
@@ -2462,7 +2474,11 @@ def test_callable_flow_allows_two_layer_local_private_and_shared_internal_calls(
     flow = generator._build_public_entrypoint_flow([public_qn, other_public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
 
     assert flow["architecture_violation_count"] == 0
-    assert all(row["architecture_result"] == "Allowed" for row in flow["transitive_callees"])
+    rows = {row["qualified_name"]: row for row in flow["transitive_callees"]}
+    assert rows[private_qn]["architecture_result"] == "Warning"
+    assert rows[private_qn]["violation_type"] == "Same-file private dependency"
+    assert rows[nested_private_qn]["architecture_result"] == "Warning"
+    assert rows[shared_qn]["architecture_result"] == "Allowed"
 
 
 def test_callable_flow_flags_single_use_internal_helper_violation() -> None:
@@ -2529,11 +2545,13 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
     ]
 
     flow = generator._build_public_entrypoint_flow([public_qn, other_public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
-    violation_types = {row["violation_type"] for row in flow["transitive_callees"] if row["architecture_result"] == "Violation"}
+    rows = {row["qualified_name"]: row for row in flow["transitive_callees"]}
 
-    assert flow["architecture_violation_count"] >= 1
-    assert "Shared helper calls private implementation" in violation_types
-    assert "Cross-callable private dependency" in violation_types
+    assert flow["architecture_violation_count"] == 0
+    assert rows[private_core_qn]["architecture_result"] == "Warning"
+    assert rows[private_core_qn]["violation_type"] == "Same-file private dependency"
+    assert rows[distribution_qn]["architecture_result"] == "Warning"
+    assert rows[distribution_qn]["violation_type"] == "Same-file private dependency"
 
 
 def test_callable_flow_flags_private_helper_reused_across_public_callables() -> None:
@@ -2557,13 +2575,13 @@ def test_callable_flow_flags_private_helper_reused_across_public_callables() -> 
 
     flows = generator._build_public_entrypoint_flow([public_a, public_b], calls_by_qn, node_by_qn, {}, inventory)
 
-    assert [flow["architecture_violation_count"] for flow in flows] == [1, 1]
-    assert all(
-        row["violation_type"] == "Cross-callable private dependency"
-        for flow in flows
-        for row in flow["transitive_callees"]
-        if row["architecture_result"] == "Violation"
-    )
+    rows_by_flow = [{row["qualified_name"]: row for row in flow["transitive_callees"]} for flow in flows]
+
+    assert [flow["architecture_violation_count"] for flow in flows] == [0, 1]
+    assert rows_by_flow[0][private_qn]["architecture_result"] == "Warning"
+    assert rows_by_flow[0][private_qn]["violation_type"] == "Same-file private dependency"
+    assert rows_by_flow[1][private_qn]["architecture_result"] == "Violation"
+    assert rows_by_flow[1][private_qn]["violation_type"] == "Cross-callable private dependency"
 
 
 def test_callable_flow_ignores_call_graph_self_edges() -> None:
@@ -2669,7 +2687,9 @@ def test_callable_flow_private_helper_containment_uses_owner_file() -> None:
     rows_by_flow = [{row["qualified_name"]: row for row in flow["transitive_callees"]} for flow in flows]
 
     assert rows_by_flow[0][private_a]["simple_classification"] == "Private helper"
-    assert rows_by_flow[0][private_a]["violation_type"] == "Cross-callable private dependency"
+    assert rows_by_flow[0][private_a]["architecture_result"] == "Warning"
+    assert rows_by_flow[0][private_a]["violation_type"] == "Same-file private dependency"
     assert rows_by_flow[0][private_a]["used_outside_flow"] == 1
     assert rows_by_flow[1][private_a]["simple_classification"] == "Private helper"
+    assert rows_by_flow[1][private_a]["architecture_result"] == "Violation"
     assert rows_by_flow[1][private_a]["violation_type"] == "Cross-callable private dependency"
