@@ -547,7 +547,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function whyReview(flow)" in dashboard_text
     assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
-    assert "'None':'Healthy'" in compact_dashboard_text
+    assert "Public callable review" in dashboard_text
+    assert "Exports selected public callable assets for callable architecture review." in dashboard_text
+    assert "Copy JSON" in dashboard_text
+    assert "Download JSON" in dashboard_text
+    assert "Copy YAML" in dashboard_text
+    assert "Download YAML" in dashboard_text
+    assert "Copy flow Markdown" not in dashboard_text
+    assert "function markdownPacket(packet)" not in dashboard_text
+    assert "function yamlPacket(packet)" in dashboard_text
     assert '<span class="badge keep">Healthy</span>' in dashboard_text
     assert "Merge candidate found" in dashboard_text
     assert "Review merge candidate" in dashboard_text
@@ -582,16 +590,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     for common_shell in [compact_dashboard_text, compact_inventory_text]:
-        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a}" in common_shell
-        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem}" in common_shell
-        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef}" in common_shell
-        assert "headerh1{margin:.1rem0.35rem}" in common_shell
-        assert "headerp{margin:.25rem0;color:#475569}" in common_shell
+        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a" in common_shell
+        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem" in common_shell
+        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef" in common_shell
+        assert "headerh1{margin:" in common_shell
+        assert "headerp{margin:" in common_shell and "color:#475569" in common_shell
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
-    assert "Support code assets" in inventory_text
-    assert "Not reached from public flow" in inventory_text
-    assert "Cleanup candidates" in inventory_text
+    assert "Shared functions" in inventory_text
+    assert "Private functions" in inventory_text
+    assert "Non functions" in inventory_text
+    assert "Suggested cleanup" in inventory_text
     assert "Public callables" in inventory_text
     assert "Total code assets" in inventory_text
     assert "User facing callable functions." in inventory_text
@@ -712,9 +721,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Selected code asset" in inventory_text
     assert "fabricops_support_inventory_cleanup_packet" in inventory_text
     assert "Selected code asset(s):" not in inventory_text
-    assert "Requested work" in inventory_text
-    assert "Safety constraints" in inventory_text
-    assert "Expected output" in inventory_text
+    assert "requested_work" in inventory_text
+    assert "safety_constraints" in inventory_text
+    assert "expected_output" in inventory_text
     assert "Batch accounting" not in inventory_text
     assert "disabled>CopyJSON" in compact_inventory_text
     assert "disabled>CopyYAML" in compact_inventory_text
@@ -749,8 +758,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "DISPLAY_LABEL_MAP" in inventory_text
     assert ".tag,.badge" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
-    assert "findingBadge(i)" in inventory_text
-    assert "displayLabel(i.recommended_action" in inventory_text
+    assert "findingBadge(i)" not in inventory_text
+    assert "actionBadge(i)" in inventory_text
+    assert "recommendedAction(i)" in inventory_text
     visible_reference_metrics = reference_text.split("## Find a function", 1)[0]
     maintainer_tools_text = reference_text.split('??? info "Maintainer tools"', 1)[1].split("## Function catalogue", 1)[0]
     assert '<span class="reference-kpi-title">Public functions</span>' in visible_reference_metrics
@@ -2425,10 +2435,31 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert 'data-table-controls="excel"' in inventory_text
     assert "max-width:100%;overflow-x:auto;overflow-y:visible" in compact_inventory_text
     assert ".callable-review-table{width:max-content;min-width:100%;table-layout:auto" in compact_inventory_text
-    assert ".callable-review-table.col-item-type,.callable-review-table.col-flow,.callable-review-table.col-health{white-space:nowrap" in compact_inventory_text
-    assert ".callable-review-table.col-finding{min-width:12rem;max-width:18rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
-    assert ".callable-review-table.col-review-note{min-width:20rem;max-width:30rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
-    assert ".callable-review-table.col-suggested-action{min-width:16rem;max-width:24rem;white-space:normal;overflow-wrap:anywhere" in compact_inventory_text
+    assert ".callable-review-table.col-recommended-action{min-width:13rem;white-space:nowrap" in compact_inventory_text
+    assert ".callable-review-table.col-details{min-width:9rem;white-space:normal" in compact_inventory_text
+    assert ".inventory-detailsummary{cursor:pointer;list-style:none" in compact_inventory_text
+    assert ".inventory-detail-panel{margin-top:.35rem;padding:.5rem" in compact_inventory_text
+    assert "<thclass='col-recommended-action'>Recommendedaction</th>" in compact_inventory_text
+    assert "<thclass='col-details'>Details</th>" in compact_inventory_text
+    assert "<strong>Finding:</strong>" in inventory_text
+    assert "Codebase note" not in inventory_text
+    assert "<thclass='col-suggested-action'>Suggestedcleanupaction</th>" not in compact_inventory_text
+    assert "<thclass='col-code-role'>Coderole</th>" not in compact_inventory_text
+    assert "<thclass='col-flow'>Reachedfrompublicflow</th>" not in compact_inventory_text
+    assert "Copy JSON" in inventory_text
+    assert "Download JSON" in inventory_text
+    assert "Copy YAML" in inventory_text
+    assert "Download YAML" in inventory_text
+    assert "Copy Markdown" not in inventory_text
+    assert "function markdownPacket(packet)" not in inventory_text
+    assert "function yamlPacket(packet)" in inventory_text
+    assert "source_file" in inventory_text
+    assert "item_name" in inventory_text
+    assert "item_type" in inventory_text
+    assert "usage_scope" in inventory_text
+    assert "health" in inventory_text
+    assert "recommended_action" in inventory_text
+    assert "action_details" in inventory_text
     assert re.search(r"\$\(['\"]inventoryBody['\"]\)\.innerHTML\s*=\s*visibleRows\s*\.map", inventory_text)
     assert re.search(
         r"window\.FabricOpsTableControls\.enhance\(\s*document\.querySelector\(['\"]table\[data-table-controls=\"excel\"\]['\"]\s*,?\s*\)\s*,?\s*\)",
