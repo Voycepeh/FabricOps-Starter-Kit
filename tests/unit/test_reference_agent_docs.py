@@ -574,8 +574,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Showing ${visibleRows.length} callable records of ${total} total discovered callable records." in normalized_inventory_text
     assert "Showing ${visibleRows.length} of ${inventory.length} discovered callables" not in inventory_text
     assert "Callable metrics are generated from the callable inventory data." in normalized_inventory_text
-    assert "<td>${sourceCallableLink(i)}</td>" in compact_inventory_text
-    assert "<th>Callable</th><th>File/Area</th><th>PublicAPI</th><th>Health</th><th>Finding</th><th>Reviewnote</th><th>Suggestedaction</th><th>Downstream</th><th>Depth</th>" in compact_inventory_text
+    assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
+    assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
+    assert "callable-review-table-wrap" in inventory_text
+    assert "<thclass='col-callable'>Callable</th><thclass='col-file-area'>File/Area</th><thclass='col-public-api'>PublicAPI</th><thclass='col-health'>Health</th><thclass='col-finding'>Finding</th><thclass='col-review-note'>Reviewnote</th><thclass='col-suggested-action'>Suggestedaction</th><thclass='col-downstream'>Downstream</th><thclass='col-depth'>Depth</th>" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
     assert "findingBadge(i)" in inventory_text
     assert "data-select-row" in inventory_text
@@ -2223,7 +2225,10 @@ def test_table_controls_are_opt_in_and_safe_for_dynamic_rows() -> None:
     assert 'table[data-table-controls="excel"]' in script
     assert "if (!isOptInTable(table)) return" in script
     assert "cfg.originalRows = currentRows(table)" in script
-    assert 'th.querySelector(":scope > .fo-table-menu-button")' in script
+    assert 'th.querySelector(":scope > .table-header-cell")' in script
+    assert 'headerCell.querySelector(":scope > .fo-table-menu-button")' in script
+    assert 'table-header-label' in script
+    assert 'filter-trigger' in script
     assert 'querySelectorAll("table")' not in script
 
 
