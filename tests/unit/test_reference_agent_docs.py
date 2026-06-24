@@ -376,14 +376,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function stableSortRows(rows)" in dashboard_text
     assert "a.index-b.index" in compact_dashboard_text
     assert dashboard_text.index('id=\"selectedCount\"') < dashboard_text.index('id=\"publicFlowDetails\"')
-    assert "Copy flow JSON" in dashboard_text
-    assert "Copy flow Markdown" in dashboard_text
-    assert "Download flow JSON" in dashboard_text
+    assert "Copy JSON" in dashboard_text
+    assert "Download JSON" in dashboard_text
+    assert "Copy YAML" in dashboard_text
+    assert "Download YAML" in dashboard_text
+    assert "Copy flow Markdown" not in dashboard_text
     assert "compatibilityMode" not in dashboard_text
     assert "COMPATIBILITY_INSTRUCTIONS" not in dashboard_text
-    assert "function callableMarkdown(item)" in dashboard_text
-    assert "function markdownPacket(packet)" in dashboard_text
-    assert "Objective" in dashboard_text
+    assert "function yamlPacket(packet)" in dashboard_text
+    assert "function downloadPacket(format)" in dashboard_text
+    assert "function markdownPacket(packet)" not in dashboard_text
     assert "Implementation instruction" not in dashboard_text
     assert "Compatibility mode" not in dashboard_text
     assert "toolbar-card-grid" in dashboard_text
@@ -2273,8 +2275,8 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "Private helper" in dashboard_text
     compact_dashboard_text = _remove_whitespace(dashboard_text)
 
-    assert "simple_classification:'Publicfunction'" in compact_dashboard_text
-    assert "consttype=n.simple_classification||'Unknown'" in compact_dashboard_text
+    assert ("simple_classification:'Publicfunction'" in compact_dashboard_text or 'simple_classification:"Publicfunction"' in compact_dashboard_text)
+    assert ("consttype=n.simple_classification||'Unknown'" in compact_dashboard_text or 'consttype=n.simple_classification||"Unknown"' in compact_dashboard_text)
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
     assert "flow-tree-main" in dashboard_text
