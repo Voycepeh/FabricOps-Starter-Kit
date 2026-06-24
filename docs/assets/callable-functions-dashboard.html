@@ -1,2064 +1,265 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Callable Architecture</title>
-    <link rel="stylesheet" href="../stylesheets/table-controls.css" />
-    <style>
-      body {
-        margin: 0;
-        font-family: Inter, system-ui, sans-serif;
-        background: #f8fafc;
-        color: #0f172a;
-      }
-      header,
-      main {
-        box-sizing: border-box;
-        max-width: 1480px;
-        margin: 0 auto;
-        padding: 1rem;
-      }
-      header {
-        background: #fff;
-        border-bottom: 1px solid #dbe3ef;
-      }
-      header h1 {
-        margin: 0.1rem 0 0.35rem;
-      }
-      header p {
-        margin: 0.25rem 0;
-        color: #475569;
-      }
-      .generation-banner {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem 0.75rem;
-        align-items: center;
-        width: fit-content;
-        max-width: 100%;
-        margin: 0.5rem 0;
-        padding: 0.35rem 0.6rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 999px;
-        background: #f1f5f9;
-        color: #475569;
-        font-size: 0.78rem;
-        line-height: 1.35;
-      }
-      .generation-banner span {
-        display: inline-flex;
-      }
-      .callable-page-nav {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        align-items: center;
-        justify-content: space-between;
-        margin: 0.75rem 0 0;
-        padding: 0.45rem;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.75rem;
-        background: #f8fafc;
-      }
-      .callable-page-tabs,
-      .callable-page-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        align-items: center;
-      }
-      .callable-page-tabs {
-        padding: 0.2rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 0.55rem;
-        background: #fff;
-      }
-      .callable-page-tab,
-      .callable-page-action {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 2rem;
-        padding: 0.36rem 0.7rem;
-        border-radius: 0.38rem;
-        font-size: 0.84rem;
-        font-weight: 800;
-        line-height: 1.2;
-        text-decoration: none;
-      }
-      .callable-page-tab {
-        border: 1px solid transparent;
-        color: #1d4ed8;
-      }
-      .callable-page-tab.is-active {
-        border-color: #1d4ed8;
-        background: #1d4ed8;
-        color: #fff;
-      }
-      .callable-page-action {
-        border: 1px solid #cbd5e1;
-        background: #fff;
-        color: #475569;
-      }
-      .callable-page-action:hover,
-      .callable-page-tab:hover {
-        border-color: #93c5fd;
-        background: #eff6ff;
-        color: #1e40af;
-      }
-      .callable-page-tab.is-active:hover {
-        border-color: #1d4ed8;
-        background: #1d4ed8;
-        color: #fff;
-      }
-      @media (max-width: 720px) {
-        .callable-page-nav {
-          align-items: stretch;
-          flex-direction: column;
-        }
-        .callable-page-tabs,
-        .callable-page-actions {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          width: 100%;
-        }
-        .callable-page-tab,
-        .callable-page-action {
-          width: 100%;
-          box-sizing: border-box;
-        }
-      }
-      @media (max-width: 720px) {
-        main,
-        header {
-          padding: 0.75rem;
-        }
-        .generation-banner {
-          width: auto;
-          border-radius: 0.75rem;
-        }
-      }
-      .surface-cards {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 18rem));
-        gap: 0.6rem;
-        margin: 0.5rem 0 0.35rem;
-      }
-      @media (max-width: 650px) {
-        .surface-cards {
-          grid-template-columns: 1fr;
-        }
-      }
-      .surface-card,
-      .flow-details,
-      .selected-summary {
-        background: #fff;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.75rem;
-        padding: 0.7rem;
-      }
-      .surface-card {
-        position: relative;
-        overflow: hidden;
-      }
-      .surface-card strong {
-        display: block;
-        margin-bottom: 0.2rem;
-        line-height: 1;
-        font-size: 1.35rem;
-      }
-      .surface-card span {
-        display: block;
-        line-height: 1.2;
-        color: #475569;
-      }
-      .surface-card small {
-        display: block;
-        margin-top: 0.32rem;
-        line-height: 1.25;
-        color: #64748b;
-      }
-      .surface-card.info {
-        border-color: #bfdbfe;
-        background: #eff6ff;
-      }
-      .surface-card.muted {
-        background: #f8fafc;
-      }
-      .surface-card.good {
-        border-color: #bbf7d0;
-        background: #f0fdf4;
-      }
-      .surface-card.review {
-        border-color: #fde68a;
-        background: #fffbeb;
-      }
-      .surface-card.risk {
-        border-color: #fecaca;
-        background: #fef2f2;
-      }
-      .surface-card.risk strong {
-        color: #991b1b;
-      }
-      .surface-card.review strong {
-        color: #92400e;
-      }
-      .surface-card.good strong {
-        color: #166534;
-      }
-      .overview-help {
-        margin: 0.2rem 0 0.7rem;
-        color: #475569;
-      }
-      .filter-panel {
-        display: grid;
-        grid-template-columns: minmax(16rem, 1fr) auto;
-        gap: 0.55rem;
-        margin: 0.65rem 0;
-        align-items: end;
-        padding: 0.65rem;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.75rem;
-        background: #fff;
-      }
-      .search-field {
-        font-size: 0.9rem;
-      }
-      .search-field input {
-        margin-top: 0.3rem;
-        font-size: 0.9rem;
-      }
-      .architecture-clear-all {
-        border: 1px solid #cbd5e1;
-        border-radius: 0.45rem;
-        background: #fff;
-        color: #1d4ed8;
-        font-weight: 800;
-      }
-      .filter-field {
-        display: flex;
-        flex-direction: column;
-        font-weight: 700;
-        font-size: 0.82rem;
-      }
-      input,
-      select,
-      button {
-        padding: 0.42rem 0.5rem;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.45rem;
-        background: #fff;
-      }
-      .table-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: center;
-        margin: 0.55rem 0;
-        color: #64748b;
-        font-size: 0.82rem;
-      }
-      .selected-summary {
-        display: none;
-        background: #eff6ff;
-      }
-      .selected-summary.is-visible {
-        display: block;
-      }
-      .callable-flow-filter-banner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-      }
-      .callable-flow-filter-banner strong {
-        min-width: 0;
-      }
-      .callable-flow-reset-button {
-        background: #15803d;
-        color: #fff;
-        border: 1px solid #166534;
-        border-radius: 0.375rem;
-        padding: 0.4rem 0.75rem;
-        font-weight: 700;
-        text-decoration: none;
-        cursor: pointer;
-      }
-      .callable-flow-reset-button:hover {
-        background: #166534;
-      }
-      .table-wrap {
-        overflow: auto;
-        background: #fff;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.75rem;
-      }
-      table {
-        width: 100%;
-        min-width: 940px;
-        border-collapse: collapse;
-      }
-      th,
-      td {
-        padding: 0.3rem 0.36rem;
-        border-bottom: 1px solid #dbe3ef;
-        text-align: left;
-        vertical-align: middle;
-        font-size: 0.82rem;
-      }
-      th {
-        background: #eef2f7;
-        font-size: 0.72rem;
-      }
-      .sort-button {
-        display: inline-flex;
-        gap: 0.25rem;
-        align-items: center;
-        border: 0;
-        background: transparent;
-        color: #1d4ed8;
-        font: inherit;
-        font-weight: 800;
-        padding: 0;
-        cursor: pointer;
-      }
-      .sort-button::after {
-        content: "↕";
-        color: #64748b;
-        font-size: 0.7rem;
-      }
-      .sort-button[aria-sort="ascending"]::after {
-        content: "↑";
-      }
-      .sort-button[aria-sort="descending"]::after {
-        content: "↓";
-      }
-      .num {
-        text-align: right;
-        width: 4.5rem;
-        white-space: nowrap;
-      }
-      tr.active {
-        outline: 2px solid #1d4ed8;
-        outline-offset: -2px;
-        background: #eff6ff;
-      }
-      .callable-button {
-        border: 0;
-        background: transparent;
-        color: #1d4ed8;
-        font-weight: 800;
-        padding: 0;
-        text-align: left;
-        cursor: pointer;
-      }
-      .source-link {
-        color: #1d4ed8;
-        text-decoration: underline;
-        text-underline-offset: 0.12em;
-      }
-      .source-link:hover {
-        color: #1e40af;
-      }
-      .compact-list,
-      .compact-badges {
-        display: block;
-        max-width: 14rem;
-        line-height: 1.35;
-      }
-      .inline-more {
-        display: inline-block;
-        position: relative;
-        margin-left: 0.15rem;
-      }
-      .inline-more summary {
-        display: inline-flex;
-        cursor: pointer;
-        list-style: none;
-      }
-      .inline-more summary::-webkit-details-marker {
-        display: none;
-      }
-      .inline-more[open] .inline-more-panel {
-        display: block;
-      }
-      .inline-more-panel {
-        display: none;
-        position: absolute;
-        z-index: 5;
-        min-width: 13rem;
-        max-width: min(22rem, 80vw);
-        max-height: 14rem;
-        overflow: auto;
-        margin-top: 0.2rem;
-        padding: 0.35rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 0.55rem;
-        background: #fff;
-        box-shadow: 0 0.75rem 1.5rem #0f172a1f;
-        white-space: normal;
-      }
-      .inline-more-panel .tag,
-      .inline-more-panel .badge {
-        margin: 0.08rem;
-      }
-      .tag,
-      .badge {
-        display: inline-flex;
-        margin: 0.06rem;
-        padding: 0.1rem 0.34rem;
-        border-radius: 999px;
-        font-size: 0.69rem;
-        font-weight: 700;
-        background: #e0e7ff;
-        color: #3730a3;
-        white-space: nowrap;
-      }
-      .warn {
-        background: #fef3c7;
-        color: #92400e;
-      }
-      .issue {
-        background: #fee2e2;
-        color: #b91c1c;
-      }
-      .keep {
-        background: #dcfce7;
-        color: #166534;
-      }
-      .muted {
-        background: #f1f5f9;
-        color: #475569;
-      }
-      .priority {
-        font-weight: 800;
-      }
-      .priority-critical {
-        background: #991b1b;
-        color: #fff;
-      }
-      .priority-high {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-      .priority-medium {
-        background: #fef3c7;
-        color: #92400e;
-      }
-      .priority-low {
-        background: #e2e8f0;
-        color: #475569;
-      }
-      tr.priority-critical-row {
-        background: #fff1f2;
-      }
-      tr.priority-high-row {
-        background: #fff7ed;
-      }
-      tr.priority-critical-row:not(.active) {
-        box-shadow: inset 0.25rem 0 #991b1b;
-      }
-      tr.priority-high-row:not(.active) {
-        box-shadow: inset 0.25rem 0 #f97316;
-      }
-      .export-toolbar {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: stretch;
-        box-sizing: border-box;
-        max-width: 100%;
-        margin: 0.65rem 0;
-        padding: 0.65rem;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.75rem;
-        background: #f8fafc;
-      }
-      .toolbar-card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-        gap: 0.5rem;
-      }
-      .toolbar-card {
-        box-sizing: border-box;
-        min-width: 0;
-        padding: 0.5rem 0.6rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.6rem;
-        background: #fff;
-      }
-      .toolbar-card--selection,
-      .toolbar-card--prompt {
-        display: flex;
-        flex-direction: column;
-        gap: 0.55rem;
-      }
-      .toolbar-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: center;
-        max-width: 100%;
-        min-width: 0;
-      }
-      .toolbar-field {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        align-items: center;
-        max-width: 100%;
-        min-width: 0;
-        font-weight: 700;
-      }
-      .toolbar-field select {
-        max-width: 100%;
-        min-width: 0;
-      }
-      .toolbar-help,
-      .group-help {
-        color: #475569;
-        font-weight: 400;
-      }
-      .toolbar-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem 1rem;
-        align-items: center;
-        max-width: 100%;
-        min-width: 0;
-      }
-      .toolbar-group > div {
-        min-width: 0;
-      }
-      .toolbar-group .toolbar-row {
-        flex: 1 1 16rem;
-      }
-      .toolbar-row button {
-        white-space: normal;
-      }
-      .primary-action,
-      .danger-action:not(:disabled) {
-        background: #1d4ed8;
-        color: #fff;
-        border-color: #1d4ed8;
-      }
-      .danger-action:not(:disabled) {
-        background: #b91c1c;
-        border-color: #b91c1c;
-      }
-      button:disabled,
-      .danger-action:disabled {
-        background: #e5e7eb;
-        color: #94a3b8;
-        border-color: #cbd5e1;
-        cursor: not-allowed;
-      }
-      .manual-copy {
-        width: 100%;
-        min-height: 7rem;
-      }
-      .flow-details {
-        margin-top: 1rem;
-      }
-      .flow-summary-card {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin: 0.55rem 0 0.75rem;
-        padding: 0.75rem;
-        border: 1px solid #bfdbfe;
-        border-radius: 0.75rem;
-        background: #eff6ff;
-      }
-      .flow-summary-heading {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: flex-start;
-        justify-content: space-between;
-      }
-      .flow-summary-heading strong {
-        display: block;
-        font-size: 1rem;
-      }
-      .flow-summary-heading small {
-        display: block;
-        margin-top: 0.12rem;
-        color: #475569;
-        overflow-wrap: anywhere;
-      }
-      .flow-summary-recommendation {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem 0.5rem;
-        align-items: center;
-      }
-      .flow-summary-recommendation span {
-        color: #64748b;
-        font-weight: 800;
-      }
-      .flow-summary-card p {
-        margin: 0.1rem 0 0;
-        color: #334155;
-      }
-      .flow-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-        gap: 0.5rem;
-      }
-      .flow-meta div {
-        padding: 0.45rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.5rem;
-        background: #f8fafc;
-      }
-      .flow-key-signals,
-      .flow-next-step {
-        margin: 0.75rem 0;
-        padding: 0.65rem;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.75rem;
-        background: #fff;
-      }
-      .flow-key-signals h3,
-      .flow-next-step h3 {
-        margin: 0.05rem 0 0.45rem;
-      }
-      .flow-key-signals div {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-      }
-      .flow-key-signals p,
-      .flow-next-step p {
-        margin: 0.45rem 0 0;
-        color: #475569;
-      }
-      .flow-tree {
-        max-height: 60vh;
-        overflow: auto;
-        border: 1px solid #dbe3ef;
-        border-radius: 0.5rem;
-        padding: 0.45rem;
-        background: #fff;
-      }
-      .flow-tree ul {
-        list-style: none;
-        margin: 0.35rem 0 0.35rem 1rem;
-        padding-left: 0.85rem;
-        border-left: 1px solid #dbe3ef;
-      }
-      .flow-tree li {
-        margin: 0.28rem 0;
-      }
-      .flow-tree details {
-        border: 1px solid #e2e8f0;
-        border-radius: 0.6rem;
-        background: #f8fafc;
-      }
-      .flow-tree details[open] {
-        background: #fff;
-      }
-      .flow-tree summary {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.3rem;
-        align-items: center;
-        padding: 0.32rem 0.45rem;
-        cursor: pointer;
-        list-style: none;
-      }
-      .flow-tree summary::-webkit-details-marker {
-        display: none;
-      }
-      .flow-tree summary::before {
-        content: "▸";
-        flex: 0 0 auto;
-        color: #64748b;
-        font-weight: 800;
-      }
-      .flow-tree details[open] > summary::before {
-        content: "▾";
-      }
-      .flow-tree-main {
-        display: flex;
-        flex: 1 1 auto;
-        flex-wrap: wrap;
-        gap: 0.22rem 0.35rem;
-        align-items: center;
-        min-width: 0;
-      }
-      .flow-tree-main strong {
-        min-width: 0;
-        font-weight: 850;
-      }
-      .flow-tree-details {
-        margin: 0 0.45rem 0.42rem;
-        padding: 0.22rem 0.35rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.45rem;
-        background: #fff;
-      }
-      .flow-tree-detail-strip {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.18rem 0.28rem;
-        align-items: center;
-      }
-      .flow-tree-detail-chip {
-        display: inline-flex;
-        gap: 0.18rem;
-        align-items: center;
-        padding: 0.08rem 0.32rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 999px;
-        background: #f8fafc;
-        color: #64748b;
-        font-size: 0.68rem;
-      }
-      .flow-tree-detail-chip strong {
-        color: #334155;
-        font-weight: 800;
-      }
-      .flow-tree-detail-notes {
-        display: flex;
-        flex-direction: column;
-        gap: 0.12rem;
-        margin-top: 0.22rem;
-        color: #64748b;
-        font-size: 0.72rem;
-        line-height: 1.35;
-        overflow-wrap: anywhere;
-      }
-      .badge.critical {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-      .badge.info {
-        background: #dbeafe;
-        color: #1e40af;
-      }
-      @media (max-width: 720px) {
-        .flow-tree ul {
-          margin-left: 0.45rem;
-          padding-left: 0.65rem;
-        }
-      }
-      @media (max-width: 720px) {
-        main,
-        header {
-          padding: 0.75rem;
-        }
-        .generation-banner {
-          width: auto;
-          border-radius: 0.75rem;
-        }
-        .filter-panel {
-          grid-template-columns: 1fr;
-        }
-        table {
-          min-width: 760px;
-        }
-        th,
-        td {
-          font-size: 0.78rem;
-          padding: 0.26rem;
-        }
-        .compact-list,
-        .compact-badges {
-          max-width: 10rem;
-        }
-        .surface-card strong {
-          font-size: 1.35rem;
-        }
-        .toolbar-card-grid {
-          grid-template-columns: 1fr;
-        }
-        .toolbar-row,
-        .toolbar-group {
-          align-items: stretch;
-        }
-        .toolbar-field,
-        .toolbar-group {
-          flex-direction: column;
-        }
-        .toolbar-field select {
-          width: 100%;
-        }
-        .toolbar-help {
-          display: block;
-        }
-        .toolbar-group .toolbar-row {
-          flex: 1 1 auto;
-          flex-direction: row;
-        }
-        .toolbar-group .toolbar-row button {
-          flex: 1 1 9rem;
-        }
-        .callable-flow-filter-banner {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-        .callable-flow-reset-button {
-          width: 100%;
-          box-sizing: border-box;
-          text-align: center;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>Callable Architecture</h1>
-      <p>
-        High-level triage for notebook-facing public APIs, dependency depth, and
-        architecture risk.
-      </p>
-      <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 19:03 SGT<span
-          ><strong>Data source:</strong> callable-flow.json</span
-        >
-      </p>
-      <nav class="callable-page-nav" aria-label="Callable reference navigation">
-        <div class="callable-page-tabs" role="list">
-          <a
-            class="callable-page-tab is-active"
-            href="callable-functions-dashboard.html"
-            aria-current="page"
-            >Architecture</a
-          ><a class="callable-page-tab" href="callable-functions-inventory.html"
-            >Inventory</a
-          >
-        </div>
-        <div class="callable-page-actions">
-          <a
-            class="callable-page-action"
-            href="../reference/_data/callable-flow.json"
-            >Open JSON data</a
-          ><a class="callable-page-action" href="../">Back to Docs</a>
-        </div>
-      </nav>
-    </header>
-    <main>
-      <h2>Public callable overview</h2>
-      <div id="publicSurfaceCards" class="surface-cards"></div>
-      <p class="overview-help">
-        <small
-          >Review notebook-facing public callables, search for risks, and
-          inspect the selected flow below.</small
-        >
-      </p>
-      <section
-        class="filter-panel search-toolbar"
-        aria-label="Public callable search"
-      >
-        <label class="filter-field search-field"
-          >Search public callables<input
-            id="decisionSearchBox"
-            type="search"
-            placeholder="Search by callable, module, finding, or recommendation..." /></label
-        ><button
-          id="resetDecisionFilters"
-          class="architecture-clear-all"
-          type="button"
-          hidden
-        >
-          Clear search
-        </button>
-      </section>
-      <section id="architectureViolationSection" class="flow-details"></section>
-      <section class="export-toolbar">
-        <div class="toolbar-card-grid">
-          <div
-            class="toolbar-card toolbar-card--selection"
-            aria-label="Selection"
-          >
-            <strong id="selectedCount">Selected flow: none</strong>
-            <div class="toolbar-row">
-              <button
-                id="clearSelected"
-                class="danger-action"
-                type="button"
-                disabled
-              >
-                Clear selection
-              </button>
-            </div>
-          </div>
-          <div class="toolbar-card toolbar-card--compatibility">
-            <label class="toolbar-field"
-              >Compatibility mode
-              <select id="compatibilityMode">
-                <option value="internal_cleanup" selected>
-                  Internal cleanup
-                </option>
-                <option value="stable_api_safe">Stable API safe</option>
-                <option value="development_breaking_allowed">
-                  Development breaking allowed
-                </option></select
-              ><small class="toolbar-help"
-                >Sets the API safety assumptions for generated refactor
-                packages.</small
-              ></label
-            >
-          </div>
-        </div>
-        <div class="toolbar-card toolbar-card--prompt">
-          <div class="toolbar-group">
-            <div>
-              <strong>Export flow cleanup packet</strong><br /><small
-                class="group-help"
-                >Copy or download the selected public callable flow for
-                AI-assisted cleanup planning.</small
-              >
-            </div>
-            <div class="toolbar-row">
-              <button id="copyJson" type="button" disabled>
-                Copy flow JSON</button
-              ><button id="copyMarkdown" type="button" disabled>
-                Copy flow Markdown</button
-              ><button id="downloadJson" type="button" disabled>
-                Download flow JSON
-              </button>
-            </div>
-          </div>
-          <small id="exportStatus"></small
-          ><textarea
-            id="manualCopy"
-            class="manual-copy"
-            hidden
-            readonly
-          ></textarea>
-        </div>
-      </section>
-      <section
-        id="selectedPublicFlowSummary"
-        class="selected-summary"
-      ></section>
-      <section class="table-actions">
-        <button id="showAllPublicCallables" type="button" hidden>
-          Show all public callables</button
-        ><button id="collapsePublicList" type="button" hidden>
-          Collapse list</button
-        ><small id="publicListStatus"></small
-        ><small id="dataLoadStatus" class="load-status" aria-live="polite"
-          >Loading callable-flow data...</small
-        >
-      </section>
-      <section class="table-wrap" id="publicCallableTableWrap">
-        <table data-table-controls="excel">
-          <thead>
-            <tr>
-              <th>Select</th>
-              <th>Priority</th>
-              <th>
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="callable"
-                >
-                  Public callable
-                </button>
-              </th>
-              <th>
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="module"
-                >
-                  Module
-                </button>
-              </th>
-              <th>
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="findings"
-                >
-                  Findings
-                </button>
-              </th>
-              <th>Review note</th>
-              <th>
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="suggested_action"
-                >
-                  Suggested action
-                </button>
-              </th>
-              <th class="num">
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="downstream"
-                >
-                  Downstream
-                </button>
-              </th>
-              <th class="num">
-                <button type="button" class="sort-button" data-sort-key="depth">
-                  Depth
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="publicCallableList"></tbody>
-        </table>
-      </section>
-      <section id="publicFlowDetails" class="flow-details">
-        <p>Select a public callable to inspect its flow.</p>
-      </section>
-    </main>
-    <script>
-      const FLOW_LAYER_LABELS = [
-        "Public function",
-        "Shared helper",
-        "Private helper",
-        "Class",
-        "Method",
-        "Unknown",
-      ];
-      const INTERNAL_LAYERING_SUGGESTED_FIX =
-        "Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.";
-      const DISPLAY_LABEL_MAP = {
-        "Architecture violation": "Architecture violation",
-        "Long call chain": "Long call chain",
-        "Large dependency surface": "Large dependency surface",
-        "Merge candidate": "Merge candidate",
-        "Review abstraction": "Review abstraction",
-        "Shared utility": "Shared utility",
-        None: "Healthy",
-        "Merge candidates found": "Merge candidate found",
-      };
-      let inventory = [],
-        publicEntryFlows = [],
-        visibleFlows = [],
-        summaryCounts = {},
-        inventoryByQn = new Map();
-      const state = {
-        selectedFlow: "",
-        activePublicFlow: "",
-        collapsedPublicList: false,
-        decisionSearch: "",
-        sortKey: "callable",
-        sortDirection: "asc",
-      };
-      let architectureThresholds = {
-        long_call_chain_depth: null,
-        large_dependency_surface: null,
-      };
-      function positiveThreshold(value) {
-        const numeric = Number(value);
-        return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
-      }
-      function longCallChainThreshold() {
-        return positiveThreshold(architectureThresholds.long_call_chain_depth);
-      }
-      function largeDependencySurfaceThreshold() {
-        return positiveThreshold(
-          architectureThresholds.large_dependency_surface,
-        );
-      }
-      const $ = (id) => document.getElementById(id),
-        text = (v) => String(v ?? ""),
-        esc = (v) =>
-          text(v).replace(
-            /[&<>"']/g,
-            (ch) =>
-              ({
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;",
-              })[ch],
-          );
-      function unique(v) {
-        return [...new Set(v.filter(Boolean))].sort();
-      }
-      function displayLabel(v) {
-        return DISPLAY_LABEL_MAP[text(v)] || text(v);
-      }
-      function label(v) {
-        return displayLabel(
-          text(v)
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (ch) => ch.toUpperCase()),
-        );
-      }
-      function option(s, v, l) {
-        const o = document.createElement("option");
-        o.value = v;
-        o.textContent = l || v;
-        s.appendChild(o);
-      }
-      function moreDetails(hidden, render) {
-        return hidden.length
-          ? `<details class="inline-more"><summary><span class="tag">+${hidden.length} more</span></summary><span class="inline-more-panel">${hidden.map(render).join("")}</span></details>`
-          : "";
-      }
-      function compactList(items, limit = 3) {
-        const list = items || [],
-          shown = list.slice(0, limit),
-          hidden = list.slice(limit);
-        return `<span class="compact-list" title="${esc(list.join(", "))}">${shown.map((i) => `<span class="tag">${esc(i)}</span>`).join("")}${moreDetails(hidden, (i) => `<span class="tag">${esc(i)}</span>`)}</span>`;
-      }
-      function compactBadges(items, cls = "warn", limit = 2) {
-        const list = items || [];
-        if (!list.length) return '<span class="badge keep">Healthy</span>';
-        const shown = list.slice(0, limit),
-          hidden = list.slice(limit);
-        return `<span class="compact-badges" title="${esc(list.join(", "))}">${shown.map((i) => `<span class="badge ${cls}">${esc(i)}</span>`).join("")}${moreDetails(hidden, (i) => `<span class="badge ${cls}">${esc(i)}</span>`)}</span>`;
-      }
-      const GITHUB_SOURCE_BASE =
-        "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/";
-      function sourceHref(i) {
-        const row = inventoryByQn.get(i.qualified_name) || i;
-        if (row.docs_path)
-          return (
-            "../" +
-            String(row.docs_path)
-              .replace(/^docs\//, "")
-              .replace(/\.md$/, "/")
-          );
-        if (row.source_url) return row.source_url;
-        const path = row.source_path || row.path;
-        if (!path) return "";
-        const start =
-          row.source_start_line || row.start_line || row.line_number;
-        const end = row.source_end_line || row.end_line;
-        let anchor = start ? `#L${start}` : "";
-        if (start && end && end !== start) anchor += `-L${end}`;
-        return `${GITHUB_SOURCE_BASE}${path}${anchor}`;
-      }
-      function sourceCallableLink(i) {
-        const href = sourceHref(i);
-        const label = esc(i.function_name);
-        return href
-          ? `<a class="source-link" href="${esc(href)}"><code>${label}</code></a>`
-          : `<code>${label}</code>`;
-      }
-      function moduleHref(module) {
-        return "";
-      }
-      function moduleLink(module) {
-        const href = moduleHref(module);
-        return href
-          ? `<a class="source-link" href="${esc(href)}"><code>${esc(module)}</code></a>`
-          : `<code>${esc(module || "")}</code>`;
-      }
-      function linkMetadata(i) {
-        const row = inventoryByQn.get(i.qualified_name) || i;
-        return {
-          source_url: row.source_url || null,
-          docs_url: row.docs_url || null,
-          file_path: row.source_path || null,
-          line_start: row.source_start_line || null,
-          line_end: row.source_end_line || null,
-        };
-      }
-      function markdownLink(i, label) {
-        const href = sourceHref(i);
-        return href
-          ? `[${label || i.function_name}](${href})`
-          : label || i.function_name;
-      }
-      function architecturePriority(f) {
-        const violations = (f.architecture_violation_count ?? 0) > 0,
-          longThreshold = longCallChainThreshold(),
-          largeThreshold = largeDependencySurfaceThreshold(),
-          deep = longThreshold !== null && (f.max_depth || 0) >= longThreshold,
-          down = f.downstream_count || 0,
-          large = largeThreshold !== null && down >= largeThreshold;
-        if (
-          (violations && deep) ||
-          (largeThreshold !== null && down >= largeThreshold * 5)
-        )
-          return "Critical";
-        if (
-          violations ||
-          (largeThreshold !== null && down >= largeThreshold * 2.5)
-        )
-          return "High";
-        if (deep || large) return "Medium";
-        return "Low";
-      }
-      function priorityClass(p) {
-        return text(p).toLowerCase();
-      }
-      function riskBadgeClass(warning, priority) {
-        if (priority === "Critical" || priority === "High") return "issue";
-        return "muted";
-      }
-      function mergeCandidateCount(flow) {
-        return Number(
-          flow.helper_cleanup_candidates ??
-            flow.single_use_helper_candidate_count ??
-            0,
-        );
-      }
-      function mergeCandidateLabel(count) {
-        return count === 1
-          ? "Merge candidate found"
-          : `${count} merge candidates found`;
-      }
-      function reviewMergeCandidateLabel(count) {
-        return count === 1
-          ? "Review merge candidate"
-          : "Review merge candidates";
-      }
-      function suggestedActionLabel(flow) {
-        const action = flow.recommended_simplification_action || "Keep public";
-        if (action === "Review merge candidates")
-          return reviewMergeCandidateLabel(mergeCandidateCount(flow));
-        return action;
-      }
-      function whyReview(flow) {
-        const reasons = [];
-        const violations = flow.architecture_violation_count ?? 0,
-          longThreshold = longCallChainThreshold(),
-          largeThreshold = largeDependencySurfaceThreshold(),
-          mergeCount = mergeCandidateCount(flow);
-        if (violations)
-          reasons.push(`Contains ${violations} architecture violations.`);
-        if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-          reasons.push(
-            `Depth is ${flow.max_depth}; threshold is >= ${longThreshold}.`,
-          );
-        if (
-          largeThreshold !== null &&
-          (flow.downstream_count || 0) >= largeThreshold
-        )
-          reasons.push(
-            `Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}.`,
-          );
-        if (mergeCount > 0)
-          reasons.push(
-            mergeCount === 1
-              ? "Contains 1 merge candidate inside this flow."
-              : `Contains ${mergeCount} merge candidates inside this flow.`,
-          );
-        return reasons.length ? reasons.join(" ") : "Clear";
-      }
-      function renderCards() {
-        const s = summaryCounts.public_api_surface || {},
-          flows = publicEntryFlows || [],
-          publicCallableCount = flows.length || s.public_api_entrypoints || 0,
-          architectureViolationFlows = flows.filter(
-            (f) =>
-              architectureViolationCount(f) > 0 ||
-              architectureFindingRows(f).length > 0,
-          ).length;
-        const cards = [
-          {
-            label: "Public callables",
-            value: publicCallableCount,
-            subtitle: "Notebook-facing APIs scanned in this review workspace.",
-            cls: "info",
-          },
-          {
-            label: "With architecture violations",
-            value: architectureViolationFlows,
-            subtitle: architectureViolationFlows
-              ? "Public callables with true architecture violations."
-              : "No architecture violations found.",
-            cls: architectureViolationFlows ? "risk" : "good",
-          },
-        ];
-        $("publicSurfaceCards").innerHTML = cards
-          .map(
-            (c) =>
-              `<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value ?? 0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`,
-          )
-          .join("");
-      }
-      function findingLabel(v) {
-        return displayLabel(v);
-      }
-      function architectureViolationBreakdown(flows = publicEntryFlows) {
-        const counts = {
-          "Shared helper calls public callable": 0,
-          "Cross-callable private dependency": 0,
-          "Single-use shared helper": 0,
-          "Hidden nested helper chain": 0,
-        };
-        flows.forEach((f) =>
-          (f.transitive_callees || []).forEach((c) => {
-            if (
-              c.architecture_result === "Violation" &&
-              counts[c.violation_type] !== undefined
-            )
-              counts[c.violation_type]++;
-          }),
-        );
-        return counts;
-      }
-      function renderArchitectureViolationSection() {
-        const meanings = {
-          "Shared helper calls public callable":
-            "A shared helper calls a notebook-facing public callable.",
-          "Cross-callable private dependency":
-            "A callable reaches into another callable private helper.",
-          "Single-use shared helper":
-            "A shared/internal helper is only used by one public callable.",
-          "Hidden nested helper chain":
-            "Nested helpers create an extra hidden architecture layer.",
-        };
-        const rows = Object.entries(architectureViolationBreakdown()).filter(
-          ([, count]) => count > 0,
-        );
-        $("architectureViolationSection").innerHTML =
-          `<h2>Architecture violations</h2><p>Architecture violations show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length ? rows : Object.entries(meanings).map(([k]) => [k, 0])).map(([type, count]) => `<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join("")}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[
-            ["Public function", "Public function", "Violation"],
-            ["Public function", "Shared helper", "Allowed"],
-            ["Public function", "Private helper in same file", "Warning"],
-            ["Shared helper", "Public function", "Violation"],
-            ["Shared helper", "Private helper in same file", "Warning"],
-            ["Shared helper", "Private helper in another file", "Violation"],
-            ["Private helper", "Shared helper", "Allowed"],
-          ]
-            .map(
-              (r) =>
-                `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`,
-            )
-            .join("")}</tbody></table></details>`;
-      }
-      const DOWNSTREAM_BANDS = [
-        ["downstream_0", "0", (v) => v === 0],
-        ["downstream_1_2", "1–2", (v) => v >= 1 && v <= 2],
-        ["downstream_3_5", "3–5", (v) => v >= 3 && v <= 5],
-        ["downstream_6_10", "6–10", (v) => v >= 6 && v <= 10],
-        ["downstream_gt_10", ">10", (v) => v > 10],
-      ];
-      const DEPTH_BANDS = [
-        ["depth_0_1", "0–1", (v) => v >= 0 && v <= 1],
-        ["depth_2_3", "2–3", (v) => v >= 2 && v <= 3],
-        ["depth_4_5", "4–5", (v) => v >= 4 && v <= 5],
-        ["depth_gte_6", ">=6", (v) => v >= 6],
-      ];
-      const ISSUE_BANDS = [
-        ["issues_0", "No violations", (v) => v === 0],
-        ["issues_1", "1 violation", (v) => v === 1],
-        ["issues_gte_2", "2+ violations", (v) => v >= 2],
-      ];
-      const ISSUE_BOOLEAN_BANDS = [
-        ["issues_0", "No violations", (v) => v === 0],
-        ["issues_gte_1", "1+ violations", (v) => v >= 1],
-      ];
-      function architectureViolationCount(flow) {
-        const value = flow.architecture_violation_count;
-        if (typeof value === "boolean") return value ? 1 : 0;
-        const numeric = Number(value ?? 0);
-        return Number.isFinite(numeric) ? numeric : 0;
-      }
-      function architectureFindingRows(flow) {
-        return (flow.transitive_callees || []).filter(
-          (c) =>
-            c.architecture_result === "Violation" ||
-            c.recommended_action === "Architecture violation",
-        );
-      }
-      function publicCallableFindingRows(flow) {
-        const findings = architectureFindingRows(flow),
-          longThreshold = longCallChainThreshold(),
-          largeThreshold = largeDependencySurfaceThreshold(),
-          rows = [
-            ...(flow.architecture_violation_count
-              ? [
-                  {
-                    finding: "Architecture violations found",
-                    evidence: `${flow.architecture_violation_count} call edge(s) go in the wrong direction.`,
-                    suggested_action: "Review the exact edges below.",
-                  },
-                ]
-              : []),
-            ...(findings.length > architectureViolationCount(flow)
-              ? [
-                  {
-                    finding: "Helper-level architecture findings found",
-                    evidence: `${findings.length - architectureViolationCount(flow)} helper-level architecture finding(s) are visible in this flow.`,
-                    suggested_action:
-                      "Review the architecture findings table and simple classifications below.",
-                  },
-                ]
-              : []),
-            ...(longThreshold !== null && (flow.max_depth || 0) >= longThreshold
-              ? [
-                  {
-                    finding: "Long call chain",
-                    evidence: `Depth ${flow.max_depth}, threshold >= ${longThreshold}`,
-                    suggested_action:
-                      "Review whether the flow can be simplified.",
-                  },
-                ]
-              : []),
-            ...(largeThreshold !== null &&
-            (flow.downstream_count || 0) >= largeThreshold
-              ? [
-                  {
-                    finding: "Large dependency surface",
-                    evidence: `${flow.downstream_count} downstream functions, threshold >= ${largeThreshold}`,
-                    suggested_action:
-                      "Many functions depend on this flow. Refactor carefully.",
-                  },
-                ]
-              : []),
-            ...((flow.external_dependents_count || 0) > 0
-              ? [
-                  {
-                    finding: "Shared impact warning",
-                    evidence: `${flow.external_dependents_count} function(s) in this flow are used outside this flow.`,
-                    suggested_action:
-                      "Check outside dependents before refactoring shared helpers.",
-                  },
-                ]
-              : []),
-            ...((flow.helper_cleanup_candidates || 0) > 0
-              ? [
-                  {
-                    finding:
-                      mergeCandidateLabel(mergeCandidateCount(flow)) +
-                      " inside flow",
-                    evidence:
-                      mergeCandidateCount(flow) === 1
-                        ? "1 helper function may be a merge candidate."
-                        : `${mergeCandidateCount(flow)} helper functions may be merge candidates.`,
-                    suggested_action:
-                      reviewMergeCandidateLabel(mergeCandidateCount(flow)) +
-                      " without merging away the public API.",
-                  },
-                ]
-              : []),
-          ];
-        return rows.length
-          ? rows
-          : [
-              {
-                finding: "Healthy",
-                evidence: "Clear",
-                suggested_action: "Keep public",
-              },
-            ];
-      }
-      function architectureFindingCount(flow) {
-        return architectureFindingRows(flow).length;
-      }
-      function metricValue(flow, metric) {
-        if (metric === "downstream") return Number(flow.downstream_count ?? 0);
-        if (metric === "depth") return Number(flow.max_depth ?? 0);
-        return architectureFindingCount(flow);
-      }
-      function issueBandsForRows(rows) {
-        return rows.some(
-          (flow) => typeof flow.architecture_violation_count === "number",
-        )
-          ? ISSUE_BANDS
-          : ISSUE_BOOLEAN_BANDS;
-      }
-      function matchesBand(flow, bandValue, bands, metric) {
-        if (!bandValue) return true;
-        const band = bands.find(([value]) => value === bandValue);
-        return band ? band[2](metricValue(flow, metric)) : true;
-      }
-      function updateDecisionFilterControls() {
-        $("resetDecisionFilters").hidden = state.decisionSearch === "";
-      }
-      function filteredPublicFlows() {
-        const q = state.decisionSearch.toLowerCase();
-        return publicEntryFlows.filter(
-          (f) =>
-            !q ||
-            text(f.function_name).toLowerCase().includes(q) ||
-            text(f.qualified_name).toLowerCase().includes(q) ||
-            text(f.module).toLowerCase().includes(q),
-        );
-      }
-      function sortValue(flow, key) {
-        if (key === "callable") return text(flow.function_name).toLowerCase();
-        if (key === "module") return text(flow.module).toLowerCase();
-        if (key === "findings")
-          return (
-            (flow.warnings || []).map(findingLabel).join(" ").toLowerCase() ||
-            "healthy"
-          );
-        if (key === "suggested_action")
-          return suggestedActionLabel(flow).toLowerCase();
-        if (key === "downstream") return Number(flow.downstream_count ?? 0);
-        if (key === "depth") return Number(flow.max_depth ?? 0);
-        return text(flow.function_name).toLowerCase();
-      }
-      function stableSortRows(rows) {
-        const dir = state.sortDirection === "desc" ? -1 : 1,
-          key = state.sortKey;
-        return rows
-          .map((row, index) => ({ row, index }))
-          .sort((a, b) => {
-            const av = sortValue(a.row, key),
-              bv = sortValue(b.row, key);
-            if (av < bv) return -1 * dir;
-            if (av > bv) return 1 * dir;
-            return a.index - b.index;
-          })
-          .map((item) => item.row);
-      }
-      function updateSortButtons() {
-        document.querySelectorAll("[data-sort-key]").forEach((button) => {
-          const active = button.dataset.sortKey === state.sortKey;
-          button.setAttribute(
-            "aria-sort",
-            active
-              ? state.sortDirection === "asc"
-                ? "ascending"
-                : "descending"
-              : "none",
-          );
-        });
-      }
-      function rowsForDisplay() {
-        if (!state.collapsedPublicList) return visibleFlows;
-        return visibleFlows.filter(
-          (f) => f.qualified_name === state.activePublicFlow,
-        );
-      }
-      function setPublicListControls() {
-        const active = publicEntryFlows.find(
-          (i) => i.qualified_name === state.activePublicFlow,
-        );
-        $("showAllPublicCallables").hidden = !state.collapsedPublicList;
-        $("collapsePublicList").hidden = state.collapsedPublicList || !active;
-        $("publicListStatus").textContent =
-          state.collapsedPublicList && active
-            ? `Showing selected callable from ${visibleFlows.length} matching public callables.`
-            : `Showing ${visibleFlows.length} matching public callables.`;
-        const showSelectedBanner = Boolean(state.collapsedPublicList && active);
-        $("selectedPublicFlowSummary").classList.toggle(
-          "is-visible",
-          showSelectedBanner,
-        );
-        $("selectedPublicFlowSummary").innerHTML = showSelectedBanner
-          ? `<div class="callable-flow-filter-banner"><strong>Showing flow for <code>${esc(active.function_name)}</code></strong><button type="button" id="backToAllPublicCallables" class="callable-flow-reset-button">Back to all public callables</button></div>`
-          : "";
-        const reset = $("backToAllPublicCallables");
-        if (reset) reset.onclick = showAllPublicCallables;
-      }
-      function renderLoadStatus(message, isError = false) {
-        const el = $("dataLoadStatus");
-        if (!el) return;
-        el.textContent = message;
-        el.className = isError ? "load-status issue" : "load-status";
-      }
-      function callableFlowDataUrl() {
-        const path = window.location.pathname,
-          origin = window.location.origin,
-          referenceMarker = "/reference/",
-          assetsMarker = "/assets/";
-        if (path.includes(referenceMarker)) {
-          return (
-            origin +
-            path.slice(
-              0,
-              path.indexOf(referenceMarker) + referenceMarker.length,
-            ) +
-            "_data/callable-flow.json"
-          );
-        }
-        if (path.includes(assetsMarker)) {
-          return (
-            origin +
-            path.slice(0, path.indexOf(assetsMarker) + 1) +
-            "reference/_data/callable-flow.json"
-          );
-        }
-        return new URL("reference/_data/callable-flow.json", document.baseURI)
-          .href;
-      }
-      function renderLoadedCount() {
-        renderLoadStatus(
-          `Loaded ${inventory.length} total callables; ${publicEntryFlows.length} public callables available; ${visibleFlows.length} rows after filters.`,
-        );
-      }
-      function renderPublicCallableList() {
-        visibleFlows = stableSortRows(filteredPublicFlows());
-        updateDecisionFilterControls();
-        if (!state.activePublicFlow && visibleFlows.length)
-          state.activePublicFlow = visibleFlows[0].qualified_name;
-        if (
-          state.activePublicFlow &&
-          !visibleFlows.some((f) => f.qualified_name === state.activePublicFlow)
-        )
-          state.collapsedPublicList = false;
-        const rows = rowsForDisplay();
-        renderLoadedCount();
-        $("publicCallableList").innerHTML = rows
-          .map((f) => {
-            const p = architecturePriority(f),
-              pc = priorityClass(p),
-              strong = p === "Critical" || p === "High",
-              active =
-                f.qualified_name === state.activePublicFlow ? "active" : "";
-            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}"><td><input type="radio" name="selectedPublicFlow" data-select-row="${esc(f.qualified_name)}" ${state.selectedFlow === f.qualified_name ? "checked" : ""} aria-label="Select flow ${esc(f.function_name)}"></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)} <button type="button" class="callable-button" data-public-flow="${esc(f.qualified_name)}">Inspect flow</button></td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
-          })
-          .join("");
-        setPublicListControls();
-        updateSortButtons();
-        renderFlowDetails();
-        updateExportControls();
-        if (window.FabricOpsTableControls)
-          window.FabricOpsTableControls.enhance(
-            document.querySelector('table[data-table-controls="excel"]'),
-          );
-      }
-      function showAllPublicCallables() {
-        state.collapsedPublicList = false;
-        renderPublicCallableList();
-        $("publicCallableTableWrap").scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
-      function collapsePublicList() {
-        state.collapsedPublicList = true;
-        renderPublicCallableList();
-        $("publicFlowDetails").scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
-      function buildFlowTree(flow) {
-        const root = {
-            qualified_name: flow.qualified_name,
-            function_name: flow.function_name,
-            module: flow.module,
-            function_type: "Public function",
-            layer_group: "Public function",
-            simple_classification: "Public function",
-            source_path: flow.source_path,
-            calls_inside_flow: (flow.direct_callees || []).length,
-            called_inside_flow_by: 0,
-            used_outside_flow: 0,
-            is_end_node: !(flow.direct_callees || []).length,
-            docs_url: flow.docs_url,
-            docs_path: flow.docs_path,
-            source_url: flow.source_url,
-            children: [],
-          },
-          byParent = new Map();
-        (flow.transitive_callees || []).forEach((r) => {
-          const p = r.parent_qualified_name || flow.qualified_name;
-          if (!byParent.has(p)) byParent.set(p, []);
-          byParent.get(p).push({ ...r, children: [] });
-        });
-        function attach(n) {
-          n.children = (byParent.get(n.qualified_name) || []).sort(
-            (a, b) => a.depth - b.depth,
-          );
-          n.children.forEach(attach);
-          return n;
-        }
-        return attach(root);
-      }
-      function flowTreeStatusChips(n) {
-        if (n.architecture_result === "Violation")
-          return '<span class="badge critical">Violation</span>';
-        if (n.architecture_result === "Warning")
-          return '<span class="badge warn">Warning</span>';
-        if (n.helper_cleanup_candidate || (n.used_outside_flow ?? 0) > 0)
-          return '<span class="badge muted">Review</span>';
-        return "";
-      }
-      function flowTreeDetailRows(n) {
-        const rows = [
-          ["Called by", n.called_inside_flow_by ?? 0],
-          ["Calls", n.calls_inside_flow ?? 0],
-          ["Used outside", n.used_outside_flow ?? 0],
-          [
-            "Source",
-            n.source_path
-              ? String(n.source_path).replace(/^src\/fabricops_kit\//, "")
-              : n.module || "Unknown",
-          ],
-          ["End", n.is_end_node ? "Yes" : "No"],
-        ];
-        if (n.architecture_result)
-          rows.push(["Architecture", n.architecture_result]);
-        return rows;
-      }
-      function flowTreeLongDetails(n) {
-        const details = [];
-        if (n.architecture_result === "Violation")
-          details.push([
-            "Violation reason",
-            n.violation_type || "Architecture violation",
-          ]);
-        if (n.architecture_result === "Warning")
-          details.push([
-            "Warning reason",
-            n.violation_type === "Same-file private dependency"
-              ? "Same-file private helper dependency; review for possible merge."
-              : n.violation_type || "Warning",
-          ]);
-        if (n.helper_cleanup_candidate)
-          details.push([
-            "Merge candidate",
-            n.recommended_action || "Review helper placement.",
-          ]);
-        if (n.path_examples && n.path_examples.length)
-          details.push(["Path example", n.path_examples[0].join(" -> ")]);
-        return details;
-      }
-      function flowTreeDetails(n) {
-        const longDetails = flowTreeLongDetails(n);
-        return `<div class="flow-tree-details"><div class="flow-tree-detail-strip">${flowTreeDetailRows(
-          n,
-        )
-          .map(
-            ([label, value]) =>
-              `<span class="flow-tree-detail-chip"><span>${esc(label)}</span> <strong>${esc(value)}</strong></span>`,
-          )
-          .join(
-            "",
-          )}</div>${longDetails.length ? `<div class="flow-tree-detail-notes">${longDetails.map(([label, value]) => `<span><strong>${esc(label)}:</strong> ${esc(value)}</span>`).join("")}</div>` : ""}</div>`;
-      }
-      function renderTreeNode(n) {
-        const type = n.simple_classification || "Unknown",
-          moduleText = n.source_path
-            ? String(n.source_path).replace(/^src\/fabricops_kit\//, "")
-            : n.module || "",
-          status = flowTreeStatusChips(n),
-          children = n.children?.length
-            ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>`
-            : "";
-        return `<li><details><summary><span class="flow-tree-main"><strong>${sourceCallableLink(n)}</strong><span class="badge muted">${esc(type)}</span>${moduleText ? `<span class="tag">${esc(moduleText)}</span>` : ""}${n.is_end_node ? '<span class="badge muted">end</span>' : ""}${status}</span></summary>${flowTreeDetails(n)}</details>${children}</li>`;
-      }
-      function flowHealth(flow, architectureFindings, mergeCandidates) {
-        if (architectureFindings.length) return "Needs architecture review";
-        const longThreshold = longCallChainThreshold(),
-          largeThreshold = largeDependencySurfaceThreshold();
-        if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-          return "Long flow";
-        if (
-          largeThreshold !== null &&
-          (flow.downstream_count || 0) >= largeThreshold
-        )
-          return "Large dependency surface";
-        if ((flow.external_dependents_count || 0) > 0) return "Shared impact";
-        if (mergeCandidates.length) return "Review helpers";
-        return "Healthy";
-      }
-      function flowReason(flow, architectureFindings, mergeCandidates) {
-        if (architectureFindings.length)
-          return `${architectureFindings.length} architecture finding(s) need review; open the flow tree for exact nodes.`;
-        if ((flow.external_dependents_count || 0) > 0)
-          return `${flow.external_dependents_count} function(s) in this flow are used outside this public callable.`;
-        if (mergeCandidates.length)
-          return `${mergeCandidates.length} internal helper(s) may be reviewed for possible merge.`;
-        return "No architecture violations found in this flow.";
-      }
-      function flowNextStep(flow, architectureFindings, mergeCandidates) {
-        const longThreshold = longCallChainThreshold();
-        if (architectureFindings.length)
-          return "Review the highlighted flow tree nodes before moving or merging helpers.";
-        if ((flow.external_dependents_count || 0) > 0)
-          return "Check external dependents before refactoring shared helpers.";
-        if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-          return "Review whether this long flow can be simplified before moving helpers.";
-        if (mergeCandidates.length)
-          return "No architecture violation found; review merge candidates only if readability improves.";
-        return "Keep the callable shape and use the flow tree only for spot checks.";
-      }
-      function flowSignalChips(flow, architectureFindings, mergeCandidates) {
-        const chips = [];
-        const longThreshold = longCallChainThreshold(),
-          largeThreshold = largeDependencySurfaceThreshold();
-        chips.push(
-          architectureFindings.length
-            ? `<span class="badge critical">${architectureFindings.length} architecture finding${architectureFindings.length === 1 ? "" : "s"}</span>`
-            : '<span class="badge keep">No architecture violations</span>',
-        );
-        if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-          chips.push('<span class="badge warn">Long chain</span>');
-        if (
-          largeThreshold !== null &&
-          (flow.downstream_count || 0) >= largeThreshold
-        )
-          chips.push(
-            '<span class="badge warn">Large dependency surface</span>',
-          );
-        if (mergeCandidates.length)
-          chips.push(
-            `<span class="badge muted">${mergeCandidates.length} merge candidate${mergeCandidates.length === 1 ? "" : "s"}</span>`,
-          );
-        if ((flow.external_dependents_count || 0) > 0)
-          chips.push('<span class="badge info">Shared impact warning</span>');
-        return chips.slice(0, 5).join("");
-      }
-      function renderFlowDetails() {
-        const f = publicEntryFlows.find(
-          (i) => i.qualified_name === state.activePublicFlow,
-        );
-        if (!f) {
-          $("publicFlowDetails").innerHTML =
-            "<p>No public entrypoint flow data found.</p>";
-          return;
-        }
-        const tree = buildFlowTree(f),
-          architectureFindings = architectureFindingRows(f),
-          mergeCandidates = (f.transitive_callees || []).filter(
-            (c) => c.helper_cleanup_candidate,
-          ),
-          longThreshold = longCallChainThreshold(),
-          health = flowHealth(f, architectureFindings, mergeCandidates),
-          reason = flowReason(f, architectureFindings, mergeCandidates),
-          nextStep = flowNextStep(f, architectureFindings, mergeCandidates),
-          signals = flowSignalChips(f, architectureFindings, mergeCandidates);
-        $("publicFlowDetails").innerHTML =
-          `<h2>Callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long call chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} internal helpers may be reviewed for possible merge. Open the flow tree to inspect helper placement.`) : "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details."}</p></section><section class="flow-next-step"><h3>Suggested next step</h3><p>${esc(nextStep)}</p></section><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
-      }
-      function selectedItem() {
-        const byQn = new Map(
-          publicEntryFlows.map((r) => [r.qualified_name, r]),
-        );
-        return state.selectedFlow ? byQn.get(state.selectedFlow) : null;
-      }
-      function selectedItems() {
-        const item = selectedItem();
-        return item ? [item] : [];
-      }
-      function selectedFlowName() {
-        const item = selectedItem();
-        return item ? item.function_name : "none";
-      }
-      function findingRows(f) {
-        return architectureFindingRows(f).map((v) => ({
-          source_function:
-            (inventoryByQn.get(v.parent_qualified_name) || {}).function_name ||
-            v.parent_qualified_name,
-          source_type:
-            (inventoryByQn.get(v.parent_qualified_name) || {})
-              .simple_classification ||
-            v.caller_type ||
-            "Unknown",
-          target_function: v.function_name,
-          target_type: v.simple_classification || "Unknown",
-          finding_type:
-            v.violation_type ||
-            findingLabel(v.recommended_action || "Architecture violation"),
-          suggested_fix:
-            v.violation_type === "Shared helper calls public callable"
-              ? "Move shared logic behind a shared helper instead of calling the public API."
-              : INTERNAL_LAYERING_SUGGESTED_FIX,
-          source_link: linkMetadata(
-            inventoryByQn.get(v.parent_qualified_name) || {
-              qualified_name: v.parent_qualified_name,
-            },
-          ),
-          target_link: linkMetadata(v),
-        }));
-      }
-      function cleanupRows(f) {
-        return (f.transitive_callees || [])
-          .filter((c) => c.helper_cleanup_candidate)
-          .map((c) => ({
-            function: c.function_name,
-            function_type: c.simple_classification || c.layer_group,
-            called_by:
-              (inventoryByQn.get(c.parent_qualified_name) || {})
-                .function_name || c.parent_qualified_name,
-            finding: findingLabel(c.recommended_action || "Merge candidate"),
-            suggested_action: (c.recommended_action || "").includes("Shared")
-              ? "Keep as shared internal helper."
-              : (c.recommended_action || "").includes("Review")
-                ? "Keep only if the helper improves readability or reuse."
-                : "Consider absorbing this helper into its only caller if it does not improve readability or reuse.",
-            link: linkMetadata(c),
-            called_by_link: linkMetadata(
-              inventoryByQn.get(c.parent_qualified_name) || {
-                qualified_name: c.parent_qualified_name,
-              },
-            ),
-          }));
-      }
-      function serializeTree(n) {
-        return {
-          ...linkMetadata(n),
-          qualified_name: n.qualified_name,
-          function_name: n.function_name,
-          module: n.module,
-          function_type: n.function_type || n.layer_group || "Public function",
-          classification: n.simple_classification || "Unknown",
-          source_path: n.source_path || null,
-          called_inside_flow_by: n.called_inside_flow_by || 0,
-          calls_inside_flow: n.calls_inside_flow || 0,
-          used_outside_flow: n.used_outside_flow || 0,
-          is_end_node: Boolean(n.is_end_node),
-          merge_candidate: Boolean(n.helper_cleanup_candidate),
-          layer: n.layer || null,
-          layer_group: n.layer_group || n.function_type || "Public function",
-          helper_tags: [
-            ...(n.architecture_result === "Violation" && n.violation_type
-              ? [`Architecture violation: ${n.violation_type}`]
-              : []),
-          ],
-          children: (n.children || []).map(serializeTree),
-        };
-      }
-      function exportItem(f) {
-        const tree = buildFlowTree(f),
-          row = inventoryByQn.get(f.qualified_name) || f,
-          cleanup = cleanupRows(f),
-          publicFindings = publicCallableFindingRows(f),
-          architectureFindings = findingRows(f),
-          health = flowHealth(f, architectureFindingRows(f), cleanup),
-          nextStep = flowNextStep(f, architectureFindingRows(f), cleanup);
-        return {
-          selected_public_callable_name: f.function_name,
-          qualified_name: f.qualified_name,
-          source_file: row.source_path || null,
-          source_url: row.source_url || null,
-          recommendation: suggestedActionLabel(f),
-          overall_health: health,
-          suggested_next_step: nextStep,
-          key_signals: (f.warnings || []).map(findingLabel),
-          downstream_count: f.downstream_count,
-          max_depth: f.max_depth,
-          architecture_violation_count: f.architecture_violation_count || 0,
-          merge_candidate_count: f.helper_cleanup_candidates || cleanup.length,
-          modules_touched: f.modules_touched || [],
-          external_shared_impact_count: f.external_dependents_count || 0,
-          direct_callees: f.direct_callees || [],
-          transitive_callees: f.transitive_callees || [],
-          architecture_findings: architectureFindings,
-          merge_candidates: cleanup,
-          public_callable_findings: publicFindings,
-          flow_tree: serializeTree(tree),
-          flow_context: {
-            direct_callees: f.direct_callees || [],
-            transitive_callees: f.transitive_callees || [],
-            flow_tree: serializeTree(tree),
-          },
-          ...linkMetadata(f),
-        };
-      }
-      const COMPATIBILITY_INSTRUCTIONS = {
-        internal_cleanup:
-          "Preserve public API behavior while allowing internal cleanup.",
-        stable_api_safe: "Avoid breaking notebook-facing APIs.",
-        development_breaking_allowed:
-          "Breaking changes require updated callers, tests, and docs.",
-      };
-      function refactorContext() {
-        const mode = $("compatibilityMode").value;
-        return {
-          compatibility_mode: mode,
-          compatibility_instruction: COMPATIBILITY_INSTRUCTIONS[mode],
-          implementation_instruction:
-            "You are cleaning up a selected public callable flow. Preserve public callable behavior and external API compatibility. Inspect the selected callable and its dependencies. Apply only focused changes that improve readability, reduce unnecessary helper depth, or resolve true architecture violations. Do not casually change public function signatures.",
-        };
-      }
-      function batchAccounting(item) {
-        return {
-          selected_public_callable_count: item ? 1 : 0,
-          planned_flow_count: item ? 1 : 0,
-          completed_or_refactored_count: "fill in after implementation",
-          deferred_items: "fill in after implementation",
-        };
-      }
-      function refactorPacket() {
-        const item = selectedItem(),
-          selected = item ? exportItem(item) : null;
-        return {
-          schema: "fabricops_public_callable_flow_cleanup_packet",
-          selected_public_callable: selected,
-          selected_flow: selected,
-          flow_context: selected ? selected.flow_context : null,
-          batch_accounting: batchAccounting(item),
-          refactor_context: refactorContext(),
-          requested_work: [
-            "Inspect the selected public callable and its call flow.",
-            "Identify whether the recommended action is safe.",
-            "Resolve true cross-file private dependency violations first.",
-            "For same-file private dependencies, treat as warning only.",
-            "Merge or inline helpers only when readability improves.",
-            "Preserve notebook-facing behavior.",
-            "Update tests where behavior could be affected.",
-            "Return summary, changed functions, tests, risks, and skipped items.",
-          ],
-          safety_constraints: [
-            "Preserve public callable behavior and external API compatibility.",
-            "Do not casually change public function signatures.",
-            "Same-file private dependency is warning only.",
-            "Cross-file private dependency is an architecture violation.",
-          ],
-          ai_prompt:
-            "You are cleaning up a selected public callable flow. Preserve public callable behavior and external API compatibility. Inspect the selected callable and its dependencies. Apply only focused changes that improve readability, reduce unnecessary helper depth, or resolve true architecture violations. Do not casually change public function signatures.",
-        };
-      }
-      function treeMarkdown(n, level = 0) {
-        const pad = "  ".repeat(level);
-        const tags = (n.helper_tags || []).length
-          ? ` — ${(n.helper_tags || []).join(", ")}`
-          : "";
-        const cls = n.classification ? ` — ${n.classification}` : "";
-        const metrics = [
-          n.called_inside_flow_by
-            ? `called inside this flow by: ${n.called_inside_flow_by}`
-            : "",
-          n.calls_inside_flow
-            ? `calls inside this flow: ${n.calls_inside_flow}`
-            : "",
-          n.used_outside_flow
-            ? `used outside this flow: ${n.used_outside_flow}`
-            : "",
-          n.is_end_node ? "end node" : "",
-          n.merge_candidate ? "merge candidate" : "",
-        ].filter(Boolean);
-        const metricText = metrics.length ? ` — ${metrics.join(" · ")}` : "";
-        return `${pad}- ${markdownLink(n, n.function_name)} (${n.qualified_name})${cls}${metricText}${tags}${(n.children || []).length ? "\n" + n.children.map((c) => treeMarkdown(c, level + 1)).join("\n") : ""}`;
-      }
-      function callableMarkdown(item) {
-        if (!item) return "No public callable flow selected.";
-        return [
-          `### ${markdownLink(item, item.selected_public_callable_name)}`,
-          `- Qualified name: ${item.qualified_name}`,
-          `- Source file: ${item.source_file || "None"}`,
-          `- Source URL: ${item.source_url || "None"}`,
-          `- Recommendation: ${item.recommendation}`,
-          `- Overall health: ${item.overall_health}`,
-          `- Suggested next step: ${item.suggested_next_step}`,
-          `- Key signals: ${(item.key_signals || []).join(", ") || "None"}`,
-          `- Downstream count: ${item.downstream_count}`,
-          `- Max depth: ${item.max_depth}`,
-          `- Architecture violation count: ${item.architecture_violation_count}`,
-          `- Merge candidate count: ${item.merge_candidate_count}`,
-          `- Modules touched: ${(item.modules_touched || []).join(", ") || "None"}`,
-          `- External/shared impact count: ${item.external_shared_impact_count}`,
-          `- Direct callees: ${(item.direct_callees || []).map((c) => c.function_name || c.qualified_name || c).join(", ") || "None"}`,
-          `- Transitive callees: ${(item.transitive_callees || []).length}`,
-          `- Architecture findings: ${(item.architecture_findings || []).length}`,
-          `- Merge candidates: ${(item.merge_candidates || []).length}`,
-          "#### Public callable findings",
-          ...(item.public_callable_findings || []).map(
-            (f) => `- ${f.finding}: ${f.evidence}; ${f.suggested_action}`,
-          ),
-          "#### Architecture findings",
-          ...(item.architecture_findings || []).map(
-            (f) =>
-              `- ${f.source_function} -> ${f.target_function}: ${f.finding_type}; ${f.suggested_fix}`,
-          ),
-          "#### Merge candidates",
-          ...(item.merge_candidates || []).map(
-            (c) =>
-              `- ${c.function} (${c.function_type}), only caller ${c.called_by}: ${c.finding}; ${c.suggested_action}`,
-          ),
-          "#### Full nested flow tree",
-          treeMarkdown(item.flow_tree),
-        ].join("\n");
-      }
-      function markdownPacket(packet) {
-        return `# Public callable flow cleanup packet
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Callable Architecture</title>
+<link rel="stylesheet" href="../stylesheets/table-controls.css">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a}
+header,main{box-sizing:border-box;max-width:1480px;margin:0 auto;padding:1rem}
+header{background:#fff;border-bottom:1px solid #dbe3ef}
+header h1{margin:.1rem 0 .35rem}
+header p{margin:.25rem 0;color:#475569}
+.generation-banner{display:flex;flex-wrap:wrap;gap:.35rem .75rem;align-items:center;width:fit-content;max-width:100%;margin:.5rem 0;padding:.35rem .6rem;border:1px solid #cbd5e1;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.78rem;line-height:1.35}
+.generation-banner span{display:inline-flex}
+.callable-page-nav{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:space-between;margin:.75rem 0 0;padding:.45rem;border:1px solid #dbe3ef;border-radius:.75rem;background:#f8fafc}
+.callable-page-tabs,.callable-page-actions{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+.callable-page-tabs{padding:.2rem;border:1px solid #cbd5e1;border-radius:.55rem;background:#fff}
+.callable-page-tab,.callable-page-action{display:inline-flex;align-items:center;justify-content:center;min-height:2rem;padding:.36rem .7rem;border-radius:.38rem;font-size:.84rem;font-weight:800;line-height:1.2;text-decoration:none}
+.callable-page-tab{border:1px solid transparent;color:#1d4ed8}
+.callable-page-tab.is-active{border-color:#1d4ed8;background:#1d4ed8;color:#fff}
+.callable-page-action{border:1px solid #cbd5e1;background:#fff;color:#475569}
+.callable-page-action:hover,.callable-page-tab:hover{border-color:#93c5fd;background:#eff6ff;color:#1e40af}
+.callable-page-tab.is-active:hover{border-color:#1d4ed8;background:#1d4ed8;color:#fff}
+@media(max-width:720px){.callable-page-nav{align-items:stretch;flex-direction:column}
+.callable-page-tabs,.callable-page-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+.callable-page-tab,.callable-page-action{width:100%;box-sizing:border-box}
+}
+@media(max-width:720px){main,header{padding:.75rem}
+.generation-banner{width:auto;border-radius:.75rem}
+}
+.surface-cards{display:grid;grid-template-columns:repeat(2,minmax(0,18rem));gap:.6rem;margin:.5rem 0 .35rem}
+@media(max-width:650px){.surface-cards{grid-template-columns:1fr}
+}
+.surface-card,.flow-details,.selected-summary{background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;padding:.7rem}
+.surface-card{position:relative;overflow:hidden}
+.surface-card strong{display:block;margin-bottom:.2rem;line-height:1;font-size:1.35rem}
+.surface-card span{display:block;line-height:1.2;color:#475569}
+.surface-card small{display:block;margin-top:.32rem;line-height:1.25;color:#64748b}
+.surface-card.info{border-color:#bfdbfe;background:#eff6ff}
+.surface-card.muted{background:#f8fafc}
+.surface-card.good{border-color:#bbf7d0;background:#f0fdf4}
+.surface-card.review{border-color:#fde68a;background:#fffbeb}
+.surface-card.risk{border-color:#fecaca;background:#fef2f2}
+.surface-card.risk strong{color:#991b1b}
+.surface-card.review strong{color:#92400e}
+.surface-card.good strong{color:#166534}
+.overview-help{margin:.2rem 0 .7rem;color:#475569}
+.filter-panel{display:grid;grid-template-columns:minmax(16rem,1fr) auto;gap:.55rem;margin:.65rem 0;align-items:end;padding:.65rem;border:1px solid #dbe3ef;border-radius:.75rem;background:#fff}
+.search-field{font-size:.9rem}
+.search-field input{margin-top:.3rem;font-size:.9rem}
+.architecture-clear-all{border:1px solid #cbd5e1;border-radius:.45rem;background:#fff;color:#1d4ed8;font-weight:800}
+.filter-field{display:flex;flex-direction:column;font-weight:700;font-size:.82rem}
+input,select,button{padding:.42rem .5rem;border:1px solid #dbe3ef;border-radius:.45rem;background:#fff}
+.table-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.55rem 0;color:#64748b;font-size:.82rem}
+.selected-summary{display:none;background:#eff6ff}
+.selected-summary.is-visible{display:block}
+.callable-flow-filter-banner{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.callable-flow-filter-banner strong{min-width:0}
+.callable-flow-reset-button{background:#15803d;color:#fff;border:1px solid #166534;border-radius:.375rem;padding:.4rem .75rem;font-weight:700;text-decoration:none;cursor:pointer}
+.callable-flow-reset-button:hover{background:#166534}
+.table-wrap{overflow:auto;background:#fff;border:1px solid #dbe3ef;border-radius:.75rem}
+table{width:100%;min-width:940px;border-collapse:collapse}
+th,td{padding:.3rem .36rem;border-bottom:1px solid #dbe3ef;text-align:left;vertical-align:middle;font-size:.82rem}
+th{background:#eef2f7;font-size:.72rem}
+.sort-button{display:inline-flex;gap:.25rem;align-items:center;border:0;background:transparent;color:#1d4ed8;font:inherit;font-weight:800;padding:0;cursor:pointer}
+.sort-button::after{content:"↕";color:#64748b;font-size:.7rem}
+.sort-button[aria-sort="ascending"]::after{content:"↑"}
+.sort-button[aria-sort="descending"]::after{content:"↓"}
+.num{text-align:right;width:4.5rem;white-space:nowrap}
+tr.active{outline:2px solid #1d4ed8;outline-offset:-2px;background:#eff6ff}
+.callable-button{border:0;background:transparent;color:#1d4ed8;font-weight:800;padding:0;text-align:left;cursor:pointer}
+.source-link{color:#1d4ed8;text-decoration:underline;text-underline-offset:.12em}
+.source-link:hover{color:#1e40af}
+.compact-list,.compact-badges{display:block;max-width:14rem;line-height:1.35}
+.inline-more{display:inline-block;position:relative;margin-left:.15rem}
+.inline-more summary{display:inline-flex;cursor:pointer;list-style:none}
+.inline-more summary::-webkit-details-marker{display:none}
+.inline-more[open] .inline-more-panel{display:block}
+.inline-more-panel{display:none;position:absolute;z-index:5;min-width:13rem;max-width:min(22rem,80vw);max-height:14rem;overflow:auto;margin-top:.2rem;padding:.35rem;border:1px solid #cbd5e1;border-radius:.55rem;background:#fff;box-shadow:0 .75rem 1.5rem #0f172a1f;white-space:normal}
+.inline-more-panel .tag,.inline-more-panel .badge{margin:.08rem}
+.tag,.badge{display:inline-flex;margin:.06rem;padding:.1rem .34rem;border-radius:999px;font-size:.69rem;font-weight:700;background:#e0e7ff;color:#3730a3;white-space:nowrap}
+.warn{background:#fef3c7;color:#92400e}
+.issue{background:#fee2e2;color:#b91c1c}
+.keep{background:#dcfce7;color:#166534}
+.muted{background:#f1f5f9;color:#475569}
+.priority{font-weight:800}
+.priority-critical{background:#991b1b;color:#fff}
+.priority-high{background:#fee2e2;color:#991b1b}
+.priority-medium{background:#fef3c7;color:#92400e}
+.priority-low{background:#e2e8f0;color:#475569}
+tr.priority-critical-row{background:#fff1f2}
+tr.priority-high-row{background:#fff7ed}
+tr.priority-critical-row:not(.active){box-shadow:inset .25rem 0 #991b1b}
+tr.priority-high-row:not(.active){box-shadow:inset .25rem 0 #f97316}
+.export-toolbar{display:flex;flex-direction:column;gap:.5rem;align-items:stretch;box-sizing:border-box;max-width:100%;margin:.65rem 0;padding:.65rem;border:1px solid #dbe3ef;border-radius:.75rem;background:#f8fafc}
+.toolbar-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:.5rem}
+.toolbar-card{box-sizing:border-box;min-width:0;padding:.5rem .6rem;border:1px solid #e2e8f0;border-radius:.6rem;background:#fff}
+.toolbar-card--selection,.toolbar-card--prompt{display:flex;flex-direction:column;gap:.55rem}
+.toolbar-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;max-width:100%;min-width:0}
+.toolbar-field{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;max-width:100%;min-width:0;font-weight:700}
+.toolbar-field select{max-width:100%;min-width:0}
+.toolbar-help,.group-help{color:#475569;font-weight:400}
+.toolbar-group{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;max-width:100%;min-width:0}
+.toolbar-group>div{min-width:0}
+.toolbar-group .toolbar-row{flex:1 1 16rem}
+.toolbar-row button{white-space:normal}
+.primary-action,.danger-action:not(:disabled){background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.danger-action:not(:disabled){background:#b91c1c;border-color:#b91c1c}
+button:disabled,.danger-action:disabled{background:#e5e7eb;color:#94a3b8;border-color:#cbd5e1;cursor:not-allowed}
+.manual-copy{width:100%;min-height:7rem}
+.flow-details{margin-top:1rem}
+.flow-summary-card{display:flex;flex-direction:column;gap:.5rem;margin:.55rem 0 .75rem;padding:.75rem;border:1px solid #bfdbfe;border-radius:.75rem;background:#eff6ff}
+.flow-summary-heading{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-start;justify-content:space-between}
+.flow-summary-heading strong{display:block;font-size:1rem}
+.flow-summary-heading small{display:block;margin-top:.12rem;color:#475569;overflow-wrap:anywhere}
+.flow-summary-recommendation{display:flex;flex-wrap:wrap;gap:.35rem .5rem;align-items:center}
+.flow-summary-recommendation span{color:#64748b;font-weight:800}
+.flow-summary-card p{margin:.1rem 0 0;color:#334155}
+.flow-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.5rem}
+.flow-meta div{padding:.45rem;border:1px solid #e2e8f0;border-radius:.5rem;background:#f8fafc}
+.flow-key-signals,.flow-next-step{margin:.75rem 0;padding:.65rem;border:1px solid #dbe3ef;border-radius:.75rem;background:#fff}
+.flow-key-signals h3,.flow-next-step h3{margin:.05rem 0 .45rem}
+.flow-key-signals div{display:flex;flex-wrap:wrap;gap:.25rem}
+.flow-key-signals p,.flow-next-step p{margin:.45rem 0 0;color:#475569}
+.flow-tree{max-height:60vh;overflow:auto;border:1px solid #dbe3ef;border-radius:.5rem;padding:.45rem;background:#fff}
+.flow-tree ul{list-style:none;margin:.35rem 0 .35rem 1rem;padding-left:.85rem;border-left:1px solid #dbe3ef}
+.flow-tree li{margin:.28rem 0}
+.flow-tree details{border:1px solid #e2e8f0;border-radius:.6rem;background:#f8fafc}
+.flow-tree details[open]{background:#fff}
+.flow-tree summary{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;padding:.32rem .45rem;cursor:pointer;list-style:none}
+.flow-tree summary::-webkit-details-marker{display:none}
+.flow-tree summary::before{content:'▸';flex:0 0 auto;color:#64748b;font-weight:800}
+.flow-tree details[open]>summary::before{content:'▾'}
+.flow-tree-main{display:flex;flex:1 1 auto;flex-wrap:wrap;gap:.22rem .35rem;align-items:center;min-width:0}
+.flow-tree-main strong{min-width:0;font-weight:850}
+.flow-tree-details{margin:0 .45rem .42rem;padding:.22rem .35rem;border:1px solid #e2e8f0;border-radius:.45rem;background:#fff}
+.flow-tree-detail-strip{display:flex;flex-wrap:wrap;gap:.18rem .28rem;align-items:center}
+.flow-tree-detail-chip{display:inline-flex;gap:.18rem;align-items:center;padding:.08rem .32rem;border:1px solid #e2e8f0;border-radius:999px;background:#f8fafc;color:#64748b;font-size:.68rem}
+.flow-tree-detail-chip strong{color:#334155;font-weight:800}
+.flow-tree-detail-notes{display:flex;flex-direction:column;gap:.12rem;margin-top:.22rem;color:#64748b;font-size:.72rem;line-height:1.35;overflow-wrap:anywhere}
+.badge.critical{background:#fee2e2;color:#991b1b}
+.badge.info{background:#dbeafe;color:#1e40af}
+@media(max-width:720px){.flow-tree ul{margin-left:.45rem;padding-left:.65rem}
+}
+@media(max-width:720px){main,header{padding:.75rem}
+.generation-banner{width:auto;border-radius:.75rem}
+.filter-panel{grid-template-columns:1fr}
+table{min-width:760px}
+th,td{font-size:.78rem;padding:.26rem}
+.compact-list,.compact-badges{max-width:10rem}
+.surface-card strong{font-size:1.35rem}
+.toolbar-card-grid{grid-template-columns:1fr}
+.toolbar-row,.toolbar-group{align-items:stretch}
+.toolbar-field,.toolbar-group{flex-direction:column}
+.toolbar-field select{width:100%}
+.toolbar-help{display:block}
+.toolbar-group .toolbar-row{flex:1 1 auto;flex-direction:row}
+.toolbar-group .toolbar-row button{flex:1 1 9rem}
+.callable-flow-filter-banner{align-items:flex-start;flex-direction:column}
+.callable-flow-reset-button{width:100%;box-sizing:border-box;text-align:center}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Callable Architecture</h1>
+<p>High-level triage for notebook-facing public APIs, dependency depth, and architecture risk.</p>
+<p class="generation-banner">
+<strong>Generated at:</strong> 2026-06-24 20:25 SGT<span>
+<strong>Data source:</strong> callable-flow.json</span>
+</p>
+<nav class="callable-page-nav" aria-label="Callable reference navigation">
+<div class="callable-page-tabs" role="list">
+<a class="callable-page-tab is-active" href="callable-functions-dashboard.html" aria-current="page">Architecture</a>
+<a class="callable-page-tab" href="callable-functions-inventory.html">Inventory</a>
+</div>
+<div class="callable-page-actions">
+<a class="callable-page-action" href="../reference/_data/callable-flow.json">Open JSON data</a>
+<a class="callable-page-action" href="../">Back to Docs</a>
+</div>
+</nav>
+</header>
+<main>
+<h2>Public callable overview</h2>
+<div id="publicSurfaceCards" class="surface-cards">
+</div>
+<p class="overview-help">
+<small>Review notebook-facing public callables, search for risks, and inspect the selected flow below.</small>
+</p>
+<section class="filter-panel search-toolbar" aria-label="Public callable search">
+<label class="filter-field search-field">Search public callables<input id="publicSearchBox" type="search" placeholder="Search by callable, module, finding, or recommendation...">
+</label>
+<button id="resetPublicFilters" class="architecture-clear-all" type="button" hidden>Clear search</button>
+</section>
+<section id="architectureViolationSection" class="flow-details">
+</section>
+<section class="export-toolbar">
+<div class="toolbar-card-grid">
+<div class="toolbar-card toolbar-card--selection" aria-label="Selection">
+<strong id="selectedCount">Selected flow: none</strong>
+<div class="toolbar-row">
+<button id="clearSelected" class="danger-action" type="button" disabled>Clear selection</button>
+</div>
+</div>
+<div class="toolbar-card toolbar-card--prompt">
+<div class="toolbar-group">
+<div>
+<strong>Export flow cleanup packet</strong>
+<br>
+<small class="group-help">Copy or download the selected public callable flow for AI-assisted cleanup planning.</small>
+</div>
+<div class="toolbar-row">
+<button id="copyJson" type="button" disabled>Copy flow JSON</button>
+<button id="copyMarkdown" type="button" disabled>Copy flow Markdown</button>
+<button id="downloadJson" type="button" disabled>Download flow JSON</button>
+</div>
+</div>
+<small id="exportStatus">
+</small>
+<textarea id="manualCopy" class="manual-copy" hidden readonly>
+</textarea>
+</div>
+</section>
+<section id="selectedPublicFlowSummary" class="selected-summary">
+</section>
+<section class="table-actions">
+<button id="showAllPublicCallables" type="button" hidden>Show all public callables</button>
+<button id="collapsePublicList" type="button" hidden>Collapse list</button>
+<small id="publicListStatus">
+</small>
+<small id="dataLoadStatus" class="load-status" aria-live="polite">Loading callable-flow data...</small>
+</section>
+<section class="table-wrap" id="publicCallableTableWrap">
+<table data-table-controls="excel">
+<thead>
+<tr>
+<th>Select</th><th>Priority</th><th>
+<button type="button" class="sort-button" data-sort-key="callable">Public callable</button>
+</th><th>
+<button type="button" class="sort-button" data-sort-key="module">Module</button>
+</th><th>
+<button type="button" class="sort-button" data-sort-key="findings">Findings</button>
+</th><th>Review note</th><th>
+<button type="button" class="sort-button" data-sort-key="suggested_action">Suggested action</button>
+</th><th class="num">
+<button type="button" class="sort-button" data-sort-key="downstream">Downstream</button>
+</th><th class="num">
+<button type="button" class="sort-button" data-sort-key="depth">Depth</button>
+</th>
+</tr>
+</thead>
+<tbody id="publicCallableList">
+</tbody>
+</table>
+</section>
+<section id="publicFlowDetails" class="flow-details">
+<p>Select a public callable to inspect its flow.</p>
+</section>
+</main>
+<script>
+const FLOW_LAYER_LABELS=['Public function','Shared helper','Private helper','Class','Method','Unknown'];const INTERNAL_LAYERING_SUGGESTED_FIX='Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.';const DISPLAY_LABEL_MAP={'Architecture violation':'Architecture violation','Long call chain':'Long call chain','Large dependency surface':'Large dependency surface','Merge candidate':'Merge candidate','Review abstraction':'Review abstraction','Shared utility':'Shared utility','None':'Healthy','Merge candidates found':'Merge candidate found'};let inventory=[],publicEntryFlows=[],visibleFlows=[],summaryCounts={},inventoryByQn=new Map();const state={selectedFlow:'',activePublicFlow:'',collapsedPublicList:false,publicSearch:'',sortKey:'callable',sortDirection:'asc'};let architectureThresholds={long_call_chain_depth:null,large_dependency_surface:null};function positiveThreshold(value){const numeric=Number(value);return Number.isFinite(numeric)&&numeric>0?numeric:null}function longCallChainThreshold(){return positiveThreshold(architectureThresholds.long_call_chain_depth)}function largeDependencySurfaceThreshold(){return positiveThreshold(architectureThresholds.large_dependency_surface)}const $=id=>document.getElementById(id),text=v=>String(v??''),esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));function unique(v){return[...new Set(v.filter(Boolean))].sort()}function displayLabel(v){return DISPLAY_LABEL_MAP[text(v)]||text(v)}function label(v){return displayLabel(text(v).replace(/_/g,' ').replace(/\b\w/g,ch=>ch.toUpperCase()))}function option(s,v,l){const o=document.createElement('option');o.value=v;o.textContent=l||v;s.appendChild(o)}function moreDetails(hidden,render){return hidden.length?`<details class="inline-more"><summary><span class="tag">+${hidden.length} more</span></summary><span class="inline-more-panel">${hidden.map(render).join('')}</span></details>`:''}function compactList(items,limit=3){const list=items||[],shown=list.slice(0,limit),hidden=list.slice(limit);return `<span class="compact-list" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="tag">${esc(i)}</span>`).join('')}${moreDetails(hidden,i=>`<span class="tag">${esc(i)}</span>`)}</span>`}function compactBadges(items,cls='warn',limit=2){const list=items||[];if(!list.length)return '<span class="badge keep">Healthy</span>';const shown=list.slice(0,limit),hidden=list.slice(limit);return `<span class="compact-badges" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="badge ${cls}">${esc(i)}</span>`).join('')}${moreDetails(hidden,i=>`<span class="badge ${cls}">${esc(i)}</span>`)}</span>`}const GITHUB_SOURCE_BASE='https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/';function sourceHref(i){const row=inventoryByQn.get(i.qualified_name)||i;if(row.docs_path)return '../'+String(row.docs_path).replace(/^docs\//,'').replace(/\.md$/,'/');if(row.source_url)return row.source_url;const path=row.source_path||row.path;if(!path)return '';const start=row.source_start_line||row.start_line||row.line_number;const end=row.source_end_line||row.end_line;let anchor=start?`#L${start}`:'';if(start&&end&&end!==start)anchor+=`-L${end}`;return `${GITHUB_SOURCE_BASE}${path}${anchor}`}function sourceCallableLink(i){const href=sourceHref(i);const label=esc(i.function_name);return href?`<a class="source-link" href="${esc(href)}"><code>${label}</code></a>`:`<code>${label}</code>`}function moduleHref(module){return ''}function moduleLink(module){const href=moduleHref(module);return href?`<a class="source-link" href="${esc(href)}"><code>${esc(module)}</code></a>`:`<code>${esc(module||'')}</code>`}function linkMetadata(i){const row=inventoryByQn.get(i.qualified_name)||i;return{source_url:row.source_url||null,docs_url:row.docs_url||null,file_path:row.source_path||null,line_start:row.source_start_line||null,line_end:row.source_end_line||null}}function markdownLink(i,label){const href=sourceHref(i);return href?`[${label||i.function_name}](${href})`:(label||i.function_name)}function architecturePriority(f){const violations=(f.architecture_violation_count??0)>0,longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),deep=longThreshold!==null&&(f.max_depth||0)>=longThreshold,down=f.downstream_count||0,large=largeThreshold!==null&&down>=largeThreshold;if((violations&&deep)||(largeThreshold!==null&&down>=largeThreshold*5))return 'Critical';if(violations||(largeThreshold!==null&&down>=largeThreshold*2.5))return 'High';if(deep||large)return 'Medium';return 'Low'}function priorityClass(p){return text(p).toLowerCase()}function riskBadgeClass(warning,priority){if(priority==='Critical'||priority==='High')return 'issue';return 'muted'}function mergeCandidateCount(flow){return Number(flow.helper_cleanup_candidates??flow.single_use_helper_candidate_count??0)}function mergeCandidateLabel(count){return count===1?'Merge candidate found':`${count} merge candidates found`}function reviewMergeCandidateLabel(count){return count===1?'Review merge candidate':'Review merge candidates'}function suggestedActionLabel(flow){const action=flow.recommended_simplification_action||'Keep public';if(action==='Review merge candidates')return reviewMergeCandidateLabel(mergeCandidateCount(flow));return action}function whyReview(flow){const reasons=[];const violations=flow.architecture_violation_count??0,longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),mergeCount=mergeCandidateCount(flow);if(violations)reasons.push(`Contains ${violations} architecture violations.`);if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)reasons.push(`Depth is ${flow.max_depth}; threshold is >= ${longThreshold}.`);if(largeThreshold!==null&&(flow.downstream_count||0)>=largeThreshold)reasons.push(`Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}.`);if(mergeCount>0)reasons.push(mergeCount===1?'Contains 1 merge candidate inside this flow.':`Contains ${mergeCount} merge candidates inside this flow.`);return reasons.length?reasons.join(' '):'Clear'}function renderCards(){const s=summaryCounts.public_api_surface||{},flows=publicEntryFlows||[],publicCallableCount=flows.length||s.public_api_entrypoints||0,architectureViolationFlows=flows.filter(f=>architectureViolationCount(f)>0||architectureFindingRows(f).length>0).length;const cards=[{label:'Public callables',value:publicCallableCount,subtitle:'Notebook-facing APIs scanned in this review workspace.',cls:'info'},{label:'With architecture violations',value:architectureViolationFlows,subtitle:architectureViolationFlows?'Public callables with true architecture violations.':'No architecture violations found.',cls:architectureViolationFlows?'risk':'good'}];$('publicSurfaceCards').innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('')}function findingLabel(v){return displayLabel(v)}function architectureViolationBreakdown(flows=publicEntryFlows){const counts={'Cross-file private dependency':0};flows.forEach(f=>(f.transitive_callees||[]).forEach(c=>{if(c.architecture_result==='Violation'&&counts[c.violation_type]!==undefined)counts[c.violation_type]++}));return counts}function renderArchitectureViolationSection(){const meanings={'Cross-file private dependency':'A helper directly calls a private helper from another source file.'};const rows=Object.entries(architectureViolationBreakdown()).filter(([,count])=>count>0);$('architectureViolationSection').innerHTML=`<h2>Architecture violations</h2><p>Architecture violations show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length?rows:Object.entries(meanings).map(([k])=>[k,0])).map(([type,count])=>`<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join('')}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[['Public function','Shared helper','Allowed'],['Public function','Private helper in same file','Warning only'],['Shared helper','Public function','Allowed'],['Shared helper','Private helper in same file','Warning only'],['Shared helper','Private helper in another file','Architecture violation'],['Private helper','Shared helper','Allowed']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></details>`}function architectureViolationCount(flow){const numeric=Number(flow.architecture_violation_count??0);return Number.isFinite(numeric)?numeric:0}function architectureFindingRows(flow){return (flow.transitive_callees||[]).filter(c=>c.architecture_result==='Violation'||c.recommended_action==='Architecture violation')}function architectureFindingCount(flow){return architectureFindingRows(flow).length}function updatePublicFilterControls(){$('resetPublicFilters').hidden=state.publicSearch===''}function filteredPublicFlows(){const q=state.publicSearch.toLowerCase();return publicEntryFlows.filter(f=>(!q||text(f.function_name).toLowerCase().includes(q)||text(f.qualified_name).toLowerCase().includes(q)||text(f.module).toLowerCase().includes(q)))}function sortValue(flow,key){if(key==='callable')return text(flow.function_name).toLowerCase();if(key==='module')return text(flow.module).toLowerCase();if(key==='findings')return (flow.warnings||[]).map(findingLabel).join(' ').toLowerCase()||'healthy';if(key==='suggested_action')return suggestedActionLabel(flow).toLowerCase();if(key==='downstream')return Number(flow.downstream_count??0);if(key==='depth')return Number(flow.max_depth??0);return text(flow.function_name).toLowerCase()}function stableSortRows(rows){const dir=state.sortDirection==='desc'?-1:1,key=state.sortKey;return rows.map((row,index)=>({row,index})).sort((a,b)=>{const av=sortValue(a.row,key),bv=sortValue(b.row,key);if(av<bv)return -1*dir;if(av>bv)return 1*dir;return a.index-b.index}).map(item=>item.row)}function updateSortButtons(){document.querySelectorAll('[data-sort-key]').forEach(button=>{const active=button.dataset.sortKey===state.sortKey;button.setAttribute('aria-sort',active?(state.sortDirection==='asc'?'ascending':'descending'):'none')})}function rowsForDisplay(){if(!state.collapsedPublicList)return visibleFlows;return visibleFlows.filter(f=>f.qualified_name===state.activePublicFlow)}function setPublicListControls(){const active=publicEntryFlows.find(i=>i.qualified_name===state.activePublicFlow);$('showAllPublicCallables').hidden=!state.collapsedPublicList;$('collapsePublicList').hidden=state.collapsedPublicList||!active;$('publicListStatus').textContent=state.collapsedPublicList&&active?`Showing selected callable from ${visibleFlows.length} matching public callables.`:`Showing ${visibleFlows.length} matching public callables.`;const showSelectedBanner=Boolean(state.collapsedPublicList&&active);$('selectedPublicFlowSummary').classList.toggle('is-visible',showSelectedBanner);$('selectedPublicFlowSummary').innerHTML=showSelectedBanner?`<div class="callable-flow-filter-banner"><strong>Showing flow for <code>${esc(active.function_name)}</code></strong><button type="button" id="backToAllPublicCallables" class="callable-flow-reset-button">Back to all public callables</button></div>`:'';const reset=$('backToAllPublicCallables');if(reset)reset.onclick=showAllPublicCallables}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');if(!el)return;el.textContent=message;el.className=isError?'load-status issue':'load-status'}function callableFlowDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker)){return origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/callable-flow.json'}if(path.includes(assetsMarker)){return origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/callable-flow.json'}return new URL('reference/_data/callable-flow.json',document.baseURI).href}function renderLoadedCount(){renderLoadStatus(`Loaded ${inventory.length} total callables; ${publicEntryFlows.length} public callables available; ${visibleFlows.length} rows after filters.`)}function renderPublicCallableList(){visibleFlows=stableSortRows(filteredPublicFlows());updatePublicFilterControls();if(!state.activePublicFlow&&visibleFlows.length)state.activePublicFlow=visibleFlows[0].qualified_name;if(state.activePublicFlow&&!visibleFlows.some(f=>f.qualified_name===state.activePublicFlow))state.collapsedPublicList=false;const rows=rowsForDisplay();renderLoadedCount();$('publicCallableList').innerHTML=rows.map(f=>{const p=architecturePriority(f),pc=priorityClass(p),strong=p==='Critical'||p==='High',active=f.qualified_name===state.activePublicFlow?'active':'';return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong?'priority-'+pc+'-row':''}"><td><input type="radio" name="selectedPublicFlow" data-select-row="${esc(f.qualified_name)}" ${state.selectedFlow===f.qualified_name?'checked':''} aria-label="Select flow ${esc(f.function_name)}"></td><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)} <button type="button" class="callable-button" data-public-flow="${esc(f.qualified_name)}">Inspect flow</button></td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings||[]).map(findingLabel),riskBadgeClass('',p))}</td><td>${esc(whyReview(f))}</td><td><span class="badge ${suggestedActionLabel(f)==='Keep public'?'keep':'muted'}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`}).join('');setPublicListControls();updateSortButtons();renderFlowDetails();updateExportControls();if(window.FabricOpsTableControls)window.FabricOpsTableControls.enhance(document.querySelector('table[data-table-controls="excel"]'))}function showAllPublicCallables(){state.collapsedPublicList=false;renderPublicCallableList();$('publicCallableTableWrap').scrollIntoView({behavior:'smooth',block:'start'})}function collapsePublicList(){state.collapsedPublicList=true;renderPublicCallableList();$('publicFlowDetails').scrollIntoView({behavior:'smooth',block:'start'})}function buildFlowTree(flow){const root={qualified_name:flow.qualified_name,function_name:flow.function_name,module:flow.module,function_type:'Public function',layer_group:'Public function',simple_classification:'Public function',source_path:flow.source_path,calls_inside_flow:(flow.direct_callees||[]).length,called_inside_flow_by:0,used_outside_flow:0,is_end_node:!(flow.direct_callees||[]).length,docs_url:flow.docs_url,docs_path:flow.docs_path,source_url:flow.source_url,children:[]},byParent=new Map();(flow.transitive_callees||[]).forEach(r=>{const p=r.parent_qualified_name||flow.qualified_name;if(!byParent.has(p))byParent.set(p,[]);byParent.get(p).push({...r,children:[]})});function attach(n){n.children=(byParent.get(n.qualified_name)||[]).sort((a,b)=>a.depth-b.depth);n.children.forEach(attach);return n}return attach(root)}function flowTreeStatusChips(n){if(n.architecture_result==='Violation')return '<span class="badge critical">Violation</span>';if(n.architecture_result==='Warning')return '<span class="badge warn">Warning</span>';if(n.helper_cleanup_candidate||(n.used_outside_flow??0)>0)return '<span class="badge muted">Review</span>';return ''}function flowTreeDetailRows(n){const rows=[['Called by',n.called_inside_flow_by??0],['Calls',n.calls_inside_flow??0],['Used outside',n.used_outside_flow??0],['Source',n.source_path?String(n.source_path).replace(/^src\/fabricops_kit\//,''):(n.module||'Unknown')],['End',n.is_end_node?'Yes':'No']];if(n.architecture_result)rows.push(['Architecture',n.architecture_result]);return rows}function flowTreeLongDetails(n){const details=[];if(n.architecture_result==='Violation')details.push(['Violation reason',n.violation_type||'Architecture violation']);if(n.architecture_result==='Warning')details.push(['Warning reason',n.violation_type==='Same-file private dependency'?'Same-file private helper dependency; review for possible merge.':(n.violation_type||'Warning')]);if(n.helper_cleanup_candidate)details.push(['Merge candidate',n.recommended_action||'Review helper placement.']);if(n.path_examples&&n.path_examples.length)details.push(['Path example',n.path_examples[0].join(' -> ')]);return details}function flowTreeDetails(n){const longDetails=flowTreeLongDetails(n);return `<div class="flow-tree-details"><div class="flow-tree-detail-strip">${flowTreeDetailRows(n).map(([label,value])=>`<span class="flow-tree-detail-chip"><span>${esc(label)}</span> <strong>${esc(value)}</strong></span>`).join('')}</div>${longDetails.length?`<div class="flow-tree-detail-notes">${longDetails.map(([label,value])=>`<span><strong>${esc(label)}:</strong> ${esc(value)}</span>`).join('')}</div>`:''}</div>`}function renderTreeNode(n){const type=n.simple_classification||'Unknown',moduleText=n.source_path?String(n.source_path).replace(/^src\/fabricops_kit\//,''):(n.module||''),status=flowTreeStatusChips(n),children=n.children?.length?`<ul>${n.children.map(renderTreeNode).join('')}</ul>`:'';return `<li><details><summary><span class="flow-tree-main"><strong>${sourceCallableLink(n)}</strong><span class="badge muted">${esc(type)}</span>${moduleText?`<span class="tag">${esc(moduleText)}</span>`:''}${n.is_end_node?'<span class="badge muted">end</span>':''}${status}</span></summary>${flowTreeDetails(n)}</details>${children}</li>`}function flowHealth(flow,architectureFindings,mergeCandidates){if(architectureFindings.length)return 'Needs architecture review';const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold();if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)return 'Long flow';if(largeThreshold!==null&&(flow.downstream_count||0)>=largeThreshold)return 'Large dependency surface';if((flow.external_dependents_count||0)>0)return 'Shared impact';if(mergeCandidates.length)return 'Review helpers';return 'Healthy'}function flowReason(flow,architectureFindings,mergeCandidates){if(architectureFindings.length)return `${architectureFindings.length} architecture finding(s) need review; open the flow tree for exact nodes.`;if((flow.external_dependents_count||0)>0)return `${flow.external_dependents_count} function(s) in this flow are used outside this public callable.`;if(mergeCandidates.length)return `${mergeCandidates.length} internal helper(s) may be reviewed for possible merge.`;return 'No architecture violations found in this flow.'}function flowNextStep(flow,architectureFindings,mergeCandidates){const longThreshold=longCallChainThreshold();if(architectureFindings.length)return 'Review the highlighted flow tree nodes before moving or merging helpers.';if((flow.external_dependents_count||0)>0)return 'Check external dependents before refactoring shared helpers.';if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)return 'Review whether this long flow can be simplified before moving helpers.';if(mergeCandidates.length)return 'No architecture violation found; review merge candidates only if readability improves.';return 'Keep the callable shape and use the flow tree only for spot checks.'}function flowSignalChips(flow,architectureFindings,mergeCandidates){const chips=[];const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold();chips.push(architectureFindings.length?`<span class="badge critical">${architectureFindings.length} architecture finding${architectureFindings.length===1?'':'s'}</span>`:'<span class="badge keep">No architecture violations</span>');if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)chips.push('<span class="badge warn">Long chain</span>');if(largeThreshold!==null&&(flow.downstream_count||0)>=largeThreshold)chips.push('<span class="badge warn">Large dependency surface</span>');if(mergeCandidates.length)chips.push(`<span class="badge muted">${mergeCandidates.length} merge candidate${mergeCandidates.length===1?'':'s'}</span>`);if((flow.external_dependents_count||0)>0)chips.push('<span class="badge info">Shared impact warning</span>');return chips.slice(0,5).join('')}function renderFlowDetails(){const f=publicEntryFlows.find(i=>i.qualified_name===state.activePublicFlow);if(!f){$('publicFlowDetails').innerHTML='<p>No public entrypoint flow data found.</p>';return}const tree=buildFlowTree(f),architectureFindings=architectureFindingRows(f),mergeCandidates=(f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate),longThreshold=longCallChainThreshold(),health=flowHealth(f,architectureFindings,mergeCandidates),reason=flowReason(f,architectureFindings,mergeCandidates),nextStep=flowNextStep(f,architectureFindings,mergeCandidates),signals=flowSignalChips(f,architectureFindings,mergeCandidates);$('publicFlowDetails').innerHTML=`<h2>Callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health==='Healthy'?'keep':health==='Needs architecture review'?'critical':'warn'}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold===null?'Max depth':'Max depth; long call chain threshold >= '+longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched||[]).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count||0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length?esc(`${mergeCandidates.length} internal helpers may be reviewed for possible merge. Open the flow tree to inspect helper placement.`):'Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details.'}</p></section><section class="flow-next-step"><h3>Suggested next step</h3><p>${esc(nextStep)}</p></section><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`}function selectedItem(){const byQn=new Map(publicEntryFlows.map(r=>[r.qualified_name,r]));return state.selectedFlow?byQn.get(state.selectedFlow):null}function selectedItems(){const item=selectedItem();return item?[item]:[]}function selectedFlowName(){const item=selectedItem();return item?item.function_name:'none'}function publicCallableFindingRows(flow){const findings=architectureFindingRows(flow),longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),rows=[...(flow.architecture_violation_count?[{finding:'Architecture violations found',evidence:`${flow.architecture_violation_count} call edge(s) go in the wrong direction.`,suggested_action:'Review the exact edges below.'}]:[]),...((longThreshold!==null&&(flow.max_depth||0)>=longThreshold)?[{finding:'Long call chain',evidence:`Depth ${flow.max_depth}, threshold >= ${longThreshold}`,suggested_action:'Review whether the flow can be simplified.'}]:[]),...((largeThreshold!==null&&(flow.downstream_count||0)>=largeThreshold)?[{finding:'Large dependency surface',evidence:`${flow.downstream_count} downstream functions, threshold >= ${largeThreshold}`,suggested_action:'Many functions depend on this flow. Refactor carefully.'}]:[]),...((flow.external_dependents_count||0)>0?[{finding:'Shared impact warning',evidence:`${flow.external_dependents_count} function(s) in this flow are used outside this flow.`,suggested_action:'Check outside dependents before refactoring shared helpers.'}]:[]),...((flow.helper_cleanup_candidates||0)>0?[{finding:mergeCandidateLabel(mergeCandidateCount(flow))+' inside flow',evidence:mergeCandidateCount(flow)===1?'1 helper function may be a merge candidate.':`${mergeCandidateCount(flow)} helper functions may be merge candidates.`,suggested_action:reviewMergeCandidateLabel(mergeCandidateCount(flow))+' without merging away the public API.'}]:[])];return rows.length?rows:[{finding:'Healthy',evidence:'Clear',suggested_action:'Keep public'}]}function findingRows(f){return architectureFindingRows(f).map(v=>({source_function:(inventoryByQn.get(v.parent_qualified_name)||{}).function_name||v.parent_qualified_name,source_type:(inventoryByQn.get(v.parent_qualified_name)||{}).simple_classification||v.caller_type||'Unknown',target_function:v.function_name,target_type:v.simple_classification||'Unknown',finding_type:v.violation_type||findingLabel(v.recommended_action||'Architecture violation'),suggested_fix:v.violation_type==='Cross-file private dependency'?'Move the private helper into the caller file or expose an architecture-visible helper.':INTERNAL_LAYERING_SUGGESTED_FIX,source_link:linkMetadata(inventoryByQn.get(v.parent_qualified_name)||{qualified_name:v.parent_qualified_name}),target_link:linkMetadata(v)}))}function cleanupRows(f){return (f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate).map(c=>({function:c.function_name,function_type:c.simple_classification||c.layer_group,called_by:(inventoryByQn.get(c.parent_qualified_name)||{}).function_name||c.parent_qualified_name,finding:findingLabel(c.recommended_action||'Merge candidate'),suggested_action:(c.recommended_action||'').includes('Shared')?'Keep as shared internal helper.':(c.recommended_action||'').includes('Review')?'Keep only if the helper improves readability or reuse.':'Consider absorbing this helper into its only caller if it does not improve readability or reuse.',link:linkMetadata(c),called_by_link:linkMetadata(inventoryByQn.get(c.parent_qualified_name)||{qualified_name:c.parent_qualified_name})}))}function serializeTree(n){return {...linkMetadata(n),qualified_name:n.qualified_name,function_name:n.function_name,module:n.module,function_type:n.function_type||n.layer_group||'Public function',classification:n.simple_classification||'Unknown',source_path:n.source_path||null,called_inside_flow_by:n.called_inside_flow_by||0,calls_inside_flow:n.calls_inside_flow||0,used_outside_flow:n.used_outside_flow||0,is_end_node:Boolean(n.is_end_node),merge_candidate:Boolean(n.helper_cleanup_candidate),layer:n.layer||null,layer_group:n.layer_group||n.function_type||'Public function',helper_tags:[...(n.architecture_result==='Violation'&&n.violation_type?[`Architecture violation: ${n.violation_type}`]:[])],children:(n.children||[]).map(serializeTree)}}function exportItem(f){const tree=buildFlowTree(f),row=inventoryByQn.get(f.qualified_name)||f,cleanup=cleanupRows(f),publicFindings=publicCallableFindingRows(f),architectureFindings=findingRows(f),health=flowHealth(f,architectureFindingRows(f),cleanup),nextStep=flowNextStep(f,architectureFindingRows(f),cleanup);return{selected_public_callable_name:f.function_name,qualified_name:f.qualified_name,source_file:row.source_path||null,source_url:row.source_url||null,recommendation:suggestedActionLabel(f),overall_health:health,suggested_next_step:nextStep,key_signals:(f.warnings||[]).map(findingLabel),downstream_count:f.downstream_count,max_depth:f.max_depth,architecture_violation_count:f.architecture_violation_count||0,merge_candidate_count:f.helper_cleanup_candidates||cleanup.length,modules_touched:f.modules_touched||[],external_shared_impact_count:f.external_dependents_count||0,direct_callees:f.direct_callees||[],transitive_callees:f.transitive_callees||[],architecture_findings:architectureFindings,merge_candidates:cleanup,public_callable_findings:publicFindings,flow_tree:serializeTree(tree),flow_context:{direct_callees:f.direct_callees||[],transitive_callees:f.transitive_callees||[],flow_tree:serializeTree(tree)},...linkMetadata(f)}}function refactorPacket(){const item=selectedItem(),selected=item?exportItem(item):null;return{schema:'fabricops_public_callable_flow_cleanup_packet',selected_public_callable:selected,selected_flow:selected?selected.flow_tree:null,flow_context:selected?selected.flow_context:null,health:selected?selected.overall_health:null,key_signals:selected?selected.key_signals:[],suggested_next_step:selected?selected.suggested_next_step:null,architecture_findings:selected?selected.architecture_findings:[],merge_candidates:selected?selected.merge_candidates:[],public_callable_findings:selected?selected.public_callable_findings:[],direct_callees:selected?selected.direct_callees:[],transitive_callees:selected?selected.transitive_callees:[],requested_work:['Inspect the selected public callable and its call flow.','Identify whether the recommended action is safe.','Resolve true cross-file private dependency violations first.','For same-file private dependencies, treat as warning only.','Merge or inline helpers only when readability improves.','Preserve notebook-facing behavior.','Update tests where behavior could be affected.','Return summary, changed functions, tests, risks, and skipped items.'],safety_constraints:['Preserve public callable behavior and external API compatibility.','Do not casually change public function signatures.','Same-file private dependency is warning only.','Cross-file private dependency is an architecture violation.'],expected_output:'Return summary, changed functions, tests, risks, and skipped items.'}}function treeMarkdown(n,level=0){const pad='  '.repeat(level);const tags=(n.helper_tags||[]).length?` — ${(n.helper_tags||[]).join(', ')}`:'';const cls=n.classification?` — ${n.classification}`:'';const metrics=[n.called_inside_flow_by?`called inside this flow by: ${n.called_inside_flow_by}`:'',n.calls_inside_flow?`calls inside this flow: ${n.calls_inside_flow}`:'',n.used_outside_flow?`used outside this flow: ${n.used_outside_flow}`:'',n.is_end_node?'end node':'',n.merge_candidate?'merge candidate':''].filter(Boolean);const metricText=metrics.length?` — ${metrics.join(' · ')}`:'';return `${pad}- ${markdownLink(n,n.function_name)} (${n.qualified_name})${cls}${metricText}${tags}${(n.children||[]).length?'\n'+n.children.map(c=>treeMarkdown(c,level+1)).join('\n'):''}`}function callableMarkdown(item){if(!item)return 'No public callable flow selected.';return [`### ${markdownLink(item,item.selected_public_callable_name)}`,`- Qualified name: ${item.qualified_name}`,`- Source file: ${item.source_file||'None'}`,`- Source URL: ${item.source_url||'None'}`,`- Recommendation: ${item.recommendation}`,`- Overall health: ${item.overall_health}`,`- Suggested next step: ${item.suggested_next_step}`,`- Key signals: ${(item.key_signals||[]).join(', ')||'None'}`,`- Downstream count: ${item.downstream_count}`,`- Max depth: ${item.max_depth}`,`- Architecture violation count: ${item.architecture_violation_count}`,`- Merge candidate count: ${item.merge_candidate_count}`,`- Modules touched: ${(item.modules_touched||[]).join(', ')||'None'}`,`- External/shared impact count: ${item.external_shared_impact_count}`,`- Direct callees: ${(item.direct_callees||[]).map(c=>c.function_name||c.qualified_name||c).join(', ')||'None'}`,`- Transitive callees: ${(item.transitive_callees||[]).length}`,`- Architecture findings: ${(item.architecture_findings||[]).length}`,`- Merge candidates: ${(item.merge_candidates||[]).length}`,'#### Public callable findings',...((item.public_callable_findings||[]).map(f=>`- ${f.finding}: ${f.evidence}; ${f.suggested_action}`)),'#### Architecture findings',...((item.architecture_findings||[]).map(f=>`- ${f.source_function} -> ${f.target_function}: ${f.finding_type}; ${f.suggested_fix}`)),'#### Merge candidates',...((item.merge_candidates||[]).map(c=>`- ${c.function} (${c.function_type}), only caller ${c.called_by}: ${c.finding}; ${c.suggested_action}`)),'#### Full nested flow tree',treeMarkdown(item.flow_tree)].join('\n')}function markdownPacket(packet){return `# Public callable flow cleanup packet
 
 ## Objective
 You are cleaning up a selected public callable flow. Preserve public callable behavior and external API compatibility. Inspect the selected callable and its dependencies. Apply only focused changes that improve readability, reduce unnecessary helper depth, or resolve true architecture violations. Do not casually change public function signatures.
@@ -2067,20 +268,18 @@ You are cleaning up a selected public callable flow. Preserve public callable be
 Selected public callable flow:
 ${callableMarkdown(packet.selected_public_callable)}
 
-## Context
-- Compatibility mode: ${packet.refactor_context.compatibility_mode}
-- Compatibility instruction: ${packet.refactor_context.compatibility_instruction}
-- Implementation instruction: ${packet.refactor_context.implementation_instruction}
+## Asset context
+- Selected code asset count: ${packet.asset_context.selected_code_asset_count}
 
 ## Health / signals
 - Same-file private dependency: warning only.
 - Cross-file private dependency: architecture violation.
-- Public callable findings: ${(packet.selected_public_callable?.public_callable_findings || []).length}
-- Architecture findings: ${(packet.selected_public_callable?.architecture_findings || []).length}
-- Merge candidates: ${(packet.selected_public_callable?.merge_candidates || []).length}
+- Public callable findings: ${(packet.selected_public_callable?.public_callable_findings||[]).length}
+- Architecture findings: ${(packet.selected_public_callable?.architecture_findings||[]).length}
+- Merge candidates: ${(packet.selected_public_callable?.merge_candidates||[]).length}
 
-## Recommended action
-${packet.selected_public_callable?.recommendation || "No selected flow."}
+## Suggested cleanup action
+${packet.selected_public_callable?.recommendation||'No selected flow.'}
 
 ## Requested work
 1. Inspect the selected public callable and its call flow.
@@ -2101,126 +300,8 @@ ${packet.selected_public_callable?.recommendation || "No selected flow."}
 ## Expected output
 Return summary, changed functions, tests, risks, and skipped items.
 
-## Batch accounting
-- selected_public_callable_count: ${packet.batch_accounting.selected_public_callable_count}
-- planned_flow_count: ${packet.batch_accounting.planned_flow_count}
-- completed_or_refactored_count: fill in after implementation
-- deferred_items: fill in after implementation
-`;
-      }
-      async function copyExport(format) {
-        const packet = refactorPacket();
-        const v =
-          format === "markdown"
-            ? markdownPacket(packet)
-            : JSON.stringify(packet, null, 2);
-        try {
-          await navigator.clipboard.writeText(v);
-          $("exportStatus").textContent = `Copied ${format}.`;
-          $("manualCopy").hidden = true;
-        } catch (e) {
-          $("manualCopy").hidden = false;
-          $("manualCopy").value = v;
-          $("exportStatus").textContent =
-            "Clipboard unavailable; copy from the text area.";
-        }
-      }
-      function downloadJson() {
-        const blob = new Blob([JSON.stringify(refactorPacket(), null, 2)], {
-          type: "application/json",
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "fabricops-public-callable-flow-cleanup-packet.json";
-        a.click();
-      }
-      function updateExportControls() {
-        const item = selectedItem();
-        $("selectedCount").textContent = item
-          ? `Selected flow: ${item.function_name}`
-          : "Selected flow: none";
-        ["copyJson", "copyMarkdown", "downloadJson"].forEach(
-          (id) => ($(id).disabled = !item),
-        );
-        $("clearSelected").disabled = !item;
-      }
-      $("showAllPublicCallables").onclick = showAllPublicCallables;
-      $("collapsePublicList").onclick = collapsePublicList;
-      $("clearSelected").onclick = () => {
-        state.selectedFlow = "";
-        renderPublicCallableList();
-      };
-      $("copyJson").onclick = () => copyExport("json");
-      $("copyMarkdown").onclick = () => copyExport("markdown");
-      $("downloadJson").onclick = downloadJson;
-      document.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-public-flow]");
-        if (b) {
-          state.activePublicFlow = b.dataset.publicFlow;
-          state.selectedFlow = b.dataset.publicFlow;
-          state.collapsedPublicList = true;
-          renderPublicCallableList();
-          $("publicFlowDetails").scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
-      });
-      document.addEventListener("change", (e) => {
-        const r = e.target.closest("[data-select-row]");
-        if (r) {
-          state.selectedFlow = r.dataset.selectRow;
-          state.activePublicFlow = r.dataset.selectRow;
-          renderPublicCallableList();
-        }
-      });
-      $("decisionSearchBox").addEventListener("input", (e) => {
-        state.decisionSearch = e.target.value;
-        state.collapsedPublicList = false;
-        renderPublicCallableList();
-      });
-      $("resetDecisionFilters").onclick = () => {
-        Object.assign(state, {
-          decisionSearch: "",
-          sortKey: "callable",
-          sortDirection: "asc",
-          collapsedPublicList: false,
-        });
-        $("decisionSearchBox").value = "";
-        if (window.FabricOpsTableControls)
-          window.FabricOpsTableControls.resetAll(document);
-        renderPublicCallableList();
-      };
-      async function loadData() {
-        const attemptedUrl = callableFlowDataUrl();
-        try {
-          const response = await fetch(attemptedUrl);
-          if (!response.ok)
-            throw new Error(`HTTP ${response.status} ${response.statusText}`);
-          const data = await response.json();
-          inventory = data.function_inventory || [];
-          inventoryByQn = new Map(
-            inventory.map((row) => [row.qualified_name, row]),
-          );
-          publicEntryFlows = data.public_entrypoint_flow || [];
-          summaryCounts = data.summary_counts || {};
-          architectureThresholds =
-            data.architecture_thresholds || architectureThresholds;
-          renderCards();
-          renderPublicCallableList();
-        } catch (error) {
-          const status =
-            error && error.message && error.message.startsWith("HTTP ")
-              ? error.message
-              : "Network/parse error";
-          renderLoadStatus(
-            `Failed to load callable-flow data. Attempted URL: ${attemptedUrl}. HTTP status: ${status}. Error message: ${error && error.message ? error.message : String(error)}`,
-            true,
-          );
-        }
-      }
-      loadData();
-    </script>
-    <script src="../javascripts/table-controls.js"></script>
-  </body>
+`;}async function copyExport(format){const packet=refactorPacket();const v=format==='markdown'?markdownPacket(packet):JSON.stringify(packet,null,2);try{await navigator.clipboard.writeText(v);$('exportStatus').textContent=`Copied ${format}.`;$('manualCopy').hidden=true}catch(e){$('manualCopy').hidden=false;$('manualCopy').value=v;$('exportStatus').textContent='Clipboard unavailable; copy from the text area.'}}function downloadJson(){const blob=new Blob([JSON.stringify(refactorPacket(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fabricops-public-callable-flow-cleanup-packet.json';a.click()}function updateExportControls(){const item=selectedItem();$('selectedCount').textContent=item?`Selected flow: ${item.function_name}`:'Selected flow: none';['copyJson','copyMarkdown','downloadJson'].forEach(id=>$(id).disabled=!item);$('clearSelected').disabled=!item}$('showAllPublicCallables').onclick=showAllPublicCallables;$('collapsePublicList').onclick=collapsePublicList;$('clearSelected').onclick=()=>{state.selectedFlow='';renderPublicCallableList()};$('copyJson').onclick=()=>copyExport('json');$('copyMarkdown').onclick=()=>copyExport('markdown');$('downloadJson').onclick=downloadJson;document.addEventListener('click',e=>{const b=e.target.closest('[data-public-flow]');if(b){state.activePublicFlow=b.dataset.publicFlow;state.selectedFlow=b.dataset.publicFlow;state.collapsedPublicList=true;renderPublicCallableList();$('publicFlowDetails').scrollIntoView({behavior:'smooth',block:'start'})}});document.addEventListener('change',e=>{const r=e.target.closest('[data-select-row]');if(r){state.selectedFlow=r.dataset.selectRow;state.activePublicFlow=r.dataset.selectRow;renderPublicCallableList()}});$('publicSearchBox').addEventListener('input',e=>{state.publicSearch=e.target.value;state.collapsedPublicList=false;renderPublicCallableList()});$('resetPublicFilters').onclick=()=>{Object.assign(state,{publicSearch:'',sortKey:'callable',sortDirection:'asc',collapsedPublicList:false});$('publicSearchBox').value='';if(window.FabricOpsTableControls)window.FabricOpsTableControls.resetAll(document);renderPublicCallableList()};async function loadData(){const attemptedUrl=callableFlowDataUrl();try{const response=await fetch(attemptedUrl);if(!response.ok)throw new Error(`HTTP ${response.status} ${response.statusText}`);const data=await response.json();inventory=data.function_inventory||[];inventoryByQn=new Map(inventory.map(row=>[row.qualified_name,row]));publicEntryFlows=data.public_entrypoint_flow||[];summaryCounts=data.summary_counts||{};architectureThresholds=data.architecture_thresholds||architectureThresholds;renderCards();renderPublicCallableList()}catch(error){const status=error&&error.message&&error.message.startsWith('HTTP ')?error.message:'Network/parse error';renderLoadStatus(`Failed to load callable-flow data. Attempted URL: ${attemptedUrl}. HTTP status: ${status}. Error message: ${error&&error.message?error.message:String(error)}`,true)}}loadData();
+</script>
+<script src="../javascripts/table-controls.js"></script>
+</body>
 </html>
