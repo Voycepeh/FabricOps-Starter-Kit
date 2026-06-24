@@ -20,13 +20,15 @@ VISIBLE_FUNCTION_TYPES = {"Public function", "Internal function"}
 PRIVATE_HELPER_TYPE = "Private helper"
 PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Internal", PRIVATE_HELPER_TYPE}
 ALLOWED_ARCHITECTURE_WARNING_TYPES = {"Same-file private dependency"}
-ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {
+ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {"Cross-file private dependency"}
+LEGACY_ARCHITECTURE_VIOLATION_TYPES = {
+    "Public -> Public",
+    "Internal -> Public",
     "Shared helper calls public callable",
     "Cross-callable private dependency",
     "Single-use shared helper",
     "Hidden nested helper chain",
 }
-LEGACY_ARCHITECTURE_VIOLATION_TYPES = {"Public -> Public", "Internal -> Public"}
 VISIBLE_LAYERS = {"public", "internal"}
 PRIVATE_HELPER_LAYER = "private_helper"
 OLD_VISIBLE_LAYER_LABELS = {"Public API", "Internal helper", "Utility", "Adapter", "Workflow", "Private"}
