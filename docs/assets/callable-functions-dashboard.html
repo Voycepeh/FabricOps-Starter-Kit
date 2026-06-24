@@ -41,6 +41,79 @@
       .generation-banner span {
         display: inline-flex;
       }
+      .header-action-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        align-items: center;
+        margin: 0.75rem 0 0;
+      }
+      .header-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2rem;
+        padding: 0.38rem 0.72rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #fff;
+        color: #1d4ed8;
+        font-size: 0.86rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-decoration: none;
+        box-shadow: 0 1px 2px #0f172a0d;
+      }
+      .header-action:hover {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1e40af;
+      }
+      .header-action.is-active {
+        border-color: #1d4ed8;
+        background: #1d4ed8;
+        color: #fff;
+      }
+      .header-action:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #0f172a;
+          color: #e2e8f0;
+        }
+        header,
+        .surface-card,
+        .flow-details,
+        .selected-summary,
+        .table-wrap {
+          background: #111827;
+          border-color: #334155;
+        }
+        .generation-banner,
+        .toolbar-card,
+        .flow-meta div {
+          background: #1e293b;
+          border-color: #475569;
+          color: #cbd5e1;
+        }
+        .header-action {
+          background: #1e293b;
+          border-color: #475569;
+          color: #93c5fd;
+        }
+        .header-action:hover {
+          background: #172554;
+          border-color: #60a5fa;
+          color: #bfdbfe;
+        }
+        .header-action.is-active {
+          background: #2563eb;
+          border-color: #60a5fa;
+          color: #fff;
+        }
+      }
       .surface-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -557,10 +630,16 @@
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
-      <p>
-        <a href="callable-functions-inventory.html">Inventory</a> -
-        <a href="../reference/_data/callable-flow.json">Open JSON data</a>
-      </p>
+      <nav
+        class="header-action-bar"
+        aria-label="Callable architecture navigation"
+      >
+        <a class="header-action" href="callable-functions-inventory.html"
+          >Inventory</a
+        ><a class="header-action" href="../reference/_data/callable-flow.json"
+          >Open JSON data</a
+        ><a class="header-action" href="../">Back to Docs</a>
+      </nav>
     </header>
     <main>
       <h2>Decision mode: Public API Surface</h2>

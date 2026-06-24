@@ -274,6 +274,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Generated at:" in dashboard_text
     assert "Data source:" in dashboard_text
     assert "callable-flow.json" in dashboard_text
+    assert "header-action-bar" in dashboard_text
+    assert "<aclass='header-action'href='callable-functions-inventory.html'" in compact_dashboard_text
+    assert "<aclass='header-action'href='../reference/_data/callable-flow.json'" in compact_dashboard_text
+    assert "<aclass='header-action'href='../'>BacktoDocs</a>" in compact_dashboard_text
+    assert '<a href="callable-functions-inventory.html">Inventory</a> -' not in dashboard_text
     assert "new Date()" not in dashboard_text
     assert "Date.now" not in dashboard_text
     assert "publicSurfaceCards" in dashboard_text
