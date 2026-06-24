@@ -19,6 +19,14 @@ INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
 VISIBLE_FUNCTION_TYPES = {"Public function", "Internal function"}
 PRIVATE_HELPER_TYPE = "Private helper"
 PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Internal", PRIVATE_HELPER_TYPE}
+ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {
+    "Shared helper calls private implementation",
+    "Shared helper calls public callable",
+    "Cross-callable private dependency",
+    "Single-use shared helper",
+    "Hidden nested helper chain",
+}
+LEGACY_ARCHITECTURE_VIOLATION_TYPES = {"Public -> Public", "Internal -> Public"}
 VISIBLE_LAYERS = {"public", "internal"}
 PRIVATE_HELPER_LAYER = "private_helper"
 OLD_VISIBLE_LAYER_LABELS = {"Public API", "Internal helper", "Utility", "Adapter", "Workflow", "Private"}
@@ -340,23 +348,39 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
         failures.append("public_api_surface still emits boundary_violations instead of architecture_violation_count/architecture_violations")
 
     architecture_violation_edges = 0
+    architecture_violation_flows = 0
     for flow_row in flow.get("public_entrypoint_flow", []):
-        for callee in [*flow_row.get("direct_callees", []), *flow_row.get("transitive_callees", [])]:
+        flow_violation_edges = 0
+        for callee in flow_row.get("transitive_callees", []):
             if callee.get("function_type") == "Supporting object" or callee.get("layer") == "supporting_object":
                 failures.append(f"Supporting object surfaced in public flow: {callee.get('qualified_name')}")
             if callee.get("callee_type") not in PUBLIC_FLOW_CALLEE_TYPES:
                 failures.append(f"Non callable-layer callee type in public flow: {callee.get('qualified_name')}={callee.get('callee_type')!r}")
             if callee.get("architecture_result") == "Violation":
                 architecture_violation_edges += 1
-                if callee.get("violation_type") not in {"Public -> Public", "Internal -> Public"}:
-                    failures.append(f"Unsupported architecture violation type: {callee.get('violation_type')!r}")
-    if public_surface.get("architecture_violations", 0) > architecture_violation_edges:
-        failures.append("Private helpers appear to contribute to Public API Surface architecture violation counts")
+                flow_violation_edges += 1
+                violation_type = callee.get("violation_type")
+                if violation_type in LEGACY_ARCHITECTURE_VIOLATION_TYPES:
+                    failures.append(f"Legacy architecture violation type emitted: {violation_type!r}")
+                elif violation_type not in ALLOWED_ARCHITECTURE_VIOLATION_TYPES:
+                    failures.append(f"Unsupported architecture violation type: {violation_type!r}")
+        if flow_row.get("architecture_violation_count", 0) != flow_violation_edges:
+            failures.append(
+                "Public flow architecture violation count does not match violation rows: "
+                f"{flow_row.get('qualified_name')} has {flow_row.get('architecture_violation_count')} count and {flow_violation_edges} row(s)"
+            )
+        if flow_violation_edges:
+            architecture_violation_flows += 1
+    if public_surface.get("architecture_violations", 0) != architecture_violation_flows:
+        failures.append("Public API Surface architecture violation count does not match public flow violation rows")
 
     dashboard_text = DASHBOARD_PATH.read_text(encoding="utf-8")
     inventory_text = INVENTORY_PATH.read_text(encoding="utf-8")
     if "Boundary violations" in dashboard_text or "boundary_violations" in dashboard_text:
         failures.append("Legacy boundary wording remains in dashboard default UI")
+    for legacy_type in LEGACY_ARCHITECTURE_VIOLATION_TYPES:
+        if legacy_type in dashboard_text or legacy_type in inventory_text:
+            failures.append(f"Legacy architecture violation wording remains in dashboard assets: {legacy_type}")
     for label in ("Utility ->", "Adapter layer", "Workflow layer", "Private layer"):
         if label in dashboard_text or label in inventory_text:
             failures.append(f"Old architecture wording remains in dashboard assets: {label}")
