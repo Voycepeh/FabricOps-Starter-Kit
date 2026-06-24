@@ -4,8 +4,11 @@ AI coding tools make it easy to add callables quickly. That speed is useful, but
 
 <div align="center" markdown="1">
 
-[Architecture](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
-[Inventory](../assets/callable-functions-inventory.html){ .md-button }
+[Open Dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+
+<br>
+
+![Callable flow dashboard preview](../assets/fabricops-refactor-risk-dashboard.png)
 
 </div>
 
