@@ -321,11 +321,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert 'href="${esc(flow.source_url' not in dashboard_text
     assert '<button type=\"button\" class=\"callable-button\" data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
     assert 'data-public-flow=\"${esc(f.qualified_name)}\"' in dashboard_text
-    assert "decisionSearchBox" in dashboard_text
+    assert "publicSearchBox" in dashboard_text
     assert 'aria-label="Architecture quick filters"' not in dashboard_text
     assert 'data-architecture-quick-filter' not in dashboard_text
     assert "function matchesQuickFilter(flow)" not in dashboard_text
-    assert "function updateDecisionFilterControls()" in dashboard_text
+    assert "function updatePublicFilterControls()" in dashboard_text
     assert "resetAll(document)" in dashboard_text
     for removed_filter in [
         "decisionModuleFilter",
@@ -344,7 +344,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert 'id="decisionMinDepth" type="number"' not in dashboard_text
     assert 'id="decisionMinIssues" type="number"' not in dashboard_text
     assert "Architecture violation type<input" not in dashboard_text
-    assert "resetDecisionFilters" in dashboard_text
+    assert "resetPublicFilters" in dashboard_text
     assert "compactList" in dashboard_text
     assert "compactBadges" in dashboard_text
     assert "<details class=\"inline-more\">" in dashboard_text
@@ -364,7 +364,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "reset.onclick=showAllPublicCallables" in compact_dashboard_text
     assert "showAllPublicCallablesInline" not in dashboard_text
     assert "Show all public callables</button>`:'';const inline" not in dashboard_text
-    assert ".surface-cardstrong{display:block;margin-bottom:0.2rem;line-height:1" in compact_dashboard_text
+    assert ".surface-cardstrong{display:block;margin-bottom:.2rem;line-height:1" in compact_dashboard_text
     assert ".surface-cardspan{display:block;line-height:1.2" in compact_dashboard_text
     assert "Review note" in dashboard_text
     assert "data-sort-key=\"callable\"" in dashboard_text
@@ -379,16 +379,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy flow JSON" in dashboard_text
     assert "Copy flow Markdown" in dashboard_text
     assert "Download flow JSON" in dashboard_text
-    assert "compatibilityMode" in dashboard_text
-    assert "COMPATIBILITY_INSTRUCTIONS" in dashboard_text
+    assert "compatibilityMode" not in dashboard_text
+    assert "COMPATIBILITY_INSTRUCTIONS" not in dashboard_text
     assert "function callableMarkdown(item)" in dashboard_text
     assert "function markdownPacket(packet)" in dashboard_text
     assert "Objective" in dashboard_text
-    assert "Implementation instruction" in dashboard_text
-    assert "Compatibility mode" in dashboard_text
+    assert "Implementation instruction" not in dashboard_text
+    assert "Compatibility mode" not in dashboard_text
     assert "toolbar-card-grid" in dashboard_text
     assert "toolbar-card--selection" in dashboard_text
-    assert "toolbar-card--compatibility" in dashboard_text
+    assert "toolbar-card--compatibility" not in dashboard_text
     assert "toolbar-card--prompt" in dashboard_text
     assert "toolbar-row--top" not in dashboard_text
     assert "Selected public callable flow" in dashboard_text
@@ -404,7 +404,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Same-file private dependency is warning only" in dashboard_text
     assert "Cross-file private dependency is an architecture violation" in dashboard_text
     assert "Requested work" in dashboard_text
-    assert "Batch accounting" in dashboard_text
+    assert "Batch accounting" not in dashboard_text
     assert "downstream_count" in dashboard_text
     assert "max_depth" in dashboard_text
     assert "modules_touched" in dashboard_text
@@ -463,39 +463,26 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "disabled>CopyflowMarkdown" in compact_dashboard_text
     assert "disabled>DownloadflowJSON" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
-    assert "decisionSearch:''" in compact_dashboard_text
+    assert "publicSearch:''" in compact_dashboard_text
     assert "quickFilter:'all'" not in compact_dashboard_text
-    assert "constDOWNSTREAM_BANDS=" in compact_dashboard_text
-    assert "['downstream_0','0',(v)=>v===0]" in compact_dashboard_text
-    assert "['downstream_1_2','1–2',(v)=>v>=1&&v<=2]" in compact_dashboard_text
-    assert "['downstream_3_5','3–5',(v)=>v>=3&&v<=5]" in compact_dashboard_text
-    assert "['downstream_6_10','6–10',(v)=>v>=6&&v<=10]" in compact_dashboard_text
-    assert "['downstream_gt_10','>10',(v)=>v>10]" in compact_dashboard_text
-    assert "constDEPTH_BANDS=" in compact_dashboard_text
-    assert "['depth_0_1','0–1',(v)=>v>=0&&v<=1]" in compact_dashboard_text
-    assert "['depth_2_3','2–3',(v)=>v>=2&&v<=3]" in compact_dashboard_text
-    assert "['depth_4_5','4–5',(v)=>v>=4&&v<=5]" in compact_dashboard_text
-    assert "['depth_gte_6','>=6',(v)=>v>=6]" in compact_dashboard_text
-    assert "constISSUE_BANDS=" in compact_dashboard_text
-    assert "['issues_0','Noviolations',(v)=>v===0]" in compact_dashboard_text
-    assert "['issues_1','1violation',(v)=>v===1]" in compact_dashboard_text
-    assert "['issues_gte_2','2+violations',(v)=>v>=2]" in compact_dashboard_text
-    assert "constISSUE_BOOLEAN_BANDS=" in compact_dashboard_text
-    assert "['issues_gte_1','1+violations',(v)=>v>=1]" in compact_dashboard_text
+    assert "constDOWNSTREAM_BANDS=" not in compact_dashboard_text
+    assert "constDEPTH_BANDS=" not in compact_dashboard_text
+    assert "constISSUE_BANDS=" not in compact_dashboard_text
+    assert "constISSUE_BOOLEAN_BANDS=" not in compact_dashboard_text
     assert "function architectureViolationCount(flow)" in dashboard_text
-    assert "if(typeofvalue==='boolean')returnvalue?1:0" in compact_dashboard_text
-    assert "function issueBandsForRows(rows)" in dashboard_text
-    assert "?ISSUE_BANDS:ISSUE_BOOLEAN_BANDS" in compact_dashboard_text
-    assert "functionmatchesBand(flow,bandValue,bands,metric)" in compact_dashboard_text
+    assert "if(typeofvalue==='boolean')returnvalue?1:0" not in compact_dashboard_text
+    assert "function issueBandsForRows(rows)" not in dashboard_text
+    assert "?ISSUE_BANDS:ISSUE_BOOLEAN_BANDS" not in compact_dashboard_text
+    assert "functionmatchesBand(flow,bandValue,bands,metric)" not in compact_dashboard_text
     assert "function populateBandFilter" not in dashboard_text
-    assert "matchesBand(f,state.decisionDownstreamBand" not in dashboard_text
-    assert "matchesBand(f,state.decisionDepthBand" not in dashboard_text
-    assert "matchesBand(f,state.decisionIssueBand" not in dashboard_text
-    assert "['decisionMinDownstream','decisionDownstreamBand']" not in dashboard_text
+    assert "matchesBand(f,state.publicDownstreamBand" not in dashboard_text
+    assert "matchesBand(f,state.publicDepthBand" not in dashboard_text
+    assert "matchesBand(f,state.publicIssueBand" not in dashboard_text
+    assert "['publicMinDownstream','publicDownstreamBand']" not in dashboard_text
     assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" not in compact_dashboard_text
-    assert "populateBandFilter('decisionMinDownstream'" not in dashboard_text
-    assert "populateBandFilter('decisionMinDepth'" not in dashboard_text
-    assert "populateBandFilter('decisionMinIssues'" not in dashboard_text
+    assert "populateBandFilter('publicMinDownstream'" not in dashboard_text
+    assert "populateBandFilter('publicMinDepth'" not in dashboard_text
+    assert "populateBandFilter('publicMinIssues'" not in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
     card_order = [
@@ -544,12 +531,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architecture_violation_count??0" in compact_dashboard_text
     assert "down>=12" not in dashboard_text
     assert "Violation reason" in dashboard_text
-    assert "Helper-level architecture findings found" in dashboard_text
+    assert "Helper-level architecture findings found" not in dashboard_text
     assert "No architecture violations found in this flow." in dashboard_text
     assert "function whyReview(flow)" in dashboard_text
     assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
-    assert "None:'Healthy'" in compact_dashboard_text
+    assert "'None':'Healthy'" in compact_dashboard_text
     assert '<span class="badge keep">Healthy</span>' in dashboard_text
     assert "Merge candidate found" in dashboard_text
     assert "Review merge candidate" in dashboard_text
@@ -584,11 +571,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     for common_shell in [compact_dashboard_text, compact_inventory_text]:
-        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a;}" in common_shell
-        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem;}" in common_shell
-        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef;}" in common_shell
-        assert "headerh1{margin:0.1rem00.35rem;}" in common_shell
-        assert "headerp{margin:0.25rem0;color:#475569;}" in common_shell
+        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a}" in common_shell
+        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem}" in common_shell
+        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef}" in common_shell
+        assert "headerh1{margin:.1rem0.35rem}" in common_shell
+        assert "headerp{margin:.25rem0;color:#475569}" in common_shell
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
     assert "Support code assets" in inventory_text
@@ -603,8 +590,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "giant review table" not in inventory_text
     assert "callable_inventory_metrics" not in inventory_text
     assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
-    assert ".surface-cardstrong{display:block;margin-bottom:0.25rem;line-height:1;font-size:1.45rem;" in compact_inventory_text
-    assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700;" in compact_inventory_text
+    assert ".surface-cardstrong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem" in compact_inventory_text
+    assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700" in compact_inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
     assert 'class="source-link" href="${esc(href)}"' in inventory_text
     assert "if(i.source_url)returni.source_url" in compact_inventory_text
@@ -661,7 +648,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     ]:
         assert removed_filter not in inventory_text
     assert "selectedCount" in inventory_text
-    assert "compatibilityMode" in inventory_text
+    assert "compatibilityMode" not in inventory_text
     assert "Select visible" in inventory_text
     assert "Clear selection" in inventory_text
     assert "Copy JSON" in inventory_text
@@ -671,25 +658,25 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "refactorPacket" in inventory_text
     assert "copyExport" in inventory_text
     assert "downloadJson" in inventory_text
-    assert "COMPATIBILITY_INSTRUCTIONS" in inventory_text
+    assert "COMPATIBILITY_INSTRUCTIONS" not in inventory_text
     assert "function callableMarkdown(item)" in inventory_text
     assert "function markdownPacket(packet)" in inventory_text
     assert "Objective" in inventory_text
     assert "Selected code assets" in inventory_text
-    assert "Compatibility mode" in inventory_text
+    assert "Compatibility mode" not in inventory_text
     assert "toolbar-card-grid" in inventory_text
     assert "toolbar-card--selection" in inventory_text
-    assert "toolbar-card--compatibility" in inventory_text
+    assert "toolbar-card--compatibility" not in inventory_text
     assert "toolbar-card--prompt" in inventory_text
     assert "toolbar-row--top" not in inventory_text
     assert "Selected code assets" in inventory_text
     assert "Selected code asset" in inventory_text
     assert "fabricops_support_inventory_cleanup_packet" in inventory_text
-    assert "Selected code asset(s):" in inventory_text
+    assert "Selected code asset(s):" not in inventory_text
     assert "Requested work" in inventory_text
     assert "Safety constraints" in inventory_text
     assert "Expected output" in inventory_text
-    assert "Batch accounting" in inventory_text
+    assert "Batch accounting" not in inventory_text
     assert "disabled>CopyJSON" in compact_inventory_text
     assert "disabled>CopyMarkdown" in compact_inventory_text
     assert "disabled>DownloadJSON" in compact_inventory_text
@@ -1856,12 +1843,7 @@ def test_callable_architecture_layer_rules_and_labels():
         assert edge == {"result": "Allowed", "violation_type": ""}
 
     assert set(generator.ARCHITECTURE_WARNING_TYPES) == {"Same-file private dependency"}
-    assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {
-        "Shared helper calls public callable",
-        "Cross-callable private dependency",
-        "Single-use shared helper",
-        "Hidden nested helper chain",
-    }
+    assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {"Cross-file private dependency"}
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long call chain"
@@ -2290,8 +2272,8 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "Private helper" in dashboard_text
     compact_dashboard_text = _remove_whitespace(dashboard_text)
 
-    assert 'simple_classification:"Publicfunction"' in compact_dashboard_text
-    assert 'consttype=n.simple_classification||"Unknown"' in compact_dashboard_text
+    assert "simple_classification:'Publicfunction'" in compact_dashboard_text
+    assert "consttype=n.simple_classification||'Unknown'" in compact_dashboard_text
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
     assert "flow-tree-main" in dashboard_text
@@ -2316,7 +2298,7 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "called by count" not in dashboard_text.lower()
     assert "<th>Called by</th>" not in dashboard_text
     assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
-    assert "n.is_end_node ? '<span class=\"badge muted\">end</span>'" in dashboard_text
+    assert "n.is_end_node?'<spanclass=\"badgemuted\">end</span>'" in _remove_whitespace(dashboard_text)
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
@@ -2536,8 +2518,8 @@ def test_callable_flow_allows_two_layer_local_private_and_shared_internal_calls(
     assert rows[shared_qn]["architecture_result"] == "Allowed"
 
 
-def test_callable_flow_flags_single_use_internal_helper_violation() -> None:
-    """Verify single-use shared/internal helpers are architecture findings."""
+def test_callable_flow_allows_single_use_internal_helper_cleanup_candidate() -> None:
+    """Verify single-use shared/internal helpers are cleanup candidates, not violations."""
     import scripts.generate_function_reference as generator
 
     public_qn = "fabricops_kit.alpha.public_alpha"
@@ -2555,9 +2537,10 @@ def test_callable_flow_flags_single_use_internal_helper_violation() -> None:
     flow = generator._build_public_entrypoint_flow([public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
     row = flow["transitive_callees"][0]
 
-    assert flow["architecture_violation_count"] == 1
-    assert row["architecture_result"] == "Violation"
-    assert row["violation_type"] == "Single-use shared helper"
+    assert flow["architecture_violation_count"] == 0
+    assert row["architecture_result"] == "Allowed"
+    assert row["violation_type"] == ""
+    assert row["helper_cleanup_candidate"] is True
 
 
 def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
@@ -2636,7 +2619,7 @@ def test_callable_flow_flags_private_helper_reused_across_public_callables() -> 
     assert rows_by_flow[0][private_qn]["architecture_result"] == "Warning"
     assert rows_by_flow[0][private_qn]["violation_type"] == "Same-file private dependency"
     assert rows_by_flow[1][private_qn]["architecture_result"] == "Violation"
-    assert rows_by_flow[1][private_qn]["violation_type"] == "Cross-callable private dependency"
+    assert rows_by_flow[1][private_qn]["violation_type"] == "Cross-file private dependency"
 
 
 def test_callable_flow_ignores_call_graph_self_edges() -> None:
@@ -2711,7 +2694,7 @@ def test_callable_flow_simple_classification_detects_shared_internal_reuse() -> 
     assert rows[shared_qn]["simple_classification"] == "Shared helper"
     assert rows[shared_qn]["architecture_result"] == "Allowed"
     assert rows[single_qn]["simple_classification"] == "Unknown"
-    assert rows[single_qn]["violation_type"] == "Single-use shared helper"
+    assert rows[single_qn]["violation_type"] == ""
     assert rows[shared_qn]["called_inside_flow_by"] == 1
     assert rows[shared_qn]["calls_inside_flow"] == 0
     assert rows[shared_qn]["used_outside_flow"] == 1
@@ -2747,4 +2730,4 @@ def test_callable_flow_private_helper_containment_uses_owner_file() -> None:
     assert rows_by_flow[0][private_a]["used_outside_flow"] == 1
     assert rows_by_flow[1][private_a]["simple_classification"] == "Private helper"
     assert rows_by_flow[1][private_a]["architecture_result"] == "Violation"
-    assert rows_by_flow[1][private_a]["violation_type"] == "Cross-callable private dependency"
+    assert rows_by_flow[1][private_a]["violation_type"] == "Cross-file private dependency"
