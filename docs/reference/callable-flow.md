@@ -1,15 +1,12 @@
 # Callable Flow
 
-Callable Flow is the generated review surface for keeping FabricOps notebook-facing APIs small, explainable, and safe to maintain. It is split into two linked pages:
-
-- **Callable Architecture** reviews public callable flows from the notebook-facing entry point down through its dependencies.
-- **Code Inventory** inspects supporting implementation assets such as helpers, private functions, methods, classes, and orphaned or unreached code.
+Callable Flow is the generated review surface for keeping FabricOps notebook-facing APIs small, explainable, and safe to maintain. Open the dashboard to review public callable architecture, inspect supporting implementation assets, and export focused cleanup packets when needed.
 
 <div align="center" markdown="1">
 
-[Open Callable Architecture](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
-[Open Code Inventory](../assets/callable-functions-inventory.html){ .md-button }
-[Open callable-flow.json](_data/callable-flow.json){ .md-button }
+[Open Dashboard](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+
+![Callable Flow dashboard preview](../assets/fabricops-refactor-risk-dashboard.png)
 
 </div>
 
@@ -19,10 +16,10 @@ Use Callable Flow as a maintenance aid, not as a replacement for source code rev
 
 The main workflow is:
 
-1. Start in **Callable Architecture** to review public callable flows.
+1. Start from the dashboard entry point to review public callable flows.
 2. Select one public callable flow and inspect its compact flow tree.
 3. Export a flow cleanup packet when you want Codex or another AI tool to make a focused, safe change.
-4. Move to **Code Inventory** when you need to inspect or batch-select lower-level support code assets.
+4. Move to **Code Inventory** from the dashboard navigation when you need to inspect or batch-select lower-level support code assets.
 
 ## Callable Architecture
 
