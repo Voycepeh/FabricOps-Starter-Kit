@@ -50,8 +50,8 @@ They abstract the important but tedious work into a simplified plug and play wor
   </a>
 
   <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>26</strong><span> public callables</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body"><!-- FABRICOPS_CALLABLE_RECORD_COUNT -->Supported by <strong>68</strong><span> functions and </span><strong>22</strong><span> non-function records</span><!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
+    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>26</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
+    <span class="fabricops-landing-card__body"><!-- FABRICOPS_CALLABLE_RECORD_COUNT -->Each public callable is documented as a standalone function, with supporting private functions, classes, and internal methods kept behind the scenes<!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
@@ -70,7 +70,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the callable dashboards to review public API architecture and export raw callable inventory packets.
 
 <div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="assets/callable-functions-dashboard.html">
+  <a class="fabricops-landing-card" href="https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/callable-flow/">
     <span class="fabricops-landing-card__title">Callable Flow Dashboard</span>
     <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, modules touched, and architecture signals.</span>
     <span class="fabricops-landing-card__meta">Open Callable Flow Dashboard</span>

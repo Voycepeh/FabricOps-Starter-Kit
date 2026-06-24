@@ -102,9 +102,9 @@ def test_homepage_template_called_function_kpi_matches_reference_count() -> None
     token_body = token_match.group(1).strip()
     token_text = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", token_body)).split())
 
-    assert token_text == f"{len(_catalogue_row_names())} public callables"
+    assert token_text == f"{len(_catalogue_row_names())} public callable functions"
     assert "<strong>" in token_body
-    assert "<span> public callables</span>" in token_body
+    assert "<span> public callable functions</span>" in token_body
     assert 'href="reference/"' in homepage
 
 
