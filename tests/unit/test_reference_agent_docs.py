@@ -241,17 +241,40 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert flow_page.exists()
     assert dashboard_path.exists()
     flow_text = flow_page.read_text(encoding="utf-8")
-    assert "# Callable Flow Dashboard" in flow_text
-    assert "## Why callable flow matters" in flow_text
-    assert "## How the dashboard is generated" in flow_text
-    assert "## Refactor signals" in flow_text
-    assert "## Exporting an AI refactor prompt" in flow_text
-    assert "[Architecture](../assets/callable-functions-dashboard.html)" in flow_text
-    assert "[Inventory](../assets/callable-functions-inventory.html)" in flow_text
+    assert "# Callable Flow" in flow_text
+    assert "## Overview" in flow_text
+    assert "## Callable Architecture" in flow_text
+    assert "## Code Inventory" in flow_text
+    assert "## Architecture rules" in flow_text
+    assert "## AI cleanup packets" in flow_text
+    assert "## When to use which page" in flow_text
+    assert "## Generated outputs" in flow_text
+    assert "[Open Callable Architecture](../assets/callable-functions-dashboard.html)" in flow_text
+    assert "[Open Code Inventory](../assets/callable-functions-inventory.html)" in flow_text
+    assert "[Open callable-flow.json](_data/callable-flow.json)" in flow_text
+    assert "Public callable overview" in flow_text
+    assert "Export flow cleanup packet" in flow_text
+    assert "Export support cleanup packet" in flow_text
+    assert "Selected public callable flow" in flow_text
+    assert "selected code assets" in flow_text.lower()
+    assert "fabricops_public_callable_flow_cleanup_packet" in flow_text
+    assert "fabricops_support_inventory_cleanup_packet" in flow_text
+    assert "Same-file private dependency = warning only" in flow_text
+    assert "Cross-file private dependency = architecture violation" in flow_text
     assert "## Callable helper summary" not in flow_text
     assert "## Internal helper nesting inventory" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
     assert "refactor reason" not in flow_text.lower()
+    for stale_flow_phrase in [
+        "Decision mode",
+        "quick filter",
+        "Architecture inventory",
+        "callable refactor packet",
+        "Selecting refactor candidates",
+        "Exporting an AI refactor prompt",
+        "fabricops-select-refactor-candidates",
+    ]:
+        assert stale_flow_phrase not in flow_text
 
     inventory_path = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
     assert dashboard_path.exists()
@@ -891,15 +914,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all({"function_type", "layer", "dependency_role", "callable_kind"} <= set(item) for item in function_inventory)
 
     callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
-    assert "Public callables → Shared internal helpers (private helpers stay owner-local)" in callable_flow_text
+    assert "Public callable → shared helper → owner-local private helper" in callable_flow_text
     assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
     assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
-    assert "Callable review uses a lightweight model" in callable_flow_text
+    assert "Same-file private dependency = warning only" in callable_flow_text
+    assert "Cross-file private dependency = architecture violation" in callable_flow_text
     assert "Internal-to-internal calls are valid" not in callable_flow_text
     assert "Role group = broad job of the callable." not in callable_flow_text
-    assert "Findings / Signal = review hints or actions, not automatic refactor commands." in callable_flow_text
-    assert "Priority = triage order, not a guarantee something must be changed." in callable_flow_text
-    assert "compact dashboard contract data" in callable_flow_text
+    assert "Generated outputs" in callable_flow_text
+    assert "fabricops_public_callable_flow_cleanup_packet" in callable_flow_text
+    assert "fabricops_support_inventory_cleanup_packet" in callable_flow_text
     serialized_flow = json.dumps(flow_data)
     for legacy_name in ["cross_layer", "deep_chain", "inline_candidate", "used_by_count", "change_risk", "refined_recommended_action"]:
         assert legacy_name not in serialized_flow
