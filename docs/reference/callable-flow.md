@@ -1,115 +1,140 @@
 # Callable Flow
 
-Callable Flow is the generated review surface for keeping FabricOps notebook-facing APIs small, explainable, and safe to maintain. Open the dashboard to review public callable architecture, inspect supporting implementation assets, and export focused cleanup packets when needed.
+> **Make it exist first. Make it good next.**
+>
+> AI helps FabricOps move quickly from idea to working public callable. Callable Flow helps us come back afterwards to review whether the implementation is clean enough to keep.
 
-<div align="center" markdown="1">
+## Why this exists
 
-[Open Callable Architecture](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+AI can code fast.
 
-![Callable Flow dashboard preview](../assets/fabricops-refactor-risk-dashboard.png)
+That speed is useful when building FabricOps because the first priority is often to create a working public callable function that users can try.
 
-</div>
+At that stage, the goal is not perfect code.
 
-## Overview
-
-Use Callable Flow as a maintenance aid, not as a replacement for source code review. The generated pages summarize caller/callee relationships, source files, reachability, function layers, health signals, and cleanup recommendations from repository scans.
-
-The main workflow is:
-
-1. Start from the dashboard entry point to review public callable flows.
-2. Select one public callable flow and inspect its compact flow tree.
-3. Export a flow cleanup packet when you want Codex or another AI tool to make a focused, safe change.
-4. Move to **Code Inventory** from the dashboard navigation when you need to inspect or batch-select lower-level support code assets.
-
-## Callable Architecture
-
-Callable Architecture is the public callable review page. It shows a **Public callable overview** with two top metrics: public callables scanned and public callables with architecture violations.
-
-Use it to:
-
-- search public callables by callable, module, finding, or recommendation;
-- inspect one selected public callable flow at a time;
-- review the selected callable name, qualified name, recommendation, health, key signals, and suggested next step;
-- read the flow tree in compact order: function name, layer, source `.py` file, optional `end` chip, then a compact review or warning indicator;
-- expand flow tree rows for details such as callers, callees, usage counts, source, architecture result, warning or violation reason, and merge-candidate context;
-- export `fabricops_public_callable_flow_cleanup_packet` for the selected public callable flow.
-
-Architecture selection is intentionally single-select. One selected public callable already carries its direct callees, transitive callees, flow tree, findings, risks, merge candidates, and suggested next step, so batching unrelated public flows would make the cleanup prompt less actionable.
-
-## Code Inventory
-
-Code Inventory is the support/codebase inspection page. It complements the Architecture page by showing individual implementation assets that may not be obvious from a public flow summary.
-
-Use it to:
-
-- inspect helpers, private functions, methods, classes, supporting objects, and orphaned or unreached assets;
-- filter by inventory focus, item type, and health;
-- identify whether an asset is reached from a public callable flow;
-- multi-select one or more code assets for batch review;
-- export `fabricops_support_inventory_cleanup_packet` for selected code assets.
-
-Inventory selection remains multi-select because support cleanup often benefits from batching related lower-level assets, such as several private helpers or orphan candidates in the same area.
-
-## Architecture rules
-
-Callable Flow uses a function-layer model focused on public entry points and helper ownership:
+The goal is:
 
 ```text
-Public callable → shared helper → owner-local private helper
+Make the function exist.
+Make it work.
+Validate whether the behaviour is useful.
 ```
 
-The important private-helper rule is file ownership:
+Once the behaviour is worth keeping, the next problem is maintainability.
 
-- **Same-file private dependency = warning only.** A shared helper calling a private helper in the same `.py` file is acceptable, but it may still be reviewed for possible simplification or clearer placement.
-- **Cross-file private dependency = architecture violation.** Directly calling a private helper from another `.py` file breaks ownership boundaries and should be resolved first.
-- Public callables should remain stable notebook-facing surfaces.
-- Shared helpers should remain reusable and should not casually reach into another module's private implementation details.
-- Classes, dataclasses, enums, constants, protocols, config objects, lifecycle methods, and property accessors provide supporting context; they are not treated as public/internal function layers by themselves.
+AI generated code can work correctly but still leave behind messy integration patterns: duplicated helpers, private functions used across files, wide dependency surfaces, or long chains of thin wrapper functions.
 
-## Cleanup packets
+Callable Flow exists to support that second step.
 
-Both pages export action-ready JSON and YAML packages for Codex or another AI implementation tool.
+It helps us move quickly during prototyping, then return later with a clearer view of what should be cleaned up.
 
-### Architecture export: `fabricops_public_callable_flow_cleanup_packet`
+## What we want to catch
 
-Use **Export flow cleanup packet** after choosing a **Selected public callable flow**. The package includes:
+### Pointless wrapper functions
 
-- selected public callable name, qualified name, source file, and source URL when available;
-- recommendation, overall health, suggested next step, and key signals;
-- downstream count, max depth, architecture violation count, merge candidate count, modules touched, and external/shared impact count;
-- direct callees, transitive callees, architecture findings, merge candidates, public callable findings, and flow tree context;
-- compatibility mode, export type, AI prompt, requested work, safety constraints, and expected output.
+AI generated code can create small wrapper functions that only pass work to the next function.
 
-The prompt tells the AI to use the selected compatibility mode as the rule for how aggressive cleanup can be: preserve backwards compatibility by default, or clearly label migration impact when breaking changes are allowed.
+Each wrapper may look harmless by itself, but the full chain makes the implementation harder to read, test, and refactor.
 
-### Inventory export: `fabricops_support_inventory_cleanup_packet`
+![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)
 
-Use **Export support cleanup packet** after selecting one or more Code Inventory rows. The package includes:
+Wrappers are worth keeping when they add clear naming, validation, reuse, or a meaningful boundary.
 
-- selected code asset name, qualified name, item type, code role, source file, and source URL when available;
-- whether the asset is reached from public callable flows;
-- health, finding, codebase note, suggested cleanup action, callers, callees, related public flows, and signals;
-- compatibility mode, export type, AI prompt, requested work, safety constraints, and expected output.
+They are worth simplifying when they only make the call path longer.
 
-The prompt tells the AI to open the selected code asset, check callers and public-flow reachability, verify orphaned assets before removal, merge single-use helpers only when readability improves, preserve public callable behavior, and update tests where needed.
+### Wide dependency surfaces
 
-## When to use which page
+A public callable can become hard to reason about when it pulls in too many downstream helpers.
 
-| Need | Use |
-| --- | --- |
-| Review notebook-facing API health | Callable Architecture |
-| Inspect one public callable's full call flow | Callable Architecture |
-| Export one focused public-flow cleanup prompt | Callable Architecture |
-| Find private helpers, methods, classes, or orphaned utilities | Code Inventory |
-| Batch-select support assets for cleanup review | Code Inventory |
-| Confirm whether a support asset is reached from public flows | Code Inventory |
+![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
 
-## Generated outputs
+This is not automatically wrong.
 
-Callable Flow is generated from repository scans. The generated outputs are:
+But it is a signal to ask whether the function is doing too much, or whether the same responsibility has been spread across too many helper functions.
 
-- [Callable Architecture](../assets/callable-functions-dashboard.html)
-- [Open Code Inventory](../assets/callable-functions-inventory.html)
-- [Open callable-flow.json](_data/callable-flow.json)
+### Public callable dependencies
 
-Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
+Public callables should usually be entry points, not dependencies of other public callables.
+
+![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)
+
+When shared logic is needed, it should usually move into a helper that both public functions can call safely.
+
+### Long nested chains
+
+Long nested chains make it harder to understand where the real work happens.
+
+![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)
+
+The question is not whether the code works.
+
+The question is whether the structure is still simple enough to keep.
+
+## The workflow
+
+The intended workflow is:
+
+```text
+Prototype quickly
+→ validate with users
+→ inspect callable structure
+→ export a focused cleanup packet
+→ use AI to assist the refactor
+→ review the actual code
+→ run tests
+```
+
+The point is not to review every line of code at the moment it is created.
+
+The point is to avoid letting fast prototypes quietly become long term technical debt.
+
+## Cleanup packet
+
+When a function is worth improving, Callable Flow can export a focused cleanup packet.
+
+The packet gives AI enough context to help with the next step without asking it to freely rewrite the repository.
+
+![Selecting refactor candidates](../assets/fabricops-select-refactor-candidates.png)
+
+![Prompt export](../assets/fabricops-select-refactor-candidates-prompt-export.png)
+
+Example packet shape:
+
+```yaml
+schema: fabricops_public_callable_flow_cleanup_packet
+
+selected_public_callable:
+  selected_public_callable_name: display_guardrail_results
+  qualified_name: fabricops_kit.pipeline.display_guardrail_results
+  source_file: src/fabricops_kit/pipeline.py
+
+compatibility_mode: internal_cleanup
+
+architecture_summary:
+  downstream_count: 8
+  max_depth: 4
+  architecture_violation_count: 1
+  merge_candidate_count: 2
+
+requested_work:
+  intent: >
+    Plan a safe cleanup for the selected public callable and its
+    supporting helpers.
+  priority_order:
+    - Resolve architecture violations first.
+    - Keep public callable behaviour stable.
+    - Merge or inline thin wrappers only when readability improves.
+    - Call out tests required before implementation.
+```
+
+The packet keeps the refactor focused on the selected callable, the identified risks, and the compatibility mode.
+
+## Principle
+
+```text
+Make it exist first.
+Validate that it is useful.
+Then make the implementation good enough to keep.
+```
+
+Callable Flow exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
