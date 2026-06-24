@@ -3025,8 +3025,6 @@ def _classify_two_layer_edge(
     parent_is_local_private = _is_same_owner_private_helper(parent_row, public_qn)
     callee_is_local_private = _is_same_owner_private_helper(callee_row, public_qn)
     callee_is_private = callee_row.get("layer") == HIDDEN_PRIVATE_LAYER
-    callee_is_internal = callee_type == "Internal"
-    parent_is_internal = caller_type == "Internal" and not parent_is_local_private
 
     if callee_type == "Public":
         return base
