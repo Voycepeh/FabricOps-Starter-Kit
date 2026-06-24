@@ -307,7 +307,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<navclass='callable-page-nav'aria-label='Callablereferencenavigation'>" in compact_dashboard_text
     assert "<aclass='callable-page-tabis-active'href='callable-functions-dashboard.html'aria-current='page'>Architecture</a>" in compact_dashboard_text
     assert "<aclass='callable-page-tab'href='callable-functions-inventory.html'>Inventory</a>" in compact_dashboard_text
-    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_dashboard_text
+    assert "<aid='openCallableFlowJson'class='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_dashboard_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_dashboard_text
     assert '<a href="callable-functions-inventory.html">Inventory</a> -' not in dashboard_text
     assert "new Date()" not in dashboard_text
@@ -587,7 +587,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "header-action" not in inventory_text
     assert "<aclass='callable-page-tab'href='callable-functions-dashboard.html'>Architecture</a>" in compact_inventory_text
     assert "<aclass='callable-page-tabis-active'href='callable-functions-inventory.html'aria-current='page'>Inventory</a>" in compact_inventory_text
-    assert "<aclass='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
+    assert "<aid='openCallableFlowJson'class='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     for common_shell in [compact_dashboard_text, compact_inventory_text]:
         assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a" in common_shell
@@ -2406,16 +2406,18 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
     compact_inventory_text = _remove_whitespace(inventory_text).replace('"', "'")
 
-    assert "function callableFlowUrl()" in inventory_text
+    assert "function callableFlowDataUrl()" in inventory_text
     assert "constpath=window.location.pathname" in compact_inventory_text
     assert "reference/_data/callable-flow.json" in inventory_text
-    assert "newURL('../reference/_data/callable-flow.json',window.location.href).href" in compact_inventory_text
+    assert "newURL('reference/_data/callable-flow.json',document.baseURI).href" in compact_inventory_text
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} code inventory records" in inventory_text
     assert "No supporting code assets found for the current filters." in inventory_text
     assert "Inventory data is missing from callable-flow.json. Regenerate the callable flow export." in inventory_text
-    assert "Failed to load callable-flow data. Attempted URL:" in inventory_text
+    assert "Failed to load callable-flow data. URL:" in inventory_text
     assert "Could not parse callable-flow.json from ${attemptedUrl}" in inventory_text
+    assert "updateCallableFlowDataLink(attemptedUrl)" in inventory_text
+    assert "Error: ${error&&error.message?error.message:String(error)}" in inventory_text
     assert "did not include a function_inventory array" not in inventory_text
     assert "inventoryDataMissing=true" in compact_inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text

@@ -858,7 +858,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-25 00:19 SGT<span
+        <strong>Generated at:</strong> 2026-06-25 00:51 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -875,6 +875,7 @@
         </div>
         <div class="callable-page-actions">
           <a
+            id="openCallableFlowJson"
             class="callable-page-action"
             href="../reference/_data/callable-flow.json"
             >Open JSON data</a
@@ -1499,6 +1500,10 @@
         }
         return new URL("reference/_data/callable-flow.json", document.baseURI)
           .href;
+      }
+      function updateCallableFlowDataLink(url) {
+        const link = $("openCallableFlowJson");
+        if (link) link.href = url;
       }
       function renderLoadedCount() {
         renderLoadStatus(
@@ -2147,6 +2152,7 @@
       updateCompatibilityModeMeta();
       async function loadData() {
         const attemptedUrl = callableFlowDataUrl();
+        updateCallableFlowDataLink(attemptedUrl);
         try {
           const response = await fetch(attemptedUrl);
           if (!response.ok)
