@@ -381,16 +381,25 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy YAML" in dashboard_text
     assert "Download YAML" in dashboard_text
     assert "Copy flow Markdown" not in dashboard_text
-    assert "compatibilityMode" not in dashboard_text
+    assert "compatibilityMode" in dashboard_text
+    assert "COMPATIBILITY_MODE_META" in dashboard_text
+    assert "Stable API safe" in dashboard_text
+    assert "Preserve public APIs and notebook-facing behavior. Only make low-risk internal cleanup changes." in dashboard_text
+    assert "Preserve external behavior, but internal helper boundaries and names may be adjusted when justified." in dashboard_text
+    assert "Cleaner breaking changes are allowed when they improve design, but risks must be called out clearly." in dashboard_text
+    assert "compat-mode-safe" in dashboard_text
+    assert "compat-mode-review" in dashboard_text
+    assert "compat-mode-breaking" in dashboard_text
+    assert "CLEANUP_MODE_GUIDANCE" not in dashboard_text
     assert "COMPATIBILITY_INSTRUCTIONS" not in dashboard_text
     assert "function yamlPacket(packet)" in dashboard_text
     assert "function downloadPacket(format)" in dashboard_text
     assert "function markdownPacket(packet)" not in dashboard_text
     assert "Implementation instruction" not in dashboard_text
-    assert "Compatibility mode" not in dashboard_text
+    assert "Compatibility mode" in dashboard_text
     assert "toolbar-card-grid" in dashboard_text
     assert "toolbar-card--selection" in dashboard_text
-    assert "toolbar-card--compatibility" not in dashboard_text
+    assert "toolbar-card--compatibility" in dashboard_text
     assert "toolbar-card--prompt" in dashboard_text
     assert "toolbar-row--top" not in dashboard_text
     assert "Selected public callable flow" in dashboard_text
@@ -651,7 +660,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert removed_filter not in inventory_text
     assert "selectedCount" in inventory_text
     assert "compatibilityMode" in inventory_text
-    assert "CLEANUP_MODE_GUIDANCE" in inventory_text
+    assert "COMPATIBILITY_MODE_META" in inventory_text
+    assert "CLEANUP_MODE_GUIDANCE" not in inventory_text
+    assert "Stable API safe" in inventory_text
+    assert "Preserve public APIs and notebook-facing behavior. Only make low-risk internal cleanup changes." in inventory_text
+    assert "Preserve external behavior, but internal helper boundaries and names may be adjusted when justified." in inventory_text
+    assert "Cleaner breaking changes are allowed when they improve design, but risks must be called out clearly." in inventory_text
+    assert "compat-mode-safe" in inventory_text
+    assert "compat-mode-review" in inventory_text
+    assert "compat-mode-breaking" in inventory_text
     assert "Select visible" in inventory_text
     assert "Clear selection" in inventory_text
     assert "Copy JSON" in inventory_text

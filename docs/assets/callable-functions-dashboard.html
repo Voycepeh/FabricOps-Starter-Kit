@@ -512,6 +512,20 @@
         color: #475569;
         font-weight: 400;
       }
+      .compat-mode-subtitle {
+        margin-top: 0.35rem;
+        font-size: 0.85rem;
+        line-height: 1.35;
+      }
+      .compat-mode-safe {
+        color: #1d4ed8;
+      }
+      .compat-mode-review {
+        color: #b45309;
+      }
+      .compat-mode-breaking {
+        color: #b91c1c;
+      }
       .toolbar-group {
         display: flex;
         flex-wrap: wrap;
@@ -808,7 +822,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 21:07 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 21:19 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -950,17 +964,19 @@
             <label class="toolbar-field"
               >Compatibility mode
               <select id="compatibilityMode">
-                <option value="stable_public_api" selected>
-                  Stable public API
+                <option value="stable_api_safe" selected>
+                  Stable API safe
                 </option>
                 <option value="internal_cleanup">Internal cleanup</option>
-                <option value="breaking_cleanup_allowed">
+                <option value="development_breaking_allowed">
                   Breaking cleanup allowed
                 </option>
               </select></label
-            ><small class="toolbar-help"
-              >Compatibility mode applies only to exported cleanup
-              planning.</small
+            ><small
+              id="compatibilityModeSubtitle"
+              class="compat-mode-subtitle compat-mode-safe"
+              >Preserve public APIs and notebook-facing behavior. Only make
+              low-risk internal cleanup changes.</small
             >
           </div>
           <div class="toolbar-card toolbar-card--prompt">
@@ -1002,13 +1018,25 @@
         "Method",
         "Unknown",
       ];
-      const CLEANUP_MODE_GUIDANCE = {
-        stable_public_api:
-          "Keep the public callable API stable and avoid broad support-code churn unless the selected flow is clearly unsafe.",
-        internal_cleanup:
-          "Preserve public callable behavior while allowing support assets to move, merge, or rename when callers and tests are updated.",
-        breaking_cleanup_allowed:
-          "Breaking cleanup is allowed only when the exported packet explicitly requests it and tests/docs are updated.",
+      const COMPATIBILITY_MODE_META = {
+        stable_api_safe: {
+          label: "Stable API safe",
+          subtitle:
+            "Preserve public APIs and notebook-facing behavior. Only make low-risk internal cleanup changes.",
+          className: "compat-mode-safe",
+        },
+        internal_cleanup: {
+          label: "Internal cleanup",
+          subtitle:
+            "Preserve external behavior, but internal helper boundaries and names may be adjusted when justified.",
+          className: "compat-mode-review",
+        },
+        development_breaking_allowed: {
+          label: "Breaking cleanup allowed",
+          subtitle:
+            "Cleaner breaking changes are allowed when they improve design, but risks must be called out clearly.",
+          className: "compat-mode-breaking",
+        },
       };
       const INTERNAL_LAYERING_SUGGESTED_FIX =
         "Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.";
@@ -1872,16 +1900,32 @@
           ...linkMetadata(f),
         };
       }
+      function compatibilityModeMeta() {
+        const mode = $("compatibilityMode")
+          ? $("compatibilityMode").value
+          : "stable_api_safe";
+        return (
+          COMPATIBILITY_MODE_META[mode] ||
+          COMPATIBILITY_MODE_META.stable_api_safe
+        );
+      }
       function cleanupMode() {
         const mode = $("compatibilityMode")
           ? $("compatibilityMode").value
-          : "stable_public_api";
+          : "stable_api_safe";
+        const meta = compatibilityModeMeta();
         return {
           compatibility_mode: mode,
-          compatibility_instruction:
-            CLEANUP_MODE_GUIDANCE[mode] ||
-            CLEANUP_MODE_GUIDANCE.stable_public_api,
+          compatibility_label: meta.label,
+          compatibility_instruction: meta.subtitle,
         };
+      }
+      function updateCompatibilityModeMeta() {
+        const el = $("compatibilityModeSubtitle");
+        if (!el) return;
+        const meta = compatibilityModeMeta();
+        el.textContent = meta.subtitle;
+        el.className = `compat-mode-subtitle ${meta.className}`;
       }
       function refactorPacket() {
         const item = selectedItem(),
@@ -2046,6 +2090,11 @@
           window.FabricOpsTableControls.resetAll(document);
         renderPublicCallableList();
       };
+      $("compatibilityMode").addEventListener(
+        "change",
+        updateCompatibilityModeMeta,
+      );
+      updateCompatibilityModeMeta();
       async function loadData() {
         const attemptedUrl = callableFlowDataUrl();
         try {
