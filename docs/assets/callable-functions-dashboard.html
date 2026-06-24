@@ -858,7 +858,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-24 21:42 SGT<span
+        <strong>Generated at:</strong> 2026-06-24 22:00 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -1000,18 +1000,18 @@
               >Compatibility mode
               <select id="compatibilityMode">
                 <option value="stable_api_safe" selected>
-                  Stable API safe
+                  Public callable review
                 </option>
                 <option value="internal_cleanup">Internal cleanup</option>
                 <option value="development_breaking_allowed">
-                  Breaking cleanup allowed
+                  AI cleanup packet
                 </option>
               </select></label
             ><small
               id="compatibilityModeSubtitle"
               class="compat-mode-subtitle compat-mode-safe"
-              >Preserve public APIs and notebook-facing behavior. Only make
-              low-risk internal cleanup changes.</small
+              >Exports selected public callable assets for callable architecture
+              review.</small
             >
           </div>
           <div class="toolbar-card toolbar-card--prompt">
@@ -1055,21 +1055,21 @@
       ];
       const COMPATIBILITY_MODE_META = {
         stable_api_safe: {
-          label: "Stable API safe",
+          label: "Public callable review",
           subtitle:
-            "Preserve public APIs and notebook-facing behavior. Only make low-risk internal cleanup changes.",
+            "Exports selected public callable assets for callable architecture review.",
           className: "compat-mode-safe",
         },
         internal_cleanup: {
           label: "Internal cleanup",
           subtitle:
-            "Preserve external behavior, but internal helper boundaries and names may be adjusted when justified.",
+            "Exports selected support assets for internal cleanup planning.",
           className: "compat-mode-review",
         },
         development_breaking_allowed: {
-          label: "Breaking cleanup allowed",
+          label: "AI cleanup packet",
           subtitle:
-            "Cleaner breaking changes are allowed when they improve design, but risks must be called out clearly.",
+            "Exports selected records with enough context for assisted cleanup.",
           className: "compat-mode-breaking",
         },
       };

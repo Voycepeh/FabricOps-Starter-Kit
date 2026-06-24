@@ -393,10 +393,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy flow Markdown" not in dashboard_text
     assert "compatibilityMode" in dashboard_text
     assert "COMPATIBILITY_MODE_META" in dashboard_text
-    assert "Stable API safe" in dashboard_text
-    assert "Preserve public APIs and notebook-facing behavior. Only make low-risk internal cleanup changes." in dashboard_text
-    assert "Preserve external behavior, but internal helper boundaries and names may be adjusted when justified." in dashboard_text
-    assert "Cleaner breaking changes are allowed when they improve design, but risks must be called out clearly." in dashboard_text
+    assert "Public callable review" in dashboard_text
+    assert "Exports selected public callable assets for callable architecture review." in dashboard_text
+    assert "Exports selected support assets for internal cleanup planning." in dashboard_text
+    assert "Exports selected records with enough context for assisted cleanup." in dashboard_text
     assert "compat-mode-safe" in dashboard_text
     assert "compat-mode-review" in dashboard_text
     assert "compat-mode-breaking" in dashboard_text
@@ -443,10 +443,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Public callable findings</h3>" not in dashboard_text
     assert "Architecture findings inside this flow" not in dashboard_text
     assert "Internal helper cleanup candidates</h3>" not in dashboard_text
-    assert "#### Public callable findings" in dashboard_text
-    assert "#### Architecture findings" in dashboard_text
-    assert "#### Merge candidates" in dashboard_text
-    assert "#### Full nested flow tree" in dashboard_text
     assert "helper_tags" in dashboard_text
     assert "Inspect the selected public callable and its call flow." in dashboard_text
     assert "Resolve true cross-file private dependency violations first." in dashboard_text
@@ -454,7 +450,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Merge or inline helpers only when readability improves." in dashboard_text
     assert "Preserve notebook-facing behavior." in dashboard_text
     assert "Return summary, changed functions, tests, risks, and skipped items." in dashboard_text
-    assert "You are cleaning up a selected public callable flow." in dashboard_text
     assert "Do not casually change public function signatures." in dashboard_text
     assert "source_url:row.source_url||null" in compact_dashboard_text
     assert "docs_url:row.docs_url||null" in compact_dashboard_text
@@ -474,9 +469,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "cross_layer_issue_count" not in dashboard_text
     assert "Suggested next step" in dashboard_text
     assert "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details." in dashboard_text
-    assert "disabled>CopyflowJSON" in compact_dashboard_text
-    assert "disabled>CopyflowMarkdown" in compact_dashboard_text
-    assert "disabled>DownloadflowJSON" in compact_dashboard_text
+    assert "disabled>CopyJSON" in compact_dashboard_text
+    assert "disabled>DownloadJSON" in compact_dashboard_text
+    assert "disabled>CopyYAML" in compact_dashboard_text
+    assert "disabled>DownloadYAML" in compact_dashboard_text
     assert "location.reload" not in dashboard_text
     assert "publicSearch:''" in compact_dashboard_text
     assert "quickFilter:'all'" not in compact_dashboard_text
@@ -598,7 +594,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Cleanup candidates" in inventory_text
     assert "Public callables" in inventory_text
     assert "Total code assets" in inventory_text
-    assert "Shown for context; use Architecture for public callable flow review." in inventory_text
+    assert "User facing callable functions." in inventory_text
+    assert "Reusable utility functions intentionally shared across callable files." in inventory_text
+    assert "Internal helpers owned by one standalone callable file." in inventory_text
+    assert "Classes, methods, constants, registries, config objects, metadata, and other support assets." in inventory_text
+    assert "Only actionable records that need review or cleanup." in inventory_text
     assert "The callable flow page is the source of truth for public callable architecture" in normalized_inventory_text
     assert "Use this inventory to inspect supporting implementation details that are not fully visible in callable flows, including internal helpers, methods, classes, orphaned utilities, and refactor candidates." in normalized_inventory_text
     assert "Architecture inventory" not in inventory_text
@@ -617,26 +617,29 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
     assert "callable-review-table-wrap" in inventory_text
-    assert "<thclass='col-callable'>Codeasset</th><thclass='col-file-area'>File/Area</th><thclass='col-item-type'>Itemtype</th><thclass='col-code-role'>Coderole</th><thclass='col-flow'>Reachedfrompublicflow</th><thclass='col-health'>Health</th><thclass='col-finding'>Finding</th><thclass='col-review-note'>Codebasenote</th><thclass='col-suggested-action'>Suggestedcleanupaction</th>" in compact_inventory_text
+    assert "<thclass='col-file-area'>Sourcefile</th><thclass='col-callable'>Itemname</th><thclass='col-item-type'>Itemtype</th><thclass='col-usage-scope'>Usagescope</th><thclass='col-health'>Health</th><thclass='col-recommended-action'>Recommendedaction</th><thclass='col-details'>Details</th>" in compact_inventory_text
     assert "healthBadge(i)" in inventory_text
-    assert "findingBadge(i)" in inventory_text
-    assert "flowBadge(i)" in inventory_text
-    assert "data-select-row" in inventory_text
-    assert "selectAllVisible" in inventory_text
+    assert "actionBadge(i)" in inventory_text
+    assert "usageBadge(i)" in inventory_text
+    assert "data-inventory-row" in inventory_text
+    assert "data-select-row" not in inventory_text
+    assert "selectAllVisible" not in inventory_text
     assert "copyJson" in inventory_text
-    assert "copyMarkdown" in inventory_text
     assert "downloadJson" in inventory_text
+    assert "copyYaml" in inventory_text
+    assert "downloadYaml" in inventory_text
     assert "searchBox" in inventory_text
     assert "Search code inventory" in inventory_text
     assert "Inventory focus" in inventory_text
     assert "Item type" in inventory_text
-    assert "Support code needing visibility" in inventory_text
+    assert "Suggested cleanup" in inventory_text
     assert "Public callable" in inventory_text
-    assert "Supporting helper" in inventory_text
+    assert "Shared function" in inventory_text
     assert "Private function" in inventory_text
-    assert "Method" in inventory_text
-    assert "Class" in inventory_text
-    assert "Orphaned / not reached from public flow" in inventory_text
+    assert "Non functions" in inventory_text
+    assert "Usage scope" in inventory_text
+    assert "Recommended action" in inventory_text
+    assert "Reached from public flow" not in inventory_text
     assert "function buildFlowSignals(flows)" in inventory_text
     assert "function matchesFilters(i)" in inventory_text
     assert "function supportFocus(i)" in inventory_text
@@ -666,27 +669,30 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "compatibilityMode" in inventory_text
     assert "COMPATIBILITY_MODE_META" in inventory_text
     assert "CLEANUP_MODE_GUIDANCE" not in inventory_text
-    assert "Stable API safe" in inventory_text
-    assert "Preserve public APIs and notebook-facing behavior. Only make low-risk internal cleanup changes." in inventory_text
-    assert "Preserve external behavior, but internal helper boundaries and names may be adjusted when justified." in inventory_text
-    assert "Cleaner breaking changes are allowed when they improve design, but risks must be called out clearly." in inventory_text
+    assert "Public callable review" in inventory_text
+    assert "Exports selected public callable assets for callable architecture review." in inventory_text
+    assert "Exports selected support assets for internal cleanup planning." in inventory_text
+    assert "Exports selected records with enough context for assisted cleanup." in inventory_text
     assert "compat-mode-safe" in inventory_text
     assert "compat-mode-review" in inventory_text
     assert "compat-mode-breaking" in inventory_text
     assert "Select visible" in inventory_text
     assert "Clear selection" in inventory_text
     assert "Copy JSON" in inventory_text
-    assert "Copy Markdown" in inventory_text
     assert "Download JSON" in inventory_text
+    assert "Copy YAML" in inventory_text
+    assert "Download YAML" in inventory_text
     assert "selectedItems" in inventory_text
     assert "refactorPacket" in inventory_text
     assert "copyExport" in inventory_text
-    assert "downloadJson" in inventory_text
+    assert "downloadPacket" in inventory_text
     assert "COMPATIBILITY_INSTRUCTIONS" not in inventory_text
-    assert "function callableMarkdown(item)" in inventory_text
-    assert "function markdownPacket(packet)" in inventory_text
-    assert "Objective" in inventory_text
-    assert "Selected code assets" in inventory_text
+    assert "function yamlPacket(packet)" in inventory_text
+    assert "function markdownPacket(packet)" not in inventory_text
+    assert "source_file" in inventory_text
+    assert "item_name" in inventory_text
+    assert "usage_scope" in inventory_text
+    assert "action_details" in inventory_text
     assert "Compatibility mode" in inventory_text
     assert "toolbar-card-grid" in inventory_text
     assert "toolbar-card--selection" in inventory_text
@@ -702,10 +708,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Expected output" in inventory_text
     assert "Batch accounting" not in inventory_text
     assert "disabled>CopyJSON" in compact_inventory_text
-    assert "disabled>CopyMarkdown" in compact_inventory_text
+    assert "disabled>CopyYAML" in compact_inventory_text
     assert "disabled>DownloadJSON" in compact_inventory_text
-    assert "selectAllVisible" in inventory_text
-    assert "$('selectAllVisible').onchange" in compact_inventory_text
+    assert "disabled>DownloadYAML" in compact_inventory_text
     assert "ROLE_GROUP_FILTER_OPTIONS" not in inventory_text
     assert "Public entrypoint" not in inventory_text
     assert "Workflow" not in inventory_text
@@ -720,6 +725,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Role group" not in inventory_text
     assert "Role detail" not in inventory_text
     assert "Suggested cleanup action" in inventory_text
+    assert "Code role" not in inventory_text
+    assert "code_role" not in inventory_text
+    assert "codeRole" not in inventory_text
+    assert "suggested_cleanup_action" not in inventory_text
+    assert "codebase_note" not in inventory_text
+    assert "reached_from_public_flow" not in inventory_text
     assert "Inbound" not in inventory_text
     assert "Outbound" not in inventory_text
     assert "Dependency role" not in inventory_text
@@ -2389,12 +2400,15 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "did not include a function_inventory array" not in inventory_text
     assert "inventoryDataMissing=true" in compact_inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text
-    assert "join('\\n\\n')" in inventory_text
+    assert "function yamlPacket(packet)" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
-        "Support code assets",
-        "Not reached from public flow",
-        "Cleanup candidates",
+        "Total code assets",
+        "Public callables",
+        "Shared functions",
+        "Private functions",
+        "Non functions",
+        "Suggested cleanup",
         "Public callables",
         "Total code assets",
     ]:

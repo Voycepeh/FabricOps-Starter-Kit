@@ -68,7 +68,7 @@ The important private-helper rule is file ownership:
 
 ## AI cleanup packets
 
-Both pages export action-ready Markdown and JSON packages for Codex or another AI implementation tool.
+Both pages export action-ready JSON and YAML packages for Codex or another AI implementation tool.
 
 ### Architecture export: `fabricops_public_callable_flow_cleanup_packet`
 
