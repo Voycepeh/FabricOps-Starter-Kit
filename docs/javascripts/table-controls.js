@@ -119,7 +119,9 @@
       th.dataset.sortDirection = cfg.sort && cfg.sort.column === index ? cfg.sort.direction : "";
       const button = th.querySelector(".fo-table-menu-button");
       if (button) {
-        button.setAttribute("aria-label", `Sort and filter ${th.textContent.trim() || `column ${index + 1}`}`);
+        const label = th.querySelector(".table-header-label");
+        const labelText = label ? label.textContent.trim() : th.textContent.replace("▾", "").trim();
+        button.setAttribute("aria-label", `Sort and filter ${labelText || `column ${index + 1}`}`);
       }
     });
   }
@@ -248,7 +250,18 @@
         event.stopPropagation();
         openMenu(table, th, index, button);
       });
-      if (!th.querySelector(":scope > .fo-table-menu-button")) th.appendChild(button);
+      button.classList.add("filter-trigger");
+      if (!th.querySelector(":scope > .table-header-cell")) {
+        const headerCell = document.createElement("div");
+        headerCell.className = "table-header-cell";
+        const label = document.createElement("span");
+        label.className = "table-header-label";
+        while (th.firstChild) label.appendChild(th.firstChild);
+        headerCell.appendChild(label);
+        th.appendChild(headerCell);
+      }
+      const headerCell = th.querySelector(":scope > .table-header-cell");
+      if (headerCell && !headerCell.querySelector(":scope > .fo-table-menu-button")) headerCell.appendChild(button);
     });
     renderClearAll(table);
     updateHeaderStates(table);
