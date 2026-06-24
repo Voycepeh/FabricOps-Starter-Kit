@@ -385,7 +385,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Group functions by refactor action before proposing code changes." in dashboard_text
     assert "Identify helpers that can be merged into parent callables and helpers that should remain separate." in dashboard_text
     assert "Preserve public API behavior and avoid changing notebook-facing callable signatures unless compatibility mode explicitly allows it." in dashboard_text
-    assert "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and flow tree tags as grounding evidence." in dashboard_text
+    assert "Use public callable findings, architecture violation rows, internal helper cleanup candidates, and simple flow classifications as grounding evidence." in dashboard_text
     assert "Propose an ordered implementation plan, list tests required before and after refactor, and call out migration risks." in dashboard_text
     assert "final_output_required" in dashboard_text
     assert "## Final output required" in dashboard_text
@@ -504,7 +504,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in compact_dashboard_text
     assert "architecture_violation_count??0" in compact_dashboard_text
     assert "down>=12" not in dashboard_text
-    assert "Architecture violation: ${esc(n.violation_type)}" in dashboard_text
+    assert "architecture violation: ${n.violation_type}" in dashboard_text
     assert "Helper-level architecture findings found" in dashboard_text
     assert "architectureFindings.length?architectureFindings" in compact_dashboard_text
     assert "function whyReview(flow)" in dashboard_text
@@ -519,10 +519,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Contains ${violations} architecture violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
-    assert "Depth; long call chain threshold >= ${longThreshold}" in dashboard_text
+    assert "Max depth; long call chain threshold >= " in dashboard_text
     assert "longThreshold!==null" in compact_dashboard_text
     assert "largeThreshold!==null" in compact_dashboard_text
-    assert "long call chain threshold unavailable" in dashboard_text
     assert "mergeCount===1?'Contains1mergecandidateinsidethisflow.'" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
@@ -864,12 +863,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all({"function_type", "layer", "dependency_role", "callable_kind"} <= set(item) for item in function_inventory)
 
     callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
-    assert "Public functions → Internal functions (supporting objects allowed)" in callable_flow_text
+    assert "Public callables → Shared internal helpers (private helpers stay owner-local)" in callable_flow_text
     assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
     assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
-    assert "Callable review is function-layer focused" in callable_flow_text
-    assert "Internal-to-internal calls are valid" in callable_flow_text
-    assert "Role group = broad job of the callable." in callable_flow_text
+    assert "Callable review uses a lightweight model" in callable_flow_text
+    assert "Internal-to-internal calls are valid" not in callable_flow_text
+    assert "Role group = broad job of the callable." not in callable_flow_text
     assert "Findings / Signal = review hints or actions, not automatic refactor commands." in callable_flow_text
     assert "Priority = triage order, not a guarantee something must be changed." in callable_flow_text
     assert "compact dashboard contract data" in callable_flow_text
@@ -900,6 +899,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "direct_callees",
         "transitive_callees",
         "private_helper_review_items",
+        "external_dependents_count",
+        "end_node_count",
     }
     expected_callee_keys = {
         "qualified_name",
@@ -909,7 +910,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "function_type",
         "layer",
         "layer_group",
-        "dependency_role",
+        "simple_classification",
         "edge_type",
         "parent_qualified_name",
         "caller_type",
@@ -927,6 +928,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "docs_url",
         "path_examples",
         "helper_cleanup_candidate",
+        "called_inside_flow_by",
+        "calls_inside_flow",
+        "used_outside_flow",
+        "is_end_node",
     }
     assert all(set(flow) == expected_public_flow_keys for flow in public_flows)
     required_callee_keys = expected_callee_keys - {"docs_path", "docs_url"}
@@ -1796,8 +1801,15 @@ def test_callable_architecture_layer_rules_and_labels():
 
     for caller, callee in [("Public", "Public"), ("Internal", "Public")]:
         edge = generator._classify_architecture_edge(caller, callee)
-        assert edge["result"] == "Violation"
-        assert edge["violation_type"] == f"{caller} -> {callee}"
+        assert edge == {"result": "Allowed", "violation_type": ""}
+
+    assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {
+        "Shared helper calls private implementation",
+        "Shared helper calls public callable",
+        "Cross-callable private dependency",
+        "Single-use shared helper",
+        "Hidden nested helper chain",
+    }
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long call chain"
@@ -2001,6 +2013,100 @@ def test_callable_architecture_validation_rejects_supporting_objects_in_public_f
     assert any("Non callable-layer callee type" in failure for failure in failures)
 
 
+
+def test_callable_architecture_validation_accepts_new_violation_types(monkeypatch, tmp_path) -> None:
+    """Verify generated validation accepts only the PR 723 architecture violation model."""
+    import scripts.validate_callable_architecture as validator
+
+    public_qn = "fabricops_kit.example.public_api"
+    public_target_qn = "fabricops_kit.example.other_public"
+    shared_qn = "fabricops_kit.example.shared_helper"
+    private_qn = "fabricops_kit.example._private_helper"
+    single_qn = "fabricops_kit.example.single_use_helper"
+    nested_qn = "fabricops_kit.example.nested_helper"
+    violation_types = list(validator.ALLOWED_ARCHITECTURE_VIOLATION_TYPES)
+    flow = {
+        "function_inventory": [
+            {"qualified_name": public_qn, "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+            {"qualified_name": public_target_qn, "function_name": "other_public", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+            {"qualified_name": shared_qn, "function_name": "shared_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": single_qn, "function_name": "single_use_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": nested_qn, "function_name": "nested_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": private_qn, "function_name": "_private_helper", "function_type": "Private helper", "layer": "private_helper", "callable_kind": "function", "architecture_signals": [], "recommended_action": "Keep private helper"},
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 2, "Internal function": 3},
+            "layer": {"public": 2, "internal": 3},
+            "public_api_surface": {"public_api_entrypoints": 2, "architecture_violations": 1},
+            "callable_inventory_metrics": {"function_callables": 5, "private_helpers_to_review": 1},
+        },
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": public_qn,
+                "architecture_violation_count": len(violation_types),
+                "direct_callees": [],
+                "transitive_callees": [
+                    {"qualified_name": f"{shared_qn}.{index}", "function_name": f"callee_{index}", "function_type": "Internal function", "layer": "internal", "callee_type": "Internal", "architecture_result": "Violation", "violation_type": violation_type}
+                    for index, violation_type in enumerate(violation_types)
+                ],
+            },
+            {
+                "qualified_name": public_target_qn,
+                "architecture_violation_count": 0,
+                "direct_callees": [],
+                "transitive_callees": [],
+            },
+        ],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    assert validator._failures(flow) == []
+
+
+def test_callable_architecture_validation_rejects_legacy_violation_types(monkeypatch, tmp_path) -> None:
+    """Verify legacy Public/Internal boundary wording still fails validation."""
+    import scripts.validate_callable_architecture as validator
+
+    public_qn = "fabricops_kit.example.public_api"
+    flow = {
+        "function_inventory": [
+            {"qualified_name": public_qn, "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 1, "Internal function": 0},
+            "layer": {"public": 1, "internal": 0},
+            "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 1},
+            "callable_inventory_metrics": {"function_callables": 1, "private_helpers_to_review": 0},
+        },
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": public_qn,
+                "architecture_violation_count": 1,
+                "direct_callees": [],
+                "transitive_callees": [
+                    {"qualified_name": "fabricops_kit.example.other_public", "function_name": "other_public", "function_type": "Public function", "layer": "public", "callee_type": "Public", "architecture_result": "Violation", "violation_type": "Public -> Public"},
+                ],
+            }
+        ],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    failures = validator._failures(flow)
+
+    assert any("Legacy architecture violation type emitted" in failure for failure in failures)
+
 def test_callable_architecture_validation_allows_same_file_private_helper(monkeypatch, tmp_path) -> None:
     """Verify a public owner can call a private helper in the same file."""
     import scripts.validate_callable_architecture as validator
@@ -2116,21 +2222,32 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
     assert flow["maximum_chain_depth"] == 2
     assert transitive_by_qn[first_helper_qn]["function_type"] == "Private helper"
     assert transitive_by_qn[first_helper_qn]["layer_group"] == "Private helper"
-    assert transitive_by_qn[first_helper_qn]["dependency_role"] == "utility"
+    assert transitive_by_qn[first_helper_qn]["simple_classification"] == "Private helper"
+    assert "dependency_role" not in transitive_by_qn[first_helper_qn]
     assert flow["architecture_violation_count"] == 0
     assert all(row["architecture_result"] == "Allowed" for row in flow["transitive_callees"])
 
 
-def test_callable_dashboard_flow_tree_exports_private_helper_layer_chips() -> None:
-    """Verify dashboard flow exports and rendering include private helper layer chip fields."""
+def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> None:
+    """Verify dashboard flow rendering uses one simple classification badge."""
     dashboard_text = (ROOT / "docs" / "assets" / "callable-functions-dashboard.html").read_text(encoding="utf-8")
 
+    assert "Public function" in dashboard_text
+    assert "Shared helper" in dashboard_text
     assert "Private helper" in dashboard_text
     compact_dashboard_text = _remove_whitespace(dashboard_text)
 
-    assert 'function_type:n.function_type||n.layer_group||"Publicfunction"' in compact_dashboard_text
-    assert "layer:n.layer||null" in compact_dashboard_text
-    assert "dependency_role:n.dependency_role||null" in compact_dashboard_text
+    assert 'simple_classification:"Publicfunction"' in compact_dashboard_text
+    assert 'consttype=n.simple_classification||"Unknown"' in compact_dashboard_text
+    assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
+    assert "label(n.dependency_role)" not in dashboard_text
+    assert "called inside this flow by:" in dashboard_text
+    assert "calls inside this flow:" in dashboard_text
+    assert "used outside this flow:" in dashboard_text
+    assert "end node" in dashboard_text
+    assert "merge candidate" in dashboard_text
+    assert "called by count" not in dashboard_text.lower()
+    assert "<th>Called by</th>" not in dashboard_text
     assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
 
 
@@ -2277,3 +2394,272 @@ def test_global_table_controls_core_sort_and_filter_helpers() -> None:
     assert(t.rowMatchesFilter(row,{column:3,kind:'values',values:new Set(['Public'])}) && t.rowMatchesFilter(row,{column:0,kind:'values',values:new Set(['Healthy'])}), 'multiple column filters AND logic');
     """
     subprocess.run(["node", "-e", node_script], cwd=ROOT, check=True)
+
+
+def _flow_test_inventory_row(qn: str, name: str, module: str, layer: str, *, owner: str | None = None, used_by_count: int = 1) -> dict[str, object]:
+    """Return a minimal callable-flow inventory row for architecture tests."""
+    function_type = {
+        "public": "Public function",
+        "internal": "Internal function",
+        "private_helper": "Private helper",
+    }[layer]
+    row: dict[str, object] = {
+        "qualified_name": qn,
+        "function_name": name,
+        "module": module,
+        "layer": layer,
+        "function_type": function_type,
+        "callable_kind": "function",
+        "used_by_count": used_by_count,
+        "signals": [],
+    }
+    if owner:
+        row["owner_qualified_name"] = owner
+    return row
+
+
+def test_callable_flow_allows_two_layer_local_private_and_shared_internal_calls() -> None:
+    """Verify allowed public/private/shared-internal paths are not architecture findings."""
+    import scripts.generate_function_reference as generator
+
+    public_qn = "fabricops_kit.alpha.public_alpha"
+    private_qn = "fabricops_kit.alpha._local_helper"
+    nested_private_qn = "fabricops_kit.alpha._nested_local_helper"
+    shared_qn = "fabricops_kit.shared.shared_helper"
+    other_public_qn = "fabricops_kit.beta.public_beta"
+    node_by_qn = {
+        public_qn: {"callable_name": "public_alpha", "module_name": "alpha", "callable_kind": "function"},
+        private_qn: {"callable_name": "_local_helper", "module_name": "alpha", "callable_kind": "function"},
+        nested_private_qn: {"callable_name": "_nested_local_helper", "module_name": "alpha", "callable_kind": "function"},
+        shared_qn: {"callable_name": "shared_helper", "module_name": "shared", "callable_kind": "function"},
+        other_public_qn: {"callable_name": "public_beta", "module_name": "beta", "callable_kind": "function"},
+    }
+    calls_by_qn = {
+        public_qn: [private_qn, shared_qn],
+        private_qn: [nested_private_qn, shared_qn],
+        nested_private_qn: [],
+        shared_qn: [],
+        other_public_qn: [shared_qn],
+    }
+    inventory = [
+        _flow_test_inventory_row(public_qn, "public_alpha", "alpha", "public"),
+        _flow_test_inventory_row(other_public_qn, "public_beta", "beta", "public"),
+        _flow_test_inventory_row(private_qn, "_local_helper", "alpha", "private_helper", owner=public_qn),
+        _flow_test_inventory_row(nested_private_qn, "_nested_local_helper", "alpha", "private_helper", owner=public_qn),
+        _flow_test_inventory_row(shared_qn, "shared_helper", "shared", "internal", used_by_count=2),
+    ]
+
+    flow = generator._build_public_entrypoint_flow([public_qn, other_public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
+
+    assert flow["architecture_violation_count"] == 0
+    assert all(row["architecture_result"] == "Allowed" for row in flow["transitive_callees"])
+
+
+def test_callable_flow_flags_single_use_internal_helper_violation() -> None:
+    """Verify single-use shared/internal helpers are architecture findings."""
+    import scripts.generate_function_reference as generator
+
+    public_qn = "fabricops_kit.alpha.public_alpha"
+    internal_qn = "fabricops_kit.shared.single_use_helper"
+    node_by_qn = {
+        public_qn: {"callable_name": "public_alpha", "module_name": "alpha", "callable_kind": "function"},
+        internal_qn: {"callable_name": "single_use_helper", "module_name": "shared", "callable_kind": "function"},
+    }
+    calls_by_qn = {public_qn: [internal_qn], internal_qn: []}
+    inventory = [
+        _flow_test_inventory_row(public_qn, "public_alpha", "alpha", "public"),
+        _flow_test_inventory_row(internal_qn, "single_use_helper", "shared", "internal", used_by_count=1),
+    ]
+
+    flow = generator._build_public_entrypoint_flow([public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
+    row = flow["transitive_callees"][0]
+
+    assert flow["architecture_violation_count"] == 1
+    assert row["architecture_result"] == "Violation"
+    assert row["violation_type"] == "Single-use shared helper"
+
+
+def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
+    """Verify hidden internal/private chains beneath public callables are findings."""
+    import scripts.generate_function_reference as generator
+
+    public_qn = "fabricops_kit.guardrails.run_table_guardrails"
+    workflow_qn = "fabricops_kit.guardrails._run_table_guardrails_workflow"
+    core_qn = "fabricops_kit.profiling.profile_dataframe_core"
+    private_core_qn = "fabricops_kit.profiling._profile_dataframe_core"
+    distribution_qn = "fabricops_kit.profiling._build_distribution_summaries"
+    categorical_qn = "fabricops_kit.profiling.build_categorical_distribution"
+    other_public_qn = "fabricops_kit.other.other_public"
+    node_by_qn = {
+        public_qn: {"callable_name": "run_table_guardrails", "module_name": "guardrails", "callable_kind": "function"},
+        other_public_qn: {"callable_name": "other_public", "module_name": "other", "callable_kind": "function"},
+        workflow_qn: {"callable_name": "_run_table_guardrails_workflow", "module_name": "guardrails", "callable_kind": "function"},
+        core_qn: {"callable_name": "profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
+        private_core_qn: {"callable_name": "_profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
+        distribution_qn: {"callable_name": "_build_distribution_summaries", "module_name": "profiling", "callable_kind": "function"},
+        categorical_qn: {"callable_name": "build_categorical_distribution", "module_name": "profiling", "callable_kind": "function"},
+    }
+    calls_by_qn = {
+        public_qn: [workflow_qn],
+        workflow_qn: [core_qn],
+        core_qn: [private_core_qn],
+        private_core_qn: [distribution_qn],
+        distribution_qn: [categorical_qn],
+        categorical_qn: [],
+        other_public_qn: [core_qn],
+    }
+    inventory = [
+        _flow_test_inventory_row(public_qn, "run_table_guardrails", "guardrails", "public"),
+        _flow_test_inventory_row(other_public_qn, "other_public", "other", "public"),
+        _flow_test_inventory_row(workflow_qn, "_run_table_guardrails_workflow", "guardrails", "private_helper", owner=public_qn),
+        _flow_test_inventory_row(core_qn, "profile_dataframe_core", "profiling", "internal", used_by_count=2),
+        _flow_test_inventory_row(private_core_qn, "_profile_dataframe_core", "profiling", "private_helper", owner=core_qn),
+        _flow_test_inventory_row(distribution_qn, "_build_distribution_summaries", "profiling", "private_helper", owner=core_qn),
+        _flow_test_inventory_row(categorical_qn, "build_categorical_distribution", "profiling", "internal", used_by_count=1),
+    ]
+
+    flow = generator._build_public_entrypoint_flow([public_qn, other_public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
+    violation_types = {row["violation_type"] for row in flow["transitive_callees"] if row["architecture_result"] == "Violation"}
+
+    assert flow["architecture_violation_count"] >= 1
+    assert "Shared helper calls private implementation" in violation_types
+    assert "Cross-callable private dependency" in violation_types
+
+
+def test_callable_flow_flags_private_helper_reused_across_public_callables() -> None:
+    """Verify reused private helpers are findings instead of hidden shared dependencies."""
+    import scripts.generate_function_reference as generator
+
+    public_a = "fabricops_kit.alpha.public_alpha"
+    public_b = "fabricops_kit.beta.public_beta"
+    private_qn = "fabricops_kit.alpha._shared_private"
+    node_by_qn = {
+        public_a: {"callable_name": "public_alpha", "module_name": "alpha", "callable_kind": "function"},
+        public_b: {"callable_name": "public_beta", "module_name": "beta", "callable_kind": "function"},
+        private_qn: {"callable_name": "_shared_private", "module_name": "alpha", "callable_kind": "function"},
+    }
+    calls_by_qn = {public_a: [private_qn], public_b: [private_qn], private_qn: []}
+    inventory = [
+        _flow_test_inventory_row(public_a, "public_alpha", "alpha", "public"),
+        _flow_test_inventory_row(public_b, "public_beta", "beta", "public"),
+        _flow_test_inventory_row(private_qn, "_shared_private", "alpha", "private_helper", owner=public_a),
+    ]
+
+    flows = generator._build_public_entrypoint_flow([public_a, public_b], calls_by_qn, node_by_qn, {}, inventory)
+
+    assert [flow["architecture_violation_count"] for flow in flows] == [1, 1]
+    assert all(
+        row["violation_type"] == "Cross-callable private dependency"
+        for flow in flows
+        for row in flow["transitive_callees"]
+        if row["architecture_result"] == "Violation"
+    )
+
+
+def test_callable_flow_ignores_call_graph_self_edges() -> None:
+    """Verify self-edges do not render as normal caller relationships."""
+    import scripts.generate_function_reference as generator
+
+    public_qn = "fabricops_kit.alpha.public_alpha"
+    other_public_qn = "fabricops_kit.other.other_public"
+    helper_qn = "fabricops_kit.shared.shared_helper"
+    node_by_qn = {
+        public_qn: {"callable_name": "public_alpha", "module_name": "alpha", "callable_kind": "function"},
+        other_public_qn: {"callable_name": "other_public", "module_name": "other", "callable_kind": "function"},
+        helper_qn: {"callable_name": "shared_helper", "module_name": "shared", "callable_kind": "function"},
+    }
+    calls_by_qn = {public_qn: [helper_qn], other_public_qn: [helper_qn], helper_qn: [helper_qn]}
+    inventory = [
+        _flow_test_inventory_row(public_qn, "public_alpha", "alpha", "public"),
+        _flow_test_inventory_row(other_public_qn, "other_public", "other", "public"),
+        _flow_test_inventory_row(helper_qn, "shared_helper", "shared", "internal", used_by_count=2),
+    ]
+
+    flow = generator._build_public_entrypoint_flow([public_qn, other_public_qn], calls_by_qn, node_by_qn, {}, inventory)[0]
+
+    assert [row["qualified_name"] for row in flow["transitive_callees"]] == [helper_qn]
+    assert flow["transitive_callees"][0]["parent_qualified_name"] == public_qn
+
+
+def test_callable_flow_generated_docs_hide_fine_grained_taxonomy_badges() -> None:
+    """Verify generated callable-flow docs do not render maintainer taxonomy badges."""
+    dashboard_text = (ROOT / "docs" / "assets" / "callable-functions-dashboard.html").read_text(encoding="utf-8")
+    callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
+    banned_labels = [
+        "Public Api",
+        "Internal Resolver",
+        "Utility Function",
+        "Internal Workflow",
+        "Internal Adapter",
+        "Utility Validator",
+        "Audit Time Utility",
+    ]
+
+    for label_text in banned_labels:
+        assert label_text not in dashboard_text
+        assert label_text not in callable_flow_text
+
+
+def test_callable_flow_simple_classification_detects_shared_internal_reuse() -> None:
+    """Verify shared internal helpers are identified from reuse across public callables."""
+    import scripts.generate_function_reference as generator
+
+    public_a = "fabricops_kit.alpha.public_alpha"
+    public_b = "fabricops_kit.beta.public_beta"
+    shared_qn = "fabricops_kit.shared.shared_helper"
+    single_qn = "fabricops_kit.shared.single_use_helper"
+    node_by_qn = {
+        public_a: {"callable_name": "public_alpha", "module_name": "alpha", "callable_kind": "function"},
+        public_b: {"callable_name": "public_beta", "module_name": "beta", "callable_kind": "function"},
+        shared_qn: {"callable_name": "shared_helper", "module_name": "shared", "callable_kind": "function"},
+        single_qn: {"callable_name": "single_use_helper", "module_name": "shared", "callable_kind": "function"},
+    }
+    calls_by_qn = {public_a: [shared_qn, single_qn], public_b: [shared_qn], shared_qn: [], single_qn: []}
+    inventory = [
+        _flow_test_inventory_row(public_a, "public_alpha", "alpha", "public"),
+        _flow_test_inventory_row(public_b, "public_beta", "beta", "public"),
+        _flow_test_inventory_row(shared_qn, "shared_helper", "shared", "internal", used_by_count=2),
+        _flow_test_inventory_row(single_qn, "single_use_helper", "shared", "internal", used_by_count=1),
+    ]
+
+    flow = generator._build_public_entrypoint_flow([public_a, public_b], calls_by_qn, node_by_qn, {}, inventory)[0]
+    rows = {row["qualified_name"]: row for row in flow["transitive_callees"]}
+
+    assert rows[shared_qn]["simple_classification"] == "Shared helper"
+    assert rows[shared_qn]["architecture_result"] == "Allowed"
+    assert rows[single_qn]["simple_classification"] == "Unknown"
+    assert rows[single_qn]["violation_type"] == "Single-use shared helper"
+    assert rows[shared_qn]["called_inside_flow_by"] == 1
+    assert rows[shared_qn]["calls_inside_flow"] == 0
+    assert rows[shared_qn]["used_outside_flow"] == 1
+    assert rows[shared_qn]["is_end_node"] is True
+    assert flow["external_dependents_count"] == 1
+
+
+def test_callable_flow_private_helper_containment_uses_owner_file() -> None:
+    """Verify private helper containment is based on the owning public callable."""
+    import scripts.generate_function_reference as generator
+
+    public_a = "fabricops_kit.alpha.public_alpha"
+    public_b = "fabricops_kit.beta.public_beta"
+    private_a = "fabricops_kit.alpha._private_alpha"
+    node_by_qn = {
+        public_a: {"callable_name": "public_alpha", "module_name": "alpha", "callable_kind": "function"},
+        public_b: {"callable_name": "public_beta", "module_name": "beta", "callable_kind": "function"},
+        private_a: {"callable_name": "_private_alpha", "module_name": "alpha", "callable_kind": "function"},
+    }
+    calls_by_qn = {public_a: [private_a], public_b: [private_a], private_a: []}
+    inventory = [
+        _flow_test_inventory_row(public_a, "public_alpha", "alpha", "public"),
+        _flow_test_inventory_row(public_b, "public_beta", "beta", "public"),
+        _flow_test_inventory_row(private_a, "_private_alpha", "alpha", "private_helper", owner=public_a),
+    ]
+
+    flows = generator._build_public_entrypoint_flow([public_a, public_b], calls_by_qn, node_by_qn, {}, inventory)
+    rows_by_flow = [{row["qualified_name"]: row for row in flow["transitive_callees"]} for flow in flows]
+
+    assert rows_by_flow[0][private_a]["simple_classification"] == "Private helper"
+    assert rows_by_flow[0][private_a]["violation_type"] == "Cross-callable private dependency"
+    assert rows_by_flow[0][private_a]["used_outside_flow"] == 1
+    assert rows_by_flow[1][private_a]["simple_classification"] == "Private helper"
+    assert rows_by_flow[1][private_a]["violation_type"] == "Cross-callable private dependency"
