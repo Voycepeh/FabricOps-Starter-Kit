@@ -648,7 +648,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     ]:
         assert removed_filter not in inventory_text
     assert "selectedCount" in inventory_text
-    assert "compatibilityMode" not in inventory_text
+    assert "compatibilityMode" in inventory_text
+    assert "CLEANUP_MODE_GUIDANCE" in inventory_text
     assert "Select visible" in inventory_text
     assert "Clear selection" in inventory_text
     assert "Copy JSON" in inventory_text
@@ -663,10 +664,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function markdownPacket(packet)" in inventory_text
     assert "Objective" in inventory_text
     assert "Selected code assets" in inventory_text
-    assert "Compatibility mode" not in inventory_text
+    assert "Compatibility mode" in inventory_text
     assert "toolbar-card-grid" in inventory_text
     assert "toolbar-card--selection" in inventory_text
-    assert "toolbar-card--compatibility" not in inventory_text
+    assert "toolbar-card--compatibility" in inventory_text
     assert "toolbar-card--prompt" in inventory_text
     assert "toolbar-row--top" not in inventory_text
     assert "Selected code assets" in inventory_text
@@ -2353,18 +2354,19 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     compact_inventory_text = _remove_whitespace(inventory_text).replace('"', "'")
 
     assert "function callableFlowUrl()" in inventory_text
-    assert re.search(
-        r"new URL\(\s*['\"]\.\./reference/_data/callable-flow\.json['\"]\s*,\s*window\.location\.href\s*,?\s*\)\.href",
-        inventory_text,
-    )
+    assert "constpath=window.location.pathname" in compact_inventory_text
+    assert "reference/_data/callable-flow.json" in inventory_text
+    assert "newURL('../reference/_data/callable-flow.json',window.location.href).href" in compact_inventory_text
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} code inventory records" in inventory_text
-    assert "No code inventory records match current filters" in inventory_text
-    assert "No code inventory records loaded." in inventory_text
+    assert "No supporting code assets found for the current filters." in inventory_text
+    assert "Inventory data is missing from callable-flow.json. Regenerate the callable flow export." in inventory_text
     assert "Failed to load callable-flow data. Attempted URL:" in inventory_text
     assert "Could not parse callable-flow.json from ${attemptedUrl}" in inventory_text
-    assert "did not include a function_inventory array" in inventory_text
+    assert "did not include a function_inventory array" not in inventory_text
+    assert "inventoryDataMissing=true" in compact_inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text
+    assert "join('\\n\\n')" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
     for label in [
         "Support code assets",
