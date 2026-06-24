@@ -2013,6 +2013,100 @@ def test_callable_architecture_validation_rejects_supporting_objects_in_public_f
     assert any("Non callable-layer callee type" in failure for failure in failures)
 
 
+
+def test_callable_architecture_validation_accepts_new_violation_types(monkeypatch, tmp_path) -> None:
+    """Verify generated validation accepts only the PR 723 architecture violation model."""
+    import scripts.validate_callable_architecture as validator
+
+    public_qn = "fabricops_kit.example.public_api"
+    public_target_qn = "fabricops_kit.example.other_public"
+    shared_qn = "fabricops_kit.example.shared_helper"
+    private_qn = "fabricops_kit.example._private_helper"
+    single_qn = "fabricops_kit.example.single_use_helper"
+    nested_qn = "fabricops_kit.example.nested_helper"
+    violation_types = list(validator.ALLOWED_ARCHITECTURE_VIOLATION_TYPES)
+    flow = {
+        "function_inventory": [
+            {"qualified_name": public_qn, "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+            {"qualified_name": public_target_qn, "function_name": "other_public", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+            {"qualified_name": shared_qn, "function_name": "shared_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": single_qn, "function_name": "single_use_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": nested_qn, "function_name": "nested_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": private_qn, "function_name": "_private_helper", "function_type": "Private helper", "layer": "private_helper", "callable_kind": "function", "architecture_signals": [], "recommended_action": "Keep private helper"},
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 2, "Internal function": 3},
+            "layer": {"public": 2, "internal": 3},
+            "public_api_surface": {"public_api_entrypoints": 2, "architecture_violations": 1},
+            "callable_inventory_metrics": {"function_callables": 5, "private_helpers_to_review": 1},
+        },
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": public_qn,
+                "architecture_violation_count": len(violation_types),
+                "direct_callees": [],
+                "transitive_callees": [
+                    {"qualified_name": f"{shared_qn}.{index}", "function_name": f"callee_{index}", "function_type": "Internal function", "layer": "internal", "callee_type": "Internal", "architecture_result": "Violation", "violation_type": violation_type}
+                    for index, violation_type in enumerate(violation_types)
+                ],
+            },
+            {
+                "qualified_name": public_target_qn,
+                "architecture_violation_count": 0,
+                "direct_callees": [],
+                "transitive_callees": [],
+            },
+        ],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    assert validator._failures(flow) == []
+
+
+def test_callable_architecture_validation_rejects_legacy_violation_types(monkeypatch, tmp_path) -> None:
+    """Verify legacy Public/Internal boundary wording still fails validation."""
+    import scripts.validate_callable_architecture as validator
+
+    public_qn = "fabricops_kit.example.public_api"
+    flow = {
+        "function_inventory": [
+            {"qualified_name": public_qn, "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 1, "Internal function": 0},
+            "layer": {"public": 1, "internal": 0},
+            "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 1},
+            "callable_inventory_metrics": {"function_callables": 1, "private_helpers_to_review": 0},
+        },
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": public_qn,
+                "architecture_violation_count": 1,
+                "direct_callees": [],
+                "transitive_callees": [
+                    {"qualified_name": "fabricops_kit.example.other_public", "function_name": "other_public", "function_type": "Public function", "layer": "public", "callee_type": "Public", "architecture_result": "Violation", "violation_type": "Public -> Public"},
+                ],
+            }
+        ],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    failures = validator._failures(flow)
+
+    assert any("Legacy architecture violation type emitted" in failure for failure in failures)
+
 def test_callable_architecture_validation_allows_same_file_private_helper(monkeypatch, tmp_path) -> None:
     """Verify a public owner can call a private helper in the same file."""
     import scripts.validate_callable_architecture as validator
