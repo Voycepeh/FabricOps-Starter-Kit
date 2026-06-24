@@ -805,7 +805,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert {"Keep private helper", "Merge into owner", "Rename to internal function", "Move closer to owner", "Remove redundant wrapper"} & {row["recommended_action"] for row in private_helper_rows}
     assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
     assert sum(1 for row in function_inventory if row["function_type"] == "Internal function") == summary_counts["function_type"]["Internal function"]
-    assert all(not callee["function_name"].split(".")[-1].startswith("_") for flow in public_flows for callee in flow["transitive_callees"])
+    assert any(
+        callee["function_type"] == "Private helper"
+        for flow in public_flows
+        for callee in flow["transitive_callees"]
+    )
     rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
     assert "fabricops_kit.config.FrameworkConfig" not in rows_by_qn
     assert "fabricops_kit.io_core.FabricStore.root" not in rows_by_qn
@@ -1179,7 +1183,7 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Downstream callables: 2"') == 1
+    assert text.count('??? info "Downstream callables: 14"') == 1
     assert "Dependency data is generated from the callable architecture inventory." in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
@@ -1192,7 +1196,7 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
-    assert "_guardrail_reason" not in implementation_section
+    assert "><code>_guardrail_reason(...)</code></a>" in implementation_section
 
 
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
@@ -1200,7 +1204,7 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Downstream callables: 2"') == 1
+    assert implementation_section.count('??? info "Downstream callables: 14"') == 1
     assert '??? info "Internal helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
     assert (
@@ -1214,7 +1218,7 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
         assert f"><code>{helper_name}(...)</code></a>" in implementation_section
-    assert "_guardrail_reason" not in implementation_section
+    assert "><code>_guardrail_reason(...)</code></a>" in implementation_section
 
 
 def _reference_call_tree_rows(text: str) -> list[str]:
@@ -1271,10 +1275,11 @@ def test_display_guardrail_results_dependency_count_matches_callable_architectur
     reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
     detail_page = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
 
-    assert flow["downstream_count"] == 2
+    assert flow["downstream_count"] == 14
+    assert any(callee["function_type"] == "Private helper" for callee in flow["transitive_callees"])
     assert 'data-callable-name="display_guardrail_results"' in reference_index
-    assert "Downstream callables: 2" in reference_index
-    assert '??? info "Downstream callables: 2"' in detail_page
+    assert "Downstream callables: 14" in reference_index
+    assert '??? info "Downstream callables: 14"' in detail_page
     assert _reference_call_tree_rows(detail_page) == _dashboard_flow_tree_rows(flow)
 
 
@@ -1310,7 +1315,7 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
     assert title_index < description_index < source_index < usage_index
-    assert '??? info "Downstream callables:' not in text
+    assert '??? info "Downstream callables:' in text
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
@@ -1932,20 +1937,54 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
     import scripts.generate_function_reference as generator
 
     public_qns = ["fabricops_kit.public_api.public_api"]
+    first_helper_qn = "fabricops_kit.public_api._helper"
+    second_helper_qn = "fabricops_kit.public_api._nested_helper"
     node_by_qn = {
         "fabricops_kit.public_api.public_api": {"callable_name": "public_api", "module_name": "public_api", "callable_kind": "function", "is_underscore": False},
-        "fabricops_kit.public_api._helper": {"callable_name": "_helper", "module_name": "public_api", "callable_kind": "function", "is_underscore": True},
+        first_helper_qn: {"callable_name": "_helper", "module_name": "public_api", "callable_kind": "function", "is_underscore": True},
+        second_helper_qn: {"callable_name": "_nested_helper", "module_name": "public_api", "callable_kind": "function", "is_underscore": True},
     }
-    calls_by_qn = {"fabricops_kit.public_api.public_api": ["fabricops_kit.public_api._helper"], "fabricops_kit.public_api._helper": []}
+    calls_by_qn = {
+        "fabricops_kit.public_api.public_api": [first_helper_qn],
+        first_helper_qn: [second_helper_qn],
+        second_helper_qn: [],
+    }
     inventory = [
         {"qualified_name": public_qns[0], "function_name": "public_api", "module": "public_api", "layer": "public", "function_type": "Public function", "callable_kind": "function"},
-        {"qualified_name": "fabricops_kit.public_api._helper", "function_name": "_helper", "module": "public_api", "layer": "private_helper", "function_type": "Private helper", "callable_kind": "function", "owner_qualified_name": public_qns[0]},
+        {"qualified_name": first_helper_qn, "function_name": "_helper", "module": "public_api", "layer": "private_helper", "function_type": "Private helper", "callable_kind": "function", "owner_qualified_name": public_qns[0], "dependency_role": "utility", "used_by_count": 1},
+        {"qualified_name": second_helper_qn, "function_name": "_nested_helper", "module": "public_api", "layer": "private_helper", "function_type": "Private helper", "callable_kind": "function", "owner_qualified_name": public_qns[0], "dependency_role": "normalizer", "used_by_count": 1},
     ]
 
     flows = generator._build_public_entrypoint_flow(public_qns, calls_by_qn, node_by_qn, {}, inventory)
+    flow = flows[0]
+    transitive_by_qn = {row["qualified_name"]: row for row in flow["transitive_callees"]}
 
-    assert flows[0]["owner_file"] == "src/fabricops_kit/public_api.py"
-    assert [item["function_name"] for item in flows[0]["private_helper_review_items"]] == ["_helper"]
+    assert flow["owner_file"] == "src/fabricops_kit/public_api.py"
+    assert [item["function_name"] for item in flow["private_helper_review_items"]] == ["_helper", "_nested_helper"]
+    assert first_helper_qn in transitive_by_qn
+    assert second_helper_qn in transitive_by_qn
+    assert [row["qualified_name"] for row in flow["direct_callees"]] == [first_helper_qn]
+    assert transitive_by_qn[second_helper_qn]["parent_qualified_name"] == first_helper_qn
+    assert flow["downstream_callable_count"] == 2
+    assert flow["maximum_chain_depth"] == 2
+    assert transitive_by_qn[first_helper_qn]["function_type"] == "Private helper"
+    assert transitive_by_qn[first_helper_qn]["layer_group"] == "Private helper"
+    assert transitive_by_qn[first_helper_qn]["dependency_role"] == "utility"
+    assert flow["architecture_violation_count"] == 0
+    assert all(row["architecture_result"] == "Allowed" for row in flow["transitive_callees"])
+
+
+def test_callable_dashboard_flow_tree_exports_private_helper_layer_chips() -> None:
+    """Verify dashboard flow exports and rendering include private helper layer chip fields."""
+    dashboard_text = (ROOT / "docs" / "assets" / "callable-functions-dashboard.html").read_text(encoding="utf-8")
+
+    assert "Private helper" in dashboard_text
+    compact_dashboard_text = _remove_whitespace(dashboard_text)
+
+    assert 'function_type:n.function_type||n.layer_group||"Publicfunction"' in compact_dashboard_text
+    assert "layer:n.layer||null" in compact_dashboard_text
+    assert "dependency_role:n.dependency_role||null" in compact_dashboard_text
+    assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
