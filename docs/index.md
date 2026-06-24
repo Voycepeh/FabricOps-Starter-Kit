@@ -75,6 +75,12 @@ FabricOps Starter Kit includes maintainer tooling to keep the framework clean, e
     <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, modules touched, and architecture signals.</span>
     <span class="fabricops-landing-card__meta">Open Callable Flow Dashboard</span>
   </a>
+
+  <a class="fabricops-landing-card" href="https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/callable-flow/">
+    <span class="fabricops-landing-card__title">Callable Flow Reference</span>
+    <span class="fabricops-landing-card__body">Open the generated callable flow reference page in the development docs.</span>
+    <span class="fabricops-landing-card__meta">Open Callable Flow Reference</span>
+  </a>
 </div>
 
 <p><small>Callable metrics are generated from the callable inventory data.</small></p>
