@@ -13,7 +13,7 @@ pytestmark = pytest.mark.integration
 def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     """Verify central metadata setup preserves existing valid tables."""
     import fabricops_kit.config as config_module
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
     import fabricops_kit.governance_review as governance
 
     class Schema:
@@ -68,7 +68,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
 def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypatch):
     """Verify central metadata setup rejects existing tables missing columns."""
     import fabricops_kit.config as config_module
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
     import fabricops_kit.governance_review as governance
 
     class Schema:

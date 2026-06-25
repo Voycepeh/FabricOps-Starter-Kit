@@ -13,11 +13,53 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from datetime import datetime
+import re
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 DEFAULT_AUDIT_TIMEZONE = "UTC"
+
+
+@dataclass(frozen=True)
+class FabricStore:
+    """Configured Fabric lakehouse or warehouse connection details."""
+
+    env: str
+    workspace_id: str
+    item_id: str
+    name: str
+    kind: str
+    schema_enabled: bool = False
+    schema: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
+        for field_name in ("env", "workspace_id", "item_id", "name", "kind"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be a non-empty string.")
+        normalized_kind = self.kind.strip().lower()
+        if normalized_kind not in {"lakehouse", "warehouse"}:
+            raise ValueError("kind must be one of: lakehouse, warehouse.")
+        object.__setattr__(self, "kind", normalized_kind)
+        object.__setattr__(self, "schema_enabled", bool(self.schema_enabled))
+        schema_value = None if self.schema is None else str(self.schema).strip()
+        if self.schema_enabled and normalized_kind == "lakehouse":
+            if not schema_value:
+                raise ValueError("schema is required when schema_enabled is True for a lakehouse store.")
+            if any(separator in schema_value for separator in ("/", "\\", ".")):
+                raise ValueError("schema must be a simple schema name; do not use paths or dots.")
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", schema_value):
+                raise ValueError("schema must contain only letters, numbers, and underscores, and must not start with a number.")
+        object.__setattr__(self, "schema", schema_value or None)
+
+    @property
+    def root(self) -> str:
+        """Return the OneLake ABFSS root for lakehouse stores."""
+        if self.kind != "lakehouse":
+            raise ValueError("root is only available for lakehouse stores.")
+        return f"abfss://{self.workspace_id}@onelake.dfs.fabric.microsoft.com/{self.item_id}"
 
 
 _DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
@@ -709,7 +751,7 @@ def _normalize_path_config(config: Any | None, *, require_paths: bool = True) ->
     return PathConfig(paths={"__missing__": {}})
 
 
-def _get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | None, env: str, target: str) -> Any:
+def get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | None, env: str, target: str) -> Any:
     """Resolve a configured Fabric path for an environment and target.
 
     Parameters
@@ -841,7 +883,7 @@ def _run_config_smoke_tests(
     results.append(ConfigSmokeCheckResult("fabric_runtime_context", runtime_status, runtime_message))
     try:
         for target in required_targets:
-            p = _get_store(config=config, env=env, target=target)
+            p = get_store(config=config, env=env, target=target)
             missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(p, attr, None)]
             if missing:
                 results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
@@ -897,7 +939,7 @@ def _setup_notebook_workflow(
 
     normalized = _validate_framework_config(config)
     required_targets = required_targets or ["Source", "Unified"]
-    resolved_paths = {target: _get_store(config=normalized, env=env, target=target) for target in required_targets}
+    resolved_paths = {target: get_store(config=normalized, env=env, target=target) for target in required_targets}
 
     context = None
     try:
@@ -1067,7 +1109,7 @@ def _detect_nested_metadata_delta_folders(
     exists = getattr(fs, "exists", None)
     if not callable(exists):
         return []
-    metadata_store = _get_store(config=config, env=env, target="metadata")
+    metadata_store = get_store(config=config, env=env, target="metadata")
     nested: list[str] = []
     schema = getattr(metadata_store, "schema", None) if getattr(metadata_store, "schema_enabled", False) else None
     for table in expected_tables:
@@ -1155,7 +1197,7 @@ def _resolve_metadata_schema(
     """Return explicit metadata schema or configured metadata target schema."""
     if metadata_schema is not None:
         return str(metadata_schema).strip() or None
-    store = _get_store(config=config, env=env, target="metadata")
+    store = get_store(config=config, env=env, target="metadata")
     if getattr(store, "schema_enabled", False):
         return str(getattr(store, "schema", "") or "").strip() or None
     return None
@@ -1170,7 +1212,7 @@ def _setup_metadata_table_registry(
     metadata_schema: str | None = None,
 ) -> dict[str, Any]:
     """Create missing metadata tables through configured lakehouse IO helpers."""
-    from fabricops_kit.io_core import read_lakehouse_table_core, write_lakehouse_table_core
+    from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
     from fabricops_kit.governance_review import _is_table_not_found_error
 
     created: list[str] = []
@@ -1226,7 +1268,7 @@ def _validate_metadata_table_registration(
     metadata_schema: str | None = None,
 ) -> dict[str, Any]:
     """Validate active metadata tables through configured metadata target reads."""
-    from fabricops_kit.io_core import read_lakehouse_table_core
+    from fabricops_kit.io.shared import read_lakehouse_table_core
 
     normalized = _validate_framework_config(config)
     expected = list(expected_tables or _get_active_metadata_tables(normalized))
@@ -1256,7 +1298,7 @@ def _validate_metadata_table_registration(
         )
     return {
         "status": "ready" if not missing else "not_ready",
-        "database": _get_store(config=normalized, env=env, target="metadata").name,
+        "database": get_store(config=normalized, env=env, target="metadata").name,
         "expected_tables": expected,
         "expected_table_count": len(expected),
         "registered_tables": [table for table in expected if table not in missing],

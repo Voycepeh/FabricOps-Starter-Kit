@@ -256,6 +256,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## Dashboard context" in flow_text
     assert "## Cleanup packets" in flow_text
     assert "## Generated outputs" in flow_text
+    assert "## Preferred callable file pattern" not in flow_text
+    assert not (ROOT / "docs" / "reference" / "callable-architecture.md").exists()
+    assert "Callable Architecture Pattern" not in (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     assert "AI can code fast." in flow_text
     assert "messy integration patterns" in flow_text
     assert "![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)" in flow_text
@@ -618,7 +621,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 94
+    assert summary_counts["callable_kind"]["function"] == 98
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] > 0
@@ -1627,6 +1630,11 @@ def test_callable_architecture_layer_rules_and_labels():
     assert set(generator.ARCHITECTURE_WARNING_TYPES) == {"Same-file private dependency"}
     assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {"Cross-file private dependency"}
 
+    import scripts.validate_callable_architecture as validator
+
+    assert validator.CALLABLE_FILE_PATTERN == "Public callable file -> domain shared helper -> same-file private helper"
+    assert "src/fabricops_kit/io/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
+
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long call chain"
     assert generator._display_label("Single-use helper candidate") == "Merge candidate"
@@ -1711,14 +1719,14 @@ def test_callable_graph_resolves_relative_import_alias_forms() -> None:
     tree = ast.parse(
         "from .shared import get_spark_session\n"
         "from . import shared\n"
-        "from ..io_core import _get_spark\n"
+        "from .shared import _private_helper\n"
     )
     module_aliases, symbol_aliases = generator.parse_import_aliases(tree.body)
-    package_modules = {"io.shared", "io_core"}
+    package_modules = {"io.shared"}
 
     assert symbol_aliases["get_spark_session"] == ".shared.get_spark_session"
     assert module_aliases["shared"] == ".shared"
-    assert symbol_aliases["_get_spark"] == "..io_core._get_spark"
+    assert symbol_aliases["_private_helper"] == ".shared._private_helper"
     assert generator.resolve_call_target(
         "io.read_lakehouse_csv",
         "get_spark_session",
@@ -1739,13 +1747,13 @@ def test_callable_graph_resolves_relative_import_alias_forms() -> None:
     ) == ("fabricops_kit.io.shared.get_spark_session", "cross_module", "internal_callable")
     assert generator.resolve_call_target(
         "io.read_lakehouse_csv",
-        "_get_spark",
+        "_private_helper",
         module_aliases,
         symbol_aliases,
         set(),
         {},
         package_modules,
-    ) == ("fabricops_kit.io_core._get_spark", "cross_module", "internal_helper")
+    ) == ("fabricops_kit.io.shared._private_helper", "cross_module", "internal_helper")
 
 
 def test_callable_architecture_validation_allows_private_helpers_in_public_flow(monkeypatch, tmp_path) -> None:

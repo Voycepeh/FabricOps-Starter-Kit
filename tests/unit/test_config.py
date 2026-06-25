@@ -205,7 +205,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     """Verify setup metadata tables creates missing tables with write helper."""
     from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
     from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
     import fabricops_kit.governance_review as governance
 
     class Schema:
@@ -281,7 +281,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
     """Verify setup metadata tables ready without active steward when not required."""
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
 
     class Schema:
         def __init__(self, fields):
@@ -363,7 +363,7 @@ def test_metadata_data_catalogue_schema_is_profile_evidence_only():
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
     """Verify metadata registration validation reads configured metadata target."""
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
 
     calls = []
 
@@ -400,7 +400,7 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
 
 def test_metadata_registration_validation_warns_for_missing_configured_tables(monkeypatch):
     """Verify metadata registration validation warns for missing configured tables."""
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
 
     def read_table(table, *, target, context, schema=None, spark_session=None):
         assert context["env"] == "dev"
@@ -422,7 +422,7 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
 
 def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch):
     """Verify setup metadata tables passes metadata schema to io helpers."""
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
 
     class Schema:
         def __init__(self, fields):
@@ -465,7 +465,7 @@ def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch)
 
 def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     """Verify setup metadata tables reports configured metadata schema."""
-    import fabricops_kit.io_core as io
+    import fabricops_kit.io.shared as io
 
     class Schema:
         def fieldNames(self):  # noqa: N802

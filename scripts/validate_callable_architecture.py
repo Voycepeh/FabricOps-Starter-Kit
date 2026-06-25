@@ -38,6 +38,8 @@ LEGACY_ARCHITECTURE_VIOLATION_TYPES = {
 VISIBLE_LAYERS = {"public", "internal"}
 PRIVATE_HELPER_LAYER = "private_helper"
 OLD_VISIBLE_LAYER_LABELS = {"Public API", "Internal helper", "Utility", "Adapter", "Workflow", "Private"}
+CALLABLE_FILE_PATTERN = "Public callable file -> domain shared helper -> same-file private helper"
+DOMAIN_SHARED_HELPER_FILES = {"src/fabricops_kit/io/shared.py"}
 
 
 @dataclass(frozen=True)
@@ -70,7 +72,15 @@ WARNING_PREFIXES = (
 
 
 def classify_source_finding(message: str) -> str:
-    """Return the enforcement class for a source-level finding."""
+    """Return the enforcement class for a source-level finding.
+
+    The intended callable pattern is ``Public callable file -> domain shared
+    helper -> same-file private helper``. Public-to-internal shared helper
+    calls are allowed, internal shared helpers may use same-file private
+    helpers, and cross-file private helper usage stays a strict source-level
+    finding. During cleanup, the existing CLI reports these source findings as
+    warnings unless strict mode is requested.
+    """
     if message.startswith(WARNING_PREFIXES):
         return "warning"
     return "failure"

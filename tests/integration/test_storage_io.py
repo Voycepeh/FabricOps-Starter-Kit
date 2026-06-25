@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 import fabricops_kit.fabric_input_output as io
-import fabricops_kit.io_core as io_core
+import fabricops_kit.io.shared as io_shared
 
 from tests.helpers import framework_config
 
@@ -150,7 +150,7 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
     captured = {}
 
     monkeypatch.setattr(
-        io_core,
+        io_shared,
         "_load_pandas",
         lambda: SimpleNamespace(
             read_excel=lambda path, sheet_name=0, **kwargs: captured.setdefault("kwargs", kwargs) or [{"a": 1}]

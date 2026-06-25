@@ -125,6 +125,66 @@ def test_lakehouse_file_readers_build_configured_files_paths():
     assert ("parquet", "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Files/curated/orders.parquet") in spark.read.calls
 
 
+def test_read_lakehouse_csv_preserves_signature_and_reader_options():
+    """Verify read_lakehouse_csv keeps its public contract and Spark CSV behavior."""
+    import inspect
+
+    from fabricops_kit.io.read_lakehouse_csv import read_lakehouse_csv
+
+    config = _io_config()
+    context = {"config": config, "env": "dev"}
+    spark = _Spark()
+
+    result = read_lakehouse_csv(
+        "Files/raw/orders.csv",
+        target="source",
+        spark_session=spark,
+        header=False,
+        context=context,
+        delimiter="|",
+        inferSchema=True,
+    )
+
+    assert inspect.signature(read_lakehouse_csv) == inspect.signature(io.read_lakehouse_csv)
+    assert result == {"path": "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"}
+    assert ("option", "header", False) in spark.read.calls
+    assert ("option", "delimiter", "|") in spark.read.calls
+    assert ("option", "inferSchema", True) in spark.read.calls
+    assert ("csv", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv") in spark.read.calls
+
+
+def test_configured_file_path_resolution_normalizes_files_prefix():
+    """Verify configured file path resolution keeps existing Files-prefix behavior."""
+    from fabricops_kit.io.shared import resolve_configured_file_path
+
+    config = _io_config()
+    store, normalized, path = resolve_configured_file_path(
+        "source",
+        "/Files/raw/orders.csv",
+        context={"config": config, "env": "dev"},
+    )
+
+    assert store.name == "lh_source_dev"
+    assert normalized == "raw/orders.csv"
+    assert path == "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"
+
+
+def test_csv_path_reader_uses_spark_csv_adapter_options():
+    """Verify CSV path reading remains a thin Spark reader adapter."""
+    from fabricops_kit.io.shared import read_csv_path
+
+    spark = _Spark()
+    result = read_csv_path(spark, "abfss://workspace/item/Files/raw/orders.csv", header=True, options={"sep": ",", "quote": '"'})
+
+    assert result == {"path": "abfss://workspace/item/Files/raw/orders.csv"}
+    assert spark.read.calls == [
+        ("option", "header", True),
+        ("option", "sep", ","),
+        ("option", "quote", '"'),
+        ("csv", "abfss://workspace/item/Files/raw/orders.csv"),
+    ]
+
+
 def test_lakehouse_excel_remains_exposed_and_callable():
     """Verify lakehouse excel remains exposed and callable."""
     assert hasattr(io, "read_lakehouse_excel")
@@ -236,10 +296,11 @@ def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
     config = _io_config()
     metadata_store = config.paths["dev"]["metadata"]
 
-    from fabricops_kit import io_core
+    from fabricops_kit.io.shared import resolve_lakehouse_table_location
 
-    assert io_core._resolve_lakehouse_table_path(metadata_store, "orders").endswith("/Tables/orders")
-    assert io_core._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
+    _table, _schema, path = resolve_lakehouse_table_location(metadata_store, "orders", None)
+    assert path.endswith("/Tables/orders")
+    assert io._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
 
 
 import pytest
@@ -330,7 +391,7 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
 
 def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypatch):
     """Verify public IO functions use the shared configured resolver boundaries."""
-    from fabricops_kit.io_core import FabricStore
+    from fabricops_kit.config import FabricStore
     import importlib
 
     csv_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_csv")
@@ -465,26 +526,55 @@ def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
 
     for helper_name in PUBLIC_IO_CALLABLES:
         assert f"{helper_name}_shared" not in shared_defs
-    assert all(not name.startswith("_") for name in shared_defs)
+    shared_internal_defs = [name for name in shared_defs if not name.startswith("_")]
     assert {
+        "get_spark_session",
+        "read_csv_path",
         "resolve_target_store",
         "resolve_lakehouse_table_location",
         "resolve_lakehouse_file_location",
         "read_warehouse_synapsesql",
         "write_warehouse_synapsesql",
-    }.issubset(shared_defs)
+    }.issubset(shared_internal_defs)
+    source = shared_path.read_text(encoding="utf-8")
+    assert "read_csv_path as read_csv_path_core" not in source
+    assert "get_spark," not in source
+    assert "reader.csv(path)" in source
+    imported_private_io_core_helpers = [
+        alias.name
+        for node in tree.body
+        if isinstance(node, ast.ImportFrom) and node.module in {"..io_core", "fabricops_kit.io_core"}
+        for alias in node.names
+        if alias.name.startswith("_")
+    ]
+    assert imported_private_io_core_helpers == []
 
 
-def test_io_core_has_no_public_function_mirror_core_wrappers():
-    """Verify migrated public function implementations are not parked in one-to-one core wrappers."""
-    source = Path("src/fabricops_kit/io_core.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+def test_io_core_module_is_deleted_after_fabric_io_shared_migration():
+    """Verify no wrapper-on-wrapper IO core module remains after migration."""
+    assert not Path("src/fabricops_kit/io_core.py").exists()
 
-    reused_internal_workflows = {"read_lakehouse_table", "write_lakehouse_table"}
-    for helper_name in PUBLIC_IO_CALLABLES - reused_internal_workflows:
-        assert f"{helper_name}_core" not in defined_functions
-    assert "metadata and orchestration internals" in source
+
+def test_no_source_imports_io_core_after_shared_migration():
+    """Verify source files import IO helpers from their real owner modules."""
+    offenders = []
+    for path in Path("src/fabricops_kit").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module and "io_core" in node.module:
+                offenders.append(f"{path}:{node.lineno}:{node.module}")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if "io_core" in alias.name:
+                        offenders.append(f"{path}:{node.lineno}:{alias.name}")
+    assert offenders == []
+
+
+def test_callable_architecture_pattern_is_not_user_facing_docs():
+    """Verify Fabric IO architecture guidance is not published as a user docs page."""
+    assert not Path("docs/reference/callable-architecture.md").exists()
+    assert "Callable Architecture Pattern" not in Path("mkdocs.yml").read_text(encoding="utf-8")
+    assert "Fabric IO callable file pattern" in Path("AGENTS.md").read_text(encoding="utf-8")
 
 
 def test_fabric_input_output_is_facade_only_after_io_migration():

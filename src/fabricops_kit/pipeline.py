@@ -17,7 +17,7 @@ from .guardrails import (
     _check_schema_runtime,
     _check_schema_rule_runtime,
 )
-from .io_core import configured_lakehouse_schema, write_lakehouse_table_core
+from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
 from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row

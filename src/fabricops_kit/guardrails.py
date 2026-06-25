@@ -814,7 +814,7 @@ def enforce_profile_behavior(
 
     """
     if rules_df is None and config is not None and env is not None:
-        from fabricops_kit.io_core import configured_lakehouse_schema, read_lakehouse_table_core
+        from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
         try:
             rules_df = read_lakehouse_table_core(rules_table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark)
         except Exception as exc:
@@ -841,7 +841,7 @@ def enforce_profile_behavior(
         raise ValueError("profile_mode must be one of: static_data, changing_data, skip")
 
     if catalogue_df is None and config is not None and env is not None:
-        from fabricops_kit.io_core import configured_lakehouse_schema, read_lakehouse_table_core
+        from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
         try:
             catalogue_df = read_lakehouse_table_core(metadata_table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark)
         except Exception as exc:
