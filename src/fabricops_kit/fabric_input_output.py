@@ -18,7 +18,8 @@ from .io import (
     write_lakehouse_table,
     write_warehouse_table,
 )
-from .io_core import FabricStore, _resolve_lakehouse_table_identifier
+from .config import FabricStore
+from .io.shared import _resolve_lakehouse_table_identifier
 
 DEFAULT_ENV = "Sandbox"
 DEFAULT_TARGET = "Source"

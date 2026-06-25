@@ -45,6 +45,8 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - The preferred Fabric IO call path is: public callable file -> `fabricops_kit.io.shared` internal helper -> same-file private helper.
 - Same-file private helpers may use leading underscores when they improve readability.
 - Cross-file calls or imports of underscore-prefixed private helpers are architecture violations. Promote reused helpers to non-underscored internal helpers in the domain owner file instead.
+- Do not add wrapper-on-wrapper IO layers. Fabric IO public callable files should use `src/fabricops_kit/io/shared.py` directly for shared implementation behavior.
+- Do not keep legacy IO modules or private compatibility wrappers after their callers move to the real owner module. Delete unused modules and helpers after migration.
 - Do not add or keep IO compatibility shims for unsupported private helper imports. Delete unused private helpers after migration.
 
 ## Before opening a PR

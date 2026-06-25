@@ -13,11 +13,53 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from datetime import datetime
+import re
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 DEFAULT_AUDIT_TIMEZONE = "UTC"
+
+
+@dataclass(frozen=True)
+class FabricStore:
+    """Configured Fabric lakehouse or warehouse connection details."""
+
+    env: str
+    workspace_id: str
+    item_id: str
+    name: str
+    kind: str
+    schema_enabled: bool = False
+    schema: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate and normalize initialized values."""
+        for field_name in ("env", "workspace_id", "item_id", "name", "kind"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be a non-empty string.")
+        normalized_kind = self.kind.strip().lower()
+        if normalized_kind not in {"lakehouse", "warehouse"}:
+            raise ValueError("kind must be one of: lakehouse, warehouse.")
+        object.__setattr__(self, "kind", normalized_kind)
+        object.__setattr__(self, "schema_enabled", bool(self.schema_enabled))
+        schema_value = None if self.schema is None else str(self.schema).strip()
+        if self.schema_enabled and normalized_kind == "lakehouse":
+            if not schema_value:
+                raise ValueError("schema is required when schema_enabled is True for a lakehouse store.")
+            if any(separator in schema_value for separator in ("/", "\\", ".")):
+                raise ValueError("schema must be a simple schema name; do not use paths or dots.")
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", schema_value):
+                raise ValueError("schema must contain only letters, numbers, and underscores, and must not start with a number.")
+        object.__setattr__(self, "schema", schema_value or None)
+
+    @property
+    def root(self) -> str:
+        """Return the OneLake ABFSS root for lakehouse stores."""
+        if self.kind != "lakehouse":
+            raise ValueError("root is only available for lakehouse stores.")
+        return f"abfss://{self.workspace_id}@onelake.dfs.fabric.microsoft.com/{self.item_id}"
 
 
 _DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
@@ -1170,7 +1212,7 @@ def _setup_metadata_table_registry(
     metadata_schema: str | None = None,
 ) -> dict[str, Any]:
     """Create missing metadata tables through configured lakehouse IO helpers."""
-    from fabricops_kit.io_core import read_lakehouse_table_core, write_lakehouse_table_core
+    from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
     from fabricops_kit.governance_review import _is_table_not_found_error
 
     created: list[str] = []
@@ -1226,7 +1268,7 @@ def _validate_metadata_table_registration(
     metadata_schema: str | None = None,
 ) -> dict[str, Any]:
     """Validate active metadata tables through configured metadata target reads."""
-    from fabricops_kit.io_core import read_lakehouse_table_core
+    from fabricops_kit.io.shared import read_lakehouse_table_core
 
     normalized = _validate_framework_config(config)
     expected = list(expected_tables or _get_active_metadata_tables(normalized))

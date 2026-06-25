@@ -589,7 +589,6 @@ def test_generated_module_docs_are_not_public_surface():
         "data_profiling",
         "fabric_input_output",
         "io",
-        "io_core",
         "guardrails",
         "metadata",
         "pipeline",

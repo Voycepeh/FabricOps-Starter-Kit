@@ -8,9 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src" / "fabricops_kit"
-LOWER_LAYER_MODULES = {"io_core"}
-LOWER_LAYER_NAMES = {"read_lakehouse_table_core", "write_lakehouse_table_core", "configured_lakehouse_schema", "profile_dataframe_core"}
-FABRIC_IO_INTERNALS = {"_read_lakehouse_table_core", "_write_lakehouse_table_core", "_read_warehouse_query_core", "_read_warehouse_table_core", "_write_warehouse_table_core"}
+LOWER_LAYER_NAMES = {"profile_dataframe_core"}
 
 
 @dataclass(frozen=True)
@@ -110,7 +108,7 @@ def _is_internal(name: str) -> bool:
 
 def _is_lower_layer(module: str, name: str) -> bool:
     """Return whether a function belongs to the explicitly allowed lower layer."""
-    return module in LOWER_LAYER_MODULES or name in LOWER_LAYER_NAMES
+    return name in LOWER_LAYER_NAMES
 
 
 def test_package_callables_obey_architecture_boundaries() -> None:
@@ -139,18 +137,9 @@ def test_package_callables_obey_architecture_boundaries() -> None:
                 elif _is_internal(fn_name):
                     if _is_public(callee_name, public):
                         violations.append(f"internal helper {caller} must not call public callable {callee}")
-                    if callee_name in FABRIC_IO_INTERNALS and not _is_lower_layer(callee_module, callee_name):
-                        violations.append(f"internal helper {caller} must use io_core instead of internal Fabric IO helper {callee}")
     assert violations == []
 
 
-def test_io_core_does_not_depend_on_public_fabric_input_output_module() -> None:
-    """Verify lower-layer IO does not import the public facade module."""
-    tree = ast.parse((SRC / "io_core.py").read_text(encoding="utf-8"))
-    imports: list[str] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module:
-            imports.append(node.module)
-        elif isinstance(node, ast.Import):
-            imports.extend(alias.name for alias in node.names)
-    assert not any(name.endswith("fabric_input_output") or name == "fabric_input_output" for name in imports)
+def test_io_core_wrapper_module_is_deleted() -> None:
+    """Verify Fabric IO no longer keeps a wrapper-on-wrapper io_core layer."""
+    assert not (SRC / "io_core.py").exists()

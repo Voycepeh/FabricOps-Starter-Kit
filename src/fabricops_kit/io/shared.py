@@ -7,8 +7,7 @@ from typing import Any
 import re
 import tempfile
 
-from ..config import get_store, resolve_fabric_context
-from ..io_core import FabricStore
+from ..config import FabricStore, get_store, resolve_fabric_context
 
 DEFAULT_ENV = "Sandbox"
 DEFAULT_TARGET = "Source"
@@ -91,6 +90,11 @@ def _resolve_lakehouse_table_path(store: FabricStore, table_name: str, schema_na
     """Return the physical OneLake Delta table path."""
     table_relative_path = f"{schema_name}/{table_name}" if schema_name else table_name
     return _join_lakehouse_area_path(store, "Tables", table_relative_path)
+
+
+def _resolve_lakehouse_table_identifier(store: FabricStore, table_name: str, schema_name: str | None = None) -> str:
+    """Return the Spark table identifier for a normalized lakehouse table."""
+    return f"{schema_name}.{table_name}" if schema_name else table_name
 
 
 def _require_fabric_connector() -> Any:
@@ -229,6 +233,57 @@ def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: di
     for key, value in (options or {}).items():
         writer = writer.option(key, value)
     writer.save(path)
+
+
+def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | None:
+    """Return the configured schema for a schema-enabled lakehouse target."""
+    try:
+        store = get_store(config, env, target)
+    except ValueError:
+        return None
+    if store.kind != "lakehouse" or not getattr(store, "schema_enabled", False):
+        return None
+    return _normalize_schema_name(getattr(store, "schema", None))
+
+
+def read_lakehouse_table_core(
+    table_name: str,
+    *,
+    target: str,
+    schema: str | None = None,
+    spark_session=None,
+    context: dict[str, Any] | None = None,
+):
+    """Read a configured Lakehouse Delta table for internal workflows."""
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
+    return read_delta_path(get_spark_session(spark_session), path)
+
+
+def write_lakehouse_table_core(
+    df,
+    table_name: str,
+    *,
+    target: str,
+    schema: str | None = None,
+    mode: str = "append",
+    partition_by=None,
+    repartition_by=None,
+    options=None,
+    verbose: bool = True,
+    context=None,
+):
+    """Write a configured Lakehouse Delta table for internal workflows."""
+    validate_dataframe_writer(df)
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
+    normalized_mode = normalize_write_mode(mode)
+    if repartition_by is not None:
+        if isinstance(repartition_by, (list, tuple)):
+            df = df.repartition(*repartition_by) if not (repartition_by and isinstance(repartition_by[0], int)) else df.repartition(repartition_by[0], *repartition_by[1:])
+        else:
+            df = df.repartition(repartition_by)
+    if verbose:
+        print(f"Writing Lakehouse table to {path}")
+    write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
 
 
 def read_warehouse_synapsesql(spark_obj, store: FabricStore, synapsesql_target: str):

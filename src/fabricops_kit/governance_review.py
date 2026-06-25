@@ -9,7 +9,7 @@ import uuid
 from typing import Any, Iterable, Mapping
 
 from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
-from .io_core import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .data_profiling import profile_dataframe_core
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row
 from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE

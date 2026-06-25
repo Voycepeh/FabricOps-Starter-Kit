@@ -17,7 +17,7 @@ import sys
 from typing import Any
 
 from .config import DEFAULT_STEWARD_ROLE_OPTIONS, resolve_fabric_context
-from .io_core import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"

@@ -391,7 +391,7 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
 
 def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypatch):
     """Verify public IO functions use the shared configured resolver boundaries."""
-    from fabricops_kit.io_core import FabricStore
+    from fabricops_kit.config import FabricStore
     import importlib
 
     csv_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_csv")
@@ -550,37 +550,24 @@ def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
     assert imported_private_io_core_helpers == []
 
 
-def test_io_core_keeps_only_metadata_core_and_supported_store_helpers():
-    """Verify io_core has no unused Fabric IO public-callable helper shims."""
-    source = Path("src/fabricops_kit/io_core.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+def test_io_core_module_is_deleted_after_fabric_io_shared_migration():
+    """Verify no wrapper-on-wrapper IO core module remains after migration."""
+    assert not Path("src/fabricops_kit/io_core.py").exists()
 
-    assert defined_functions == {
-        "_join_lakehouse_area_path",
-        "_resolve_lakehouse_table_identifier",
-        "_normalize_table_name",
-        "_normalize_schema_name",
-        "_normalize_write_mode",
-        "_validate_lakehouse_store",
-        "_validate_warehouse_store",
-        "_validate_dataframe_writer",
-        "get_spark",
-        "resolve_target_store",
-        "_resolve_lakehouse_schema",
-        "_resolve_lakehouse_table_path",
-        "_resolve_lakehouse_table_location",
-        "configured_lakehouse_schema",
-        "_read_delta_path",
-        "_write_delta_path",
-        "read_lakehouse_table_core",
-        "write_lakehouse_table_core",
-    }
-    assert "metadata/governance" in source
-    for helper_name in PUBLIC_IO_CALLABLES - {"read_lakehouse_table", "write_lakehouse_table"}:
-        assert f"{helper_name}_core" not in defined_functions
-    assert "read_csv_path" not in defined_functions
-    assert "resolve_lakehouse_file_location" not in defined_functions
+
+def test_no_source_imports_io_core_after_shared_migration():
+    """Verify source files import IO helpers from their real owner modules."""
+    offenders = []
+    for path in Path("src/fabricops_kit").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module and "io_core" in node.module:
+                offenders.append(f"{path}:{node.lineno}:{node.module}")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if "io_core" in alias.name:
+                        offenders.append(f"{path}:{node.lineno}:{alias.name}")
+    assert offenders == []
 
 
 def test_callable_architecture_pattern_is_not_user_facing_docs():

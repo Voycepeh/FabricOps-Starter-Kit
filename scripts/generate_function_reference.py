@@ -80,7 +80,6 @@ MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "data_profiling",
     "fabric_input_output",
     "io",
-    "io_core",
     "guardrails",
     "metadata",
     "pipeline",
