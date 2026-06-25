@@ -284,7 +284,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert stale_flow_phrase not in flow_text
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
+    compact_dashboard_text = "".join(dashboard_text.split())
+    compact_dashboard_text = compact_dashboard_text.replace('"', "'")
+    normalized_dashboard_text = _normalize_whitespace(dashboard_text)
     inventory_text = inventory_path.read_text(encoding="utf-8")
+    compact_inventory_text = "".join(inventory_text.split())
+    compact_inventory_text = compact_inventory_text.replace('"', "'")
+    normalized_inventory_text = _normalize_whitespace(inventory_text)
     combined_dashboard_assets = dashboard_text + inventory_text
 
     for text in (dashboard_text, inventory_text):
@@ -2196,6 +2202,27 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
         inventory_text,
     )
     assert "enhanceAll(document)" not in inventory_text
+
+
+def test_callable_inventory_html_keeps_yaml_newlines_escaped() -> None:
+    """Verify inventory YAML helpers emit escaped JavaScript newline strings."""
+    inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
+
+    assert "join('\\n')" in inventory_text
+    assert "yamlValue(packet)+'\\n'" in inventory_text
+    assert "join('\n')" not in inventory_text
+    assert "yamlValue(packet)+'\n'" not in inventory_text
+
+
+def test_callable_inventory_generated_html_smoke_contract() -> None:
+    """Verify generated inventory HTML keeps required entrypoints and no broken YAML strings."""
+    inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
+
+    assert "function canonicalNonFunctionCount()" in inventory_text
+    assert "function loadData()" in inventory_text
+    assert "loadData();" in inventory_text
+    assert "join('\n')" not in inventory_text
+    assert "yamlValue(packet)+'\n'" not in inventory_text
 
 
 def test_table_controls_are_opt_in_and_safe_for_dynamic_rows() -> None:
