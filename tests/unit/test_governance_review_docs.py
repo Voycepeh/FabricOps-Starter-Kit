@@ -48,7 +48,7 @@ def test_governance_review_page_frames_metadata_control_panel():
 def test_dq_rule_index_contains_supported_catalogue():
     """Verify dq rule index contains supported catalogue."""
     text = Path("docs/reference/dq-rules/index.md").read_text(encoding="utf-8")
-    assert "23 native DQ rule types" in text
+    assert f"{len(governance.DQ_RULE_TYPES)} native DQ rule types" in text
     for rule_type in governance.DQ_RULE_TYPES:
         assert f"`{rule_type}`" in text
     assert "Great Expectations or dbt" in text
@@ -59,7 +59,7 @@ def test_dq_rule_reference_pages_exist_for_supported_catalogue():
     """Verify dq rule reference pages exist for supported catalogue."""
     docs_dir = Path("docs/reference/dq-rules")
     mkdocs_text = Path("mkdocs.yml").read_text(encoding="utf-8")
-    assert "23 native DQ rule types" in docs_dir.joinpath("index.md").read_text(encoding="utf-8")
+    assert f"{len(governance.DQ_RULE_TYPES)} native DQ rule types" in docs_dir.joinpath("index.md").read_text(encoding="utf-8")
 
     for rule_type in governance.DQ_RULE_TYPES:
         page_name = rule_type.replace("_", "-") + ".md"
