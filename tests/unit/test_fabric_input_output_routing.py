@@ -9,8 +9,8 @@ import types
 from pathlib import Path
 
 from fabricops_kit.config import PathConfig
-from fabricops_kit.fabric_input_output import FabricStore
-import fabricops_kit.fabric_input_output as io
+from fabricops_kit.config import FabricStore
+import fabricops_kit.io as io
 from tests.integration.test_storage_io import _Frame, _Spark
 
 
@@ -24,18 +24,6 @@ PUBLIC_IO_CALLABLES = {
     "write_warehouse_table",
     "read_warehouse_query",
 }
-
-DELETED_INTERNAL_HELPERS = {
-    "_get_fabric_runtime_context",
-    "_check_naming_convention",
-    "_seed_minimal_sample_source_table",
-    "_registered_table_identifier",
-    "_uses_registered_metadata_table",
-    "_current_database_matches",
-    "_qualified_table_name",
-}
-
-DELETED_INTERNAL_CLASSES = {"_PandasProxy"}
 
 
 def _store(target: str, kind: str, name: str, *, schema_enabled: bool = False, schema: str | None = None) -> FabricStore:
@@ -225,28 +213,29 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
     assert spark.table_calls == []
 
 
-def test_deleted_internal_helpers_are_absent_and_unreferenced():
-    """Verify deleted internal helpers are absent and unreferenced."""
-    source = Path("src/fabricops_kit/fabric_input_output.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
-    defined_classes = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
-    referenced_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
-
-    assert DELETED_INTERNAL_HELPERS.isdisjoint(defined_functions)
-    assert DELETED_INTERNAL_CLASSES.isdisjoint(defined_classes)
-    assert DELETED_INTERNAL_HELPERS.isdisjoint(referenced_names)
-    assert DELETED_INTERNAL_CLASSES.isdisjoint(referenced_names)
+def test_legacy_io_facade_module_is_deleted():
+    """Verify the legacy IO facade file is deleted."""
+    assert not (Path("src/fabricops_kit") / ("fabric_input_" + "output.py")).exists()
 
 
-def test_explicit_io_callables_are_root_exports():
-    """Verify explicit IO callables are root exports."""
+def test_explicit_io_callables_are_public_exports_with_stable_signatures():
+    """Verify IO callables stay importable from root and IO package exports."""
+    import importlib
+
     import fabricops_kit
 
     for helper_name in PUBLIC_IO_CALLABLES:
+        owner_module = importlib.import_module(f"fabricops_kit.io.{helper_name}")
+        owner_callable = getattr(owner_module, helper_name)
+        root_callable = getattr(fabricops_kit, helper_name)
+        io_callable = getattr(io, helper_name)
+
         assert helper_name in fabricops_kit.__all__
-        assert callable(getattr(fabricops_kit, helper_name))
-        assert callable(getattr(io, helper_name))
+        assert helper_name in io.__all__
+        assert callable(root_callable)
+        assert callable(io_callable)
+        assert inspect.signature(root_callable) == inspect.signature(owner_callable)
+        assert inspect.signature(io_callable) == inspect.signature(owner_callable)
 
 
 def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
@@ -288,7 +277,9 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
 
     assert ("load", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders") in spark.read.calls
     assert ("save", "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL_RULES") in frame.write.calls
-    assert io._resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES", "meta") == "meta.METADATA_GUARDRAIL_RULES"
+    from fabricops_kit.io.shared import _resolve_lakehouse_table_identifier
+
+    assert _resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES", "meta") == "meta.METADATA_GUARDRAIL_RULES"
 
 
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
@@ -300,7 +291,9 @@ def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
 
     _table, _schema, path = resolve_lakehouse_table_location(metadata_store, "orders", None)
     assert path.endswith("/Tables/orders")
-    assert io._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
+    from fabricops_kit.io.shared import _resolve_lakehouse_table_identifier
+
+    assert _resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
 
 
 import pytest
@@ -498,7 +491,7 @@ def test_migrated_io_public_import_paths_remain_stable():
     """Verify migrated IO public functions remain importable from stable paths."""
     import fabricops_kit
     import fabricops_kit.io as owner_package
-    import fabricops_kit.fabric_input_output as facade
+    import fabricops_kit as facade
 
     for helper_name in PUBLIC_IO_CALLABLES:
         root_func = getattr(fabricops_kit, helper_name)
@@ -577,15 +570,16 @@ def test_callable_architecture_pattern_is_not_user_facing_docs():
     assert "Fabric IO callable file pattern" in Path("AGENTS.md").read_text(encoding="utf-8")
 
 
-def test_fabric_input_output_is_facade_only_after_io_migration():
-    """Verify the legacy fabric_input_output module no longer owns implementations."""
-    source = Path("src/fabricops_kit/fabric_input_output.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    defined_functions = [node.name for node in tree.body if isinstance(node, ast.FunctionDef)]
-
-    assert defined_functions == []
-    assert "from .io import" in source
-    assert "Compatibility facade" in source
+def test_no_code_imports_legacy_io_facade_module():
+    """Verify code and template files do not import the deleted legacy facade."""
+    roots = [Path("src"), Path("tests"), Path("templates"), Path("docs")]
+    offenders = []
+    for root in roots:
+        for path in root.rglob("*"):
+            if path.is_file() and path.suffix in {".py", ".md", ".ipynb", ".json", ".yml"}:
+                if "fabricops_kit." + "fabric_input_" + "output" in path.read_text(encoding="utf-8"):
+                    offenders.append(str(path))
+    assert offenders == []
 
 
 def test_migrated_io_owner_files_do_not_import_private_helpers():

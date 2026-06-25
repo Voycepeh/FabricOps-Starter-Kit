@@ -22,13 +22,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true
-    },
-    {
       "module_name": "governance_review",
       "visibility": "public",
       "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
@@ -44,10 +37,10 @@
     },
     {
       "module_name": "io",
-      "visibility": "internal",
-      "module_summary": "Owns shared internal IO helpers used by one-function IO owner modules.",
-      "sidebar_group": "Internal architecture",
-      "sidebar_include": false
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true
     },
     {
       "module_name": "metadata",
@@ -162,129 +155,6 @@
       ]
     },
     {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_lakehouse_csv",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_lakehouse_excel",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_lakehouse_parquet",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_lakehouse_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "02_pipeline",
-        "99_explore"
-      ]
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_warehouse_query",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "read_warehouse_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "write_lakehouse_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / examples",
-      "template_segment": "Fabric IO",
-      "used_in_templates": [
-        "02_pipeline",
-        "example_pipeline_demo",
-        "example_dq_rule_smoke_test"
-      ]
-    },
-    {
-      "module_name": "fabric_input_output",
-      "visibility": "public",
-      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
-      "callable_name": "write_warehouse_table",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Fabric IO",
-      "used_in_templates": []
-    },
-    {
       "module_name": "governance_review",
       "visibility": "public",
       "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
@@ -384,6 +254,129 @@
         "02_pipeline",
         "03_governance"
       ]
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "read_lakehouse_csv",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / optional 99_explore",
+      "template_segment": "Fabric IO",
+      "used_in_templates": []
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "read_lakehouse_excel",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / optional 99_explore",
+      "template_segment": "Fabric IO",
+      "used_in_templates": []
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "read_lakehouse_parquet",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / optional 99_explore",
+      "template_segment": "Fabric IO",
+      "used_in_templates": []
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "read_lakehouse_table",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / 99_explore",
+      "template_segment": "Fabric IO",
+      "used_in_templates": [
+        "02_pipeline",
+        "99_explore"
+      ]
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "read_warehouse_query",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / optional 99_explore",
+      "template_segment": "Fabric IO",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "read_warehouse_table",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / optional 99_explore",
+      "template_segment": "Fabric IO",
+      "used_in_templates": [
+        "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_lakehouse_table",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / examples",
+      "template_segment": "Fabric IO",
+      "used_in_templates": [
+        "02_pipeline",
+        "example_pipeline_demo",
+        "example_dq_rule_smoke_test"
+      ]
+    },
+    {
+      "module_name": "io",
+      "visibility": "public",
+      "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "write_warehouse_table",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Fabric IO",
+      "used_in_templates": []
     },
     {
       "module_name": "pipeline",

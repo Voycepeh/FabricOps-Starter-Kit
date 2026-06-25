@@ -28,7 +28,7 @@ from fabricops_kit.config import (
     setup_metadata_tables,
     setup_notebook,
 )
-from fabricops_kit.fabric_input_output import FabricStore
+from fabricops_kit.config import FabricStore
 from tests.helpers import framework_config, store
 
 pytestmark = pytest.mark.unit

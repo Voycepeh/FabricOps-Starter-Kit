@@ -68,7 +68,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "data_agreement": "data_agreement",
     "governance_review": "governance_review",
     "data_profiling": "data_profiling",
-    "fabric_input_output": "fabric_input_output",
+    "io": "io",
     "guardrails": "guardrails",
     "metadata": "metadata",
     "pipeline": "pipeline",
@@ -78,7 +78,6 @@ MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "data_agreement",
     "governance_review",
     "data_profiling",
-    "fabric_input_output",
     "io",
     "guardrails",
     "metadata",
@@ -99,7 +98,7 @@ INTERNAL_ALIAS_MODULES = {}
 # suppressing intentionally noisy shared plumbing.
 INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     "enforce_profile_behavior": {
-        "fabricops_kit.fabric_input_output._normalize_schema_name",
+        "fabricops_kit.io.shared._normalize_schema_name",
         "fabricops_kit.config._get_store",
     },
     "run_table_guardrails": {
@@ -129,11 +128,11 @@ def _hide_from_public_relationships(qn: str) -> bool:
 INTERNAL_HELPER_AUDIT_DECISIONS = {
     "fabricops_kit.config._get_store": "keep_internal",
     "fabricops_kit.config._normalize_path_config": "keep_internal",
-    "fabricops_kit.fabric_input_output._normalize_table_name": "keep_internal",
-    "fabricops_kit.fabric_input_output._normalize_schema_name": "keep_internal",
-    "fabricops_kit.fabric_input_output._resolve_lakehouse_schema": "keep_internal",
-    "fabricops_kit.fabric_input_output._resolve_lakehouse_table_path": "keep_internal",
-    "fabricops_kit.fabric_input_output._get_spark": "keep_internal",
+    "fabricops_kit.io.shared._normalize_table_name": "keep_internal",
+    "fabricops_kit.io.shared._normalize_schema_name": "keep_internal",
+    "fabricops_kit.io.shared._resolve_lakehouse_schema": "keep_internal",
+    "fabricops_kit.io.shared._resolve_lakehouse_table_path": "keep_internal",
+    "fabricops_kit.io.shared.get_spark_session": "keep_internal",
 }
 
 INTERNAL_HELPER_AUDIT_RATIONALE = {

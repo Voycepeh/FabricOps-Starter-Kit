@@ -14,14 +14,14 @@ The canonical machine-readable list lives in `fabricops_kit.public_api.SUPPORTED
 | Data agreement | `fabricops_kit.data_agreement.widget_render_data_agreement` | Render append-only agreement create/update maintenance using active stewards. |
 | Data agreement | `fabricops_kit.data_agreement.widget_render_data_steward` | Render append-only data steward create/update maintenance. |
 | Profiling | `fabricops_kit.data_profiling.profile_dataframe` | Build canonical DQ-ready profiling rows from a Spark DataFrame. |
-| Data access | `fabricops_kit.fabric_input_output.read_lakehouse_csv` | Read a CSV file from a Fabric lakehouse Files path. |
-| Data access | `fabricops_kit.fabric_input_output.read_lakehouse_excel` | Read an Excel file from a Fabric lakehouse Files path. |
-| Data access | `fabricops_kit.fabric_input_output.read_lakehouse_parquet` | Read a Parquet file from a Fabric lakehouse Files path. |
-| Data access | `fabricops_kit.fabric_input_output.read_lakehouse_table` | Read a Delta table from a Fabric lakehouse. |
-| Data access | `fabricops_kit.fabric_input_output.read_warehouse_query` | Read warehouse rows with SQL pushdown. |
-| Data access | `fabricops_kit.fabric_input_output.read_warehouse_table` | Read a full table from a Microsoft Fabric warehouse. |
-| Data access | `fabricops_kit.fabric_input_output.write_lakehouse_table` | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
-| Data access | `fabricops_kit.fabric_input_output.write_warehouse_table` | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
+| Data access | `fabricops_kit.read_lakehouse_csv` | Read a CSV file from a Fabric lakehouse Files path. |
+| Data access | `fabricops_kit.read_lakehouse_excel` | Read an Excel file from a Fabric lakehouse Files path. |
+| Data access | `fabricops_kit.read_lakehouse_parquet` | Read a Parquet file from a Fabric lakehouse Files path. |
+| Data access | `fabricops_kit.read_lakehouse_table` | Read a Delta table from a Fabric lakehouse. |
+| Data access | `fabricops_kit.read_warehouse_query` | Read warehouse rows with SQL pushdown. |
+| Data access | `fabricops_kit.read_warehouse_table` | Read a full table from a Microsoft Fabric warehouse. |
+| Data access | `fabricops_kit.write_lakehouse_table` | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
+| Data access | `fabricops_kit.write_warehouse_table` | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
 | Governance review | `fabricops_kit.governance_review.get_latest_metadata_catalogue` | Return the latest metadata catalogue rows for an exploratory table lookup. |
 | Governance review | `fabricops_kit.governance_review.widget_author_dq_rules` | Render interactive manual DQ rule authoring UI. |
 | Governance review | `fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules` | Render interactive schema, freshness, and profile behavior authoring UI. |

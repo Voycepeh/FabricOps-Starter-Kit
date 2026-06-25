@@ -840,7 +840,7 @@ def _run_config_smoke_tests(
         Required targets expected in ``config.path_config``. Defaults to
         ``["Source", "Unified"]`` when not provided.
     check_io_import : bool, default=False
-        Whether to test importability of ``fabric_input_output`` helpers.
+        Whether to test importability of IO helpers.
     notebook_name : str | None, optional
         Notebook name to validate against configured naming prefixes.
 
@@ -910,7 +910,7 @@ def _run_config_smoke_tests(
 
     if check_io_import:
         try:
-            from .fabric_input_output import read_lakehouse_table  # noqa: F401
+            from .io import read_lakehouse_table  # noqa: F401
 
             results.append(ConfigSmokeCheckResult("fabric_io_import", "pass", "fabric_io helpers are importable."))
         except Exception as exc:

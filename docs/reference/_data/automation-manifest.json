@@ -1527,7 +1527,7 @@
     "use_when": "Not documented yet",
     "do_not_use_when": "Not documented yet",
     "required_context": "Not documented yet",
-    "inputs": "config : FrameworkConfig\n    Validated framework configuration to evaluate.\nenv : str, default=\"Sandbox\"\n    Environment key used when resolving required target paths.\nrequired_targets : list[str] | None, optional\n    Required targets expected in ``config.path_config``. Defaults to\n    ``[\"Source\", \"Unified\"]`` when not provided.\ncheck_io_import : bool, default=False\n    Whether to test importability of ``fabric_input_output`` helpers.\nnotebook_name : str | None, optional\n    Notebook name to validate against configured naming prefixes.",
+    "inputs": "config : FrameworkConfig\n    Validated framework configuration to evaluate.\nenv : str, default=\"Sandbox\"\n    Environment key used when resolving required target paths.\nrequired_targets : list[str] | None, optional\n    Required targets expected in ``config.path_config``. Defaults to\n    ``[\"Source\", \"Unified\"]`` when not provided.\ncheck_io_import : bool, default=False\n    Whether to test importability of IO helpers.\nnotebook_name : str | None, optional\n    Notebook name to validate against configured naming prefixes.",
     "output": "list[ConfigSmokeCheckResult]\n    Ordered check results with ``pass``, ``warn``, ``fail``, or ``skipped``\n    statuses for each readiness dimension.",
     "return_interpretation": "Not documented yet",
     "side_effects": "Not documented yet",
