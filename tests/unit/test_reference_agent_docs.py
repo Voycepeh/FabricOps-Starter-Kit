@@ -245,9 +245,43 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Callable Flow" in flow_text
-    assert "[Open Callable Architecture](../assets/callable-functions-dashboard.html)" in flow_text
-    assert "[Open Code Inventory](../assets/callable-functions-inventory.html)" in flow_text
-    assert "[Open callable-flow.json](_data/callable-flow.json)" in flow_text
+    assert "> **Make it exist first. Make it good next.**" in flow_text
+    assert "## Why this exists" in flow_text
+    assert "## What we want to catch" in flow_text
+    assert "### Pointless wrapper functions" in flow_text
+    assert "### Wide dependency surfaces" in flow_text
+    assert "### Public callable dependencies" in flow_text
+    assert "### Long nested chains" in flow_text
+    assert "## The workflow" in flow_text
+    assert "## Dashboard context" in flow_text
+    assert "## Cleanup packets" in flow_text
+    assert "## Generated outputs" in flow_text
+    assert "AI can code fast." in flow_text
+    assert "messy integration patterns" in flow_text
+    assert "![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)" in flow_text
+    assert "![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)" in flow_text
+    assert "![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)" in flow_text
+    assert "![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)" in flow_text
+    assert "[Callable Architecture](../assets/callable-functions-dashboard.html)" in flow_text
+    assert "[Code Inventory](../assets/callable-functions-inventory.html)" in flow_text
+    assert "[callable-flow.json](_data/callable-flow.json)" in flow_text
+    assert "focused cleanup packets as JSON or YAML" in flow_text
+    assert "fabricops_public_callable_flow_cleanup_packet" in flow_text
+    assert "fabricops_support_inventory_cleanup_packet" in flow_text
+    assert "Use the Architecture page first" in flow_text
+    assert "Use Code Inventory" in flow_text
+    assert "## Callable helper summary" not in flow_text
+    assert "## Internal helper nesting inventory" not in flow_text
+    assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
+    assert "refactor reason" not in flow_text.lower()
+    for stale_flow_phrase in [
+        "Decision mode",
+        "quick filter",
+        "Architecture inventory",
+        "callable refactor packet",
+        "Exporting an AI refactor prompt",
+    ]:
+        assert stale_flow_phrase not in flow_text
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
     inventory_text = inventory_path.read_text(encoding="utf-8")
@@ -277,9 +311,276 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "compat-mode-breaking" in dashboard_text
     assert "architecture_violation_count" in dashboard_text
     assert "architecture_findings" in dashboard_text
-    assert "boundary_violations" not in dashboard_text
+    assert "flow_tree" in dashboard_text
+    assert "merge_candidates" in dashboard_text
+    assert "public_callable_findings" in dashboard_text
+    assert "merge_candidate_count" in dashboard_text
+    assert "requested_work" in dashboard_text
+    assert "safety_constraints" in dashboard_text
+    assert "function publicCallableFindingRows(flow)" in dashboard_text
+    assert "flow-summary-card" in dashboard_text
+    assert "flow-key-signals" in dashboard_text
+    assert "flow-next-step" in dashboard_text
+    assert "functionflowHealth(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "functionflowReason(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "functionflowNextStep(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "functionflowSignalChips(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "Public callable findings</h3>" not in dashboard_text
+    assert "Architecture findings inside this flow" not in dashboard_text
+    assert "Internal helper cleanup candidates</h3>" not in dashboard_text
+    assert "helper_tags" in dashboard_text
+    assert "Inspect the selected public callable and its call flow." in dashboard_text
+    assert "Resolve true cross-file private dependency violations first." in dashboard_text
+    assert "For same-file private dependencies, treat as warning only." in dashboard_text
+    assert "Merge or inline helpers only when readability improves." in dashboard_text
+    assert "Preserve notebook-facing behavior." in dashboard_text
+    assert "Return summary, changed functions, tests, risks, and skipped items." in dashboard_text
+    assert "Do not casually change public function signatures." in dashboard_text
+    assert "source_url:row.source_url||null" in compact_dashboard_text
+    assert "docs_url:row.docs_url||null" in compact_dashboard_text
+    assert "file_path:row.source_path||null" in compact_dashboard_text
+    assert "line_start:row.source_start_line||null" in compact_dashboard_text
+    assert "function moduleLink(module)" in dashboard_text
+    assert re.search(r"function moduleHref\(module\)\s*\{\s*return ['\"]{2};?\s*\}", dashboard_text)
+    assert "../api/modules/${module}/" not in dashboard_text
+    assert "../../api/modules/${module}/" not in dashboard_text
+    assert "GITHUB_SOURCE_BASE" in dashboard_text
+    assert "return`${GITHUB_SOURCE_BASE}${path}${anchor}`" in compact_dashboard_text
+    assert "architectureViolationFlows=flows.filter" in compact_dashboard_text
+    assert "function architectureFindingRows(flow)" in dashboard_text
+    assert "function architectureFindingCount(flow)" in dashboard_text
+    assert "c.architecture_result==='Violation'||c.recommended_action==='Architectureviolation'" in compact_dashboard_text
+    assert "functionmarkdownLink(i,label)" in compact_dashboard_text
+    assert "cross_layer_issue_count" not in dashboard_text
+    assert "Suggested next step" in dashboard_text
+    assert "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details." in dashboard_text
+    assert "disabled>CopyJSON" not in compact_dashboard_text
+    assert "disabled>DownloadJSON" in compact_dashboard_text
+    assert "disabled>CopyYAML" not in compact_dashboard_text
+    assert "disabled>DownloadYAML" in compact_dashboard_text
+    assert "location.reload" not in dashboard_text
+    assert "publicSearch:''" in compact_dashboard_text
+    assert "quickFilter:'all'" not in compact_dashboard_text
+    assert "constDOWNSTREAM_BANDS=" not in compact_dashboard_text
+    assert "constDEPTH_BANDS=" not in compact_dashboard_text
+    assert "constISSUE_BANDS=" not in compact_dashboard_text
+    assert "constISSUE_BOOLEAN_BANDS=" not in compact_dashboard_text
+    assert "function architectureViolationCount(flow)" in dashboard_text
+    assert "if(typeofvalue==='boolean')returnvalue?1:0" not in compact_dashboard_text
+    assert "function issueBandsForRows(rows)" not in dashboard_text
+    assert "?ISSUE_BANDS:ISSUE_BOOLEAN_BANDS" not in compact_dashboard_text
+    assert "functionmatchesBand(flow,bandValue,bands,metric)" not in compact_dashboard_text
+    assert "function populateBandFilter" not in dashboard_text
+    assert "matchesBand(f,state.publicDownstreamBand" not in dashboard_text
+    assert "matchesBand(f,state.publicDepthBand" not in dashboard_text
+    assert "matchesBand(f,state.publicIssueBand" not in dashboard_text
+    assert "['publicMinDownstream','publicDownstreamBand']" not in dashboard_text
+    assert "quickFilter:'all',sortKey:'callable',sortDirection:'asc'" not in compact_dashboard_text
+    assert "populateBandFilter('publicMinDownstream'" not in dashboard_text
+    assert "populateBandFilter('publicMinDepth'" not in dashboard_text
+    assert "populateBandFilter('publicMinIssues'" not in dashboard_text
+    assert "function numericFilterValue(value)" not in dashboard_text
+    assert "Number(e.target.value||0)" not in dashboard_text
+    card_order = [
+        compact_dashboard_text.index("label:'Publiccallables'"),
+        compact_dashboard_text.index("label:'Witharchitectureviolations'"),
+    ]
+    assert card_order == sorted(card_order)
+    assert "Notebook-facing APIs scanned in this review workspace." in dashboard_text
+    assert "No architecture violations found." in dashboard_text
+    assert "High-priority public callables" not in dashboard_text
+    assert "Long public flows" not in dashboard_text
+    assert "Public flows that can be shortened" not in dashboard_text
+    assert "Public APIs to review first." not in dashboard_text
+    assert "Public callable flows whose depth exceeds the threshold." not in dashboard_text
+    assert "Public callable flows with internal helpers that may be simplified, merged, or moved closer to their caller." not in dashboard_text
+    assert "Clean public flows" not in dashboard_text
+    assert "Public flows with warnings" not in dashboard_text
+    assert "Callables flagged as single-use helper candidates" not in dashboard_text
+    assert "label:'Merge candidates'" not in dashboard_text
+    assert "value:s.merge_candidates" not in dashboard_text
+    assert "305 Merge candidates" not in dashboard_text
+    assert "Review notebook-facing public callables, search for risks, and inspect the selected flow below." in normalized_dashboard_text
+    assert "Review detailed callable actions in Inventory" not in dashboard_text
+    assert "architecture-cta" not in dashboard_text
 
-    assert "downloadPacket" in inventory_text
+    assert "dataLoadStatus" in dashboard_text
+    assert "function callableFlowDataUrl()" in dashboard_text
+    assert "referenceMarker='/reference/'" in compact_dashboard_text
+    assert "assetsMarker='/assets/'" in compact_dashboard_text
+    assert "+'_data/callable-flow.json'" in compact_dashboard_text
+    assert "+'reference/_data/callable-flow.json'" in compact_dashboard_text
+    assert "newURL('reference/_data/callable-flow.json',document.baseURI).href" in compact_dashboard_text
+    assert "Failed to load callable-flow data. Attempted URL:" in dashboard_text
+    assert "HTTP status:" in dashboard_text
+    assert "Error message:" in dashboard_text
+    assert "function renderLoadedCount()" in dashboard_text
+    assert "total callables; ${publicEntryFlows.length} public callables available; ${visibleFlows.length} rows after filters" in dashboard_text
+    assert "renderLoadedCount();$('publicCallableList').innerHTML" in compact_dashboard_text
+    assert "architectureThresholds=data.architecture_thresholds||architectureThresholds" in compact_dashboard_text
+    assert "function longCallChainThreshold()" in dashboard_text
+    assert "function largeDependencySurfaceThreshold()" in dashboard_text
+    assert "long_call_chain_depth:null" in compact_dashboard_text
+    assert "large_dependency_surface:null" in compact_dashboard_text
+    assert "function positiveThreshold(value)" in dashboard_text
+    assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in compact_dashboard_text
+    assert "architecture_violation_count??0" in compact_dashboard_text
+    assert "down>=12" not in dashboard_text
+    assert "Violation reason" in dashboard_text
+    assert "Helper-level architecture findings found" not in dashboard_text
+    assert "No architecture violations found in this flow." in dashboard_text
+    assert "function whyReview(flow)" in dashboard_text
+    assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
+    assert "No decision findings." not in dashboard_text
+    assert "Preserve backwards compatibility" in dashboard_text
+    assert "Selected cleanup should preserve existing public callable behavior and avoid breaking current users." in dashboard_text
+    assert "Copy JSON" not in dashboard_text
+    assert "Download JSON" in dashboard_text
+    assert "Copy YAML" not in dashboard_text
+    assert "Download YAML" in dashboard_text
+    assert "Copy flow Markdown" not in dashboard_text
+    assert "function markdownPacket(packet)" not in dashboard_text
+    assert "function yamlPacket(packet)" in dashboard_text
+    assert '<span class="badge keep">Healthy</span>' in dashboard_text
+    assert "Merge candidate found" in dashboard_text
+    assert "Review merge candidate" in dashboard_text
+    assert "Review merge candidates" in dashboard_text
+    assert "reasons.join('')" in compact_dashboard_text
+    assert "Contains ${violations} architecture violations." in dashboard_text
+    assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
+    assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
+    assert "Max depth; long call chain threshold >= " in dashboard_text
+    assert "longThreshold!==null" in compact_dashboard_text
+    assert "largeThreshold!==null" in compact_dashboard_text
+    assert "mergeCount===1?'Contains1mergecandidateinsidethisflow.'" in compact_dashboard_text
+    assert "deep cross-module helper chains" not in dashboard_text
+    assert "inline single-use helper" not in dashboard_text
+
+    assert "Code Inventory" in inventory_text
+    assert "Inspect supporting implementation details that complement the callable flow architecture view." in normalized_inventory_text
+    assert "Generated at:" in inventory_text
+    assert "Generated at:</strong>" in inventory_text
+    assert "SGT" in inventory_text
+    assert " UTC" not in inventory_text
+    assert "Data source:" in inventory_text
+    assert "callable-flow.json" in inventory_text
+    assert "new Date()" not in inventory_text
+    assert "Date.now" not in inventory_text
+    assert "Architecture" in inventory_text
+    assert "callable-functions-dashboard.html" in inventory_text
+    assert "callable-page-nav" in inventory_text
+    assert "header-action" not in inventory_text
+    assert "<aclass='callable-page-tab'href='callable-functions-dashboard.html'>Architecture</a>" in compact_inventory_text
+    assert "<aclass='callable-page-tabis-active'href='callable-functions-inventory.html'aria-current='page'>Inventory</a>" in compact_inventory_text
+    assert "<aid='openCallableFlowJson'class='callable-page-action'href='../reference/_data/callable-flow.json'>OpenJSONdata</a>" in compact_inventory_text
+    assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
+    for common_shell in [compact_dashboard_text, compact_inventory_text]:
+        assert "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a" in common_shell
+        assert "header,main{box-sizing:border-box;max-width:1480px;margin:0auto;padding:1rem" in common_shell
+        assert "header{background:#fff;border-bottom:1pxsolid#dbe3ef" in common_shell
+        assert "headerh1{margin:" in common_shell
+        assert "headerp{margin:" in common_shell and "color:#475569" in common_shell
+    assert "inventorySummaryCards" in inventory_text
+    assert "function renderInventoryCards()" in inventory_text
+    assert "Shared functions" in inventory_text
+    assert "Private functions" in inventory_text
+    assert "Non functions" in inventory_text
+    assert "Suggested cleanup" in inventory_text
+    assert "Public callables" in inventory_text
+    assert "Total code assets" in inventory_text
+    assert "User facing callable functions." in inventory_text
+    assert "Reusable utility functions intentionally shared across callable files." in inventory_text
+    assert "Internal helpers owned by one standalone callable file." in inventory_text
+    assert "Classes, methods, constants, registries, config objects, metadata, and other support assets." in inventory_text
+    assert "Only actionable records that need review or cleanup." in inventory_text
+    assert "The callable flow page is the source of truth for public callable architecture" in normalized_inventory_text
+    assert "Use this inventory to inspect supporting implementation details that are not fully visible in callable flows, including internal helpers, methods, classes, orphaned utilities, and refactor candidates." in normalized_inventory_text
+    assert "Architecture inventory" not in inventory_text
+    assert "giant review table" not in inventory_text
+    assert "summaryCounts.callable_inventory_metrics" in inventory_text
+    assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
+    assert ".surface-cardstrong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem" in compact_inventory_text
+    assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700" in compact_inventory_text
+    assert "function sourceCallableLink(i)" in inventory_text
+    assert 'class="source-link" href="${esc(href)}"' in inventory_text
+    assert "if(i.source_url)returni.source_url" in compact_inventory_text
+    assert "conststart=i.source_start_line" in compact_inventory_text
+    assert "#L${start}" in inventory_text
+    assert "Showing ${visibleRows.length} support inventory records of ${total} total generated code assets." in normalized_inventory_text
+    assert "Callable metrics are generated from the callable inventory data." not in normalized_inventory_text
+    assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
+    assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
+    assert "callable-review-table-wrap" in inventory_text
+    assert "<thclass='col-file-area'>Sourcefile</th><thclass='col-callable'>Itemname</th><thclass='col-item-type'>Itemtype</th><thclass='col-usage-scope'>Usagescope</th><thclass='col-health'>Health</th><thclass='col-recommended-action'>Recommendedaction</th><thclass='col-details'>Details</th>" in compact_inventory_text
+    assert "healthBadge(i)" in inventory_text
+    assert "actionBadge(i)" in inventory_text
+    assert "usageBadge(i)" in inventory_text
+    assert "data-inventory-row" in inventory_text
+    assert "data-select-row" not in inventory_text
+    assert "selectAllVisible" not in inventory_text
+    assert "copyJson" not in inventory_text
+    assert "downloadJson" in inventory_text
+    assert "copyYaml" not in inventory_text
+    assert "downloadYaml" in inventory_text
+    assert "searchBox" in inventory_text
+    assert "Search code inventory" in inventory_text
+    assert "Inventory focus" in inventory_text
+    assert "Item type" in inventory_text
+    assert "Suggested cleanup" in inventory_text
+    assert "Public callable" in inventory_text
+    assert "Shared function" in inventory_text
+    assert "Private function" in inventory_text
+    assert "Non functions" in inventory_text
+    assert "Usage scope" in inventory_text
+    assert "Boundary violation" in inventory_text
+    assert "Recommended action" in inventory_text
+    assert "Reached from public flow" not in inventory_text
+    assert "function buildFlowSignals(flows)" in inventory_text
+    assert "function matchesFilters(i)" in inventory_text
+    assert "function supportFocus(i)" in inventory_text
+    assert "function rank(i)" in inventory_text
+    assert "state.quickFilter" not in compact_inventory_text
+    assert "function matchesQuickFilter(i)" not in inventory_text
+    assert "function updateQuickFilterChips()" not in inventory_text
+    assert 'data-quick-filter=' not in inventory_text
+    assert "resetAll(document)" in inventory_text
+    assert "selectedItems()" in inventory_text
+    for removed_filter in [
+        "moduleFilter",
+        "roleGroupFilter",
+        "reachabilityFilter",
+        "signalFilter",
+        "priorityFilter",
+        "Advanced / Debug filters",
+        "callableRoleFilter",
+        "dependencyRoleFilter",
+        "kindFilter",
+        "reviewStatusFilter",
+        "minInboundFilter",
+        "minOutboundFilter",
+    ]:
+        assert removed_filter not in inventory_text
+    assert "selectedCount" in inventory_text
+    assert "compatibilityMode" in inventory_text
+    assert "COMPATIBILITY_MODES" in inventory_text
+    assert "CLEANUP_MODE_GUIDANCE" not in inventory_text
+    assert "Preserve backwards compatibility" in inventory_text
+    assert "Allow breaking changes" in inventory_text
+    assert "Selected cleanup should preserve existing public callable behavior and avoid breaking current users." in inventory_text
+    assert "Selected cleanup may propose cleaner breaking changes when they improve the callable architecture." in inventory_text
+    assert "promptInstruction" in inventory_text
+    assert "ai_prompt:cleanupPrompt()" in compact_inventory_text
+    assert "Public callable review" not in inventory_text
+    assert "Internal cleanup" not in inventory_text
+    assert "AI cleanup packet" not in inventory_text
+    assert "compat-mode-safe" in inventory_text
+    assert "compat-mode-breaking" in inventory_text
+    assert "Select visible" in inventory_text
+    assert "Clear selection" in inventory_text
+    assert "Copy JSON" not in inventory_text
+    assert "Download JSON" in inventory_text
+    assert "Copy YAML" not in inventory_text
+    assert "Download YAML" in inventory_text
     assert "selectedItems" in inventory_text
     assert "refactorPacket" in inventory_text
     assert "fabricops_support_inventory_cleanup_packet" in inventory_text
@@ -310,6 +611,21 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
+    assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
+    assert summary_counts["callable_kind"]["function"] == 94
+    assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
+    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
+    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] > 0
+    assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
+    assert {
+        "public_api_entrypoints",
+        "long_call_chains",
+        "architecture_violations",
+        "merge_candidates",
+        "suggested_inline_or_privatize",
+    } <= set(public_api_surface)
+
+
     public_flows = flow_data["public_entrypoint_flow"]
     function_inventory = flow_data["function_inventory"]
 
@@ -339,6 +655,82 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["function_type"] == "Private helper" for row in private_helper_rows)
     assert all(row["function_name"].split(".")[-1].startswith("_") for row in private_helper_rows)
     assert all(row["architecture_signals"] == [] for row in private_helper_rows)
+    assert all(row["owner_function"] or row["usage_scope"] == "unused" for row in private_helper_rows)
+    assert all(row["owner_file"] for row in private_helper_rows)
+    assert any(row["leaks_outside_owner_file"] for row in private_helper_rows)
+    assert {"Keep private helper", "Merge into owner", "Rename to internal function", "Move closer to owner", "Remove redundant wrapper"} & {row["recommended_action"] for row in private_helper_rows}
+    assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
+    assert sum(1 for row in function_inventory if row["function_type"] == "Internal function") == summary_counts["function_type"]["Internal function"]
+    assert any(
+        callee["function_type"] == "Private helper"
+        for flow in public_flows
+        for callee in flow["transitive_callees"]
+    )
+    rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
+    assert "fabricops_kit.config.FrameworkConfig" not in rows_by_qn
+    assert "fabricops_kit.io_core.FabricStore.root" not in rows_by_qn
+    assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
+    assert all(row["review_status"] != "unreachable" for row in function_inventory)
+    expected_inventory_keys = {
+        "qualified_name",
+        "function_name",
+        "module",
+        "source_path",
+        "owner_file",
+        "source_url",
+        "source_start_line",
+        "source_end_line",
+        "function_type",
+        "layer",
+        "review_status",
+        "review_status_label",
+        "callable_kind",
+        "callable_role",
+        "callable_role_group",
+        "callable_role_group_label",
+        "callable_role_detail",
+        "callable_role_detail_label",
+        "dependency_role",
+        "owner_qualified_name",
+        "owner_function",
+        "owner_module",
+        "owner_file",
+        "leaks_outside_owner_file",
+        "usage_scope",
+        "usage_scope_label",
+        "architecture_signals",
+        "review_signals",
+        "reachability_kind",
+        "reachability_label",
+        "recommended_action",
+        "priority",
+        "signals",
+        "called_by_count",
+        "calls_count",
+        "callers",
+        "callees",
+    }
+    public_inventory_keys = expected_inventory_keys | {"docs_path", "docs_url"}
+    assert all(set(item) == expected_inventory_keys or set(item) == public_inventory_keys for item in function_inventory)
+    assert all({"function_type", "layer", "dependency_role", "callable_kind"} <= set(item) for item in function_inventory)
+
+    callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
+    assert "Make it exist first. Make it good next." in callable_flow_text
+    assert "AI generated code can work correctly but still leave behind messy integration patterns" in callable_flow_text
+    assert "Pointless wrapper functions" in callable_flow_text
+    assert "Wide dependency surfaces" in callable_flow_text
+    assert "Public callable dependencies" in callable_flow_text
+    assert "Long nested chains" in callable_flow_text
+    assert "Generated outputs" in callable_flow_text
+    assert "focused cleanup packets as JSON or YAML" in callable_flow_text
+    assert "fabricops_public_callable_flow_cleanup_packet" in callable_flow_text
+    assert "fabricops_support_inventory_cleanup_packet" in callable_flow_text
+    assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
+    assert "Internal-to-internal calls are valid" not in callable_flow_text
+    assert "Role group = broad job of the callable." not in callable_flow_text
+    serialized_flow = json.dumps(flow_data)
+    for legacy_name in ["cross_layer", "deep_chain", "inline_candidate", "used_by_count", "change_risk", "refined_recommended_action"]:
+        assert legacy_name not in serialized_flow
 
     expected_public_flow_keys = {
         "qualified_name",
@@ -1753,6 +2145,12 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "inventory=data.function_inventory" in compact_inventory_text
     assert "function yamlPacket(packet)" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
+    assert "function canonicalNonFunctionCount()" in inventory_text
+    assert "metrics.non_function_records!==undefined" in compact_inventory_text
+    assert "return Number(metrics.non_function_records)||0" in inventory_text
+    assert "summaryCounts.supporting_objects!==undefined" in compact_inventory_text
+    assert "return inventory.filter(i=>itemType(i)==='Non function').length" in inventory_text
+    assert "nonFunctionCount=canonicalNonFunctionCount()" in compact_inventory_text
     for label in [
         "Total code assets",
         "Public callables",

@@ -22,7 +22,7 @@ Validate whether the behaviour is useful.
 
 Once the behaviour is worth keeping, the next problem is maintainability.
 
-AI generated code can work correctly but still leave behind messy integration patterns: duplicated helpers, private functions used across files, wide dependency surfaces, or long chains of thin wrapper functions.
+AI generated code can work correctly but still leave behind messy integration patterns: duplicated helpers, private functions used across files, wide dependency surfaces, public callables depending on other public callables, or long chains of thin wrapper functions.
 
 Callable Flow exists to support that second step.
 
@@ -88,15 +88,28 @@ The point is not to review every line of code at the moment it is created.
 
 The point is to avoid letting fast prototypes quietly become long term technical debt.
 
-## Cleanup packet
+## Dashboard context
 
-When a function is worth improving, Callable Flow can export a focused cleanup packet.
+Callable Flow has two generated review surfaces:
+
+- [Callable Architecture](../assets/callable-functions-dashboard.html) starts from notebook-facing public callables and shows the selected callable's flow, downstream depth, architecture findings, merge candidates, and suggested next step.
+- [Code Inventory](../assets/callable-functions-inventory.html) supports deeper inspection of lower-level implementation assets, including shared helpers, private helpers, methods, classes, and other support assets.
+
+Use the Architecture page first when you are deciding whether a public callable is clean enough to keep. Use Code Inventory when the flow points to support code that needs closer review or when you need to batch related support assets for cleanup planning.
+
+## Cleanup packets
+
+When a function is worth improving, Callable Flow can export focused cleanup packets as JSON or YAML.
 
 The packet gives AI enough context to help with the next step without asking it to freely rewrite the repository.
 
 ![Selecting refactor candidates](../assets/fabricops-select-refactor-candidates.png)
 
 ![Prompt export](../assets/fabricops-select-refactor-candidates-prompt-export.png)
+
+The Architecture page exports `fabricops_public_callable_flow_cleanup_packet` for one selected public callable flow. The Code Inventory page exports `fabricops_support_inventory_cleanup_packet` for selected support assets.
+
+Both packet types are designed to keep the cleanup focused on the selected callable or assets, the identified risks, the compatibility mode, and the tests that should be reviewed before changes are merged.
 
 Example packet shape:
 
@@ -108,7 +121,7 @@ selected_public_callable:
   qualified_name: fabricops_kit.pipeline.display_guardrail_results
   source_file: src/fabricops_kit/pipeline.py
 
-compatibility_mode: internal_cleanup
+compatibility_mode: preserve_backwards_compatibility
 
 architecture_summary:
   downstream_count: 8
@@ -128,6 +141,16 @@ requested_work:
 ```
 
 The packet keeps the refactor focused on the selected callable, the identified risks, and the compatibility mode.
+
+## Generated outputs
+
+Callable Flow is generated from repository scans. The generated outputs are:
+
+- [Callable Architecture](../assets/callable-functions-dashboard.html)
+- [Code Inventory](../assets/callable-functions-inventory.html)
+- [callable-flow.json](_data/callable-flow.json)
+
+Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
 
 ## Principle
 

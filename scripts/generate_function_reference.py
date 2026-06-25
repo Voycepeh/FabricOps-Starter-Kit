@@ -3898,7 +3898,7 @@ ${yamlValue(item,indent+1)}`;return `${pad}- ${yamlScalar(item)}`}).join('
 ')}if(value&&typeof value==='object'){const entries=Object.entries(value);if(!entries.length)return '{}';return entries.map(([key,item])=>{if(item&&typeof item==='object'){return `${pad}${key}:
 ${yamlValue(item,indent+1)}`}return `${pad}${key}: ${yamlScalar(item)}`}).join('
 ')}return `${pad}${yamlScalar(value)}`}function yamlPacket(packet){return yamlValue(packet)+'
-'}function downloadPacket(format){const isYaml=format==='yaml';const blob=new Blob([isYaml?yamlPacket(refactorPacket()):JSON.stringify(refactorPacket(),null,2)],{type:isYaml?'application/x-yaml':'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`fabricops-support-inventory-cleanup-packet.${isYaml?'yaml':'json'}`;a.click()}function renderInventoryCards(){const total=inventory.length,publicCount=inventory.filter(isPublicCallable).length,sharedCount=inventory.filter(i=>itemType(i)==='Shared function').length,privateCount=inventory.filter(i=>itemType(i)==='Private function').length,nonFunctionCount=inventory.filter(i=>itemType(i)==='Non function').length,cleanupCount=inventory.filter(isActionable).length,cards=[{label:'Total code assets',value:total,subtitle:'All generated callable inventory records.',cls:'muted'},{label:'Public callables',value:publicCount,subtitle:'User facing callable functions.',cls:'primary'},{label:'Shared functions',value:sharedCount,subtitle:'Reusable utility functions intentionally shared across callable files.',cls:'info'},{label:'Private functions',value:privateCount,subtitle:'Internal helpers owned by one standalone callable file.',cls:'good'},{label:'Non functions',value:nonFunctionCount,subtitle:'Classes, methods, constants, registries, config objects, metadata, and other support assets.',cls:'muted'},{label:'Suggested cleanup',value:cleanupCount,subtitle:'Only actionable records that need review or cleanup.',cls:cleanupCount?'risk':'good'}];$('inventorySummaryCards').innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('')}function supportFocus(i){return isActionable(i)}function matchesFilters(i){const q=state.search.toLowerCase();if(q&&![i.function_name,i.qualified_name,fileArea(i),itemType(i),usageScope(i),healthLabel(i),recommendedAction(i)].some(v=>text(v).toLowerCase().includes(q)))return false;if(state.focusFilter==='actionable'&&!supportFocus(i))return false;if(state.focusFilter==='selected'&&!state.selected.has(i.qualified_name))return false;if(state.typeFilter==='non_function'&&itemType(i)!=='Non function')return false;if(!['all','non_function'].includes(state.typeFilter)&&itemTypeKey(i)!==state.typeFilter)return false;if(state.usageFilter!=='all'&&usageScope(i)!==state.usageFilter)return false;if(state.healthFilter!=='all'&&healthLabel(i)!==state.healthFilter)return false;if(state.actionFilter!=='all'&&recommendedAction(i)!==state.actionFilter)return false;return true}function rank(i){return (isActionable(i)?0:1)+text(recommendedAction(i)).localeCompare('No action')}function filteredRows(){return inventory.filter(matchesFilters).sort((a,b)=>rank(a)-rank(b)||itemType(a).localeCompare(itemType(b))||text(a.function_name).localeCompare(text(b.function_name)))}function updateFilterControls(){$('resetFilters').hidden=state.search===''&&state.focusFilter==='actionable'&&state.typeFilter==='all'&&state.usageFilter==='all'&&state.healthFilter==='all'&&state.actionFilter==='all'}function updateExportControls(){$('selectedCount').textContent=`Selected code assets: ${state.selected.size}`;['downloadJson','downloadYaml'].forEach(id=>$(id).disabled=state.selected.size===0);$('clearSelected').disabled=state.selected.size===0}function resultCountText(){const total=summaryCounts.total_callables??inventory.length;return `Showing ${visibleRows.length} support inventory records of ${total} total generated code assets.`}function inventoryEmptyMessage(){if(inventoryDataMissing)return 'Inventory data is missing from callable-flow.json. Regenerate the callable flow export.';return 'No supporting code assets found for the current filters.'}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');el.textContent=message;el.className=isError?'load-status issue':'load-status'}function renderTable(){visibleRows=filteredRows();$('resultCount').textContent=resultCountText();renderLoadStatus(visibleRows.length?`Loaded ${inventory.length} code inventory records`:inventoryEmptyMessage(),inventoryDataMissing);updateFilterControls();$('inventoryBody').innerHTML=visibleRows.map(i=>`<tr data-inventory-row="${esc(i.qualified_name)}" class="${state.selected.has(i.qualified_name)?'selected':''}" tabindex="0" aria-selected="${state.selected.has(i.qualified_name)?'true':'false'}"><td class="col-file-area">${esc(fileArea(i))}</td><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-item-type">${esc(itemType(i))}</td><td class="col-usage-scope">${usageBadge(i)}</td><td class="col-health">${healthBadge(i)}</td><td class="col-recommended-action">${actionBadge(i)}</td><td class="col-details">${detailsCell(i)}</td></tr>`).join('');updateExportControls();if(window.FabricOpsTableControls)window.FabricOpsTableControls.enhance(document.querySelector('table[data-table-controls="excel"]'))}function callableFlowDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker))return origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/callable-flow.json';if(path.includes(assetsMarker))return origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/callable-flow.json';return new URL('reference/_data/callable-flow.json',document.baseURI).href}function updateCallableFlowDataLink(url){const link=$('openCallableFlowJson');if(link)link.href=url}function buildFlowSignals(flows){publicFlowQns=new Set();flowSignalsByQn=new Map();(flows||[]).forEach(flow=>{publicFlowQns.add(flow.qualified_name);(flow.transitive_callees||[]).forEach(row=>{publicFlowQns.add(row.qualified_name);const signal=flowSignalsByQn.get(row.qualified_name)||{violation:false,warning:false,types:[]};if(row.architecture_result==='Violation')signal.violation=true;if(row.architecture_result==='Warning')signal.warning=true;if(row.violation_type&&!signal.types.includes(row.violation_type))signal.types.push(row.violation_type);flowSignalsByQn.set(row.qualified_name,signal)})})}$('searchBox').addEventListener('input',e=>{state.search=e.target.value;renderTable()});['focusFilter','typeFilter','usageFilter','healthFilter','actionFilter'].forEach(id=>$(id).addEventListener('change',e=>{state[id]=e.target.value;renderTable()}));$('resetFilters').onclick=()=>{Object.assign(state,{search:'',focusFilter:'actionable',typeFilter:'all',usageFilter:'all',healthFilter:'all',actionFilter:'all'});$('searchBox').value='';$('focusFilter').value='actionable';$('typeFilter').value='all';$('usageFilter').value='all';$('healthFilter').value='all';$('actionFilter').value='all';if(window.FabricOpsTableControls)window.FabricOpsTableControls.resetAll(document);renderTable()};document.addEventListener('click',e=>{if(e.target.closest('a,button,input,select,textarea,label,summary,.inventory-detail'))return;const row=e.target.closest('[data-inventory-row]');if(row){state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});document.addEventListener('keydown',e=>{const row=e.target.closest('[data-inventory-row]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});$('selectVisible').onclick=()=>{visibleRows.forEach(r=>state.selected.add(r.qualified_name));renderTable()};$('clearSelected').onclick=()=>{state.selected.clear();renderTable()};$('downloadJson').onclick=()=>downloadPacket('json');$('downloadYaml').onclick=()=>downloadPacket('yaml');$('compatibilityMode').addEventListener('change',updateCompatibilityModeMeta);updateCompatibilityModeMeta();async function loadData(){const attemptedUrl=callableFlowDataUrl();updateCallableFlowDataLink(attemptedUrl);try{const response=await fetch(attemptedUrl);if(!response.ok)throw new Error(`HTTP ${response.status} ${response.statusText}`);let data;try{data=await response.json()}catch(parseError){throw new Error(`Could not parse callable-flow.json from ${attemptedUrl}: ${parseError&&parseError.message?parseError.message:String(parseError)}`)}if(!Array.isArray(data.function_inventory)){inventory=[];summaryCounts=data&&data.summary_counts?data.summary_counts:{};inventoryDataMissing=true;buildFlowSignals(data&&Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]);renderInventoryCards();renderTable();return}inventoryDataMissing=false;inventory=data.function_inventory;summaryCounts=data.summary_counts||{};buildFlowSignals(data.public_entrypoint_flow||[]);renderInventoryCards();renderTable()}catch(error){inventoryDataMissing=false;renderInventoryCards();$('inventoryBody').innerHTML='';$('resultCount').textContent='';renderLoadStatus(`Failed to load callable-flow data. URL: ${attemptedUrl}. Error: ${error&&error.message?error.message:String(error)}`,true)}}loadData();
+'}function downloadPacket(format){const isYaml=format==='yaml';const blob=new Blob([isYaml?yamlPacket(refactorPacket()):JSON.stringify(refactorPacket(),null,2)],{type:isYaml?'application/x-yaml':'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`fabricops-support-inventory-cleanup-packet.${isYaml?'yaml':'json'}`;a.click()}function canonicalNonFunctionCount(){const metrics=summaryCounts&&summaryCounts.callable_inventory_metrics?summaryCounts.callable_inventory_metrics:{};if(metrics.non_function_records!==undefined&&metrics.non_function_records!==null)return Number(metrics.non_function_records)||0;if(summaryCounts&&summaryCounts.supporting_objects!==undefined&&summaryCounts.supporting_objects!==null)return Number(summaryCounts.supporting_objects)||0;return inventory.filter(i=>itemType(i)==='Non function').length}function renderInventoryCards(){const total=inventory.length,publicCount=inventory.filter(isPublicCallable).length,sharedCount=inventory.filter(i=>itemType(i)==='Shared function').length,privateCount=inventory.filter(i=>itemType(i)==='Private function').length,nonFunctionCount=canonicalNonFunctionCount(),cleanupCount=inventory.filter(isActionable).length,cards=[{label:'Total code assets',value:total,subtitle:'All generated callable inventory records.',cls:'muted'},{label:'Public callables',value:publicCount,subtitle:'User facing callable functions.',cls:'primary'},{label:'Shared functions',value:sharedCount,subtitle:'Reusable utility functions intentionally shared across callable files.',cls:'info'},{label:'Private functions',value:privateCount,subtitle:'Internal helpers owned by one standalone callable file.',cls:'good'},{label:'Non functions',value:nonFunctionCount,subtitle:'Classes, methods, constants, registries, config objects, metadata, and other support assets.',cls:'muted'},{label:'Suggested cleanup',value:cleanupCount,subtitle:'Only actionable records that need review or cleanup.',cls:cleanupCount?'risk':'good'}];$('inventorySummaryCards').innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('')}function supportFocus(i){return isActionable(i)}function matchesFilters(i){const q=state.search.toLowerCase();if(q&&![i.function_name,i.qualified_name,fileArea(i),itemType(i),usageScope(i),healthLabel(i),recommendedAction(i)].some(v=>text(v).toLowerCase().includes(q)))return false;if(state.focusFilter==='actionable'&&!supportFocus(i))return false;if(state.focusFilter==='selected'&&!state.selected.has(i.qualified_name))return false;if(state.typeFilter==='non_function'&&itemType(i)!=='Non function')return false;if(!['all','non_function'].includes(state.typeFilter)&&itemTypeKey(i)!==state.typeFilter)return false;if(state.usageFilter!=='all'&&usageScope(i)!==state.usageFilter)return false;if(state.healthFilter!=='all'&&healthLabel(i)!==state.healthFilter)return false;if(state.actionFilter!=='all'&&recommendedAction(i)!==state.actionFilter)return false;return true}function rank(i){return (isActionable(i)?0:1)+text(recommendedAction(i)).localeCompare('No action')}function filteredRows(){return inventory.filter(matchesFilters).sort((a,b)=>rank(a)-rank(b)||itemType(a).localeCompare(itemType(b))||text(a.function_name).localeCompare(text(b.function_name)))}function updateFilterControls(){$('resetFilters').hidden=state.search===''&&state.focusFilter==='actionable'&&state.typeFilter==='all'&&state.usageFilter==='all'&&state.healthFilter==='all'&&state.actionFilter==='all'}function updateExportControls(){$('selectedCount').textContent=`Selected code assets: ${state.selected.size}`;['downloadJson','downloadYaml'].forEach(id=>$(id).disabled=state.selected.size===0);$('clearSelected').disabled=state.selected.size===0}function resultCountText(){const total=summaryCounts.total_callables??inventory.length;return `Showing ${visibleRows.length} support inventory records of ${total} total generated code assets.`}function inventoryEmptyMessage(){if(inventoryDataMissing)return 'Inventory data is missing from callable-flow.json. Regenerate the callable flow export.';return 'No supporting code assets found for the current filters.'}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');el.textContent=message;el.className=isError?'load-status issue':'load-status'}function renderTable(){visibleRows=filteredRows();$('resultCount').textContent=resultCountText();renderLoadStatus(visibleRows.length?`Loaded ${inventory.length} code inventory records`:inventoryEmptyMessage(),inventoryDataMissing);updateFilterControls();$('inventoryBody').innerHTML=visibleRows.map(i=>`<tr data-inventory-row="${esc(i.qualified_name)}" class="${state.selected.has(i.qualified_name)?'selected':''}" tabindex="0" aria-selected="${state.selected.has(i.qualified_name)?'true':'false'}"><td class="col-file-area">${esc(fileArea(i))}</td><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-item-type">${esc(itemType(i))}</td><td class="col-usage-scope">${usageBadge(i)}</td><td class="col-health">${healthBadge(i)}</td><td class="col-recommended-action">${actionBadge(i)}</td><td class="col-details">${detailsCell(i)}</td></tr>`).join('');updateExportControls();if(window.FabricOpsTableControls)window.FabricOpsTableControls.enhance(document.querySelector('table[data-table-controls="excel"]'))}function callableFlowDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker))return origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/callable-flow.json';if(path.includes(assetsMarker))return origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/callable-flow.json';return new URL('reference/_data/callable-flow.json',document.baseURI).href}function updateCallableFlowDataLink(url){const link=$('openCallableFlowJson');if(link)link.href=url}function buildFlowSignals(flows){publicFlowQns=new Set();flowSignalsByQn=new Map();(flows||[]).forEach(flow=>{publicFlowQns.add(flow.qualified_name);(flow.transitive_callees||[]).forEach(row=>{publicFlowQns.add(row.qualified_name);const signal=flowSignalsByQn.get(row.qualified_name)||{violation:false,warning:false,types:[]};if(row.architecture_result==='Violation')signal.violation=true;if(row.architecture_result==='Warning')signal.warning=true;if(row.violation_type&&!signal.types.includes(row.violation_type))signal.types.push(row.violation_type);flowSignalsByQn.set(row.qualified_name,signal)})})}$('searchBox').addEventListener('input',e=>{state.search=e.target.value;renderTable()});['focusFilter','typeFilter','usageFilter','healthFilter','actionFilter'].forEach(id=>$(id).addEventListener('change',e=>{state[id]=e.target.value;renderTable()}));$('resetFilters').onclick=()=>{Object.assign(state,{search:'',focusFilter:'actionable',typeFilter:'all',usageFilter:'all',healthFilter:'all',actionFilter:'all'});$('searchBox').value='';$('focusFilter').value='actionable';$('typeFilter').value='all';$('usageFilter').value='all';$('healthFilter').value='all';$('actionFilter').value='all';if(window.FabricOpsTableControls)window.FabricOpsTableControls.resetAll(document);renderTable()};document.addEventListener('click',e=>{if(e.target.closest('a,button,input,select,textarea,label,summary,.inventory-detail'))return;const row=e.target.closest('[data-inventory-row]');if(row){state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});document.addEventListener('keydown',e=>{const row=e.target.closest('[data-inventory-row]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});$('selectVisible').onclick=()=>{visibleRows.forEach(r=>state.selected.add(r.qualified_name));renderTable()};$('clearSelected').onclick=()=>{state.selected.clear();renderTable()};$('downloadJson').onclick=()=>downloadPacket('json');$('downloadYaml').onclick=()=>downloadPacket('yaml');$('compatibilityMode').addEventListener('change',updateCompatibilityModeMeta);updateCompatibilityModeMeta();async function loadData(){const attemptedUrl=callableFlowDataUrl();updateCallableFlowDataLink(attemptedUrl);try{const response=await fetch(attemptedUrl);if(!response.ok)throw new Error(`HTTP ${response.status} ${response.statusText}`);let data;try{data=await response.json()}catch(parseError){throw new Error(`Could not parse callable-flow.json from ${attemptedUrl}: ${parseError&&parseError.message?parseError.message:String(parseError)}`)}if(!Array.isArray(data.function_inventory)){inventory=[];summaryCounts=data&&data.summary_counts?data.summary_counts:{};inventoryDataMissing=true;buildFlowSignals(data&&Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]);renderInventoryCards();renderTable();return}inventoryDataMissing=false;inventory=data.function_inventory;summaryCounts=data.summary_counts||{};buildFlowSignals(data.public_entrypoint_flow||[]);renderInventoryCards();renderTable()}catch(error){inventoryDataMissing=false;renderInventoryCards();$('inventoryBody').innerHTML='';$('resultCount').textContent='';renderLoadStatus(`Failed to load callable-flow data. URL: ${attemptedUrl}. Error: ${error&&error.message?error.message:String(error)}`,true)}}loadData();
 </script><script src="../javascripts/table-controls.js"></script></body></html>
 """.replace("<!--CALLABLE_GENERATION_BANNER-->", generation_banner).replace("<!--CALLABLE_PAGE_SHELL_CSS-->", _callable_page_shell_css()).replace("<!--CALLABLE_PAGE_NAV-->", _render_callable_page_nav("inventory"))
 
@@ -3907,119 +3907,167 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     del flow_data
     return '''# Callable Flow
 
-Callable Flow is the generated review surface for keeping FabricOps notebook-facing APIs small, explainable, and safe to maintain. Open the dashboard to review public callable architecture, inspect supporting implementation assets, and export focused cleanup packets when needed.
+> **Make it exist first. Make it good next.**
+>
+> AI helps FabricOps move quickly from idea to working public callable. Callable Flow helps us come back afterwards to review whether the implementation is clean enough to keep.
 
-<div align="center" markdown="1">
+## Why this exists
 
-[Open Callable Architecture](../assets/callable-functions-dashboard.html){ .md-button .md-button--primary }
+AI can code fast.
 
-![Callable Flow dashboard preview](../assets/fabricops-refactor-risk-dashboard.png)
+That speed is useful when building FabricOps because the first priority is often to create a working public callable function that users can try.
 
-</div>
+At that stage, the goal is not perfect code.
 
-## Overview
-
-Use Callable Flow as a maintenance aid, not as a replacement for source code review. The generated pages summarize caller/callee relationships, source files, reachability, function layers, health signals, and cleanup recommendations from repository scans.
-
-The main workflow is:
-
-1. Start from the dashboard entry point to review public callable flows.
-2. Select one public callable flow and inspect its compact flow tree.
-3. Export a flow cleanup packet when you want Codex or another AI tool to make a focused, safe change.
-4. Move to **Code Inventory** from the dashboard navigation when you need to inspect or batch-select lower-level support code assets.
-
-## Callable Architecture
-
-Callable Architecture is the public callable review page. It shows a **Public callable overview** with two top metrics: public callables scanned and public callables with architecture violations.
-
-Use it to:
-
-- search public callables by callable, module, finding, or recommendation;
-- inspect one selected public callable flow at a time;
-- review the selected callable name, qualified name, recommendation, health, key signals, and suggested next step;
-- read the flow tree in compact order: function name, layer, source `.py` file, optional `end` chip, then a compact review or warning indicator;
-- expand flow tree rows for details such as callers, callees, usage counts, source, architecture result, warning or violation reason, and merge-candidate context;
-- export `fabricops_public_callable_flow_cleanup_packet` for the selected public callable flow.
-
-Architecture selection is intentionally single-select. One selected public callable already carries its direct callees, transitive callees, flow tree, findings, risks, merge candidates, and suggested next step, so batching unrelated public flows would make the cleanup prompt less actionable.
-
-## Code Inventory
-
-Code Inventory is the support/codebase inspection page. It complements the Architecture page by showing individual implementation assets that may not be obvious from a public flow summary.
-
-Use it to:
-
-- inspect helpers, private functions, methods, classes, supporting objects, and orphaned or unreached assets;
-- filter by inventory focus, item type, and health;
-- identify whether an asset is reached from a public callable flow;
-- multi-select one or more code assets for batch review;
-- export `fabricops_support_inventory_cleanup_packet` for selected code assets.
-
-Inventory selection remains multi-select because support cleanup often benefits from batching related lower-level assets, such as several private helpers or orphan candidates in the same area.
-
-## Architecture rules
-
-Callable Flow uses a function-layer model focused on public entry points and helper ownership:
+The goal is:
 
 ```text
-Public callable → shared helper → owner-local private helper
+Make the function exist.
+Make it work.
+Validate whether the behaviour is useful.
 ```
 
-The important private-helper rule is file ownership:
+Once the behaviour is worth keeping, the next problem is maintainability.
 
-- **Same-file private dependency = warning only.** A shared helper calling a private helper in the same `.py` file is acceptable, but it may still be reviewed for possible simplification or clearer placement.
-- **Cross-file private dependency = architecture violation.** Directly calling a private helper from another `.py` file breaks ownership boundaries and should be resolved first.
-- Public callables should remain stable notebook-facing surfaces.
-- Shared helpers should remain reusable and should not casually reach into another module's private implementation details.
-- Classes, dataclasses, enums, constants, protocols, config objects, lifecycle methods, and property accessors provide supporting context; they are not treated as public/internal function layers by themselves.
+AI generated code can work correctly but still leave behind messy integration patterns: duplicated helpers, private functions used across files, wide dependency surfaces, public callables depending on other public callables, or long chains of thin wrapper functions.
+
+Callable Flow exists to support that second step.
+
+It helps us move quickly during prototyping, then return later with a clearer view of what should be cleaned up.
+
+## What we want to catch
+
+### Pointless wrapper functions
+
+AI generated code can create small wrapper functions that only pass work to the next function.
+
+Each wrapper may look harmless by itself, but the full chain makes the implementation harder to read, test, and refactor.
+
+![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)
+
+Wrappers are worth keeping when they add clear naming, validation, reuse, or a meaningful boundary.
+
+They are worth simplifying when they only make the call path longer.
+
+### Wide dependency surfaces
+
+A public callable can become hard to reason about when it pulls in too many downstream helpers.
+
+![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
+
+This is not automatically wrong.
+
+But it is a signal to ask whether the function is doing too much, or whether the same responsibility has been spread across too many helper functions.
+
+### Public callable dependencies
+
+Public callables should usually be entry points, not dependencies of other public callables.
+
+![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)
+
+When shared logic is needed, it should usually move into a helper that both public functions can call safely.
+
+### Long nested chains
+
+Long nested chains make it harder to understand where the real work happens.
+
+![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)
+
+The question is not whether the code works.
+
+The question is whether the structure is still simple enough to keep.
+
+## The workflow
+
+The intended workflow is:
+
+```text
+Prototype quickly
+→ validate with users
+→ inspect callable structure
+→ export a focused cleanup packet
+→ use AI to assist the refactor
+→ review the actual code
+→ run tests
+```
+
+The point is not to review every line of code at the moment it is created.
+
+The point is to avoid letting fast prototypes quietly become long term technical debt.
+
+## Dashboard context
+
+Callable Flow has two generated review surfaces:
+
+- [Callable Architecture](../assets/callable-functions-dashboard.html) starts from notebook-facing public callables and shows the selected callable's flow, downstream depth, architecture findings, merge candidates, and suggested next step.
+- [Code Inventory](../assets/callable-functions-inventory.html) supports deeper inspection of lower-level implementation assets, including shared helpers, private helpers, methods, classes, and other support assets.
+
+Use the Architecture page first when you are deciding whether a public callable is clean enough to keep. Use Code Inventory when the flow points to support code that needs closer review or when you need to batch related support assets for cleanup planning.
 
 ## Cleanup packets
 
-Both pages export action-ready JSON and YAML packages for Codex or another AI implementation tool.
+When a function is worth improving, Callable Flow can export focused cleanup packets as JSON or YAML.
 
-### Architecture export: `fabricops_public_callable_flow_cleanup_packet`
+The packet gives AI enough context to help with the next step without asking it to freely rewrite the repository.
 
-Use **Export flow cleanup packet** after choosing a **Selected public callable flow**. The package includes:
+![Selecting refactor candidates](../assets/fabricops-select-refactor-candidates.png)
 
-- selected public callable name, qualified name, source file, and source URL when available;
-- recommendation, overall health, suggested next step, and key signals;
-- downstream count, max depth, architecture violation count, merge candidate count, modules touched, and external/shared impact count;
-- direct callees, transitive callees, architecture findings, merge candidates, public callable findings, and flow tree context;
-- compatibility mode, export type, AI prompt, requested work, safety constraints, and expected output.
+![Prompt export](../assets/fabricops-select-refactor-candidates-prompt-export.png)
 
-The prompt tells the AI to use the selected compatibility mode as the rule for how aggressive cleanup can be: preserve backwards compatibility by default, or clearly label migration impact when breaking changes are allowed.
+The Architecture page exports `fabricops_public_callable_flow_cleanup_packet` for one selected public callable flow. The Code Inventory page exports `fabricops_support_inventory_cleanup_packet` for selected support assets.
 
-### Inventory export: `fabricops_support_inventory_cleanup_packet`
+Both packet types are designed to keep the cleanup focused on the selected callable or assets, the identified risks, the compatibility mode, and the tests that should be reviewed before changes are merged.
 
-Use **Export support cleanup packet** after selecting one or more Code Inventory rows. The package includes:
+Example packet shape:
 
-- selected code asset name, qualified name, item type, code role, source file, and source URL when available;
-- whether the asset is reached from public callable flows;
-- health, finding, codebase note, suggested cleanup action, callers, callees, related public flows, and signals;
-- compatibility mode, export type, AI prompt, requested work, safety constraints, and expected output.
+```yaml
+schema: fabricops_public_callable_flow_cleanup_packet
 
-The prompt tells the AI to open the selected code asset, check callers and public-flow reachability, verify orphaned assets before removal, merge single-use helpers only when readability improves, preserve public callable behavior, and update tests where needed.
+selected_public_callable:
+  selected_public_callable_name: display_guardrail_results
+  qualified_name: fabricops_kit.pipeline.display_guardrail_results
+  source_file: src/fabricops_kit/pipeline.py
 
-## When to use which page
+compatibility_mode: preserve_backwards_compatibility
 
-| Need | Use |
-| --- | --- |
-| Review notebook-facing API health | Callable Architecture |
-| Inspect one public callable's full call flow | Callable Architecture |
-| Export one focused public-flow cleanup prompt | Callable Architecture |
-| Find private helpers, methods, classes, or orphaned utilities | Code Inventory |
-| Batch-select support assets for cleanup review | Code Inventory |
-| Confirm whether a support asset is reached from public flows | Code Inventory |
+architecture_summary:
+  downstream_count: 8
+  max_depth: 4
+  architecture_violation_count: 1
+  merge_candidate_count: 2
+
+requested_work:
+  intent: >
+    Plan a safe cleanup for the selected public callable and its
+    supporting helpers.
+  priority_order:
+    - Resolve architecture violations first.
+    - Keep public callable behaviour stable.
+    - Merge or inline thin wrappers only when readability improves.
+    - Call out tests required before implementation.
+```
+
+The packet keeps the refactor focused on the selected callable, the identified risks, and the compatibility mode.
 
 ## Generated outputs
 
 Callable Flow is generated from repository scans. The generated outputs are:
 
 - [Callable Architecture](../assets/callable-functions-dashboard.html)
-- [Open Code Inventory](../assets/callable-functions-inventory.html)
-- [Open callable-flow.json](_data/callable-flow.json)
+- [Code Inventory](../assets/callable-functions-inventory.html)
+- [callable-flow.json](_data/callable-flow.json)
 
 Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
+
+## Principle
+
+```text
+Make it exist first.
+Validate that it is useful.
+Then make the implementation good enough to keep.
+```
+
+Callable Flow exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
 '''
 
 
