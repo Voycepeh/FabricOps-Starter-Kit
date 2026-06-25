@@ -242,25 +242,31 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert dashboard_path.exists()
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Callable Flow" in flow_text
-    assert "## Overview" in flow_text
-    assert "## Callable Architecture" in flow_text
-    assert "## Code Inventory" in flow_text
-    assert "## Architecture rules" in flow_text
+    assert "> **Make it exist first. Make it good next.**" in flow_text
+    assert "## Why this exists" in flow_text
+    assert "## What we want to catch" in flow_text
+    assert "### Pointless wrapper functions" in flow_text
+    assert "### Wide dependency surfaces" in flow_text
+    assert "### Public callable dependencies" in flow_text
+    assert "### Long nested chains" in flow_text
+    assert "## The workflow" in flow_text
+    assert "## Dashboard context" in flow_text
     assert "## Cleanup packets" in flow_text
-    assert "## When to use which page" in flow_text
     assert "## Generated outputs" in flow_text
-    assert "[Open Callable Architecture](../assets/callable-functions-dashboard.html)" in flow_text
-    assert "[Open Code Inventory](../assets/callable-functions-inventory.html)" in flow_text
-    assert "[Open callable-flow.json](_data/callable-flow.json)" in flow_text
-    assert "Public callable overview" in flow_text
-    assert "Export flow cleanup packet" in flow_text
-    assert "Export support cleanup packet" in flow_text
-    assert "Selected public callable flow" in flow_text
-    assert "selected code assets" in flow_text.lower()
+    assert "AI can code fast." in flow_text
+    assert "messy integration patterns" in flow_text
+    assert "![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)" in flow_text
+    assert "![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)" in flow_text
+    assert "![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)" in flow_text
+    assert "![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)" in flow_text
+    assert "[Callable Architecture](../assets/callable-functions-dashboard.html)" in flow_text
+    assert "[Code Inventory](../assets/callable-functions-inventory.html)" in flow_text
+    assert "[callable-flow.json](_data/callable-flow.json)" in flow_text
+    assert "focused cleanup packets as JSON or YAML" in flow_text
     assert "fabricops_public_callable_flow_cleanup_packet" in flow_text
     assert "fabricops_support_inventory_cleanup_packet" in flow_text
-    assert "Same-file private dependency = warning only" in flow_text
-    assert "Cross-file private dependency = architecture violation" in flow_text
+    assert "Use the Architecture page first" in flow_text
+    assert "Use Code Inventory" in flow_text
     assert "## Callable helper summary" not in flow_text
     assert "## Internal helper nesting inventory" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
@@ -270,9 +276,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "quick filter",
         "Architecture inventory",
         "callable refactor packet",
-        "Selecting refactor candidates",
         "Exporting an AI refactor prompt",
-        "fabricops-select-refactor-candidates",
     ]:
         assert stale_flow_phrase not in flow_text
 
@@ -964,16 +968,19 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all({"function_type", "layer", "dependency_role", "callable_kind"} <= set(item) for item in function_inventory)
 
     callable_flow_text = (REFERENCE_DIR / "callable-flow.md").read_text(encoding="utf-8")
-    assert "Public callable → shared helper → owner-local private helper" in callable_flow_text
-    assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
-    assert "callable may call lower layers, but not the same layer or higher layers" not in callable_flow_text
-    assert "Same-file private dependency = warning only" in callable_flow_text
-    assert "Cross-file private dependency = architecture violation" in callable_flow_text
-    assert "Internal-to-internal calls are valid" not in callable_flow_text
-    assert "Role group = broad job of the callable." not in callable_flow_text
+    assert "Make it exist first. Make it good next." in callable_flow_text
+    assert "AI generated code can work correctly but still leave behind messy integration patterns" in callable_flow_text
+    assert "Pointless wrapper functions" in callable_flow_text
+    assert "Wide dependency surfaces" in callable_flow_text
+    assert "Public callable dependencies" in callable_flow_text
+    assert "Long nested chains" in callable_flow_text
     assert "Generated outputs" in callable_flow_text
+    assert "focused cleanup packets as JSON or YAML" in callable_flow_text
     assert "fabricops_public_callable_flow_cleanup_packet" in callable_flow_text
     assert "fabricops_support_inventory_cleanup_packet" in callable_flow_text
+    assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
+    assert "Internal-to-internal calls are valid" not in callable_flow_text
+    assert "Role group = broad job of the callable." not in callable_flow_text
     serialized_flow = json.dumps(flow_data)
     for legacy_name in ["cross_layer", "deep_chain", "inline_candidate", "used_by_count", "change_risk", "refined_recommended_action"]:
         assert legacy_name not in serialized_flow
