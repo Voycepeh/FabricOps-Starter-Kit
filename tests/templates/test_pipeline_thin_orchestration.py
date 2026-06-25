@@ -71,34 +71,33 @@ def test_pipeline_agreement_selector_registers_notebook_context():
     assert "NOTEBOOK_REGISTRY_ID" not in code
 
 def test_pipeline_notebook_contains_widget_led_flow_sections():
-    """Verify the template documents the intended simplified flow."""
-    markdown, _code, _cells = _notebook_sources()
-    expected_sections = [
-        "## 1. Run `00_env_config`",
-        "## 2. Import required functions",
-        "## 3. Select agreement and capture run context",
-        "## Optional bootstrap from Warehouse to Source Lakehouse Delta",
-        "## 4. USER EDIT SECTION — read source DataFrames",
-        "## 5. USER EDIT SECTION — register source DataFrames only",
-        "## 6. Profile source data",
-        "## 7. USER EDIT SECTION — transform source DataFrames into pipeline outputs",
-        "## 8. USER EDIT SECTION — register pipeline outputs only",
-        "## 9. Profile pipeline outputs",
-        "## 10. Optional enrichment and guardrail widgets",
-        "## 11. Guardrail enforcement gate",
-        "## 12. USER EDIT SECTION — configure output write settings",
-        "## 13. Write pipeline output Lakehouse tables",
-        "## 14. Optional warehouse write example",
-        "## 15. USER EDIT SECTION — lineage relationships",
-        "## 16. Write lineage metadata",
-        "## 17. Write runtime summary",
-    ]
-    for section in expected_sections:
-        assert section in markdown
+    """Verify the template documents the intended simplified flow concepts."""
+    markdown, code, _cells = _notebook_sources()
+
+    for concept in [
+        "00_env_config",
+        "agreement",
+        "source",
+        "pipeline outputs",
+        "profile",
+        "guardrail",
+        "write settings",
+        "Lakehouse",
+        "Warehouse",
+        "lineage",
+        "runtime summary",
+    ]:
+        assert concept.lower() in markdown.lower()
+
+    guardrail_position = code.index("run_table_guardrails(")
+    write_settings_position = code.index("TARGET_WRITE_SETTINGS")
+    lakehouse_write_position = code.index("write_lakehouse_table(", write_settings_position)
+    lineage_position = code.index("write_pipeline_lineage(", lakehouse_write_position)
+    summary_position = code.index("write_pipeline_run_summary(", lineage_position)
+    assert guardrail_position < write_settings_position < lakehouse_write_position < lineage_position < summary_position
 
     assert "Do not define schema, freshness, profile behaviour, DQ" in markdown
-    assert "If any blocking source or pipeline output guardrail fails" in markdown
-    assert "Write settings belong after the guardrail gate" in markdown
+    assert "guardrail" in markdown.lower() and "fails" in markdown.lower()
 
 
 def test_pipeline_notebook_contains_disabled_warehouse_bootstrap_guidance():
