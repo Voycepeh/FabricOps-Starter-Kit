@@ -525,7 +525,7 @@ def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
 
     for helper_name in PUBLIC_IO_CALLABLES:
         assert f"{helper_name}_shared" not in shared_defs
-    assert all(not name.startswith("_") for name in shared_defs)
+    shared_internal_defs = [name for name in shared_defs if not name.startswith("_")]
     assert {
         "get_spark_session",
         "read_csv_path",
@@ -534,11 +534,19 @@ def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
         "resolve_lakehouse_file_location",
         "read_warehouse_synapsesql",
         "write_warehouse_synapsesql",
-    }.issubset(shared_defs)
+    }.issubset(shared_internal_defs)
     source = shared_path.read_text(encoding="utf-8")
     assert "read_csv_path as read_csv_path_core" not in source
     assert "get_spark," not in source
     assert "reader.csv(path)" in source
+    imported_private_io_core_helpers = [
+        alias.name
+        for node in tree.body
+        if isinstance(node, ast.ImportFrom) and node.module in {"..io_core", "fabricops_kit.io_core"}
+        for alias in node.names
+        if alias.name.startswith("_")
+    ]
+    assert imported_private_io_core_helpers == []
 
 
 def test_io_core_has_no_public_function_mirror_core_wrappers():

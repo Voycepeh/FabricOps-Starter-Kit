@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from importlib import import_module
 from typing import Any
 import re
-import tempfile
 
 from .config import get_store, resolve_fabric_context
 
@@ -60,19 +58,9 @@ class FabricStore:
 # ---------------------------------------------------------------------------
 
 
-def _load_pandas() -> Any:
-    """Return pandas for Excel/Parquet helpers that need it."""
-    return import_module("pandas")
-
-
 def _join_lakehouse_area_path(store: FabricStore, area: str, relative_path: str) -> str:
     """Return an ABFSS path under a lakehouse area."""
     return f"{store.root.rstrip('/')}/{area.strip('/')}/{relative_path.strip('/')}"
-
-
-def _build_warehouse_object_name(warehouse_name: str, schema_name: str, table_name: str) -> str:
-    """Return the connector warehouse object name."""
-    return f"{warehouse_name}.{schema_name}.{table_name}"
 
 
 def _resolve_lakehouse_table_identifier(store: FabricStore, table_name: str, schema_name: str | None = None) -> str:
@@ -141,16 +129,6 @@ def _validate_relative_path(relative_path: str) -> str:
     return value
 
 
-def _validate_select_query(query: str) -> str:
-    """Return a safe warehouse read query shape for connector pushdown."""
-    sql = str(query or "").strip()
-    if not sql:
-        raise ValueError("query must be a non-empty SQL SELECT statement.")
-    if not sql.lower().lstrip().startswith(("select", "with")):
-        raise ValueError("query must be a SELECT statement or a CTE ending in a SELECT statement.")
-    return sql
-
-
 def _validate_dataframe_writer(df) -> None:
     """Validate that the object exposes the Spark DataFrame write contract."""
     if not hasattr(df, "write"):
@@ -215,13 +193,6 @@ def resolve_lakehouse_file_location(store: FabricStore, relative_path: str) -> t
     return normalized_relative_path, _lakehouse_file_path(store, normalized_relative_path)
 
 
-def _resolve_warehouse_table_location(store: FabricStore, schema: str, table_name: str) -> tuple[str, str, str]:
-    """Resolve a warehouse table to normalized schema, table, and connector object."""
-    schema_value = _normalize_schema_name(schema)
-    table_value = _normalize_table_name(table_name)
-    return schema_value, table_value, _build_warehouse_object_name(store.name, schema_value, table_value)
-
-
 def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | None:
     """Return the configured schema for a schema-enabled lakehouse target."""
     try:
@@ -236,16 +207,6 @@ def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | Non
 # ---------------------------------------------------------------------------
 # Adapter layer: runtime connector and Spark/pandas calls.
 # ---------------------------------------------------------------------------
-
-
-def _require_fabric_connector() -> Any:
-    """Return Fabric connector constants or raise a runtime-specific error."""
-    try:
-        import com.microsoft.spark.fabric  # noqa: F401
-        from com.microsoft.spark.fabric.Constants import Constants
-    except Exception as exc:
-        raise RuntimeError("This function must run inside Microsoft Fabric Spark with com.microsoft.spark.fabric available.") from exc
-    return Constants
 
 
 def _read_delta_path(spark_obj, path: str):
@@ -270,48 +231,6 @@ def _write_delta_path(df, path: str, *, mode: str, partition_by=None, options: d
         writer = writer.option(key, value)
     writer.save(path)
 
-
-def _read_warehouse_synapsesql(spark_obj, store: FabricStore, synapsesql_target: str):
-    """Read from Fabric Warehouse through the Spark connector."""
-    constants = _require_fabric_connector()
-    return spark_obj.read.option(constants.WorkspaceId, store.workspace_id).option(constants.DatawarehouseId, store.item_id).synapsesql(synapsesql_target)
-
-
-def _write_warehouse_synapsesql(df, store: FabricStore, synapsesql_target: str, *, mode: str) -> None:
-    """Write to Fabric Warehouse through the Spark connector."""
-    constants = _require_fabric_connector()
-    df.write.mode(mode).option(constants.WorkspaceId, store.workspace_id).option(constants.DatawarehouseId, store.item_id).synapsesql(synapsesql_target)
-
-
-def _read_excel_file(spark_obj, lakehouse_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):
-    """Read an Excel file from binary Spark content and convert it to a Spark DataFrame."""
-    bin_df = spark_obj.read.format("binaryFile").option("recursiveFileLookup", "false").load(lakehouse_path)
-    if bin_df.count() == 0:
-        raise FileNotFoundError(f"No file found at path: {lakehouse_path}")
-    content = bin_df.select("content").collect()[0][0]
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
-        temp_file.write(bytearray(content))
-        temp_file_path = temp_file.name
-    pandas_df = _load_pandas().read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
-    return spark_obj.createDataFrame(pandas_df)
-
-
-def _convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True):
-    """Convert one local Parquet file from nanosecond to microsecond timestamps."""
-    import pyarrow as pa
-    import pyarrow.parquet as pq
-
-    try:
-        if verbose:
-            print(f"Reading with pyarrow: {local_in_path}")
-            print(f"Writing us timestamps to: {local_out_path}")
-        pdf = import_module("pandas").read_parquet(local_in_path, engine="pyarrow")
-        table = pa.Table.from_pandas(pdf, preserve_index=False)
-        pq.write_table(table, local_out_path, coerce_timestamps="us", allow_truncated_timestamps=True)
-        if verbose:
-            print(f"done: {local_out_path}")
-    except Exception as exc:
-        print(f"FAILED converting ns to us for file {local_in_path}: {exc}")
 
 # ---------------------------------------------------------------------------
 # Shared metadata IO workflows used by non-public orchestration modules.
