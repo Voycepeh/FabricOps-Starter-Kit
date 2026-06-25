@@ -616,7 +616,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Use this inventory to inspect supporting implementation details that are not fully visible in callable flows, including internal helpers, methods, classes, orphaned utilities, and refactor candidates." in normalized_inventory_text
     assert "Architecture inventory" not in inventory_text
     assert "giant review table" not in inventory_text
-    assert "callable_inventory_metrics" not in inventory_text
+    assert "summaryCounts.callable_inventory_metrics" in inventory_text
     assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
     assert ".surface-cardstrong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem" in compact_inventory_text
     assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700" in compact_inventory_text
@@ -834,6 +834,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert summary_counts["callable_kind"]["function"] == 94
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
+    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] > 0
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
     assert {
         "public_api_entrypoints",
@@ -2431,6 +2432,12 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "inventory=data.function_inventory" in compact_inventory_text
     assert "function yamlPacket(packet)" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
+    assert "function canonicalNonFunctionCount()" in inventory_text
+    assert "metrics.non_function_records!==undefined" in compact_inventory_text
+    assert "return Number(metrics.non_function_records)||0" in inventory_text
+    assert "summaryCounts.supporting_objects!==undefined" in compact_inventory_text
+    assert "return inventory.filter(i=>itemType(i)==='Non function').length" in inventory_text
+    assert "nonFunctionCount=canonicalNonFunctionCount()" in compact_inventory_text
     for label in [
         "Total code assets",
         "Public callables",
