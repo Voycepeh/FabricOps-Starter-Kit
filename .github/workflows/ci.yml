@@ -34,20 +34,11 @@ jobs:
       - name: Ruff lint
         run: uv run ruff check .
 
-      - name: Run unit tests
-        run: uv run pytest tests/unit
-
-      - name: Run architecture guardrail tests
-        run: uv run pytest tests/contract/test_architecture_boundaries.py tests/unit/test_reference_agent_docs.py::test_callable_layer_dependency_rule_matrix tests/unit/test_reference_agent_docs.py::test_callable_architecture_layer_rules_and_labels
-
-      - name: Run dashboard snapshot tests
-        run: uv run pytest tests/unit/test_reference_agent_docs.py::test_callable_flow_page_and_json_cover_public_surface
+      - name: Run full test suite
+        run: uv run pytest
 
       - name: Validate callable architecture outputs
         run: uv run python scripts/validate_callable_architecture.py
-
-      - name: Run full test suite
-        run: uv run pytest
 
       - name: Build strict documentation
         env:

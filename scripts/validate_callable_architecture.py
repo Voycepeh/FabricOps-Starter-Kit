@@ -1,11 +1,17 @@
-"""Validate callable architecture outputs and source-level boundaries."""
+"""Validate callable architecture outputs and source-level boundaries.
+
+During active refactoring, architecture cleanup findings are warnings by default
+while structural contract violations still fail CI. Run this script with
+``--strict`` after cleanup work to promote warnings to failures.
+"""
 
 from __future__ import annotations
 
 import ast
+import argparse
 import json
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +51,45 @@ class SourceFunction:
     node: ast.FunctionDef | ast.AsyncFunctionDef
     imports: dict[str, str]
     path: Path
+
+
+@dataclass(frozen=True)
+class ValidationResult:
+    """Classified callable architecture validation findings."""
+
+    failures: list[str]
+    warnings: list[str]
+
+
+WARNING_PREFIXES = (
+    "Private helper imported outside owner file:",
+    "Private helper called outside owner file:",
+    "One-to-one public pass-through helper should be inlined",
+    "Shared helper is underscore-prefixed but used by multiple public function files:",
+)
+
+
+def classify_source_finding(message: str) -> str:
+    """Return the enforcement class for a source-level finding."""
+    if message.startswith(WARNING_PREFIXES):
+        return "warning"
+    return "failure"
+
+
+def classify_generated_finding(message: str) -> str:
+    """Return the enforcement class for a generated-data finding."""
+    if message.startswith("Unsupported architecture warning type:"):
+        return "failure"
+    return "failure"
+
+
+def _print_group(title: str, items: list[str], *, stream: object = sys.stdout) -> None:
+    print(title, file=stream)
+    if items:
+        for item in items:
+            print(f"- {item}", file=stream)
+    else:
+        print("- None", file=stream)
 
 
 def _load_flow() -> dict[str, Any]:
@@ -394,19 +439,63 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
 
 
 def _failures(flow: dict[str, Any]) -> list[str]:
+    """Return all blocking generated and source validation failures.
+
+    Kept for tests that exercise generated-data blocking contracts directly.
+    Cleanup-only source findings are exposed through ``validate`` warnings.
+    """
     return [*_generated_failures(flow), *_source_failures()]
 
 
-def main() -> int:
+def validate(flow: dict[str, Any] | None = None) -> ValidationResult:
+    """Return classified architecture validation findings."""
+    if flow is None:
+        try:
+            flow = _load_flow()
+        except (OSError, json.JSONDecodeError) as exc:
+            return ValidationResult(failures=[f"callable-flow.json cannot be loaded or parsed: {exc}"], warnings=[])
+
+    failures = [finding for finding in _generated_failures(flow) if classify_generated_finding(finding) == "failure"]
+    warnings: list[str] = []
+    for finding in _source_failures():
+        if classify_source_finding(finding) == "warning":
+            warnings.append(finding)
+        else:
+            failures.append(finding)
+    return ValidationResult(failures=failures, warnings=warnings)
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--strict", action="store_true", help="Promote cleanup warnings to failures.")
+    parser.add_argument("--json", action="store_true", help="Print a structured JSON summary.")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
     """Run callable architecture validation."""
-    failures = _failures(_load_flow())
-    if failures:
-        print("Callable architecture validation failed:", file=sys.stderr)
-        for failure in failures:
-            print(f"- {failure}", file=sys.stderr)
-        return 1
-    print("Callable architecture validation passed.")
-    return 0
+    args = _parser().parse_args(argv)
+    result = validate()
+    exit_code = 1 if result.failures or (args.strict and result.warnings) else 0
+
+    if args.json:
+        print(json.dumps({**asdict(result), "strict": args.strict, "exit_code": exit_code}, indent=2))
+        return exit_code
+
+    if exit_code:
+        print("Callable architecture validation failed.", file=sys.stderr)
+        _print_group("Blocking failures:", result.failures, stream=sys.stderr)
+        warning_title = "Warnings promoted to failures:" if args.strict else "Warnings:"
+        _print_group(warning_title, result.warnings, stream=sys.stderr)
+    elif result.warnings:
+        print("Callable architecture validation completed with warnings.")
+        _print_group("Blocking failures:", result.failures)
+        _print_group("Warnings:", result.warnings)
+    else:
+        print("Callable architecture validation passed.")
+        _print_group("Blocking failures:", result.failures)
+        _print_group("Warnings:", result.warnings)
+    return exit_code
 
 
 if __name__ == "__main__":

@@ -138,3 +138,9 @@ Then make the implementation good enough to keep.
 ```
 
 Callable Flow exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
+
+## Generated outputs
+
+- [Open Callable Architecture](../assets/callable-functions-dashboard.html)
+- [Open Code Inventory](../assets/callable-functions-inventory.html)
+- [Open callable-flow.json](_data/callable-flow.json)
