@@ -2,7 +2,7 @@
   "schema": "fabricops_public_function_ownership_plan_v1",
   "status": "migration_plan",
   "notes": [
-    "PR #704 is merged; this follow-up adds enforceable guardrails and documents remaining multi-public-function files before physical file moves.",
+    "PR #704 is merged; this follow-up adds enforceable guardrails and documents remaining multi-public-function files after the IO facade removal.",
     "Files listed in migration_files are current broad modules that intentionally need follow-up ownership splits; new multi-public-function files must be added here deliberately or validation fails."
   ],
   "facade_files": [
@@ -48,8 +48,8 @@
     }
   },
   "completed_migrations": {
-    "src/fabricops_kit/fabric_input_output.py": {
-      "status": "facade_only",
+    "src/fabricops_kit/io": {
+      "status": "owner_package_exports",
       "owner_package": "src/fabricops_kit/io",
       "public_functions": [
         "read_lakehouse_csv",
@@ -63,7 +63,6 @@
       ],
       "stable_import_paths": [
         "fabricops_kit.<function>",
-        "fabricops_kit.fabric_input_output.<function>",
         "fabricops_kit.io.<function>"
       ]
     }

@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import fabricops_kit.fabric_input_output as io
+import fabricops_kit.io as io
 import fabricops_kit.io.shared as io_shared
 
 from tests.helpers import framework_config

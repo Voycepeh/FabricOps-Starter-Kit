@@ -12,7 +12,7 @@ from fabricops_kit.config import (
     NotebookRuntimeConfig,
     PathConfig,
 )
-from fabricops_kit.fabric_input_output import FabricStore
+from fabricops_kit.config import FabricStore
 
 
 def store(kind: str = "lakehouse", *, env: str = "dev", name: str | None = None) -> FabricStore:
