@@ -7,7 +7,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any
-from .config import _current_audit_timestamp, _get_store
+from .config import _current_audit_timestamp, get_store
 from .io_core import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
@@ -256,7 +256,7 @@ def _build_runtime_audit_fields(
     metadata_lakehouse_name = ""
     if config is not None and env is not None:
         try:
-            metadata_lakehouse_name = _safe_str(_get_store(config=config, env=env, target="metadata").name)
+            metadata_lakehouse_name = _safe_str(get_store(config=config, env=env, target="metadata").name)
         except ValueError:
             metadata_lakehouse_name = ""
     return {

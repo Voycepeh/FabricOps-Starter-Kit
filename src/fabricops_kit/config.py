@@ -709,7 +709,7 @@ def _normalize_path_config(config: Any | None, *, require_paths: bool = True) ->
     return PathConfig(paths={"__missing__": {}})
 
 
-def _get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | None, env: str, target: str) -> Any:
+def get_store(config: FrameworkConfig | PathConfig | dict[str, Any] | Any | None, env: str, target: str) -> Any:
     """Resolve a configured Fabric path for an environment and target.
 
     Parameters
@@ -841,7 +841,7 @@ def _run_config_smoke_tests(
     results.append(ConfigSmokeCheckResult("fabric_runtime_context", runtime_status, runtime_message))
     try:
         for target in required_targets:
-            p = _get_store(config=config, env=env, target=target)
+            p = get_store(config=config, env=env, target=target)
             missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(p, attr, None)]
             if missing:
                 results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
@@ -897,7 +897,7 @@ def _setup_notebook_workflow(
 
     normalized = _validate_framework_config(config)
     required_targets = required_targets or ["Source", "Unified"]
-    resolved_paths = {target: _get_store(config=normalized, env=env, target=target) for target in required_targets}
+    resolved_paths = {target: get_store(config=normalized, env=env, target=target) for target in required_targets}
 
     context = None
     try:
@@ -1067,7 +1067,7 @@ def _detect_nested_metadata_delta_folders(
     exists = getattr(fs, "exists", None)
     if not callable(exists):
         return []
-    metadata_store = _get_store(config=config, env=env, target="metadata")
+    metadata_store = get_store(config=config, env=env, target="metadata")
     nested: list[str] = []
     schema = getattr(metadata_store, "schema", None) if getattr(metadata_store, "schema_enabled", False) else None
     for table in expected_tables:
@@ -1155,7 +1155,7 @@ def _resolve_metadata_schema(
     """Return explicit metadata schema or configured metadata target schema."""
     if metadata_schema is not None:
         return str(metadata_schema).strip() or None
-    store = _get_store(config=config, env=env, target="metadata")
+    store = get_store(config=config, env=env, target="metadata")
     if getattr(store, "schema_enabled", False):
         return str(getattr(store, "schema", "") or "").strip() or None
     return None
@@ -1256,7 +1256,7 @@ def _validate_metadata_table_registration(
         )
     return {
         "status": "ready" if not missing else "not_ready",
-        "database": _get_store(config=normalized, env=env, target="metadata").name,
+        "database": get_store(config=normalized, env=env, target="metadata").name,
         "expected_tables": expected,
         "expected_table_count": len(expected),
         "registered_tables": [table for table in expected if table not in missing],

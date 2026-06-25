@@ -125,6 +125,66 @@ def test_lakehouse_file_readers_build_configured_files_paths():
     assert ("parquet", "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Files/curated/orders.parquet") in spark.read.calls
 
 
+def test_read_lakehouse_csv_preserves_signature_and_reader_options():
+    """Verify read_lakehouse_csv keeps its public contract and Spark CSV behavior."""
+    import inspect
+
+    from fabricops_kit.io.read_lakehouse_csv import read_lakehouse_csv
+
+    config = _io_config()
+    context = {"config": config, "env": "dev"}
+    spark = _Spark()
+
+    result = read_lakehouse_csv(
+        "Files/raw/orders.csv",
+        target="source",
+        spark_session=spark,
+        header=False,
+        context=context,
+        delimiter="|",
+        inferSchema=True,
+    )
+
+    assert inspect.signature(read_lakehouse_csv) == inspect.signature(io.read_lakehouse_csv)
+    assert result == {"path": "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"}
+    assert ("option", "header", False) in spark.read.calls
+    assert ("option", "delimiter", "|") in spark.read.calls
+    assert ("option", "inferSchema", True) in spark.read.calls
+    assert ("csv", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv") in spark.read.calls
+
+
+def test_configured_file_path_resolution_normalizes_files_prefix():
+    """Verify configured file path resolution keeps existing Files-prefix behavior."""
+    from fabricops_kit.io.shared import resolve_configured_file_path
+
+    config = _io_config()
+    store, normalized, path = resolve_configured_file_path(
+        "source",
+        "/Files/raw/orders.csv",
+        context={"config": config, "env": "dev"},
+    )
+
+    assert store.name == "lh_source_dev"
+    assert normalized == "raw/orders.csv"
+    assert path == "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"
+
+
+def test_csv_path_reader_uses_spark_csv_adapter_options():
+    """Verify CSV path reading remains a thin Spark reader adapter."""
+    from fabricops_kit.io.shared import read_csv_path
+
+    spark = _Spark()
+    result = read_csv_path(spark, "abfss://workspace/item/Files/raw/orders.csv", header=True, options={"sep": ",", "quote": '"'})
+
+    assert result == {"path": "abfss://workspace/item/Files/raw/orders.csv"}
+    assert spark.read.calls == [
+        ("option", "header", True),
+        ("option", "sep", ","),
+        ("option", "quote", '"'),
+        ("csv", "abfss://workspace/item/Files/raw/orders.csv"),
+    ]
+
+
 def test_lakehouse_excel_remains_exposed_and_callable():
     """Verify lakehouse excel remains exposed and callable."""
     assert hasattr(io, "read_lakehouse_excel")

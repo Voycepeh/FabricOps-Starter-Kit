@@ -8,7 +8,7 @@ from typing import Any
 import re
 import tempfile
 
-from .config import _get_store, resolve_fabric_context
+from .config import get_store, resolve_fabric_context
 
 DEFAULT_ENV = "Sandbox"
 DEFAULT_TARGET = "Source"
@@ -162,7 +162,7 @@ def _validate_dataframe_writer(df) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _get_spark(spark_session=None):
+def get_spark(spark_session=None):
     """Return an explicit Spark session or the active notebook global spark."""
     if spark_session is not None:
         return spark_session
@@ -172,10 +172,10 @@ def _get_spark(spark_session=None):
         raise RuntimeError("Spark session was not provided and global 'spark' was not found. Run this inside Fabric/Spark or pass spark_session explicitly.") from exc
 
 
-def _resolve_target_store(target: str, expected_kind: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str]:
+def resolve_target_store(target: str, expected_kind: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str]:
     """Resolve a configured Fabric target and validate its store kind."""
     config, env, _context = resolve_fabric_context(context=context)
-    store = _get_store(config, env, target)
+    store = get_store(config, env, target)
     if expected_kind == "lakehouse":
         _validate_lakehouse_store(store, env, target)
     elif expected_kind == "warehouse":
@@ -209,7 +209,7 @@ def _resolve_lakehouse_table_location(store: FabricStore, table_name: str, schem
     return table_value, schema_value, _resolve_lakehouse_table_path(store, table_value, schema_value)
 
 
-def _resolve_lakehouse_file_location(store: FabricStore, relative_path: str) -> tuple[str, str]:
+def resolve_lakehouse_file_location(store: FabricStore, relative_path: str) -> tuple[str, str]:
     """Resolve a lakehouse Files path to normalized relative and ABFSS paths."""
     normalized_relative_path = _validate_relative_path(relative_path)
     return normalized_relative_path, _lakehouse_file_path(store, normalized_relative_path)
@@ -225,7 +225,7 @@ def _resolve_warehouse_table_location(store: FabricStore, schema: str, table_nam
 def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | None:
     """Return the configured schema for a schema-enabled lakehouse target."""
     try:
-        store = _get_store(config, env, target)
+        store = get_store(config, env, target)
     except ValueError:
         return None
     if store.kind != "lakehouse" or not getattr(store, "schema_enabled", False):
@@ -253,7 +253,7 @@ def _read_delta_path(spark_obj, path: str):
     return spark_obj.read.format("delta").load(path)
 
 
-def _read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]):
+def read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]):
     """Read a CSV path through Spark."""
     reader = spark_obj.read.option("header", header)
     for key, value in options.items():
@@ -326,9 +326,9 @@ def read_lakehouse_table_core(table_name: str, *, target: str, schema: str | Non
     reads. Notebook-facing IO public functions own their implementation in
     ``fabricops_kit.io`` and do not call this compatibility workflow.
     """
-    store, _env = _resolve_target_store(target, "lakehouse", context=context)
+    store, _env = resolve_target_store(target, "lakehouse", context=context)
     _table_value, _schema_value, path = _resolve_lakehouse_table_location(store, table_name, schema)
-    return _read_delta_path(_get_spark(spark_session), path)
+    return _read_delta_path(get_spark(spark_session), path)
 
 
 def write_lakehouse_table_core(df, table_name: str, *, target: str, schema: str | None = None, mode: str = "append", partition_by=None, repartition_by=None, options=None, verbose: bool = True, context=None):
@@ -340,7 +340,7 @@ def write_lakehouse_table_core(df, table_name: str, *, target: str, schema: str 
     ``fabricops_kit.io`` and do not call this compatibility workflow.
     """
     _validate_dataframe_writer(df)
-    store, _env = _resolve_target_store(target, "lakehouse", context=context)
+    store, _env = resolve_target_store(target, "lakehouse", context=context)
     _table_value, _schema_value, path = _resolve_lakehouse_table_location(store, table_name, schema)
     normalized_mode = _normalize_write_mode(mode)
     if repartition_by is not None:

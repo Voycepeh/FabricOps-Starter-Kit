@@ -6,15 +6,15 @@ from typing import Any
 
 from ..io_core import (
     FabricStore,
-    _get_spark,
+    get_spark,
     _lakehouse_file_path,
-    _read_csv_path,
+    read_csv_path as read_csv_path_core,
     _read_delta_path,
     _read_excel_file,
     _read_warehouse_synapsesql,
-    _resolve_lakehouse_file_location,
+    resolve_lakehouse_file_location as resolve_lakehouse_file_location_core,
     _resolve_lakehouse_table_location,
-    _resolve_target_store,
+    resolve_target_store as resolve_target_store_core,
     _resolve_warehouse_table_location,
     _validate_dataframe_writer,
     _validate_select_query,
@@ -30,39 +30,39 @@ DEFAULT_TARGET = "Source"
 
 def get_spark_session(spark_session=None):
     """Return the explicit or active notebook Spark session."""
-    return _get_spark(spark_session)
+    return get_spark(spark_session)
 
 
 def resolve_configured_file_path(target: str, relative_path: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str]:
     """Resolve a logical target and relative file path through Fabric config."""
-    store, _env = _resolve_target_store(target, "lakehouse", context=context)
-    normalized_relative_path, path = _resolve_lakehouse_file_location(store, relative_path)
+    store, _env = resolve_target_store_core(target, "lakehouse", context=context)
+    normalized_relative_path, path = resolve_lakehouse_file_location_core(store, relative_path)
     return store, normalized_relative_path, path
 
 
 def resolve_configured_lakehouse_table(target: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str | None, str]:
     """Resolve a logical target and table through configured lakehouse metadata."""
-    store, _env = _resolve_target_store(target, "lakehouse", context=context)
+    store, _env = resolve_target_store_core(target, "lakehouse", context=context)
     table_value, schema_value, path = _resolve_lakehouse_table_location(store, table_name, schema)
     return store, table_value, schema_value, path
 
 
 def resolve_configured_warehouse_table(target: str, schema: str, table_name: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str, str]:
     """Resolve a logical target and table through configured warehouse metadata."""
-    store, _env = _resolve_target_store(target, "warehouse", context=context)
+    store, _env = resolve_target_store_core(target, "warehouse", context=context)
     schema_value, table_value, object_name = _resolve_warehouse_table_location(store, schema, table_name)
     return store, schema_value, table_value, object_name
 
 
 def resolve_configured_warehouse_query_target(target: str, *, context: dict[str, Any] | None = None) -> FabricStore:
     """Resolve a logical target for Fabric warehouse query execution."""
-    store, _env = _resolve_target_store(target, "warehouse", context=context)
+    store, _env = resolve_target_store_core(target, "warehouse", context=context)
     return store
 
 
 def resolve_target_store(target: str, expected_kind: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str]:
     """Resolve and validate a configured Fabric target store."""
-    return _resolve_target_store(target, expected_kind, context=context)
+    return resolve_target_store_core(target, expected_kind, context=context)
 
 
 def resolve_lakehouse_table_location(store: FabricStore, table_name: str, schema: str | None) -> tuple[str, str | None, str]:
@@ -72,7 +72,7 @@ def resolve_lakehouse_table_location(store: FabricStore, table_name: str, schema
 
 def resolve_lakehouse_file_location(store: FabricStore, relative_path: str) -> tuple[str, str]:
     """Resolve a Lakehouse Files path to normalized relative and ABFSS paths."""
-    return _resolve_lakehouse_file_location(store, relative_path)
+    return resolve_lakehouse_file_location_core(store, relative_path)
 
 
 def resolve_lakehouse_file_path(store: FabricStore, relative_path: str) -> str:
@@ -107,7 +107,7 @@ def read_delta_path(spark_obj, path: str):
 
 def read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]):
     """Read a CSV path through Spark."""
-    return _read_csv_path(spark_obj, path, header=header, options=options)
+    return read_csv_path_core(spark_obj, path, header=header, options=options)
 
 
 def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: dict[str, Any] | None = None) -> None:
