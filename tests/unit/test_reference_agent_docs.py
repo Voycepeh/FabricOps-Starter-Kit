@@ -284,7 +284,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert stale_flow_phrase not in flow_text
 
     dashboard_text = dashboard_path.read_text(encoding="utf-8")
+    compact_dashboard_text = "".join(dashboard_text.split())
+    compact_dashboard_text = compact_dashboard_text.replace('"', "'")
+    normalized_dashboard_text = _normalize_whitespace(dashboard_text)
     inventory_text = inventory_path.read_text(encoding="utf-8")
+    compact_inventory_text = "".join(inventory_text.split())
+    compact_inventory_text = compact_inventory_text.replace('"', "'")
+    normalized_inventory_text = _normalize_whitespace(inventory_text)
     combined_dashboard_assets = dashboard_text + inventory_text
 
     for text in (dashboard_text, inventory_text):
