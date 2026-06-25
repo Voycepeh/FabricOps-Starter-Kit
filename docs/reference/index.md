@@ -31,9 +31,9 @@ Use the finder below to look up the 26 public Starter Kit functions. Internal he
     Maintainer inventory metrics:
 
     - Modules: 21
-    - Total callables: 334
-    - Supporting functions: 73
-    - Private helpers to review: 235
+    - Total callables: 330
+    - Supporting functions: 71
+    - Private helpers to review: 233
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Public callable flow map](callable-flow.md): global public callable dependency view and nested internal helper summary.

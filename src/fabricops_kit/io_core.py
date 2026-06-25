@@ -1,4 +1,10 @@
-"""Lower-level Fabric IO implementations shared by package internals."""
+"""Metadata Lakehouse IO core used by internal governance workflows.
+
+Notebook-facing Fabric IO public callables own their flows under
+``fabricops_kit.io`` and use ``fabricops_kit.io.shared`` for reusable IO
+implementation helpers. This module remains only for metadata/governance/
+pipeline internals and supported store compatibility objects.
+"""
 
 from __future__ import annotations
 
@@ -119,16 +125,6 @@ def _validate_warehouse_store(store: FabricStore, env: str, target: str) -> None
         raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
 
 
-def _validate_relative_path(relative_path: str) -> str:
-    """Return a normalized lakehouse file path fragment."""
-    value = str(relative_path or "").strip().lstrip("/")
-    if not value:
-        raise ValueError("relative_path must be a non-empty string.")
-    if value.startswith("Files/"):
-        value = value[len("Files/") :]
-    return value
-
-
 def _validate_dataframe_writer(df) -> None:
     """Validate that the object exposes the Spark DataFrame write contract."""
     if not hasattr(df, "write"):
@@ -174,23 +170,11 @@ def _resolve_lakehouse_table_path(store: FabricStore, table_name: str, schema_na
     return _join_lakehouse_area_path(store, "Tables", table_relative_path)
 
 
-def _lakehouse_file_path(store: FabricStore, relative_path: str) -> str:
-    """Return an ABFSS path under a configured lakehouse Files area."""
-    normalized_relative_path = _validate_relative_path(relative_path)
-    return _join_lakehouse_area_path(store, "Files", normalized_relative_path)
-
-
 def _resolve_lakehouse_table_location(store: FabricStore, table_name: str, schema: str | None) -> tuple[str, str | None, str]:
     """Resolve a lakehouse table to normalized table, schema, and path."""
     table_value = _normalize_table_name(table_name)
     schema_value = _resolve_lakehouse_schema(store, schema)
     return table_value, schema_value, _resolve_lakehouse_table_path(store, table_value, schema_value)
-
-
-def resolve_lakehouse_file_location(store: FabricStore, relative_path: str) -> tuple[str, str]:
-    """Resolve a lakehouse Files path to normalized relative and ABFSS paths."""
-    normalized_relative_path = _validate_relative_path(relative_path)
-    return normalized_relative_path, _lakehouse_file_path(store, normalized_relative_path)
 
 
 def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | None:
@@ -212,14 +196,6 @@ def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | Non
 def _read_delta_path(spark_obj, path: str):
     """Read a Delta path through Spark."""
     return spark_obj.read.format("delta").load(path)
-
-
-def read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]):
-    """Read a CSV path through Spark."""
-    reader = spark_obj.read.option("header", header)
-    for key, value in options.items():
-        reader = reader.option(key, value)
-    return reader.csv(path)
 
 
 def _write_delta_path(df, path: str, *, mode: str, partition_by=None, options: dict[str, Any] | None = None) -> None:

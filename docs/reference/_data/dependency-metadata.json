@@ -5884,36 +5884,12 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.io_core._lakehouse_file_path",
         "fabricops_kit.io_core._resolve_lakehouse_table_path"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.io_core._lakehouse_file_path": {
-      "qualified_name": "fabricops_kit.io_core._lakehouse_file_path",
-      "short_name": "_lakehouse_file_path",
-      "module": "io_core",
-      "callable": "_lakehouse_file_path",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._join_lakehouse_area_path",
-        "fabricops_kit.io_core._validate_relative_path"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.io_core.resolve_lakehouse_file_location"
       ],
       "used_by_count": 1,
       "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._join_lakehouse_area_path",
-        "fabricops_kit.io_core._validate_relative_path"
-      ],
-      "internal_helper_count": 2
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.io_core._normalize_schema_name": {
       "qualified_name": "fabricops_kit.io_core._normalize_schema_name",
@@ -6101,24 +6077,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.io_core._validate_relative_path": {
-      "qualified_name": "fabricops_kit.io_core._validate_relative_path",
-      "short_name": "_validate_relative_path",
-      "module": "io_core",
-      "callable": "_validate_relative_path",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.io_core._lakehouse_file_path",
-        "fabricops_kit.io_core.resolve_lakehouse_file_location"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.io_core._validate_warehouse_store": {
       "qualified_name": "fabricops_kit.io_core._validate_warehouse_store",
       "short_name": "_validate_warehouse_store",
@@ -6208,21 +6166,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.io_core.read_csv_path": {
-      "qualified_name": "fabricops_kit.io_core.read_csv_path",
-      "short_name": "read_csv_path",
-      "module": "io_core",
-      "callable": "read_csv_path",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.io_core.read_lakehouse_table_core": {
       "qualified_name": "fabricops_kit.io_core.read_lakehouse_table_core",
       "short_name": "read_lakehouse_table_core",
@@ -6255,27 +6198,6 @@
       "internal_helpers_used": [
         "fabricops_kit.io_core._read_delta_path",
         "fabricops_kit.io_core._resolve_lakehouse_table_location"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.io_core.resolve_lakehouse_file_location": {
-      "qualified_name": "fabricops_kit.io_core.resolve_lakehouse_file_location",
-      "short_name": "resolve_lakehouse_file_location",
-      "module": "io_core",
-      "callable": "resolve_lakehouse_file_location",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core._lakehouse_file_path",
-        "fabricops_kit.io_core._validate_relative_path"
-      ],
-      "calls_count": 2,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.io_core._lakehouse_file_path",
-        "fabricops_kit.io_core._validate_relative_path"
       ],
       "internal_helper_count": 2
     },
@@ -7844,7 +7766,7 @@
     },
     "io_core": {
       "callable_count": 0,
-      "internal_count": 15,
+      "internal_count": 13,
       "outbound_modules": [
         "config"
       ],

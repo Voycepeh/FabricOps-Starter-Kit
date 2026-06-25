@@ -296,10 +296,11 @@ def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
     config = _io_config()
     metadata_store = config.paths["dev"]["metadata"]
 
-    from fabricops_kit import io_core
+    from fabricops_kit.io.shared import resolve_lakehouse_table_location
 
-    assert io_core._resolve_lakehouse_table_path(metadata_store, "orders").endswith("/Tables/orders")
-    assert io_core._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
+    _table, _schema, path = resolve_lakehouse_table_location(metadata_store, "orders", None)
+    assert path.endswith("/Tables/orders")
+    assert io._resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
 
 
 import pytest
@@ -549,16 +550,44 @@ def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
     assert imported_private_io_core_helpers == []
 
 
-def test_io_core_has_no_public_function_mirror_core_wrappers():
-    """Verify migrated public function implementations are not parked in one-to-one core wrappers."""
+def test_io_core_keeps_only_metadata_core_and_supported_store_helpers():
+    """Verify io_core has no unused Fabric IO public-callable helper shims."""
     source = Path("src/fabricops_kit/io_core.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     defined_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
 
-    reused_internal_workflows = {"read_lakehouse_table", "write_lakehouse_table"}
-    for helper_name in PUBLIC_IO_CALLABLES - reused_internal_workflows:
+    assert defined_functions == {
+        "_join_lakehouse_area_path",
+        "_resolve_lakehouse_table_identifier",
+        "_normalize_table_name",
+        "_normalize_schema_name",
+        "_normalize_write_mode",
+        "_validate_lakehouse_store",
+        "_validate_warehouse_store",
+        "_validate_dataframe_writer",
+        "get_spark",
+        "resolve_target_store",
+        "_resolve_lakehouse_schema",
+        "_resolve_lakehouse_table_path",
+        "_resolve_lakehouse_table_location",
+        "configured_lakehouse_schema",
+        "_read_delta_path",
+        "_write_delta_path",
+        "read_lakehouse_table_core",
+        "write_lakehouse_table_core",
+    }
+    assert "metadata/governance" in source
+    for helper_name in PUBLIC_IO_CALLABLES - {"read_lakehouse_table", "write_lakehouse_table"}:
         assert f"{helper_name}_core" not in defined_functions
-    assert "metadata and orchestration internals" in source
+    assert "read_csv_path" not in defined_functions
+    assert "resolve_lakehouse_file_location" not in defined_functions
+
+
+def test_callable_architecture_pattern_is_not_user_facing_docs():
+    """Verify Fabric IO architecture guidance is not published as a user docs page."""
+    assert not Path("docs/reference/callable-architecture.md").exists()
+    assert "Callable Architecture Pattern" not in Path("mkdocs.yml").read_text(encoding="utf-8")
+    assert "Fabric IO callable file pattern" in Path("AGENTS.md").read_text(encoding="utf-8")
 
 
 def test_fabric_input_output_is_facade_only_after_io_migration():

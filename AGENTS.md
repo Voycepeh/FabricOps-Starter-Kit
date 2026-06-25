@@ -38,6 +38,15 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - New dashboard metrics must be public-callable-centric unless explicitly marked as internal/debug.
 - Coding agents must update tests and snapshots whenever architecture classification or dashboard outputs change.
 
+## Fabric IO callable file pattern
+
+- Notebook-facing Fabric IO public callable files live under `src/fabricops_kit/io/` with one public callable per owner file.
+- Reusable Fabric IO implementation helpers live in `src/fabricops_kit/io/shared.py`.
+- The preferred Fabric IO call path is: public callable file -> `fabricops_kit.io.shared` internal helper -> same-file private helper.
+- Same-file private helpers may use leading underscores when they improve readability.
+- Cross-file calls or imports of underscore-prefixed private helpers are architecture violations. Promote reused helpers to non-underscored internal helpers in the domain owner file instead.
+- Do not add or keep IO compatibility shims for unsupported private helper imports. Delete unused private helpers after migration.
+
 ## Before opening a PR
 
 - Run the architecture guardrail tests, including source-code architecture validation rather than only generated asset checks.

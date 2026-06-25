@@ -70,20 +70,6 @@ The question is not whether the code works.
 
 The question is whether the structure is still simple enough to keep.
 
-## Preferred callable file pattern
-
-The long-term architecture pattern for notebook-facing callables is:
-
-```text
-Public callable file
-→ domain shared helper file
-→ same-file private helper
-```
-
-For IO callables, `src/fabricops_kit/io/shared.py` is the preferred domain shared helper boundary. New or migrated IO callable flows should not use `src/fabricops_kit/io_core.py` as the main implementation hub; keep `io_core.py` for legacy compatibility and internal orchestration workflows that still need it.
-
-Cross-file calls to underscore-prefixed private helpers remain architecture violations. Same-file private helper usage remains a warning or review signal only.
-
 ## The workflow
 
 The intended workflow is:

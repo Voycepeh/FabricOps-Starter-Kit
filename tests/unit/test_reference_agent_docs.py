@@ -253,15 +253,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "### Public callable dependencies" in flow_text
     assert "### Long nested chains" in flow_text
     assert "## The workflow" in flow_text
-    assert "## Preferred callable file pattern" in flow_text
-    assert "Public callable file" in flow_text
-    assert "domain shared helper file" in flow_text
-    assert "same-file private helper" in flow_text
-    assert "src/fabricops_kit/io/shared.py" in flow_text
-    assert "Cross-file calls to underscore-prefixed private helpers remain architecture violations." in flow_text
     assert "## Dashboard context" in flow_text
     assert "## Cleanup packets" in flow_text
     assert "## Generated outputs" in flow_text
+    assert "## Preferred callable file pattern" not in flow_text
+    assert not (ROOT / "docs" / "reference" / "callable-architecture.md").exists()
+    assert "Callable Architecture Pattern" not in (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     assert "AI can code fast." in flow_text
     assert "messy integration patterns" in flow_text
     assert "![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)" in flow_text
@@ -624,7 +621,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 99
+    assert summary_counts["callable_kind"]["function"] == 97
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] > 0
@@ -1637,7 +1634,7 @@ def test_callable_architecture_layer_rules_and_labels():
 
     assert validator.CALLABLE_FILE_PATTERN == "Public callable file -> domain shared helper -> same-file private helper"
     assert "src/fabricops_kit/io/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
-    assert validator.LEGACY_IO_CORE_MODULE == "src/fabricops_kit/io_core.py"
+    assert validator.METADATA_IO_CORE_MODULE == "src/fabricops_kit/io_core.py"
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long call chain"
