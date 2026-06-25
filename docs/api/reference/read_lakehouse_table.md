@@ -1,16 +1,15 @@
 # read_lakehouse_table
 
-??? info "Downstream callables: 18"
+??? info "Downstream callables: 17"
 
     Dependency data is generated from the callable architecture inventory.
 
     <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>read_lakehouse_table(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.shared.py#L31-L33"><code>get_spark_session(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│   └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L165-L172"><code>get_spark(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.shared.py#L103-L105"><code>read_delta_path(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.shared.py#L29-L36"><code>get_spark_session(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.shared.py#L106-L108"><code>read_delta_path(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│   └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L251-L253"><code>_read_delta_path(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.shared.py#L43-L47"><code>resolve_configured_lakehouse_table(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io.shared.py#L46-L50"><code>resolve_configured_lakehouse_table(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L205-L209"><code>_resolve_lakehouse_table_location(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L88-L97"><code>_normalize_table_name(...)</code></a></div>
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io_core.py#L188-L190"><code>_resolve_lakehouse_schema(...)</code></a></div>

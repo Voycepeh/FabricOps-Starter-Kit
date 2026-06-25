@@ -73,6 +73,7 @@ nav:
       - Overview: reference/maintainer-guide.md
       - Glossary: reference/glossary.md
       - Callable Functions Flow: reference/callable-flow.md
+      - Callable Architecture Pattern: reference/callable-architecture.md
       - Public API Contract: reference/public-api-contract.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md

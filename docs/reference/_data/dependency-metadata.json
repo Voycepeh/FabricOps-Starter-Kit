@@ -4499,10 +4499,8 @@
       "callable": "get_spark_session",
       "docs_url": null,
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core.get_spark"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
@@ -4533,10 +4531,8 @@
       "callable": "read_csv_path",
       "docs_url": null,
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core.read_csv_path"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
@@ -4899,10 +4895,8 @@
       "callable": "get_spark_session",
       "docs_url": null,
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core.get_spark"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -4942,10 +4936,8 @@
       "callable": "read_csv_path",
       "docs_url": null,
       "classification": "internal",
-      "calls": [
-        "fabricops_kit.io_core.read_csv_path"
-      ],
-      "calls_count": 1,
+      "calls": [],
+      "calls_count": 0,
       "used_by": [
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv"
       ],
@@ -5940,11 +5932,9 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.io.get_spark_session",
-        "fabricops_kit.io.shared.get_spark_session",
         "fabricops_kit.io_core.read_lakehouse_table_core"
       ],
-      "used_by_count": 3,
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -5958,11 +5948,8 @@
       "classification": "internal",
       "calls": [],
       "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.io.read_csv_path",
-        "fabricops_kit.io.shared.read_csv_path"
-      ],
-      "used_by_count": 2,
+      "used_by": [],
+      "used_by_count": 0,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0

@@ -6,9 +6,7 @@ from typing import Any
 
 from ..io_core import (
     FabricStore,
-    get_spark,
     _lakehouse_file_path,
-    read_csv_path as read_csv_path_core,
     _read_delta_path,
     _read_excel_file,
     _read_warehouse_synapsesql,
@@ -30,7 +28,12 @@ DEFAULT_TARGET = "Source"
 
 def get_spark_session(spark_session=None):
     """Return the explicit or active notebook Spark session."""
-    return get_spark(spark_session)
+    if spark_session is not None:
+        return spark_session
+    try:
+        return globals()["spark"]
+    except KeyError as exc:
+        raise RuntimeError("Spark session was not provided and global 'spark' was not found. Run this inside Fabric/Spark or pass spark_session explicitly.") from exc
 
 
 def resolve_configured_file_path(target: str, relative_path: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str]:
@@ -107,7 +110,10 @@ def read_delta_path(spark_obj, path: str):
 
 def read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]):
     """Read a CSV path through Spark."""
-    return read_csv_path_core(spark_obj, path, header=header, options=options)
+    reader = spark_obj.read.option("header", header)
+    for key, value in options.items():
+        reader = reader.option(key, value)
+    return reader.csv(path)
 
 
 def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: dict[str, Any] | None = None) -> None:

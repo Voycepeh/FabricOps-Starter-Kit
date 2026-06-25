@@ -253,6 +253,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "### Public callable dependencies" in flow_text
     assert "### Long nested chains" in flow_text
     assert "## The workflow" in flow_text
+    assert "## Preferred callable file pattern" in flow_text
+    assert "Public callable file" in flow_text
+    assert "domain shared helper file" in flow_text
+    assert "same-file private helper" in flow_text
+    assert "src/fabricops_kit/io/shared.py" in flow_text
+    assert "Cross-file calls to underscore-prefixed private helpers remain architecture violations." in flow_text
     assert "## Dashboard context" in flow_text
     assert "## Cleanup packets" in flow_text
     assert "## Generated outputs" in flow_text
@@ -1626,6 +1632,12 @@ def test_callable_architecture_layer_rules_and_labels():
 
     assert set(generator.ARCHITECTURE_WARNING_TYPES) == {"Same-file private dependency"}
     assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {"Cross-file private dependency"}
+
+    import scripts.validate_callable_architecture as validator
+
+    assert validator.CALLABLE_FILE_PATTERN == "Public callable file -> domain shared helper -> same-file private helper"
+    assert "src/fabricops_kit/io/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
+    assert validator.LEGACY_IO_CORE_MODULE == "src/fabricops_kit/io_core.py"
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long call chain"

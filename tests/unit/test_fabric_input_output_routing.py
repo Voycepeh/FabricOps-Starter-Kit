@@ -527,12 +527,18 @@ def test_migrated_io_shared_helpers_are_non_underscore_internal_functions():
         assert f"{helper_name}_shared" not in shared_defs
     assert all(not name.startswith("_") for name in shared_defs)
     assert {
+        "get_spark_session",
+        "read_csv_path",
         "resolve_target_store",
         "resolve_lakehouse_table_location",
         "resolve_lakehouse_file_location",
         "read_warehouse_synapsesql",
         "write_warehouse_synapsesql",
     }.issubset(shared_defs)
+    source = shared_path.read_text(encoding="utf-8")
+    assert "read_csv_path as read_csv_path_core" not in source
+    assert "get_spark," not in source
+    assert "reader.csv(path)" in source
 
 
 def test_io_core_has_no_public_function_mirror_core_wrappers():
