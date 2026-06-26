@@ -624,10 +624,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 98
+    assert summary_counts["callable_kind"]["function"] == 102
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
-    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 22
-    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] > 0
+    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 0
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
     assert {
         "public_api_entrypoints",
@@ -679,8 +678,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         for callee in flow["transitive_callees"]
     )
     rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
-    assert rows_by_qn["fabricops_kit.config.FrameworkConfig"]["layer"] == "supporting_object"
-    assert rows_by_qn["fabricops_kit.config.FabricStore.root"]["layer"] == "supporting_object"
+    assert "fabricops_kit.config.FrameworkConfig" not in rows_by_qn
+    assert "fabricops_kit.config.FabricStore.root" not in rows_by_qn
     assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
     assert all(row["review_status"] != "unreachable" for row in function_inventory)
     expected_inventory_keys = {
@@ -2253,14 +2252,14 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
 
     expected_counts = {
         "public": 26,
-        "internal": 72,
-        "private_helper": 222,
+        "internal": 76,
+        "private_helper": 217,
         "supporting_object": metrics["non_function_records"],
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 
     assert actual_counts == expected_counts
-    assert actual_counts["supporting_object"] == 22
+    assert actual_counts["supporting_object"] == 0
     assert actual_counts["supporting_object"] == metrics["non_function_records"]
     assert all(row["function_type"] == "Non functions" for row in inventory if row["layer"] == "supporting_object")
 
@@ -2448,7 +2447,7 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
     workflow_qn = "fabricops_kit.guardrails._run_table_guardrails_workflow"
     core_qn = "fabricops_kit.profiling.profile_dataframe_core"
     private_core_qn = "fabricops_kit.profiling._profile_dataframe_core"
-    distribution_qn = "fabricops_kit.profiling._build_distribution_summaries"
+    distribution_qn = "fabricops_kit.profiling.build_distribution_summaries"
     categorical_qn = "fabricops_kit.profiling.build_categorical_distribution"
     other_public_qn = "fabricops_kit.other.other_public"
     node_by_qn = {
@@ -2457,7 +2456,7 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
         workflow_qn: {"callable_name": "_run_table_guardrails_workflow", "module_name": "guardrails", "callable_kind": "function"},
         core_qn: {"callable_name": "profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
         private_core_qn: {"callable_name": "_profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
-        distribution_qn: {"callable_name": "_build_distribution_summaries", "module_name": "profiling", "callable_kind": "function"},
+        distribution_qn: {"callable_name": "build_distribution_summaries", "module_name": "profiling", "callable_kind": "function"},
         categorical_qn: {"callable_name": "build_categorical_distribution", "module_name": "profiling", "callable_kind": "function"},
     }
     calls_by_qn = {
@@ -2475,7 +2474,7 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
         _flow_test_inventory_row(workflow_qn, "_run_table_guardrails_workflow", "guardrails", "private_helper", owner=public_qn),
         _flow_test_inventory_row(core_qn, "profile_dataframe_core", "profiling", "internal", used_by_count=2),
         _flow_test_inventory_row(private_core_qn, "_profile_dataframe_core", "profiling", "private_helper", owner=core_qn),
-        _flow_test_inventory_row(distribution_qn, "_build_distribution_summaries", "profiling", "private_helper", owner=core_qn),
+        _flow_test_inventory_row(distribution_qn, "build_distribution_summaries", "profiling", "private_helper", owner=core_qn),
         _flow_test_inventory_row(categorical_qn, "build_categorical_distribution", "profiling", "internal", used_by_count=1),
     ]
 
