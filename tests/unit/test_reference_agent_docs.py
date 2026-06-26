@@ -2157,6 +2157,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} code inventory records" in inventory_text
     assert "No supporting code assets found for the current filters." in inventory_text
+    assert "No selected code assets. Clear the Selected focus or select visible rows first." in inventory_text
     assert "Inventory data is missing from callable-flow.json. Regenerate the callable flow export." in inventory_text
     assert "Failed to load callable-flow data. URL:" in inventory_text
     assert "callable-flow.json" in inventory_text
@@ -2177,6 +2178,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert '<option value="supporting_object">Non functions</option>' in inventory_text
     assert "if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false" in inventory_text
     assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!supportFocus(i))return false" in inventory_text
+    assert "if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected code assets. Clear the Selected focus or select visible rows first.'" in inventory_text
     for label in [
         "Total code assets",
         "Public callables",
@@ -2222,6 +2224,25 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
         inventory_text,
     )
     assert "enhanceAll(document)" not in inventory_text
+
+
+def test_callable_inventory_selected_focus_empty_state_is_clear() -> None:
+    """Verify Selected focus with no selection has a specific empty-state message."""
+    inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
+
+    assert "No selected code assets. Clear the Selected focus or select visible rows first." in inventory_text
+    assert "state.focusFilter==='selected'&&state.selected.size===0" in inventory_text
+    assert "state.focusFilter==='selected'&&!state.selected.has(i.qualified_name)" in inventory_text
+
+
+def test_callable_inventory_non_functions_filter_works_outside_selected_focus() -> None:
+    """Verify Non functions filtering can match summary count when focus is all or cleanup."""
+    flow_data = json.loads((ROOT / "docs" / "reference" / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
+    inventory = flow_data["function_inventory"]
+    non_function_rows = [row for row in inventory if row["layer"] == "supporting_object"]
+
+    assert len(non_function_rows) == flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"]
+    assert len(non_function_rows) == 22
 
 
 def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
