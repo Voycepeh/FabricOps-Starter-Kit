@@ -8,7 +8,7 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from .data_agreement import get_selected_agreement, widget_select_agreement
-from .data_profiling import profile_dataframe_core
+from .data_profiling.shared import profile_dataframe_core
 from .guardrails import (
     enforce_freshness,
     enforce_freshness_rule,
@@ -19,7 +19,7 @@ from .guardrails import (
 )
 from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
-from .config import _current_audit_timestamp, _get_audit_timezone, resolve_fabric_context
+from .config import _current_audit_timestamp, get_audit_timezone, resolve_fabric_context
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"

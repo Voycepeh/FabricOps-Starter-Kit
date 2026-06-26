@@ -859,7 +859,7 @@ def enforce_profile_behavior(
     effective_exclude_columns = _guardrail_exclude_columns(exclude_columns)
     if mode == "static_data":
         if current_profile is None:
-            from fabricops_kit.data_profiling import profile_dataframe_core
+            from fabricops_kit.data_profiling.shared import profile_dataframe_core
             current_profile = profile_dataframe_core(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
         payload = _profile_payload_from_profile(current_profile, dataframe=dataframe, watermark_column="", watermark_value="__FULL_TABLE__")
         evidence_rows.append({"watermark_column": "", "watermark_value": "__FULL_TABLE__", "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
@@ -869,7 +869,7 @@ def enforce_profile_behavior(
         if not hasattr(dataframe, "filter") or not hasattr(dataframe, "select"):
             raise ValueError("changing_data profile behavior requires a Spark-like DataFrame")
         values = [row[0] for row in dataframe.select(watermark_column).distinct().collect()]
-        from fabricops_kit.data_profiling import profile_dataframe_core
+        from fabricops_kit.data_profiling.shared import profile_dataframe_core
         for value in sorted(values, key=lambda item: str(item)):
             group_df = dataframe.filter(dataframe[watermark_column] == value)
             group_profile = profile_dataframe_core(group_df, table_name, exclude_columns=effective_exclude_columns, config=config)

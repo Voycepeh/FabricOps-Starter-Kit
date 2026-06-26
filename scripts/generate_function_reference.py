@@ -67,7 +67,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
     "data_agreement": "data_agreement",
     "governance_review": "governance_review",
-    "data_profiling": "data_profiling",
+    "data_profiling.profile_dataframe": "data_profiling",
     "io": "io",
     "guardrails": "guardrails",
     "metadata": "metadata",
@@ -103,7 +103,7 @@ INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     },
     "run_table_guardrails": {
         "fabricops_kit.config._current_audit_timestamp",
-        "fabricops_kit.config._get_audit_timezone",
+        "fabricops_kit.config.get_audit_timezone",
         "fabricops_kit.config._validate_audit_timezone",
     },
 }
@@ -290,18 +290,23 @@ def _is_property_method(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
 
 def source_module_name(path: Path) -> str:
     """Return a dotted package-relative source module name."""
-    return ".".join(path.relative_to(PKG_DIR).with_suffix("").parts)
+    parts = path.relative_to(PKG_DIR).with_suffix("").parts
+    if parts[-1] == "__init__":
+        return ".".join(parts[:-1])
+    return ".".join(parts)
 
 
 def source_module_paths() -> list[Path]:
     """Return package source files that participate in generated callable metadata."""
-    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py")
+    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py" or path.parent.name == "data_profiling")
 
 
 def source_module_path(module: str) -> Path:
     """Return the source path for a dotted package-relative module name."""
     if module == "io":
         return PKG_DIR / "io" / "shared.py"
+    if module == "data_profiling":
+        return PKG_DIR / "data_profiling" / "shared.py"
     return PKG_DIR.joinpath(*module.split(".")).with_suffix(".py")
 
 def parse_module(path: Path) -> dict[str, Any]:
@@ -481,9 +486,11 @@ def resolve_call_target(
             module_candidate = ".".join(imported_short[:-1])
             resolved_module = module_candidate.removeprefix(f"{PACKAGE_NAME}.")
             if imported.startswith(PACKAGE_NAME) or resolved_module in package_module_names:
+                exported = exported_symbol_map.get(resolved_symbol)
+                target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module == "data_profiling" else resolved_module)
                 callee_kind = _classify_callee(resolved_module, resolved_symbol)
                 return (
-                    f"{PACKAGE_NAME}.{resolved_module}.{resolved_symbol}",
+                    f"{PACKAGE_NAME}.{target_module}.{resolved_symbol}",
                     "cross_module" if resolved_module != module else "same_module",
                     callee_kind,
                 )
@@ -496,15 +503,18 @@ def resolve_call_target(
         resolved_owner = mapped_owner.removeprefix(f"{PACKAGE_NAME}.")
         if mapped_owner.startswith(PACKAGE_NAME) or resolved_owner in package_module_names or short_owner in package_module_names:
             resolved_module = resolved_owner if resolved_owner in package_module_names else short_owner
+            exported = exported_symbol_map.get(member)
+            target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module == "data_profiling" else resolved_module)
             callee_kind = _classify_callee(resolved_module, member)
-            return f"{PACKAGE_NAME}.{resolved_module}.{member}", "cross_module" if resolved_module != module else "same_module", callee_kind
+            return f"{PACKAGE_NAME}.{target_module}.{member}", "cross_module" if resolved_module != module else "same_module", callee_kind
         return None, "unresolved", "unresolved"
 
     # public exported symbol map fallback (bare-name cross-module only for exported mapping)
     exported = exported_symbol_map.get(raw_name)
     if exported and exported.actual_module != module:
         callee_kind = _classify_callee(exported.actual_module, raw_name)
-        return f"{PACKAGE_NAME}.{exported.actual_module}.{raw_name}", "cross_module", callee_kind
+        target_module = exported.public_module if exported.public_module == "data_profiling" else exported.actual_module
+        return f"{PACKAGE_NAME}.{target_module}.{raw_name}", "cross_module", callee_kind
 
     return None, "unresolved", "unresolved"
 
@@ -523,6 +533,13 @@ def build_callable_graph(
     module_summaries: list[dict[str, Any]] = []
     calls_modules: dict[str, set[str]] = {m: set() for m in package_modules}
     called_by_modules: dict[str, set[str]] = {m: set() for m in package_modules}
+
+    def canonical_qualified_name(module: str, callable_name: str) -> str:
+        exported = symbol_map.get(callable_name)
+        if exported and exported.actual_module == module:
+            target_module = exported.public_module if exported.public_module == "data_profiling" else exported.actual_module
+            return f"{PACKAGE_NAME}.{target_module}.{callable_name}"
+        return f"{PACKAGE_NAME}.{module}.{callable_name}"
 
     for module, info in module_data.items():
         module_tree = ast.parse(source_module_path(module).read_text(encoding="utf-8"))
@@ -553,7 +570,7 @@ def build_callable_graph(
             exported = callable_name in exported_names
             if not exported and role not in {"callable", "internal"}:
                 role = "internal"
-            qualified_name = f"{PACKAGE_NAME}.{module}.{callable_name}"
+            qualified_name = canonical_qualified_name(module, callable_name)
             key = (module, callable_name)
             if key not in node_keys:
                 node_keys.add(key)
@@ -590,7 +607,7 @@ def build_callable_graph(
                     if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
                         callable_nodes.append((f"{node.name}.{child.name}", child))
         for caller_name, node in callable_nodes:
-            caller_qn = f"{PACKAGE_NAME}.{module}.{caller_name}"
+            caller_qn = canonical_qualified_name(module, caller_name)
             local_module_aliases, local_symbol_aliases = parse_import_aliases(
                 [n for n in ast.walk(node) if isinstance(n, (ast.Import, ast.ImportFrom))]
             )
@@ -612,7 +629,7 @@ def build_callable_graph(
                 }
                 edges.append(edge)
                 if resolved_qn and edge_type in {"same_module", "cross_module"}:
-                    callee_module = resolved_qn.split(".")[1] if resolved_qn.startswith(f"{PACKAGE_NAME}.") else resolved_qn.split(".")[-2]
+                    callee_module = resolved_qn.removeprefix(f"{PACKAGE_NAME}.").rsplit(".", 1)[0] if resolved_qn.startswith(f"{PACKAGE_NAME}.") else resolved_qn.split(".")[-2]
                     if callee_module != module:
                         calls_modules[module].add(callee_module)
                         called_by_modules[callee_module].add(module)
@@ -1408,7 +1425,7 @@ def _call_tree_link(
     if module_name and callable_name and module_name in module_data:
         source_location = module_data.get(module_name, {}).get("source_locations", {}).get(callable_name, {})
         return github_source_url(
-            f"src/fabricops_kit/{module_name}.py",
+            f"src/fabricops_kit/{module_name.replace('.', '/')}.py",
             source_location.get("start_line"),
             source_location.get("end_line"),
         )
@@ -2152,8 +2169,8 @@ ROLE_TAGS_BY_NAME = {
     ],
     "get_default_fabric_context": ["internal_resolver", "runtime_context_provider", "shared_internal_service"],
     "_current_audit_timestamp": ["audit_time_utility", "shared_internal_service", "high_fanout_shared"],
-    "_get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
-    "_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
+    "get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
+    "build_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
     "_validate_framework_config": ["internal_validator", "config_validator"],
     "_validate_metadata_table_registration": ["internal_validator", "metadata_table_registration_validator"],
     "_validate_audit_timezone": ["utility_validator", "low_level_utility"],
@@ -2263,12 +2280,12 @@ ROLE_TAGS_BY_NAME = {
     # Profiling public entrypoint and role-organized internals.
     "profile_dataframe": ["public_api_entrypoint", "profiling_entrypoint", "public_stable"],
     "profile_dataframe_core": ["internal_workflow", "profiling_workflow"],
-    "_get_profiled_columns": ["internal_resolver", "profiling_column_resolver"],
-    "_is_min_max_supported_type": ["internal_resolver", "spark_type_resolver"],
+    "resolve_profiled_columns": ["internal_resolver", "profiling_column_resolver"],
+    "is_min_max_supported_type": ["internal_resolver", "spark_type_resolver"],
     "_numeric_bin_edges": ["internal_adapter", "spark_profiling_adapter"],
     "_build_numeric_distribution": ["internal_adapter", "spark_profiling_adapter"],
     "_build_categorical_distribution": ["internal_adapter", "spark_profiling_adapter"],
-    "_build_distribution_summaries": ["internal_adapter", "spark_profiling_adapter"],
+    "build_distribution_summaries": ["internal_adapter", "spark_profiling_adapter"],
 
     # Guardrail support internals.
     "_check_schema_rule_runtime": ["internal_workflow", "schema_guardrail_workflow"],
@@ -2557,7 +2574,7 @@ def _build_function_inventory(
         return layer_by_qn.get(qn) in {"public", "internal"}
 
     def is_inventory_function(qn: str) -> bool:
-        return layer_by_qn.get(qn) in {"public", "internal", HIDDEN_PRIVATE_LAYER, SUPPORTING_OBJECT_LAYER}
+        return layer_by_qn.get(qn) in {"public", "internal", HIDDEN_PRIVATE_LAYER}
 
     def inventory_function_type(layer: str) -> str:
         if layer == HIDDEN_PRIVATE_LAYER:
@@ -2582,7 +2599,7 @@ def _build_function_inventory(
 
     def private_helper_action(qn: str, inbound: set[str], outbound: list[str]) -> tuple[str, str]:
         scope = private_helper_usage_scope(qn, inbound)
-        if node_by_qn[qn]["module_name"] == "_profiling_adapters":
+        if node_by_qn[qn]["module_name"] == "data_profiling.shared":
             return "Keep private helper", "Low"
         if scope == "cross_module":
             return "Rename to shared helper", "Medium"
@@ -2804,8 +2821,8 @@ def _build_function_inventory(
             layer: sum(1 for row in inventory if row["layer"] == layer)
             for layer in CALLABLE_LAYER_LABELS
         },
-        "hidden_private_helpers": sum(1 for qn, layer in layer_by_qn.items() if layer == HIDDEN_PRIVATE_LAYER),
-        "supporting_objects": sum(1 for qn, layer in layer_by_qn.items() if layer == SUPPORTING_OBJECT_LAYER),
+        "hidden_private_helpers": sum(1 for row in inventory if row["layer"] == HIDDEN_PRIVATE_LAYER),
+        "supporting_objects": 0,
         "review_status": {
             status: sum(1 for row in inventory if row["review_status"] == status)
             for status in REVIEW_STATUS_LABELS
@@ -2857,8 +2874,8 @@ def _build_callable_inventory_metrics(
         "public_api_entrypoints": public_api_entrypoints,
         "function_callables": visible_function_callables,
         "supporting_functions": max(visible_function_callables - public_api_entrypoints, 0),
-        "non_function_records": int(summary_counts.get("supporting_objects", 0)),
-        "hidden_private_helpers": int(summary_counts.get("hidden_private_helpers", 0)),
+        "non_function_records": 0,
+        "hidden_private_helpers": private_helper_review,
         "private_helpers_to_review": private_helper_review,
     }
 
@@ -4088,7 +4105,7 @@ def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
 def _helper_area(helper_name: str, purpose: str) -> tuple[str, str]:
     """Return the implementation area and plain-English role for an internal helper."""
     haystack = f"{helper_name} {purpose}".lower()
-    if helper_name in {"_guardrail_exclude_columns", "_get_profiled_columns"} or "exclude_columns" in haystack:
+    if helper_name in {"_guardrail_exclude_columns", "resolve_profiled_columns"} or "exclude_columns" in haystack:
         return "Column handling", "Select, exclude, and normalize column names used by the callable."
     if helper_name in {
         "_catalogue_value",
@@ -4752,7 +4769,7 @@ def main() -> None:
 
     def _module_name(qn: str) -> str:
         parts = qn.split(".")
-        return parts[1] if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
+        return ".".join(parts[1:-1]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     for generated_page in MODULE_DIR.glob("*.md"):
         if generated_page.name != "index.md" and generated_page.stem not in MAJOR_IMPLEMENTATION_MODULES:
@@ -5141,7 +5158,7 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
-    public_qn_by_name = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
+    public_qn_by_name = {name: f"{PACKAGE_NAME}.{(symbol.public_module if symbol.public_module == 'data_profiling' else symbol.actual_module)}.{name}" for name, symbol in symbol_map.items()}
     internalized_public_helpers = {
         "read_lakehouse_csv",
         "read_lakehouse_excel",
@@ -5463,7 +5480,7 @@ def main() -> None:
         docs_path = f"api/reference/{short_name}.md" if node["exported"] else (
             f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
         )
-        source_path = f"src/fabricops_kit/{module_name.replace('.', '/')}.py"
+        source_path = module_info.get("source_path") or f"src/fabricops_kit/{module_name.replace('.', '/')}.py"
         source_location = module_info.get("source_locations", {}).get(short_name, {})
         source_start_line = source_location.get("start_line")
         source_end_line = source_location.get("end_line")

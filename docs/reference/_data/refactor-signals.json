@@ -217,7 +217,7 @@
   },
   "widget_render_agreement_evidence": {
     "qualified_name": "fabricops_kit.data_agreement.widget_render_agreement_evidence",
-    "unique_internal_helper_count": 27,
+    "unique_internal_helper_count": 26,
     "repeated_helpers": [
       {
         "helper": "_normalize_path_config",
@@ -375,18 +375,6 @@
     ],
     "single_delegate_helpers": [
       {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
-      {
         "helper": "_prepare_evidence_file_references",
         "qualified_name": "fabricops_kit.data_agreement._prepare_evidence_file_references",
         "delegates_to": "_get_notebookutils",
@@ -415,7 +403,7 @@
   },
   "widget_render_data_agreement": {
     "qualified_name": "fabricops_kit.data_agreement.widget_render_data_agreement",
-    "unique_internal_helper_count": 46,
+    "unique_internal_helper_count": 45,
     "repeated_helpers": [
       {
         "helper": "_normalize_path_config",
@@ -487,7 +475,7 @@
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -498,7 +486,7 @@
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -572,18 +560,6 @@
       }
     ],
     "single_delegate_helpers": [
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
       {
         "helper": "_active_steward",
         "qualified_name": "fabricops_kit.data_agreement._active_steward",
@@ -643,7 +619,7 @@
   },
   "widget_render_data_steward": {
     "qualified_name": "fabricops_kit.data_agreement.widget_render_data_steward",
-    "unique_internal_helper_count": 46,
+    "unique_internal_helper_count": 45,
     "repeated_helpers": [
       {
         "helper": "_normalize_path_config",
@@ -715,7 +691,7 @@
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -726,7 +702,7 @@
           "fabricops_kit.data_agreement._create_or_update_data_agreement",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -801,18 +777,6 @@
     ],
     "single_delegate_helpers": [
       {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
-      {
         "helper": "_active_steward",
         "qualified_name": "fabricops_kit.data_agreement._active_steward",
         "delegates_to": "_to_bool",
@@ -871,46 +835,16 @@
   },
   "profile_dataframe": {
     "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
-    "unique_internal_helper_count": 9,
+    "unique_internal_helper_count": 4,
     "repeated_helpers": [
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "branch_count": 2
-      },
       {
         "helper": "_validate_audit_timezone",
         "qualified_name": "fabricops_kit.config._validate_audit_timezone",
         "branch_count": 2
       }
     ],
-    "deep_call_chains": [
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.data_profiling.profile_dataframe",
-          "fabricops_kit.data_profiling.profile_dataframe_core",
-          "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "fabricops_kit.config._audit_timestamp_expr",
-          "fabricops_kit.config._get_audit_timezone",
-          "fabricops_kit.config._validate_audit_timezone"
-        ]
-      }
-    ],
-    "single_delegate_helpers": [
-      {
-        "helper": "_audit_timestamp_expr",
-        "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      }
-    ],
+    "deep_call_chains": [],
+    "single_delegate_helpers": [],
     "possible_grouping_mismatches": []
   },
   "get_latest_metadata_catalogue": {
@@ -1038,7 +972,7 @@
   },
   "widget_author_dq_rules": {
     "qualified_name": "fabricops_kit.governance_review.widget_author_dq_rules",
-    "unique_internal_helper_count": 28,
+    "unique_internal_helper_count": 27,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -1053,11 +987,6 @@
       {
         "helper": "_current_audit_timestamp",
         "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "branch_count": 2
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
         "branch_count": 2
       },
       {
@@ -1150,7 +1079,7 @@
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -1162,7 +1091,7 @@
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -1190,18 +1119,6 @@
       }
     ],
     "single_delegate_helpers": [
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
       {
         "helper": "_dq_records_from_selection",
         "qualified_name": "fabricops_kit.governance_review._dq_records_from_selection",
@@ -1255,7 +1172,7 @@
   },
   "widget_author_schema_freshness_profile_rules": {
     "qualified_name": "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules",
-    "unique_internal_helper_count": 28,
+    "unique_internal_helper_count": 27,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -1270,11 +1187,6 @@
       {
         "helper": "_current_audit_timestamp",
         "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "branch_count": 2
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
         "branch_count": 2
       },
       {
@@ -1367,7 +1279,7 @@
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -1379,7 +1291,7 @@
           "fabricops_kit.governance_review._base_guardrail_rule_record",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -1407,18 +1319,6 @@
       }
     ],
     "single_delegate_helpers": [
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
       {
         "helper": "_schema_freshness_profile_records_from_selection",
         "qualified_name": "fabricops_kit.governance_review._schema_freshness_profile_records_from_selection",
@@ -1472,7 +1372,7 @@
   },
   "widget_enrich_table_metadata": {
     "qualified_name": "fabricops_kit.governance_review.widget_enrich_table_metadata",
-    "unique_internal_helper_count": 35,
+    "unique_internal_helper_count": 34,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -1487,11 +1387,6 @@
       {
         "helper": "_current_audit_timestamp",
         "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "branch_count": 3
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
         "branch_count": 3
       },
       {
@@ -1635,18 +1530,6 @@
     ],
     "single_delegate_helpers": [
       {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
-      {
         "helper": "_selected_catalogue_rows_for_enrichment",
         "qualified_name": "fabricops_kit.governance_review._selected_catalogue_rows_for_enrichment",
         "delegates_to": "_value",
@@ -1699,7 +1582,7 @@
   },
   "widget_review_guardrail_governance": {
     "qualified_name": "fabricops_kit.governance_review.widget_review_guardrail_governance",
-    "unique_internal_helper_count": 10,
+    "unique_internal_helper_count": 9,
     "repeated_helpers": [
       {
         "helper": "_context_get",
@@ -1714,11 +1597,6 @@
       {
         "helper": "_current_audit_timestamp",
         "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "branch_count": 2
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
         "branch_count": 2
       },
       {
@@ -1756,7 +1634,7 @@
           "fabricops_kit.governance_review.apply_governance_enrichment_action",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -1767,7 +1645,7 @@
           "fabricops_kit.governance_review.apply_governance_enrichment_action",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -1790,7 +1668,7 @@
           "fabricops_kit.governance_review.apply_governance_rule_action",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -1801,7 +1679,7 @@
           "fabricops_kit.governance_review.apply_governance_rule_action",
           "fabricops_kit.metadata._now_utc_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -1818,18 +1696,6 @@
       }
     ],
     "single_delegate_helpers": [
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
       {
         "helper": "_now_utc_iso",
         "qualified_name": "fabricops_kit.metadata._now_utc_iso",
@@ -2356,7 +2222,7 @@
   },
   "prepare_pipeline_table_configs": {
     "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
-    "unique_internal_helper_count": 5,
+    "unique_internal_helper_count": 4,
     "repeated_helpers": [],
     "deep_call_chains": [
       {
@@ -2366,24 +2232,12 @@
           "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
           "fabricops_kit.pipeline._add_audit_columns",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       }
     ],
     "single_delegate_helpers": [
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
       {
         "helper": "_add_audit_columns",
         "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
@@ -2401,7 +2255,7 @@
   },
   "run_table_guardrails": {
     "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
-    "unique_internal_helper_count": 87,
+    "unique_internal_helper_count": 83,
     "repeated_helpers": [
       {
         "helper": "_catalogue_value",
@@ -2561,12 +2415,6 @@
     ],
     "single_delegate_helpers": [
       {
-        "helper": "_audit_timestamp_expr",
-        "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
         "helper": "_latest_dq_rule_versions",
         "qualified_name": "fabricops_kit.governance_review._latest_dq_rule_versions",
         "delegates_to": "_spark_sql_helpers",
@@ -2631,13 +2479,19 @@
         "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_table_path",
         "delegates_to": "_join_lakehouse_area_path",
         "delegates_to_qualified_name": "fabricops_kit.io.shared._join_lakehouse_area_path"
+      },
+      {
+        "helper": "_build_metadata_table_key",
+        "qualified_name": "fabricops_kit.metadata._build_metadata_table_key",
+        "delegates_to": "_stable_metadata_key",
+        "delegates_to_qualified_name": "fabricops_kit.metadata._stable_metadata_key"
       }
     ],
     "possible_grouping_mismatches": []
   },
   "start_pipeline_run": {
     "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
-    "unique_internal_helper_count": 33,
+    "unique_internal_helper_count": 32,
     "repeated_helpers": [
       {
         "helper": "_normalize_path_config",
@@ -2695,8 +2549,8 @@
         "branch_count": 2
       },
       {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
+        "helper": "_html_escape",
+        "qualified_name": "fabricops_kit.data_agreement._html_escape",
         "branch_count": 2
       }
     ],
@@ -2708,7 +2562,7 @@
           "fabricops_kit.pipeline._start_pipeline_run_workflow",
           "fabricops_kit.pipeline._now_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -2799,18 +2653,6 @@
     ],
     "single_delegate_helpers": [
       {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
-      {
         "helper": "_resolve_lakehouse_schema",
         "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_schema",
         "delegates_to": "_normalize_schema_name",
@@ -2839,16 +2681,11 @@
   },
   "write_pipeline_lineage": {
     "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
-    "unique_internal_helper_count": 21,
+    "unique_internal_helper_count": 20,
     "repeated_helpers": [
       {
         "helper": "_current_audit_timestamp",
         "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "branch_count": 3
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
         "branch_count": 3
       },
       {
@@ -2885,7 +2722,7 @@
           "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
           "fabricops_kit.pipeline._now_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -2897,7 +2734,7 @@
           "fabricops_kit.pipeline._runtime_audit_fields",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -2908,7 +2745,7 @@
           "fabricops_kit.pipeline._runtime_audit_fields",
           "fabricops_kit.metadata._build_runtime_audit_fields",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -2954,7 +2791,7 @@
           "fabricops_kit.pipeline._runtime_audit_fields",
           "fabricops_kit.pipeline._now_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone"
+          "fabricops_kit.config.get_audit_timezone"
         ]
       },
       {
@@ -2965,24 +2802,12 @@
           "fabricops_kit.pipeline._runtime_audit_fields",
           "fabricops_kit.pipeline._now_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       }
     ],
     "single_delegate_helpers": [
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
       {
         "helper": "_resolve_lakehouse_schema",
         "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_schema",
@@ -3018,7 +2843,7 @@
   },
   "write_pipeline_run_summary": {
     "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
-    "unique_internal_helper_count": 16,
+    "unique_internal_helper_count": 15,
     "repeated_helpers": [
       {
         "helper": "_normalize_path_config",
@@ -3039,7 +2864,7 @@
           "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
           "fabricops_kit.pipeline._now_iso",
           "fabricops_kit.config._current_audit_timestamp",
-          "fabricops_kit.config._get_audit_timezone",
+          "fabricops_kit.config.get_audit_timezone",
           "fabricops_kit.config._validate_audit_timezone"
         ]
       },
@@ -3124,18 +2949,6 @@
       }
     ],
     "single_delegate_helpers": [
-      {
-        "helper": "_current_audit_timestamp",
-        "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-        "delegates_to": "_get_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._get_audit_timezone"
-      },
-      {
-        "helper": "_get_audit_timezone",
-        "qualified_name": "fabricops_kit.config._get_audit_timezone",
-        "delegates_to": "_validate_audit_timezone",
-        "delegates_to_qualified_name": "fabricops_kit.config._validate_audit_timezone"
-      },
       {
         "helper": "_resolve_lakehouse_schema",
         "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_schema",
