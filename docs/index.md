@@ -67,20 +67,20 @@ They abstract the important but tedious work into a simplified plug and play wor
 
 ## For maintainers
 
-FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the callable dashboards to review public API architecture and export raw callable inventory packets.
+FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the Function Call Graph Dashboard and Function Inventory to review public API architecture and export raw function-level packets.
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="assets/callable-functions-dashboard.html">
-    <span class="fabricops-landing-card__title">Callable Flow Dashboard</span>
+    <span class="fabricops-landing-card__title">Function Call Graph Dashboard</span>
     <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, source Python files, and architecture signals.</span>
-    <span class="fabricops-landing-card__meta">Open Callable Flow Dashboard</span>
+    <span class="fabricops-landing-card__meta">Open Function Call Graph Dashboard</span>
   </a>
 
   <a class="fabricops-landing-card" href="https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/callable-flow/">
-    <span class="fabricops-landing-card__title">Callable Flow Reference</span>
-    <span class="fabricops-landing-card__body">Read about the architecture and the motivation behind the callable flow reference dashboard.</span>
-    <span class="fabricops-landing-card__meta">Open Callable Flow Reference</span>
+    <span class="fabricops-landing-card__title">Function Call Graph Reference</span>
+    <span class="fabricops-landing-card__body">Read about the architecture and the motivation behind the function call graph dashboard.</span>
+    <span class="fabricops-landing-card__meta">Open Function Call Graph Reference</span>
   </a>
 </div>
 
-<p><small>Callable metrics are generated from the callable inventory data.</small></p>
+<p><small>Function metrics are generated from the function inventory data.</small></p>

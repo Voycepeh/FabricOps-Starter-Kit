@@ -10,7 +10,7 @@ Use this page to look up Starter Kit functions used by the template notebooks.
   </section>
 </div>
 
-<p><small>Callable metrics are generated from the callable inventory data.</small></p>
+<p><small>Function metrics are generated from the function inventory data.</small></p>
 
 ## Find a function
 
@@ -36,9 +36,9 @@ Use the finder below to look up the 26 public Starter Kit functions. Implementat
     - Private helpers to review: 217
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
-    - [Public callable flow map](callable-flow.md): global public callable dependency view and nested internal helper summary.
-    - [Architecture](../assets/callable-functions-dashboard.html): review public API shape, chain depth, fan-out, source Python files, cross-layer warnings, and flattening recommendations.
-    - [Inventory](../assets/callable-functions-inventory.html): search/filter function-level callable assets, select rows, and export AI refactor packets.
+    - [Function Call Graph](callable-flow.md): global public function dependency view and nested helper summary.
+    - [Function Call Graph](../assets/callable-functions-dashboard.html): review public function dependencies, chain depth, fan-out, source Python files, architecture boundaries, and cleanup recommendations.
+    - [Function Inventory](../assets/callable-functions-inventory.html): search/filter function-level code assets, select rows, and export AI refactor packets.
     - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.
     - Agent metadata: `_data/automation-manifest.json`.
     - Implementation contracts: expectations maintainers must satisfy before using or changing a function.

@@ -1,8 +1,8 @@
-# Callable Flow
+# Function Call Graph
 
 > **Make it exist first. Make it good next.**
 >
-> AI helps FabricOps move quickly from idea to working public callable. Callable Flow helps us come back afterwards to review whether the implementation is clean enough to keep.
+> AI helps FabricOps move quickly from idea to working public function. The Function Call Graph helps us come back afterwards to review whether the implementation is clean enough to keep.
 
 ## Why this exists
 
@@ -24,7 +24,7 @@ Once the behaviour is worth keeping, the next problem is maintainability.
 
 AI generated code can work correctly but still leave behind messy integration patterns: duplicated helpers, private functions used across files, wide dependency surfaces, public callables depending on other public callables, or long chains of thin wrapper functions.
 
-Callable Flow exists to support that second step.
+The Function Call Graph exists to support that second step.
 
 It helps us move quickly during prototyping, then return later with a clearer view of what should be cleaned up.
 
@@ -77,7 +77,7 @@ The intended workflow is:
 ```text
 Prototype quickly
 → validate with users
-→ inspect callable structure
+→ inspect the function call graph
 → export a focused cleanup packet
 → use AI to assist the refactor
 → review the actual code
@@ -90,16 +90,16 @@ The point is to avoid letting fast prototypes quietly become long term technical
 
 ## Dashboard context
 
-Callable Flow has two generated review surfaces:
+The generated review surfaces are:
 
-- [Callable Architecture](../assets/callable-functions-dashboard.html) starts from notebook-facing public callables and shows the selected callable's flow, downstream depth, architecture findings, merge candidates, and suggested next step.
-- [Code Inventory](../assets/callable-functions-inventory.html) supports deeper inspection of function-level callable support assets, including public callables, shared helpers, private helpers, and cleanup candidates.
+- [Function Call Graph Dashboard](../assets/callable-functions-dashboard.html) shows how public functions, shared helpers, and private helpers connect across the package. Use it to inspect function dependencies, architecture boundaries, and cleanup candidates.
+- [Function Inventory](../assets/callable-functions-inventory.html) focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.
 
-Use the Architecture page first when you are deciding whether a public callable is clean enough to keep. Use Code Inventory when the flow points to function-level support code that needs closer review or when you need to batch related function assets for cleanup planning.
+Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep. Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
 
 ## Cleanup packets
 
-When a function is worth improving, Callable Flow can export focused cleanup packets as JSON or YAML.
+When a function is worth improving, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
 
 The packet gives AI enough context to help with the next step without asking it to freely rewrite the repository.
 
@@ -107,9 +107,9 @@ The packet gives AI enough context to help with the next step without asking it 
 
 ![Prompt export](../assets/fabricops-select-refactor-candidates-prompt-export.png)
 
-The Architecture page exports `fabricops_public_callable_flow_cleanup_packet` for one selected public callable flow. The Code Inventory page exports `fabricops_support_inventory_cleanup_packet` for selected function-level support assets.
+The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph. The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
 
-Both packet types are designed to keep the cleanup focused on the selected callable or assets, the identified risks, the compatibility mode, and the tests that should be reviewed before changes are merged.
+Both packet types are designed to keep the cleanup focused on the selected function or assets, the identified risks, the compatibility mode, and the tests that should be reviewed before changes are merged.
 
 Example packet shape:
 
@@ -140,14 +140,14 @@ requested_work:
     - Call out tests required before implementation.
 ```
 
-The packet keeps the refactor focused on the selected callable, the identified risks, and the compatibility mode.
+The packet keeps the refactor focused on the selected function, the identified risks, and the compatibility mode.
 
 ## Generated outputs
 
-Callable Flow is generated from repository scans. The generated outputs are:
+The Function Call Graph is generated from repository scans. The generated outputs are:
 
-- [Callable Architecture](../assets/callable-functions-dashboard.html)
-- [Code Inventory](../assets/callable-functions-inventory.html)
+- [Function Call Graph Dashboard](../assets/callable-functions-dashboard.html)
+- [Function Inventory](../assets/callable-functions-inventory.html)
 - [callable-flow.json](_data/callable-flow.json)
 
 Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
@@ -160,4 +160,4 @@ Validate that it is useful.
 Then make the implementation good enough to keep.
 ```
 
-Callable Flow exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
+The Function Call Graph exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
