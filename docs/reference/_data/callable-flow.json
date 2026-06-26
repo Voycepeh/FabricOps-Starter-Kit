@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-26T13:38:04.036956Z",
+    "generated_at_utc": "2026-06-26T18:03:33.165222Z",
     "data_source": "callable-flow.json"
   },
   "architecture_thresholds": {
@@ -71324,7 +71324,6 @@
       "public_api_entrypoints": 26,
       "function_callables": 102,
       "supporting_functions": 76,
-      "non_function_records": 0,
       "hidden_private_helpers": 217,
       "private_helpers_to_review": 217
     },
