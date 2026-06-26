@@ -8,7 +8,7 @@ import re
 import uuid
 from typing import Any, Iterable, Mapping
 
-from .config import _current_audit_timestamp, get_audit_timezone, resolve_fabric_context
+from .config.shared import _current_audit_timestamp, get_audit_timezone, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .data_profiling.shared import profile_dataframe_core
 from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row

@@ -7,7 +7,8 @@ from typing import Any
 import re
 import tempfile
 
-from ..config import FabricStore, get_store, resolve_fabric_context
+from fabricops_kit.config import FabricStore
+from fabricops_kit.config.shared import get_store, resolve_fabric_context
 
 DEFAULT_ENV = "Sandbox"
 DEFAULT_TARGET = "Source"

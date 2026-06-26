@@ -9,7 +9,6 @@ from typing import Any
 from fabricops_kit.config import (
     DataAgreementConfig,
     FrameworkConfig,
-    NotebookRuntimeConfig,
     PathConfig,
 )
 from fabricops_kit.config import FabricStore
@@ -40,7 +39,6 @@ def framework_config() -> FrameworkConfig:
                 }
             }
         ),
-        notebook_runtime_config=NotebookRuntimeConfig(),
         data_agreement_config=DataAgreementConfig(),
     )
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from fabricops_kit.config import build_audit_timestamp_expr, get_audit_timezone
+from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone
 
 
 _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {

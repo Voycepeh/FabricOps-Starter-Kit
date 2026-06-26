@@ -4,7 +4,18 @@ import pathlib
 import tomllib
 from importlib.metadata import PackageNotFoundError, version
 
-from .config import setup_metadata_tables, setup_notebook
+from .config import (
+    ConfigSmokeCheckResult,
+    DataAgreementConfig,
+    FabricStore,
+    FrameworkConfig,
+    GovernanceConfig,
+    NotebookSetupContext,
+    PathConfig,
+    get_fabric_context,
+    setup_metadata_tables,
+    setup_notebook,
+)
 from .data_agreement import (
     widget_render_agreement_evidence,
     widget_render_data_agreement,
@@ -55,8 +66,16 @@ def _load_package_version() -> str:
 __version__ = _load_package_version()
 
 __all__ = [
+    "FabricStore",
+    "PathConfig",
+    "GovernanceConfig",
+    "DataAgreementConfig",
+    "FrameworkConfig",
+    "ConfigSmokeCheckResult",
+    "NotebookSetupContext",
     "setup_notebook",
     "setup_metadata_tables",
+    "get_fabric_context",
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",

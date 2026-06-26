@@ -25,8 +25,16 @@ DELETED_MODULE_SUFFIXES = (
 DELETED_MODULE_IMPORTS = tuple(f"fabricops_kit.{suffix}" for suffix in DELETED_MODULE_SUFFIXES)
 
 EXPECTED_V1_CALLABLES = [
+    "FabricStore",
+    "PathConfig",
+    "GovernanceConfig",
+    "DataAgreementConfig",
+    "FrameworkConfig",
+    "ConfigSmokeCheckResult",
+    "NotebookSetupContext",
     "setup_notebook",
     "setup_metadata_tables",
+    "get_fabric_context",
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
@@ -56,7 +64,7 @@ EXPECTED_V1_CALLABLES = [
 def test_public_callable_list_includes_guardrail_authoring_widgets():
     """Verify public callable list includes guardrail authoring widgets."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == 26
+    assert len(fabricops_kit.__all__) == len(EXPECTED_V1_CALLABLES)
     assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)
 
 

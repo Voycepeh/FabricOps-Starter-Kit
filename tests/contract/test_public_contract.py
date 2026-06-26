@@ -20,6 +20,7 @@ pytestmark = pytest.mark.contract
 
 APPROVED_V1_CALLABLES = {qualified_name.rsplit(".", maxsplit=1)[-1] for qualified_name in SUPPORTED_PUBLIC_API}
 APPROVED_V1_QUALIFIED_CALLABLES = set(SUPPORTED_PUBLIC_API)
+APPROVED_V1_QUALIFIED_FUNCTIONS = {name for name in APPROVED_V1_QUALIFIED_CALLABLES if not name.rsplit(".", maxsplit=1)[-1][0].isupper()}
 LEGACY_APPROVED_V1_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
@@ -172,7 +173,7 @@ def test_supported_public_api_matches_generated_inventory_classification():
     }
 
     assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES
-    assert flow_public == APPROVED_V1_QUALIFIED_CALLABLES
+    assert flow_public == APPROVED_V1_QUALIFIED_FUNCTIONS
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():

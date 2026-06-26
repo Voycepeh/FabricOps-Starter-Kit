@@ -7,7 +7,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any
-from .config import _current_audit_timestamp, get_store
+from .config.shared import _current_audit_timestamp, get_store
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"

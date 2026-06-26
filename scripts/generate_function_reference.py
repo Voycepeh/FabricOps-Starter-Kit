@@ -64,7 +64,7 @@ def markdown_anchor(value: str) -> str:
 
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
-    "config": "config",
+    "config.public": "config",
     "data_agreement": "data_agreement",
     "governance_review": "governance_review",
     "data_profiling.profile_dataframe": "data_profiling",
@@ -99,12 +99,12 @@ INTERNAL_ALIAS_MODULES = {}
 INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     "enforce_profile_behavior": {
         "fabricops_kit.io.shared._normalize_schema_name",
-        "fabricops_kit.config._get_store",
+        "fabricops_kit.config.shared.get_store",
     },
     "run_table_guardrails": {
-        "fabricops_kit.config._current_audit_timestamp",
-        "fabricops_kit.config.get_audit_timezone",
-        "fabricops_kit.config._validate_audit_timezone",
+        "fabricops_kit.config.shared._current_audit_timestamp",
+        "fabricops_kit.config.shared.get_audit_timezone",
+        "fabricops_kit.config.shared._validate_audit_timezone",
     },
 }
 
@@ -126,8 +126,8 @@ def _hide_from_public_relationships(qn: str) -> bool:
 
 
 INTERNAL_HELPER_AUDIT_DECISIONS = {
-    "fabricops_kit.config._get_store": "keep_internal",
-    "fabricops_kit.config._normalize_path_config": "keep_internal",
+    "fabricops_kit.config.shared.get_store": "keep_internal",
+    "fabricops_kit.config.shared._normalize_path_config": "keep_internal",
     "fabricops_kit.io.shared._normalize_table_name": "keep_internal",
     "fabricops_kit.io.shared._normalize_schema_name": "keep_internal",
     "fabricops_kit.io.shared._resolve_lakehouse_schema": "keep_internal",
@@ -307,6 +307,8 @@ def source_module_path(module: str) -> Path:
         return PKG_DIR / "io" / "shared.py"
     if module == "data_profiling":
         return PKG_DIR / "data_profiling" / "shared.py"
+    if module == "config":
+        return PKG_DIR / "config" / "public.py"
     return PKG_DIR.joinpath(*module.split(".")).with_suffix(".py")
 
 def parse_module(path: Path) -> dict[str, Any]:
@@ -2142,12 +2144,8 @@ def _classify_layer_consistency(
 
 
 CONFIG_MODEL_CLASSES = {
-    "NotebookRuntimeConfig",
-    "QualityConfig",
     "GovernanceConfig",
     "DataAgreementConfig",
-    "ReviewWorkflowConfig",
-    "LineageConfig",
     "FrameworkConfig",
     "PathConfig",
 }
@@ -4384,7 +4382,7 @@ def _default_reference_config() -> Any:
     """Return a minimal validated config for schema registry generation."""
     from types import SimpleNamespace
 
-    from fabricops_kit.config import FrameworkConfig, NotebookRuntimeConfig, PathConfig
+    from fabricops_kit.config import FrameworkConfig, PathConfig
 
     metadata_store = SimpleNamespace(
         workspace_id="reference-workspace",
@@ -4394,7 +4392,6 @@ def _default_reference_config() -> Any:
     )
     return FrameworkConfig(
         path_config=PathConfig(paths={"dev": {"metadata": metadata_store}}),
-        notebook_runtime_config=NotebookRuntimeConfig(),
     )
 
 
@@ -4517,7 +4514,7 @@ def _metadata_registry_without_pyspark() -> dict[str, Any]:
     sys.modules.setdefault("pyspark.sql", sql)
     sys.modules.setdefault("pyspark.sql.types", sql_types)
 
-    from fabricops_kit.config import _get_metadata_table_schema_registry
+    from fabricops_kit.config.shared import _get_metadata_table_schema_registry
 
     return _get_metadata_table_schema_registry(_default_reference_config())
 
@@ -4532,7 +4529,7 @@ def generate_metadata_table_reference() -> int:
 
     """
     try:
-        from fabricops_kit.config import _get_metadata_table_schema_registry
+        from fabricops_kit.config.shared import _get_metadata_table_schema_registry
 
         registry = _get_metadata_table_schema_registry(_default_reference_config())
     except RuntimeError as exc:
@@ -4772,6 +4769,8 @@ def main() -> None:
             generated_page.unlink()
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
+    if "config" not in discovered_doc_modules:
+        discovered_doc_modules.append("config")
     module_index_lines = [
         "# Implementation Module Catalogue",
         "",
@@ -4783,6 +4782,8 @@ def main() -> None:
     all_doc_modules = discovered_doc_modules
     for module in all_doc_modules:
         actual_module = next((k for k,v in PUBLIC_MODULE_PREFERRED_NAMES.items() if v==module), module)
+        if actual_module not in module_data and module == "config" and "config.public" in module_data:
+            actual_module = "config.public"
         info = module_data[actual_module]
         module_data[module] = info
         info = module_data[module]
