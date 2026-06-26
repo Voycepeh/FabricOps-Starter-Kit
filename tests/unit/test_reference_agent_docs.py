@@ -361,8 +361,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "c.architecture_result==='Violation'||c.recommended_action==='Architectureviolation'" in compact_dashboard_text
     assert "functionmarkdownLink(i,label)" in compact_dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
-    assert "Suggested next step" in dashboard_text
-    assert "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details." in dashboard_text
+    assert "Next step" in dashboard_text
+    assert "Open the flow tree to inspect exact helper names, layers, source files, and actionable details." in dashboard_text
     assert "disabled>CopyJSON" not in compact_dashboard_text
     assert "disabled>DownloadJSON" in compact_dashboard_text
     assert "disabled>CopyYAML" not in compact_dashboard_text
@@ -452,13 +452,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function yamlPacket(packet)" in dashboard_text
     assert '<span class="badge keep">Healthy</span>' in dashboard_text
     assert "Merge candidate found" in dashboard_text
-    assert "Review merge candidate" in dashboard_text
-    assert "Review merge candidates" in dashboard_text
+    assert "Inspect merge candidate" in dashboard_text
+    assert "Inspect merge candidates" in dashboard_text
     assert "reasons.join('')" in compact_dashboard_text
     assert "Contains ${violations} architecture violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
-    assert "Max depth; long call chain threshold >= " in dashboard_text
+    assert "Max depth; long chain threshold >= " in dashboard_text
     assert "longThreshold!==null" in compact_dashboard_text
     assert "largeThreshold!==null" in compact_dashboard_text
     assert "mergeCount===1?'Contains1mergecandidateinsidethisflow.'" in compact_dashboard_text
@@ -1636,7 +1636,7 @@ def test_callable_architecture_layer_rules_and_labels():
     assert "src/fabricops_kit/io/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
-    assert generator._display_label("Deep chain") == "Long call chain"
+    assert generator._display_label("Deep chain") == "Long chain"
     assert generator._display_label("Single-use helper candidate") == "Merge candidate"
 
 
@@ -2079,7 +2079,6 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "Source module" not in dashboard_text
     assert "Called by" in dashboard_text
     assert "Used outside" in dashboard_text
-    assert "End" in dashboard_text
     assert "Merge candidate" in dashboard_text
     assert "Violation reason" in dashboard_text
     assert "Warning reason" in dashboard_text
@@ -2088,7 +2087,10 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "called by count" not in dashboard_text.lower()
     assert "<th>Called by</th>" not in dashboard_text
     assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
-    assert "n.is_end_node?'<spanclass=\"badgemuted\">end</span>'" in _remove_whitespace(dashboard_text)
+    compact = _remove_whitespace(dashboard_text)
+    assert "<spanclass=\"badgemuted\">end</span>" not in compact
+    assert "functionflowTreeStatusChips(n)" in compact
+    assert "Inlinecandidate" in compact
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:

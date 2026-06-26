@@ -854,7 +854,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-25 23:42 SGT<span
+        <strong>Generated at:</strong> 2026-06-26 00:30 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -950,14 +950,14 @@
                   Findings
                 </button>
               </th>
-              <th>Review note</th>
+              <th>Finding note</th>
               <th>
                 <button
                   type="button"
                   class="sort-button"
-                  data-sort-key="suggested_action"
+                  data-sort-key="next_step"
                 >
-                  Suggested action
+                  Next step
                 </button>
               </th>
               <th class="num">
@@ -1063,13 +1063,13 @@
         "Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.";
       const DISPLAY_LABEL_MAP = {
         "Architecture violation": "Architecture violation",
-        "Long call chain": "Long call chain",
-        "Large dependency surface": "Large dependency surface",
+        "Long chain": "Long chain",
+        "Wide dependency": "Wide dependency",
         "Merge candidate": "Merge candidate",
-        "Review abstraction": "Review abstraction",
+        "Inline candidate": "Inline candidate",
         "Shared utility": "Shared utility",
         None: "Healthy",
-        "Merge candidates found": "Merge candidate found",
+        "Merge candidate found": "Merge candidate found",
       };
       let inventory = [],
         publicEntryFlows = [],
@@ -1245,12 +1245,12 @@
       }
       function reviewMergeCandidateLabel(count) {
         return count === 1
-          ? "Review merge candidate"
-          : "Review merge candidates";
+          ? "Inspect merge candidate"
+          : "Inspect merge candidates";
       }
       function suggestedActionLabel(flow) {
         const action = flow.recommended_simplification_action || "Keep public";
-        if (action === "Review merge candidates")
+        if (action === "Inspect merge candidates")
           return reviewMergeCandidateLabel(mergeCandidateCount(flow));
         return action;
       }
@@ -1283,7 +1283,7 @@
       }
       function reviewNoteControl(flow) {
         const note = whyReview(flow);
-        return `<details class="review-note"><summary><span class="badge muted">Review note</span> <span class="review-note-toggle">View details</span></summary><div class="review-note-panel">${esc(note)}</div></details>`;
+        return `<details class="review-note"><summary><span class="badge muted">Finding note</span> <span class="review-note-toggle">View details</span></summary><div class="review-note-panel">${esc(note)}</div></details>`;
       }
       function renderCards() {
         const s = summaryCounts.public_api_surface || {},
@@ -1395,7 +1395,7 @@
             (flow.warnings || []).map(findingLabel).join(" ").toLowerCase() ||
             "healthy"
           );
-        if (key === "suggested_action")
+        if (key === "next_step")
           return suggestedActionLabel(flow).toLowerCase();
         if (key === "downstream") return Number(flow.downstream_count ?? 0);
         if (key === "depth") return Number(flow.max_depth ?? 0);
@@ -1576,13 +1576,24 @@
         return attach(root);
       }
       function flowTreeStatusChips(n) {
+        const chips = [];
         if (n.architecture_result === "Violation")
-          return '<span class="badge critical">Violation</span>';
+          chips.push(
+            '<span class="badge critical" title="This edge breaks the callable architecture boundary.">Violation</span>',
+          );
         if (n.architecture_result === "Warning")
-          return '<span class="badge warn">Warning</span>';
-        if (n.helper_cleanup_candidate || (n.used_outside_flow ?? 0) > 0)
-          return '<span class="badge muted">Review</span>';
-        return "";
+          chips.push(
+            '<span class="badge warn" title="This edge deserves attention before refactoring.">Warning</span>',
+          );
+        if (n.helper_cleanup_candidate)
+          chips.push(
+            '<span class="badge muted" title="Inline only if this helper does not improve readability or reuse.">Inline candidate</span>',
+          );
+        if ((n.used_outside_flow ?? 0) > 0)
+          chips.push(
+            '<span class="badge info" title="This helper is reused outside the selected flow; check callers before moving it.">Shared dependency</span>',
+          );
+        return chips.join("");
       }
       function flowTreeDetailRows(n) {
         const rows = [
@@ -1595,7 +1606,6 @@
               ? String(n.source_path).replace(/^src\/fabricops_kit\//, "")
               : n.module || "Unknown",
           ],
-          ["End", n.is_end_node ? "Yes" : "No"],
         ];
         if (n.architecture_result)
           rows.push(["Architecture", n.architecture_result]);
@@ -1618,7 +1628,7 @@
         if (n.helper_cleanup_candidate)
           details.push([
             "Merge candidate",
-            n.recommended_action || "Review helper placement.",
+            n.recommended_action || "Inspect helper placement.",
           ]);
         if (n.path_examples && n.path_examples.length)
           details.push(["Path example", n.path_examples[0].join(" -> ")]);
@@ -1646,7 +1656,7 @@
           children = n.children?.length
             ? `<ul>${n.children.map(renderTreeNode).join("")}</ul>`
             : "";
-        return `<li><details><summary><span class="flow-tree-main"><strong>${sourceCallableLink(n)}</strong><span class="badge muted">${esc(type)}</span>${moduleText ? `<span class="tag">${esc(moduleText)}</span>` : ""}${n.is_end_node ? '<span class="badge muted">end</span>' : ""}${status}</span></summary>${flowTreeDetails(n)}</details>${children}</li>`;
+        return `<li><details><summary><span class="flow-tree-main"><strong>${sourceCallableLink(n)}</strong><span class="badge muted">${esc(type)}</span>${moduleText ? `<span class="tag">${esc(moduleText)}</span>` : ""}${status}</span></summary>${flowTreeDetails(n)}</details>${children}</li>`;
       }
       function flowHealth(flow, architectureFindings, mergeCandidates) {
         if (architectureFindings.length) return "Needs architecture review";
@@ -1658,9 +1668,9 @@
           largeThreshold !== null &&
           (flow.downstream_count || 0) >= largeThreshold
         )
-          return "Large dependency surface";
+          return "Wide dependency";
         if ((flow.external_dependents_count || 0) > 0) return "Shared impact";
-        if (mergeCandidates.length) return "Review helpers";
+        if (mergeCandidates.length) return "Inline candidate";
         return "Healthy";
       }
       function flowReason(flow, architectureFindings, mergeCandidates) {
@@ -1669,19 +1679,19 @@
         if ((flow.external_dependents_count || 0) > 0)
           return `${flow.external_dependents_count} function(s) in this flow are used outside this public callable.`;
         if (mergeCandidates.length)
-          return `${mergeCandidates.length} internal helper(s) may be reviewed for possible merge.`;
+          return `${mergeCandidates.length} internal helper(s) may be inspected for possible inline or merge.`;
         return "No architecture violations found in this flow.";
       }
       function flowNextStep(flow, architectureFindings, mergeCandidates) {
         const longThreshold = longCallChainThreshold();
         if (architectureFindings.length)
-          return "Review the highlighted flow tree nodes before moving or merging helpers.";
+          return "Inspect the highlighted flow tree nodes before moving or merging helpers.";
         if ((flow.external_dependents_count || 0) > 0)
-          return "Check external dependents before refactoring shared helpers.";
+          return "Inspect external dependents before refactoring shared helpers.";
         if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-          return "Review whether this long flow can be simplified before moving helpers.";
+          return "Inspect whether this long flow can be simplified before moving helpers.";
         if (mergeCandidates.length)
-          return "No architecture violation found; review merge candidates only if readability improves.";
+          return "No architecture violation found; inspect merge candidates only if readability improves.";
         return "Keep the callable shape and use the flow tree only for spot checks.";
       }
       function flowSignalChips(flow, architectureFindings, mergeCandidates) {
@@ -1699,15 +1709,13 @@
           largeThreshold !== null &&
           (flow.downstream_count || 0) >= largeThreshold
         )
-          chips.push(
-            '<span class="badge warn">Large dependency surface</span>',
-          );
+          chips.push('<span class="badge warn">Wide dependency</span>');
         if (mergeCandidates.length)
           chips.push(
             `<span class="badge muted">${mergeCandidates.length} merge candidate${mergeCandidates.length === 1 ? "" : "s"}</span>`,
           );
         if ((flow.external_dependents_count || 0) > 0)
-          chips.push('<span class="badge info">Shared impact warning</span>');
+          chips.push('<span class="badge info">Shared dependency</span>');
         return chips.slice(0, 5).join("");
       }
       function renderFlowDetails() {
@@ -1730,7 +1738,7 @@
           nextStep = flowNextStep(f, architectureFindings, mergeCandidates),
           signals = flowSignalChips(f, architectureFindings, mergeCandidates);
         $("publicFlowDetails").innerHTML =
-          `<h2>Callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long call chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} internal helpers may be reviewed for possible merge. Open the flow tree to inspect helper placement.`) : "Open the flow tree to inspect exact helper names, layers, source files, end nodes, and review details."}</p></section><section class="flow-next-step"><h3>Suggested next step</h3><p>${esc(nextStep)}</p></section><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
+          `<h2>Callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div><strong>${(f.modules_touched || []).length}</strong><br><span>Modules touched</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} internal helpers may be inspected for possible inline or merge. Open the flow tree to inspect helper placement.`) : "Open the flow tree to inspect exact helper names, layers, source files, and actionable details."}</p></section><section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section><h3>Flow tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
       function selectedItem() {
         const byQn = new Map(
@@ -1756,17 +1764,16 @@
                   {
                     finding: "Architecture violations found",
                     evidence: `${flow.architecture_violation_count} call edge(s) go in the wrong direction.`,
-                    suggested_action: "Review the exact edges below.",
+                    next_step: "Inspect the exact edges below.",
                   },
                 ]
               : []),
             ...(longThreshold !== null && (flow.max_depth || 0) >= longThreshold
               ? [
                   {
-                    finding: "Long call chain",
+                    finding: "Long chain",
                     evidence: `Depth ${flow.max_depth}, threshold >= ${longThreshold}`,
-                    suggested_action:
-                      "Review whether the flow can be simplified.",
+                    next_step: "Inspect whether the flow can be simplified.",
                   },
                 ]
               : []),
@@ -1774,9 +1781,9 @@
             (flow.downstream_count || 0) >= largeThreshold
               ? [
                   {
-                    finding: "Large dependency surface",
+                    finding: "Wide dependency",
                     evidence: `${flow.downstream_count} downstream functions, threshold >= ${largeThreshold}`,
-                    suggested_action:
+                    next_step:
                       "Many functions depend on this flow. Refactor carefully.",
                   },
                 ]
@@ -1784,10 +1791,10 @@
             ...((flow.external_dependents_count || 0) > 0
               ? [
                   {
-                    finding: "Shared impact warning",
+                    finding: "Shared dependency",
                     evidence: `${flow.external_dependents_count} function(s) in this flow are used outside this flow.`,
-                    suggested_action:
-                      "Check outside dependents before refactoring shared helpers.",
+                    next_step:
+                      "Inspect outside dependents before refactoring shared helpers.",
                   },
                 ]
               : []),
@@ -1801,7 +1808,7 @@
                       mergeCandidateCount(flow) === 1
                         ? "1 helper function may be a merge candidate."
                         : `${mergeCandidateCount(flow)} helper functions may be merge candidates.`,
-                    suggested_action:
+                    next_step:
                       reviewMergeCandidateLabel(mergeCandidateCount(flow)) +
                       " without merging away the public API.",
                   },
@@ -1814,7 +1821,7 @@
               {
                 finding: "Healthy",
                 evidence: "Clear",
-                suggested_action: "Keep public",
+                next_step: "Keep public",
               },
             ];
       }
@@ -1855,9 +1862,9 @@
               (inventoryByQn.get(c.parent_qualified_name) || {})
                 .function_name || c.parent_qualified_name,
             finding: findingLabel(c.recommended_action || "Merge candidate"),
-            suggested_action: (c.recommended_action || "").includes("Shared")
+            next_step: (c.recommended_action || "").includes("Shared")
               ? "Keep as shared internal helper."
-              : (c.recommended_action || "").includes("Review")
+              : (c.recommended_action || "").includes("Inline")
                 ? "Keep only if the helper improves readability or reuse."
                 : "Consider absorbing this helper into its only caller if it does not improve readability or reuse.",
             link: linkMetadata(c),
@@ -1907,7 +1914,7 @@
           source_url: row.source_url || null,
           recommendation: suggestedActionLabel(f),
           overall_health: health,
-          suggested_next_step: nextStep,
+          next_step: nextStep,
           key_signals: (f.warnings || []).map(findingLabel),
           downstream_count: f.downstream_count,
           max_depth: f.max_depth,
@@ -1988,7 +1995,7 @@ Always call out tests required before changes.`;
             : cleanupMode(),
           health: selected ? selected.overall_health : null,
           key_signals: selected ? selected.key_signals : [],
-          suggested_next_step: selected ? selected.suggested_next_step : null,
+          next_step: selected ? selected.next_step : null,
           architecture_findings: selected ? selected.architecture_findings : [],
           merge_candidates: selected ? selected.merge_candidates : [],
           public_callable_findings: selected

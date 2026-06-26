@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-25T15:42:09.892748Z",
+    "generated_at_utc": "2026-06-25T16:30:06.111051Z",
     "data_source": "callable-flow.json"
   },
   "architecture_thresholds": {
@@ -43,7 +43,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Leaf internal helper",
@@ -106,7 +106,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -211,7 +211,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Leaf internal helper",
@@ -274,7 +274,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Leaf internal helper",
@@ -462,8 +462,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -1033,7 +1033,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -1293,7 +1293,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -1396,7 +1396,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -1536,7 +1536,7 @@
       "reachability_kind": "implicit_lifecycle_reachable",
       "reachability_label": "Lifecycle reachable",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "implicit_lifecycle_reachability",
         "Leaf internal helper",
@@ -1584,7 +1584,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -1673,7 +1673,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -1791,7 +1791,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -1924,7 +1924,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -2102,7 +2102,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -2275,7 +2275,7 @@
       "reachability_kind": "implicit_lifecycle_reachable",
       "reachability_label": "Lifecycle reachable",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "implicit_lifecycle_reachability",
         "Leaf internal helper",
@@ -2352,7 +2352,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "High-fanout helper",
         "Layer assignment needs review"
@@ -2486,7 +2486,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -2698,7 +2698,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -2771,8 +2771,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -2833,7 +2833,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Promote candidate"
@@ -3039,7 +3039,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Promote candidate"
       ],
@@ -3317,7 +3317,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -3382,7 +3382,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -3445,7 +3445,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -3608,7 +3608,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -3696,7 +3696,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -3857,7 +3857,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -3999,7 +3999,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -4207,7 +4207,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -4374,7 +4374,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -4703,7 +4703,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -4776,7 +4776,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -4954,7 +4954,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -5100,7 +5100,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -5344,7 +5344,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -5429,7 +5429,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -5514,7 +5514,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -5663,7 +5663,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -5796,7 +5796,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -5898,7 +5898,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Layer assignment needs review"
@@ -6179,7 +6179,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -6292,7 +6292,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -6408,7 +6408,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -6522,7 +6522,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -6608,7 +6608,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -6708,7 +6708,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -6822,7 +6822,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -6895,7 +6895,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -6997,7 +6997,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -7112,8 +7112,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -7175,7 +7175,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -7256,7 +7256,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -7337,7 +7337,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -7413,8 +7413,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -7587,7 +7587,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -7650,7 +7650,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -7767,7 +7767,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -7880,7 +7880,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -8005,7 +8005,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -8079,7 +8079,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -8191,7 +8191,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -8344,7 +8344,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -8509,7 +8509,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -8656,7 +8656,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -8818,7 +8818,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -9067,7 +9067,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -9179,7 +9179,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -9344,7 +9344,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -9540,7 +9540,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -9628,7 +9628,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -9849,7 +9849,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Single-use internal helper",
@@ -10298,7 +10298,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -10423,7 +10423,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -10558,7 +10558,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -10778,7 +10778,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -10927,7 +10927,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -11143,7 +11143,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -11277,7 +11277,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -11417,7 +11417,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -11617,7 +11617,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -11722,7 +11722,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -11828,7 +11828,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -11946,7 +11946,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -12081,7 +12081,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -12319,7 +12319,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -12445,7 +12445,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -12611,7 +12611,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -12824,7 +12824,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -12975,7 +12975,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -13168,7 +13168,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -13242,7 +13242,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Single-use internal helper",
@@ -13419,7 +13419,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -13543,7 +13543,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -13786,7 +13786,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -13892,7 +13892,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -13997,8 +13997,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -14111,8 +14111,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -14226,7 +14226,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -14376,8 +14376,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Shared helper"
@@ -14480,7 +14480,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -14541,7 +14541,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Shared helper"
@@ -14640,8 +14640,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -14785,8 +14785,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -14844,8 +14844,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -14905,8 +14905,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -14966,8 +14966,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -15108,8 +15108,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -15187,7 +15187,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -15252,7 +15252,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -15317,7 +15317,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -15382,7 +15382,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -15447,7 +15447,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -15510,7 +15510,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -15615,7 +15615,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -15705,7 +15705,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -15809,7 +15809,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -16234,7 +16234,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -16373,7 +16373,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -16632,7 +16632,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -16771,7 +16771,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -16847,7 +16847,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -16951,7 +16951,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -17119,7 +17119,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -17316,7 +17316,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -17406,7 +17406,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -17588,7 +17588,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -17707,7 +17707,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -17839,7 +17839,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -18014,7 +18014,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Shared helper"
@@ -18131,8 +18131,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -18277,8 +18277,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -18534,8 +18534,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -18657,7 +18657,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -18795,7 +18795,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -18888,7 +18888,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -18962,7 +18962,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -19308,7 +19308,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -19447,8 +19447,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -19520,8 +19520,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -19564,8 +19564,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -19624,8 +19624,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -19684,8 +19684,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -19728,8 +19728,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -19788,8 +19788,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -19851,8 +19851,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -19938,8 +19938,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -19998,8 +19998,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -20072,8 +20072,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Shared helper"
@@ -20177,8 +20177,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -20238,8 +20238,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -20312,8 +20312,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -20402,8 +20402,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -20490,8 +20490,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -20594,8 +20594,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -20751,8 +20751,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -20854,8 +20854,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -20914,8 +20914,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -20958,8 +20958,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -21022,8 +21022,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "callee_classification_pending",
         "Possible inline/private helper"
@@ -21122,8 +21122,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -21187,7 +21187,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -21277,7 +21277,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -21367,7 +21367,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -21470,7 +21470,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -21560,7 +21560,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -21663,7 +21663,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -21813,7 +21813,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -21951,7 +21951,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -22044,7 +22044,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -22118,7 +22118,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -22464,7 +22464,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -22604,7 +22604,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Promote candidate"
       ],
@@ -22906,8 +22906,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -22969,7 +22969,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Promote candidate"
       ],
@@ -23131,7 +23131,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -23207,8 +23207,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -23270,7 +23270,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -23346,8 +23346,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -23428,7 +23428,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Promote candidate"
@@ -23665,7 +23665,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Shared helper"
@@ -23760,7 +23760,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -23883,7 +23883,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -24018,8 +24018,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -24095,7 +24095,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -24200,8 +24200,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -24288,7 +24288,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -24392,8 +24392,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -24497,7 +24497,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -24653,8 +24653,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -24757,7 +24757,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -24850,8 +24850,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Possible inline/private helper"
       ],
@@ -24913,7 +24913,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Shared helper"
       ],
@@ -24994,7 +24994,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Promote candidate"
@@ -25226,8 +25226,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -25309,7 +25309,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -25412,7 +25412,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -26117,7 +26117,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -26341,7 +26341,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -26458,7 +26458,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -27120,7 +27120,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -27231,7 +27231,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -27316,7 +27316,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -27544,7 +27544,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -27752,7 +27752,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -27838,7 +27838,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -27984,7 +27984,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -28069,7 +28069,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -28231,7 +28231,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -28317,7 +28317,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -28467,7 +28467,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -28599,7 +28599,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "High-fanout helper",
         "Layer assignment needs review"
@@ -28802,7 +28802,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -28888,7 +28888,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -28960,7 +28960,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -29058,7 +29058,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "High-fanout helper",
@@ -29170,7 +29170,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -29489,7 +29489,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -29647,7 +29647,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -29808,7 +29808,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -29880,7 +29880,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -29952,7 +29952,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -30024,7 +30024,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -30185,7 +30185,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Single-use internal helper",
         "Layer assignment needs review"
@@ -30345,7 +30345,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Keep private helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -30417,7 +30417,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Shared helper"
@@ -30568,7 +30568,7 @@
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
       "recommended_action": "Shared internal helper",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Shared helper"
@@ -30732,7 +30732,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -30792,7 +30792,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -30852,7 +30852,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -30912,7 +30912,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -30971,8 +30971,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Review manually",
-      "priority": "Review",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "Possible inline/private helper"
@@ -31141,7 +31141,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -31201,7 +31201,7 @@
       "reachability_kind": "public_entrypoint",
       "reachability_label": "Public entrypoint",
       "recommended_action": "Public API entrypoint",
-      "priority": "Review",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call"
       ],
@@ -31241,12 +31241,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1529-L1533",
       "source_start_line": 1529,
       "source_end_line": 1533,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -31976,7 +31976,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "Single-use internal helper",
             "Layer assignment needs review"
@@ -32044,12 +32044,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2675-L2690",
       "source_start_line": 2675,
       "source_end_line": 2690,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 21,
       "max_depth": 6,
@@ -32672,7 +32672,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -33021,7 +33021,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -33140,11 +33140,11 @@
       "source_start_line": 1536,
       "source_end_line": 1551,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found"
       ],
       "downstream_count": 5,
       "max_depth": 5,
@@ -33489,13 +33489,13 @@
       "source_start_line": 80,
       "source_end_line": 135,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found",
-        "Spans many modules"
+        "Long chain",
+        "Merge candidate found",
+        "Spans many modules",
+        "Wide dependency"
       ],
       "downstream_count": 11,
       "max_depth": 4,
@@ -33608,7 +33608,7 @@
             "allowed_internal_role_call",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 5,
           "used_outside_flow": 0,
@@ -34017,12 +34017,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L35",
       "source_start_line": 10,
       "source_end_line": 35,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -34093,7 +34093,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -34203,7 +34203,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -34276,7 +34276,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 2,
           "used_outside_flow": 0,
@@ -34712,12 +34712,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L35",
       "source_start_line": 10,
       "source_end_line": 35,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -34789,7 +34789,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -34900,7 +34900,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -35012,7 +35012,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 2,
           "used_outside_flow": 0,
@@ -35448,12 +35448,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L82",
       "source_start_line": 15,
       "source_end_line": 82,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -35488,7 +35488,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -35640,7 +35640,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -35887,7 +35887,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 2,
           "used_outside_flow": 0,
@@ -36198,12 +36198,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L38",
       "source_start_line": 10,
       "source_end_line": 38,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 16,
       "max_depth": 4,
@@ -36457,7 +36457,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -36967,12 +36967,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L10-L46",
       "source_start_line": 10,
       "source_end_line": 46,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 12,
       "max_depth": 4,
@@ -37080,7 +37080,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -37116,7 +37116,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -37227,7 +37227,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -37263,7 +37263,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -37611,12 +37611,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L49",
       "source_start_line": 10,
       "source_end_line": 49,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -37948,7 +37948,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -38340,13 +38340,13 @@
       "source_start_line": 1554,
       "source_end_line": 1588,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found",
-        "Spans many modules"
+        "Long chain",
+        "Merge candidate found",
+        "Spans many modules",
+        "Wide dependency"
       ],
       "downstream_count": 113,
       "max_depth": 7,
@@ -38729,7 +38729,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 6,
           "used_outside_flow": 0,
@@ -38767,7 +38767,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 14,
           "used_outside_flow": 0,
@@ -38804,7 +38804,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -39219,7 +39219,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 8,
           "used_outside_flow": 0,
@@ -39258,7 +39258,7 @@
             "allowed_internal_role_call",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 5,
           "used_outside_flow": 0,
@@ -43471,7 +43471,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -43984,7 +43984,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "Single-use internal helper",
             "Layer assignment needs review"
@@ -44284,12 +44284,12 @@
       "source_start_line": 1433,
       "source_end_line": 1488,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 44,
       "max_depth": 7,
@@ -45854,7 +45854,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -46539,7 +46539,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -46695,10 +46695,10 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1008-L1062",
       "source_start_line": 1008,
       "source_end_line": 1062,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Merge candidates found"
+        "Merge candidate found"
       ],
       "downstream_count": 9,
       "max_depth": 3,
@@ -47155,7 +47155,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -47242,13 +47242,13 @@
       "source_start_line": 34,
       "source_end_line": 98,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found",
-        "Spans many modules"
+        "Long chain",
+        "Merge candidate found",
+        "Spans many modules",
+        "Wide dependency"
       ],
       "downstream_count": 48,
       "max_depth": 8,
@@ -47361,7 +47361,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -47399,7 +47399,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 8,
           "used_outside_flow": 0,
@@ -49194,7 +49194,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -49731,7 +49731,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "Single-use internal helper",
             "Layer assignment needs review"
@@ -49813,12 +49813,12 @@
       "source_start_line": 2738,
       "source_end_line": 2767,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 40,
       "max_depth": 7,
@@ -51005,7 +51005,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -51683,7 +51683,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -51800,12 +51800,12 @@
       "source_start_line": 2716,
       "source_end_line": 2735,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 40,
       "max_depth": 7,
@@ -52992,7 +52992,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -53670,7 +53670,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -53787,12 +53787,12 @@
       "source_start_line": 2693,
       "source_end_line": 2708,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 48,
       "max_depth": 7,
@@ -55382,7 +55382,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -56021,7 +56021,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -56177,12 +56177,12 @@
       "source_start_line": 1407,
       "source_end_line": 1440,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 41,
       "max_depth": 7,
@@ -57621,7 +57621,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -58182,7 +58182,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -58296,12 +58296,12 @@
       "source_start_line": 1464,
       "source_end_line": 1482,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 60,
       "max_depth": 7,
@@ -60753,7 +60753,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -61426,7 +61426,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Layer assignment needs review"
@@ -61686,12 +61686,12 @@
       "source_start_line": 1443,
       "source_end_line": 1461,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 60,
       "max_depth": 7,
@@ -64143,7 +64143,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -64794,12 +64794,12 @@
       "source_start_line": 2770,
       "source_end_line": 2772,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 15,
       "max_depth": 6,
@@ -64949,7 +64949,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 4,
           "used_outside_flow": 0,
@@ -64986,7 +64986,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 4,
           "used_outside_flow": 0,
@@ -65023,7 +65023,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
@@ -65547,7 +65547,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -65651,12 +65651,12 @@
       "source_start_line": 2711,
       "source_end_line": 2713,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 26,
       "max_depth": 7,
@@ -65893,7 +65893,7 @@
           "signals": [
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -66491,7 +66491,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -66848,7 +66848,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
             "Single-use internal helper",
@@ -66963,12 +66963,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L57",
       "source_start_line": 10,
       "source_end_line": 57,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 17,
       "max_depth": 4,
@@ -67294,7 +67294,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -67805,12 +67805,12 @@
       "source_start_line": 1591,
       "source_end_line": 1624,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 32,
       "max_depth": 6,
@@ -68751,7 +68751,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -69286,7 +69286,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "Single-use internal helper",
             "Layer assignment needs review"
@@ -69428,12 +69428,12 @@
       "source_start_line": 1627,
       "source_end_line": 1676,
       "priority": "High",
-      "recommended_simplification_action": "Review architecture violation",
+      "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
         "Architecture violation",
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 27,
       "max_depth": 6,
@@ -70246,7 +70246,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -70635,7 +70635,7 @@
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
           "recommended_action": "Keep private helper",
-          "priority": "Review",
+          "priority": "Low",
           "signals": [
             "Single-use internal helper",
             "Layer assignment needs review"
@@ -70775,12 +70775,12 @@
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L43",
       "source_start_line": 10,
       "source_end_line": 43,
-      "priority": "Review",
+      "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Large dependency surface",
-        "Long call chain",
-        "Merge candidates found"
+        "Long chain",
+        "Merge candidate found",
+        "Wide dependency"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -70888,7 +70888,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -70999,7 +70999,7 @@
             "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -71112,7 +71112,7 @@
             "Possible inline/private helper",
             "internal_helper_chain"
           ],
-          "recommended_action": "Review manually",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 3,
           "used_outside_flow": 0,
@@ -71539,10 +71539,10 @@
     "recommended_action": {
       "Keep private helper": 135,
       "Merge into owner": 63,
+      "Next step": 49,
       "Public API entrypoint": 26,
       "Remove redundant wrapper": 4,
       "Rename to internal function": 20,
-      "Review manually": 49,
       "Shared internal helper": 23
     },
     "public_api_surface": {
