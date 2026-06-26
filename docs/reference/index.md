@@ -31,7 +31,7 @@ Use the finder below to look up the 26 public Starter Kit functions. Implementat
     Maintainer inventory metrics:
 
     - Source Python files count: 19
-    - Total callables: 320
+    - Total callables: 342
     - Supporting functions: 72
     - Private helpers to review: 222
 

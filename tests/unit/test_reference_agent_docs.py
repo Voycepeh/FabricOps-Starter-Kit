@@ -659,7 +659,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert len(function_inventory) == summary_counts["total_callables"]
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
-    assert all(row["callable_kind"] == "function" for row in function_inventory)
+    assert all(row["callable_kind"] == "function" for row in function_inventory if row["layer"] != "supporting_object")
     assert all(row["recommended_action"] for row in function_inventory)
 
     private_helper_rows = [row for row in function_inventory if row["layer"] == "private_helper"]
@@ -679,8 +679,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         for callee in flow["transitive_callees"]
     )
     rows_by_qn = {row["qualified_name"]: row for row in function_inventory}
-    assert "fabricops_kit.config.FrameworkConfig" not in rows_by_qn
-    assert "fabricops_kit.io_core.FabricStore.root" not in rows_by_qn
+    assert rows_by_qn["fabricops_kit.config.FrameworkConfig"]["layer"] == "supporting_object"
+    assert rows_by_qn["fabricops_kit.config.FabricStore.root"]["layer"] == "supporting_object"
     assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
     assert all(row["review_status"] != "unreachable" for row in function_inventory)
     expected_inventory_keys = {
@@ -2171,8 +2171,12 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "metrics.non_function_records!==undefined" in compact_inventory_text
     assert "return Number(metrics.non_function_records)||0" in inventory_text
     assert "summaryCounts.supporting_objects!==undefined" in compact_inventory_text
-    assert "return inventory.filter(i=>itemType(i)==='Non function').length" in inventory_text
+    assert "return inventory.filter(i=>itemTypeKey(i)==='supporting_object').length" in inventory_text
     assert "nonFunctionCount=canonicalNonFunctionCount()" in compact_inventory_text
+    assert "const ITEM_TYPE_LABELS={public:'Public callable',internal:'Shared helper',private_helper:'Private helper',supporting_object:'Non functions'}" in inventory_text
+    assert '<option value="supporting_object">Non functions</option>' in inventory_text
+    assert "if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false" in inventory_text
+    assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!supportFocus(i))return false" in inventory_text
     for label in [
         "Total code assets",
         "Public callables",
@@ -2218,6 +2222,26 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
         inventory_text,
     )
     assert "enhanceAll(document)" not in inventory_text
+
+
+def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
+    """Verify item type filter keys match generated inventory records and summary metrics."""
+    flow_data = json.loads((ROOT / "docs" / "reference" / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
+    inventory = flow_data["function_inventory"]
+    metrics = flow_data["summary_counts"]["callable_inventory_metrics"]
+
+    expected_counts = {
+        "public": 26,
+        "internal": 72,
+        "private_helper": 222,
+        "supporting_object": metrics["non_function_records"],
+    }
+    actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
+
+    assert actual_counts == expected_counts
+    assert actual_counts["supporting_object"] == 22
+    assert actual_counts["supporting_object"] == metrics["non_function_records"]
+    assert all(row["function_type"] == "Non functions" for row in inventory if row["layer"] == "supporting_object")
 
 
 def test_callable_inventory_html_keeps_yaml_newlines_escaped() -> None:
