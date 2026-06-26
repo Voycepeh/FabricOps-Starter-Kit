@@ -41,7 +41,7 @@ The [Public API contract](public-api-contract.md) remains the release anchor for
 
 Notebook-facing release work should depend only on the 26 supported functions listed in `fabricops_kit.public_api.SUPPORTED_PUBLIC_API`. Those functions are the stable API surface for v1.0.0 release preparation.
 
-Internal helpers are not part of the stable public API. Internal functions, classes, methods, validators, resolvers, workflows, adapters, and utilities may be reorganized before release without being treated as supported public API changes. Maintainers should keep notebook templates and public guidance on the supported functions above, and use generated implementation references only when maintaining package internals.
+Implementation helpers are not part of the stable public API. Shared helpers, private helpers, classes, methods, validators, resolvers, workflows, adapters, and utilities may be reorganized before release without being treated as supported public API changes. Maintainers should keep notebook templates and public guidance on the supported functions above, and use generated implementation references only when maintaining package internals.
 
 ## Supporting maintainer references
 
